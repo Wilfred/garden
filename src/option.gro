@@ -2,3 +2,10 @@ enum Option {
   Some(_),
   None,
 }
+
+fun print_val(x) {
+  match(x: Option) {
+    Some(_) -> print("got some");
+    None -> print("got none");
+  }
+}

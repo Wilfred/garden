@@ -7,6 +7,10 @@ function papToken(tokens) {
   return tokens.shift();
 }
 
+function peekToken(tokens) {
+  return tokens[0];
+}
+
 function parseExpression(tokens) {
   const token = papToken(tokens);
 
@@ -18,8 +22,22 @@ function parseExpression(tokens) {
   return null;
 }
 
-function parseTerminatedExpression(tokens) {
+function parseBinaryOpOrExpression(tokens) {
   const expr = parseExpression(tokens);
+
+  const token = peekToken(tokens);
+  if (token.match(/[+-]/)) {
+    papToken(tokens);
+
+    const rhsExpr = parseExpression(tokens);
+    return { binaryOperator: token, lhs: expr, rhs: rhsExpr };
+  } else {
+    return expr;
+  }
+}
+
+function parseTerminatedExpression(tokens) {
+  const expr = parseBinaryOpOrExpression(tokens);
 
   const terminator = papToken(tokens);
   if (terminator != ";") {
@@ -27,7 +45,7 @@ function parseTerminatedExpression(tokens) {
     return null;
   }
 
-  return { expression: expr };
+  return { terminatedExpression: expr };
 }
 
 function parse(tokens) {

@@ -13,6 +13,10 @@ function peekToken(tokens) {
 
 function parseExpression(tokens) {
   const token = popToken(tokens);
+  if (!token) {
+    developerError("Expected an expression, got an empty input");
+    return null;
+  }
 
   if (token.match(/[0-9]+/)) {
     return { intLiteral: parseInt(token, 10) };
@@ -26,7 +30,7 @@ function parseBinaryOpOrExpression(tokens) {
   const expr = parseExpression(tokens);
 
   const token = peekToken(tokens);
-  if (token.match(/[+-]/)) {
+  if (token && token.match(/[+-]/)) {
     popToken(tokens);
 
     const rhsExpr = parseExpression(tokens);
@@ -38,6 +42,9 @@ function parseBinaryOpOrExpression(tokens) {
 
 function parseTerminatedExpression(tokens) {
   const expr = parseBinaryOpOrExpression(tokens);
+  if (!expr) {
+    return null;
+  }
 
   const terminator = popToken(tokens);
   if (terminator != ";") {

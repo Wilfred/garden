@@ -3,13 +3,35 @@ function lex(src) {
   return Array.from(src.matchAll(tokenRegex), (m) => m[0]);
 }
 
-function parse(tokens) {
-  if (tokens.length == 1 || tokens.length == 3) {
-    return tokens;
+function papToken(tokens) {
+  return tokens.shift();
+}
+
+function parseExpression(tokens) {
+  const token = papToken(tokens);
+
+  if (token.match(/[0-9]+/)) {
+    return { intLiteral: 123 };
   }
 
-  developerError("Wrong number of tokens: " + tokens.length);
-  return [];
+  developerError("Expected integer literal, got: " + token);
+  return null;
+}
+
+function parseTerminatedExpression(tokens) {
+  const expr = parseExpression(tokens);
+
+  const terminator = papToken(tokens);
+  if (terminator != ";") {
+    developerError("Expected ; terminator, got: " + terminator);
+    return null;
+  }
+
+  return { expression: expr };
+}
+
+function parse(tokens) {
+  return parseTerminatedExpression(tokens);
 }
 
 function reset() {

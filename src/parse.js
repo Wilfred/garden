@@ -3,7 +3,7 @@ function lex(src) {
   return Array.from(src.matchAll(tokenRegex), (m) => m[0]);
 }
 
-function papToken(tokens) {
+function popToken(tokens) {
   return tokens.shift();
 }
 
@@ -12,7 +12,7 @@ function peekToken(tokens) {
 }
 
 function parseExpression(tokens) {
-  const token = papToken(tokens);
+  const token = popToken(tokens);
 
   if (token.match(/[0-9]+/)) {
     return { intLiteral: parseInt(token, 10) };
@@ -27,7 +27,7 @@ function parseBinaryOpOrExpression(tokens) {
 
   const token = peekToken(tokens);
   if (token.match(/[+-]/)) {
-    papToken(tokens);
+    popToken(tokens);
 
     const rhsExpr = parseExpression(tokens);
     return { binaryOperator: token, lhs: expr, rhs: rhsExpr };
@@ -39,7 +39,7 @@ function parseBinaryOpOrExpression(tokens) {
 function parseTerminatedExpression(tokens) {
   const expr = parseBinaryOpOrExpression(tokens);
 
-  const terminator = papToken(tokens);
+  const terminator = popToken(tokens);
   if (terminator != ";") {
     developerError("Expected ; terminator, got: " + terminator);
     return null;

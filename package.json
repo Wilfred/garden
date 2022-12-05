@@ -4,9 +4,12 @@
   "description": "Experiments in coding incrementally on running programs.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "parcel src/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Wilfred Hughes",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "parcel": "^2.8.0"
+  }
 }

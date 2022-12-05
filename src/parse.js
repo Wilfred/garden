@@ -1,5 +1,6 @@
 function lex(src) {
-  return src.split(" ");
+  const tokenRegex = /[0-9]+|[+-]|;/g;
+  return Array.from(src.matchAll(tokenRegex), (m) => m[0]);
 }
 
 function parse(tokens) {
@@ -7,10 +8,21 @@ function parse(tokens) {
     return tokens;
   }
 
-  return tokens;
+  developerError("Wrong number of tokens: " + tokens.length);
+  return [];
+}
+
+function reset() {
+  document.querySelectorAll("#error")[0].textContent = "";
+}
+
+function developerError(msg) {
+  document.querySelectorAll("#error")[0].textContent = msg;
 }
 
 setInterval(() => {
+  reset();
+
   const src = document.querySelectorAll("#editor")[0].value;
   const ast = parse(lex(src));
 

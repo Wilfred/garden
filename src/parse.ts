@@ -4,11 +4,11 @@ function lex(src: string): string[] {
 }
 
 function popToken(tokens: string[]): string | null {
-  return tokens.shift();
+  return tokens.shift() || null;
 }
 
 function peekToken(tokens: string[]): string | null {
-  return tokens[0];
+  return tokens[0] || null;
 }
 
 function parseExpression(tokens: string[]) {

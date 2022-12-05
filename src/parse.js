@@ -11,7 +11,7 @@ function parseExpression(tokens) {
   const token = papToken(tokens);
 
   if (token.match(/[0-9]+/)) {
-    return { intLiteral: 123 };
+    return { intLiteral: parseInt(token, 10) };
   }
 
   developerError("Expected integer literal, got: " + token);

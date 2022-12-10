@@ -91,5 +91,9 @@ setInterval(() => {
   const src = document.querySelectorAll("#editor")[0].value;
   const ast = parse(lex(src));
 
-  document.querySelectorAll("#result")[0].textContent = JSON.stringify(ast);
+  document.querySelectorAll("#result")[0].textContent = JSON.stringify(
+    ast,
+    null,
+    2
+  );
 }, 1000);

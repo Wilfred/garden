@@ -9,9 +9,9 @@ type BinaryOperator = {
   rhs: Expression;
 };
 
-type Expression = IntegerLiteral | BinaryOperator;
+export type Expression = IntegerLiteral | BinaryOperator;
 
-type Statement = {
+export type Statement = {
   expression: Expression;
 };
 

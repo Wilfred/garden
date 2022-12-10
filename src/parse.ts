@@ -77,8 +77,19 @@ function parseStatement(tokens: string[]): Statement | null {
   return { expression: expr };
 }
 
-function parse(tokens: string[]) {
-  return parseStatement(tokens);
+function parse(tokens: string[]): Statement[] | null {
+  const statements = [];
+
+  while (tokens.length > 0) {
+    const statement = parseStatement(tokens);
+    if (statement) {
+      statements.push(statement);
+    } else {
+      return null;
+    }
+  }
+
+  return statements;
 }
 
 function reset(): void {

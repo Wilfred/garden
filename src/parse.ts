@@ -22,6 +22,10 @@ type BinaryOperator = {
 
 type Expression = IntegerLiteral | BinaryOperator;
 
+type Statement = {
+  expression: Expression;
+};
+
 function parseExpression(tokens: string[]): Expression | null {
   const token = popToken(tokens);
   if (!token) {
@@ -58,7 +62,7 @@ function parseBinaryOpOrExpression(tokens: string[]): Expression | null {
   return expr;
 }
 
-function parseTerminatedExpression(tokens: string[]) {
+function parseStatement(tokens: string[]): Statement | null {
   const expr = parseBinaryOpOrExpression(tokens);
   if (!expr) {
     return null;
@@ -70,11 +74,11 @@ function parseTerminatedExpression(tokens: string[]) {
     return null;
   }
 
-  return { terminatedExpression: expr };
+  return { expression: expr };
 }
 
 function parse(tokens: string[]) {
-  return parseTerminatedExpression(tokens);
+  return parseStatement(tokens);
 }
 
 function reset(): void {

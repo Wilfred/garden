@@ -88,7 +88,8 @@ function developerError(msg: string): void {
 setInterval(() => {
   reset();
 
-  const src = document.querySelectorAll("#editor")[0].value;
+  const editor = document.querySelectorAll("#editor")[0] as HTMLInputElement;
+  const src = editor.value;
   const ast = parse(lex(src));
 
   document.querySelectorAll("#result")[0].textContent = JSON.stringify(

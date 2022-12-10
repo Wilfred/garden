@@ -1,4 +1,4 @@
-import { lex, popToken, peekToken } from "./lexer";
+import { popToken, peekToken } from "./lexer";
 
 type IntegerLiteral = { kind: "integerLiteral"; value: number };
 
@@ -66,7 +66,7 @@ function parseStatement(tokens: string[]): Statement | null {
   return { expression: expr };
 }
 
-function parse(tokens: string[]): Statement[] | null {
+export function parse(tokens: string[]): Statement[] | null {
   const statements = [];
 
   while (tokens.length > 0) {
@@ -81,24 +81,6 @@ function parse(tokens: string[]): Statement[] | null {
   return statements;
 }
 
-function reset(): void {
-  document.querySelectorAll("#error")[0].textContent = "";
-}
-
-function developerError(msg: string): void {
+export function developerError(msg: string): void {
   document.querySelectorAll("#error")[0].textContent = msg;
 }
-
-setInterval(() => {
-  reset();
-
-  const editor = document.querySelectorAll("#editor")[0] as HTMLInputElement;
-  const src = editor.value;
-  const ast = parse(lex(src));
-
-  document.querySelectorAll("#result")[0].textContent = JSON.stringify(
-    ast,
-    null,
-    2
-  );
-}, 1000);

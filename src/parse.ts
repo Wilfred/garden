@@ -11,7 +11,18 @@ function peekToken(tokens: string[]): string | null {
   return tokens[0] || null;
 }
 
-function parseExpression(tokens: string[]) {
+type IntegerLiteral = { kind: "integerLiteral"; value: number };
+
+type BinaryOperator = {
+  kind: "binaryOperator";
+  operator: string;
+  lhs: Expression;
+  rhs: Expression;
+};
+
+type Expression = IntegerLiteral | BinaryOperator;
+
+function parseExpression(tokens: string[]): Expression | null {
   const token = popToken(tokens);
   if (!token) {
     developerError("Expected an expression, got an empty input");
@@ -19,25 +30,32 @@ function parseExpression(tokens: string[]) {
   }
 
   if (token.match(/[0-9]+/)) {
-    return { intLiteral: parseInt(token, 10) };
+    return { kind: "integerLiteral", value: parseInt(token, 10) };
   }
 
   developerError("Expected integer literal, got: " + token);
   return null;
 }
 
-function parseBinaryOpOrExpression(tokens: string[]) {
+function parseBinaryOpOrExpression(tokens: string[]): Expression | null {
   const expr = parseExpression(tokens);
 
   const token = peekToken(tokens);
-  if (token && token.match(/[+-]/)) {
+  if (expr && token && token.match(/[+-]/)) {
     popToken(tokens);
 
     const rhsExpr = parseExpression(tokens);
-    return { binaryOperator: token, lhs: expr, rhs: rhsExpr };
-  } else {
-    return expr;
+    if (rhsExpr) {
+      return {
+        kind: "binaryOperator",
+        operator: token,
+        lhs: expr,
+        rhs: rhsExpr,
+      };
+    }
   }
+
+  return expr;
 }
 
 function parseTerminatedExpression(tokens: string[]) {

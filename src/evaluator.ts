@@ -13,7 +13,15 @@ function evalExpression(expr: Expression): Value | null {
       const rhsValue = evalExpression(expr.rhs);
 
       if (lhsValue && rhsValue) {
-        return { value: lhsValue.value + rhsValue.value };
+        const operator = expr.operator;
+        switch (operator) {
+          case "+":
+            return { value: lhsValue.value + rhsValue.value };
+          case "-":
+            return { value: lhsValue.value - rhsValue.value };
+          default:
+            return null;
+        }
       } else {
         return null;
       }

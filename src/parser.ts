@@ -1,4 +1,4 @@
-import { popToken, peekToken } from "./lexer";
+import { popToken, peekToken, requireToken } from "./lexer";
 import { developerError } from "./errors";
 
 type IntegerLiteral = { kind: "integerLiteral"; value: number };
@@ -58,9 +58,8 @@ function parseStatement(tokens: string[]): Statement | null {
     return null;
   }
 
-  const terminator = popToken(tokens);
-  if (terminator != ";") {
-    developerError("Expected ; terminator, got: " + terminator);
+  const terminator = requireToken(tokens, ";");
+  if (!terminator) {
     return null;
   }
 

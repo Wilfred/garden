@@ -1,3 +1,5 @@
+import { developerError } from "./errors";
+
 export function lex(src: string): string[] {
   const tokenRegex = /[0-9]+|[+-]|;/g;
   return Array.from(src.matchAll(tokenRegex), (m) => m[0]);
@@ -9,4 +11,22 @@ export function popToken(tokens: string[]): string | null {
 
 export function peekToken(tokens: string[]): string | null {
   return tokens[0] || null;
+}
+
+export function requireToken(
+  tokens: string[],
+  wantedToken: string
+): string | null {
+  const token = popToken(tokens);
+  if (!token) {
+    developerError("Expected " + wantedToken + " but got an empty input");
+    return null;
+  }
+
+  if (token !== wantedToken) {
+    developerError("Expected " + wantedToken + " but got " + token);
+    return null;
+  }
+
+  return token;
 }

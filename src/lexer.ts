@@ -1,7 +1,7 @@
 import { developerError } from "./errors";
 
 export function lex(src: string): string[] {
-  const tokenRegex = /[0-9]+|[+-]|;/g;
+  const tokenRegex = /[0-9]+|([a-z_][a-z0-9_]*)|[+-]|;/gi;
   return Array.from(src.matchAll(tokenRegex), (m) => m[0]);
 }
 

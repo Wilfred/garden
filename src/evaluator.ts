@@ -1,3 +1,4 @@
+import { developerError } from "./errors";
 import { Expression, Statement } from "./parser";
 
 type Value = {
@@ -8,6 +9,9 @@ function evalExpression(expr: Expression): Value | null {
   switch (expr.kind) {
     case "integerLiteral":
       return { value: expr.value };
+    case "symbol":
+      developerError("No such variable: " + expr.name);
+      return null;
     case "binaryOperator":
       const lhsValue = evalExpression(expr.lhs);
       const rhsValue = evalExpression(expr.rhs);

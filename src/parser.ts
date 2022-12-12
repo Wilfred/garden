@@ -10,7 +10,12 @@ type BinaryOperator = {
   rhs: Expression;
 };
 
-export type Expression = IntegerLiteral | BinaryOperator;
+type Symbol = {
+  kind: "symbol";
+  name: string;
+};
+
+export type Expression = IntegerLiteral | BinaryOperator | Symbol;
 
 export type Statement = {
   expression: Expression;
@@ -25,9 +30,12 @@ function parseExpression(tokens: string[]): Expression | null {
 
   if (token.match(/[0-9]+/)) {
     return { kind: "integerLiteral", value: parseInt(token, 10) };
+  } else if (token.match(/[a-z_][a-z0-9_]*/)) {
+    // TODO: these regexes are repeated with lexer.ts.
+    return { kind: "symbol", name: token };
   }
 
-  developerError("Expected integer literal, got: " + token);
+  developerError("Expected an expression, got " + token);
   return null;
 }
 

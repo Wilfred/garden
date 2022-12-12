@@ -1,4 +1,5 @@
 import { popToken, peekToken } from "./lexer";
+import { developerError } from "./errors";
 
 type IntegerLiteral = { kind: "integerLiteral"; value: number };
 
@@ -79,8 +80,4 @@ export function parse(tokens: string[]): Statement[] | null {
   }
 
   return statements;
-}
-
-export function developerError(msg: string): void {
-  document.querySelectorAll("#error")[0].textContent = msg;
 }

@@ -8,11 +8,9 @@ function reset(): void {
   document.querySelectorAll("#error")[0].textContent = "";
 }
 
-setInterval(() => {
+function update(src: string): void {
   reset();
 
-  const editor = document.querySelectorAll("#editor")[0] as HTMLInputElement;
-  const src = editor.value;
   const ast = parse(lex(src));
 
   document.querySelectorAll("#parse-tree")[0].textContent = JSON.stringify(
@@ -32,4 +30,12 @@ setInterval(() => {
       );
     }
   }
-}, 1000);
+}
+
+const editor = document.querySelectorAll("#editor")[0] as HTMLInputElement;
+
+update(editor.value);
+editor.addEventListener("input", (e) => {
+  const target = e.target as HTMLInputElement;
+  update(target.value);
+});

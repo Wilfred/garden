@@ -1,4 +1,4 @@
-import { popToken, peekToken, requireToken } from "./lexer";
+import { popToken, peekToken, requireToken, VARIABLE_NAME } from "./lexer";
 import { developerError } from "./errors";
 
 type IntegerLiteral = { kind: "integerLiteral"; value: number };
@@ -30,8 +30,7 @@ function parseExpression(tokens: string[]): Expression | null {
 
   if (token.match(/[0-9]+/)) {
     return { kind: "integerLiteral", value: parseInt(token, 10) };
-  } else if (token.match(/[a-z_][a-z0-9_]*/)) {
-    // TODO: these regexes are repeated with lexer.ts.
+  } else if (token.match(VARIABLE_NAME)) {
     return { kind: "symbol", name: token };
   }
 

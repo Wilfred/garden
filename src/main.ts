@@ -20,7 +20,9 @@ function update(src: string): void {
   );
 
   if (ast) {
-    const value = evalStatements(ast);
+    const env = new Map();
+    env.set("x", { value: 123 });
+    const value = evalStatements(env, ast);
 
     if (value) {
       document.querySelectorAll("#result")[0].textContent = JSON.stringify(

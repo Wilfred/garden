@@ -1,20 +1,27 @@
 import { developerError } from "./errors";
 import { Expression, Statement } from "./parser";
 
-type Value = {
+export type Value = {
   value: number;
 };
 
-function evalExpression(expr: Expression): Value | null {
+export type Env = Map<string, Value>;
+
+function evalExpression(env: Env, expr: Expression): Value | null {
   switch (expr.kind) {
     case "integerLiteral":
       return { value: expr.value };
     case "symbol":
-      developerError("No such variable: " + expr.name);
-      return null;
+      const value = env.get(expr.name);
+      if (value) {
+        return value;
+      } else {
+        developerError("No such variable: " + expr.name);
+        return null;
+      }
     case "binaryOperator":
-      const lhsValue = evalExpression(expr.lhs);
-      const rhsValue = evalExpression(expr.rhs);
+      const lhsValue = evalExpression(env, expr.lhs);
+      const rhsValue = evalExpression(env, expr.rhs);
 
       if (lhsValue && rhsValue) {
         const operator = expr.operator;
@@ -32,15 +39,15 @@ function evalExpression(expr: Expression): Value | null {
   }
 }
 
-function evalStatement(stmt: Statement): Value | null {
-  return evalExpression(stmt.expression);
+function evalStatement(env: Env, stmt: Statement): Value | null {
+  return evalExpression(env, stmt.expression);
 }
 
-export function evalStatements(stmts: Statement[]): Value | null {
+export function evalStatements(env: Env, stmts: Statement[]): Value | null {
   let result = null;
 
   for (let stmt of stmts) {
-    const value = evalStatement(stmt);
+    const value = evalStatement(env, stmt);
     if (value) {
       result = value;
     } else {

@@ -1,5 +1,5 @@
 {
-  "name": "growcode",
+  "name": "garden",
   "version": "0.0.1",
   "description": "Experiments in coding incrementally on running programs.",
   "main": "index.js",

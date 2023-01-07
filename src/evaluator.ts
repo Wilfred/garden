@@ -40,7 +40,17 @@ function evalExpression(env: Env, expr: Expression): Value | null {
 }
 
 function evalStatement(env: Env, stmt: Statement): Value | null {
-  return evalExpression(env, stmt.expression);
+  switch (stmt.kind) {
+    case "expression":
+      return evalExpression(env, stmt.expression);
+    case "let": {
+      const rhs = evalExpression(env, stmt.expression);
+      if (rhs) {
+        env.set(stmt.variable, rhs);
+      }
+      return rhs;
+    }
+  }
 }
 
 export function evalStatements(env: Env, stmts: Statement[]): Value | null {

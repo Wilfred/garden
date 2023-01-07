@@ -18,10 +18,12 @@ type Symbol = {
 export type Expression = IntegerLiteral | BinaryOperator | Symbol;
 
 type ExpressionStatement = {
+  kind: "expression";
   expression: Expression;
 };
 
 type LetStatement = {
+  kind: "let";
   variable: string;
   expression: Expression;
 };
@@ -66,7 +68,46 @@ function parseBinaryOpOrExpression(tokens: string[]): Expression | null {
   return expr;
 }
 
-function parseStatement(tokens: string[]): Statement | null {
+// Parse `let x = 1;`
+function parseLetStatement(tokens: string[]): LetStatement | null {
+  const letToken = requireToken(tokens, "let");
+  if (!letToken) {
+    return null;
+  }
+
+  const variable = popToken(tokens);
+  if (!variable) {
+    return null;
+  }
+  if (variable.match(VARIABLE_NAME)) {
+    // TODO: Keywords (e.g. let should not be a valid variable name).
+  } else {
+    developerError("Expected a variable name, got " + variable);
+    return null;
+  }
+
+  const equalsSign = requireToken(tokens, "=");
+  if (!equalsSign) {
+    developerError("Expected =, got " + equalsSign);
+    return null;
+  }
+
+  const expression = parseBinaryOpOrExpression(tokens);
+  if (!expression) {
+    return null;
+  }
+
+  const terminator = requireToken(tokens, ";");
+  if (!terminator) {
+    return null;
+  }
+
+  return { kind: "let", variable, expression };
+}
+
+function parseExpressionStatement(
+  tokens: string[]
+): ExpressionStatement | null {
   const expr = parseBinaryOpOrExpression(tokens);
   if (!expr) {
     return null;
@@ -77,7 +118,16 @@ function parseStatement(tokens: string[]): Statement | null {
     return null;
   }
 
-  return { expression: expr };
+  return { expression: expr, kind: "expression" };
+}
+
+function parseStatement(tokens: string[]): Statement | null {
+  const token = peekToken(tokens);
+  if (token == "let") {
+    return parseLetStatement(tokens);
+  }
+
+  return parseExpressionStatement(tokens);
 }
 
 export function parse(tokens: string[]): Statement[] | null {

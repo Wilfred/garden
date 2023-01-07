@@ -17,9 +17,16 @@ type Symbol = {
 
 export type Expression = IntegerLiteral | BinaryOperator | Symbol;
 
-export type Statement = {
+type ExpressionStatement = {
   expression: Expression;
 };
+
+type LetStatement = {
+  variable: string;
+  expression: Expression;
+};
+
+export type Statement = ExpressionStatement | LetStatement;
 
 function parseExpression(tokens: string[]): Expression | null {
   const token = popToken(tokens);

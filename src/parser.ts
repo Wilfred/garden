@@ -30,7 +30,7 @@ type LetStatement = {
 
 export type Statement = ExpressionStatement | LetStatement;
 
-function parseExpression(tokens: string[]): Expression | null {
+function parseSimpleExpression(tokens: string[]): Expression | null {
   const token = popToken(tokens);
   if (!token) {
     developerError("Expected an expression, got an empty input");
@@ -47,14 +47,14 @@ function parseExpression(tokens: string[]): Expression | null {
   return null;
 }
 
-function parseBinaryOpOrExpression(tokens: string[]): Expression | null {
-  const expr = parseExpression(tokens);
+function parseExpression(tokens: string[]): Expression | null {
+  const expr = parseSimpleExpression(tokens);
 
   const token = peekToken(tokens);
   if (expr && token && token.match(/[+-]/)) {
     popToken(tokens);
 
-    const rhsExpr = parseExpression(tokens);
+    const rhsExpr = parseSimpleExpression(tokens);
     if (rhsExpr) {
       return {
         kind: "binaryOperator",
@@ -92,7 +92,7 @@ function parseLetStatement(tokens: string[]): LetStatement | null {
     return null;
   }
 
-  const expression = parseBinaryOpOrExpression(tokens);
+  const expression = parseExpression(tokens);
   if (!expression) {
     return null;
   }
@@ -108,7 +108,7 @@ function parseLetStatement(tokens: string[]): LetStatement | null {
 function parseExpressionStatement(
   tokens: string[]
 ): ExpressionStatement | null {
-  const expr = parseBinaryOpOrExpression(tokens);
+  const expr = parseExpression(tokens);
   if (!expr) {
     return null;
   }

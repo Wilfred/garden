@@ -30,6 +30,14 @@ type LetStatement = {
 
 export type Statement = ExpressionStatement | LetStatement;
 
+type FunctionDefinition = {
+  kind: "function";
+  parameters: string[];
+  body: Statement[];
+};
+
+export type ToplevelSyntax = FunctionDefinition | Statement;
+
 function parseSimpleExpression(tokens: string[]): Expression | null {
   const token = popToken(tokens);
   if (!token) {
@@ -130,17 +138,97 @@ function parseStatement(tokens: string[]): Statement | null {
   return parseExpressionStatement(tokens);
 }
 
-export function parse(tokens: string[]): Statement[] | null {
-  const statements = [];
+function parseFunctionParameters(tokens: string[]): string[] | null {
+  const openParen = requireToken(tokens, "(");
+  if (!openParen) {
+    return null;
+  }
+
+  const parameters = [];
+  while (tokens.length > 0) {
+    const firstToken = peekToken(tokens);
+    if (firstToken == ")") {
+      break;
+    }
+
+    const variable = popToken(tokens);
+    if (!variable) {
+      return null;
+    }
+    if (variable.match(VARIABLE_NAME)) {
+      // TODO: Keywords (e.g. let should not be a valid variable name).
+      parameters.push(variable);
+    } else {
+      developerError("Expected a variable name, got " + variable);
+      return null;
+    }
+
+    // Require a comma or a closing parenthesis after this symbol.
+    const token = peekToken(tokens);
+    if (token == ")") {
+      break;
+    }
+
+    const comma = requireToken(tokens, ",");
+    if (!comma) {
+      return null;
+    }
+  }
+
+  const closeParen = requireToken(tokens, ")");
+  if (!closeParen) {
+    return null;
+  }
+
+  return parameters;
+}
+
+function parseFunctionBody(_tokens: string[]): Statement[] | null {
+  return [];
+}
+
+function parseFunction(tokens: string[]): FunctionDefinition | null {
+  const fnKeyword = requireToken(tokens, "fn");
+  if (!fnKeyword) {
+    developerError("Expected fn, got: " + fnKeyword);
+    return null;
+  }
+
+  const parameters = parseFunctionParameters(tokens);
+  if (!parameters) {
+    return null;
+  }
+
+  const body = parseFunctionBody(tokens);
+  if (!body) {
+    return null;
+  }
+
+  return { kind: "function", parameters, body };
+}
+
+function parseTopLevel(
+  tokens: string[]
+): FunctionDefinition | Statement | null {
+  const token = peekToken(tokens);
+  if (token == "fn") {
+    return parseFunction(tokens);
+  }
+
+  return parseStatement(tokens);
+}
+
+export function parse(tokens: string[]): ToplevelSyntax[] | null {
+  const result = [];
 
   while (tokens.length > 0) {
-    const statement = parseStatement(tokens);
-    if (statement) {
-      statements.push(statement);
+    const item = parseTopLevel(tokens);
+    if (item) {
+      result.push(item);
     } else {
       return null;
     }
   }
 
-  return statements;
+  return result;
 }

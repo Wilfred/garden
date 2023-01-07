@@ -1,5 +1,5 @@
 import { developerError } from "./errors";
-import { Expression, Statement } from "./parser";
+import { Expression, Statement, ToplevelSyntax } from "./parser";
 
 export type Value = {
   value: number;
@@ -62,6 +62,32 @@ export function evalStatements(env: Env, stmts: Statement[]): Value | null {
       result = value;
     } else {
       return null;
+    }
+  }
+
+  return result;
+}
+
+export function evalTopLevelSyntax(
+  env: Env,
+  items: ToplevelSyntax[]
+): Value | null {
+  let result = null;
+
+  for (let item of items) {
+    switch (item.kind) {
+      case "function": {
+        developerError("Cannot evaluate function definitions yet.");
+        return null;
+      }
+      default: {
+        const value = evalStatement(env, item);
+        if (value) {
+          result = value;
+        } else {
+          return null;
+        }
+      }
     }
   }
 

@@ -96,7 +96,6 @@ function parseLetStatement(tokens: string[]): LetStatement | null {
 
   const equalsSign = requireToken(tokens, "=");
   if (!equalsSign) {
-    developerError("Expected =, got " + equalsSign);
     return null;
   }
 
@@ -190,7 +189,6 @@ function parseFunctionBody(_tokens: string[]): Statement[] | null {
 function parseFunction(tokens: string[]): FunctionDefinition | null {
   const fnKeyword = requireToken(tokens, "fn");
   if (!fnKeyword) {
-    developerError("Expected fn, got: " + fnKeyword);
     return null;
   }
 

@@ -186,8 +186,33 @@ function parseFunctionParameters(tokens: string[]): string[] | null {
   return parameters;
 }
 
-function parseFunctionBody(_tokens: string[]): Statement[] | null {
-  return [];
+function parseFunctionBody(tokens: string[]): Statement[] | null {
+  const openBrace = requireToken(tokens, "{");
+  if (!openBrace) {
+    return null;
+  }
+
+  const statements = [];
+  while (tokens.length > 0) {
+    const token = peekToken(tokens);
+    if (token == "}") {
+      break;
+    }
+
+    const statement = parseStatement(tokens);
+    if (!statement) {
+      return null;
+    }
+
+    statements.push(statement);
+  }
+
+  const closeBrace = requireToken(tokens, "}");
+  if (!closeBrace) {
+    return null;
+  }
+
+  return statements;
 }
 
 function parseFunction(tokens: string[]): FunctionDefinition | null {

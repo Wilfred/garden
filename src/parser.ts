@@ -76,6 +76,22 @@ function parseExpression(tokens: string[]): Expression | null {
   return expr;
 }
 
+function parseVariable(tokens: string[]): string | null {
+  const variable = popToken(tokens);
+  if (!variable) {
+    developerError("Expected a variable name, got EOF");
+    return null;
+  }
+
+  if (variable.match(VARIABLE_NAME)) {
+    // TODO: Keywords (e.g. let should not be a valid variable name).
+    return variable;
+  } else {
+    developerError("Expected a variable name, got " + variable);
+    return null;
+  }
+}
+
 // Parse `let x = 1;`
 function parseLetStatement(tokens: string[]): LetStatement | null {
   const letToken = requireToken(tokens, "let");
@@ -83,14 +99,8 @@ function parseLetStatement(tokens: string[]): LetStatement | null {
     return null;
   }
 
-  const variable = popToken(tokens);
+  const variable = parseVariable(tokens);
   if (!variable) {
-    return null;
-  }
-  if (variable.match(VARIABLE_NAME)) {
-    // TODO: Keywords (e.g. let should not be a valid variable name).
-  } else {
-    developerError("Expected a variable name, got " + variable);
     return null;
   }
 
@@ -150,17 +160,11 @@ function parseFunctionParameters(tokens: string[]): string[] | null {
       break;
     }
 
-    const variable = popToken(tokens);
+    const variable = parseVariable(tokens);
     if (!variable) {
       return null;
     }
-    if (variable.match(VARIABLE_NAME)) {
-      // TODO: Keywords (e.g. let should not be a valid variable name).
-      parameters.push(variable);
-    } else {
-      developerError("Expected a variable name, got " + variable);
-      return null;
-    }
+    parameters.push(variable);
 
     // Require a comma or a closing parenthesis after this symbol.
     const token = peekToken(tokens);

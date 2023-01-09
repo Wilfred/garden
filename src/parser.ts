@@ -32,6 +32,7 @@ export type Statement = ExpressionStatement | LetStatement;
 
 type FunctionDefinition = {
   kind: "function";
+  name: string;
   parameters: string[];
   body: Statement[];
 };
@@ -221,6 +222,11 @@ function parseFunction(tokens: string[]): FunctionDefinition | null {
     return null;
   }
 
+  const name = parseVariable(tokens);
+  if (!name) {
+    return null;
+  }
+
   const parameters = parseFunctionParameters(tokens);
   if (!parameters) {
     return null;
@@ -231,7 +237,7 @@ function parseFunction(tokens: string[]): FunctionDefinition | null {
     return null;
   }
 
-  return { kind: "function", parameters, body };
+  return { kind: "function", parameters, body, name };
 }
 
 function parseTopLevel(

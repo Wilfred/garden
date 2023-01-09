@@ -77,6 +77,8 @@ function parseExpression(tokens: string[]): Expression | null {
   return expr;
 }
 
+const RESERVED_WORDS = ["let", "fn"];
+
 function parseVariable(tokens: string[]): string | null {
   const variable = popToken(tokens);
   if (!variable) {
@@ -85,7 +87,11 @@ function parseVariable(tokens: string[]): string | null {
   }
 
   if (variable.match(VARIABLE_NAME)) {
-    // TODO: Keywords (e.g. let should not be a valid variable name).
+    if (RESERVED_WORDS.includes(variable)) {
+      developerError("Expected a variable name, got reserved word " + variable);
+      return null;
+    }
+
     return variable;
   } else {
     developerError("Expected a variable name, got " + variable);

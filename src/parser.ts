@@ -10,12 +10,22 @@ type BinaryOperator = {
   rhs: Expression;
 };
 
+type CallExpression = {
+  kind: "call";
+  receiver: Expression;
+  arguments: Expression[];
+};
+
 type Symbol = {
   kind: "symbol";
   name: string;
 };
 
-export type Expression = IntegerLiteral | BinaryOperator | Symbol;
+export type Expression =
+  | IntegerLiteral
+  | BinaryOperator
+  | Symbol
+  | CallExpression;
 
 type ExpressionStatement = {
   kind: "expression";
@@ -39,6 +49,45 @@ type FunctionDefinition = {
 
 export type ToplevelSyntax = FunctionDefinition | Statement;
 
+function parseCallArguments(tokens: string[]): Expression[] | null {
+  const openParen = requireToken(tokens, "(");
+  if (!openParen) {
+    return null;
+  }
+
+  const args = [];
+  while (tokens.length > 0) {
+    const firstToken = peekToken(tokens);
+    if (firstToken == ")") {
+      break;
+    }
+
+    const expr = parseExpression(tokens);
+    if (!expr) {
+      return null;
+    }
+    args.push(expr);
+
+    // Require a comma or a closing parenthesis afterwards.
+    const token = peekToken(tokens);
+    if (token == ")") {
+      break;
+    }
+
+    const comma = requireToken(tokens, ",");
+    if (!comma) {
+      return null;
+    }
+  }
+
+  const closeParen = requireToken(tokens, ")");
+  if (!closeParen) {
+    return null;
+  }
+
+  return args;
+}
+
 function parseSimpleExpression(tokens: string[]): Expression | null {
   const token = popToken(tokens);
   if (!token) {
@@ -46,10 +95,24 @@ function parseSimpleExpression(tokens: string[]): Expression | null {
     return null;
   }
 
+  let expr: Expression | null = null;
   if (token.match(/[0-9]+/)) {
-    return { kind: "integerLiteral", value: parseInt(token, 10) };
+    expr = { kind: "integerLiteral", value: parseInt(token, 10) };
   } else if (token.match(VARIABLE_NAME)) {
-    return { kind: "symbol", name: token };
+    expr = { kind: "symbol", name: token };
+  }
+
+  const nextToken = peekToken(tokens);
+  if (expr && nextToken == "(") {
+    const args = parseCallArguments(tokens);
+    if (!args) {
+      return null;
+    }
+    expr = { kind: "call", receiver: expr, arguments: args };
+  }
+
+  if (expr) {
+    return expr;
   }
 
   developerError("Expected an expression, got " + token);

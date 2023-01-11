@@ -4,12 +4,14 @@
   "description": "Experiments in coding incrementally on running programs.",
   "main": "index.js",
   "scripts": {
+    "clean": "rimraf .parcel-cache && rimraf dist",
     "start": "parcel src/index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Wilfred Hughes",
   "license": "MIT",
   "devDependencies": {
-    "parcel": "^2.8.0"
+    "parcel": "^2.8.0",
+    "rimraf": "^3.0.2"
   }
 }

@@ -1,16 +1,19 @@
 import { developerError } from "./errors";
 import { Expression, Statement, ToplevelSyntax } from "./parser";
 
-export type Value = {
+type NumberValue = {
+  kind: "number";
   value: number;
 };
+
+export type Value = NumberValue;
 
 export type Env = Map<string, Value>;
 
 function evalExpression(env: Env, expr: Expression): Value | null {
   switch (expr.kind) {
     case "integerLiteral":
-      return { value: expr.value };
+      return { value: expr.value, kind: "number" };
     case "symbol":
       const value = env.get(expr.name);
       if (value) {
@@ -27,9 +30,9 @@ function evalExpression(env: Env, expr: Expression): Value | null {
         const operator = expr.operator;
         switch (operator) {
           case "+":
-            return { value: lhsValue.value + rhsValue.value };
+            return { value: lhsValue.value + rhsValue.value, kind: "number" };
           case "-":
-            return { value: lhsValue.value - rhsValue.value };
+            return { value: lhsValue.value - rhsValue.value, kind: "number" };
           default:
             return null;
         }

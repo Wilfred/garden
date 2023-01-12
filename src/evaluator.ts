@@ -6,7 +6,12 @@ type NumberValue = {
   value: number;
 };
 
-export type Value = NumberValue;
+type FunctionValue = {
+  kind: "function";
+  name: string;
+};
+
+export type Value = NumberValue | FunctionValue;
 
 export type Env = Map<string, Value>;
 
@@ -86,11 +91,13 @@ export function evalTopLevelSyntax(
   for (let item of items) {
     switch (item.kind) {
       case "function": {
-        developerError("Cannot evaluate function definitions yet.");
-        return null;
+        const fnValue: FunctionValue = { kind: "function", name: item.name };
+        env.set(item.name, fnValue);
+        result = fnValue;
+        break;
       }
       default: {
-        const value = evalStatement(env, item);
+        const value = evalStatement(env, item as Statement);
         if (value) {
           result = value;
         } else {

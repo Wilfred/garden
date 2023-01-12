@@ -56,21 +56,6 @@ function evalStatement(env: Env, stmt: Statement): Value | null {
   }
 }
 
-function evalStatements(env: Env, stmts: Statement[]): Value | null {
-  let result = null;
-
-  for (let stmt of stmts) {
-    const value = evalStatement(env, stmt);
-    if (value) {
-      result = value;
-    } else {
-      return null;
-    }
-  }
-
-  return result;
-}
-
 export function evalTopLevelSyntax(
   env: Env,
   items: ToplevelSyntax[]

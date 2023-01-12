@@ -56,7 +56,7 @@ function evalStatement(env: Env, stmt: Statement): Value | null {
   }
 }
 
-export function evalStatements(env: Env, stmts: Statement[]): Value | null {
+function evalStatements(env: Env, stmts: Statement[]): Value | null {
   let result = null;
 
   for (let stmt of stmts) {

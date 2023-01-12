@@ -1,6 +1,6 @@
 import { lex } from "./lexer";
 import { parse } from "./parser";
-import { evalStatements } from "./evaluator";
+import { evalTopLevelSyntax } from "./evaluator";
 
 function reset(): void {
   document.querySelectorAll("#result")[0].textContent = "";
@@ -22,7 +22,7 @@ function update(src: string): void {
   if (ast) {
     const env = new Map();
     env.set("x", { value: 123 });
-    const value = evalStatements(env, ast);
+    const value = evalTopLevelSyntax(env, ast);
 
     if (value) {
       document.querySelectorAll("#result")[0].textContent = JSON.stringify(

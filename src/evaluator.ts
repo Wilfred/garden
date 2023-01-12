@@ -28,17 +28,38 @@ function evalExpression(env: Env, expr: Expression): Value | null {
 
       if (lhsValue && rhsValue) {
         const operator = expr.operator;
+
+        let lhsNumber;
+        if (lhsValue.kind == "number") {
+          lhsNumber = lhsValue.value;
+        } else {
+          developerError("Expected a number, got: " + lhsValue.kind);
+          return null;
+        }
+
+        let rhsNumber;
+        if (rhsValue.kind == "number") {
+          rhsNumber = rhsValue.value;
+        } else {
+          developerError("Expected a number, got: " + rhsValue.kind);
+          return null;
+        }
+
         switch (operator) {
           case "+":
-            return { value: lhsValue.value + rhsValue.value, kind: "number" };
+            return { value: lhsNumber + rhsNumber, kind: "number" };
           case "-":
-            return { value: lhsValue.value - rhsValue.value, kind: "number" };
+            return { value: lhsNumber - rhsNumber, kind: "number" };
           default:
             return null;
         }
       } else {
         return null;
       }
+    case "call": {
+      developerError("Not yet implemented: function calls");
+      return null;
+    }
   }
 }
 

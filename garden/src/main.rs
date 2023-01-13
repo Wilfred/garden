@@ -5,6 +5,7 @@ use regex::Regex;
 #[derive(Debug)]
 enum Expression {
     Integer(i64),
+    Variable(String),
 }
 
 fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
@@ -33,7 +34,21 @@ fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 }
 
+fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
+    match pop_token(tokens) {
+        Some(token) => Ok(Expression::Variable(token.into())),
+        None => Err("Expected variable, got EOF".into()),
+    }
+}
+
 fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+    if let Some(token) = tokens.first() {
+        let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
+        if re.is_match(token) {
+            return parse_variable(tokens);
+        }
+    }
+
     parse_integer(tokens)
 }
 

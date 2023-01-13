@@ -33,6 +33,10 @@ fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 }
 
+fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+    parse_integer(tokens)
+}
+
 fn lex(s: &str) -> Vec<&str> {
     if s.is_empty() {
         return vec![];
@@ -52,7 +56,7 @@ fn main() {
             Ok(_) => {
                 let tokens = lex(input.trim());
                 let mut token_ptr = &tokens[..];
-                let ast = parse_integer(&mut token_ptr);
+                let ast = parse_expression(&mut token_ptr);
                 println!("{:?}", ast)
             }
             Err(error) => println!("error: {error}"),

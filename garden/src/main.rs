@@ -1,5 +1,7 @@
 use std::io::Write;
 
+use regex::Regex;
+
 #[derive(Debug)]
 enum Expression {
     Integer(i64),
@@ -16,8 +18,17 @@ fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
 }
 
 fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
+    let re = Regex::new(r"^[0-9]+$").unwrap();
+
     match pop_token(tokens) {
-        Some(_token) => Ok(Expression::Integer(1)),
+        Some(token) => {
+            if re.is_match(token) {
+                let i: i64 = token.parse().unwrap();
+                Ok(Expression::Integer(i))
+            } else {
+                Err(format!("Not a valid integer literal: {}", token))
+            }
+        }
         None => Err("Expected integer, got EOF".into()),
     }
 }

@@ -60,6 +60,10 @@ fn lex(s: &str) -> Vec<&str> {
     s.split(' ').collect()
 }
 
+fn evaluate(expr: &Expression) {
+    println!("eval :)")
+}
+
 fn main() {
     println!("Welcome to the garden!");
 
@@ -71,8 +75,16 @@ fn main() {
             Ok(_) => {
                 let tokens = lex(input.trim());
                 let mut token_ptr = &tokens[..];
-                let ast = parse_expression(&mut token_ptr);
-                println!("{:?}", ast)
+
+                match parse_expression(&mut token_ptr) {
+                    Ok(expr) => {
+                        println!("{:?}", expr);
+                        evaluate(&expr);
+                    }
+                    Err(e) => {
+                        println!("Parsing failed: {}", e);
+                    }
+                }
             }
             Err(error) => println!("error: {error}"),
         }

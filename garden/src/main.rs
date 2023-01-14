@@ -8,6 +8,11 @@ enum Expression {
     Variable(String),
 }
 
+#[derive(Debug)]
+enum Value {
+    Integer(i64),
+}
+
 fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
     if tokens.is_empty() {
         return None;
@@ -60,8 +65,11 @@ fn lex(s: &str) -> Vec<&str> {
     s.split(' ').collect()
 }
 
-fn evaluate(expr: &Expression) {
-    println!("eval :)")
+fn evaluate(expr: &Expression) -> Result<Value, String> {
+    match expr {
+        Expression::Integer(i) => Ok(Value::Integer(*i)),
+        Expression::Variable(s) => Err(format!("Unbound variable: {}", s)),
+    }
 }
 
 fn main() {
@@ -78,8 +86,9 @@ fn main() {
 
                 match parse_expression(&mut token_ptr) {
                     Ok(expr) => {
-                        println!("{:?}", expr);
-                        evaluate(&expr);
+                        println!("parsed: {:?}", expr);
+                        let result = evaluate(&expr);
+                        println!("value: {:?}", result);
                     }
                     Err(e) => {
                         println!("Parsing failed: {}", e);

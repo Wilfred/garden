@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use owo_colors::OwoColorize;
 use regex::Regex;
 
 #[derive(Debug)]
@@ -113,10 +114,10 @@ fn evaluate(expr: &Expression) -> Result<Value, String> {
 }
 
 fn main() {
-    println!("Welcome to the garden!");
+    println!("{}", "Welcome to the garden!".bold());
 
     loop {
-        print!("> ");
+        print!("\n{}", "> ".bold());
         let mut input = String::new();
         std::io::stdout().flush().unwrap();
         match std::io::stdin().read_line(&mut input) {

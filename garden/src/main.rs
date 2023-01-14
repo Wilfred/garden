@@ -5,6 +5,7 @@ use regex::Regex;
 #[derive(Debug)]
 enum Expression {
     Integer(i64),
+    BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
 }
 
@@ -46,7 +47,7 @@ fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 }
 
-fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     if let Some(token) = tokens.first() {
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
         if re.is_match(token) {
@@ -55,6 +56,26 @@ fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 
     parse_integer(tokens)
+}
+
+fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+    let mut expr = parse_simple_expression(tokens)?;
+
+    if let Some(token) = tokens.first() {
+        if *token == "+" {
+            let operator = pop_token(tokens).unwrap();
+
+            let rhs_expr = parse_expression(tokens)?;
+
+            expr = Expression::BinaryOperator(
+                Box::new(expr),
+                operator.to_string(),
+                Box::new(rhs_expr),
+            );
+        }
+    }
+
+    Ok(expr)
 }
 
 fn lex(s: &str) -> Vec<&str> {
@@ -68,6 +89,15 @@ fn lex(s: &str) -> Vec<&str> {
 fn evaluate(expr: &Expression) -> Result<Value, String> {
     match expr {
         Expression::Integer(i) => Ok(Value::Integer(*i)),
+        Expression::BinaryOperator(lhs, _, rhs) => {
+            let lhs_value = evaluate(lhs)?;
+            let rhs_value = evaluate(rhs)?;
+
+            match (lhs_value, rhs_value) {
+                (Value::Integer(lhs_i), Value::Integer(rhs_i)) => Ok(Value::Integer(lhs_i + rhs_i)),
+                _ => Err("Addition requires integers.".into()),
+            }
+        }
         Expression::Variable(s) => Err(format!("Unbound variable: {}", s)),
     }
 }

@@ -5,6 +5,7 @@ use regex::Regex;
 #[derive(Debug)]
 enum Expression {
     Integer(i64),
+    Boolean(bool),
     BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
 }
@@ -12,6 +13,7 @@ enum Expression {
 #[derive(Debug)]
 enum Value {
     Integer(i64),
+    Boolean(bool),
 }
 
 fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
@@ -49,6 +51,13 @@ fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
 
 fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     if let Some(token) = tokens.first() {
+        if *token == "true" {
+            return Ok(Expression::Boolean(true));
+        }
+        if *token == "false" {
+            return Ok(Expression::Boolean(false));
+        }
+
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
         if re.is_match(token) {
             return parse_variable(tokens);
@@ -89,6 +98,7 @@ fn lex(s: &str) -> Vec<&str> {
 fn evaluate(expr: &Expression) -> Result<Value, String> {
     match expr {
         Expression::Integer(i) => Ok(Value::Integer(*i)),
+        Expression::Boolean(b) => Ok(Value::Boolean(*b)),
         Expression::BinaryOperator(lhs, _, rhs) => {
             let lhs_value = evaluate(lhs)?;
             let rhs_value = evaluate(rhs)?;

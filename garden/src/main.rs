@@ -58,7 +58,10 @@ fn evaluate(expr: &Expression) -> Result<Value, String> {
 
             Ok(Value::Integer(lhs_num + rhs_num))
         }
-        Expression::Variable(s) => Err(format!("Unbound variable: {}", s)),
+        Expression::Variable(s) => {
+            let expr_new = read_replacement(&format!("Unbound variable: {}", s))?;
+            evaluate(&expr_new)
+        }
     }
 }
 

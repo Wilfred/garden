@@ -135,7 +135,12 @@ fn evaluate(expr: &Expression) -> Result<Value, String> {
 }
 
 fn main() {
-    println!("{}", "Welcome to the garden!".bold());
+    println!(
+        "{} {}{}",
+        "Welcome to the".bold(),
+        "garden".bold().green(),
+        "!".bold()
+    );
 
     loop {
         print!("\n{}", "> ".bold());

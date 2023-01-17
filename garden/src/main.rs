@@ -74,8 +74,8 @@ fn prompt_symbol(depth: usize) {
 }
 
 fn read_replacement(msg: &str) -> Result<Expression, String> {
-    println!("{}", msg);
-    println!("Oh no! What value should be used instead?\n");
+    println!("{}: {}", "Unexpected error".bright_red(), msg);
+    println!("What value should be used instead?\n");
     prompt_symbol(1);
 
     let mut input = String::new();

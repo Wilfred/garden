@@ -62,11 +62,18 @@ fn evaluate(expr: &Expression) -> Result<Value, String> {
     }
 }
 
+fn prompt_symbol(depth: usize) {
+    if depth > 0 {
+        print!("[{}]", depth);
+    }
+    print!("{} ", ">".green().bold());
+    std::io::stdout().flush().unwrap();
+}
+
 fn read_replacement(msg: &str) -> Result<Expression, String> {
     println!("{}", msg);
     println!("Oh no! What value should be used instead?\n");
-    print!("[1]> ");
-    std::io::stdout().flush().unwrap();
+    prompt_symbol(1);
 
     let mut input = String::new();
     std::io::stdin()
@@ -87,9 +94,10 @@ fn main() {
     );
 
     loop {
-        print!("\n{}", "> ".bold());
+        println!();
+        prompt_symbol(0);
+
         let mut input = String::new();
-        std::io::stdout().flush().unwrap();
         match std::io::stdin().read_line(&mut input) {
             Ok(_) => {
                 let tokens = lex(input.trim());

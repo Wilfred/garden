@@ -125,13 +125,54 @@ fn evaluate(expr: &Expression) -> Result<Value, String> {
             let lhs_value = evaluate(lhs)?;
             let rhs_value = evaluate(rhs)?;
 
-            match (lhs_value, rhs_value) {
-                (Value::Integer(lhs_i), Value::Integer(rhs_i)) => Ok(Value::Integer(lhs_i + rhs_i)),
-                _ => Err("Addition requires integers.".into()),
-            }
+            let lhs_num = match lhs_value {
+                Value::Integer(i) => i,
+                _ => {
+                    let lhs_new =
+                        read_replacement(&format!("Expected an integer, but got: {}", lhs_value))?;
+                    match evaluate(&lhs_new)? {
+                        Value::Integer(i) => i,
+                        v => {
+                            return Err(format!("Expected an integer, but got: {}", v));
+                        }
+                    }
+                }
+            };
+
+            let rhs_num = match rhs_value {
+                Value::Integer(i) => i,
+                _ => {
+                    let rhs_new =
+                        read_replacement(&format!("Expected an integer, but got: {}", rhs_value))?;
+                    match evaluate(&rhs_new)? {
+                        Value::Integer(i) => i,
+                        v => {
+                            return Err(format!("Expected an integer, but got: {}", v));
+                        }
+                    }
+                }
+            };
+
+            Ok(Value::Integer(lhs_num + rhs_num))
         }
         Expression::Variable(s) => Err(format!("Unbound variable: {}", s)),
     }
+}
+
+fn read_replacement(msg: &str) -> Result<Expression, String> {
+    println!("{}", msg);
+    println!("Oh no! What value should be used instead?\n");
+    print!("[1]> ");
+    std::io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    std::io::stdin()
+        .read_line(&mut input)
+        .expect("error: unable to read user input");
+
+    let tokens = lex(input.trim());
+    let mut token_ptr = &tokens[..];
+    parse_toplevel(&mut token_ptr)
 }
 
 fn main() {

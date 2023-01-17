@@ -136,11 +136,15 @@ fn main() {
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
-                    Ok(expr) => {
-                        println!("parsed: {:?}", expr);
-                        let result = evaluate(&expr);
-                        println!("value: {:?}", result);
-                    }
+                    Ok(expr) => match evaluate(&expr) {
+                        Ok(result) => {
+                            println!("{:?}", result)
+                        }
+                        Err(e) => {
+                            println!("parsed: {:?}", expr);
+                            println!("{}: {}", "Error".bright_red(), e);
+                        }
+                    },
                     Err(e) => {
                         println!("Parsing failed: {}", e);
                     }

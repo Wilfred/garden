@@ -88,6 +88,16 @@ fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     Ok(expr)
 }
 
+fn parse_toplevel(tokens: &mut &[&str]) -> Result<Expression, String> {
+    let expr = parse_expression(tokens)?;
+
+    if !tokens.is_empty() {
+        return Err(format!("Tokens left after parsing: {:?}", tokens));
+    }
+
+    Ok(expr)
+}
+
 fn lex(s: &str) -> Vec<&str> {
     if s.is_empty() {
         return vec![];
@@ -125,7 +135,7 @@ fn main() {
                 let tokens = lex(input.trim());
                 let mut token_ptr = &tokens[..];
 
-                match parse_expression(&mut token_ptr) {
+                match parse_toplevel(&mut token_ptr) {
                     Ok(expr) => {
                         println!("parsed: {:?}", expr);
                         let result = evaluate(&expr);

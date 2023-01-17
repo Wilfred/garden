@@ -62,9 +62,11 @@ fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
 fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     if let Some(token) = tokens.first() {
         if *token == "true" {
+            pop_token(tokens);
             return Ok(Expression::Boolean(true));
         }
         if *token == "false" {
+            pop_token(tokens);
             return Ok(Expression::Boolean(false));
         }
 

@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{fmt::Display, io::Write};
 
 use owo_colors::OwoColorize;
 use regex::Regex;
@@ -15,6 +15,15 @@ enum Expression {
 enum Value {
     Integer(i64),
     Boolean(bool),
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Integer(i) => write!(f, "{}", i),
+            Value::Boolean(b) => write!(f, "{}", b),
+        }
+    }
 }
 
 fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
@@ -138,7 +147,7 @@ fn main() {
                 match parse_toplevel(&mut token_ptr) {
                     Ok(expr) => match evaluate(&expr) {
                         Ok(result) => {
-                            println!("{:?}", result)
+                            println!("{}", result)
                         }
                         Err(e) => {
                             println!("parsed: {:?}", expr);

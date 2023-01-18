@@ -89,7 +89,7 @@ fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
         if *token == "+" {
             let operator = pop_token(tokens).unwrap();
 
-            let rhs_expr = parse_expression(tokens)?;
+            let rhs_expr = parse_simple_expression(tokens)?;
 
             expr = Expression::BinaryOperator(
                 Box::new(expr),

@@ -8,7 +8,7 @@ pub enum Expression {
     Variable(String),
 }
 
-fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
+fn pop_token<'a>(tokens: &mut &[&'a str]) -> Option<&'a str> {
     if tokens.is_empty() {
         return None;
     }
@@ -18,57 +18,69 @@ fn pop_token<'a, 'b>(tokens: &'a mut &[&'b str]) -> Option<&'b str> {
     Some(token)
 }
 
+fn peek_token<'a>(tokens: &[&'a str]) -> Option<&'a str> {
+    tokens.first().copied()
+}
+
+fn require_a_token<'a>(
+    tokens: &mut &[&'a str],
+    token_description: &str,
+) -> Result<&'a str, String> {
+    match pop_token(tokens) {
+        Some(token) => Ok(token),
+        None => Err(format!("Expected {}, got EOF", token_description)),
+    }
+}
+
+fn require_token<'a>(tokens: &mut &[&'a str], expected: &str) -> Result<(), String> {
+    match pop_token(tokens) {
+        Some(token) => {
+            if token == expected {
+                Ok(())
+            } else {
+                Err(format!("Expected `{}`, got `{}`", expected, token))
+            }
+        }
+        None => Err(format!("Expected `{}`, got EOF", expected)),
+    }
+}
+
 fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
     let re = Regex::new(r"^[0-9]+$").unwrap();
 
-    match pop_token(tokens) {
-        Some(token) => {
-            if re.is_match(token) {
-                let i: i64 = token.parse().unwrap();
-                Ok(Expression::Integer(i))
-            } else {
-                Err(format!("Not a valid integer literal: {}", token))
-            }
-        }
-        None => Err("Expected integer, got EOF".into()),
+    let token = require_a_token(tokens, "integer literal")?;
+    if re.is_match(token) {
+        let i: i64 = token.parse().unwrap();
+        Ok(Expression::Integer(i))
+    } else {
+        Err(format!("Not a valid integer literal: {}", token))
     }
 }
 
 fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
-    match pop_token(tokens) {
-        Some(token) => Ok(Expression::Variable(token.into())),
-        None => Err("Expected variable, got EOF".into()),
-    }
+    let token = require_a_token(tokens, "variable name")?;
+    Ok(Expression::Variable(token.into()))
 }
 
 fn parse_parenthesis_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
-    // TODO: add require_next_token() and require_token("(") helpers.
-    pop_token(tokens);
-
+    require_token(tokens, "(")?;
     let expr = parse_expression(tokens)?;
-
-    if let Some(token) = pop_token(tokens) {
-        if token != ")" {
-            return Err(format!("Expected (, got {}", token));
-        }
-    } else {
-        return Err("Expected (, got EOF".into());
-    }
+    require_token(tokens, ")")?;
 
     Ok(expr)
 }
 
 fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
-    if let Some(token) = tokens.first() {
-        if *token == "(" {
+    if let Some(token) = peek_token(tokens) {
+        if token == "(" {
             return parse_parenthesis_expression(tokens);
         }
 
-        if *token == "true" {
+        if token == "true" {
             pop_token(tokens);
             return Ok(Expression::Boolean(true));
         }
-        if *token == "false" {
+        if token == "false" {
             pop_token(tokens);
             return Ok(Expression::Boolean(false));
         }
@@ -85,9 +97,10 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
 fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     let mut expr = parse_simple_expression(tokens)?;
 
-    if let Some(token) = tokens.first() {
-        if *token == "+" {
-            let operator = pop_token(tokens).unwrap();
+    if let Some(token) = peek_token(tokens) {
+        if token == "+" {
+            let operator = token;
+            pop_token(tokens);
 
             let rhs_expr = parse_simple_expression(tokens)?;
 

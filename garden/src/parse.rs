@@ -41,8 +41,29 @@ fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 }
 
+fn parse_parenthesis_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+    // TODO: add require_next_token() and require_token("(") helpers.
+    pop_token(tokens);
+
+    let expr = parse_expression(tokens)?;
+
+    if let Some(token) = pop_token(tokens) {
+        if token != ")" {
+            return Err(format!("Expected (, got {}", token));
+        }
+    } else {
+        return Err("Expected (, got EOF".into());
+    }
+
+    Ok(expr)
+}
+
 fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     if let Some(token) = tokens.first() {
+        if *token == "(" {
+            return parse_parenthesis_expression(tokens);
+        }
+
         if *token == "true" {
             pop_token(tokens);
             return Ok(Expression::Boolean(true));
@@ -96,5 +117,6 @@ pub fn lex(s: &str) -> Vec<&str> {
         return vec![];
     }
 
+    // TODO: This considers (1) to be a single token.
     s.split(' ').collect()
 }

@@ -2,8 +2,9 @@ mod parse;
 
 use std::{collections::HashMap, fmt::Display, io::Write};
 
-use crate::parse::{lex, parse_toplevel, Expression};
+use crate::parse::{lex, parse_expression, parse_toplevel, Expression};
 use owo_colors::OwoColorize;
+use parse::Statement;
 
 #[derive(Debug, Clone)]
 enum Value {
@@ -20,20 +21,26 @@ impl Display for Value {
     }
 }
 
-fn evaluate(expr: &Expression, env: &HashMap<String, Value>) -> Result<Value, String> {
+fn evaluate_stmt(stmt: &Statement, env: &HashMap<String, Value>) -> Result<Value, String> {
+    match stmt {
+        Statement::Expr(e) => evaluate_expr(e, env),
+    }
+}
+
+fn evaluate_expr(expr: &Expression, env: &HashMap<String, Value>) -> Result<Value, String> {
     match expr {
         Expression::Integer(i) => Ok(Value::Integer(*i)),
         Expression::Boolean(b) => Ok(Value::Boolean(*b)),
         Expression::BinaryOperator(lhs, _, rhs) => {
-            let lhs_value = evaluate(lhs, env)?;
-            let rhs_value = evaluate(rhs, env)?;
+            let lhs_value = evaluate_expr(lhs, env)?;
+            let rhs_value = evaluate_expr(rhs, env)?;
 
             let lhs_num = match lhs_value {
                 Value::Integer(i) => i,
                 _ => {
                     let lhs_new =
                         read_replacement(&format!("Expected an integer, but got: {}", lhs_value))?;
-                    match evaluate(&lhs_new, env)? {
+                    match evaluate_expr(&lhs_new, env)? {
                         Value::Integer(i) => i,
                         v => {
                             return Err(format!("Expected an integer, but got: {}", v));
@@ -47,7 +54,7 @@ fn evaluate(expr: &Expression, env: &HashMap<String, Value>) -> Result<Value, St
                 _ => {
                     let rhs_new =
                         read_replacement(&format!("Expected an integer, but got: {}", rhs_value))?;
-                    match evaluate(&rhs_new, env)? {
+                    match evaluate_expr(&rhs_new, env)? {
                         Value::Integer(i) => i,
                         v => {
                             return Err(format!("Expected an integer, but got: {}", v));
@@ -62,7 +69,7 @@ fn evaluate(expr: &Expression, env: &HashMap<String, Value>) -> Result<Value, St
             Some(v) => Ok(v.clone()),
             None => {
                 let expr_new = read_replacement(&format!("Unbound variable: {}", s))?;
-                evaluate(&expr_new, env)
+                evaluate_expr(&expr_new, env)
             }
         },
     }
@@ -88,7 +95,7 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
 
     let tokens = lex(input.trim())?;
     let mut token_ptr = &tokens[..];
-    parse_toplevel(&mut token_ptr)
+    parse_expression(&mut token_ptr)
 }
 
 fn main() {
@@ -134,7 +141,7 @@ fn main() {
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
-                    Ok(expr) => match evaluate(&expr, &env) {
+                    Ok(stmt) => match evaluate_stmt(&stmt, &env) {
                         Ok(result) => {
                             println!("{}", result)
                         }

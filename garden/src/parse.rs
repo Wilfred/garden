@@ -8,6 +8,11 @@ pub enum Expression {
     Variable(String),
 }
 
+#[derive(Debug)]
+pub enum Statement {
+    Expr(Expression),
+}
+
 fn pop_token<'a>(tokens: &mut &[&'a str]) -> Option<&'a str> {
     if tokens.is_empty() {
         return None;
@@ -94,7 +99,7 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     parse_integer(tokens)
 }
 
-fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+pub fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     let mut expr = parse_simple_expression(tokens)?;
 
     if let Some(token) = peek_token(tokens) {
@@ -115,8 +120,14 @@ fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     Ok(expr)
 }
 
-pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     let expr = parse_expression(tokens)?;
+    require_token(tokens, ";")?;
+    Ok(Statement::Expr(expr))
+}
+
+pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Statement, String> {
+    let expr = parse_statement(tokens)?;
 
     if !tokens.is_empty() {
         return Err(format!("Tokens left after parsing: {:?}", tokens));
@@ -134,7 +145,7 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let mut s = s;
     'outer: while !s.is_empty() {
         s = s.trim();
-        for token_char in ['+', '(', ')'] {
+        for token_char in ['+', '(', ')', ';'] {
             if let Some(new_s) = s.strip_prefix(token_char) {
                 res.push(&s[0..1]);
                 s = new_s;

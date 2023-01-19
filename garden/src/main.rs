@@ -109,7 +109,16 @@ fn main() {
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
             Ok(_) => {
-                let tokens = lex(input.trim());
+                input = input.trim().to_string();
+
+                if let Some(input) = input.strip_prefix(":parse ") {
+                    let tokens = lex(input);
+                    let mut token_ptr = &tokens[..];
+                    println!("{:?}", parse_toplevel(&mut token_ptr));
+                    continue;
+                }
+
+                let tokens = lex(&input);
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
@@ -118,7 +127,6 @@ fn main() {
                             println!("{}", result)
                         }
                         Err(e) => {
-                            println!("parsed: {:?}", expr);
                             println!("{}: {}", "Error".bright_red(), e);
                         }
                     },

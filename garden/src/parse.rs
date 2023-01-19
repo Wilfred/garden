@@ -132,17 +132,16 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let mut res = vec![];
 
     let mut s = s;
-    while !s.is_empty() {
-        if let Some(new_s) = s.strip_prefix('+') {
-            res.push(&s[0..1]);
-            s = new_s;
-        } else if let Some(new_s) = s.strip_prefix('(') {
-            res.push(&s[0..1]);
-            s = new_s;
-        } else if let Some(new_s) = s.strip_prefix(')') {
-            res.push(&s[0..1]);
-            s = new_s;
-        } else if let Some(integer_match) = integer_re.find(s) {
+    'outer: while !s.is_empty() {
+        s = s.trim();
+        for token_char in ['+', '(', ')'] {
+            if let Some(new_s) = s.strip_prefix(token_char) {
+                res.push(&s[0..1]);
+                s = new_s;
+                continue 'outer;
+            }
+        }
+        if let Some(integer_match) = integer_re.find(s) {
             res.push(integer_match.as_str());
             s = &s[integer_match.end()..];
         } else if let Some(variable_match) = variable_re.find(s) {
@@ -154,8 +153,23 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     }
 
     if !s.is_empty() {
-        return Err(format!("Unrecognized syntax: {}", s));
+        return Err(format!("Unrecognized syntax: '{}'", s));
     }
 
     Ok(res)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lex_spaces() {
+        assert_eq!(lex("1 + 2").unwrap(), vec!["1", "+", "2"]);
+    }
+
+    #[test]
+    fn test_lex_no_spaces() {
+        assert_eq!(lex("1+2").unwrap(), vec!["1", "+", "2"]);
+    }
 }

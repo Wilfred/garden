@@ -10,6 +10,7 @@ pub enum Expression {
 
 #[derive(Debug)]
 pub enum Statement {
+    Let(String, Expression),
     Expr(Expression),
 }
 

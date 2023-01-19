@@ -21,9 +21,14 @@ impl Display for Value {
     }
 }
 
-fn evaluate_stmt(stmt: &Statement, env: &HashMap<String, Value>) -> Result<Value, String> {
+fn evaluate_stmt(stmt: &Statement, env: &mut HashMap<String, Value>) -> Result<Value, String> {
     match stmt {
         Statement::Expr(e) => evaluate_expr(e, env),
+        Statement::Let(variable, expr) => {
+            let value = evaluate_expr(expr, env)?;
+            env.insert(variable.to_string(), value.clone());
+            Ok(value)
+        }
     }
 }
 
@@ -141,7 +146,7 @@ fn main() {
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
-                    Ok(stmt) => match evaluate_stmt(&stmt, &env) {
+                    Ok(stmt) => match evaluate_stmt(&stmt, &mut env) {
                         Ok(result) => {
                             println!("{}", result)
                         }

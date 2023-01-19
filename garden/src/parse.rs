@@ -126,10 +126,32 @@ pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Expression, String> {
 }
 
 pub fn lex(s: &str) -> Vec<&str> {
-    if s.is_empty() {
-        return vec![];
+    let integer_re = Regex::new(r"^[0-9]+").unwrap();
+    let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
+
+    let mut res = vec![];
+
+    let mut s = s;
+    while !s.is_empty() {
+        if let Some(new_s) = s.strip_prefix('+') {
+            res.push(&s[0..1]);
+            s = new_s;
+        } else if let Some(new_s) = s.strip_prefix('(') {
+            res.push(&s[0..1]);
+            s = new_s;
+        } else if let Some(new_s) = s.strip_prefix(')') {
+            res.push(&s[0..1]);
+            s = new_s;
+        } else if let Some(integer_match) = integer_re.find(s) {
+            res.push(integer_match.as_str());
+            s = &s[integer_match.end()..];
+        } else if let Some(variable_match) = variable_re.find(s) {
+            res.push(variable_match.as_str());
+            s = &s[variable_match.end()..];
+        } else {
+            break;
+        }
     }
 
-    // TODO: This considers (1) to be a single token.
-    s.split(' ').collect()
+    res
 }

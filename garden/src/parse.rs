@@ -125,7 +125,7 @@ pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Expression, String> {
     Ok(expr)
 }
 
-pub fn lex(s: &str) -> Vec<&str> {
+pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let integer_re = Regex::new(r"^[0-9]+").unwrap();
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 
@@ -153,5 +153,9 @@ pub fn lex(s: &str) -> Vec<&str> {
         }
     }
 
-    res
+    if !s.is_empty() {
+        return Err(format!("Unrecognized syntax: {}", s));
+    }
+
+    Ok(res)
 }

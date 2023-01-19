@@ -86,7 +86,7 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
         .read_line(&mut input)
         .expect("error: unable to read user input");
 
-    let tokens = lex(input.trim());
+    let tokens = lex(input.trim())?;
     let mut token_ptr = &tokens[..];
     parse_toplevel(&mut token_ptr)
 }
@@ -112,13 +112,25 @@ fn main() {
                 input = input.trim().to_string();
 
                 if let Some(input) = input.strip_prefix(":parse ") {
-                    let tokens = lex(input);
+                    let tokens = match lex(&input) {
+                        Ok(tokens) => tokens,
+                        Err(e) => {
+                            println!("{}: {}", "Error".bright_red(), e);
+                            continue;
+                        }
+                    };
                     let mut token_ptr = &tokens[..];
                     println!("{:?}", parse_toplevel(&mut token_ptr));
                     continue;
                 }
 
-                let tokens = lex(&input);
+                let tokens = match lex(&input) {
+                    Ok(tokens) => tokens,
+                    Err(e) => {
+                        println!("{}: {}", "Error".bright_red(), e);
+                        continue;
+                    }
+                };
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {

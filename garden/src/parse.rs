@@ -63,9 +63,9 @@ fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 }
 
-fn parse_variable(tokens: &mut &[&str]) -> Result<Expression, String> {
-    let token = require_a_token(tokens, "variable name")?;
-    Ok(Expression::Variable(token.into()))
+fn parse_variable_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+    let variable = parse_variable_name(tokens)?;
+    Ok(Expression::Variable(variable))
 }
 
 fn parse_parenthesis_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
@@ -93,7 +93,7 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
 
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
         if re.is_match(token) {
-            return parse_variable(tokens);
+            return parse_variable_expression(tokens);
         }
     }
 
@@ -133,17 +133,36 @@ fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     Ok(Statement::Expr(expr))
 }
 
+fn parse_variable_name(tokens: &mut &[&str]) -> Result<String, String> {
+    // TODO: this is duplicated with lex().
+    let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
+
+    let variable = require_a_token(tokens, "variable name")?;
+    if !variable_re.is_match(variable) {
+        return Err(format!("Invalid variable name: '{}'", variable));
+    }
+
+    for reserved in ["let", "fun"] {
+        if variable == reserved {
+            return Err(format!(
+                "'{}' is a reserved word that cannot be used as a variable",
+                variable
+            ));
+        }
+    }
+
+    Ok(variable.to_string())
+}
+
 fn parse_let_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     require_token(tokens, "let")?;
-    // TODO: check it's not a reserved work.
-    // TODO: check it's a valid variable name.
-    let variable = require_a_token(tokens, "variable name")?;
+    let variable = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
 
-    Ok(Statement::Let(variable.to_string(), expr))
+    Ok(Statement::Let(variable, expr))
 }
 
 pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Statement, String> {

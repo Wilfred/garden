@@ -122,9 +122,28 @@ pub fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
 }
 
 fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
+    if let Some(token) = peek_token(tokens) {
+        if token == "let" {
+            return parse_let_statement(tokens);
+        }
+    }
+
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
     Ok(Statement::Expr(expr))
+}
+
+fn parse_let_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
+    require_token(tokens, "let")?;
+    // TODO: check it's not a reserved work.
+    // TODO: check it's a valid variable name.
+    let variable = require_a_token(tokens, "variable name")?;
+
+    require_token(tokens, "=")?;
+    let expr = parse_expression(tokens)?;
+    require_token(tokens, ";")?;
+
+    Ok(Statement::Let(variable.to_string(), expr))
 }
 
 pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Statement, String> {
@@ -146,7 +165,7 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let mut s = s;
     'outer: while !s.is_empty() {
         s = s.trim();
-        for token_char in ['+', '(', ')', ';'] {
+        for token_char in ['+', '(', ')', ';', '='] {
             if let Some(new_s) = s.strip_prefix(token_char) {
                 res.push(&s[0..1]);
                 s = new_s;

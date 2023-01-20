@@ -124,7 +124,7 @@ fn main() {
                 input = input.trim().to_string();
 
                 if let Some(input) = input.strip_prefix(":parse ") {
-                    let tokens = match lex(&input) {
+                    let tokens = match lex(input) {
                         Ok(tokens) => tokens,
                         Err(e) => {
                             println!("{}: {}", "Error".bright_red(), e);

@@ -10,6 +10,8 @@ pub enum Expression {
 
 #[derive(Debug)]
 pub enum Statement {
+    // TODO: is Statement the best place for Fun?
+    Fun(String, Vec<String>, Vec<Expression>),
     Let(String, Expression),
     Expr(Expression),
 }
@@ -126,11 +128,30 @@ fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
         if token == "let" {
             return parse_let_statement(tokens);
         }
+
+        if token == "fun" {
+            return parse_function(tokens);
+        }
     }
 
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
     Ok(Statement::Expr(expr))
+}
+
+fn parse_function(tokens: &mut &[&str]) -> Result<Statement, String> {
+    require_token(tokens, "fun")?;
+    let name = parse_variable_name(tokens)?;
+
+    require_token(tokens, "(")?;
+    let params = vec!["todo".to_string()];
+    require_token(tokens, ")")?;
+
+    require_token(tokens, "{")?;
+    let body = vec![]; // TODO
+    require_token(tokens, "}")?;
+
+    Ok(Statement::Fun(name, params, body))
 }
 
 fn parse_variable_name(tokens: &mut &[&str]) -> Result<String, String> {
@@ -184,7 +205,7 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let mut s = s;
     'outer: while !s.is_empty() {
         s = s.trim();
-        for token_char in ['+', '(', ')', ';', '='] {
+        for token_char in ['+', '(', ')', '{', '}', ';', '='] {
             if let Some(new_s) = s.strip_prefix(token_char) {
                 res.push(&s[0..1]);
                 s = new_s;

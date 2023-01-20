@@ -29,6 +29,7 @@ fn evaluate_stmt(stmt: &Statement, env: &mut HashMap<String, Value>) -> Result<V
             env.insert(variable.to_string(), value.clone());
             Ok(value)
         }
+        Statement::Fun(name, params, _) => Err("TODO: implement evaluating function defs".into()),
     }
 }
 

@@ -173,14 +173,32 @@ fn parse_function_params(tokens: &mut &[&str]) -> Result<Vec<String>, String> {
     Ok(params)
 }
 
+fn parse_function_body(tokens: &mut &[&str]) -> Result<Vec<Statement>, String> {
+    require_token(tokens, "{")?;
+
+    let mut stmts = vec![];
+    loop {
+        if let Some(token) = peek_token(tokens) {
+            if token == "}" {
+                break;
+            }
+        } else {
+            return Err("Invalid syntax: Expected `}}` here, but got EOF".to_string());
+        }
+
+        let stmt = parse_statement(tokens)?;
+        stmts.push(stmt);
+    }
+
+    require_token(tokens, "}")?;
+    Ok(stmts)
+}
+
 fn parse_function(tokens: &mut &[&str]) -> Result<Statement, String> {
     require_token(tokens, "fun")?;
     let name = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
-
-    require_token(tokens, "{")?;
-    let body = vec![]; // TODO
-    require_token(tokens, "}")?;
+    let body = parse_function_body(tokens)?;
 
     Ok(Statement::Fun(name, params, body))
 }

@@ -10,6 +10,7 @@ use parse::Statement;
 enum Value {
     Integer(i64),
     Boolean(bool),
+    Fun(String, Vec<String>, Vec<Statement>),
 }
 
 impl Display for Value {
@@ -17,6 +18,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
+            Value::Fun(name, _, _) => write!(f, "(function: {})", name),
         }
     }
 }
@@ -29,7 +31,9 @@ fn evaluate_stmt(stmt: &Statement, env: &mut HashMap<String, Value>) -> Result<V
             env.insert(variable.to_string(), value.clone());
             Ok(value)
         }
-        Statement::Fun(name, params, _) => Err("TODO: implement evaluating function defs".into()),
+        Statement::Fun(name, params, body) => {
+            Ok(Value::Fun(name.clone(), params.clone(), body.clone()))
+        }
     }
 }
 

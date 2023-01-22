@@ -1,6 +1,6 @@
 use regex::Regex;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     Integer(i64),
     Boolean(bool),
@@ -8,10 +8,10 @@ pub enum Expression {
     Variable(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Statement {
     // TODO: is Statement the best place for Fun?
-    Fun(String, Vec<String>, Vec<Expression>),
+    Fun(String, Vec<String>, Vec<Statement>),
     Let(String, Expression),
     Expr(Expression),
 }

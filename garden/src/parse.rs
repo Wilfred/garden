@@ -139,13 +139,44 @@ fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     Ok(Statement::Expr(expr))
 }
 
+fn parse_function_params(tokens: &mut &[&str]) -> Result<Vec<String>, String> {
+    require_token(tokens, "(")?;
+
+    let mut params = vec![];
+    loop {
+        if let Some(token) = peek_token(tokens) {
+            if token == ")" {
+                break;
+            }
+        }
+
+        let param = parse_variable_name(tokens)?;
+        params.push(param);
+
+        if let Some(token) = peek_token(tokens) {
+            if token == "," {
+                pop_token(tokens);
+            } else if token == ")" {
+                break;
+            } else {
+                return Err(format!(
+                    "Invalid syntax: Expected `,` or `)` here, but got `{}`",
+                    token
+                ));
+            }
+        } else {
+            return Err("Invalid syntax: Expected `,` or `)` here, but got EOF".to_string());
+        }
+    }
+
+    require_token(tokens, ")")?;
+    Ok(params)
+}
+
 fn parse_function(tokens: &mut &[&str]) -> Result<Statement, String> {
     require_token(tokens, "fun")?;
     let name = parse_variable_name(tokens)?;
-
-    require_token(tokens, "(")?;
-    let params = vec!["todo".to_string()];
-    require_token(tokens, ")")?;
+    let params = parse_function_params(tokens)?;
 
     require_token(tokens, "{")?;
     let body = vec![]; // TODO
@@ -205,7 +236,7 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let mut s = s;
     'outer: while !s.is_empty() {
         s = s.trim();
-        for token_char in ['+', '(', ')', '{', '}', ';', '='] {
+        for token_char in ['+', '(', ')', '{', '}', ';', '=', ','] {
             if let Some(new_s) = s.strip_prefix(token_char) {
                 res.push(&s[0..1]);
                 s = new_s;

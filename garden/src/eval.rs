@@ -32,7 +32,9 @@ pub fn evaluate_stmt(stmt: &Statement, env: &mut HashMap<String, Value>) -> Resu
             Ok(value)
         }
         Statement::Fun(name, params, body) => {
-            Ok(Value::Fun(name.clone(), params.clone(), body.clone()))
+            let value = Value::Fun(name.clone(), params.clone(), body.clone());
+            env.insert(name.to_string(), value.clone());
+            Ok(value)
         }
     }
 }

@@ -27,6 +27,7 @@ pub fn evaluate_stmt(stmt: &Statement, env: &mut HashMap<String, Value>) -> Resu
     match stmt {
         Statement::Expr(e) => evaluate_expr(e, env),
         Statement::Let(variable, expr) => {
+            // TODO: error if the variable is already defined.
             let value = evaluate_expr(expr, env)?;
             env.insert(variable.to_string(), value.clone());
             Ok(value)

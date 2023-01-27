@@ -84,6 +84,7 @@ fn evaluate_expr(expr: &Expression, env: &HashMap<String, Value>) -> Result<Valu
                 evaluate_expr(&expr_new, env)
             }
         },
+        Expression::Call(_, _) => todo!(),
     }
 }
 

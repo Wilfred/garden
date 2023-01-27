@@ -6,6 +6,7 @@ pub enum Expression {
     Boolean(bool),
     BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
+    Call(Box<Expression>, Vec<Expression>),
 }
 
 #[derive(Debug, Clone)]
@@ -102,15 +103,62 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     parse_integer(tokens)
 }
 
+fn parse_call_arguments(tokens: &mut &[&str]) -> Result<Vec<Expression>, String> {
+    require_token(tokens, "(")?;
+
+    let mut args = vec![];
+    loop {
+        if let Some(token) = peek_token(tokens) {
+            if token == ")" {
+                break;
+            }
+        }
+
+        let arg = parse_expression(tokens)?;
+        args.push(arg);
+
+        if let Some(token) = peek_token(tokens) {
+            if token == "," {
+                pop_token(tokens);
+            } else if token == ")" {
+                break;
+            } else {
+                return Err(format!(
+                    "Invalid syntax: Expected `,` or `)` here, but got `{}`",
+                    token
+                ));
+            }
+        } else {
+            return Err("Invalid syntax: Expected `,` or `)` here, but got EOF".to_string());
+        }
+    }
+
+    require_token(tokens, ")")?;
+    Ok(args)
+}
+
+fn parse_simple_expression_or_call(tokens: &mut &[&str]) -> Result<Expression, String> {
+    let expr = parse_simple_expression(tokens)?;
+
+    if let Some(token) = peek_token(tokens) {
+        if token == "(" {
+            let arguments = parse_call_arguments(tokens)?;
+            return Ok(Expression::Call(Box::new(expr), arguments));
+        }
+    }
+
+    Ok(expr)
+}
+
 pub fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
-    let mut expr = parse_simple_expression(tokens)?;
+    let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some(token) = peek_token(tokens) {
         if token == "+" {
             let operator = token;
             pop_token(tokens);
 
-            let rhs_expr = parse_simple_expression(tokens)?;
+            let rhs_expr = parse_simple_expression_or_call(tokens)?;
 
             expr = Expression::BinaryOperator(
                 Box::new(expr),

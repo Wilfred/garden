@@ -84,7 +84,31 @@ fn evaluate_expr(expr: &Expression, env: &HashMap<String, Value>) -> Result<Valu
                 evaluate_expr(&expr_new, env)
             }
         },
-        Expression::Call(_, _) => todo!(),
+        Expression::Call(receiver, args) => {
+            let mut args_values = vec![];
+            for arg in args {
+                args_values.push(evaluate_expr(arg, env)?);
+            }
+
+            match evaluate_expr(receiver, env)? {
+                Value::Fun(name, params, _body) => {
+                    if args_values.len() != params.len() {
+                        // TODO: prompt user for extra arguments.
+                        return Err(format!(
+                            "Function {} requires {} arguments, but got: {}",
+                            name,
+                            params.len(),
+                            args_values.len()
+                        ));
+                    }
+
+                    todo!();
+                }
+                v => {
+                    return Err(format!("Expected a function, but got: {}", v));
+                }
+            }
+        }
     }
 }
 

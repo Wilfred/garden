@@ -26,10 +26,8 @@ fn main() {
     let mut rl: Editor<()> = Editor::new().unwrap();
     loop {
         println!();
-        prompt_symbol(0);
 
-        // TODO: coloured recursive prompt.
-        match rl.readline("> ") {
+        match rl.readline(&prompt_symbol(0)) {
             Ok(input) => {
                 rl.add_history_entry(input.as_str());
 

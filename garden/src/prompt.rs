@@ -1,10 +1,8 @@
 use owo_colors::OwoColorize;
-use std::io::Write;
 
-pub fn prompt_symbol(depth: usize) {
+pub fn prompt_symbol(depth: usize) -> String {
     if depth > 0 {
-        print!("[{}]", depth);
+        return format!("[{}]{} ", depth, ">".green().bold());
     }
-    print!("{} ", ">".green().bold());
-    std::io::stdout().flush().unwrap();
+    format!("{} ", ">".green().bold())
 }

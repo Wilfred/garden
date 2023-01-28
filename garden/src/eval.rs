@@ -5,6 +5,7 @@ use crate::parse::{lex, parse_expression, Expression};
 use crate::prompt::prompt_symbol;
 
 use owo_colors::OwoColorize;
+use rustyline::Editor;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -116,11 +117,10 @@ fn evaluate_expr(expr: &Expression, env: &HashMap<String, Value>) -> Result<Valu
 fn read_replacement(msg: &str) -> Result<Expression, String> {
     println!("{}: {}", "Unexpected error".bright_red(), msg);
     println!("What value should be used instead?\n");
-    prompt_symbol(1);
 
-    let mut input = String::new();
-    std::io::stdin()
-        .read_line(&mut input)
+    let mut rl: Editor<()> = Editor::new().unwrap();
+    let input = rl
+        .readline(&prompt_symbol(1))
         .expect("error: unable to read user input");
 
     let tokens = lex(input.trim())?;

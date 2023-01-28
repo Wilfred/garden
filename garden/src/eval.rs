@@ -45,8 +45,21 @@ impl Env {
         None
     }
 
+    pub fn push_new_fun_scope(&mut self) {
+        self.fun_scopes.push(HashMap::new());
+    }
+
+    pub fn pop_fun_scope(&mut self) {
+        self.fun_scopes.pop().unwrap();
+    }
+
     pub fn set_with_file_scope(&mut self, name: &str, value: Value) {
         self.file_scope.insert(name.to_string(), value);
+    }
+
+    pub fn set_with_fun_scope(&mut self, name: &str, value: Value) {
+        let fun_scope = &mut self.fun_scopes.last_mut().unwrap();
+        fun_scope.insert(name.to_string(), value);
     }
 }
 
@@ -69,7 +82,7 @@ pub fn evaluate_stmt(stmt: &Statement, env: &mut Env) -> Result<Value, String> {
     }
 }
 
-fn evaluate_expr(expr: &Expression, env: &Env) -> Result<Value, String> {
+fn evaluate_expr(expr: &Expression, env: &mut Env) -> Result<Value, String> {
     match expr {
         Expression::Integer(i) => Ok(Value::Integer(*i)),
         Expression::Boolean(b) => Ok(Value::Boolean(*b)),
@@ -121,7 +134,7 @@ fn evaluate_expr(expr: &Expression, env: &Env) -> Result<Value, String> {
             }
 
             match evaluate_expr(receiver, env)? {
-                Value::Fun(name, params, _body) => {
+                Value::Fun(name, params, body) => {
                     if args_values.len() != params.len() {
                         // TODO: prompt user for extra arguments.
                         return Err(format!(
@@ -132,7 +145,19 @@ fn evaluate_expr(expr: &Expression, env: &Env) -> Result<Value, String> {
                         ));
                     }
 
-                    todo!();
+                    env.push_new_fun_scope();
+                    for (var_name, value) in params.iter().zip(args_values) {
+                        env.set_with_fun_scope(&var_name, value);
+                    }
+
+                    // TODO: define a void type.
+                    let mut res = Value::Boolean(false);
+                    for stmt in body {
+                        res = evaluate_stmt(&stmt, env)?;
+                    }
+
+                    env.pop_fun_scope();
+                    Ok(res)
                 }
                 v => {
                     return Err(format!("Expected a function, but got: {}", v));

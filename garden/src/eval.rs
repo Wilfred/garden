@@ -71,7 +71,7 @@ pub fn evaluate_stmt(stmt: &Statement, env: &mut Env) -> Result<Value, String> {
             let value = evaluate_expr(expr, env)?;
 
             // TODO: does this make sense for scope for let outside a function?
-            env.set_with_file_scope(variable, value.clone());
+            env.set_with_fun_scope(variable, value.clone());
             Ok(value)
         }
         Statement::Fun(name, params, body) => {

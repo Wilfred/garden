@@ -24,24 +24,50 @@ impl Display for Value {
     }
 }
 
-pub fn evaluate_stmt(stmt: &Statement, env: &mut HashMap<String, Value>) -> Result<Value, String> {
+#[derive(Debug, Default)]
+pub struct Env {
+    file_scope: HashMap<String, Value>,
+    fun_scope: HashMap<String, Value>,
+}
+
+impl Env {
+    pub fn get(&self, name: &str) -> Option<Value> {
+        if let Some(value) = self.fun_scope.get(name) {
+            return Some(value.clone());
+        }
+
+        if let Some(value) = self.file_scope.get(name) {
+            return Some(value.clone());
+        }
+
+        None
+    }
+
+    pub fn set_with_file_scope(&mut self, name: &str, value: Value) {
+        self.file_scope.insert(name.to_string(), value);
+    }
+}
+
+pub fn evaluate_stmt(stmt: &Statement, env: &mut Env) -> Result<Value, String> {
     match stmt {
         Statement::Expr(e) => evaluate_expr(e, env),
         Statement::Let(variable, expr) => {
             // TODO: error if the variable is already defined.
             let value = evaluate_expr(expr, env)?;
-            env.insert(variable.to_string(), value.clone());
+
+            // TODO: does this make sense for scope for let outside a function?
+            env.set_with_file_scope(variable, value.clone());
             Ok(value)
         }
         Statement::Fun(name, params, body) => {
             let value = Value::Fun(name.clone(), params.clone(), body.clone());
-            env.insert(name.to_string(), value.clone());
+            env.set_with_file_scope(name, value.clone());
             Ok(value)
         }
     }
 }
 
-fn evaluate_expr(expr: &Expression, env: &HashMap<String, Value>) -> Result<Value, String> {
+fn evaluate_expr(expr: &Expression, env: &Env) -> Result<Value, String> {
     match expr {
         Expression::Integer(i) => Ok(Value::Integer(*i)),
         Expression::Boolean(b) => Ok(Value::Boolean(*b)),

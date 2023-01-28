@@ -2,10 +2,8 @@ mod eval;
 mod parse;
 mod prompt;
 
-use std::collections::HashMap;
-
 use crate::{
-    eval::{evaluate_stmt, Value},
+    eval::{evaluate_stmt, Env, Value},
     parse::{lex, parse_toplevel},
     prompt::prompt_symbol,
 };
@@ -20,8 +18,8 @@ fn main() {
         "!".bold()
     );
 
-    let mut env: HashMap<String, Value> = HashMap::new();
-    env.insert("x".into(), Value::Boolean(true));
+    let mut env = Env::default();
+    env.set_with_file_scope("x", Value::Boolean(true));
 
     let mut rl: Editor<()> = Editor::new().unwrap();
     loop {

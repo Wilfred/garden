@@ -27,13 +27,15 @@ impl Display for Value {
 #[derive(Debug, Default)]
 pub struct Env {
     file_scope: HashMap<String, Value>,
-    fun_scope: HashMap<String, Value>,
+    fun_scopes: Vec<HashMap<String, Value>>,
 }
 
 impl Env {
     pub fn get(&self, name: &str) -> Option<Value> {
-        if let Some(value) = self.fun_scope.get(name) {
-            return Some(value.clone());
+        if let Some(fun_scope) = self.fun_scopes.last() {
+            if let Some(value) = fun_scope.get(name) {
+                return Some(value.clone());
+            }
         }
 
         if let Some(value) = self.file_scope.get(name) {

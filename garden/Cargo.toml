@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 owo-colors = "3.5.0"
 regex = "1.7.1"
+rustyline = "10.1.1"

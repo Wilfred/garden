@@ -10,6 +10,7 @@ use crate::{
     prompt::prompt_symbol,
 };
 use owo_colors::OwoColorize;
+use rustyline::Editor;
 
 fn main() {
     println!(
@@ -22,14 +23,17 @@ fn main() {
     let mut env: HashMap<String, Value> = HashMap::new();
     env.insert("x".into(), Value::Boolean(true));
 
+    let mut rl: Editor<()> = Editor::new().unwrap();
     loop {
         println!();
         prompt_symbol(0);
 
-        let mut input = String::new();
-        match std::io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                input = input.trim().to_string();
+        // TODO: coloured recursive prompt.
+        match rl.readline("> ") {
+            Ok(input) => {
+                rl.add_history_entry(input.as_str());
+
+                let input = input.trim().to_string();
 
                 if let Some(input) = input.strip_prefix(":parse ") {
                     let tokens = match lex(input) {
@@ -67,7 +71,7 @@ fn main() {
                     }
                 }
             }
-            Err(error) => println!("error: {error}"),
+            Err(_) => break,
         }
     }
 }

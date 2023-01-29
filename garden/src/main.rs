@@ -31,6 +31,24 @@ fn main() {
 
                 let input = input.trim().to_string();
 
+                if input == ":globals" {
+                    for (var_name, value) in &env.file_scope {
+                        println!("{}\t{}", var_name.bright_green(), value);
+                    }
+
+                    continue;
+                }
+
+                if input == ":locals" {
+                    if let Some(fun_scope) = env.fun_scopes.last() {
+                        for (var_name, value) in fun_scope {
+                            println!("{}\t{}", var_name.bright_green(), value);
+                        }
+                    }
+
+                    continue;
+                }
+
                 if let Some(input) = input.strip_prefix(":parse ") {
                     let tokens = match lex(input) {
                         Ok(tokens) => tokens,

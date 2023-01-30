@@ -24,10 +24,20 @@ impl Display for Value {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Env {
     pub file_scope: HashMap<String, Value>,
     pub fun_scopes: Vec<HashMap<String, Value>>,
+}
+
+impl Default for Env {
+    fn default() -> Self {
+        Self {
+            file_scope: HashMap::new(),
+            // TODO: having a toplevel function scope is hard to reason about.
+            fun_scopes: vec![HashMap::new()],
+        }
+    }
 }
 
 impl Env {

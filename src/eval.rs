@@ -178,7 +178,7 @@ fn evaluate_expr(expr: &Expression, env: &mut Env) -> Result<Value, String> {
 }
 
 enum NextStep {
-    NextStmt,
+    NextStmt { idx: usize },
     EvalSubexpressions(usize),
     EvalLet(String),
     EvalCall { num_args: usize },
@@ -186,30 +186,46 @@ enum NextStep {
     Drop,
 }
 
-fn eval_iter(exprs: &[Statement], env: &mut Env) -> Result<(), String> {
+fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<(), String> {
     let mut subexprs_to_eval: Vec<Expression> = vec![];
     let mut subexprs_values: Vec<Value> = vec![];
-    let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt];
+    let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
+    let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
-    let i = 0;
     loop {
         if let Some(step) = next_steps.pop() {
             match step {
-                NextStep::NextStmt => match &exprs[i] {
-                    Statement::Fun(_, _, _) => todo!(),
-                    Statement::Let(v, e) => {
-                        subexprs_to_eval.push(e.clone());
-                        next_steps.push(NextStep::NextStmt);
-                        next_steps.push(NextStep::EvalLet(v.clone()));
-                        next_steps.push(NextStep::EvalSubexpressions(1));
+                NextStep::NextStmt { idx } => {
+                    let stmts = fun_bodies
+                        .last()
+                        .expect("Function stack should never be empty");
+                    if let Some(stmt) = stmts.get(idx) {
+                        match stmt {
+                            Statement::Fun(name, params, body) => {
+                                let value = Value::Fun(name.clone(), params.clone(), body.clone());
+                                env.set_with_file_scope(name, value.clone());
+                                next_steps.push(NextStep::NextStmt { idx: idx + 1 });
+                            }
+                            Statement::Let(v, e) => {
+                                subexprs_to_eval.push(e.clone());
+                                next_steps.push(NextStep::NextStmt { idx: idx + 1 });
+                                next_steps.push(NextStep::EvalLet(v.clone()));
+                                next_steps.push(NextStep::EvalSubexpressions(1));
+                            }
+                            Statement::Expr(e) => {
+                                subexprs_to_eval.push(e.clone());
+                                next_steps.push(NextStep::NextStmt { idx: idx + 1 });
+                                next_steps.push(NextStep::Drop);
+                                next_steps.push(NextStep::EvalSubexpressions(1));
+                            }
+                        }
+                    } else {
+                        // Reached end of this block. Pop to the parent.
+                        // TODO: function return value.
+                        env.pop_fun_scope();
+                        fun_bodies.pop();
                     }
-                    Statement::Expr(e) => {
-                        subexprs_to_eval.push(e.clone());
-                        next_steps.push(NextStep::NextStmt);
-                        next_steps.push(NextStep::Drop);
-                        next_steps.push(NextStep::EvalSubexpressions(1));
-                    }
-                },
+                }
                 NextStep::EvalSubexpressions(n) => {
                     assert!(n > 0);
                     if n > 1 {
@@ -305,7 +321,50 @@ fn eval_iter(exprs: &[Statement], env: &mut Env) -> Result<(), String> {
                 NextStep::Drop => {
                     subexprs_values.pop().expect("Popped an empty value stack");
                 }
-                NextStep::EvalCall { num_args } => todo!(),
+                NextStep::EvalCall { num_args } => {
+                    let receiver = subexprs_values
+                        .pop()
+                        .expect("Popped an empty value stack for call receiver");
+
+                    let mut args = vec![];
+                    for _ in 0..num_args {
+                        args.push(
+                            subexprs_values
+                                .pop()
+                                .expect("Popped an empty value for stack for call arguments"),
+                        );
+                    }
+
+                    match receiver {
+                        Value::Fun(name, params, body) => {
+                            if args.len() != params.len() {
+                                // TODO: prompt user for extra arguments.
+                                return Err(format!(
+                                    "Function {} requires {} arguments, but got: {}",
+                                    name,
+                                    params.len(),
+                                    args.len()
+                                ));
+                            }
+
+                            env.push_new_fun_scope();
+                            for (var_name, value) in params.iter().zip(args) {
+                                env.set_with_fun_scope(&var_name, value);
+                            }
+
+                            fun_bodies.push(body);
+                            next_steps.push(NextStep::NextStmt { idx: 0 });
+
+                            // Push block.
+                            // Eval block.
+                            // Pop fun scope.
+                            // env.pop_fun_scope();
+                        }
+                        v => {
+                            return Err(format!("Expected a function, but got: {}", v));
+                        }
+                    }
+                }
             }
         } else {
             break;

@@ -1,6 +1,6 @@
 use regex::Regex;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
     Integer(i64),
     Boolean(bool),
@@ -9,7 +9,7 @@ pub enum Expression {
     Call(Box<Expression>, Vec<Expression>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     // TODO: is Statement the best place for Fun?
     Fun(String, Vec<String>, Vec<Statement>),
@@ -349,5 +349,18 @@ mod tests {
         let ast = parse_toplevel(&mut token_ptr).unwrap();
 
         assert!(matches!(ast, Statement::Expr(Expression::Boolean(true))));
+    }
+
+    #[test]
+    fn test_parse_variable() {
+        let src = "abc_def;";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert_eq!(
+            ast,
+            Statement::Expr(Expression::Variable("abc_def".to_string()))
+        );
     }
 }

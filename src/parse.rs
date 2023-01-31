@@ -340,4 +340,14 @@ mod tests {
     fn test_lex_no_spaces() {
         assert_eq!(lex("1+2").unwrap(), vec!["1", "+", "2"]);
     }
+
+    #[test]
+    fn test_parse_bool_literal() {
+        let src = "true;";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert!(matches!(ast, Statement::Expr(Expression::Boolean(true))));
+    }
 }

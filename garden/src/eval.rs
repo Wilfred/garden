@@ -177,6 +177,144 @@ fn evaluate_expr(expr: &Expression, env: &mut Env) -> Result<Value, String> {
     }
 }
 
+enum NextStep {
+    NextStmt,
+    EvalSubexpressions(usize),
+    EvalLet(String),
+    EvalCall { num_args: usize },
+    EvalAdd,
+    Drop,
+}
+
+fn eval_iter(exprs: &[Statement], env: &mut Env) -> Result<(), String> {
+    let mut subexprs_to_eval: Vec<Expression> = vec![];
+    let mut subexprs_values: Vec<Value> = vec![];
+    let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt];
+
+    let i = 0;
+    loop {
+        if let Some(step) = next_steps.pop() {
+            match step {
+                NextStep::NextStmt => match &exprs[i] {
+                    Statement::Fun(_, _, _) => todo!(),
+                    Statement::Let(v, e) => {
+                        subexprs_to_eval.push(e.clone());
+                        next_steps.push(NextStep::NextStmt);
+                        next_steps.push(NextStep::EvalLet(v.clone()));
+                        next_steps.push(NextStep::EvalSubexpressions(1));
+                    }
+                    Statement::Expr(e) => {
+                        subexprs_to_eval.push(e.clone());
+                        next_steps.push(NextStep::NextStmt);
+                        next_steps.push(NextStep::Drop);
+                        next_steps.push(NextStep::EvalSubexpressions(1));
+                    }
+                },
+                NextStep::EvalSubexpressions(n) => {
+                    assert!(n > 0);
+                    if n > 1 {
+                        next_steps.push(NextStep::EvalSubexpressions(n - 1));
+                    }
+
+                    let expr = subexprs_to_eval
+                        .pop()
+                        .expect("Expected a non-empty subexpression stack");
+                    match expr {
+                        Expression::Integer(i) => {
+                            subexprs_values.push(Value::Integer(i));
+                        }
+                        Expression::Boolean(b) => {
+                            subexprs_values.push(Value::Boolean(b));
+                        }
+                        Expression::BinaryOperator(lhs, _, rhs) => {
+                            subexprs_to_eval.push(*rhs.clone());
+                            subexprs_to_eval.push(*lhs.clone());
+
+                            next_steps.push(NextStep::EvalSubexpressions(2));
+                        }
+                        Expression::Variable(s) => match env.get(&s) {
+                            Some(v) => subexprs_values.push(v),
+                            None => {
+                                // TODO: read_replacement
+                                return Err(format!("Unbound variable: {}", s));
+                            }
+                        },
+                        Expression::Call(receiver, args) => {
+                            for arg in &args {
+                                subexprs_to_eval.push(arg.clone());
+                            }
+                            subexprs_to_eval.push(*receiver.clone());
+
+                            next_steps.push(NextStep::EvalCall {
+                                num_args: args.len(),
+                            });
+                            next_steps.push(NextStep::EvalSubexpressions(args.len() + 1));
+                        }
+                    }
+                }
+                NextStep::EvalLet(variable) => {
+                    let value = subexprs_values
+                        .pop()
+                        .expect("Got an empty value stack when evaluating let");
+
+                    // TODO: does this make sense for scope for let outside a function?
+                    env.set_with_fun_scope(&variable, value.clone());
+                }
+                NextStep::EvalAdd => {
+                    let rhs_value = subexprs_values
+                        .pop()
+                        .expect("Got an empty value stack when evaluating RHS of +");
+                    let lhs_value = subexprs_values
+                        .pop()
+                        .expect("Got an empty value stack when evaluating LHS of +");
+
+                    let lhs_num = match lhs_value {
+                        Value::Integer(i) => i,
+                        _ => {
+                            let lhs_new = read_replacement(&format!(
+                                "Expected an integer, but got: {}",
+                                lhs_value
+                            ))?;
+                            match evaluate_expr(&lhs_new, env)? {
+                                Value::Integer(i) => i,
+                                v => {
+                                    return Err(format!("Expected an integer, but got: {}", v));
+                                }
+                            }
+                        }
+                    };
+
+                    let rhs_num = match rhs_value {
+                        Value::Integer(i) => i,
+                        _ => {
+                            let rhs_new = read_replacement(&format!(
+                                "Expected an integer, but got: {}",
+                                rhs_value
+                            ))?;
+                            match evaluate_expr(&rhs_new, env)? {
+                                Value::Integer(i) => i,
+                                v => {
+                                    return Err(format!("Expected an integer, but got: {}", v));
+                                }
+                            }
+                        }
+                    };
+
+                    subexprs_values.push(Value::Integer(lhs_num + rhs_num))
+                }
+                NextStep::Drop => {
+                    subexprs_values.pop().expect("Popped an empty value stack");
+                }
+                NextStep::EvalCall { num_args } => todo!(),
+            }
+        } else {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
 fn read_replacement(msg: &str) -> Result<Expression, String> {
     println!("{}: {}", "Unexpected error".bright_red(), msg);
     println!("What value should be used instead?\n");

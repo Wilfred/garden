@@ -1,3 +1,8 @@
 # Garden 🌿
 
-Experiments in coding incrementally on running programs.
+Garden is an experimental programming language exploring PL design on
+running programs.
+
+## License
+
+MIT.

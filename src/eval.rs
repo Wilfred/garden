@@ -387,3 +387,15 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
     let mut token_ptr = &tokens[..];
     parse_expression(&mut token_ptr)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_eval_bool_literal() {
+        let mut env = Env::default();
+        let value = evaluate_stmt(&Statement::Expr(Expression::Boolean(true)), &mut env).unwrap();
+        assert!(matches!(value, Value::Boolean(true)));
+    }
+}

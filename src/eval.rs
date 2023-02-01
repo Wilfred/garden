@@ -193,8 +193,7 @@ fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
     loop {
-        if let Some(step) = dbg!(next_steps.pop()) {
-            dbg!(&subexprs_values);
+        if let Some(step) = next_steps.pop() {
             match step {
                 NextStep::NextStmt { idx } => {
                     let stmts = fun_bodies

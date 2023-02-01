@@ -7,7 +7,7 @@ use crate::prompt::prompt_symbol;
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Integer(i64),
     Boolean(bool),
@@ -177,33 +177,39 @@ fn evaluate_expr(expr: &Expression, env: &mut Env) -> Result<Value, String> {
     }
 }
 
+#[derive(Debug)]
 enum NextStep {
     NextStmt { idx: usize },
     EvalSubexpressions(usize),
     EvalLet(String),
     EvalCall { num_args: usize },
     EvalAdd,
-    Drop,
 }
 
-fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<(), String> {
+fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut subexprs_to_eval: Vec<Expression> = vec![];
-    let mut subexprs_values: Vec<Value> = vec![];
+    let mut subexprs_values: Vec<Value> = vec![Value::Integer(1234)];
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
     loop {
-        if let Some(step) = next_steps.pop() {
+        if let Some(step) = dbg!(next_steps.pop()) {
+            dbg!(&subexprs_values);
             match step {
                 NextStep::NextStmt { idx } => {
                     let stmts = fun_bodies
                         .last()
                         .expect("Function stack should never be empty");
                     if let Some(stmt) = stmts.get(idx) {
+                        if idx > 0 {
+                            // Discard value from previous statement.
+                            subexprs_values.pop().expect("Popped an empty value stack");
+                        }
                         match stmt {
                             Statement::Fun(name, params, body) => {
                                 let value = Value::Fun(name.clone(), params.clone(), body.clone());
                                 env.set_with_file_scope(name, value.clone());
+                                subexprs_values.push(value);
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                             }
                             Statement::Let(v, e) => {
@@ -215,7 +221,6 @@ fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<(), String> {
                             Statement::Expr(e) => {
                                 subexprs_to_eval.push(e.clone());
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
-                                next_steps.push(NextStep::Drop);
                                 next_steps.push(NextStep::EvalSubexpressions(1));
                             }
                         }
@@ -318,9 +323,6 @@ fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<(), String> {
 
                     subexprs_values.push(Value::Integer(lhs_num + rhs_num))
                 }
-                NextStep::Drop => {
-                    subexprs_values.pop().expect("Popped an empty value stack");
-                }
                 NextStep::EvalCall { num_args } => {
                     let receiver = subexprs_values
                         .pop()
@@ -371,7 +373,9 @@ fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<(), String> {
         }
     }
 
-    Ok(())
+    Ok(subexprs_values
+        .pop()
+        .expect("Should have a value from the last expression"))
 }
 
 fn read_replacement(msg: &str) -> Result<Expression, String> {
@@ -397,5 +401,14 @@ mod tests {
         let mut env = Env::default();
         let value = evaluate_stmt(&Statement::Expr(Expression::Boolean(true)), &mut env).unwrap();
         assert!(matches!(value, Value::Boolean(true)));
+    }
+
+    #[test]
+    fn test_eval_iter_bool_literal() {
+        let stmts = vec![Statement::Expr(Expression::Boolean(true))];
+
+        let mut env = Env::default();
+        let value = eval_iter(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(true));
     }
 }

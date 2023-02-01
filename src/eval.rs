@@ -250,6 +250,7 @@ fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             subexprs_to_eval.push(*rhs.clone());
                             subexprs_to_eval.push(*lhs.clone());
 
+                            next_steps.push(NextStep::EvalAdd);
                             next_steps.push(NextStep::EvalSubexpressions(2));
                         }
                         Expression::Variable(s) => match env.get(&s) {
@@ -421,5 +422,18 @@ mod tests {
         let mut env = Env::default();
         let value = eval_iter(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(false));
+    }
+
+    #[test]
+    fn test_eval_iter_add() {
+        let stmts = vec![Statement::Expr(Expression::BinaryOperator(
+            Box::new(Expression::Integer(1)),
+            "+".into(),
+            Box::new(Expression::Integer(2)),
+        ))];
+
+        let mut env = Env::default();
+        let value = eval_iter(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(3));
     }
 }

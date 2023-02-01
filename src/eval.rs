@@ -411,4 +411,16 @@ mod tests {
         let value = eval_iter(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
+
+    #[test]
+    fn test_eval_iter_multiple_stmts() {
+        let stmts = vec![
+            Statement::Expr(Expression::Boolean(true)),
+            Statement::Expr(Expression::Boolean(false)),
+        ];
+
+        let mut env = Env::default();
+        let value = eval_iter(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(false));
+    }
 }

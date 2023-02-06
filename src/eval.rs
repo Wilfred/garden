@@ -12,6 +12,7 @@ pub enum Value {
     Integer(i64),
     Boolean(bool),
     Fun(String, Vec<String>, Vec<Statement>),
+    Void,
 }
 
 impl Display for Value {
@@ -20,6 +21,7 @@ impl Display for Value {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Fun(name, _, _) => write!(f, "(function: {})", name),
+            Value::Void => write!(f, "void"),
         }
     }
 }
@@ -82,7 +84,7 @@ pub fn evaluate_stmt(stmt: &Statement, env: &mut Env) -> Result<Value, String> {
 
             // TODO: does this make sense for scope for let outside a function?
             env.set_with_fun_scope(variable, value.clone());
-            Ok(value)
+            Ok(Value::Void)
         }
         Statement::Fun(name, params, body) => {
             let value = Value::Fun(name.clone(), params.clone(), body.clone());
@@ -188,7 +190,7 @@ enum NextStep {
 
 fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut subexprs_to_eval: Vec<Expression> = vec![];
-    let mut subexprs_values: Vec<Value> = vec![Value::Integer(1234)];
+    let mut subexprs_values: Vec<Value> = vec![Value::Void];
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 

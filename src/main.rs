@@ -17,6 +17,7 @@ fn main() {
         "garden".bold().green(),
         "!".bold()
     );
+    println!("Type {} if you're new here.", ":help".bold().green(),);
 
     let mut env = Env::default();
     env.set_with_file_scope("x", Value::Boolean(true));
@@ -59,6 +60,16 @@ fn main() {
                     };
                     let mut token_ptr = &tokens[..];
                     println!("{:?}", parse_toplevel(&mut token_ptr));
+                    continue;
+                }
+                if input.trim() == ":help" {
+                    println!(
+                        "Available commands are {}, {}, {} and {}.",
+                        ":parse".green(),
+                        ":locals".green(),
+                        ":globals".green(),
+                        ":help".green(),
+                    );
                     continue;
                 }
 

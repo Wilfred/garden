@@ -457,4 +457,25 @@ mod tests {
         let value = eval_iter(&[], &mut env).unwrap();
         assert_eq!(value, Value::Void);
     }
+
+    #[test]
+    fn test_eval_iter_call() {
+        // fun f() { true; }
+        // f();
+        let stmts = vec![
+            Statement::Fun(
+                "f".into(),
+                vec![],
+                vec![Statement::Expr(Expression::Boolean(true))],
+            ),
+            Statement::Expr(Expression::Call(
+                Box::new(Expression::Variable("f".into())),
+                vec![],
+            )),
+        ];
+
+        let mut env = Env::default();
+        let value = eval_iter(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(true));
+    }
 }

@@ -450,4 +450,11 @@ mod tests {
         let value = eval_iter(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
+
+    #[test]
+    fn test_eval_iter_empty() {
+        let mut env = Env::default();
+        let value = eval_iter(&[], &mut env).unwrap();
+        assert_eq!(value, Value::Void);
+    }
 }

@@ -36,7 +36,7 @@ impl Default for Env {
     fn default() -> Self {
         Self {
             file_scope: HashMap::new(),
-            fun_scopes: vec![],
+            fun_scopes: vec![HashMap::new()],
         }
     }
 }
@@ -193,7 +193,6 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
-    env.push_new_fun_scope();
     loop {
         if let Some(step) = next_steps.pop() {
             match step {
@@ -227,8 +226,12 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         }
                     } else {
                         // Reached end of this block. Pop to the parent.
+                        if env.fun_scopes.len() > 1 {
+                            // Don't pop the outer scope: that's for the top level environment.
+                            env.pop_fun_scope();
+                        }
+
                         // TODO: function return value.
-                        env.pop_fun_scope();
                         fun_bodies.pop();
                     }
                 }
@@ -415,11 +418,13 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_twice() {
-        let stmts = vec![Statement::Expr(Expression::Integer(123))];
-
+    fn test_eval_persist_env() {
         let mut env = Env::default();
+
+        let stmts = vec![Statement::Let("foo".into(), Expression::Boolean(true))];
         eval_iter(&stmts, &mut env).unwrap();
+
+        let stmts = vec![Statement::Expr(Expression::Variable("foo".into()))];
         eval_iter(&stmts, &mut env).unwrap();
     }
 

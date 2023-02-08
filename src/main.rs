@@ -20,7 +20,6 @@ fn main() {
     println!("Type {} if you're new here.", ":help".bold().green(),);
 
     let mut env = Env::default();
-    env.set_with_file_scope("x", Value::Boolean(true));
 
     let mut rl: Editor<()> = Editor::new().unwrap();
     loop {

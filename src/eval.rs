@@ -36,8 +36,7 @@ impl Default for Env {
     fn default() -> Self {
         Self {
             file_scope: HashMap::new(),
-            // TODO: having a toplevel function scope is hard to reason about.
-            fun_scopes: vec![HashMap::new()],
+            fun_scopes: vec![],
         }
     }
 }
@@ -188,12 +187,13 @@ enum NextStep {
     EvalAdd,
 }
 
-fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
+pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut subexprs_to_eval: Vec<Expression> = vec![];
     let mut subexprs_values: Vec<Value> = vec![Value::Void];
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
+    env.push_new_fun_scope();
     loop {
         if let Some(step) = next_steps.pop() {
             match step {
@@ -412,6 +412,15 @@ mod tests {
         let mut env = Env::default();
         let value = eval_iter(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
+    }
+
+    #[test]
+    fn test_eval_twice() {
+        let stmts = vec![Statement::Expr(Expression::Integer(123))];
+
+        let mut env = Env::default();
+        eval_iter(&stmts, &mut env).unwrap();
+        eval_iter(&stmts, &mut env).unwrap();
     }
 
     #[test]

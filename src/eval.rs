@@ -161,8 +161,7 @@ fn evaluate_expr(expr: &Expression, env: &mut Env) -> Result<Value, String> {
                         env.set_with_fun_scope(&var_name, value);
                     }
 
-                    // TODO: define a void type.
-                    let mut res = Value::Boolean(false);
+                    let mut res = Value::Void;
                     for stmt in body {
                         res = evaluate_stmt(&stmt, env)?;
                     }

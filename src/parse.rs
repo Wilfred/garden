@@ -291,14 +291,14 @@ fn parse_let_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     Ok(Statement::Let(variable, expr))
 }
 
-pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Statement, String> {
-    let expr = parse_statement(tokens)?;
+pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Vec<Statement>, String> {
+    let mut res = vec![];
 
-    if !tokens.is_empty() {
-        return Err(format!("Tokens left after parsing: {:?}", tokens));
+    while !tokens.is_empty() {
+        res.push(parse_statement(tokens)?);
     }
 
-    Ok(expr)
+    Ok(res)
 }
 
 pub fn lex(s: &str) -> Result<Vec<&str>, String> {
@@ -360,10 +360,7 @@ mod tests {
         let mut token_ptr = &tokens[..];
         let ast = parse_toplevel(&mut token_ptr).unwrap();
 
-        assert!(matches!(
-            ast,
-            Statement::Expr(Expression::BoolLiteral(true))
-        ));
+        assert_eq!(ast, vec![Statement::Expr(Expression::BoolLiteral(true))]);
     }
 
     #[test]
@@ -375,7 +372,7 @@ mod tests {
 
         assert_eq!(
             ast,
-            Statement::Expr(Expression::Variable("abc_def".to_string()))
+            vec![Statement::Expr(Expression::Variable("abc_def".to_string()))]
         );
     }
 }

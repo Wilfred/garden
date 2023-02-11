@@ -85,7 +85,7 @@ fn main() {
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
-                    Ok(stmt) => match eval_iter(&[stmt], &mut env) {
+                    Ok(stmts) => match eval_iter(&stmts, &mut env) {
                         Ok(result) => match result {
                             eval::Value::Void => {}
                             v => {

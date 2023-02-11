@@ -102,8 +102,9 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
 
         if token.starts_with("\"") {
             pop_token(tokens);
-            // TODO: strip outer double quotes.
-            return Ok(Expression::StringLiteral(token.to_owned()));
+            return Ok(Expression::StringLiteral(
+                token[1..token.len() - 1].to_owned(),
+            ));
         }
     }
 

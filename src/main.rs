@@ -22,6 +22,9 @@ fn main() {
     let mut env = Env::default();
 
     let mut rl: Editor<()> = Editor::new().unwrap();
+    // TODO: put this in the home directory rather than the current directory.
+    let _ = rl.load_history(".history");
+
     loop {
         println!();
 
@@ -101,4 +104,6 @@ fn main() {
             Err(_) => break,
         }
     }
+
+    let _ = rl.save_history(".history");
 }

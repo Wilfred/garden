@@ -12,8 +12,14 @@ pub enum Value {
     Integer(i64),
     Boolean(bool),
     Fun(String, Vec<String>, Vec<Statement>),
+    BuiltinFunction(BuiltinFunctionKind),
     String(String),
     Void,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BuiltinFunctionKind {
+    Print,
 }
 
 impl Display for Value {
@@ -22,6 +28,7 @@ impl Display for Value {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Fun(name, _, _) => write!(f, "(function: {})", name),
+            Value::BuiltinFunction(BuiltinFunctionKind::Print) => write!(f, "(function: print)"),
             Value::Void => write!(f, "void"),
             // TODO: escape inner double quotes.
             Value::String(s) => write!(f, "\"{}\"", s),
@@ -37,8 +44,14 @@ pub struct Env {
 
 impl Default for Env {
     fn default() -> Self {
+        let mut file_scope: HashMap<String, Value> = HashMap::new();
+        file_scope.insert(
+            "print".to_owned(),
+            Value::BuiltinFunction(BuiltinFunctionKind::Print),
+        );
+
         Self {
-            file_scope: HashMap::new(),
+            file_scope,
             fun_scopes: vec![HashMap::new()],
         }
     }
@@ -260,6 +273,22 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             // Pop fun scope.
                             // env.pop_fun_scope();
                         }
+                        Value::BuiltinFunction(k) => match k {
+                            BuiltinFunctionKind::Print => {
+                                if args.len() != 1 {
+                                    return Err(format!(
+                                        "Function print requires 1 argument, but got: {}",
+                                        args.len()
+                                    ));
+                                }
+                                match &args[0] {
+                                    Value::String(s) => println!("{}", s),
+                                    v => {
+                                        return Err(format!("Expected a string, but got: {}", v));
+                                    }
+                                }
+                            }
+                        },
                         v => {
                             return Err(format!("Expected a function, but got: {}", v));
                         }

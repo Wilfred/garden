@@ -266,10 +266,10 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             }
                         },
                         Expression::Call(receiver, args) => {
+                            subexprs_to_eval.push(*receiver.clone());
                             for arg in &args {
                                 subexprs_to_eval.push(arg.clone());
                             }
-                            subexprs_to_eval.push(*receiver.clone());
 
                             next_steps.push(NextStep::EvalCall {
                                 num_args: args.len(),
@@ -491,5 +491,26 @@ mod tests {
         let mut env = Env::default();
         let value = eval_iter(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
+    }
+
+    #[test]
+    fn test_eval_iter_call_with_arg() {
+        // fun f(x) { x; }
+        // f(123);
+        let stmts = vec![
+            Statement::Fun(
+                "f".into(),
+                vec!["x".into()],
+                vec![Statement::Expr(Expression::Variable("x".into()))],
+            ),
+            Statement::Expr(Expression::Call(
+                Box::new(Expression::Variable("f".into())),
+                vec![Expression::Integer(123)],
+            )),
+        ];
+
+        let mut env = Env::default();
+        let value = eval_iter(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(123));
     }
 }

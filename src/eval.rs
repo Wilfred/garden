@@ -12,6 +12,7 @@ pub enum Value {
     Integer(i64),
     Boolean(bool),
     Fun(String, Vec<String>, Vec<Statement>),
+    String(String),
     Void,
 }
 
@@ -22,6 +23,8 @@ impl Display for Value {
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Fun(name, _, _) => write!(f, "(function: {})", name),
             Value::Void => write!(f, "void"),
+            // TODO: escape inner double quotes.
+            Value::String(s) => write!(f, "\"{}\"", s),
         }
     }
 }
@@ -146,6 +149,9 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         }
                         Expression::Boolean(b) => {
                             subexprs_values.push(Value::Boolean(b));
+                        }
+                        Expression::String(s) => {
+                            subexprs_values.push(Value::String(s));
                         }
                         Expression::BinaryOperator(lhs, _, rhs) => {
                             subexprs_to_eval.push(*rhs.clone());

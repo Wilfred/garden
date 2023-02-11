@@ -3,6 +3,7 @@ use regex::Regex;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
     Integer(i64),
+    String(String),
     Boolean(bool),
     BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
@@ -97,6 +98,12 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
         if re.is_match(token) {
             return parse_variable_expression(tokens);
+        }
+
+        if token.starts_with("\"") {
+            pop_token(tokens);
+            // TODO: strip outer double quotes.
+            return Ok(Expression::String(token.to_owned()));
         }
     }
 
@@ -295,6 +302,7 @@ pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Statement, String> {
 
 pub fn lex(s: &str) -> Result<Vec<&str>, String> {
     let integer_re = Regex::new(r"^[0-9]+").unwrap();
+    let string_re = Regex::new(r#"^"[^"]*""#).unwrap();
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 
     let mut res = vec![];
@@ -312,6 +320,9 @@ pub fn lex(s: &str) -> Result<Vec<&str>, String> {
         if let Some(integer_match) = integer_re.find(s) {
             res.push(integer_match.as_str());
             s = &s[integer_match.end()..];
+        } else if let Some(string_match) = string_re.find(s) {
+            res.push(string_match.as_str());
+            s = &s[string_match.end()..];
         } else if let Some(variable_match) = variable_re.find(s) {
             res.push(variable_match.as_str());
             s = &s[variable_match.end()..];

@@ -83,9 +83,12 @@ fn main() {
 
                 match parse_toplevel(&mut token_ptr) {
                     Ok(stmt) => match eval_iter(&[stmt], &mut env) {
-                        Ok(result) => {
-                            println!("{}", result)
-                        }
+                        Ok(result) => match result {
+                            eval::Value::Void => {}
+                            v => {
+                                println!("{}", v)
+                            }
+                        },
                         Err(e) => {
                             println!("{}: {}", "Error".bright_red(), e);
                         }

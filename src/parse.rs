@@ -2,9 +2,9 @@ use regex::Regex;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression {
-    Integer(i64),
-    String(String),
-    Boolean(bool),
+    IntLiteral(i64),
+    StringLiteral(String),
+    BoolLiteral(bool),
     BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
     Call(Box<Expression>, Vec<Expression>),
@@ -61,7 +61,7 @@ fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
     let token = require_a_token(tokens, "integer literal")?;
     if re.is_match(token) {
         let i: i64 = token.parse().unwrap();
-        Ok(Expression::Integer(i))
+        Ok(Expression::IntLiteral(i))
     } else {
         Err(format!("Not a valid integer literal: {}", token))
     }
@@ -88,11 +88,11 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
 
         if token == "true" {
             pop_token(tokens);
-            return Ok(Expression::Boolean(true));
+            return Ok(Expression::BoolLiteral(true));
         }
         if token == "false" {
             pop_token(tokens);
-            return Ok(Expression::Boolean(false));
+            return Ok(Expression::BoolLiteral(false));
         }
 
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
@@ -103,7 +103,7 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
         if token.starts_with("\"") {
             pop_token(tokens);
             // TODO: strip outer double quotes.
-            return Ok(Expression::String(token.to_owned()));
+            return Ok(Expression::StringLiteral(token.to_owned()));
         }
     }
 
@@ -359,7 +359,10 @@ mod tests {
         let mut token_ptr = &tokens[..];
         let ast = parse_toplevel(&mut token_ptr).unwrap();
 
-        assert!(matches!(ast, Statement::Expr(Expression::Boolean(true))));
+        assert!(matches!(
+            ast,
+            Statement::Expr(Expression::BoolLiteral(true))
+        ));
     }
 
     #[test]

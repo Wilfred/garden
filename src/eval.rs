@@ -144,13 +144,13 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         .pop()
                         .expect("Expected a non-empty subexpression stack");
                     match expr {
-                        Expression::Integer(i) => {
+                        Expression::IntLiteral(i) => {
                             subexprs_values.push(Value::Integer(i));
                         }
-                        Expression::Boolean(b) => {
+                        Expression::BoolLiteral(b) => {
                             subexprs_values.push(Value::Boolean(b));
                         }
-                        Expression::String(s) => {
+                        Expression::StringLiteral(s) => {
                             subexprs_values.push(Value::String(s));
                         }
                         Expression::BinaryOperator(lhs, _, rhs) => {
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_eval_iter_bool_literal() {
-        let stmts = vec![Statement::Expr(Expression::Boolean(true))];
+        let stmts = vec![Statement::Expr(Expression::BoolLiteral(true))];
 
         let mut env = Env::default();
         let value = eval_iter(&stmts, &mut env).unwrap();
@@ -307,7 +307,7 @@ mod tests {
     fn test_eval_persist_env() {
         let mut env = Env::default();
 
-        let stmts = vec![Statement::Let("foo".into(), Expression::Boolean(true))];
+        let stmts = vec![Statement::Let("foo".into(), Expression::BoolLiteral(true))];
         eval_iter(&stmts, &mut env).unwrap();
 
         let stmts = vec![Statement::Expr(Expression::Variable("foo".into()))];
@@ -317,8 +317,8 @@ mod tests {
     #[test]
     fn test_eval_iter_multiple_stmts() {
         let stmts = vec![
-            Statement::Expr(Expression::Boolean(true)),
-            Statement::Expr(Expression::Boolean(false)),
+            Statement::Expr(Expression::BoolLiteral(true)),
+            Statement::Expr(Expression::BoolLiteral(false)),
         ];
 
         let mut env = Env::default();
@@ -329,9 +329,9 @@ mod tests {
     #[test]
     fn test_eval_iter_add() {
         let stmts = vec![Statement::Expr(Expression::BinaryOperator(
-            Box::new(Expression::Integer(1)),
+            Box::new(Expression::IntLiteral(1)),
             "+".into(),
-            Box::new(Expression::Integer(2)),
+            Box::new(Expression::IntLiteral(2)),
         ))];
 
         let mut env = Env::default();
@@ -342,7 +342,7 @@ mod tests {
     #[test]
     fn test_eval_iter_let() {
         let stmts = vec![
-            Statement::Let("foo".into(), Expression::Boolean(true)),
+            Statement::Let("foo".into(), Expression::BoolLiteral(true)),
             Statement::Expr(Expression::Variable("foo".into())),
         ];
 
@@ -366,7 +366,7 @@ mod tests {
             Statement::Fun(
                 "f".into(),
                 vec![],
-                vec![Statement::Expr(Expression::Boolean(true))],
+                vec![Statement::Expr(Expression::BoolLiteral(true))],
             ),
             Statement::Expr(Expression::Call(
                 Box::new(Expression::Variable("f".into())),
@@ -391,7 +391,7 @@ mod tests {
             ),
             Statement::Expr(Expression::Call(
                 Box::new(Expression::Variable("f".into())),
-                vec![Expression::Integer(123)],
+                vec![Expression::IntLiteral(123)],
             )),
         ];
 

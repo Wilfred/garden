@@ -120,8 +120,8 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         match stmt {
                             Statement::Fun(name, params, body) => {
                                 let value = Value::Fun(name.clone(), params.clone(), body.clone());
-                                env.set_with_file_scope(name, value.clone());
-                                subexprs_values.push(value);
+                                env.set_with_file_scope(name, value);
+                                subexprs_values.push(Value::Void);
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                             }
                             Statement::Let(v, e) => {

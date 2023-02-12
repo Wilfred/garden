@@ -94,6 +94,7 @@ fn main() {
                         },
                         Err(e) => {
                             println!("{}: {}", "Error".bright_red(), e);
+                            print_stack(&env);
                         }
                     },
                     Err(e) => {
@@ -106,4 +107,10 @@ fn main() {
     }
 
     let _ = rl.save_history(".history");
+}
+
+fn print_stack(env: &Env) {
+    for (description, _) in env.fun_scopes.iter().rev() {
+        println!("In {}", description);
+    }
 }

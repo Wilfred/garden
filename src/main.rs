@@ -43,7 +43,7 @@ fn main() {
                 }
 
                 if input == ":locals" {
-                    if let Some(fun_scope) = env.fun_scopes.last() {
+                    if let Some((_, fun_scope)) = env.fun_scopes.last() {
                         for (var_name, value) in fun_scope {
                             println!("{}\t{}", var_name.bright_green(), value);
                         }

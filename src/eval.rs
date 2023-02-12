@@ -39,7 +39,7 @@ impl Display for Value {
 #[derive(Debug)]
 pub struct Env {
     pub file_scope: HashMap<String, Value>,
-    pub fun_scopes: Vec<HashMap<String, Value>>,
+    pub fun_scopes: Vec<(String, HashMap<String, Value>)>,
 }
 
 impl Default for Env {
@@ -52,14 +52,14 @@ impl Default for Env {
 
         Self {
             file_scope,
-            fun_scopes: vec![HashMap::new()],
+            fun_scopes: vec![("toplevel".into(), HashMap::new())],
         }
     }
 }
 
 impl Env {
     pub fn get(&self, name: &str) -> Option<Value> {
-        if let Some(fun_scope) = self.fun_scopes.last() {
+        if let Some((_, fun_scope)) = self.fun_scopes.last() {
             if let Some(value) = fun_scope.get(name) {
                 return Some(value.clone());
             }
@@ -72,8 +72,8 @@ impl Env {
         None
     }
 
-    pub fn push_new_fun_scope(&mut self) {
-        self.fun_scopes.push(HashMap::new());
+    pub fn push_new_fun_scope(&mut self, description: String) {
+        self.fun_scopes.push((description, HashMap::new()));
     }
 
     pub fn pop_fun_scope(&mut self) {
@@ -85,7 +85,7 @@ impl Env {
     }
 
     pub fn set_with_fun_scope(&mut self, name: &str, value: Value) {
-        let fun_scope = &mut self.fun_scopes.last_mut().unwrap();
+        let (_, fun_scope) = &mut self.fun_scopes.last_mut().unwrap();
         fun_scope.insert(name.to_string(), value);
     }
 }
@@ -260,7 +260,7 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 ));
                             }
 
-                            env.push_new_fun_scope();
+                            env.push_new_fun_scope(name);
                             for (var_name, value) in params.iter().zip(args) {
                                 env.set_with_fun_scope(&var_name, value);
                             }

@@ -1,5 +1,8 @@
 [package]
-name = "garden"
+name = "garden-lang"
+description = "A live programming language."
+license = "MIT"
+repository = "https://github.com/Wilfred/garden"
 version = "0.2.0"
 edition = "2021"
 

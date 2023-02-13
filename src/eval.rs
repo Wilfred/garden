@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parse::Statement;
 use crate::parse::{lex, parse_expression, Expression};
+use crate::parse::{parse_toplevel, Statement};
 use crate::prompt::prompt_symbol;
 
 use owo_colors::OwoColorize;
@@ -99,6 +99,31 @@ enum NextStep {
     EvalAdd,
 }
 
+fn error_prompt(message: &str) -> Result<Statement, String> {
+    println!("{}: {}", "Error".bright_red(), message);
+    println!("What value would you like to use instead?");
+
+    let mut rl: Editor<()> = Editor::new().unwrap();
+    match rl.readline(&prompt_symbol(1)) {
+        Ok(input) => {
+            let input = input.trim().to_string();
+            let tokens = lex(&input)?;
+            let mut token_ptr = &tokens[..];
+
+            let mut asts: Vec<Statement> = parse_toplevel(&mut token_ptr)?;
+            if asts.len() != 1 {
+                return Err(format!(
+                    "Expected to read a single statement, got {} items",
+                    asts.len()
+                ));
+            }
+
+            Ok(asts.pop().unwrap())
+        }
+        Err(e) => Err(format!("Input failed: {}", e)),
+    }
+}
+
 pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut subexprs_to_eval: Vec<Expression> = vec![];
     let mut subexprs_values: Vec<Value> = vec![Value::Void];
@@ -176,8 +201,20 @@ pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         Expression::Variable(s) => match env.get(&s) {
                             Some(v) => subexprs_values.push(v),
                             None => {
-                                // TODO: read_replacement
-                                return Err(format!("Unbound variable: {}", s));
+                                let replacement_stmt =
+                                    error_prompt(&format!("Unbound variable: {}", s))?;
+                                match replacement_stmt {
+                                    Statement::Expr(expr) => {
+                                        subexprs_to_eval.push(expr);
+                                        next_steps.push(NextStep::EvalSubexpressions(1));
+                                    }
+                                    _ => {
+                                        return Err(format!(
+                                            "Expected an expression, but got {:?}",
+                                            replacement_stmt
+                                        ));
+                                    }
+                                }
                             }
                         },
                         Expression::Call(receiver, args) => {

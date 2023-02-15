@@ -10,6 +10,31 @@ use crate::{
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 
+#[derive(Debug)]
+enum Commands {
+    Help,
+    Globals,
+    Locals,
+    Parse(String),
+}
+
+impl Commands {
+    fn from_string(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            ":help" => Some(Commands::Help),
+            ":globals" => Some(Commands::Globals),
+            ":locals" => Some(Commands::Locals),
+            _ => {
+                if let Some(src) = s.strip_prefix(":parse ") {
+                    Some(Commands::Parse(src.to_owned()))
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+
 fn main() {
     println!(
         "{} {}{}",
@@ -34,45 +59,53 @@ fn main() {
 
                 let input = input.trim().to_string();
 
-                if input == ":globals" {
-                    for (var_name, value) in &env.file_scope {
-                        println!("{}\t{}", var_name.bright_green(), value);
+                match Commands::from_string(&input) {
+                    Some(Commands::Help) => {
+                        println!(
+                            "Available commands are {}, {}, {} and {}.",
+                            ":parse".green(),
+                            ":locals".green(),
+                            ":globals".green(),
+                            ":help".green(),
+                        );
+                        continue;
                     }
-
-                    continue;
-                }
-
-                if input == ":locals" {
-                    if let Some((_, fun_scope)) = env.fun_scopes.last() {
-                        for (var_name, value) in fun_scope {
+                    Some(Commands::Globals) => {
+                        for (var_name, value) in &env.file_scope {
                             println!("{}\t{}", var_name.bright_green(), value);
                         }
+
+                        continue;
                     }
-
-                    continue;
-                }
-
-                if let Some(input) = input.strip_prefix(":parse ") {
-                    let tokens = match lex(input) {
-                        Ok(tokens) => tokens,
-                        Err(e) => {
-                            println!("{}: {}", "Error".bright_red(), e);
-                            continue;
+                    Some(Commands::Locals) => {
+                        if let Some((_, fun_scope)) = env.fun_scopes.last() {
+                            for (var_name, value) in fun_scope {
+                                println!("{}\t{}", var_name.bright_green(), value);
+                            }
                         }
-                    };
-                    let mut token_ptr = &tokens[..];
-                    println!("{:?}", parse_toplevel(&mut token_ptr));
-                    continue;
-                }
-                if input.trim() == ":help" {
-                    println!(
-                        "Available commands are {}, {}, {} and {}.",
-                        ":parse".green(),
-                        ":locals".green(),
-                        ":globals".green(),
-                        ":help".green(),
-                    );
-                    continue;
+
+                        continue;
+                    }
+                    Some(Commands::Parse(src)) => {
+                        let tokens = match lex(&src) {
+                            Ok(tokens) => tokens,
+                            Err(e) => {
+                                println!("{}: {}", "Error".bright_red(), e);
+                                continue;
+                            }
+                        };
+                        let mut token_ptr = &tokens[..];
+
+                        match parse_toplevel(&mut token_ptr) {
+                            Ok(ast) => println!("{:?}", ast),
+                            Err(e) => {
+                                println!("{}: {}", "Error".bright_red(), e);
+                                continue;
+                            }
+                        };
+                        continue;
+                    }
+                    None => {}
                 }
 
                 let tokens = match lex(&input) {

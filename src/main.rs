@@ -3,7 +3,7 @@ mod parse;
 mod prompt;
 
 use crate::{
-    eval::{eval_iter, Env},
+    eval::{eval_stmts, Env},
     parse::{lex, parse_toplevel},
     prompt::prompt_symbol,
 };
@@ -118,7 +118,7 @@ fn main() {
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
-                    Ok(stmts) => match eval_iter(&stmts, &mut env) {
+                    Ok(stmts) => match eval_stmts(&stmts, &mut env) {
                         Ok(result) => match result {
                             eval::Value::Void => {}
                             v => {

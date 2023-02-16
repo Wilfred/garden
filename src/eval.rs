@@ -124,7 +124,7 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
     }
 }
 
-pub fn eval_iter(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
+pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut subexprs_to_eval: Vec<Expression> = vec![];
     let mut subexprs_values: Vec<Value> = vec![Value::Void];
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
@@ -365,7 +365,7 @@ mod tests {
         let stmts = vec![Statement::Expr(Expression::BoolLiteral(true))];
 
         let mut env = Env::default();
-        let value = eval_iter(&stmts, &mut env).unwrap();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
@@ -374,10 +374,10 @@ mod tests {
         let mut env = Env::default();
 
         let stmts = vec![Statement::Let("foo".into(), Expression::BoolLiteral(true))];
-        eval_iter(&stmts, &mut env).unwrap();
+        eval_stmts(&stmts, &mut env).unwrap();
 
         let stmts = vec![Statement::Expr(Expression::Variable("foo".into()))];
-        eval_iter(&stmts, &mut env).unwrap();
+        eval_stmts(&stmts, &mut env).unwrap();
     }
 
     #[test]
@@ -388,7 +388,7 @@ mod tests {
         ];
 
         let mut env = Env::default();
-        let value = eval_iter(&stmts, &mut env).unwrap();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(false));
     }
 
@@ -401,7 +401,7 @@ mod tests {
         ))];
 
         let mut env = Env::default();
-        let value = eval_iter(&stmts, &mut env).unwrap();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(3));
     }
 
@@ -413,14 +413,14 @@ mod tests {
         ];
 
         let mut env = Env::default();
-        let value = eval_iter(&stmts, &mut env).unwrap();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
     #[test]
     fn test_eval_iter_empty() {
         let mut env = Env::default();
-        let value = eval_iter(&[], &mut env).unwrap();
+        let value = eval_stmts(&[], &mut env).unwrap();
         assert_eq!(value, Value::Void);
     }
 
@@ -441,7 +441,7 @@ mod tests {
         ];
 
         let mut env = Env::default();
-        let value = eval_iter(&stmts, &mut env).unwrap();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
@@ -462,7 +462,7 @@ mod tests {
         ];
 
         let mut env = Env::default();
-        let value = eval_iter(&stmts, &mut env).unwrap();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(123));
     }
 }

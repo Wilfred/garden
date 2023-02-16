@@ -2,6 +2,9 @@ mod eval;
 mod parse;
 mod prompt;
 
+use std::fs::OpenOptions;
+use std::io::Write;
+
 use crate::{
     eval::{eval_stmts, Env},
     parse::{lex, parse_toplevel},
@@ -118,18 +121,21 @@ fn main() {
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {
-                    Ok(stmts) => match eval_stmts(&stmts, &mut env) {
-                        Ok(result) => match result {
-                            eval::Value::Void => {}
-                            v => {
-                                println!("{}", v)
+                    Ok(stmts) => {
+                        log_src(input).unwrap();
+                        match eval_stmts(&stmts, &mut env) {
+                            Ok(result) => match result {
+                                eval::Value::Void => {}
+                                v => {
+                                    println!("{}", v)
+                                }
+                            },
+                            Err(e) => {
+                                println!("{}: {}", "Error".bright_red(), e);
+                                print_stack(&env);
                             }
-                        },
-                        Err(e) => {
-                            println!("{}: {}", "Error".bright_red(), e);
-                            print_stack(&env);
                         }
-                    },
+                    }
                     Err(e) => {
                         println!("Parsing failed: {}", e);
                     }
@@ -140,6 +146,15 @@ fn main() {
     }
 
     let _ = rl.save_history(".history");
+}
+
+fn log_src(src: String) -> std::io::Result<()> {
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("log.gdn")?;
+
+    write!(file, "\n{}", src)
 }
 
 fn print_stack(env: &Env) {

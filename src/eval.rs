@@ -107,7 +107,7 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
     match rl.readline(&prompt_symbol(1)) {
         Ok(input) => {
             let input = input.trim().to_string();
-            let tokens = lex(&input)?;
+            let tokens: Vec<&str> = lex(input.trim())?.into_iter().map(|x| x.1).collect();
             let mut token_ptr = &tokens[..];
 
             let mut asts: Vec<Statement> = parse_toplevel(&mut token_ptr)?;
@@ -351,7 +351,7 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
         .readline(&prompt_symbol(1))
         .expect("error: unable to read user input");
 
-    let tokens = lex(input.trim())?;
+    let tokens: Vec<&str> = lex(input.trim())?.into_iter().map(|x| x.1).collect();
     let mut token_ptr = &tokens[..];
     parse_expression(&mut token_ptr)
 }

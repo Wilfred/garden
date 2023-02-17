@@ -97,6 +97,7 @@ fn main() {
                                 continue;
                             }
                         };
+                        let tokens: Vec<&str> = tokens.into_iter().map(|x| x.1).collect();
                         let mut token_ptr = &tokens[..];
 
                         match parse_toplevel(&mut token_ptr) {
@@ -118,6 +119,7 @@ fn main() {
                         continue;
                     }
                 };
+                let tokens: Vec<&str> = tokens.into_iter().map(|x| x.1).collect();
                 let mut token_ptr = &tokens[..];
 
                 match parse_toplevel(&mut token_ptr) {

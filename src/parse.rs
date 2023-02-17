@@ -52,11 +52,11 @@ fn require_a_token<'a>(
     }
 }
 
-fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<(), String> {
+fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize, String> {
     match pop_token(tokens) {
-        Some((_, token)) => {
+        Some((offset, token)) => {
             if token == expected {
-                Ok(())
+                Ok(offset)
             } else {
                 Err(format!("Expected `{}`, got `{}`", expected, token))
             }

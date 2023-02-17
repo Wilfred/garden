@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parse::{lex, parse_expression, Expression, Statement_};
+use crate::parse::{lex, parse_expression, Expression, Expression_, Statement_};
 use crate::parse::{parse_toplevel, Statement};
 use crate::prompt::prompt_symbol;
 
@@ -178,27 +178,27 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         next_steps.push(NextStep::EvalSubexpressions(n - 1));
                     }
 
-                    let expr = subexprs_to_eval
+                    let Expression(expr_) = subexprs_to_eval
                         .pop()
                         .expect("Expected a non-empty subexpression stack");
-                    match expr {
-                        Expression::IntLiteral(i) => {
+                    match expr_ {
+                        Expression_::IntLiteral(i) => {
                             subexprs_values.push(Value::Integer(i));
                         }
-                        Expression::BoolLiteral(b) => {
+                        Expression_::BoolLiteral(b) => {
                             subexprs_values.push(Value::Boolean(b));
                         }
-                        Expression::StringLiteral(s) => {
+                        Expression_::StringLiteral(s) => {
                             subexprs_values.push(Value::String(s));
                         }
-                        Expression::BinaryOperator(lhs, _, rhs) => {
+                        Expression_::BinaryOperator(lhs, _, rhs) => {
                             subexprs_to_eval.push(*rhs.clone());
                             subexprs_to_eval.push(*lhs.clone());
 
                             next_steps.push(NextStep::EvalAdd);
                             next_steps.push(NextStep::EvalSubexpressions(2));
                         }
-                        Expression::Variable(s) => match env.get(&s) {
+                        Expression_::Variable(s) => match env.get(&s) {
                             Some(v) => subexprs_values.push(v),
                             None => {
                                 let replacement_stmt =
@@ -217,7 +217,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 }
                             }
                         },
-                        Expression::Call(receiver, args) => {
+                        Expression_::Call(receiver, args) => {
                             subexprs_to_eval.push(*receiver.clone());
                             for arg in &args {
                                 subexprs_to_eval.push(arg.clone());
@@ -358,13 +358,15 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
 
 #[cfg(test)]
 mod tests {
+    use crate::parse::Expression_;
+
     use super::*;
 
     #[test]
     fn test_eval_iter_bool_literal() {
         let stmts = vec![Statement(
             0,
-            Statement_::Expr(Expression::BoolLiteral(true)),
+            Statement_::Expr(Expression(Expression_::BoolLiteral(true))),
         )];
 
         let mut env = Env::default();
@@ -378,13 +380,13 @@ mod tests {
 
         let stmts = vec![Statement(
             0,
-            Statement_::Let("foo".into(), Expression::BoolLiteral(true)),
+            Statement_::Let("foo".into(), Expression(Expression_::BoolLiteral(true))),
         )];
         eval_stmts(&stmts, &mut env).unwrap();
 
         let stmts = vec![Statement(
             0,
-            Statement_::Expr(Expression::Variable("foo".into())),
+            Statement_::Expr(Expression(Expression_::Variable("foo".into()))),
         )];
         eval_stmts(&stmts, &mut env).unwrap();
     }
@@ -392,8 +394,14 @@ mod tests {
     #[test]
     fn test_eval_iter_multiple_stmts() {
         let stmts = vec![
-            Statement(0, Statement_::Expr(Expression::BoolLiteral(true))),
-            Statement(5, Statement_::Expr(Expression::BoolLiteral(false))),
+            Statement(
+                0,
+                Statement_::Expr(Expression(Expression_::BoolLiteral(true))),
+            ),
+            Statement(
+                5,
+                Statement_::Expr(Expression(Expression_::BoolLiteral(false))),
+            ),
         ];
 
         let mut env = Env::default();
@@ -405,11 +413,11 @@ mod tests {
     fn test_eval_iter_add() {
         let stmts = vec![Statement(
             0,
-            Statement_::Expr(Expression::BinaryOperator(
-                Box::new(Expression::IntLiteral(1)),
+            Statement_::Expr(Expression(Expression_::BinaryOperator(
+                Box::new(Expression(Expression_::IntLiteral(1))),
                 "+".into(),
-                Box::new(Expression::IntLiteral(2)),
-            )),
+                Box::new(Expression(Expression_::IntLiteral(2))),
+            ))),
         )];
 
         let mut env = Env::default();
@@ -422,9 +430,12 @@ mod tests {
         let stmts = vec![
             Statement(
                 0,
-                Statement_::Let("foo".into(), Expression::BoolLiteral(true)),
+                Statement_::Let("foo".into(), Expression(Expression_::BoolLiteral(true))),
             ),
-            Statement(0, Statement_::Expr(Expression::Variable("foo".into()))),
+            Statement(
+                0,
+                Statement_::Expr(Expression(Expression_::Variable("foo".into()))),
+            ),
         ];
 
         let mut env = Env::default();
@@ -451,16 +462,16 @@ mod tests {
                     vec![],
                     vec![Statement(
                         0,
-                        Statement_::Expr(Expression::BoolLiteral(true)),
+                        Statement_::Expr(Expression(Expression_::BoolLiteral(true))),
                     )],
                 ),
             ),
             Statement(
                 0,
-                Statement_::Expr(Expression::Call(
-                    Box::new(Expression::Variable("f".into())),
+                Statement_::Expr(Expression(Expression_::Call(
+                    Box::new(Expression(Expression_::Variable("f".into()))),
                     vec![],
-                )),
+                ))),
             ),
         ];
 
@@ -481,16 +492,16 @@ mod tests {
                     vec!["x".into()],
                     vec![Statement(
                         0,
-                        Statement_::Expr(Expression::Variable("x".into())),
+                        Statement_::Expr(Expression(Expression_::Variable("x".into()))),
                     )],
                 ),
             ),
             Statement(
                 0,
-                Statement_::Expr(Expression::Call(
-                    Box::new(Expression::Variable("f".into())),
-                    vec![Expression::IntLiteral(123)],
-                )),
+                Statement_::Expr(Expression(Expression_::Call(
+                    Box::new(Expression(Expression_::Variable("f".into()))),
+                    vec![Expression(Expression_::IntLiteral(123))],
+                ))),
             ),
         ];
 

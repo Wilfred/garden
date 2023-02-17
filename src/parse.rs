@@ -6,7 +6,7 @@ use regex::Regex;
 // }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Expression {
+pub enum Expression_ {
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
@@ -14,6 +14,9 @@ pub enum Expression {
     Variable(String),
     Call(Box<Expression>, Vec<Expression>),
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Expression(pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement_ {
@@ -71,7 +74,7 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let (_, token) = require_a_token(tokens, "integer literal")?;
     if re.is_match(token) {
         let i: i64 = token.parse().unwrap();
-        Ok(Expression::IntLiteral(i))
+        Ok(Expression(Expression_::IntLiteral(i)))
     } else {
         Err(format!("Not a valid integer literal: {}", token))
     }
@@ -79,7 +82,7 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
 
 fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let variable = parse_variable_name(tokens)?;
-    Ok(Expression::Variable(variable))
+    Ok(Expression(Expression_::Variable(variable)))
 }
 
 fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
@@ -98,11 +101,11 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
 
         if token == "true" {
             pop_token(tokens);
-            return Ok(Expression::BoolLiteral(true));
+            return Ok(Expression(Expression_::BoolLiteral(true)));
         }
         if token == "false" {
             pop_token(tokens);
-            return Ok(Expression::BoolLiteral(false));
+            return Ok(Expression(Expression_::BoolLiteral(false)));
         }
 
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
@@ -112,9 +115,9 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
 
         if token.starts_with("\"") {
             pop_token(tokens);
-            return Ok(Expression::StringLiteral(
+            return Ok(Expression(Expression_::StringLiteral(
                 token[1..token.len() - 1].to_owned(),
-            ));
+            )));
         }
     }
 
@@ -161,7 +164,7 @@ fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expressi
     if let Some((_, token)) = peek_token(tokens) {
         if token == "(" {
             let arguments = parse_call_arguments(tokens)?;
-            return Ok(Expression::Call(Box::new(expr), arguments));
+            return Ok(Expression(Expression_::Call(Box::new(expr), arguments)));
         }
     }
 
@@ -178,11 +181,11 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
 
             let rhs_expr = parse_simple_expression_or_call(tokens)?;
 
-            expr = Expression::BinaryOperator(
+            expr = Expression(Expression_::BinaryOperator(
                 Box::new(expr),
                 operator.to_string(),
                 Box::new(rhs_expr),
-            );
+            ));
         }
     }
 
@@ -395,7 +398,7 @@ mod tests {
             ast,
             vec![Statement(
                 0,
-                Statement_::Expr(Expression::BoolLiteral(true))
+                Statement_::Expr(Expression(Expression_::BoolLiteral(true)))
             )]
         );
     }
@@ -411,7 +414,7 @@ mod tests {
             ast,
             vec![Statement(
                 0,
-                Statement_::Expr(Expression::Variable("abc_def".to_string()))
+                Statement_::Expr(Expression(Expression_::Variable("abc_def".to_string())))
             )]
         );
     }

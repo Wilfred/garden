@@ -137,7 +137,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                     let stmts = fun_bodies
                         .last()
                         .expect("Function stack should never be empty");
-                    if let Some(Statement(stmt)) = stmts.get(idx) {
+                    if let Some(Statement(_, stmt)) = stmts.get(idx) {
                         if idx > 0 {
                             // Discard value from previous statement.
                             subexprs_values.pop().expect("Popped an empty value stack");
@@ -204,7 +204,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 let replacement_stmt =
                                     error_prompt(&format!("Unbound variable: {}", s))?;
                                 match replacement_stmt {
-                                    Statement(Statement_::Expr(expr)) => {
+                                    Statement(_, Statement_::Expr(expr)) => {
                                         subexprs_to_eval.push(expr);
                                         next_steps.push(NextStep::EvalSubexpressions(1));
                                     }
@@ -362,7 +362,10 @@ mod tests {
 
     #[test]
     fn test_eval_iter_bool_literal() {
-        let stmts = vec![Statement(Statement_::Expr(Expression::BoolLiteral(true)))];
+        let stmts = vec![Statement(
+            0,
+            Statement_::Expr(Expression::BoolLiteral(true)),
+        )];
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -373,23 +376,24 @@ mod tests {
     fn test_eval_persist_env() {
         let mut env = Env::default();
 
-        let stmts = vec![Statement(Statement_::Let(
-            "foo".into(),
-            Expression::BoolLiteral(true),
-        ))];
+        let stmts = vec![Statement(
+            0,
+            Statement_::Let("foo".into(), Expression::BoolLiteral(true)),
+        )];
         eval_stmts(&stmts, &mut env).unwrap();
 
-        let stmts = vec![Statement(Statement_::Expr(Expression::Variable(
-            "foo".into(),
-        )))];
+        let stmts = vec![Statement(
+            0,
+            Statement_::Expr(Expression::Variable("foo".into())),
+        )];
         eval_stmts(&stmts, &mut env).unwrap();
     }
 
     #[test]
     fn test_eval_iter_multiple_stmts() {
         let stmts = vec![
-            Statement(Statement_::Expr(Expression::BoolLiteral(true))),
-            Statement(Statement_::Expr(Expression::BoolLiteral(false))),
+            Statement(0, Statement_::Expr(Expression::BoolLiteral(true))),
+            Statement(5, Statement_::Expr(Expression::BoolLiteral(false))),
         ];
 
         let mut env = Env::default();
@@ -399,11 +403,14 @@ mod tests {
 
     #[test]
     fn test_eval_iter_add() {
-        let stmts = vec![Statement(Statement_::Expr(Expression::BinaryOperator(
-            Box::new(Expression::IntLiteral(1)),
-            "+".into(),
-            Box::new(Expression::IntLiteral(2)),
-        )))];
+        let stmts = vec![Statement(
+            0,
+            Statement_::Expr(Expression::BinaryOperator(
+                Box::new(Expression::IntLiteral(1)),
+                "+".into(),
+                Box::new(Expression::IntLiteral(2)),
+            )),
+        )];
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -413,8 +420,11 @@ mod tests {
     #[test]
     fn test_eval_iter_let() {
         let stmts = vec![
-            Statement(Statement_::Let("foo".into(), Expression::BoolLiteral(true))),
-            Statement(Statement_::Expr(Expression::Variable("foo".into()))),
+            Statement(
+                0,
+                Statement_::Let("foo".into(), Expression::BoolLiteral(true)),
+            ),
+            Statement(0, Statement_::Expr(Expression::Variable("foo".into()))),
         ];
 
         let mut env = Env::default();
@@ -434,15 +444,24 @@ mod tests {
         // fun f() { true; }
         // f();
         let stmts = vec![
-            Statement(Statement_::Fun(
-                "f".into(),
-                vec![],
-                vec![Statement(Statement_::Expr(Expression::BoolLiteral(true)))],
-            )),
-            Statement(Statement_::Expr(Expression::Call(
-                Box::new(Expression::Variable("f".into())),
-                vec![],
-            ))),
+            Statement(
+                0,
+                Statement_::Fun(
+                    "f".into(),
+                    vec![],
+                    vec![Statement(
+                        0,
+                        Statement_::Expr(Expression::BoolLiteral(true)),
+                    )],
+                ),
+            ),
+            Statement(
+                0,
+                Statement_::Expr(Expression::Call(
+                    Box::new(Expression::Variable("f".into())),
+                    vec![],
+                )),
+            ),
         ];
 
         let mut env = Env::default();
@@ -455,17 +474,24 @@ mod tests {
         // fun f(x) { x; }
         // f(123);
         let stmts = vec![
-            Statement(Statement_::Fun(
-                "f".into(),
-                vec!["x".into()],
-                vec![Statement(Statement_::Expr(Expression::Variable(
-                    "x".into(),
-                )))],
-            )),
-            Statement(Statement_::Expr(Expression::Call(
-                Box::new(Expression::Variable("f".into())),
-                vec![Expression::IntLiteral(123)],
-            ))),
+            Statement(
+                0,
+                Statement_::Fun(
+                    "f".into(),
+                    vec!["x".into()],
+                    vec![Statement(
+                        0,
+                        Statement_::Expr(Expression::Variable("x".into())),
+                    )],
+                ),
+            ),
+            Statement(
+                0,
+                Statement_::Expr(Expression::Call(
+                    Box::new(Expression::Variable("f".into())),
+                    vec![Expression::IntLiteral(123)],
+                )),
+            ),
         ];
 
         let mut env = Env::default();

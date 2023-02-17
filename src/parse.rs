@@ -24,7 +24,7 @@ pub enum Statement_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Statement(pub Statement_);
+pub struct Statement(pub usize, pub Statement_);
 
 type Token<'a> = (usize, &'a str);
 
@@ -202,7 +202,7 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
 
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
-    Ok(Statement(Statement_::Expr(expr)))
+    Ok(Statement(0, Statement_::Expr(expr)))
 }
 
 fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<String>, String> {
@@ -266,7 +266,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     let params = parse_function_params(tokens)?;
     let body = parse_function_body(tokens)?;
 
-    Ok(Statement(Statement_::Fun(name, params, body)))
+    Ok(Statement(0, Statement_::Fun(name, params, body)))
 }
 
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<String, String> {
@@ -298,7 +298,7 @@ fn parse_let_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
 
-    Ok(Statement(Statement_::Let(variable, expr)))
+    Ok(Statement(0, Statement_::Let(variable, expr)))
 }
 
 pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
@@ -393,7 +393,10 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(Statement_::Expr(Expression::BoolLiteral(true)))]
+            vec![Statement(
+                0,
+                Statement_::Expr(Expression::BoolLiteral(true))
+            )]
         );
     }
 
@@ -406,9 +409,10 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(Statement_::Expr(Expression::Variable(
-                "abc_def".to_string()
-            )))]
+            vec![Statement(
+                0,
+                Statement_::Expr(Expression::Variable("abc_def".to_string()))
+            )]
         );
     }
 }

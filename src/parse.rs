@@ -23,7 +23,9 @@ pub enum Statement {
     Expr(Expression),
 }
 
-fn pop_token<'a>(tokens: &mut &[&'a str]) -> Option<&'a str> {
+type Token<'a> = &'a str;
+
+fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
     if tokens.is_empty() {
         return None;
     }
@@ -33,21 +35,21 @@ fn pop_token<'a>(tokens: &mut &[&'a str]) -> Option<&'a str> {
     Some(token)
 }
 
-fn peek_token<'a>(tokens: &[&'a str]) -> Option<&'a str> {
+fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
     tokens.first().copied()
 }
 
 fn require_a_token<'a>(
-    tokens: &mut &[&'a str],
+    tokens: &mut &[Token<'a>],
     token_description: &str,
-) -> Result<&'a str, String> {
+) -> Result<Token<'a>, String> {
     match pop_token(tokens) {
         Some(token) => Ok(token),
         None => Err(format!("Expected {}, got EOF", token_description)),
     }
 }
 
-fn require_token<'a>(tokens: &mut &[&'a str], expected: &str) -> Result<(), String> {
+fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<(), String> {
     match pop_token(tokens) {
         Some(token) => {
             if token == expected {
@@ -60,7 +62,7 @@ fn require_token<'a>(tokens: &mut &[&'a str], expected: &str) -> Result<(), Stri
     }
 }
 
-fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let re = Regex::new(r"^[0-9]+$").unwrap();
 
     let token = require_a_token(tokens, "integer literal")?;
@@ -72,12 +74,12 @@ fn parse_integer(tokens: &mut &[&str]) -> Result<Expression, String> {
     }
 }
 
-fn parse_variable_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let variable = parse_variable_name(tokens)?;
     Ok(Expression::Variable(variable))
 }
 
-fn parse_parenthesis_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     require_token(tokens, "(")?;
     let expr = parse_expression(tokens)?;
     require_token(tokens, ")")?;
@@ -85,7 +87,7 @@ fn parse_parenthesis_expression(tokens: &mut &[&str]) -> Result<Expression, Stri
     Ok(expr)
 }
 
-fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     if let Some(token) = peek_token(tokens) {
         if token == "(" {
             return parse_parenthesis_expression(tokens);
@@ -116,7 +118,7 @@ fn parse_simple_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     parse_integer(tokens)
 }
 
-fn parse_call_arguments(tokens: &mut &[&str]) -> Result<Vec<Expression>, String> {
+fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, String> {
     require_token(tokens, "(")?;
 
     let mut args = vec![];
@@ -150,7 +152,7 @@ fn parse_call_arguments(tokens: &mut &[&str]) -> Result<Vec<Expression>, String>
     Ok(args)
 }
 
-fn parse_simple_expression_or_call(tokens: &mut &[&str]) -> Result<Expression, String> {
+fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let expr = parse_simple_expression(tokens)?;
 
     if let Some(token) = peek_token(tokens) {
@@ -163,7 +165,7 @@ fn parse_simple_expression_or_call(tokens: &mut &[&str]) -> Result<Expression, S
     Ok(expr)
 }
 
-pub fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
+pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some(token) = peek_token(tokens) {
@@ -184,7 +186,7 @@ pub fn parse_expression(tokens: &mut &[&str]) -> Result<Expression, String> {
     Ok(expr)
 }
 
-fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
+fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     if let Some(token) = peek_token(tokens) {
         if token == "let" {
             return parse_let_statement(tokens);
@@ -200,7 +202,7 @@ fn parse_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     Ok(Statement::Expr(expr))
 }
 
-fn parse_function_params(tokens: &mut &[&str]) -> Result<Vec<String>, String> {
+fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<String>, String> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -234,7 +236,7 @@ fn parse_function_params(tokens: &mut &[&str]) -> Result<Vec<String>, String> {
     Ok(params)
 }
 
-fn parse_function_body(tokens: &mut &[&str]) -> Result<Vec<Statement>, String> {
+fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     require_token(tokens, "{")?;
 
     let mut stmts = vec![];
@@ -255,7 +257,7 @@ fn parse_function_body(tokens: &mut &[&str]) -> Result<Vec<Statement>, String> {
     Ok(stmts)
 }
 
-fn parse_function(tokens: &mut &[&str]) -> Result<Statement, String> {
+fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     require_token(tokens, "fun")?;
     let name = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
@@ -264,7 +266,7 @@ fn parse_function(tokens: &mut &[&str]) -> Result<Statement, String> {
     Ok(Statement::Fun(name, params, body))
 }
 
-fn parse_variable_name(tokens: &mut &[&str]) -> Result<String, String> {
+fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<String, String> {
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
 
@@ -285,7 +287,7 @@ fn parse_variable_name(tokens: &mut &[&str]) -> Result<String, String> {
     Ok(variable.to_string())
 }
 
-fn parse_let_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
+fn parse_let_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     require_token(tokens, "let")?;
     let variable = parse_variable_name(tokens)?;
 
@@ -296,7 +298,7 @@ fn parse_let_statement(tokens: &mut &[&str]) -> Result<Statement, String> {
     Ok(Statement::Let(variable, expr))
 }
 
-pub fn parse_toplevel(tokens: &mut &[&str]) -> Result<Vec<Statement>, String> {
+pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     let mut res = vec![];
 
     while !tokens.is_empty() {

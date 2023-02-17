@@ -23,7 +23,7 @@ pub enum Statement {
     Expr(Expression),
 }
 
-type Token<'a> = &'a str;
+type Token<'a> = (usize, &'a str);
 
 fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
     if tokens.is_empty() {
@@ -51,7 +51,7 @@ fn require_a_token<'a>(
 
 fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<(), String> {
     match pop_token(tokens) {
-        Some(token) => {
+        Some((_, token)) => {
             if token == expected {
                 Ok(())
             } else {
@@ -65,7 +65,7 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<(), St
 fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let re = Regex::new(r"^[0-9]+$").unwrap();
 
-    let token = require_a_token(tokens, "integer literal")?;
+    let (_, token) = require_a_token(tokens, "integer literal")?;
     if re.is_match(token) {
         let i: i64 = token.parse().unwrap();
         Ok(Expression::IntLiteral(i))
@@ -88,7 +88,7 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
 }
 
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
-    if let Some(token) = peek_token(tokens) {
+    if let Some((_, token)) = peek_token(tokens) {
         if token == "(" {
             return parse_parenthesis_expression(tokens);
         }
@@ -123,7 +123,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
 
     let mut args = vec![];
     loop {
-        if let Some(token) = peek_token(tokens) {
+        if let Some((_, token)) = peek_token(tokens) {
             if token == ")" {
                 break;
             }
@@ -132,7 +132,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
         let arg = parse_expression(tokens)?;
         args.push(arg);
 
-        if let Some(token) = peek_token(tokens) {
+        if let Some((_, token)) = peek_token(tokens) {
             if token == "," {
                 pop_token(tokens);
             } else if token == ")" {
@@ -155,7 +155,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
 fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let expr = parse_simple_expression(tokens)?;
 
-    if let Some(token) = peek_token(tokens) {
+    if let Some((_, token)) = peek_token(tokens) {
         if token == "(" {
             let arguments = parse_call_arguments(tokens)?;
             return Ok(Expression::Call(Box::new(expr), arguments));
@@ -168,7 +168,7 @@ fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expressi
 pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
-    if let Some(token) = peek_token(tokens) {
+    if let Some((_, token)) = peek_token(tokens) {
         if token == "+" {
             let operator = token;
             pop_token(tokens);
@@ -187,7 +187,7 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
 }
 
 fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
-    if let Some(token) = peek_token(tokens) {
+    if let Some((_, token)) = peek_token(tokens) {
         if token == "let" {
             return parse_let_statement(tokens);
         }
@@ -207,7 +207,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<String>, Strin
 
     let mut params = vec![];
     loop {
-        if let Some(token) = peek_token(tokens) {
+        if let Some((_, token)) = peek_token(tokens) {
             if token == ")" {
                 break;
             }
@@ -216,7 +216,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<String>, Strin
         let param = parse_variable_name(tokens)?;
         params.push(param);
 
-        if let Some(token) = peek_token(tokens) {
+        if let Some((_, token)) = peek_token(tokens) {
             if token == "," {
                 pop_token(tokens);
             } else if token == ")" {
@@ -241,7 +241,7 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Stri
 
     let mut stmts = vec![];
     loop {
-        if let Some(token) = peek_token(tokens) {
+        if let Some((_, token)) = peek_token(tokens) {
             if token == "}" {
                 break;
             }
@@ -270,7 +270,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<String, String> {
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
 
-    let variable = require_a_token(tokens, "variable name")?;
+    let (_, variable) = require_a_token(tokens, "variable name")?;
     if !variable_re.is_match(variable) {
         return Err(format!("Invalid variable name: '{}'", variable));
     }
@@ -308,7 +308,7 @@ pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Strin
     Ok(res)
 }
 
-pub fn lex(s: &str) -> Result<Vec<(usize, &str)>, String> {
+pub fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, String> {
     let integer_re = Regex::new(r"^[0-9]+").unwrap();
     let string_re = Regex::new(r#"^"[^"]*""#).unwrap();
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
@@ -385,8 +385,6 @@ mod tests {
     fn test_parse_bool_literal() {
         let src = "true;";
         let tokens = lex(src).unwrap();
-        let tokens: Vec<&str> = tokens.into_iter().map(|x| x.1).collect();
-
         let mut token_ptr = &tokens[..];
         let ast = parse_toplevel(&mut token_ptr).unwrap();
 
@@ -397,8 +395,6 @@ mod tests {
     fn test_parse_variable() {
         let src = "abc_def;";
         let tokens = lex(src).unwrap();
-        let tokens: Vec<&str> = tokens.into_iter().map(|x| x.1).collect();
-
         let mut token_ptr = &tokens[..];
         let ast = parse_toplevel(&mut token_ptr).unwrap();
 

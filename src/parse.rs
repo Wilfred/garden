@@ -313,34 +313,43 @@ pub fn lex(s: &str) -> Result<Vec<(usize, &str)>, String> {
 
     let mut res: Vec<(usize, &str)> = vec![];
 
-    let mut s = s;
-    let offset = 0;
+    let mut offset = 0;
+    'outer: while offset < s.len() {
+        let s = &s[offset..];
 
-    'outer: while !s.is_empty() {
-        s = s.trim();
+        // Skip over whitespace.
+        if let Some(first_char) = s.chars().next() {
+            if first_char.is_whitespace() {
+                offset += 1;
+                continue;
+            }
+        } else {
+            break;
+        }
+
         for token_char in ['+', '(', ')', '{', '}', ';', '=', ','] {
-            if let Some(new_s) = s.strip_prefix(token_char) {
+            if s.starts_with(token_char) {
                 res.push((offset, &s[0..1]));
-                s = new_s;
+                offset += 1;
                 continue 'outer;
             }
         }
         if let Some(integer_match) = integer_re.find(s) {
             res.push((offset, integer_match.as_str()));
-            s = &s[integer_match.end()..];
+            offset += integer_match.end();
         } else if let Some(string_match) = string_re.find(s) {
             res.push((offset, string_match.as_str()));
-            s = &s[string_match.end()..];
+            offset += string_match.end();
         } else if let Some(variable_match) = variable_re.find(s) {
             res.push((offset, variable_match.as_str()));
-            s = &s[variable_match.end()..];
+            offset += variable_match.end();
         } else {
             break;
         }
     }
 
-    if !s.is_empty() {
-        return Err(format!("Unrecognized syntax: '{}'", s));
+    if offset != s.len() {
+        return Err(format!("Unrecognized syntax: '{}'", &s[offset..]));
     }
 
     Ok(res)
@@ -353,6 +362,11 @@ mod tests {
     #[test]
     fn test_lex_no_offset() {
         assert_eq!(lex("1").unwrap(), vec![(0, "1")]);
+    }
+
+    #[test]
+    fn test_lex_with_offset() {
+        assert_eq!(lex(" a").unwrap(), vec![(1, "a")]);
     }
 
     // #[test]

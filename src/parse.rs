@@ -16,12 +16,15 @@ pub enum Expression {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Statement {
+pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
     Fun(String, Vec<String>, Vec<Statement>),
     Let(String, Expression),
     Expr(Expression),
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Statement(pub Statement_);
 
 type Token<'a> = (usize, &'a str);
 
@@ -199,7 +202,7 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
 
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
-    Ok(Statement::Expr(expr))
+    Ok(Statement(Statement_::Expr(expr)))
 }
 
 fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<String>, String> {
@@ -263,7 +266,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     let params = parse_function_params(tokens)?;
     let body = parse_function_body(tokens)?;
 
-    Ok(Statement::Fun(name, params, body))
+    Ok(Statement(Statement_::Fun(name, params, body)))
 }
 
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<String, String> {
@@ -295,7 +298,7 @@ fn parse_let_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
 
-    Ok(Statement::Let(variable, expr))
+    Ok(Statement(Statement_::Let(variable, expr)))
 }
 
 pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
@@ -388,7 +391,10 @@ mod tests {
         let mut token_ptr = &tokens[..];
         let ast = parse_toplevel(&mut token_ptr).unwrap();
 
-        assert_eq!(ast, vec![Statement::Expr(Expression::BoolLiteral(true))]);
+        assert_eq!(
+            ast,
+            vec![Statement(Statement_::Expr(Expression::BoolLiteral(true)))]
+        );
     }
 
     #[test]
@@ -400,7 +406,9 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement::Expr(Expression::Variable("abc_def".to_string()))]
+            vec![Statement(Statement_::Expr(Expression::Variable(
+                "abc_def".to_string()
+            )))]
         );
     }
 }

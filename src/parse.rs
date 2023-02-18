@@ -323,7 +323,7 @@ pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Strin
 
 pub fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, String> {
     let integer_re = Regex::new(r"^[0-9]+").unwrap();
-    let string_re = Regex::new(r#"^"[^"]*""#).unwrap();
+    let string_re = Regex::new(r##"^"[^"]*""##).unwrap();
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 
     let mut res: Vec<(usize, &str)> = vec![];

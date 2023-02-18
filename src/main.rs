@@ -19,6 +19,7 @@ enum Commands {
     Globals,
     Locals,
     Parse(String),
+    Source,
 }
 
 impl Commands {
@@ -27,6 +28,7 @@ impl Commands {
             ":help" => Some(Commands::Help),
             ":globals" => Some(Commands::Globals),
             ":locals" => Some(Commands::Locals),
+            ":source" => Some(Commands::Source),
             _ => {
                 if let Some(src) = s.strip_prefix(":parse ") {
                     Some(Commands::Parse(src.to_owned()))
@@ -48,6 +50,7 @@ fn main() {
     println!("Type {} if you're new here.", ":help".bold().green(),);
 
     let mut env = Env::default();
+    let mut complete_src = String::new();
 
     let mut rl: Editor<()> = Editor::new().unwrap();
     // TODO: put this in the home directory rather than the current directory.
@@ -71,6 +74,11 @@ fn main() {
                             ":globals".green(),
                             ":help".green(),
                         );
+                        continue;
+                    }
+                    Some(Commands::Source) => {
+                        println!("{}", complete_src);
+
                         continue;
                     }
                     Some(Commands::Globals) => {
@@ -110,6 +118,9 @@ fn main() {
                     }
                     None => {}
                 }
+
+                complete_src.push_str(&input);
+                complete_src.push('\n');
 
                 let tokens = match lex(&input) {
                     Ok(tokens) => tokens,

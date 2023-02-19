@@ -94,6 +94,26 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
     Ok(expr)
 }
 
+fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
+    let mut res = vec![];
+
+    require_token(tokens, "{")?;
+
+    while !tokens.is_empty() {
+        if let Some((_, token)) = peek_token(tokens) {
+            if token == "}" {
+                break;
+            }
+        }
+
+        res.push(parse_statement(tokens)?);
+    }
+
+    require_token(tokens, "}")?;
+
+    Ok(res)
+}
+
 fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let offset = require_token(tokens, "if")?;
 
@@ -101,15 +121,13 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> 
     let condition = parse_expression(tokens)?;
     require_token(tokens, ")")?;
 
-    require_token(tokens, "{")?;
-    require_token(tokens, "}")?;
+    let then_body = parse_block(tokens)?;
     require_token(tokens, "else")?;
-    require_token(tokens, "{")?;
-    require_token(tokens, "}")?;
+    let else_body = parse_block(tokens)?;
 
     Ok(Expression(
         offset,
-        Expression_::If(Box::new(condition), vec![], vec![]),
+        Expression_::If(Box::new(condition), then_body, else_body),
     ))
 }
 

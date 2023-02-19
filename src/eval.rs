@@ -363,7 +363,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_eval_iter_bool_literal() {
+    fn test_eval_bool_literal() {
         let stmts = vec![Statement(
             0,
             Statement_::Expr(Expression(0, Expression_::BoolLiteral(true))),
@@ -392,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_iter_multiple_stmts() {
+    fn test_eval_multiple_stmts() {
         let stmts = vec![
             Statement(
                 0,
@@ -410,7 +410,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_iter_add() {
+    fn test_eval_add() {
         let stmts = vec![Statement(
             0,
             Statement_::Expr(Expression(0, Expression_::BinaryOperator(
@@ -426,7 +426,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_iter_let() {
+    fn test_eval_let() {
         let stmts = vec![
             Statement(
                 0,
@@ -444,14 +444,14 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_iter_empty() {
+    fn test_eval_empty() {
         let mut env = Env::default();
         let value = eval_stmts(&[], &mut env).unwrap();
         assert_eq!(value, Value::Void);
     }
 
     #[test]
-    fn test_eval_iter_call() {
+    fn test_eval_call() {
         // fun f() { true; }
         // f();
         let stmts = vec![
@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_iter_call_with_arg() {
+    fn test_eval_call_with_arg() {
         // fun f(x) { x; }
         // f(123);
         let stmts = vec![

@@ -93,10 +93,7 @@ impl Env {
 #[derive(Debug)]
 enum NextStep {
     NextStmt { idx: usize },
-    EvalSubexpressions(usize),
     EvalLet(String),
-    EvalCall { num_args: usize },
-    EvalAdd,
 }
 
 fn error_prompt(message: &str) -> Result<Statement, String> {
@@ -125,17 +122,156 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
 }
 
 pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
-    let mut subexprs_to_eval: Vec<(bool, Expression)> = vec![];
+    let mut subexprs_to_eval_per_fun: Vec<Vec<(bool, Expression)>> = vec![vec![]];
     let mut subexprs_values: Vec<Value> = vec![Value::Void];
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
     loop {
-        // handle subexprs_to_eval first.
+        let subexprs_to_eval = subexprs_to_eval_per_fun.last_mut().unwrap();
+        while let Some((done_subexprs, Expression(offset, expr_))) = subexprs_to_eval.pop() {
+            match expr_.clone() {
+                Expression_::IntLiteral(i) => {
+                    subexprs_values.push(Value::Integer(i));
+                }
+                Expression_::BoolLiteral(b) => {
+                    subexprs_values.push(Value::Boolean(b));
+                }
+                Expression_::StringLiteral(s) => {
+                    subexprs_values.push(Value::String(s));
+                }
+                Expression_::BinaryOperator(lhs, _, rhs) => {
+                    if done_subexprs {
+                        let rhs_value = subexprs_values
+                            .pop()
+                            .expect("Got an empty value stack when evaluating RHS of +");
+                        let lhs_value = subexprs_values
+                            .pop()
+                            .expect("Got an empty value stack when evaluating LHS of +");
+
+                        let lhs_num = match lhs_value {
+                            Value::Integer(i) => i,
+                            _ => {
+                                // TODO: read replacement value
+                                let _lhs_new = read_replacement(&format!(
+                                    "Expected an integer, but got: {}",
+                                    lhs_value
+                                ))?;
+                                return Err(format!("Expected an integer, but got: {}", lhs_value));
+                            }
+                        };
+
+                        let rhs_num = match rhs_value {
+                            Value::Integer(i) => i,
+                            _ => {
+                                let _rhs_new = read_replacement(&format!(
+                                    "Expected an integer, but got: {}",
+                                    rhs_value
+                                ))?;
+                                return Err(format!("Expected an integer, but got: {}", rhs_value));
+                            }
+                        };
+
+                        subexprs_values.push(Value::Integer(lhs_num + rhs_num))
+                    } else {
+                        subexprs_to_eval.push((true, Expression(offset, expr_)));
+                        subexprs_to_eval.push((false, *rhs.clone()));
+                        subexprs_to_eval.push((false, *lhs.clone()));
+                    }
+                }
+                Expression_::Variable(s) => match env.get(&s) {
+                    Some(v) => subexprs_values.push(v),
+                    None => {
+                        let replacement_stmt = error_prompt(&format!("Unbound variable: {}", s))?;
+                        match replacement_stmt {
+                            Statement(_, Statement_::Expr(expr)) => {
+                                subexprs_to_eval.push((false, expr));
+                            }
+                            _ => {
+                                return Err(format!(
+                                    "Expected an expression, but got {:?}",
+                                    replacement_stmt
+                                ));
+                            }
+                        }
+                    }
+                },
+                Expression_::Call(receiver, args) => {
+                    if done_subexprs {
+                        let receiver = subexprs_values
+                            .pop()
+                            .expect("Popped an empty value stack for call receiver");
+
+                        let mut arg_values = vec![];
+                        for _ in 0..args.len() {
+                            arg_values.push(
+                                subexprs_values
+                                    .pop()
+                                    .expect("Popped an empty value for stack for call arguments"),
+                            );
+                        }
+
+                        match receiver {
+                            Value::Fun(name, params, body) => {
+                                if args.len() != params.len() {
+                                    // TODO: prompt user for extra arguments.
+                                    return Err(format!(
+                                        "Function {} requires {} arguments, but got: {}",
+                                        name,
+                                        params.len(),
+                                        args.len()
+                                    ));
+                                }
+
+                                env.push_new_fun_scope(name);
+                                for (var_name, value) in params.iter().zip(arg_values) {
+                                    env.set_with_fun_scope(&var_name, value);
+                                }
+
+                                subexprs_to_eval_per_fun.push(vec![]);
+                                fun_bodies.push(body);
+                                next_steps.push(NextStep::NextStmt { idx: 0 });
+
+                                break;
+                            }
+                            Value::BuiltinFunction(k) => match k {
+                                BuiltinFunctionKind::Print => {
+                                    if args.len() != 1 {
+                                        return Err(format!(
+                                            "Function print requires 1 argument, but got: {}",
+                                            args.len()
+                                        ));
+                                    }
+                                    match &arg_values[0] {
+                                        Value::String(s) => println!("{}", s),
+                                        v => {
+                                            return Err(format!(
+                                                "Expected a string, but got: {}",
+                                                v
+                                            ));
+                                        }
+                                    }
+                                }
+                            },
+                            v => {
+                                return Err(format!("Expected a function, but got: {}", v));
+                            }
+                        }
+                    } else {
+                        subexprs_to_eval.push((true, Expression(offset, expr_)));
+                        subexprs_to_eval.push((false, *receiver.clone()));
+                        for arg in args {
+                            subexprs_to_eval.push((false, arg.clone()));
+                        }
+                    }
+                }
+            }
+        }
 
         if let Some(step) = next_steps.pop() {
             match step {
                 NextStep::NextStmt { idx } => {
+                    let subexprs_to_eval = subexprs_to_eval_per_fun.last_mut().unwrap();
                     let stmts = fun_bodies
                         .last()
                         .expect("Function stack should never be empty");
@@ -155,12 +291,10 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 subexprs_to_eval.push((false, e.clone()));
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                                 next_steps.push(NextStep::EvalLet(v.clone()));
-                                next_steps.push(NextStep::EvalSubexpressions(1));
                             }
                             Statement_::Expr(e) => {
                                 subexprs_to_eval.push((false, e.clone()));
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
-                                next_steps.push(NextStep::EvalSubexpressions(1));
                             }
                         }
                     } else {
@@ -168,68 +302,10 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         if env.fun_scopes.len() > 1 {
                             // Don't pop the outer scope: that's for the top level environment.
                             env.pop_fun_scope();
+                            subexprs_to_eval_per_fun.pop();
                         }
 
-                        // TODO: function return value.
                         fun_bodies.pop();
-                    }
-                }
-                NextStep::EvalSubexpressions(n) => {
-                    assert!(n > 0);
-                    if n > 1 {
-                        next_steps.push(NextStep::EvalSubexpressions(n - 1));
-                    }
-
-                    let (_, Expression(_, expr_)) = subexprs_to_eval
-                        .pop()
-                        .expect("Expected a non-empty subexpression stack");
-                    match expr_ {
-                        Expression_::IntLiteral(i) => {
-                            subexprs_values.push(Value::Integer(i));
-                        }
-                        Expression_::BoolLiteral(b) => {
-                            subexprs_values.push(Value::Boolean(b));
-                        }
-                        Expression_::StringLiteral(s) => {
-                            subexprs_values.push(Value::String(s));
-                        }
-                        Expression_::BinaryOperator(lhs, _, rhs) => {
-                            subexprs_to_eval.push((false, *rhs.clone()));
-                            subexprs_to_eval.push((false, *lhs.clone()));
-
-                            next_steps.push(NextStep::EvalAdd);
-                            next_steps.push(NextStep::EvalSubexpressions(2));
-                        }
-                        Expression_::Variable(s) => match env.get(&s) {
-                            Some(v) => subexprs_values.push(v),
-                            None => {
-                                let replacement_stmt =
-                                    error_prompt(&format!("Unbound variable: {}", s))?;
-                                match replacement_stmt {
-                                    Statement(_, Statement_::Expr(expr)) => {
-                                        subexprs_to_eval.push((false, expr));
-                                        next_steps.push(NextStep::EvalSubexpressions(1));
-                                    }
-                                    _ => {
-                                        return Err(format!(
-                                            "Expected an expression, but got {:?}",
-                                            replacement_stmt
-                                        ));
-                                    }
-                                }
-                            }
-                        },
-                        Expression_::Call(receiver, args) => {
-                            subexprs_to_eval.push((false, *receiver.clone()));
-                            for arg in &args {
-                                subexprs_to_eval.push((false, arg.clone()));
-                            }
-
-                            next_steps.push(NextStep::EvalCall {
-                                num_args: args.len(),
-                            });
-                            next_steps.push(NextStep::EvalSubexpressions(args.len() + 1));
-                        }
                     }
                 }
                 NextStep::EvalLet(variable) => {
@@ -241,99 +317,6 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                     env.set_with_fun_scope(&variable, value.clone());
 
                     subexprs_values.push(value);
-                }
-                NextStep::EvalAdd => {
-                    let rhs_value = subexprs_values
-                        .pop()
-                        .expect("Got an empty value stack when evaluating RHS of +");
-                    let lhs_value = subexprs_values
-                        .pop()
-                        .expect("Got an empty value stack when evaluating LHS of +");
-
-                    let lhs_num = match lhs_value {
-                        Value::Integer(i) => i,
-                        _ => {
-                            // TODO: read replacement value
-                            let _lhs_new = read_replacement(&format!(
-                                "Expected an integer, but got: {}",
-                                lhs_value
-                            ))?;
-                            return Err(format!("Expected an integer, but got: {}", lhs_value));
-                        }
-                    };
-
-                    let rhs_num = match rhs_value {
-                        Value::Integer(i) => i,
-                        _ => {
-                            let _rhs_new = read_replacement(&format!(
-                                "Expected an integer, but got: {}",
-                                rhs_value
-                            ))?;
-                            return Err(format!("Expected an integer, but got: {}", rhs_value));
-                        }
-                    };
-
-                    subexprs_values.push(Value::Integer(lhs_num + rhs_num))
-                }
-                NextStep::EvalCall { num_args } => {
-                    let receiver = subexprs_values
-                        .pop()
-                        .expect("Popped an empty value stack for call receiver");
-
-                    let mut args = vec![];
-                    for _ in 0..num_args {
-                        args.push(
-                            subexprs_values
-                                .pop()
-                                .expect("Popped an empty value for stack for call arguments"),
-                        );
-                    }
-
-                    match receiver {
-                        Value::Fun(name, params, body) => {
-                            if args.len() != params.len() {
-                                // TODO: prompt user for extra arguments.
-                                return Err(format!(
-                                    "Function {} requires {} arguments, but got: {}",
-                                    name,
-                                    params.len(),
-                                    args.len()
-                                ));
-                            }
-
-                            env.push_new_fun_scope(name);
-                            for (var_name, value) in params.iter().zip(args) {
-                                env.set_with_fun_scope(&var_name, value);
-                            }
-
-                            fun_bodies.push(body);
-                            next_steps.push(NextStep::NextStmt { idx: 0 });
-
-                            // Push block.
-                            // Eval block.
-                            // Pop fun scope.
-                            // env.pop_fun_scope();
-                        }
-                        Value::BuiltinFunction(k) => match k {
-                            BuiltinFunctionKind::Print => {
-                                if args.len() != 1 {
-                                    return Err(format!(
-                                        "Function print requires 1 argument, but got: {}",
-                                        args.len()
-                                    ));
-                                }
-                                match &args[0] {
-                                    Value::String(s) => println!("{}", s),
-                                    v => {
-                                        return Err(format!("Expected a string, but got: {}", v));
-                                    }
-                                }
-                            }
-                        },
-                        v => {
-                            return Err(format!("Expected a function, but got: {}", v));
-                        }
-                    }
                 }
             }
         } else {
@@ -564,7 +547,10 @@ mod tests {
                     0,
                     Expression_::Call(
                         Box::new(Expression(0, Expression_::Variable("f".into()))),
-                        vec![Expression(0, Expression_::IntLiteral(1)), Expression(0, Expression_::IntLiteral(2))],
+                        vec![
+                            Expression(0, Expression_::IntLiteral(1)),
+                            Expression(0, Expression_::IntLiteral(2)),
+                        ],
                     ),
                 )),
             ),

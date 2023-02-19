@@ -140,8 +140,27 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                 Expression_::StringLiteral(s) => {
                     subexprs_values.push(Value::String(s));
                 }
-                Expression_::If(_, _, _) => {
-                    todo!();
+                Expression_::If(condition, then_body, else_body) => {
+                    if done_subexprs {
+                        let condition_value = subexprs_values
+                            .pop()
+                            .expect("Popped an empty value stack for if condition");
+                        match condition_value {
+                            Value::Boolean(b) => {
+                                if b {
+                                    println!("evaluate: {:?}", then_body);
+                                } else {
+                                    println!("evaluate: {:?}", else_body);
+                                }
+                            }
+                            v => {
+                                return Err(format!("Expected a boolean, but got: {}", v));
+                            }
+                        }
+                    } else {
+                        subexprs_to_eval.push((true, Expression(offset, expr_)));
+                        subexprs_to_eval.push((false, *condition.clone()));
+                    }
                 }
                 Expression_::BinaryOperator(lhs, _, rhs) => {
                     if done_subexprs {

@@ -498,10 +498,13 @@ mod tests {
             ),
             Statement(
                 0,
-                Statement_::Expr(Expression(0, Expression_::Call(
-                    Box::new(Expression(0, Expression_::Variable("f".into()))),
-                    vec![Expression(0, Expression_::IntLiteral(123))],
-                ))),
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Call(
+                        Box::new(Expression(0, Expression_::Variable("f".into()))),
+                        vec![Expression(0, Expression_::IntLiteral(123))],
+                    ),
+                )),
             ),
         ];
 

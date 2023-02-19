@@ -13,6 +13,7 @@ pub enum Expression_ {
     BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
     Call(Box<Expression>, Vec<Expression>),
+    If(Box<Expression>, Vec<Statement>, Vec<Statement>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -93,10 +94,33 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
     Ok(expr)
 }
 
+fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+    let offset = require_token(tokens, "if")?;
+
+    require_token(tokens, "(")?;
+    let condition = parse_expression(tokens)?;
+    require_token(tokens, ")")?;
+
+    require_token(tokens, "{")?;
+    require_token(tokens, "}")?;
+    require_token(tokens, "else")?;
+    require_token(tokens, "{")?;
+    require_token(tokens, "}")?;
+
+    Ok(Expression(
+        offset,
+        Expression_::If(Box::new(condition), vec![], vec![]),
+    ))
+}
+
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     if let Some((offset, token)) = peek_token(tokens) {
         if token == "(" {
             return parse_parenthesis_expression(tokens);
+        }
+
+        if token == "if" {
+            return parse_if_expression(tokens);
         }
 
         if token == "true" {
@@ -279,7 +303,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(offset, Statement_::Fun(name, params, body)))
 }
 
-const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false"];
+const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false", "if", "else"];
 
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, String), String> {
     // TODO: this is duplicated with lex().

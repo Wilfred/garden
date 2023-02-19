@@ -140,6 +140,9 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                 Expression_::StringLiteral(s) => {
                     subexprs_values.push(Value::String(s));
                 }
+                Expression_::If(_, _, _) => {
+                    todo!();
+                }
                 Expression_::BinaryOperator(lhs, _, rhs) => {
                     if done_subexprs {
                         let rhs_value = subexprs_values

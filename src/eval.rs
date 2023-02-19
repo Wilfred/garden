@@ -125,12 +125,14 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
 }
 
 pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
-    let mut subexprs_to_eval: Vec<Expression> = vec![];
+    let mut subexprs_to_eval: Vec<(bool, Expression)> = vec![];
     let mut subexprs_values: Vec<Value> = vec![Value::Void];
     let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
     let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
     loop {
+        // handle subexprs_to_eval first.
+
         if let Some(step) = next_steps.pop() {
             match step {
                 NextStep::NextStmt { idx } => {
@@ -150,13 +152,13 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                             }
                             Statement_::Let(v, e) => {
-                                subexprs_to_eval.push(e.clone());
+                                subexprs_to_eval.push((false, e.clone()));
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                                 next_steps.push(NextStep::EvalLet(v.clone()));
                                 next_steps.push(NextStep::EvalSubexpressions(1));
                             }
                             Statement_::Expr(e) => {
-                                subexprs_to_eval.push(e.clone());
+                                subexprs_to_eval.push((false, e.clone()));
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                                 next_steps.push(NextStep::EvalSubexpressions(1));
                             }
@@ -178,7 +180,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         next_steps.push(NextStep::EvalSubexpressions(n - 1));
                     }
 
-                    let Expression(_, expr_) = subexprs_to_eval
+                    let (_, Expression(_, expr_)) = subexprs_to_eval
                         .pop()
                         .expect("Expected a non-empty subexpression stack");
                     match expr_ {
@@ -192,8 +194,8 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             subexprs_values.push(Value::String(s));
                         }
                         Expression_::BinaryOperator(lhs, _, rhs) => {
-                            subexprs_to_eval.push(*rhs.clone());
-                            subexprs_to_eval.push(*lhs.clone());
+                            subexprs_to_eval.push((false, *rhs.clone()));
+                            subexprs_to_eval.push((false, *lhs.clone()));
 
                             next_steps.push(NextStep::EvalAdd);
                             next_steps.push(NextStep::EvalSubexpressions(2));
@@ -205,7 +207,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                     error_prompt(&format!("Unbound variable: {}", s))?;
                                 match replacement_stmt {
                                     Statement(_, Statement_::Expr(expr)) => {
-                                        subexprs_to_eval.push(expr);
+                                        subexprs_to_eval.push((false, expr));
                                         next_steps.push(NextStep::EvalSubexpressions(1));
                                     }
                                     _ => {
@@ -218,9 +220,9 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             }
                         },
                         Expression_::Call(receiver, args) => {
-                            subexprs_to_eval.push(*receiver.clone());
+                            subexprs_to_eval.push((false, *receiver.clone()));
                             for arg in &args {
-                                subexprs_to_eval.push(arg.clone());
+                                subexprs_to_eval.push((false, arg.clone()));
                             }
 
                             next_steps.push(NextStep::EvalCall {

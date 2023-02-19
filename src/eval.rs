@@ -540,4 +540,38 @@ mod tests {
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(123));
     }
+
+    #[test]
+    fn test_eval_call_second_arg() {
+        // fun f(x, y) { y; }
+        // f(1, 2);
+        let stmts = vec![
+            Statement(
+                0,
+                Statement_::Fun(
+                    "f".into(),
+                    // TODO: check for duplicate param names.
+                    vec!["x".into(), "y".into()],
+                    vec![Statement(
+                        0,
+                        Statement_::Expr(Expression(0, Expression_::Variable("y".into()))),
+                    )],
+                ),
+            ),
+            Statement(
+                0,
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Call(
+                        Box::new(Expression(0, Expression_::Variable("f".into()))),
+                        vec![Expression(0, Expression_::IntLiteral(1)), Expression(0, Expression_::IntLiteral(2))],
+                    ),
+                )),
+            ),
+        ];
+
+        let mut env = Env::default();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(2));
+    }
 }

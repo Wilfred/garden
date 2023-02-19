@@ -237,6 +237,8 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
 
                     // TODO: does this make sense for scope for let outside a function?
                     env.set_with_fun_scope(&variable, value.clone());
+
+                    subexprs_values.push(value);
                 }
                 NextStep::EvalAdd => {
                     let rhs_value = subexprs_values
@@ -413,11 +415,14 @@ mod tests {
     fn test_eval_add() {
         let stmts = vec![Statement(
             0,
-            Statement_::Expr(Expression(0, Expression_::BinaryOperator(
-                Box::new(Expression(0, Expression_::IntLiteral(1))),
-                "+".into(),
-                Box::new(Expression(0, Expression_::IntLiteral(2))),
-            ))),
+            Statement_::Expr(Expression(
+                0,
+                Expression_::BinaryOperator(
+                    Box::new(Expression(0, Expression_::IntLiteral(1))),
+                    "+".into(),
+                    Box::new(Expression(0, Expression_::IntLiteral(2))),
+                ),
+            )),
         )];
 
         let mut env = Env::default();
@@ -441,6 +446,24 @@ mod tests {
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
+    }
+
+    #[test]
+    fn test_eval_let_twice() {
+        let stmts = vec![
+            Statement(
+                0,
+                Statement_::Let("foo".into(), Expression(0, Expression_::BoolLiteral(true))),
+            ),
+            Statement(
+                0,
+                Statement_::Let("bar".into(), Expression(0, Expression_::BoolLiteral(false))),
+            ),
+        ];
+
+        let mut env = Env::default();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(false));
     }
 
     #[test]
@@ -468,10 +491,13 @@ mod tests {
             ),
             Statement(
                 0,
-                Statement_::Expr(Expression(0, Expression_::Call(
-                    Box::new(Expression(0, Expression_::Variable("f".into()))),
-                    vec![],
-                ))),
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Call(
+                        Box::new(Expression(0, Expression_::Variable("f".into()))),
+                        vec![],
+                    ),
+                )),
             ),
         ];
 

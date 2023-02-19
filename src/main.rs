@@ -13,7 +13,10 @@ use crate::{
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 
-#[derive(Debug)]
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+
+#[derive(Debug, EnumIter)]
 enum Commands {
     Help,
     Globals,
@@ -36,6 +39,16 @@ impl Commands {
                     None
                 }
             }
+        }
+    }
+
+    fn to_string(&self) -> &str {
+        match self {
+            Commands::Help => ":help",
+            Commands::Globals => ":globals",
+            Commands::Locals => ":locals",
+            Commands::Parse(_) => ":parse",
+            Commands::Source => ":source",
         }
     }
 }
@@ -67,13 +80,11 @@ fn main() {
 
                 match Commands::from_string(&input) {
                     Some(Commands::Help) => {
-                        println!(
-                            "Available commands are {}, {}, {} and {}.",
-                            ":parse".green(),
-                            ":locals".green(),
-                            ":globals".green(),
-                            ":help".green(),
-                        );
+                        print!("Available commands are:");
+                        for command in Commands::iter() {
+                            print!(" {}", command.to_string().green());
+                        }
+                        println!();
                         continue;
                     }
                     Some(Commands::Source) => {

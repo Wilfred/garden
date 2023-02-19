@@ -279,6 +279,8 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(offset, Statement_::Fun(name, params, body)))
 }
 
+const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false"];
+
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, String), String> {
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
@@ -288,8 +290,8 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, String), Str
         return Err(format!("Invalid variable name: '{}'", variable));
     }
 
-    for reserved in ["let", "fun"] {
-        if variable == reserved {
+    for reserved in RESERVED_WORDS {
+        if variable == *reserved {
             return Err(format!(
                 "'{}' is a reserved word that cannot be used as a variable",
                 variable

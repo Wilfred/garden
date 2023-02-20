@@ -14,6 +14,7 @@ pub enum Expression_ {
     Variable(String),
     Call(Box<Expression>, Vec<Expression>),
     If(Box<Expression>, Vec<Statement>, Vec<Statement>),
+    Let(String, Box<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -23,7 +24,6 @@ pub struct Expression(pub usize, pub Expression_);
 pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
     Fun(String, Vec<String>, Vec<Statement>),
-    Let(String, Expression),
     Expr(Expression),
 }
 
@@ -137,6 +137,10 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
             return parse_parenthesis_expression(tokens);
         }
 
+        if token == "let" {
+            return parse_let_expr(tokens);
+        }
+
         if token == "if" {
             return parse_if_expression(tokens);
         }
@@ -243,10 +247,6 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
 
 fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     if let Some((_, token)) = peek_token(tokens) {
-        if token == "let" {
-            return parse_let_statement(tokens);
-        }
-
         if token == "fun" {
             return parse_function(tokens);
         }
@@ -344,15 +344,17 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, String), Str
     Ok((offset, variable.to_string()))
 }
 
-fn parse_let_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_let_expr(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let offset = require_token(tokens, "let")?;
     let (_, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
     let expr = parse_expression(tokens)?;
-    require_token(tokens, ";")?;
 
-    Ok(Statement(offset, Statement_::Let(variable, expr)))
+    Ok(Expression(
+        offset,
+        Expression_::Let(variable, Box::new(expr)),
+    ))
 }
 
 pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {

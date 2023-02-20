@@ -93,7 +93,6 @@ impl Env {
 #[derive(Debug)]
 enum NextStep {
     NextStmt { idx: usize },
-    EvalLet(String),
 }
 
 fn error_prompt(message: &str) -> Result<Statement, String> {
@@ -139,6 +138,18 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                 }
                 Expression_::StringLiteral(s) => {
                     subexprs_values.push(Value::String(s));
+                }
+                Expression_::Let(variable, expr) => {
+                    if done_subexprs {
+                        let expr_value = subexprs_values
+                            .pop()
+                            .expect("Popped an empty value stack for let value");
+                        env.set_with_fun_scope(&variable, expr_value.clone());
+                        subexprs_values.push(expr_value);
+                    } else {
+                        subexprs_to_eval.push((true, Expression(offset, expr_)));
+                        subexprs_to_eval.push((false, *expr.clone()));
+                    }
                 }
                 Expression_::If(condition, then_body, else_body) => {
                     if done_subexprs {
@@ -309,11 +320,6 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 subexprs_values.push(Value::Void);
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
                             }
-                            Statement_::Let(v, e) => {
-                                subexprs_to_eval.push((false, e.clone()));
-                                next_steps.push(NextStep::NextStmt { idx: idx + 1 });
-                                next_steps.push(NextStep::EvalLet(v.clone()));
-                            }
                             Statement_::Expr(e) => {
                                 subexprs_to_eval.push((false, e.clone()));
                                 next_steps.push(NextStep::NextStmt { idx: idx + 1 });
@@ -329,16 +335,6 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
 
                         fun_bodies.pop();
                     }
-                }
-                NextStep::EvalLet(variable) => {
-                    let value = subexprs_values
-                        .pop()
-                        .expect("Got an empty value stack when evaluating let");
-
-                    // TODO: does this make sense for scope for let outside a function?
-                    env.set_with_fun_scope(&variable, value.clone());
-
-                    subexprs_values.push(value);
                 }
             }
         } else {
@@ -389,7 +385,13 @@ mod tests {
 
         let stmts = vec![Statement(
             0,
-            Statement_::Let("foo".into(), Expression(0, Expression_::BoolLiteral(true))),
+            Statement_::Expr(Expression(
+                0,
+                Expression_::Let(
+                    "foo".into(),
+                    Box::new(Expression(0, Expression_::BoolLiteral(true))),
+                ),
+            )),
         )];
         eval_stmts(&stmts, &mut env).unwrap();
 
@@ -442,7 +444,13 @@ mod tests {
         let stmts = vec![
             Statement(
                 0,
-                Statement_::Let("foo".into(), Expression(0, Expression_::BoolLiteral(true))),
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Let(
+                        "foo".into(),
+                        Box::new(Expression(0, Expression_::BoolLiteral(true))),
+                    ),
+                )),
             ),
             Statement(
                 0,
@@ -460,11 +468,23 @@ mod tests {
         let stmts = vec![
             Statement(
                 0,
-                Statement_::Let("foo".into(), Expression(0, Expression_::BoolLiteral(true))),
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Let(
+                        "foo".into(),
+                        Box::new(Expression(0, Expression_::BoolLiteral(true))),
+                    ),
+                )),
             ),
             Statement(
                 0,
-                Statement_::Let("bar".into(), Expression(0, Expression_::BoolLiteral(false))),
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Let(
+                        "foo".into(),
+                        Box::new(Expression(0, Expression_::BoolLiteral(false))),
+                    ),
+                )),
             ),
         ];
 

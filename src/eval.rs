@@ -116,17 +116,17 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
 }
 
 pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
-    let mut subexprs_to_eval = vec![];
+    let mut stmts_to_eval = vec![];
     for stmt in stmts.iter().rev() {
-        subexprs_to_eval.push((false, stmt.clone()));
+        stmts_to_eval.push((false, stmt.clone()));
     }
 
-    let mut subexprs_to_eval_per_fun: Vec<Vec<(bool, Statement)>> = vec![subexprs_to_eval];
-    let mut subexprs_values: Vec<Value> = vec![Value::Void];
+    let mut stmts_to_eval_per_fun: Vec<Vec<(bool, Statement)>> = vec![stmts_to_eval];
+    let mut evalled_values: Vec<Value> = vec![Value::Void];
 
     loop {
-        if let Some(mut subexprs_to_eval) = subexprs_to_eval_per_fun.pop() {
-            while let Some((done_subexprs, Statement(offset, stmt_))) = subexprs_to_eval.pop() {
+        if let Some(mut stmts_to_eval) = stmts_to_eval_per_fun.pop() {
+            while let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
                 let stmt_copy = stmt_.clone();
                 match stmt_ {
                     Statement_::Fun(name, params, body) => {
@@ -136,30 +136,30 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         );
                     }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
-                        subexprs_values.push(Value::Integer(i));
+                        evalled_values.push(Value::Integer(i));
                     }
                     Statement_::Expr(Expression(_, Expression_::BoolLiteral(b))) => {
-                        subexprs_values.push(Value::Boolean(b));
+                        evalled_values.push(Value::Boolean(b));
                     }
                     Statement_::Expr(Expression(_, Expression_::StringLiteral(s))) => {
-                        subexprs_values.push(Value::String(s));
+                        evalled_values.push(Value::String(s));
                     }
                     Statement_::Expr(Expression(_, Expression_::Let(variable, expr))) => {
-                        if done_subexprs {
-                            let expr_value = subexprs_values
+                        if done_children {
+                            let expr_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for let value");
                             env.set_with_fun_scope(&variable, expr_value.clone());
-                            subexprs_values.push(expr_value);
+                            evalled_values.push(expr_value);
                         } else {
-                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
-                            subexprs_to_eval
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval
                                 .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
                         }
                     }
                     Statement_::Expr(Expression(_, Expression_::Variable(name))) => {
                         if let Some(value) = env.get(&name) {
-                            subexprs_values.push(value);
+                            evalled_values.push(value);
                         } else {
                             // TODO: prompt for a replacement value
                             return Err(format!("Undefined variable: {}", name));
@@ -169,19 +169,19 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         _,
                         Expression_::If(condition, ref then_body, ref else_body),
                     )) => {
-                        if done_subexprs {
-                            let condition_value = subexprs_values
+                        if done_children {
+                            let condition_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for if condition");
                             match condition_value {
                                 Value::Boolean(b) => {
                                     if b {
                                         for stmt in then_body.iter().rev() {
-                                            subexprs_to_eval.push((false, stmt.clone()));
+                                            stmts_to_eval.push((false, stmt.clone()));
                                         }
                                     } else {
                                         for stmt in else_body.iter().rev() {
-                                            subexprs_to_eval.push((false, stmt.clone()));
+                                            stmts_to_eval.push((false, stmt.clone()));
                                         }
                                     }
                                 }
@@ -190,19 +190,19 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 }
                             }
                         } else {
-                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
-                            subexprs_to_eval.push((
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval.push((
                                 false,
                                 Statement(condition.0, Statement_::Expr(*condition.clone())),
                             ));
                         }
                     }
                     Statement_::Expr(Expression(_, Expression_::BinaryOperator(lhs, _, rhs))) => {
-                        if done_subexprs {
-                            let lhs_value = subexprs_values
+                        if done_children {
+                            let lhs_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for LHS of binary operator");
-                            let rhs_value = subexprs_values
+                            let rhs_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for RHS of binary operator");
 
@@ -225,24 +225,24 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 }
                             };
 
-                            subexprs_values.push(Value::Integer(lhs_num + rhs_num));
+                            evalled_values.push(Value::Integer(lhs_num + rhs_num));
                         } else {
-                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
-                            subexprs_to_eval
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval
                                 .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
-                            subexprs_to_eval
+                            stmts_to_eval
                                 .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
                         }
                     }
                     Statement_::Expr(Expression(_, Expression_::Call(receiver, ref args))) => {
-                        if done_subexprs {
-                            let receiver_value = subexprs_values
+                        if done_children {
+                            let receiver_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for call receiver");
                             let mut arg_values = vec![];
                             for _ in 0..args.len() {
                                 arg_values.push(
-                                    subexprs_values.pop().expect(
+                                    evalled_values.pop().expect(
                                         "Popped an empty value for stack for call arguments",
                                     ),
                                 );
@@ -259,7 +259,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                         ));
                                     }
 
-                                    subexprs_to_eval_per_fun.push(subexprs_to_eval.clone());
+                                    stmts_to_eval_per_fun.push(stmts_to_eval.clone());
 
                                     env.push_new_fun_scope(name.clone());
                                     for (param, value) in params.iter().zip(arg_values.iter()) {
@@ -270,21 +270,21 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                     for stmt in body.iter().rev() {
                                         fun_subexprs.push((false, stmt.clone()));
                                     }
-                                    subexprs_to_eval_per_fun.push(fun_subexprs);
+                                    stmts_to_eval_per_fun.push(fun_subexprs);
                                 }
                                 v => {
                                     return Err(format!("Expected a function, but got: {}", v));
                                 }
                             }
                         } else {
-                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
 
-                            subexprs_to_eval.push((
+                            stmts_to_eval.push((
                                 false,
                                 Statement(receiver.0, Statement_::Expr(*receiver.clone())),
                             ));
                             for arg in args {
-                                subexprs_to_eval
+                                stmts_to_eval
                                     .push((false, Statement(arg.0, Statement_::Expr(arg.clone()))));
                             }
                         }
@@ -292,7 +292,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                 }
             }
 
-            if let Some(subexprs_to_eval) = subexprs_to_eval_per_fun.last() {
+            if let Some(subexprs_to_eval) = stmts_to_eval_per_fun.last() {
                 if subexprs_to_eval.is_empty() {
                     // Reached end of this block. Pop to the parent.
                     if env.fun_scopes.len() > 1 {
@@ -306,7 +306,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
         }
     }
 
-    Ok(subexprs_values
+    Ok(evalled_values
         .pop()
         .expect("Should have a value from the last expression"))
 }

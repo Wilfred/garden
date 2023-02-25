@@ -90,11 +90,6 @@ impl Env {
     }
 }
 
-#[derive(Debug)]
-enum NextStep {
-    NextStmt { idx: usize },
-}
-
 fn error_prompt(message: &str) -> Result<Statement, String> {
     println!("{}: {}", "Error".bright_red(), message);
     println!("What value would you like to use instead?");
@@ -121,219 +116,188 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
 }
 
 pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
-    let mut subexprs_to_eval_per_fun: Vec<Vec<(bool, Expression)>> = vec![vec![]];
+    let mut subexprs_to_eval = vec![];
+    for stmt in stmts.iter().rev() {
+        subexprs_to_eval.push((false, stmt.clone()));
+    }
+
+    let mut subexprs_to_eval_per_fun: Vec<Vec<(bool, Statement)>> = vec![subexprs_to_eval];
     let mut subexprs_values: Vec<Value> = vec![Value::Void];
-    let mut next_steps: Vec<NextStep> = vec![NextStep::NextStmt { idx: 0 }];
-    let mut fun_bodies: Vec<Vec<Statement>> = vec![stmts.to_vec()];
 
     loop {
-        let subexprs_to_eval = subexprs_to_eval_per_fun.last_mut().unwrap();
-        while let Some((done_subexprs, Expression(offset, expr_))) = subexprs_to_eval.pop() {
-            match expr_.clone() {
-                Expression_::IntLiteral(i) => {
-                    subexprs_values.push(Value::Integer(i));
-                }
-                Expression_::BoolLiteral(b) => {
-                    subexprs_values.push(Value::Boolean(b));
-                }
-                Expression_::StringLiteral(s) => {
-                    subexprs_values.push(Value::String(s));
-                }
-                Expression_::Let(variable, expr) => {
-                    if done_subexprs {
-                        let expr_value = subexprs_values
-                            .pop()
-                            .expect("Popped an empty value stack for let value");
-                        env.set_with_fun_scope(&variable, expr_value.clone());
-                        subexprs_values.push(expr_value);
-                    } else {
-                        subexprs_to_eval.push((true, Expression(offset, expr_)));
-                        subexprs_to_eval.push((false, *expr.clone()));
+        if let Some(mut subexprs_to_eval) = subexprs_to_eval_per_fun.pop() {
+            while let Some((done_subexprs, Statement(offset, stmt_))) = subexprs_to_eval.pop() {
+                let stmt_copy = stmt_.clone();
+                match stmt_ {
+                    Statement_::Fun(name, params, body) => {
+                        env.set_with_file_scope(
+                            &name,
+                            Value::Fun(name.clone(), params.clone(), body.clone()),
+                        );
                     }
-                }
-                Expression_::If(condition, then_body, else_body) => {
-                    if done_subexprs {
-                        let condition_value = subexprs_values
-                            .pop()
-                            .expect("Popped an empty value stack for if condition");
-                        match condition_value {
-                            Value::Boolean(b) => {
-                                if b {
-                                    println!("evaluate: {:?}", then_body);
-                                } else {
-                                    println!("evaluate: {:?}", else_body);
-                                }
-                            }
-                            v => {
-                                return Err(format!("Expected a boolean, but got: {}", v));
-                            }
-                        }
-                    } else {
-                        subexprs_to_eval.push((true, Expression(offset, expr_)));
-                        subexprs_to_eval.push((false, *condition.clone()));
+                    Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
+                        subexprs_values.push(Value::Integer(i));
                     }
-                }
-                Expression_::BinaryOperator(lhs, _, rhs) => {
-                    if done_subexprs {
-                        let rhs_value = subexprs_values
-                            .pop()
-                            .expect("Got an empty value stack when evaluating RHS of +");
-                        let lhs_value = subexprs_values
-                            .pop()
-                            .expect("Got an empty value stack when evaluating LHS of +");
-
-                        let lhs_num = match lhs_value {
-                            Value::Integer(i) => i,
-                            _ => {
-                                // TODO: read replacement value
-                                let _lhs_new = read_replacement(&format!(
-                                    "Expected an integer, but got: {}",
-                                    lhs_value
-                                ))?;
-                                return Err(format!("Expected an integer, but got: {}", lhs_value));
-                            }
-                        };
-
-                        let rhs_num = match rhs_value {
-                            Value::Integer(i) => i,
-                            _ => {
-                                let _rhs_new = read_replacement(&format!(
-                                    "Expected an integer, but got: {}",
-                                    rhs_value
-                                ))?;
-                                return Err(format!("Expected an integer, but got: {}", rhs_value));
-                            }
-                        };
-
-                        subexprs_values.push(Value::Integer(lhs_num + rhs_num))
-                    } else {
-                        subexprs_to_eval.push((true, Expression(offset, expr_)));
-                        subexprs_to_eval.push((false, *rhs.clone()));
-                        subexprs_to_eval.push((false, *lhs.clone()));
+                    Statement_::Expr(Expression(_, Expression_::BoolLiteral(b))) => {
+                        subexprs_values.push(Value::Boolean(b));
                     }
-                }
-                Expression_::Variable(s) => match env.get(&s) {
-                    Some(v) => subexprs_values.push(v),
-                    None => {
-                        let replacement_stmt = error_prompt(&format!("Unbound variable: {}", s))?;
-                        match replacement_stmt {
-                            Statement(_, Statement_::Expr(expr)) => {
-                                subexprs_to_eval.push((false, expr));
-                            }
-                            _ => {
-                                return Err(format!(
-                                    "Expected an expression, but got {:?}",
-                                    replacement_stmt
-                                ));
-                            }
+                    Statement_::Expr(Expression(_, Expression_::StringLiteral(s))) => {
+                        subexprs_values.push(Value::String(s));
+                    }
+                    Statement_::Expr(Expression(_, Expression_::Let(variable, expr))) => {
+                        if done_subexprs {
+                            let expr_value = subexprs_values
+                                .pop()
+                                .expect("Popped an empty value stack for let value");
+                            env.set_with_fun_scope(&variable, expr_value.clone());
+                            subexprs_values.push(expr_value);
+                        } else {
+                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
+                            subexprs_to_eval
+                                .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
                         }
                     }
-                },
-                Expression_::Call(receiver, args) => {
-                    if done_subexprs {
-                        let receiver = subexprs_values
-                            .pop()
-                            .expect("Popped an empty value stack for call receiver");
-
-                        let mut arg_values = vec![];
-                        for _ in 0..args.len() {
-                            arg_values.push(
-                                subexprs_values
-                                    .pop()
-                                    .expect("Popped an empty value for stack for call arguments"),
-                            );
+                    Statement_::Expr(Expression(_, Expression_::Variable(name))) => {
+                        if let Some(value) = env.get(&name) {
+                            subexprs_values.push(value);
+                        } else {
+                            // TODO: prompt for a replacement value
+                            return Err(format!("Undefined variable: {}", name));
                         }
-
-                        match receiver {
-                            Value::Fun(name, params, body) => {
-                                if args.len() != params.len() {
-                                    // TODO: prompt user for extra arguments.
-                                    return Err(format!(
-                                        "Function {} requires {} arguments, but got: {}",
-                                        name,
-                                        params.len(),
-                                        args.len()
-                                    ));
-                                }
-
-                                env.push_new_fun_scope(name);
-                                for (var_name, value) in params.iter().zip(arg_values) {
-                                    env.set_with_fun_scope(&var_name, value);
-                                }
-
-                                subexprs_to_eval_per_fun.push(vec![]);
-                                fun_bodies.push(body);
-                                next_steps.push(NextStep::NextStmt { idx: 0 });
-
-                                break;
-                            }
-                            Value::BuiltinFunction(k) => match k {
-                                BuiltinFunctionKind::Print => {
-                                    if args.len() != 1 {
-                                        return Err(format!(
-                                            "Function print requires 1 argument, but got: {}",
-                                            args.len()
-                                        ));
-                                    }
-                                    match &arg_values[0] {
-                                        Value::String(s) => println!("{}", s),
-                                        v => {
-                                            return Err(format!(
-                                                "Expected a string, but got: {}",
-                                                v
-                                            ));
+                    }
+                    Statement_::Expr(Expression(
+                        _,
+                        Expression_::If(condition, ref then_body, ref else_body),
+                    )) => {
+                        if done_subexprs {
+                            let condition_value = subexprs_values
+                                .pop()
+                                .expect("Popped an empty value stack for if condition");
+                            match condition_value {
+                                Value::Boolean(b) => {
+                                    if b {
+                                        for stmt in then_body.iter().rev() {
+                                            subexprs_to_eval.push((false, stmt.clone()));
+                                        }
+                                    } else {
+                                        for stmt in else_body.iter().rev() {
+                                            subexprs_to_eval.push((false, stmt.clone()));
                                         }
                                     }
                                 }
-                            },
-                            v => {
-                                return Err(format!("Expected a function, but got: {}", v));
+                                v => {
+                                    return Err(format!("Expected a boolean, but got: {}", v));
+                                }
                             }
+                        } else {
+                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
+                            subexprs_to_eval.push((
+                                false,
+                                Statement(condition.0, Statement_::Expr(*condition.clone())),
+                            ));
                         }
-                    } else {
-                        subexprs_to_eval.push((true, Expression(offset, expr_)));
-                        subexprs_to_eval.push((false, *receiver.clone()));
-                        for arg in args {
-                            subexprs_to_eval.push((false, arg.clone()));
+                    }
+                    Statement_::Expr(Expression(_, Expression_::BinaryOperator(lhs, _, rhs))) => {
+                        if done_subexprs {
+                            let lhs_value = subexprs_values
+                                .pop()
+                                .expect("Popped an empty value stack for LHS of binary operator");
+                            let rhs_value = subexprs_values
+                                .pop()
+                                .expect("Popped an empty value stack for RHS of binary operator");
+
+                            let lhs_num = match lhs_value {
+                                Value::Integer(i) => i,
+                                _ => {
+                                    return Err(format!(
+                                        "Expected an integer, but got: {}",
+                                        lhs_value
+                                    ));
+                                }
+                            };
+                            let rhs_num = match rhs_value {
+                                Value::Integer(i) => i,
+                                _ => {
+                                    return Err(format!(
+                                        "Expected an integer, but got: {}",
+                                        rhs_value
+                                    ));
+                                }
+                            };
+
+                            subexprs_values.push(Value::Integer(lhs_num + rhs_num));
+                        } else {
+                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
+                            subexprs_to_eval
+                                .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
+                            subexprs_to_eval
+                                .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
+                        }
+                    }
+                    Statement_::Expr(Expression(_, Expression_::Call(receiver, ref args))) => {
+                        if done_subexprs {
+                            let receiver_value = subexprs_values
+                                .pop()
+                                .expect("Popped an empty value stack for call receiver");
+                            let mut arg_values = vec![];
+                            for _ in 0..args.len() {
+                                arg_values.push(
+                                    subexprs_values.pop().expect(
+                                        "Popped an empty value for stack for call arguments",
+                                    ),
+                                );
+                            }
+
+                            match receiver_value {
+                                Value::Fun(name, params, body) => {
+                                    if params.len() != arg_values.len() {
+                                        return Err(format!(
+                                            "Expected {} arguments to function {}, but got {}",
+                                            params.len(),
+                                            name,
+                                            arg_values.len()
+                                        ));
+                                    }
+
+                                    subexprs_to_eval_per_fun.push(subexprs_to_eval.clone());
+
+                                    env.push_new_fun_scope(name.clone());
+                                    for (param, value) in params.iter().zip(arg_values.iter()) {
+                                        env.set_with_fun_scope(param, value.clone());
+                                    }
+
+                                    let mut fun_subexprs = vec![];
+                                    for stmt in body.iter().rev() {
+                                        fun_subexprs.push((false, stmt.clone()));
+                                    }
+                                    subexprs_to_eval_per_fun.push(fun_subexprs);
+                                }
+                                v => {
+                                    return Err(format!("Expected a function, but got: {}", v));
+                                }
+                            }
+                        } else {
+                            subexprs_to_eval.push((true, Statement(offset, stmt_copy)));
+
+                            subexprs_to_eval.push((
+                                false,
+                                Statement(receiver.0, Statement_::Expr(*receiver.clone())),
+                            ));
+                            for arg in args {
+                                subexprs_to_eval
+                                    .push((false, Statement(arg.0, Statement_::Expr(arg.clone()))));
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if let Some(step) = next_steps.pop() {
-            match step {
-                NextStep::NextStmt { idx } => {
-                    let subexprs_to_eval = subexprs_to_eval_per_fun.last_mut().unwrap();
-                    let stmts = fun_bodies
-                        .last()
-                        .expect("Function stack should never be empty");
-                    if let Some(Statement(_, stmt)) = stmts.get(idx) {
-                        if idx > 0 {
-                            // Discard value from previous statement.
-                            subexprs_values.pop().expect("Popped an empty value stack");
-                        }
-                        match stmt {
-                            Statement_::Fun(name, params, body) => {
-                                let value = Value::Fun(name.clone(), params.clone(), body.clone());
-                                env.set_with_file_scope(name, value);
-                                subexprs_values.push(Value::Void);
-                                next_steps.push(NextStep::NextStmt { idx: idx + 1 });
-                            }
-                            Statement_::Expr(e) => {
-                                subexprs_to_eval.push((false, e.clone()));
-                                next_steps.push(NextStep::NextStmt { idx: idx + 1 });
-                            }
-                        }
-                    } else {
-                        // Reached end of this block. Pop to the parent.
-                        if env.fun_scopes.len() > 1 {
-                            // Don't pop the outer scope: that's for the top level environment.
-                            env.pop_fun_scope();
-                            subexprs_to_eval_per_fun.pop();
-                        }
-
-                        fun_bodies.pop();
+            if let Some(subexprs_to_eval) = subexprs_to_eval_per_fun.last() {
+                if subexprs_to_eval.is_empty() {
+                    // Reached end of this block. Pop to the parent.
+                    if env.fun_scopes.len() > 1 {
+                        // Don't pop the outer scope: that's for the top level environment.
+                        env.pop_fun_scope();
                     }
                 }
             }

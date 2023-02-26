@@ -161,8 +161,8 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         if let Some(value) = env.get(&name) {
                             evalled_values.push(value);
                         } else {
-                            // TODO: prompt for a replacement value
-                            return Err(format!("Undefined variable: {}", name));
+                            let stmt = error_prompt(&format!("Undefined variable: {}", name))?;
+                            stmts_to_eval.push((false, stmt));
                         }
                     }
                     Statement_::Expr(Expression(

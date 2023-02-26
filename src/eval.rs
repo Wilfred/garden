@@ -135,6 +135,35 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             Value::Fun(name.clone(), params.clone(), body.clone()),
                         );
                     }
+                    Statement_::If(condition, ref then_body, ref else_body) => {
+                        if done_children {
+                            let condition_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for if condition");
+                            match condition_value {
+                                Value::Boolean(b) => {
+                                    if b {
+                                        for stmt in then_body.iter().rev() {
+                                            stmts_to_eval.push((false, stmt.clone()));
+                                        }
+                                    } else {
+                                        for stmt in else_body.iter().rev() {
+                                            stmts_to_eval.push((false, stmt.clone()));
+                                        }
+                                    }
+                                }
+                                v => {
+                                    return Err(format!("Expected a boolean, but got: {}", v));
+                                }
+                            }
+                        } else {
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval.push((
+                                false,
+                                Statement(condition.0, Statement_::Expr(*condition.clone())),
+                            ));
+                        }
+                    }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
                         evalled_values.push(Value::Integer(i));
                     }
@@ -163,38 +192,6 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         } else {
                             let stmt = error_prompt(&format!("Undefined variable: {}", name))?;
                             stmts_to_eval.push((false, stmt));
-                        }
-                    }
-                    Statement_::Expr(Expression(
-                        _,
-                        Expression_::If(condition, ref then_body, ref else_body),
-                    )) => {
-                        if done_children {
-                            let condition_value = evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for if condition");
-                            match condition_value {
-                                Value::Boolean(b) => {
-                                    if b {
-                                        for stmt in then_body.iter().rev() {
-                                            stmts_to_eval.push((false, stmt.clone()));
-                                        }
-                                    } else {
-                                        for stmt in else_body.iter().rev() {
-                                            stmts_to_eval.push((false, stmt.clone()));
-                                        }
-                                    }
-                                }
-                                v => {
-                                    return Err(format!("Expected a boolean, but got: {}", v));
-                                }
-                            }
-                        } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval.push((
-                                false,
-                                Statement(condition.0, Statement_::Expr(*condition.clone())),
-                            ));
                         }
                     }
                     Statement_::Expr(Expression(_, Expression_::BinaryOperator(lhs, _, rhs))) => {

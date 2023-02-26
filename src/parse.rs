@@ -13,7 +13,6 @@ pub enum Expression_ {
     BinaryOperator(Box<Expression>, String, Box<Expression>),
     Variable(String),
     Call(Box<Expression>, Vec<Expression>),
-    If(Box<Expression>, Vec<Statement>, Vec<Statement>),
     Let(String, Box<Expression>),
 }
 
@@ -24,6 +23,7 @@ pub struct Expression(pub usize, pub Expression_);
 pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
     Fun(String, Vec<String>, Vec<Statement>),
+    If(Box<Expression>, Vec<Statement>, Vec<Statement>),
     Expr(Expression),
 }
 
@@ -114,7 +114,7 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     Ok(res)
 }
 
-fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     let offset = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
@@ -125,9 +125,9 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> 
     require_token(tokens, "else")?;
     let else_body = parse_block(tokens)?;
 
-    Ok(Expression(
+    Ok(Statement(
         offset,
-        Expression_::If(Box::new(condition), then_body, else_body),
+        Statement_::If(Box::new(condition), then_body, else_body),
     ))
 }
 
@@ -139,10 +139,6 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
 
         if token == "let" {
             return parse_let_expr(tokens);
-        }
-
-        if token == "if" {
-            return parse_if_expression(tokens);
         }
 
         if token == "true" {
@@ -249,6 +245,9 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     if let Some((_, token)) = peek_token(tokens) {
         if token == "fun" {
             return parse_function(tokens);
+        }
+        if token == "if" {
+            return parse_if_stmt(tokens);
         }
     }
 

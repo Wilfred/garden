@@ -88,8 +88,7 @@ fn main() {
                         continue;
                     }
                     Some(Commands::Source) => {
-                        println!("{}", complete_src);
-
+                        print!("{}", complete_src);
                         continue;
                     }
                     Some(Commands::Globals) => {

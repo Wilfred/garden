@@ -355,6 +355,15 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(offset, Statement_::Let(variable, Box::new(expr))))
 }
 
+// fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+//     let (_, variable) = parse_variable_name(tokens)?;
+
+//     require_token(tokens, "=")?;
+//     let expr = parse_expression(tokens)?;
+
+//     Ok(Statement(offset, Statement_::Assign(variable, Box::new(expr))))
+// }
+
 pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     let mut res = vec![];
 
@@ -432,15 +441,29 @@ mod tests {
         assert_eq!(lex(" a").unwrap(), vec![(1, "a")]);
     }
 
-    // #[test]
-    // fn test_lex_spaces() {
-    //     assert_eq!(lex("1 + 2").unwrap(), vec!["1", "+", "2"]);
-    // }
+    #[test]
+    fn test_lex_spaces() {
+        assert_eq!(
+            lex("1 + 2")
+                .unwrap()
+                .iter()
+                .map(|token| token.1)
+                .collect::<Vec<_>>(),
+            vec!["1", "+", "2"]
+        );
+    }
 
-    // #[test]
-    // fn test_lex_no_spaces() {
-    //     assert_eq!(lex("1+2").unwrap(), vec!["1", "+", "2"]);
-    // }
+    #[test]
+    fn test_lex_no_spaces() {
+        assert_eq!(
+            lex("1+2")
+                .unwrap()
+                .iter()
+                .map(|token| token.1)
+                .collect::<Vec<_>>(),
+            vec!["1", "+", "2"]
+        );
+    }
 
     #[test]
     fn test_parse_bool_literal() {

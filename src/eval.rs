@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parse::{lex, parse_expression, Expression, Expression_, Statement_};
+use crate::parse::{lex, parse_expression, Expression, Expression_, Statement_, VariableName};
 use crate::parse::{parse_toplevel, Statement};
 use crate::prompt::prompt_symbol;
 
@@ -11,7 +11,7 @@ use rustyline::Editor;
 pub enum Value {
     Integer(i64),
     Boolean(bool),
-    Fun(String, Vec<String>, Vec<Statement>),
+    Fun(VariableName, Vec<VariableName>, Vec<Statement>),
     BuiltinFunction(BuiltinFunctionKind),
     String(String),
     Void,
@@ -27,7 +27,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(name, _, _) => write!(f, "(function: {})", name),
+            Value::Fun(name, _, _) => write!(f, "(function: {})", name.0),
             Value::BuiltinFunction(BuiltinFunctionKind::Print) => write!(f, "(function: print)"),
             Value::Void => write!(f, "void"),
             // TODO: escape inner double quotes.
@@ -38,27 +38,27 @@ impl Display for Value {
 
 #[derive(Debug)]
 pub struct Env {
-    pub file_scope: HashMap<String, Value>,
-    pub fun_scopes: Vec<(String, HashMap<String, Value>)>,
+    pub file_scope: HashMap<VariableName, Value>,
+    pub fun_scopes: Vec<(VariableName, HashMap<VariableName, Value>)>,
 }
 
 impl Default for Env {
     fn default() -> Self {
-        let mut file_scope: HashMap<String, Value> = HashMap::new();
+        let mut file_scope = HashMap::new();
         file_scope.insert(
-            "print".to_owned(),
+            VariableName("print".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::Print),
         );
 
         Self {
             file_scope,
-            fun_scopes: vec![("toplevel".into(), HashMap::new())],
+            fun_scopes: vec![(VariableName("toplevel".into()), HashMap::new())],
         }
     }
 }
 
 impl Env {
-    pub fn get(&self, name: &str) -> Option<Value> {
+    pub fn get(&self, name: &VariableName) -> Option<Value> {
         if let Some((_, fun_scope)) = self.fun_scopes.last() {
             if let Some(value) = fun_scope.get(name) {
                 return Some(value.clone());
@@ -72,21 +72,21 @@ impl Env {
         None
     }
 
-    pub fn push_new_fun_scope(&mut self, description: String) {
-        self.fun_scopes.push((description, HashMap::new()));
+    pub fn push_new_fun_scope(&mut self, description: &VariableName) {
+        self.fun_scopes.push((description.clone(), HashMap::new()));
     }
 
     pub fn pop_fun_scope(&mut self) {
         self.fun_scopes.pop().unwrap();
     }
 
-    pub fn set_with_file_scope(&mut self, name: &str, value: Value) {
-        self.file_scope.insert(name.to_string(), value);
+    pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
+        self.file_scope.insert(name.clone(), value);
     }
 
-    pub fn set_with_fun_scope(&mut self, name: &str, value: Value) {
+    pub fn set_with_fun_scope(&mut self, name: &VariableName, value: Value) {
         let (_, fun_scope) = &mut self.fun_scopes.last_mut().unwrap();
-        fun_scope.insert(name.to_string(), value);
+        fun_scope.insert(name.clone(), value);
     }
 }
 
@@ -190,7 +190,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                         if let Some(value) = env.get(&name) {
                             evalled_values.push(value);
                         } else {
-                            let stmt = error_prompt(&format!("Undefined variable: {}", name))?;
+                            let stmt = error_prompt(&format!("Undefined variable: {}", name.0))?;
                             stmts_to_eval.push((false, stmt));
                         }
                     }
@@ -251,14 +251,14 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                         return Err(format!(
                                             "Expected {} arguments to function {}, but got {}",
                                             params.len(),
-                                            name,
+                                            name.0,
                                             arg_values.len()
                                         ));
                                     }
 
                                     stmts_to_eval_per_fun.push(stmts_to_eval.clone());
 
-                                    env.push_new_fun_scope(name.clone());
+                                    env.push_new_fun_scope(&name);
                                     for (param, value) in params.iter().zip(arg_values.iter()) {
                                         env.set_with_fun_scope(param, value.clone());
                                     }
@@ -349,7 +349,7 @@ mod tests {
             Statement_::Expr(Expression(
                 0,
                 Expression_::Let(
-                    "foo".into(),
+                    VariableName("foo".into()),
                     Box::new(Expression(0, Expression_::BoolLiteral(true))),
                 ),
             )),
@@ -358,7 +358,10 @@ mod tests {
 
         let stmts = vec![Statement(
             0,
-            Statement_::Expr(Expression(0, Expression_::Variable("foo".into()))),
+            Statement_::Expr(Expression(
+                0,
+                Expression_::Variable(VariableName("foo".into())),
+            )),
         )];
         eval_stmts(&stmts, &mut env).unwrap();
     }
@@ -408,14 +411,17 @@ mod tests {
                 Statement_::Expr(Expression(
                     0,
                     Expression_::Let(
-                        "foo".into(),
+                        VariableName("foo".into()),
                         Box::new(Expression(0, Expression_::BoolLiteral(true))),
                     ),
                 )),
             ),
             Statement(
                 0,
-                Statement_::Expr(Expression(0, Expression_::Variable("foo".into()))),
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Variable(VariableName("foo".into())),
+                )),
             ),
         ];
 
@@ -432,7 +438,7 @@ mod tests {
                 Statement_::Expr(Expression(
                     0,
                     Expression_::Let(
-                        "foo".into(),
+                        VariableName("foo".into()),
                         Box::new(Expression(0, Expression_::BoolLiteral(true))),
                     ),
                 )),
@@ -442,7 +448,7 @@ mod tests {
                 Statement_::Expr(Expression(
                     0,
                     Expression_::Let(
-                        "foo".into(),
+                        VariableName("foo".into()),
                         Box::new(Expression(0, Expression_::BoolLiteral(false))),
                     ),
                 )),
@@ -469,7 +475,7 @@ mod tests {
             Statement(
                 0,
                 Statement_::Fun(
-                    "f".into(),
+                    VariableName("f".into()),
                     vec![],
                     vec![Statement(
                         0,
@@ -482,7 +488,10 @@ mod tests {
                 Statement_::Expr(Expression(
                     0,
                     Expression_::Call(
-                        Box::new(Expression(0, Expression_::Variable("f".into()))),
+                        Box::new(Expression(
+                            0,
+                            Expression_::Variable(VariableName("f".into())),
+                        )),
                         vec![],
                     ),
                 )),
@@ -502,11 +511,14 @@ mod tests {
             Statement(
                 0,
                 Statement_::Fun(
-                    "f".into(),
-                    vec!["x".into()],
+                    VariableName("f".into()),
+                    vec![VariableName("x".into())],
                     vec![Statement(
                         0,
-                        Statement_::Expr(Expression(0, Expression_::Variable("x".into()))),
+                        Statement_::Expr(Expression(
+                            0,
+                            Expression_::Variable(VariableName("x".into())),
+                        )),
                     )],
                 ),
             ),
@@ -515,7 +527,10 @@ mod tests {
                 Statement_::Expr(Expression(
                     0,
                     Expression_::Call(
-                        Box::new(Expression(0, Expression_::Variable("f".into()))),
+                        Box::new(Expression(
+                            0,
+                            Expression_::Variable(VariableName("f".into())),
+                        )),
                         vec![Expression(0, Expression_::IntLiteral(123))],
                     ),
                 )),
@@ -535,12 +550,15 @@ mod tests {
             Statement(
                 0,
                 Statement_::Fun(
-                    "f".into(),
+                    VariableName("f".into()),
                     // TODO: check for duplicate param names.
-                    vec!["x".into(), "y".into()],
+                    vec![VariableName("x".into()), VariableName("y".into())],
                     vec![Statement(
                         0,
-                        Statement_::Expr(Expression(0, Expression_::Variable("y".into()))),
+                        Statement_::Expr(Expression(
+                            0,
+                            Expression_::Variable(VariableName("y".into())),
+                        )),
                     )],
                 ),
             ),
@@ -549,7 +567,10 @@ mod tests {
                 Statement_::Expr(Expression(
                     0,
                     Expression_::Call(
-                        Box::new(Expression(0, Expression_::Variable("f".into()))),
+                        Box::new(Expression(
+                            0,
+                            Expression_::Variable(VariableName("f".into())),
+                        )),
                         vec![
                             Expression(0, Expression_::IntLiteral(1)),
                             Expression(0, Expression_::IntLiteral(2)),

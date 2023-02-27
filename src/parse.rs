@@ -5,15 +5,18 @@ use regex::Regex;
 //     line: usize,
 // }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct VariableName(pub String);
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
     BinaryOperator(Box<Expression>, String, Box<Expression>),
-    Variable(String),
+    Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),
-    Let(String, Box<Expression>),
+    Let(VariableName, Box<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -22,7 +25,7 @@ pub struct Expression(pub usize, pub Expression_);
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
-    Fun(String, Vec<String>, Vec<Statement>),
+    Fun(VariableName, Vec<VariableName>, Vec<Statement>),
     If(Box<Expression>, Vec<Statement>, Vec<Statement>),
     Expr(Expression),
 }
@@ -256,7 +259,7 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(expr.0, Statement_::Expr(expr)))
 }
 
-fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<String>, String> {
+fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>, String> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -322,7 +325,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
 
 const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false", "if", "else"];
 
-fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, String), String> {
+fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName), String> {
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
 
@@ -340,7 +343,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, String), Str
         }
     }
 
-    Ok((offset, variable.to_string()))
+    Ok((offset, VariableName(variable.to_string())))
 }
 
 fn parse_let_expr(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
@@ -470,7 +473,10 @@ mod tests {
             ast,
             vec![Statement(
                 0,
-                Statement_::Expr(Expression(0, Expression_::Variable("abc_def".to_string())))
+                Statement_::Expr(Expression(
+                    0,
+                    Expression_::Variable(VariableName("abc_def".to_string()))
+                ))
             )]
         );
     }

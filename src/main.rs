@@ -93,7 +93,7 @@ fn main() {
                     }
                     Some(Commands::Globals) => {
                         for (var_name, value) in &env.file_scope {
-                            println!("{}\t{}", var_name.bright_green(), value);
+                            println!("{}\t{}", var_name.0.bright_green(), value);
                         }
 
                         continue;
@@ -101,7 +101,7 @@ fn main() {
                     Some(Commands::Locals) => {
                         if let Some((_, fun_scope)) = env.fun_scopes.last() {
                             for (var_name, value) in fun_scope {
-                                println!("{}\t{}", var_name.bright_green(), value);
+                                println!("{}\t{}", var_name.0.bright_green(), value);
                             }
                         }
 
@@ -180,6 +180,6 @@ fn log_src(src: String) -> std::io::Result<()> {
 
 fn print_stack(env: &Env) {
     for (description, _) in env.fun_scopes.iter().rev() {
-        println!("In {}", description);
+        println!("In {}", description.0);
     }
 }

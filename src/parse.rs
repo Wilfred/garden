@@ -351,6 +351,7 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
 
     require_token(tokens, "=")?;
     let expr = parse_expression(tokens)?;
+    let _ = require_token(tokens, ";")?;
 
     Ok(Statement(offset, Statement_::Let(variable, Box::new(expr))))
 }
@@ -496,6 +497,25 @@ mod tests {
                     0,
                     Expression_::Variable(VariableName("abc_def".to_string()))
                 ))
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_let() {
+        let src = "let x = 1;";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Statement(
+                0,
+                Statement_::Let(
+                    VariableName("x".into()),
+                    Box::new(Expression(8, Expression_::IntLiteral(1)))
+                )
             )]
         );
     }

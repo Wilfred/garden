@@ -164,16 +164,7 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             ));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
-                        evalled_values.push(Value::Integer(i));
-                    }
-                    Statement_::Expr(Expression(_, Expression_::BoolLiteral(b))) => {
-                        evalled_values.push(Value::Boolean(b));
-                    }
-                    Statement_::Expr(Expression(_, Expression_::StringLiteral(s))) => {
-                        evalled_values.push(Value::String(s));
-                    }
-                    Statement_::Expr(Expression(_, Expression_::Let(variable, expr))) => {
+                    Statement_::Let(variable, expr) => {
                         if done_children {
                             let expr_value = evalled_values
                                 .pop()
@@ -185,6 +176,15 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             stmts_to_eval
                                 .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
                         }
+                    }
+                    Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
+                        evalled_values.push(Value::Integer(i));
+                    }
+                    Statement_::Expr(Expression(_, Expression_::BoolLiteral(b))) => {
+                        evalled_values.push(Value::Boolean(b));
+                    }
+                    Statement_::Expr(Expression(_, Expression_::StringLiteral(s))) => {
+                        evalled_values.push(Value::String(s));
                     }
                     Statement_::Expr(Expression(_, Expression_::Variable(name))) => {
                         if let Some(value) = env.get(&name) {
@@ -346,13 +346,10 @@ mod tests {
 
         let stmts = vec![Statement(
             0,
-            Statement_::Expr(Expression(
-                0,
-                Expression_::Let(
-                    VariableName("foo".into()),
-                    Box::new(Expression(0, Expression_::BoolLiteral(true))),
-                ),
-            )),
+            Statement_::Let(
+                VariableName("foo".into()),
+                Box::new(Expression(0, Expression_::BoolLiteral(true))),
+            ),
         )];
         eval_stmts(&stmts, &mut env).unwrap();
 
@@ -408,13 +405,10 @@ mod tests {
         let stmts = vec![
             Statement(
                 0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Let(
-                        VariableName("foo".into()),
-                        Box::new(Expression(0, Expression_::BoolLiteral(true))),
-                    ),
-                )),
+                Statement_::Let(
+                    VariableName("foo".into()),
+                    Box::new(Expression(0, Expression_::BoolLiteral(true))),
+                ),
             ),
             Statement(
                 0,
@@ -435,23 +429,17 @@ mod tests {
         let stmts = vec![
             Statement(
                 0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Let(
-                        VariableName("foo".into()),
-                        Box::new(Expression(0, Expression_::BoolLiteral(true))),
-                    ),
-                )),
+                Statement_::Let(
+                    VariableName("foo".into()),
+                    Box::new(Expression(0, Expression_::BoolLiteral(true))),
+                ),
             ),
             Statement(
                 0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Let(
-                        VariableName("foo".into()),
-                        Box::new(Expression(0, Expression_::BoolLiteral(false))),
-                    ),
-                )),
+                Statement_::Let(
+                    VariableName("foo".into()),
+                    Box::new(Expression(0, Expression_::BoolLiteral(false))),
+                ),
             ),
         ];
 

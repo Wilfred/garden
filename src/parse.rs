@@ -26,6 +26,7 @@ pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
     Fun(VariableName, Vec<VariableName>, Vec<Statement>),
     If(Box<Expression>, Vec<Statement>, Vec<Statement>),
+    Assign(VariableName, Box<Expression>),
     Let(VariableName, Box<Expression>),
     Expr(Expression),
 }
@@ -47,6 +48,14 @@ fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
 
 fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
     tokens.first().copied()
+}
+
+fn peek_two_tokens<'a>(tokens: &[Token<'a>]) -> Option<(Token<'a>, Token<'a>)> {
+    if tokens.len() > 1 {
+        Some((tokens[0], tokens[1]))
+    } else {
+        None
+    }
 }
 
 fn require_a_token<'a>(
@@ -241,6 +250,12 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
 }
 
 fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+    if let Some((_, (_, token))) = peek_two_tokens(tokens) {
+        if token == "=" {
+            return parse_assign_stmt(tokens);
+        }
+    }
+
     if let Some((_, token)) = peek_token(tokens) {
         if token == "fun" {
             return parse_function(tokens);
@@ -356,14 +371,18 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(offset, Statement_::Let(variable, Box::new(expr))))
 }
 
-// fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
-//     let (_, variable) = parse_variable_name(tokens)?;
+fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+    let (offset, variable) = parse_variable_name(tokens)?;
 
-//     require_token(tokens, "=")?;
-//     let expr = parse_expression(tokens)?;
+    require_token(tokens, "=")?;
+    let expr = parse_expression(tokens)?;
+    let _ = require_token(tokens, ";")?;
 
-//     Ok(Statement(offset, Statement_::Assign(variable, Box::new(expr))))
-// }
+    Ok(Statement(
+        offset,
+        Statement_::Assign(variable, Box::new(expr)),
+    ))
+}
 
 pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     let mut res = vec![];

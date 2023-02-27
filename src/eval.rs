@@ -177,6 +177,9 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
                         }
                     }
+                    Statement_::Assign(_variable, _expr) => {
+                        todo!();
+                    }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
                         evalled_values.push(Value::Integer(i));
                     }

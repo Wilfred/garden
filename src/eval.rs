@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parse::{lex, Expression, Expression_, Statement_, VariableName};
-use crate::parse::{parse_toplevel, BinaryOperatorKind, Statement};
+use crate::parse::{Expression, Expression_, Statement_, VariableName, parse_toplevel_from_str};
+use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
 
 use owo_colors::OwoColorize;
@@ -103,10 +103,7 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
     match rl.readline(&prompt_symbol(1)) {
         Ok(input) => {
             let input = input.trim().to_string();
-            let tokens = lex(input.trim())?;
-            let mut token_ptr = &tokens[..];
-
-            let mut asts: Vec<Statement> = parse_toplevel(&mut token_ptr)?;
+            let mut asts: Vec<Statement> = parse_toplevel_from_str(&input)?;
             if asts.len() != 1 {
                 return Err(format!(
                     "Expected to read a single statement, got {} items",

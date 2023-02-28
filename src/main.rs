@@ -7,7 +7,7 @@ use std::io::Write;
 
 use crate::{
     eval::{eval_stmts, Env},
-    parse::{lex, parse_toplevel},
+    parse::parse_toplevel_from_str,
     prompt::prompt_symbol,
 };
 use owo_colors::OwoColorize;
@@ -108,16 +108,7 @@ fn main() {
                         continue;
                     }
                     Some(Commands::Parse(src)) => {
-                        let tokens = match lex(&src) {
-                            Ok(tokens) => tokens,
-                            Err(e) => {
-                                println!("{}: {}", "Error".bright_red(), e);
-                                continue;
-                            }
-                        };
-                        let mut token_ptr = &tokens[..];
-
-                        match parse_toplevel(&mut token_ptr) {
+                        match parse_toplevel_from_str(&src) {
                             Ok(ast) => println!("{:?}", ast),
                             Err(e) => {
                                 println!("{}: {}", "Error".bright_red(), e);
@@ -132,16 +123,7 @@ fn main() {
                 complete_src.push_str(&input);
                 complete_src.push('\n');
 
-                let tokens = match lex(&input) {
-                    Ok(tokens) => tokens,
-                    Err(e) => {
-                        println!("{}: {}", "Error".bright_red(), e);
-                        continue;
-                    }
-                };
-                let mut token_ptr = &tokens[..];
-
-                match parse_toplevel(&mut token_ptr) {
+                match parse_toplevel_from_str(&input) {
                     Ok(stmts) => {
                         log_src(input).unwrap();
                         match eval_stmts(&stmts, &mut env) {

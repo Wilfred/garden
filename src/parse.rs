@@ -231,7 +231,7 @@ fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expressi
     Ok(expr)
 }
 
-pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some((_, token)) = peek_token(tokens) {
@@ -404,7 +404,13 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     ))
 }
 
-pub fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
+pub fn parse_toplevel_from_str(s: &str) -> Result<Vec<Statement>, String> {
+    let tokens = lex(s)?;
+    let mut token_ptr = &tokens[..];
+    parse_toplevel(&mut token_ptr)
+}
+
+fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     let mut res = vec![];
 
     while !tokens.is_empty() {
@@ -468,7 +474,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
     Ok(res)
 }
 
-pub fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, String> {
+fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, String> {
     lex_from(s, 0)
 }
 

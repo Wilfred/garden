@@ -336,19 +336,19 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
         .expect("Should have a value from the last expression"))
 }
 
-fn read_replacement(msg: &str) -> Result<Expression, String> {
-    println!("{}: {}", "Unexpected error".bright_red(), msg);
-    println!("What value should be used instead?\n");
+// fn read_replacement(msg: &str) -> Result<Expression, String> {
+//     println!("{}: {}", "Unexpected error".bright_red(), msg);
+//     println!("What value should be used instead?\n");
 
-    let mut rl: Editor<()> = Editor::new().unwrap();
-    let input = rl
-        .readline(&prompt_symbol(1))
-        .expect("error: unable to read user input");
+//     let mut rl: Editor<()> = Editor::new().unwrap();
+//     let input = rl
+//         .readline(&prompt_symbol(1))
+//         .expect("error: unable to read user input");
 
-    let tokens = lex(input.trim())?;
-    let mut token_ptr = &tokens[..];
-    parse_expression(&mut token_ptr)
-}
+//     let tokens = lex(input.trim())?;
+//     let mut token_ptr = &tokens[..];
+//     parse_expression(&mut token_ptr)
+// }
 
 #[cfg(test)]
 mod tests {

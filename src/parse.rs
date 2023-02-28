@@ -32,6 +32,7 @@ pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
     Fun(VariableName, Vec<VariableName>, Vec<Statement>),
     If(Box<Expression>, Vec<Statement>, Vec<Statement>),
+    While(Box<Expression>, Vec<Statement>),
     Assign(VariableName, Box<Expression>),
     Let(VariableName, Box<Expression>),
     Expr(Expression),
@@ -146,6 +147,21 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(
         offset,
         Statement_::If(Box::new(condition), then_body, else_body),
+    ))
+}
+
+fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+    let offset = require_token(tokens, "while")?;
+
+    require_token(tokens, "(")?;
+    let condition = parse_expression(tokens)?;
+    require_token(tokens, ")")?;
+
+    let body = parse_block(tokens)?;
+
+    Ok(Statement(
+        offset,
+        Statement_::While(Box::new(condition), body),
     ))
 }
 
@@ -286,6 +302,9 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
         if token == "if" {
             return parse_if_stmt(tokens);
         }
+        if token == "while" {
+            return parse_while_stmt(tokens);
+        }
     }
 
     let expr = parse_expression(tokens)?;
@@ -357,7 +376,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(offset, Statement_::Fun(name, params, body)))
 }
 
-const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false", "if", "else"];
+const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false", "if", "else", "while"];
 
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName), String> {
     // TODO: this is duplicated with lex().

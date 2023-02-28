@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parse::{Expression, Expression_, Statement_, VariableName, parse_toplevel_from_str};
+use crate::parse::{parse_toplevel_from_str, Expression, Expression_, Statement_, VariableName};
 use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
 
@@ -152,6 +152,38 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                         for stmt in else_body.iter().rev() {
                                             stmts_to_eval.push((false, stmt.clone()));
                                         }
+                                    }
+                                }
+                                v => {
+                                    return Err(format!("Expected a boolean, but got: {}", v));
+                                }
+                            }
+                        } else {
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval.push((
+                                false,
+                                Statement(condition.0, Statement_::Expr(*condition.clone())),
+                            ));
+                        }
+                    }
+                    Statement_::While(condition, ref body) => {
+                        if done_children {
+                            let condition_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for if condition");
+                            match condition_value {
+                                Value::Boolean(b) => {
+                                    if b {
+                                        // Start loop evaluation again.
+                                        stmts_to_eval.push((false, Statement(offset, stmt_copy)));
+
+                                        // Evaluate the body.
+                                        for stmt in body.iter().rev() {
+                                            stmts_to_eval.push((false, stmt.clone()));
+                                        }
+
+                                    } else {
+                                        evalled_values.push(Value::Void);
                                     }
                                 }
                                 v => {

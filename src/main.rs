@@ -75,6 +75,7 @@ fn main() {
         match rl.readline(&prompt_symbol(0)) {
             Ok(input) => {
                 rl.add_history_entry(input.as_str());
+                let _ = rl.save_history(".history");
 
                 let input = input.trim().to_string();
 
@@ -147,8 +148,6 @@ fn main() {
             Err(_) => break,
         }
     }
-
-    let _ = rl.save_history(".history");
 }
 
 fn log_src(src: String) -> std::io::Result<()> {

@@ -366,6 +366,26 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                     }
                                     stmts_to_eval_per_fun.push(fun_subexprs);
                                 }
+                                Value::BuiltinFunction(kind) => match kind {
+                                    BuiltinFunctionKind::Print => {
+                                        if args.len() != 1 {
+                                            return Err(format!(
+                                                "Function print requires 1 argument, but got: {}",
+                                                args.len()
+                                            ));
+                                        }
+                                        match &arg_values[0] {
+                                            Value::String(s) => println!("{}", s),
+                                            v => {
+                                                return Err(format!(
+                                                    "Expected a string, but got: {}",
+                                                    v
+                                                ));
+                                            }
+                                        }
+                                        evalled_values.push(Value::Void);
+                                    }
+                                },
                                 v => {
                                     return Err(format!("Expected a function, but got: {}", v));
                                 }

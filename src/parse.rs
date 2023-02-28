@@ -249,6 +249,21 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
                 ),
             );
         }
+
+        if token == "==" {
+            pop_token(tokens);
+
+            let rhs_expr = parse_simple_expression_or_call(tokens)?;
+
+            expr = Expression(
+                expr.0,
+                Expression_::BinaryOperator(
+                    Box::new(expr),
+                    BinaryOperatorKind::Equal,
+                    Box::new(rhs_expr),
+                ),
+            );
+        }
     }
 
     Ok(expr)
@@ -420,6 +435,11 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
             break;
         }
 
+        if s.starts_with("==") {
+            res.push((offset, &s[0..2]));
+            offset += 2;
+            continue;
+        }
         for token_char in ['+', '(', ')', '{', '}', ';', '=', ','] {
             if s.starts_with(token_char) {
                 res.push((offset, &s[0..1]));

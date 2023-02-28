@@ -88,6 +88,11 @@ impl Env {
         let (_, fun_scope) = &mut self.fun_scopes.last_mut().unwrap();
         fun_scope.insert(name.clone(), value);
     }
+
+    pub fn fun_scope_has_var(&self, name: &VariableName) -> bool {
+        let (_, fun_scope) = self.fun_scopes.last().unwrap();
+        fun_scope.contains_key(name)
+    }
 }
 
 fn error_prompt(message: &str) -> Result<Statement, String> {
@@ -177,8 +182,25 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                 .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
                         }
                     }
-                    Statement_::Assign(_variable, _expr) => {
-                        todo!();
+                    Statement_::Assign(variable, expr) => {
+                        if done_children {
+                            if !env.fun_scope_has_var(&variable) {
+                                return Err(format!(
+                                    "{} is not currently bound. Try `let {} = something`.",
+                                    variable.0, variable.0
+                                ));
+                            }
+
+                            let expr_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for let value");
+                            env.set_with_fun_scope(&variable, expr_value.clone());
+                            evalled_values.push(expr_value);
+                        } else {
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval
+                                .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
+                        }
                     }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
                         evalled_values.push(Value::Integer(i));

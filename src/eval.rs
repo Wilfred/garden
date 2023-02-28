@@ -349,7 +349,7 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::Expression_;
+    use crate::parse::{Expression_, BinaryOperatorKind};
 
     use super::*;
 
@@ -414,7 +414,7 @@ mod tests {
                 0,
                 Expression_::BinaryOperator(
                     Box::new(Expression(0, Expression_::IntLiteral(1))),
-                    "+".into(),
+                    BinaryOperatorKind::Add,
                     Box::new(Expression(0, Expression_::IntLiteral(2))),
                 ),
             )),

@@ -8,12 +8,17 @@ use regex::Regex;
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct VariableName(pub String);
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BinaryOperatorKind {
+    Add,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
-    BinaryOperator(Box<Expression>, String, Box<Expression>),
+    BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),
 }
@@ -230,7 +235,6 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
 
     if let Some((_, token)) = peek_token(tokens) {
         if token == "+" {
-            let operator = token;
             pop_token(tokens);
 
             let rhs_expr = parse_simple_expression_or_call(tokens)?;
@@ -239,7 +243,7 @@ pub fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String>
                 expr.0,
                 Expression_::BinaryOperator(
                     Box::new(expr),
-                    operator.to_string(),
+                    BinaryOperatorKind::Add,
                     Box::new(rhs_expr),
                 ),
             );

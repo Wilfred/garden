@@ -11,6 +11,7 @@ pub struct VariableName(pub String);
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperatorKind {
     Add,
+    Equal,
 }
 
 #[derive(Debug, Clone, PartialEq)]

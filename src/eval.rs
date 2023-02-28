@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt::Display};
 
 use crate::parse::{lex, parse_expression, Expression, Expression_, Statement_, VariableName};
-use crate::parse::{parse_toplevel, Statement};
+use crate::parse::{parse_toplevel, BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
 
 use owo_colors::OwoColorize;
@@ -219,7 +219,10 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                             stmts_to_eval.push((false, stmt));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::BinaryOperator(lhs, _, rhs))) => {
+                    Statement_::Expr(Expression(
+                        _,
+                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Add, rhs),
+                    )) => {
                         if done_children {
                             let lhs_value = evalled_values
                                 .pop()
@@ -349,8 +352,6 @@ fn read_replacement(msg: &str) -> Result<Expression, String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::{Expression_, BinaryOperatorKind};
-
     use super::*;
 
     #[test]

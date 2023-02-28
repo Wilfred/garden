@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt::Display};
 
-use crate::parse::{lex, parse_expression, Expression, Expression_, Statement_, VariableName};
+use crate::parse::{lex, Expression, Expression_, Statement_, VariableName};
 use crate::parse::{parse_toplevel, BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
 

@@ -9,6 +9,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ctrlc = "3.2.5"
 owo-colors = "3.5.0"
 regex = "1.7.1"
 rustyline = "10.1.1"

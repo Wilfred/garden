@@ -1,3 +1,4 @@
+mod commands;
 mod eval;
 mod parse;
 mod prompt;
@@ -7,6 +8,7 @@ use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+use crate::commands::Commands;
 use crate::{
     eval::{eval_stmts, Env},
     parse::parse_toplevel_from_str,
@@ -14,49 +16,7 @@ use crate::{
 };
 use owo_colors::OwoColorize;
 use rustyline::Editor;
-
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
-
-#[derive(Debug, EnumIter)]
-enum Commands {
-    Help,
-    Globals,
-    Locals,
-    Parse(String),
-    Source,
-    Stack,
-}
-
-impl Commands {
-    fn from_string(s: &str) -> Option<Self> {
-        match s.to_lowercase().as_str() {
-            ":help" => Some(Commands::Help),
-            ":globals" => Some(Commands::Globals),
-            ":locals" => Some(Commands::Locals),
-            ":source" => Some(Commands::Source),
-            ":stack" => Some(Commands::Stack),
-            _ => {
-                if let Some(src) = s.strip_prefix(":parse ") {
-                    Some(Commands::Parse(src.to_owned()))
-                } else {
-                    None
-                }
-            }
-        }
-    }
-
-    fn to_string(&self) -> &str {
-        match self {
-            Commands::Help => ":help",
-            Commands::Globals => ":globals",
-            Commands::Locals => ":locals",
-            Commands::Parse(_) => ":parse",
-            Commands::Source => ":source",
-            Commands::Stack => ":stack",
-        }
-    }
-}
 
 fn main() {
     let interrupted = Arc::new(AtomicBool::new(false));

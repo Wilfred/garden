@@ -23,6 +23,7 @@ pub enum Value {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinFunctionKind {
     Print,
+    IntToString,
 }
 
 impl Display for Value {
@@ -31,7 +32,13 @@ impl Display for Value {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Fun(name, _, _) => write!(f, "(function: {})", name.0),
-            Value::BuiltinFunction(BuiltinFunctionKind::Print) => write!(f, "(function: print)"),
+            Value::BuiltinFunction(kind) => {
+                let name = match kind {
+                    BuiltinFunctionKind::Print => "print",
+                    BuiltinFunctionKind::IntToString => "int_to_string",
+                };
+                write!(f, "(function: {})", name)
+            }
             Value::Void => write!(f, "void"),
             // TODO: escape inner double quotes.
             Value::String(s) => write!(f, "\"{}\"", s),
@@ -51,6 +58,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("print".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::Print),
+        );
+        file_scope.insert(
+            VariableName("int_to_string".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::IntToString),
         );
 
         Self {
@@ -410,6 +421,26 @@ pub fn eval_stmts(
                                             }
                                         }
                                         evalled_values.push(Value::Void);
+                                    }
+                                    BuiltinFunctionKind::IntToString => {
+                                        if args.len() != 1 {
+                                            return Err(format!(
+                                                "Function print requires 1 argument, but got: {}",
+                                                args.len()
+                                            ));
+                                        }
+                                        match &arg_values[0] {
+                                            Value::Integer(i) => {
+                                                evalled_values
+                                                    .push(Value::String(format!("{}", i)));
+                                            }
+                                            v => {
+                                                return Err(format!(
+                                                    "Expected an integer, but got: {}",
+                                                    v
+                                                ));
+                                            }
+                                        }
                                     }
                                 },
                                 v => {

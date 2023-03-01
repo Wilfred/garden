@@ -92,6 +92,7 @@ fn main() {
 
                 let input = input.trim().to_string();
 
+                // TODO: factor out so this can be used in error interfaces too.
                 match Commands::from_string(&input) {
                     Some(Commands::Help) => {
                         print!("The available commands are:");

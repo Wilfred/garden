@@ -44,23 +44,32 @@ impl Commands {
     }
 }
 
+fn print_available_commands() {
+    print!("The available commands are");
+
+    let mut command_names: Vec<String> = Commands::iter().map(|c| c.to_string().into()).collect();
+    command_names.sort();
+
+    for (i, name) in command_names.iter().enumerate() {
+        if i == command_names.len() - 1 {
+            print!(" and {}.", name.green());
+        } else if i == command_names.len() - 2 {
+            print!(" {}", name.green());
+        } else {
+            print!(" {},", name.green());
+        }
+    }
+    println!();
+}
+
 pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> bool {
     match Commands::from_string(&input) {
         Some(Commands::Help) => {
-            print!("The available commands are:");
-            for command in Commands::iter() {
-                print!(" {}", command.to_string().green());
-            }
-            println!();
+            print_available_commands();
             true
         }
         None if input.starts_with(':') => {
-            println!("I don't know of any commands with that syntax.\n");
-            print!("The available commands are:");
-            for command in Commands::iter() {
-                print!(" {}", command.to_string().green());
-            }
-            println!();
+            print_available_commands();
             true
         }
         Some(Commands::Source) => {

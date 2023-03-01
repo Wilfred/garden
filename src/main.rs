@@ -8,7 +8,7 @@ use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use crate::commands::Commands;
+use crate::commands::{print_stack, run_if_command};
 use crate::{
     eval::{eval_stmts, Env},
     parse::parse_toplevel_from_str,
@@ -16,7 +16,6 @@ use crate::{
 };
 use owo_colors::OwoColorize;
 use rustyline::Editor;
-use strum::IntoEnumIterator;
 
 fn main() {
     let interrupted = Arc::new(AtomicBool::new(false));
@@ -52,60 +51,8 @@ fn main() {
 
                 let input = input.trim().to_string();
 
-                // TODO: factor out so this can be used in error interfaces too.
-                match Commands::from_string(&input) {
-                    Some(Commands::Help) => {
-                        print!("The available commands are:");
-                        for command in Commands::iter() {
-                            print!(" {}", command.to_string().green());
-                        }
-                        println!();
-                        continue;
-                    }
-                    None if input.starts_with(':') => {
-                        println!("I don't know of any commands with that syntax.\n");
-                        print!("The available commands are:");
-                        for command in Commands::iter() {
-                            print!(" {}", command.to_string().green());
-                        }
-                        println!();
-                        continue;
-                    }
-                    Some(Commands::Source) => {
-                        print!("{}", complete_src);
-                        continue;
-                    }
-                    Some(Commands::Globals) => {
-                        for (var_name, value) in &env.file_scope {
-                            println!("{}\t{}", var_name.0.bright_green(), value);
-                        }
-
-                        continue;
-                    }
-                    Some(Commands::Locals) => {
-                        if let Some((_, fun_scope)) = env.fun_scopes.last() {
-                            for (var_name, value) in fun_scope {
-                                println!("{}\t{}", var_name.0.bright_green(), value);
-                            }
-                        }
-
-                        continue;
-                    }
-                    Some(Commands::Stack) => {
-                        print_stack(&env);
-                        continue;
-                    }
-                    Some(Commands::Parse(src)) => {
-                        match parse_toplevel_from_str(&src) {
-                            Ok(ast) => println!("{:?}", ast),
-                            Err(e) => {
-                                println!("{}: {}", "Error".bright_red(), e);
-                                continue;
-                            }
-                        };
-                        continue;
-                    }
-                    None => {}
+                if run_if_command(&input, &env, &complete_src) {
+                    continue;
                 }
 
                 complete_src.push_str(&input);
@@ -144,10 +91,4 @@ fn log_src(src: String) -> std::io::Result<()> {
         .open("log.gdn")?;
 
     write!(file, "\n{}", src)
-}
-
-fn print_stack(env: &Env) {
-    for (description, _) in env.fun_scopes.iter().rev() {
-        println!("In {}", description.0);
-    }
 }

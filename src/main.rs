@@ -61,7 +61,7 @@ fn main() {
                 match parse_toplevel_from_str(&input) {
                     Ok(stmts) => {
                         log_src(input).unwrap();
-                        match eval_stmts(&stmts, &mut env, &interrupted) {
+                        match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
                             Ok(result) => match result {
                                 eval::Value::Void => {}
                                 v => {

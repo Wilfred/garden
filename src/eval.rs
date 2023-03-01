@@ -2,6 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
+use crate::commands::run_if_command;
 use crate::parse::{parse_toplevel_from_str, Expression, Expression_, Statement_, VariableName};
 use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
@@ -97,31 +98,41 @@ impl Env {
     }
 }
 
-fn error_prompt(message: &str) -> Result<Statement, String> {
+fn error_prompt(message: &str, env: &Env, complete_src: &str) -> Result<Statement, String> {
     println!("{}: {}", "Error".bright_red(), message);
-    println!("What value would you like to use instead?");
+    println!("What value would you like to use instead?\n");
 
     let mut rl: Editor<()> = Editor::new().unwrap();
-    match rl.readline(&prompt_symbol(1)) {
-        Ok(input) => {
-            let input = input.trim().to_string();
-            let mut asts: Vec<Statement> = parse_toplevel_from_str(&input)?;
-            if asts.len() != 1 {
-                return Err(format!(
-                    "Expected to read a single statement, got {} items",
-                    asts.len()
-                ));
-            }
+    loop {
+        match rl.readline(&prompt_symbol(1)) {
+            Ok(input) => {
+                let input = input.trim().to_string();
+                if run_if_command(&input, env, complete_src) {
+                    println!();
+                    continue;
+                }
 
-            Ok(asts.pop().unwrap())
+                let mut asts: Vec<Statement> = parse_toplevel_from_str(&input)?;
+                if asts.len() != 1 {
+                    return Err(format!(
+                        "Expected to read a single statement, got {} items",
+                        asts.len()
+                    ));
+                }
+
+                return Ok(asts.pop().unwrap());
+            }
+            Err(e) => {
+                return Err(format!("Input failed: {}", e));
+            }
         }
-        Err(e) => Err(format!("Input failed: {}", e)),
     }
 }
 
 pub fn eval_stmts(
     stmts: &[Statement],
     env: &mut Env,
+    complete_src: &str,
     interrupted: &Arc<AtomicBool>,
 ) -> Result<Value, String> {
     let mut stmts_to_eval = vec![];
@@ -255,7 +266,11 @@ pub fn eval_stmts(
                         if let Some(value) = env.get(&name) {
                             evalled_values.push(value);
                         } else {
-                            let stmt = error_prompt(&format!("Undefined variable: {}", name.0))?;
+                            let stmt = error_prompt(
+                                &format!("Undefined variable: {}", name.0),
+                                env,
+                                complete_src,
+                            )?;
                             stmts_to_eval.push((false, stmt));
                         }
                     }
@@ -456,7 +471,7 @@ mod tests {
 
     fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
         let interrupted = Arc::new(AtomicBool::new(false));
-        super::eval_stmts(stmts, env, &interrupted)
+        super::eval_stmts(stmts, env, "", &interrupted)
     }
 
     #[test]

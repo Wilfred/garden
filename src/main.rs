@@ -91,7 +91,16 @@ fn main() {
 
                 match Commands::from_string(&input) {
                     Some(Commands::Help) => {
-                        print!("Available commands are:");
+                        print!("The available commands are:");
+                        for command in Commands::iter() {
+                            print!(" {}", command.to_string().green());
+                        }
+                        println!();
+                        continue;
+                    }
+                    None if input.starts_with(':') => {
+                        println!("I don't know of any commands with that syntax.\n");
+                        print!("The available commands are:");
                         for command in Commands::iter() {
                             print!(" {}", command.to_string().green());
                         }

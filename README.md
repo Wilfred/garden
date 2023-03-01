@@ -1,4 +1,6 @@
-# Garden ![garden logo](img/gardening.png)
+<img src="img/gardening.png" width="150" align="right">
+
+# Garden
 
 Garden is an experimental programming language exploring PL design on
 running programs.

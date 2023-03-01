@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::parse::{parse_toplevel_from_str, Expression, Expression_, Statement_, VariableName};
@@ -117,7 +119,11 @@ fn error_prompt(message: &str) -> Result<Statement, String> {
     }
 }
 
-pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
+pub fn eval_stmts(
+    stmts: &[Statement],
+    env: &mut Env,
+    interrupted: &Arc<AtomicBool>,
+) -> Result<Value, String> {
     let mut stmts_to_eval = vec![];
     for stmt in stmts.iter().rev() {
         stmts_to_eval.push((false, stmt.clone()));
@@ -126,9 +132,15 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
     let mut stmts_to_eval_per_fun: Vec<Vec<(bool, Statement)>> = vec![stmts_to_eval];
     let mut evalled_values: Vec<Value> = vec![Value::Void];
 
-    loop {
+    'outer: loop {
         if let Some(mut stmts_to_eval) = stmts_to_eval_per_fun.pop() {
             while let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
+                if interrupted.load(Ordering::SeqCst) {
+                    // TODO: prompt for what to do next.
+                    println!("Got ctrl-c");
+                    break 'outer;
+                }
+
                 let stmt_copy = stmt_.clone();
                 match stmt_ {
                     Statement_::Fun(name, params, body) => {
@@ -181,7 +193,6 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
                                         for stmt in body.iter().rev() {
                                             stmts_to_eval.push((false, stmt.clone()));
                                         }
-
                                     } else {
                                         evalled_values.push(Value::Void);
                                     }
@@ -442,6 +453,11 @@ pub fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
+        let interrupted = Arc::new(AtomicBool::new(false));
+        super::eval_stmts(stmts, env, &interrupted)
+    }
 
     #[test]
     fn test_eval_bool_literal() {

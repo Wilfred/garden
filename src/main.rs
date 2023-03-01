@@ -25,6 +25,7 @@ enum Commands {
     Locals,
     Parse(String),
     Source,
+    Stack,
 }
 
 impl Commands {
@@ -34,6 +35,7 @@ impl Commands {
             ":globals" => Some(Commands::Globals),
             ":locals" => Some(Commands::Locals),
             ":source" => Some(Commands::Source),
+            ":stack" => Some(Commands::Stack),
             _ => {
                 if let Some(src) = s.strip_prefix(":parse ") {
                     Some(Commands::Parse(src.to_owned()))
@@ -51,6 +53,7 @@ impl Commands {
             Commands::Locals => ":locals",
             Commands::Parse(_) => ":parse",
             Commands::Source => ":source",
+            Commands::Stack => ":stack",
         }
     }
 }
@@ -125,6 +128,10 @@ fn main() {
                             }
                         }
 
+                        continue;
+                    }
+                    Some(Commands::Stack) => {
+                        print_stack(&env);
                         continue;
                     }
                     Some(Commands::Parse(src)) => {

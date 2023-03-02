@@ -1,6 +1,6 @@
 # 0.2 (unreleased)
 
-Syntax: Added `if`, `while`, and assignment.
+Syntax: Added `if`, `while`, assignment and `/`.
 
 Standard library: Added `int_to_string`.
 

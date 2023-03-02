@@ -290,12 +290,12 @@ pub fn eval_stmts(
                         Expression_::BinaryOperator(lhs, BinaryOperatorKind::Add, rhs),
                     )) => {
                         if done_children {
-                            let lhs_value = evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for LHS of binary operator");
                             let rhs_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for RHS of binary operator");
+                            let lhs_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for LHS of binary operator");
 
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
@@ -327,15 +327,59 @@ pub fn eval_stmts(
                     }
                     Statement_::Expr(Expression(
                         _,
-                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Equal, rhs),
+                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Divide, rhs),
                     )) => {
                         if done_children {
-                            let lhs_value = evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for LHS of binary operator");
                             let rhs_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for RHS of binary operator");
+                            let lhs_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for LHS of binary operator");
+
+                            let lhs_num = match lhs_value {
+                                Value::Integer(i) => i,
+                                _ => {
+                                    return Err(format!(
+                                        "Expected an integer, but got: {}",
+                                        lhs_value
+                                    ));
+                                }
+                            };
+                            let rhs_num = match rhs_value {
+                                Value::Integer(i) => i,
+                                _ => {
+                                    return Err(format!(
+                                        "Expected an integer, but got: {}",
+                                        rhs_value
+                                    ));
+                                }
+                            };
+
+                            if rhs_num == 0 {
+                                return Err(format!("Tried to divide {} by zero.", rhs_value));
+                            }
+
+                            evalled_values.push(Value::Integer(lhs_num / rhs_num));
+                        } else {
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval
+                                .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
+                            stmts_to_eval
+                                .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
+                        }
+                    }
+                    Statement_::Expr(Expression(
+                        _,
+                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Equal, rhs),
+                    )) => {
+                        if done_children {
+                            let rhs_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for RHS of binary operator");
+                            let lhs_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for LHS of binary operator");
 
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,

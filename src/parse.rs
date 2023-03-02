@@ -15,6 +15,7 @@ pub enum BinaryOperatorKind {
     Multiply,
     Divide,
     Equal,
+    NotEqual,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -257,6 +258,7 @@ fn token_as_binary_op(token: &str) -> Option<BinaryOperatorKind> {
         "*" => Some(BinaryOperatorKind::Multiply),
         "/" => Some(BinaryOperatorKind::Divide),
         "==" => Some(BinaryOperatorKind::Equal),
+        "!=" => Some(BinaryOperatorKind::NotEqual),
         _ => None,
     }
 }
@@ -454,10 +456,12 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
             break;
         }
 
-        if s.starts_with("==") {
-            res.push((offset, &s[0..2]));
-            offset += 2;
-            continue;
+        for token_str in ["==", "!="] {
+            if s.starts_with(token_str) {
+                res.push((offset, &s[0..token_str.len()]));
+                offset += token_str.len();
+                continue 'outer;
+            }
         }
         for token_char in ['+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ','] {
             if s.starts_with(token_char) {

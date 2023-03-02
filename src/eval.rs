@@ -347,6 +347,7 @@ pub fn eval_stmts(
                                     evalled_values.push(Value::Integer(lhs_num / rhs_num));
                                 }
                                 BinaryOperatorKind::Equal => unreachable!(),
+                                BinaryOperatorKind::NotEqual => unreachable!(),
                             }
                         } else {
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
@@ -358,7 +359,11 @@ pub fn eval_stmts(
                     }
                     Statement_::Expr(Expression(
                         _,
-                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Equal, rhs),
+                        Expression_::BinaryOperator(
+                            lhs,
+                            op @ (BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual),
+                            rhs,
+                        ),
                     )) => {
                         if done_children {
                             let rhs_value = evalled_values
@@ -387,7 +392,15 @@ pub fn eval_stmts(
                                 }
                             };
 
-                            evalled_values.push(Value::Boolean(lhs_num == rhs_num));
+                            match op {
+                                BinaryOperatorKind::Equal => {
+                                    evalled_values.push(Value::Boolean(lhs_num == rhs_num));
+                                }
+                                BinaryOperatorKind::NotEqual => {
+                                    evalled_values.push(Value::Boolean(lhs_num != rhs_num));
+                                }
+                                _ => unreachable!(),
+                            }
                         } else {
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval

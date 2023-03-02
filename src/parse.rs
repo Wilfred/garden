@@ -11,6 +11,8 @@ pub struct VariableName(pub String);
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperatorKind {
     Add,
+    Subtract,
+    Multiply,
     Divide,
     Equal,
 }
@@ -248,52 +250,28 @@ fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expressi
     Ok(expr)
 }
 
+fn token_as_binary_op(token: &str) -> Option<BinaryOperatorKind> {
+    match token {
+        "+" => Some(BinaryOperatorKind::Add),
+        "-" => Some(BinaryOperatorKind::Subtract),
+        "*" => Some(BinaryOperatorKind::Multiply),
+        "/" => Some(BinaryOperatorKind::Divide),
+        "==" => Some(BinaryOperatorKind::Equal),
+        _ => None,
+    }
+}
+
 fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some((_, token)) = peek_token(tokens) {
-        if token == "+" {
+        if let Some(op) = token_as_binary_op(token) {
             pop_token(tokens);
 
             let rhs_expr = parse_simple_expression_or_call(tokens)?;
-
             expr = Expression(
                 expr.0,
-                Expression_::BinaryOperator(
-                    Box::new(expr),
-                    BinaryOperatorKind::Add,
-                    Box::new(rhs_expr),
-                ),
-            );
-        }
-
-        if token == "/" {
-            pop_token(tokens);
-
-            let rhs_expr = parse_simple_expression_or_call(tokens)?;
-
-            expr = Expression(
-                expr.0,
-                Expression_::BinaryOperator(
-                    Box::new(expr),
-                    BinaryOperatorKind::Divide,
-                    Box::new(rhs_expr),
-                ),
-            );
-        }
-
-        if token == "==" {
-            pop_token(tokens);
-
-            let rhs_expr = parse_simple_expression_or_call(tokens)?;
-
-            expr = Expression(
-                expr.0,
-                Expression_::BinaryOperator(
-                    Box::new(expr),
-                    BinaryOperatorKind::Equal,
-                    Box::new(rhs_expr),
-                ),
+                Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
             );
         }
     }
@@ -481,7 +459,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
             offset += 2;
             continue;
         }
-        for token_char in ['+', '/', '(', ')', '{', '}', ';', '=', ','] {
+        for token_char in ['+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ','] {
             if s.starts_with(token_char) {
                 res.push((offset, &s[0..1]));
                 offset += 1;

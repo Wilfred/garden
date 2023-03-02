@@ -287,7 +287,14 @@ pub fn eval_stmts(
                     }
                     Statement_::Expr(Expression(
                         _,
-                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Add, rhs),
+                        Expression_::BinaryOperator(
+                            lhs,
+                            op @ (BinaryOperatorKind::Add
+                            | BinaryOperatorKind::Subtract
+                            | BinaryOperatorKind::Multiply
+                            | BinaryOperatorKind::Divide),
+                            rhs,
+                        ),
                     )) => {
                         if done_children {
                             let rhs_value = evalled_values
@@ -316,51 +323,31 @@ pub fn eval_stmts(
                                 }
                             };
 
-                            evalled_values.push(Value::Integer(lhs_num + rhs_num));
-                        } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
-                                .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
-                            stmts_to_eval
-                                .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
-                        }
-                    }
-                    Statement_::Expr(Expression(
-                        _,
-                        Expression_::BinaryOperator(lhs, BinaryOperatorKind::Divide, rhs),
-                    )) => {
-                        if done_children {
-                            let rhs_value = evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for LHS of binary operator");
-
-                            let lhs_num = match lhs_value {
-                                Value::Integer(i) => i,
-                                _ => {
-                                    return Err(format!(
-                                        "Expected an integer, but got: {}",
-                                        lhs_value
-                                    ));
+                            match op {
+                                BinaryOperatorKind::Add => {
+                                    evalled_values
+                                        .push(Value::Integer(lhs_num.wrapping_add(rhs_num)));
                                 }
-                            };
-                            let rhs_num = match rhs_value {
-                                Value::Integer(i) => i,
-                                _ => {
-                                    return Err(format!(
-                                        "Expected an integer, but got: {}",
-                                        rhs_value
-                                    ));
+                                BinaryOperatorKind::Subtract => {
+                                    evalled_values
+                                        .push(Value::Integer(lhs_num.wrapping_sub(rhs_num)));
                                 }
-                            };
+                                BinaryOperatorKind::Multiply => {
+                                    evalled_values
+                                        .push(Value::Integer(lhs_num.wrapping_mul(rhs_num)));
+                                }
+                                BinaryOperatorKind::Divide => {
+                                    if rhs_num == 0 {
+                                        return Err(format!(
+                                            "Tried to divide {} by zero.",
+                                            rhs_value
+                                        ));
+                                    }
 
-                            if rhs_num == 0 {
-                                return Err(format!("Tried to divide {} by zero.", rhs_value));
+                                    evalled_values.push(Value::Integer(lhs_num / rhs_num));
+                                }
+                                BinaryOperatorKind::Equal => unreachable!(),
                             }
-
-                            evalled_values.push(Value::Integer(lhs_num / rhs_num));
                         } else {
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval

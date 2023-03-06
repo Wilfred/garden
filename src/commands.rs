@@ -14,6 +14,11 @@ pub enum Commands {
     Stack,
 }
 
+const HELP_TOPICS: &[(&str, &str)] = &[
+    ("intro", "Garden is a programming language."),
+    ("syntax", "Garden uses curly braces."),
+];
+
 impl Commands {
     pub fn from_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
@@ -65,6 +70,7 @@ fn print_available_commands() {
 pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> bool {
     match Commands::from_string(&input) {
         Some(Commands::Help) => {
+            println!("{}\n", HELP_TOPICS[0].1);
             print_available_commands();
             true
         }

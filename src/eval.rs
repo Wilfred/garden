@@ -346,8 +346,9 @@ pub fn eval_stmts(
 
                                     evalled_values.push(Value::Integer(lhs_num / rhs_num));
                                 }
-                                BinaryOperatorKind::Equal => unreachable!(),
-                                BinaryOperatorKind::NotEqual => unreachable!(),
+                                _ => {
+                                    unreachable!()
+                                }
                             }
                         } else {
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
@@ -386,6 +387,9 @@ pub fn eval_stmts(
                                 Value::Integer(i) => i,
                                 _ => {
                                     return Err(format!(
+                                        // TODO: use the term 'int' or 'integer' in error messages?
+                                        // int: reflects code
+                                        // integer: conventional maths
                                         "Expected an integer, but got: {}",
                                         rhs_value
                                     ));
@@ -402,6 +406,53 @@ pub fn eval_stmts(
                                 _ => unreachable!(),
                             }
                         } else {
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval
+                                .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
+                            stmts_to_eval
+                                .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
+                        }
+                    }
+                    Statement_::Expr(Expression(
+                        _,
+                        Expression_::BinaryOperator(
+                            lhs,
+                            op @ (BinaryOperatorKind::And | BinaryOperatorKind::Or),
+                            rhs,
+                        ),
+                    )) => {
+                        if done_children {
+                            let rhs_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for RHS of binary operator");
+                            let lhs_value = evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for LHS of binary operator");
+
+                            let lhs_bool = match lhs_value {
+                                Value::Boolean(b) => b,
+                                _ => {
+                                    return Err(format!("Expected a bool, but got: {}", lhs_value));
+                                }
+                            };
+                            let rhs_bool = match rhs_value {
+                                Value::Boolean(b) => b,
+                                _ => {
+                                    return Err(format!("Expected a bool, but got: {}", rhs_value));
+                                }
+                            };
+
+                            match op {
+                                BinaryOperatorKind::And => {
+                                    evalled_values.push(Value::Boolean(lhs_bool && rhs_bool));
+                                }
+                                BinaryOperatorKind::Or => {
+                                    evalled_values.push(Value::Boolean(lhs_bool || rhs_bool));
+                                }
+                                _ => unreachable!(),
+                            }
+                        } else {
+                            // TODO: do short-circuit evaluation of && and ||.
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval
                                 .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));

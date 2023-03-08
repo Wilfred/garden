@@ -233,6 +233,13 @@ pub fn eval_stmts(
                     }
                     Statement_::Let(variable, expr) => {
                         if done_children {
+                            if env.fun_scope_has_var(&variable) {
+                                return Err(format!(
+                                    "{} is already bound. Try `{} = something` instead.",
+                                    variable.0, variable.0
+                                ));
+                            }
+
                             let expr_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for let value");

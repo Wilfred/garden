@@ -16,6 +16,8 @@ pub enum BinaryOperatorKind {
     Divide,
     Equal,
     NotEqual,
+    LessThan,
+    GreaterThan,
     And,
     Or,
 }
@@ -263,6 +265,8 @@ fn token_as_binary_op(token: &str) -> Option<BinaryOperatorKind> {
         "!=" => Some(BinaryOperatorKind::NotEqual),
         "&&" => Some(BinaryOperatorKind::And),
         "||" => Some(BinaryOperatorKind::Or),
+        "<" => Some(BinaryOperatorKind::LessThan),
+        ">" => Some(BinaryOperatorKind::GreaterThan),
         _ => None,
     }
 }
@@ -467,7 +471,9 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
                 continue 'outer;
             }
         }
-        for token_char in ['+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ','] {
+        for token_char in [
+            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>',
+        ] {
             if s.starts_with(token_char) {
                 res.push((offset, &s[0..1]));
                 offset += 1;

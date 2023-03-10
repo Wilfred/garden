@@ -299,7 +299,9 @@ pub fn eval_stmts(
                             op @ (BinaryOperatorKind::Add
                             | BinaryOperatorKind::Subtract
                             | BinaryOperatorKind::Multiply
-                            | BinaryOperatorKind::Divide),
+                            | BinaryOperatorKind::Divide
+                            | BinaryOperatorKind::LessThan
+                            | BinaryOperatorKind::GreaterThan),
                             rhs,
                         ),
                     )) => {
@@ -352,6 +354,12 @@ pub fn eval_stmts(
                                     }
 
                                     evalled_values.push(Value::Integer(lhs_num / rhs_num));
+                                }
+                                BinaryOperatorKind::LessThan => {
+                                    evalled_values.push(Value::Boolean(lhs_num < rhs_num));
+                                }
+                                BinaryOperatorKind::GreaterThan => {
+                                    evalled_values.push(Value::Boolean(lhs_num > rhs_num));
                                 }
                                 _ => {
                                     unreachable!()

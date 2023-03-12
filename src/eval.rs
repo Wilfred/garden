@@ -731,8 +731,8 @@ mod tests {
         ];
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(false));
+        let value = eval_stmts(&stmts, &mut env);
+        assert!(value.is_err());
     }
 
     #[test]

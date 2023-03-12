@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 
 // #[derive(Debug, Clone, PartialEq)]
@@ -443,11 +444,13 @@ fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     Ok(res)
 }
 
-fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
-    let integer_re = Regex::new(r"^[0-9]+").unwrap();
-    let string_re = Regex::new(r##"^"[^"]*""##).unwrap();
-    let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
+lazy_static! {
+    static ref INTEGER_RE: Regex = Regex::new(r"^[0-9]+").unwrap();
+    static ref STRING_RE: Regex = Regex::new(r##"^"[^"]*""##).unwrap();
+    static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
+}
 
+fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
     let mut res: Vec<(usize, &str)> = vec![];
 
     let mut offset = offset;
@@ -480,13 +483,13 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
                 continue 'outer;
             }
         }
-        if let Some(integer_match) = integer_re.find(s) {
+        if let Some(integer_match) = INTEGER_RE.find(s) {
             res.push((offset, integer_match.as_str()));
             offset += integer_match.end();
-        } else if let Some(string_match) = string_re.find(s) {
+        } else if let Some(string_match) = STRING_RE.find(s) {
             res.push((offset, string_match.as_str()));
             offset += string_match.end();
-        } else if let Some(variable_match) = variable_re.find(s) {
+        } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push((offset, variable_match.as_str()));
             offset += variable_match.end();
         } else {

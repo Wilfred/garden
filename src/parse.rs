@@ -201,9 +201,16 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
                 Expression_::StringLiteral(token[1..token.len() - 1].to_owned()),
             ));
         }
+
+        if INTEGER_RE.is_match(token) {
+            return parse_integer(tokens);
+        }
+
+        return Err(format!("Expected an expression, got: {}", token));
+
     }
 
-    parse_integer(tokens)
+    Err("Expected an expression".to_owned())
 }
 
 fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, String> {

@@ -652,16 +652,7 @@ mod tests {
 
     #[test]
     fn test_eval_multiple_stmts() {
-        let stmts = vec![
-            Statement(
-                0,
-                Statement_::Expr(Expression(0, Expression_::BoolLiteral(true))),
-            ),
-            Statement(
-                5,
-                Statement_::Expr(Expression(0, Expression_::BoolLiteral(false))),
-            ),
-        ];
+        let stmts = parse_toplevel_from_str("true; false;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -670,17 +661,7 @@ mod tests {
 
     #[test]
     fn test_eval_add() {
-        let stmts = vec![Statement(
-            0,
-            Statement_::Expr(Expression(
-                0,
-                Expression_::BinaryOperator(
-                    Box::new(Expression(0, Expression_::IntLiteral(1))),
-                    BinaryOperatorKind::Add,
-                    Box::new(Expression(0, Expression_::IntLiteral(2))),
-                ),
-            )),
-        )];
+        let stmts = parse_toplevel_from_str("1 + 2;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -689,22 +670,7 @@ mod tests {
 
     #[test]
     fn test_eval_let() {
-        let stmts = vec![
-            Statement(
-                0,
-                Statement_::Let(
-                    VariableName("foo".into()),
-                    Box::new(Expression(0, Expression_::BoolLiteral(true))),
-                ),
-            ),
-            Statement(
-                0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Variable(VariableName("foo".into())),
-                )),
-            ),
-        ];
+        let stmts = parse_toplevel_from_str("let foo = true; foo;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -713,22 +679,7 @@ mod tests {
 
     #[test]
     fn test_eval_let_twice() {
-        let stmts = vec![
-            Statement(
-                0,
-                Statement_::Let(
-                    VariableName("foo".into()),
-                    Box::new(Expression(0, Expression_::BoolLiteral(true))),
-                ),
-            ),
-            Statement(
-                0,
-                Statement_::Let(
-                    VariableName("foo".into()),
-                    Box::new(Expression(0, Expression_::BoolLiteral(false))),
-                ),
-            ),
-        ];
+        let stmts = parse_toplevel_from_str("let foo = true; let foo = false;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env);
@@ -744,34 +695,7 @@ mod tests {
 
     #[test]
     fn test_eval_call() {
-        // fun f() { true; }
-        // f();
-        let stmts = vec![
-            Statement(
-                0,
-                Statement_::Fun(
-                    VariableName("f".into()),
-                    vec![],
-                    vec![Statement(
-                        0,
-                        Statement_::Expr(Expression(0, Expression_::BoolLiteral(true))),
-                    )],
-                ),
-            ),
-            Statement(
-                0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Call(
-                        Box::new(Expression(
-                            0,
-                            Expression_::Variable(VariableName("f".into())),
-                        )),
-                        vec![],
-                    ),
-                )),
-            ),
-        ];
+        let stmts = parse_toplevel_from_str("fun f() { true; } f();").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -780,37 +704,7 @@ mod tests {
 
     #[test]
     fn test_eval_call_with_arg() {
-        // fun f(x) { x; }
-        // f(123);
-        let stmts = vec![
-            Statement(
-                0,
-                Statement_::Fun(
-                    VariableName("f".into()),
-                    vec![VariableName("x".into())],
-                    vec![Statement(
-                        0,
-                        Statement_::Expr(Expression(
-                            0,
-                            Expression_::Variable(VariableName("x".into())),
-                        )),
-                    )],
-                ),
-            ),
-            Statement(
-                0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Call(
-                        Box::new(Expression(
-                            0,
-                            Expression_::Variable(VariableName("f".into())),
-                        )),
-                        vec![Expression(0, Expression_::IntLiteral(123))],
-                    ),
-                )),
-            ),
-        ];
+        let stmts = parse_toplevel_from_str("fun f(x) { x; } f(123);").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -819,41 +713,7 @@ mod tests {
 
     #[test]
     fn test_eval_call_second_arg() {
-        // fun f(x, y) { y; }
-        // f(1, 2);
-        let stmts = vec![
-            Statement(
-                0,
-                Statement_::Fun(
-                    VariableName("f".into()),
-                    // TODO: check for duplicate param names.
-                    vec![VariableName("x".into()), VariableName("y".into())],
-                    vec![Statement(
-                        0,
-                        Statement_::Expr(Expression(
-                            0,
-                            Expression_::Variable(VariableName("y".into())),
-                        )),
-                    )],
-                ),
-            ),
-            Statement(
-                0,
-                Statement_::Expr(Expression(
-                    0,
-                    Expression_::Call(
-                        Box::new(Expression(
-                            0,
-                            Expression_::Variable(VariableName("f".into())),
-                        )),
-                        vec![
-                            Expression(0, Expression_::IntLiteral(1)),
-                            Expression(0, Expression_::IntLiteral(2)),
-                        ],
-                    ),
-                )),
-            ),
-        ];
+        let stmts = parse_toplevel_from_str("fun f(x, y) { y; } f(1, 2);").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();

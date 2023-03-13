@@ -719,4 +719,13 @@ mod tests {
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
+
+    #[test]
+    fn test_eval_while() {
+        let stmts = parse_toplevel_from_str("let i = 0; while (i < 5) { i = i + 1;}").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Void);
+    }
 }

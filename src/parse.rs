@@ -207,7 +207,6 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
         }
 
         return Err(format!("Expected an expression, got: {}", token));
-
     }
 
     Err("Expected an expression".to_owned())

@@ -156,7 +156,7 @@ pub fn eval_stmts(
 
     'outer: loop {
         if let Some(mut stmts_to_eval) = stmts_to_eval_per_fun.pop() {
-            while let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
+            if let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
                 if interrupted.load(Ordering::SeqCst) {
                     // TODO: prompt for what to do next.
                     println!("Got ctrl-c");
@@ -500,7 +500,10 @@ pub fn eval_stmts(
                                         ));
                                     }
 
-                                    stmts_to_eval_per_fun.push(stmts_to_eval.clone());
+                                    // Normally we want to append to this vec of statements at
+                                    // the end, but for function calls we are pushing a new
+                                    // scope with additional statements.
+                                    stmts_to_eval_per_fun.push(stmts_to_eval);
 
                                     env.push_new_fun_scope(&name);
                                     for (param, value) in params.iter().zip(arg_values.iter()) {
@@ -512,6 +515,7 @@ pub fn eval_stmts(
                                         fun_subexprs.push((false, stmt.clone()));
                                     }
                                     stmts_to_eval_per_fun.push(fun_subexprs);
+                                    continue;
                                 }
                                 Value::BuiltinFunction(kind) => match kind {
                                     BuiltinFunctionKind::Print => {
@@ -571,15 +575,13 @@ pub fn eval_stmts(
                         }
                     }
                 }
-            }
-
-            if let Some(subexprs_to_eval) = stmts_to_eval_per_fun.last() {
-                if subexprs_to_eval.is_empty() {
-                    // Reached end of this block. Pop to the parent.
-                    if env.fun_scopes.len() > 1 {
-                        // Don't pop the outer scope: that's for the top level environment.
-                        env.pop_fun_scope();
-                    }
+                stmts_to_eval_per_fun.push(stmts_to_eval);
+            } else {
+                assert!(stmts_to_eval.is_empty());
+                // Reached end of this block. Pop to the parent.
+                if env.fun_scopes.len() > 1 {
+                    // Don't pop the outer scope: that's for the top level environment.
+                    env.pop_fun_scope();
                 }
             }
         } else {
@@ -727,5 +729,14 @@ mod tests {
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Void);
+    }
+
+    #[test]
+    fn test_eval_env_after_call() {
+        let stmts = parse_toplevel_from_str("fun id(x) { x; } let i = 0; id(i); i;").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(0));
     }
 }

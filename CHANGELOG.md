@@ -1,5 +1,7 @@
 # 0.3 (unreleased)
 
+Syntax: Allow `if` without `else`.
+
 # 0.2 (released 14 March 2023)
 
 Syntax: Added `if`, `while`, assignment, `!=`, `-`, `*`, `/`, `<`,

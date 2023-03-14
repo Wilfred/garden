@@ -150,8 +150,17 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     require_token(tokens, ")")?;
 
     let then_body = parse_block(tokens)?;
-    require_token(tokens, "else")?;
-    let else_body = parse_block(tokens)?;
+
+    let else_body = if let Some((_, token)) = peek_token(tokens) {
+        if token == "else" {
+            pop_token(tokens);
+            parse_block(tokens)?
+        } else {
+            vec![]
+        }
+    } else {
+        vec![]
+    };
 
     Ok(Statement(
         offset,
@@ -601,6 +610,46 @@ mod tests {
                 Statement_::Let(
                     VariableName("x".into()),
                     Box::new(Expression(8, Expression_::IntLiteral(1)))
+                )
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_if_else() {
+        let src = "if (true) {} else {}";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Statement(
+                0,
+                Statement_::If(
+                    Box::new(Expression(4, Expression_::BoolLiteral(true))),
+                    vec![],
+                    vec![],
+                )
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_if() {
+        let src = "if (true) {}";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Statement(
+                0,
+                Statement_::If(
+                    Box::new(Expression(4, Expression_::BoolLiteral(true))),
+                    vec![],
+                    vec![],
                 )
             )]
         );

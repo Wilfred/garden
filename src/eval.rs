@@ -155,7 +155,7 @@ pub fn eval_stmts(
     let mut evalled_values: Vec<Value> = vec![Value::Void];
 
     loop {
-        if let Some(mut stmts_to_eval) = stmts_to_eval_per_fun.pop() {
+        if let Some(stmts_to_eval) = stmts_to_eval_per_fun.last_mut() {
             if let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
                 if interrupted.load(Ordering::SeqCst) {
                     // TODO: prompt for what to do next.
@@ -500,11 +500,6 @@ pub fn eval_stmts(
                                         ));
                                     }
 
-                                    // Normally we want to append to this vec of statements at
-                                    // the end, but for function calls we are pushing a new
-                                    // scope with additional statements.
-                                    stmts_to_eval_per_fun.push(stmts_to_eval);
-
                                     env.push_new_fun_scope(&name);
                                     for (param, value) in params.iter().zip(arg_values.iter()) {
                                         env.set_with_fun_scope(param, value.clone());
@@ -575,9 +570,10 @@ pub fn eval_stmts(
                         }
                     }
                 }
-                stmts_to_eval_per_fun.push(stmts_to_eval);
             } else {
                 assert!(stmts_to_eval.is_empty());
+                stmts_to_eval_per_fun.pop();
+
                 // Reached end of this block. Pop to the parent.
                 if env.fun_scopes.len() > 1 {
                     // Don't pop the outer scope: that's for the top level environment.

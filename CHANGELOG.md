@@ -1,6 +1,6 @@
 # 0.3 (unreleased)
 
-Syntax: Allow `if` without `else`.
+Syntax: Allow `if` without `else`, as well as `else if (...) { ... }`.
 
 # 0.2 (released 14 March 2023)
 

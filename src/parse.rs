@@ -154,7 +154,16 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     let else_body = if let Some((_, token)) = peek_token(tokens) {
         if token == "else" {
             pop_token(tokens);
-            parse_block(tokens)?
+
+            if let Some((_, token)) = peek_token(tokens) {
+                if token == "if" {
+                    vec![parse_if_stmt(tokens)?]
+                } else {
+                    parse_block(tokens)?
+                }
+            } else {
+                return Err("Expected `if` or `{` after `else`".to_string());
+            }
         } else {
             vec![]
         }
@@ -630,6 +639,39 @@ mod tests {
                     Box::new(Expression(4, Expression_::BoolLiteral(true))),
                     vec![],
                     vec![],
+                )
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_else_if() {
+        let src = "if (x) {} else if (y) {}";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Statement(
+                0,
+                Statement_::If(
+                    Box::new(Expression(
+                        4,
+                        Expression_::Variable(VariableName("x".into()))
+                    )),
+                    vec![],
+                    vec![Statement(
+                        15,
+                        Statement_::If(
+                            Box::new(Expression(
+                                19,
+                                Expression_::Variable(VariableName("y".into()))
+                            )),
+                            vec![],
+                            vec![],
+                        )
+                    )],
                 )
             )]
         );

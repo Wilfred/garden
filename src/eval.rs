@@ -154,13 +154,13 @@ pub fn eval_stmts(
     let mut stmts_to_eval_per_fun: Vec<Vec<(bool, Statement)>> = vec![stmts_to_eval];
     let mut evalled_values: Vec<Value> = vec![Value::Void];
 
-    'outer: loop {
+    loop {
         if let Some(mut stmts_to_eval) = stmts_to_eval_per_fun.pop() {
             if let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
                 if interrupted.load(Ordering::SeqCst) {
                     // TODO: prompt for what to do next.
                     println!("Got ctrl-c");
-                    break 'outer;
+                    break;
                 }
 
                 let stmt_copy = stmt_.clone();

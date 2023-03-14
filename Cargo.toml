@@ -17,3 +17,7 @@ rustyline = "10.1.1"
 strsim = "0.10.0"
 strum = "0.24.1"
 strum_macros = "0.24.1"
+
+[[bin]]
+name = "garden"
+path = "src/main.rs"

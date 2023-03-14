@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
-use crate::commands::run_if_command;
+use crate::commands::{run_if_command, CommandError};
 use crate::parse::{parse_toplevel_from_str, Expression, Expression_, Statement_, VariableName};
 use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
@@ -118,9 +118,13 @@ fn error_prompt(message: &str, env: &Env, complete_src: &str) -> Result<Statemen
         match rl.readline(&prompt_symbol(1)) {
             Ok(input) => {
                 let input = input.trim().to_string();
-                if run_if_command(&input, env, complete_src) {
-                    println!();
-                    continue;
+
+                match run_if_command(&input, env, complete_src) {
+                    Ok(()) => {
+                        println!();
+                        continue;
+                    }
+                    Err(CommandError::NotACommand) => {}
                 }
 
                 let mut asts: Vec<Statement> = parse_toplevel_from_str(&input)?;

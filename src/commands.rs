@@ -67,27 +67,32 @@ fn print_available_commands() {
     println!();
 }
 
-pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> bool {
+#[derive(Debug)]
+pub enum CommandError {
+    NotACommand,
+}
+
+pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), CommandError> {
     match Commands::from_string(&input) {
         Some(Commands::Help) => {
             println!("{}\n", HELP_TOPICS[0].1);
             print_available_commands();
-            true
+            Ok(())
         }
         None if input.starts_with(':') => {
             print_available_commands();
-            true
+            Ok(())
         }
         Some(Commands::Source) => {
             print!("{}", complete_src);
-            true
+            Ok(())
         }
         Some(Commands::Globals) => {
             for (var_name, value) in &env.file_scope {
                 println!("{}\t{}", var_name.0.bright_green(), value);
             }
 
-            true
+            Ok(())
         }
         Some(Commands::Locals) => {
             if let Some((_, fun_scope)) = env.fun_scopes.last() {
@@ -96,11 +101,11 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> bool {
                 }
             }
 
-            true
+            Ok(())
         }
         Some(Commands::Stack) => {
             print_stack(env);
-            true
+            Ok(())
         }
         Some(Commands::Parse(src)) => {
             match parse_toplevel_from_str(&src) {
@@ -109,9 +114,9 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> bool {
                     println!("{}: {}", "Error".bright_red(), e);
                 }
             };
-            true
+            Ok(())
         }
-        None => false,
+        None => Err(CommandError::NotACommand),
     }
 }
 

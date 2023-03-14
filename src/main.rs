@@ -8,7 +8,7 @@ use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use crate::commands::{print_stack, run_if_command};
+use crate::commands::{print_stack, run_if_command, CommandError};
 use crate::{
     eval::{eval_stmts, Env},
     parse::parse_toplevel_from_str,
@@ -51,8 +51,11 @@ fn main() {
 
                 let input = input.trim().to_string();
 
-                if run_if_command(&input, &env, &complete_src) {
-                    continue;
+                match run_if_command(&input, &env, &complete_src) {
+                    Ok(()) => {
+                        continue;
+                    }
+                    Err(CommandError::NotACommand) => {}
                 }
 
                 complete_src.push_str(&input);

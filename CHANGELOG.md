@@ -1,4 +1,6 @@
-# 0.2 (unreleased)
+# 0.3 (unreleased)
+
+# 0.2 (released 14 March 2023)
 
 Syntax: Added `if`, `while`, assignment, `!=`, `-`, `*`, `/`, `<`,
 `>`, `||` and `&&`.

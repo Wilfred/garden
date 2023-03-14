@@ -66,6 +66,10 @@ fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
     tokens.first().copied()
 }
 
+fn next_token_is(tokens: &[Token<'_>], token: &str) -> bool {
+    tokens.first().map(|t| t.1 == token).unwrap_or(false)
+}
+
 fn peek_two_tokens<'a>(tokens: &[Token<'a>]) -> Option<(Token<'a>, Token<'a>)> {
     if tokens.len() > 1 {
         Some((tokens[0], tokens[1]))
@@ -128,10 +132,8 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     require_token(tokens, "{")?;
 
     while !tokens.is_empty() {
-        if let Some((_, token)) = peek_token(tokens) {
-            if token == "}" {
-                break;
-            }
+        if next_token_is(tokens, "}") {
+            break;
         }
 
         res.push(parse_statement(tokens)?);
@@ -151,21 +153,13 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
 
     let then_body = parse_block(tokens)?;
 
-    let else_body = if let Some((_, token)) = peek_token(tokens) {
-        if token == "else" {
-            pop_token(tokens);
+    let else_body = if next_token_is(tokens, "else") {
+        pop_token(tokens);
 
-            if let Some((_, token)) = peek_token(tokens) {
-                if token == "if" {
-                    vec![parse_if_stmt(tokens)?]
-                } else {
-                    parse_block(tokens)?
-                }
-            } else {
-                return Err("Expected `if` or `{` after `else`".to_string());
-            }
+        if next_token_is(tokens, "if") {
+            vec![parse_if_stmt(tokens)?]
         } else {
-            vec![]
+            parse_block(tokens)?
         }
     } else {
         vec![]
@@ -235,10 +229,8 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
 
     let mut args = vec![];
     loop {
-        if let Some((_, token)) = peek_token(tokens) {
-            if token == ")" {
-                break;
-            }
+        if next_token_is(tokens, ")") {
+            break;
         }
 
         let arg = parse_expression(tokens)?;
@@ -267,14 +259,12 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
 fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     let expr = parse_simple_expression(tokens)?;
 
-    if let Some((_, token)) = peek_token(tokens) {
-        if token == "(" {
-            let arguments = parse_call_arguments(tokens)?;
-            return Ok(Expression(
-                expr.0,
-                Expression_::Call(Box::new(expr), arguments),
-            ));
-        }
+    if next_token_is(tokens, "(") {
+        let arguments = parse_call_arguments(tokens)?;
+        return Ok(Expression(
+            expr.0,
+            Expression_::Call(Box::new(expr), arguments),
+        ));
     }
 
     Ok(expr)
@@ -346,10 +336,8 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
 
     let mut params = vec![];
     loop {
-        if let Some((_, token)) = peek_token(tokens) {
-            if token == ")" {
-                break;
-            }
+        if next_token_is(tokens, ")") {
+            break;
         }
 
         let (_, param) = parse_variable_name(tokens)?;

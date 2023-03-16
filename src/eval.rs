@@ -109,7 +109,13 @@ impl Env {
     }
 }
 
-fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Statement, String> {
+#[derive(Debug)]
+pub enum EvalError {
+    UserError(String),
+    Aborted,
+}
+
+fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Statement, EvalError> {
     println!("{}: {}", "Error".bright_red(), message);
     println!("What value would you like to use instead?\n");
 
@@ -131,22 +137,23 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
                             env.pop_fun_scope();
                         }
 
-                        return Err("Aborted".into());
+                        return Err(EvalError::Aborted);
                     }
                 }
 
-                let mut asts: Vec<Statement> = parse_toplevel_from_str(&input)?;
+                let mut asts: Vec<Statement> =
+                    parse_toplevel_from_str(&input).map_err(|e| EvalError::UserError(e))?;
                 if asts.len() != 1 {
-                    return Err(format!(
+                    return Err(EvalError::UserError(format!(
                         "Expected to read a single statement, got {} items",
                         asts.len()
-                    ));
+                    )));
                 }
 
                 return Ok(asts.pop().unwrap());
             }
             Err(e) => {
-                return Err(format!("Input failed: {}", e));
+                return Err(EvalError::UserError(format!("Input failed: {}", e)));
             }
         }
     }
@@ -157,7 +164,7 @@ pub fn eval_stmts(
     env: &mut Env,
     complete_src: &str,
     interrupted: &Arc<AtomicBool>,
-) -> Result<Value, String> {
+) -> Result<Value, EvalError> {
     let mut stmts_to_eval = vec![];
     for stmt in stmts.iter().rev() {
         stmts_to_eval.push((false, stmt.clone()));
@@ -201,7 +208,10 @@ pub fn eval_stmts(
                                     }
                                 }
                                 v => {
-                                    return Err(format!("Expected a boolean, but got: {}", v));
+                                    return Err(EvalError::UserError(format!(
+                                        "Expected a boolean, but got: {}",
+                                        v
+                                    )));
                                 }
                             }
                         } else {
@@ -232,7 +242,10 @@ pub fn eval_stmts(
                                     }
                                 }
                                 v => {
-                                    return Err(format!("Expected a boolean, but got: {}", v));
+                                    return Err(EvalError::UserError(format!(
+                                        "Expected a boolean, but got: {}",
+                                        v
+                                    )));
                                 }
                             }
                         } else {
@@ -246,10 +259,10 @@ pub fn eval_stmts(
                     Statement_::Let(variable, expr) => {
                         if done_children {
                             if env.fun_scope_has_var(&variable) {
-                                return Err(format!(
+                                return Err(EvalError::UserError(format!(
                                     "{} is already bound. Try `{} = something` instead.",
                                     variable.0, variable.0
-                                ));
+                                )));
                             }
 
                             let expr_value = evalled_values
@@ -266,10 +279,10 @@ pub fn eval_stmts(
                     Statement_::Assign(variable, expr) => {
                         if done_children {
                             if !env.fun_scope_has_var(&variable) {
-                                return Err(format!(
+                                return Err(EvalError::UserError(format!(
                                     "{} is not currently bound. Try `let {} = something`.",
                                     variable.0, variable.0
-                                ));
+                                )));
                             }
 
                             let expr_value = evalled_values
@@ -328,19 +341,19 @@ pub fn eval_stmts(
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    return Err(format!(
+                                    return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
-                                    ));
+                                    )));
                                 }
                             };
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    return Err(format!(
+                                    return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",
                                         rhs_value
-                                    ));
+                                    )));
                                 }
                             };
 
@@ -359,10 +372,10 @@ pub fn eval_stmts(
                                 }
                                 BinaryOperatorKind::Divide => {
                                     if rhs_num == 0 {
-                                        return Err(format!(
+                                        return Err(EvalError::UserError(format!(
                                             "Tried to divide {} by zero.",
                                             rhs_value
-                                        ));
+                                        )));
                                     }
 
                                     evalled_values.push(Value::Integer(lhs_num / rhs_num));
@@ -404,22 +417,22 @@ pub fn eval_stmts(
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    return Err(format!(
+                                    return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
-                                    ));
+                                    )));
                                 }
                             };
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    return Err(format!(
+                                    return Err(EvalError::UserError(format!(
                                         // TODO: use the term 'int' or 'integer' in error messages?
                                         // int: reflects code
                                         // integer: conventional maths
                                         "Expected an integer, but got: {}",
                                         rhs_value
-                                    ));
+                                    )));
                                 }
                             };
 
@@ -459,13 +472,19 @@ pub fn eval_stmts(
                             let lhs_bool = match lhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
-                                    return Err(format!("Expected a bool, but got: {}", lhs_value));
+                                    return Err(EvalError::UserError(format!(
+                                        "Expected a bool, but got: {}",
+                                        lhs_value
+                                    )));
                                 }
                             };
                             let rhs_bool = match rhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
-                                    return Err(format!("Expected a bool, but got: {}", rhs_value));
+                                    return Err(EvalError::UserError(format!(
+                                        "Expected a bool, but got: {}",
+                                        rhs_value
+                                    )));
                                 }
                             };
 
@@ -504,12 +523,12 @@ pub fn eval_stmts(
                             match receiver_value {
                                 Value::Fun(name, params, body) => {
                                     if params.len() != arg_values.len() {
-                                        return Err(format!(
+                                        return Err(EvalError::UserError(format!(
                                             "Expected {} arguments to function {}, but got {}",
                                             params.len(),
                                             name.0,
                                             arg_values.len()
-                                        ));
+                                        )));
                                     }
 
                                     env.push_new_fun_scope(&name);
@@ -527,28 +546,28 @@ pub fn eval_stmts(
                                 Value::BuiltinFunction(kind) => match kind {
                                     BuiltinFunctionKind::Print => {
                                         if args.len() != 1 {
-                                            return Err(format!(
+                                            return Err(EvalError::UserError(format!(
                                                 "Function print requires 1 argument, but got: {}",
                                                 args.len()
-                                            ));
+                                            )));
                                         }
                                         match &arg_values[0] {
                                             Value::String(s) => println!("{}", s),
                                             v => {
-                                                return Err(format!(
+                                                return Err(EvalError::UserError(format!(
                                                     "Expected a string, but got: {}",
                                                     v
-                                                ));
+                                                )));
                                             }
                                         }
                                         evalled_values.push(Value::Void);
                                     }
                                     BuiltinFunctionKind::IntToString => {
                                         if args.len() != 1 {
-                                            return Err(format!(
+                                            return Err(EvalError::UserError(format!(
                                                 "Function print requires 1 argument, but got: {}",
                                                 args.len()
-                                            ));
+                                            )));
                                         }
                                         match &arg_values[0] {
                                             Value::Integer(i) => {
@@ -556,16 +575,19 @@ pub fn eval_stmts(
                                                     .push(Value::String(format!("{}", i)));
                                             }
                                             v => {
-                                                return Err(format!(
+                                                return Err(EvalError::UserError(format!(
                                                     "Expected an integer, but got: {}",
                                                     v
-                                                ));
+                                                )));
                                             }
                                         }
                                     }
                                 },
                                 v => {
-                                    return Err(format!("Expected a function, but got: {}", v));
+                                    return Err(EvalError::UserError(format!(
+                                        "Expected a function, but got: {}",
+                                        v
+                                    )));
                                 }
                             }
                         } else {
@@ -620,7 +642,7 @@ pub fn eval_stmts(
 mod tests {
     use super::*;
 
-    fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, String> {
+    fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, EvalError> {
         let interrupted = Arc::new(AtomicBool::new(false));
         super::eval_stmts(stmts, env, "", &interrupted)
     }

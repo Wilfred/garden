@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use crate::commands::{print_stack, run_if_command, CommandError};
+use crate::eval::EvalError;
 use crate::{
     eval::{eval_stmts, Env},
     parse::parse_toplevel_from_str,
@@ -74,7 +75,8 @@ fn main() {
                                     println!("{}", v)
                                 }
                             },
-                            Err(e) => {
+                            Err(EvalError::Aborted) => {}
+                            Err(EvalError::UserError(e)) => {
                                 println!("{}: {}", "Error".bright_red(), e);
                                 print_stack(&env);
                             }

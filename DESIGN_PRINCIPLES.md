@@ -30,7 +30,7 @@ is secondary.
 
 Pervasive docs that can be explored interactively.
 
-Separate out values that must be checked (i.e. Result) from resumable,
+Distinguish values that must be checked (i.e. Result) from resumable,
 developer-oriented exceptions.
 
 Expressions evaluated are written to a log, so users can copy them
@@ -38,4 +38,4 @@ Expressions evaluated are written to a log, so users can copy them
 
 Unbounded stack (stored on heap).
 
-Mix type and value information when inspecting bad stacks.
+Combine type and value information when inspecting bad stacks.

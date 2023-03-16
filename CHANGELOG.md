@@ -2,6 +2,8 @@
 
 Syntax: Allow `if` without `else`, as well as `else if (...) { ... }`.
 
+Interactive interpreter: added `:abort` command.
+
 # 0.2 (released 14 March 2023)
 
 Syntax: Added `if`, `while`, assignment, `!=`, `-`, `*`, `/`, `<`,

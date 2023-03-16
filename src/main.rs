@@ -56,6 +56,9 @@ fn main() {
                         continue;
                     }
                     Err(CommandError::NotACommand) => {}
+                    Err(CommandError::Abort) => {
+                        // Nothing to do, we're in the top level.
+                    }
                 }
 
                 complete_src.push_str(&input);

@@ -109,7 +109,7 @@ impl Env {
     }
 }
 
-fn error_prompt(message: &str, env: &Env, complete_src: &str) -> Result<Statement, String> {
+fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Statement, String> {
     println!("{}: {}", "Error".bright_red(), message);
     println!("What value would you like to use instead?\n");
 
@@ -125,6 +125,14 @@ fn error_prompt(message: &str, env: &Env, complete_src: &str) -> Result<Statemen
                         continue;
                     }
                     Err(CommandError::NotACommand) => {}
+                    Err(CommandError::Abort) => {
+                        // Pop to toplevel.
+                        while env.fun_scopes.len() > 1 {
+                            env.pop_fun_scope();
+                        }
+
+                        return Err("Aborted".into());
+                    }
                 }
 
                 let mut asts: Vec<Statement> = parse_toplevel_from_str(&input)?;

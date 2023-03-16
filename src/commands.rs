@@ -6,6 +6,7 @@ use crate::{eval::Env, parse::parse_toplevel_from_str};
 
 #[derive(Debug, EnumIter)]
 pub enum Commands {
+    Abort,
     Help,
     Globals,
     Locals,
@@ -22,6 +23,7 @@ const HELP_TOPICS: &[(&str, &str)] = &[
 impl Commands {
     pub fn from_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
+            ":abort" => Some(Commands::Abort),
             ":help" => Some(Commands::Help),
             ":globals" => Some(Commands::Globals),
             ":locals" => Some(Commands::Locals),
@@ -39,6 +41,7 @@ impl Commands {
 
     pub fn to_string(&self) -> &str {
         match self {
+            Commands::Abort => ":abort",
             Commands::Help => ":help",
             Commands::Globals => ":globals",
             Commands::Locals => ":locals",
@@ -70,16 +73,13 @@ fn print_available_commands() {
 #[derive(Debug)]
 pub enum CommandError {
     NotACommand,
+    Abort,
 }
 
 pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), CommandError> {
     match Commands::from_string(&input) {
         Some(Commands::Help) => {
             println!("{}\n", HELP_TOPICS[0].1);
-            print_available_commands();
-            Ok(())
-        }
-        None if input.starts_with(':') => {
             print_available_commands();
             Ok(())
         }
@@ -114,6 +114,13 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
                     println!("{}: {}", "Error".bright_red(), e);
                 }
             };
+            Ok(())
+        }
+        Some(Commands::Abort) => {
+            Err(CommandError::Abort)
+        }
+        None if input.starts_with(':') => {
+            print_available_commands();
             Ok(())
         }
         None => Err(CommandError::NotACommand),

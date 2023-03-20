@@ -90,7 +90,7 @@ fn require_a_token<'a>(
 ) -> Result<Token<'a>, ParseError> {
     match pop_token(tokens) {
         Some(token) => Ok(token),
-        None => Err(ParseError::OtherError(format!("Expected {}, got EOF", token_description))),
+        None => Err(ParseError::Incomplete(format!("Expected {}, got EOF", token_description))),
     }
 }
 
@@ -106,7 +106,7 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize,
                 )))
             }
         }
-        None => Err(ParseError::OtherError(format!(
+        None => Err(ParseError::Incomplete(format!(
             "Expected `{}`, got EOF",
             expected
         ))),
@@ -239,7 +239,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
         )));
     }
 
-    Err(ParseError::OtherError("Expected an expression".to_owned()))
+    Err(ParseError::Incomplete("Expected an expression".to_owned()))
 }
 
 fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
@@ -266,7 +266,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
                 )));
             }
         } else {
-            return Err(ParseError::OtherError(
+            return Err(ParseError::Incomplete(
                 "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
             ));
         }
@@ -375,7 +375,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
                 )));
             }
         } else {
-            return Err(ParseError::OtherError(
+            return Err(ParseError::Incomplete(
                 "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
             ));
         }
@@ -395,7 +395,7 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
                 break;
             }
         } else {
-            return Err(ParseError::OtherError(
+            return Err(ParseError::Incomplete(
                 "Invalid syntax: Expected `}}` here, but got EOF".to_string(),
             ));
         }

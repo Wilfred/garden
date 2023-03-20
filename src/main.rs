@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use crate::commands::{print_stack, run_if_command, CommandError};
 use crate::eval::EvalError;
+use crate::parse::ParseError;
 use crate::{
     eval::{eval_stmts, Env},
     parse::parse_toplevel_from_str,
@@ -82,7 +83,10 @@ fn main() {
                             }
                         }
                     }
-                    Err(e) => {
+                    Err(ParseError::Incomplete(e)) => {
+                        println!("Parsing failed: {}", e);
+                    }
+                    Err(ParseError::OtherError(e)) => {
                         println!("Parsing failed: {}", e);
                     }
                 }

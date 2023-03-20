@@ -3,7 +3,9 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::commands::{run_if_command, CommandError};
-use crate::parse::{parse_toplevel_from_str, Expression, Expression_, Statement_, VariableName};
+use crate::parse::{
+    parse_toplevel_from_str, Expression, Expression_, ParseError, Statement_, VariableName,
+};
 use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
 
@@ -142,7 +144,11 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
                 }
 
                 let mut asts: Vec<Statement> =
-                    parse_toplevel_from_str(&input).map_err(|e| EvalError::UserError(e))?;
+                    parse_toplevel_from_str(&input).map_err(|e| match e {
+                        ParseError::OtherError(e) | ParseError::Incomplete(e) => {
+                            EvalError::UserError(e)
+                        }
+                    })?;
                 if asts.len() != 1 {
                     return Err(EvalError::UserError(format!(
                         "Expected to read a single statement, got {} items",

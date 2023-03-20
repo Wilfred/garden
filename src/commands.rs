@@ -2,7 +2,10 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::{eval::Env, parse::parse_toplevel_from_str};
+use crate::{
+    eval::Env,
+    parse::{parse_toplevel_from_str, ParseError},
+};
 
 #[derive(Debug, EnumIter)]
 pub enum Commands {
@@ -110,7 +113,7 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
         Some(Commands::Parse(src)) => {
             match parse_toplevel_from_str(&src) {
                 Ok(ast) => println!("{:?}", ast),
-                Err(e) => {
+                Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
                     println!("{}: {}", "Error".bright_red(), e);
                 }
             };

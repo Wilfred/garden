@@ -6,6 +6,12 @@ use regex::Regex;
 //     line: usize,
 // }
 
+#[derive(Debug)]
+pub enum ParseError {
+    OtherError(String),
+    Incomplete(String),
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct VariableName(pub String);
 
@@ -81,27 +87,33 @@ fn peek_two_tokens<'a>(tokens: &[Token<'a>]) -> Option<(Token<'a>, Token<'a>)> {
 fn require_a_token<'a>(
     tokens: &mut &[Token<'a>],
     token_description: &str,
-) -> Result<Token<'a>, String> {
+) -> Result<Token<'a>, ParseError> {
     match pop_token(tokens) {
         Some(token) => Ok(token),
-        None => Err(format!("Expected {}, got EOF", token_description)),
+        None => Err(ParseError::OtherError(format!("Expected {}, got EOF", token_description))),
     }
 }
 
-fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize, String> {
+fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize, ParseError> {
     match pop_token(tokens) {
         Some((offset, token)) => {
             if token == expected {
                 Ok(offset)
             } else {
-                Err(format!("Expected `{}`, got `{}`", expected, token))
+                Err(ParseError::OtherError(format!(
+                    "Expected `{}`, got `{}`",
+                    expected, token
+                )))
             }
         }
-        None => Err(format!("Expected `{}`, got EOF", expected)),
+        None => Err(ParseError::OtherError(format!(
+            "Expected `{}`, got EOF",
+            expected
+        ))),
     }
 }
 
-fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let re = Regex::new(r"^[0-9]+$").unwrap();
 
     let (offset, token) = require_a_token(tokens, "integer literal")?;
@@ -109,16 +121,19 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
         let i: i64 = token.parse().unwrap();
         Ok(Expression(offset, Expression_::IntLiteral(i)))
     } else {
-        Err(format!("Not a valid integer literal: {}", token))
+        Err(ParseError::OtherError(format!(
+            "Not a valid integer literal: {}",
+            token
+        )))
     }
 }
 
-fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let (offset, variable) = parse_variable_name(tokens)?;
     Ok(Expression(offset, Expression_::Variable(variable)))
 }
 
-fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     require_token(tokens, "(")?;
     let expr = parse_expression(tokens)?;
     require_token(tokens, ")")?;
@@ -126,7 +141,7 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
     Ok(expr)
 }
 
-fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
+fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
     let mut res = vec![];
 
     require_token(tokens, "{")?;
@@ -144,7 +159,7 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
     Ok(res)
 }
 
-fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let offset = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
@@ -171,7 +186,7 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     ))
 }
 
-fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let offset = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
@@ -186,7 +201,7 @@ fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     ))
 }
 
-fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     if let Some((offset, token)) = peek_token(tokens) {
         if token == "(" {
             return parse_parenthesis_expression(tokens);
@@ -218,13 +233,16 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Stri
             return parse_integer(tokens);
         }
 
-        return Err(format!("Expected an expression, got: {}", token));
+        return Err(ParseError::OtherError(format!(
+            "Expected an expression, got: {}",
+            token
+        )));
     }
 
-    Err("Expected an expression".to_owned())
+    Err(ParseError::OtherError("Expected an expression".to_owned()))
 }
 
-fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, String> {
+fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut args = vec![];
@@ -242,13 +260,15 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
             } else if token == ")" {
                 break;
             } else {
-                return Err(format!(
+                return Err(ParseError::OtherError(format!(
                     "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                     token
-                ));
+                )));
             }
         } else {
-            return Err("Invalid syntax: Expected `,` or `)` here, but got EOF".to_string());
+            return Err(ParseError::OtherError(
+                "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
+            ));
         }
     }
 
@@ -256,7 +276,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, St
     Ok(args)
 }
 
-fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let expr = parse_simple_expression(tokens)?;
 
     if next_token_is(tokens, "(") {
@@ -286,7 +306,7 @@ fn token_as_binary_op(token: &str) -> Option<BinaryOperatorKind> {
     }
 }
 
-fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
+fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some((_, token)) = peek_token(tokens) {
@@ -304,7 +324,7 @@ fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, String> {
     Ok(expr)
 }
 
-fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     if let Some((_, (_, token))) = peek_two_tokens(tokens) {
         if token == "=" {
             return parse_assign_stmt(tokens);
@@ -331,7 +351,7 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(expr.0, Statement_::Expr(expr)))
 }
 
-fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>, String> {
+fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -349,13 +369,15 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
             } else if token == ")" {
                 break;
             } else {
-                return Err(format!(
+                return Err(ParseError::OtherError(format!(
                     "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                     token
-                ));
+                )));
             }
         } else {
-            return Err("Invalid syntax: Expected `,` or `)` here, but got EOF".to_string());
+            return Err(ParseError::OtherError(
+                "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
+            ));
         }
     }
 
@@ -363,7 +385,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
     Ok(params)
 }
 
-fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
+fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
     require_token(tokens, "{")?;
 
     let mut stmts = vec![];
@@ -373,7 +395,9 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Stri
                 break;
             }
         } else {
-            return Err("Invalid syntax: Expected `}}` here, but got EOF".to_string());
+            return Err(ParseError::OtherError(
+                "Invalid syntax: Expected `}}` here, but got EOF".to_string(),
+            ));
         }
 
         let stmt = parse_statement(tokens)?;
@@ -384,7 +408,7 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Stri
     Ok(stmts)
 }
 
-fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let offset = require_token(tokens, "fun")?;
     let (_, name) = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
@@ -395,28 +419,31 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
 
 const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false", "if", "else", "while"];
 
-fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName), String> {
+fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName), ParseError> {
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
 
     let (offset, variable) = require_a_token(tokens, "variable name")?;
     if !variable_re.is_match(variable) {
-        return Err(format!("Invalid variable name: '{}'", variable));
+        return Err(ParseError::OtherError(format!(
+            "Invalid variable name: '{}'",
+            variable
+        )));
     }
 
     for reserved in RESERVED_WORDS {
         if variable == *reserved {
-            return Err(format!(
+            return Err(ParseError::OtherError(format!(
                 "'{}' is a reserved word that cannot be used as a variable",
                 variable
-            ));
+            )));
         }
     }
 
     Ok((offset, VariableName(variable.to_string())))
 }
 
-fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let offset = require_token(tokens, "let")?;
     let (_, variable) = parse_variable_name(tokens)?;
 
@@ -427,7 +454,7 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     Ok(Statement(offset, Statement_::Let(variable, Box::new(expr))))
 }
 
-fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
+fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let (offset, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
@@ -440,13 +467,13 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, String> {
     ))
 }
 
-pub fn parse_toplevel_from_str(s: &str) -> Result<Vec<Statement>, String> {
+pub fn parse_toplevel_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
     let tokens = lex(s)?;
     let mut token_ptr = &tokens[..];
     parse_toplevel(&mut token_ptr)
 }
 
-fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, String> {
+fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
     let mut res = vec![];
 
     while !tokens.is_empty() {
@@ -462,7 +489,7 @@ lazy_static! {
     static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 }
 
-fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
+fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError> {
     let mut res: Vec<(usize, &str)> = vec![];
 
     let mut offset = offset;
@@ -510,13 +537,13 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, String> {
     }
 
     if offset != s.len() {
-        return Err(format!("Unrecognized syntax: '{}'", &s[offset..]));
+        return Err(ParseError::OtherError(format!("Unrecognized syntax: '{}'", &s[offset..])));
     }
 
     Ok(res)
 }
 
-fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, String> {
+fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
     lex_from(s, 0)
 }
 

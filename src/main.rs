@@ -17,6 +17,7 @@ use crate::{
     prompt::prompt_symbol,
 };
 use owo_colors::OwoColorize;
+use parse::Statement;
 use rustyline::Editor;
 
 fn main() {
@@ -61,12 +62,12 @@ fn main() {
                     }
                 }
 
-                complete_src.push_str(&input);
-                complete_src.push('\n');
-
-                match parse_toplevel_from_str(&input) {
-                    Ok(stmts) => {
+                match read_multiline_syntax(&input, &mut rl) {
+                    Ok((src, stmts)) => {
+                        complete_src.push_str(&src);
+                        complete_src.push('\n');
                         log_src(input).unwrap();
+
                         match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
                             Ok(result) => match result {
                                 eval::Value::Void => {}
@@ -90,6 +91,31 @@ fn main() {
                 }
             }
             Err(_) => break,
+        }
+    }
+}
+
+fn read_multiline_syntax(
+    first_line: &str,
+    rl: &mut Editor<()>,
+) -> Result<(String, Vec<Statement>), ParseError> {
+    let mut src = first_line.to_string();
+
+    loop {
+        match parse_toplevel_from_str(&src) {
+            Ok(stmts) => {
+                return Ok((src, stmts));
+            }
+            Err(e @ ParseError::Incomplete(_)) => match rl.readline(&prompt_symbol(1)) {
+                Ok(input) => {
+                    src.push('\n');
+                    src.push_str(&input);
+                }
+                Err(_) => return Err(e),
+            },
+            Err(e @ ParseError::OtherError(_)) => {
+                return Err(e);
+            }
         }
     }
 }

@@ -116,9 +116,7 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
             };
             Ok(())
         }
-        Some(Commands::Abort) => {
-            Err(CommandError::Abort)
-        }
+        Some(Commands::Abort) => Err(CommandError::Abort),
         None if input.starts_with(':') => {
             print_available_commands();
             Ok(())

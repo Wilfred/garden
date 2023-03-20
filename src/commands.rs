@@ -33,6 +33,7 @@ impl Commands {
             ":source" => Some(Commands::Source),
             ":stack" => Some(Commands::Stack),
             _ => {
+                // TODO: allow :parse without any trailing whitespace.
                 if let Some(src) = s.strip_prefix(":parse ") {
                     Some(Commands::Parse(src.to_owned()))
                 } else {

@@ -51,8 +51,6 @@ fn main() {
                 rl.add_history_entry(input.as_str());
                 let _ = rl.save_history(".history");
 
-                let input = input.trim().to_string();
-
                 match run_if_command(&input, &env, &complete_src) {
                     Ok(()) => {
                         continue;

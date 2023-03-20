@@ -25,7 +25,7 @@ const HELP_TOPICS: &[(&str, &str)] = &[
 
 impl Commands {
     pub fn from_string(s: &str) -> Option<Self> {
-        match s.to_lowercase().as_str() {
+        match s.to_lowercase().trim() {
             ":abort" => Some(Commands::Abort),
             ":help" => Some(Commands::Help),
             ":globals" => Some(Commands::Globals),

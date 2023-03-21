@@ -40,9 +40,9 @@ enum Commands {
 fn repl(interrupted: &Arc<AtomicBool>) {
     println!(
         "{} {}{}",
-        "Welcome to the".bold(),
-        "garden".bold().green(),
-        "!".bold()
+        "Garden".bold().green(),
+        env!("CARGO_PKG_VERSION").bold(),
+        ": good programs take time to grow.".bold()
     );
     println!("Type {} if you're new here.", ":help".bold().green(),);
 

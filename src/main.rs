@@ -20,6 +20,7 @@ use clap::{Parser, Subcommand};
 use owo_colors::OwoColorize;
 use parse::Statement;
 use rustyline::Editor;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Parser)]
 #[command(name = "git")]
@@ -104,8 +105,18 @@ fn repl(interrupted: &Arc<AtomicBool>) {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+struct EvalRequest {
+    input: String,
+}
+
 fn json_session() {
-    println!("hello world");
+    let req = EvalRequest {
+        input: "1 + 2;".into(),
+    };
+
+    let serialized = serde_json::to_string(&req).unwrap();
+    println!("JSON: {}", serialized);
 }
 
 fn main() {

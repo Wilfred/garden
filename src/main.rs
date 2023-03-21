@@ -104,6 +104,10 @@ fn repl(interrupted: &Arc<AtomicBool>) {
     }
 }
 
+fn json_session() {
+    println!("hello world");
+}
+
 fn main() {
     let interrupted = Arc::new(AtomicBool::new(false));
 
@@ -116,7 +120,7 @@ fn main() {
     let args = Cli::parse();
     match args.command {
         Commands::Repl => repl(&interrupted),
-        Commands::Json => todo!(),
+        Commands::Json => json_session(),
     }
 }
 

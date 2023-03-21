@@ -16,19 +16,29 @@ use crate::{
     parse::parse_toplevel_from_str,
     prompt::prompt_symbol,
 };
+use clap::{Parser, Subcommand};
 use owo_colors::OwoColorize;
 use parse::Statement;
 use rustyline::Editor;
 
-fn main() {
-    let interrupted = Arc::new(AtomicBool::new(false));
+/// A fictional versioning CLI
+#[derive(Debug, Parser)] // requires `derive` feature
+#[command(name = "git")]
+#[command(about = "A programming language for growing programs", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    let i = interrupted.clone();
-    ctrlc::set_handler(move || {
-        i.store(true, Ordering::SeqCst);
-    })
-    .expect("Error setting Ctrl-C handler");
+#[derive(Debug, Subcommand)]
+enum Commands {
+    /// Start a session directly in the CLI.
+    Repl,
+    /// Start a session over JSON RPC.
+    Json,
+}
 
+fn repl(interrupted: &Arc<AtomicBool>) {
     println!(
         "{} {}{}",
         "Welcome to the".bold(),
@@ -92,6 +102,22 @@ fn main() {
             }
             Err(_) => break,
         }
+    }
+}
+
+fn main() {
+    let interrupted = Arc::new(AtomicBool::new(false));
+
+    let i = interrupted.clone();
+    ctrlc::set_handler(move || {
+        i.store(true, Ordering::SeqCst);
+    })
+    .expect("Error setting Ctrl-C handler");
+
+    let args = Cli::parse();
+    match args.command {
+        Commands::Repl => repl(&interrupted),
+        Commands::Json => todo!(),
     }
 }
 

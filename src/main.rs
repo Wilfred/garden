@@ -21,7 +21,7 @@ use owo_colors::OwoColorize;
 use parse::Statement;
 use rustyline::Editor;
 
-#[derive(Debug, Parser)] // requires `derive` feature
+#[derive(Debug, Parser)]
 #[command(name = "git")]
 #[command(about = "A programming language for growing programs", long_about = None)]
 struct Cli {

@@ -4,7 +4,7 @@ mod parse;
 mod prompt;
 
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{BufRead, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -112,22 +112,36 @@ struct EvalRequest {
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Response {
+    error: bool,
     message: String,
 }
 
 fn json_session() {
-    let req = EvalRequest {
-        input: "1 + 2;".into(),
-    };
-
-    let serialized = serde_json::to_string(&req).unwrap();
-    println!("{}", serialized);
-
     let response = Response {
+        error: false,
         message: "ready".into(),
     };
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
+
+    let mut line = String::new();
+    let stdin = std::io::stdin();
+    stdin
+        .lock()
+        .read_line(&mut line)
+        .expect("Could not read line");
+
+    match serde_json::from_str::<EvalRequest>(&line) {
+        Ok(req) => println!("{:?}", req),
+        Err(_) => {
+            let response = Response {
+                error: true,
+                message: format!("Could not parse request: {}", line),
+            };
+            let serialized = serde_json::to_string(&response).unwrap();
+            println!("{}", serialized);
+        }
+    };
 }
 
 fn main() {

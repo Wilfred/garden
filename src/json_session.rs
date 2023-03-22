@@ -17,15 +17,14 @@ struct EvalRequest {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Response {
-    error: bool,
-    message: String,
+enum EvalResponse {
+    Error { message: String },
+    Success { result: String },
 }
 
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
-    let response = Response {
-        error: false,
-        message: "ready".into(),
+    let response = EvalResponse::Success {
+        result: "ready".into(),
     };
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
@@ -48,26 +47,21 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
         let response = match serde_json::from_str::<EvalRequest>(&line) {
             Ok(req) => match parse_toplevel_from_str(&req.input) {
                 Ok(stmts) => match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
-                    Ok(result) => Response {
-                        error: false,
-                        message: format!("result: {}", result),
+                    Ok(result) => EvalResponse::Success {
+                        result: format!("{}", result),
                     },
-                    Err(EvalError::Aborted) => Response {
-                        error: true,
+                    Err(EvalError::Aborted) => EvalResponse::Error {
                         message: format!("Aborted"),
                     },
-                    Err(EvalError::UserError(e)) => Response {
-                        error: true,
+                    Err(EvalError::UserError(e)) => EvalResponse::Error {
                         message: format!("Error: {}", e),
                     },
                 },
-                Err(e) => Response {
-                    error: true,
+                Err(e) => EvalResponse::Error {
                     message: format!("Could not parse input: {:?}", e),
                 },
             },
-            Err(_) => Response {
-                error: true,
+            Err(_) => EvalResponse::Error {
                 message: format!("Could not parse request: {}", line),
             },
         };

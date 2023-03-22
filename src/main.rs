@@ -110,13 +110,24 @@ struct EvalRequest {
     input: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+struct Response {
+    message: String,
+}
+
 fn json_session() {
     let req = EvalRequest {
         input: "1 + 2;".into(),
     };
 
     let serialized = serde_json::to_string(&req).unwrap();
-    println!("JSON: {}", serialized);
+    println!("{}", serialized);
+
+    let response = Response {
+        message: "ready".into(),
+    };
+    let serialized = serde_json::to_string(&response).unwrap();
+    println!("{}", serialized);
 }
 
 fn main() {

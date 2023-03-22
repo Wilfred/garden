@@ -1,6 +1,9 @@
 use std::{
     io::BufRead,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use serde::{Deserialize, Serialize};
@@ -30,18 +33,21 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
     let mut env = Env::default();
     let mut complete_src = String::new();
 
-    let mut line = String::new();
-    let stdin = std::io::stdin();
-    stdin
-        .lock()
-        .read_line(&mut line)
-        .expect("Could not read line");
+    loop {
+        if interrupted.load(Ordering::SeqCst) {
+            break;
+        }
 
-    let response = match serde_json::from_str::<EvalRequest>(&line) {
-        Ok(req) => match parse_toplevel_from_str(&req.input) {
-            Ok(stmts) => {
-                let e = 1;
-                match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
+        let mut line = String::new();
+        let stdin = std::io::stdin();
+        stdin
+            .lock()
+            .read_line(&mut line)
+            .expect("Could not read line");
+
+        let response = match serde_json::from_str::<EvalRequest>(&line) {
+            Ok(req) => match parse_toplevel_from_str(&req.input) {
+                Ok(stmts) => match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
                     Ok(result) => Response {
                         error: false,
                         message: format!("result: {}", result),
@@ -54,18 +60,18 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         error: true,
                         message: format!("Error: {}", e),
                     },
-                }
-            }
-            Err(e) => Response {
-                error: true,
-                message: format!("Could not parse input: {:?}", e),
+                },
+                Err(e) => Response {
+                    error: true,
+                    message: format!("Could not parse input: {:?}", e),
+                },
             },
-        },
-        Err(_) => Response {
-            error: true,
-            message: format!("Could not parse request: {}", line),
-        },
-    };
-    let serialized = serde_json::to_string(&response).unwrap();
-    println!("{}", serialized);
+            Err(_) => Response {
+                error: true,
+                message: format!("Could not parse request: {}", line),
+            },
+        };
+        let serialized = serde_json::to_string(&response).unwrap();
+        println!("{}", serialized);
+    }
 }

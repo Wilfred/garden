@@ -38,6 +38,6 @@ fn main() {
     let args = Cli::parse();
     match args.command {
         Commands::Repl => interactive_session::repl(&interrupted),
-        Commands::Json => json_session::json_session(),
+        Commands::Json => json_session::json_session(&interrupted),
     }
 }

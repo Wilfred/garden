@@ -2,7 +2,7 @@
 
 Syntax: Allow `if` without `else`, as well as `else if (...) { ... }`.
 
-Interactive interpreter: added `:abort` command.
+Interactive interpreter: added `:abort` and `:quit` commands.
 
 # 0.2 (released 14 March 2023)
 

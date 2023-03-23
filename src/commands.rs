@@ -16,6 +16,7 @@ pub enum Commands {
     Parse(String),
     Source,
     Stack,
+    Quit,
 }
 
 const HELP_TOPICS: &[(&str, &str)] = &[
@@ -32,6 +33,7 @@ impl Commands {
             ":locals" => Some(Commands::Locals),
             ":source" => Some(Commands::Source),
             ":stack" => Some(Commands::Stack),
+            ":quit" => Some(Commands::Quit),
             _ => {
                 // TODO: allow :parse without any trailing whitespace.
                 if let Some(src) = s.strip_prefix(":parse ") {
@@ -52,6 +54,7 @@ impl Commands {
             Commands::Parse(_) => ":parse",
             Commands::Source => ":source",
             Commands::Stack => ":stack",
+            Commands::Quit => ":quit",
         }
     }
 }
@@ -121,6 +124,9 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
             Ok(())
         }
         Some(Commands::Abort) => Err(CommandError::Abort),
+        Some(Commands::Quit) => {
+            std::process::exit(0);
+        }
         None if input.starts_with(':') => {
             print_available_commands();
             Ok(())

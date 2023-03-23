@@ -32,6 +32,12 @@
     (process-send-string buf (json-serialize `((input . ,input))))
     (process-send-string buf "\n")))
 
+(defun garden-new-session ()
+  (interactive)
+  (let ((buf (get-buffer-create "*garden-json*")))
+    (kill-buffer buf)
+    (get-buffer-create "*garden-json*")))
+
 (defun garden ()
   (interactive)
   (let* ((buf (get-buffer-create "*garden-json*"))

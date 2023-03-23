@@ -29,7 +29,7 @@
 (defun garden-send-input (input)
   (interactive "r")
   (let ((buf (get-buffer-create "*garden-json*")))
-    (process-send-string buf (json-serialize `((input . ,input))))
+    (process-send-string buf (json-serialize `((method . "Evaluate") (input . ,input))))
     (process-send-string buf "\n")))
 
 (defun garden-new-session ()

@@ -12,7 +12,14 @@ use crate::eval::{Env, EvalError};
 use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
 
 #[derive(Debug, Deserialize, Serialize)]
+enum Method {
+    Evaluate,
+    RunCommand,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 struct EvalRequest {
+    method: Method,
     input: String,
 }
 
@@ -62,7 +69,15 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                 },
             },
             Err(_) => EvalResponse::Error {
-                message: format!("Could not parse request: {}", line),
+                message: format!(
+                    "Could not parse request: {}. A valid request looks like: {}",
+                    line,
+                    serde_json::to_string(&EvalRequest {
+                        method: Method::RunCommand,
+                        input: ":help".into(),
+                    })
+                    .unwrap()
+                ),
             },
         };
         let serialized = serde_json::to_string(&response).unwrap();

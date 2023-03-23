@@ -20,6 +20,12 @@
   (interactive "r")
   (garden-send-input (buffer-substring-no-properties start end)))
 
+(defun garden-process-filter (proc output)
+  (let ((buf (process-buffer proc)))
+    (with-current-buffer buf
+      (insert output))
+    (message "%s" (json-parse-string output :object-type 'plist))))
+
 (defun garden-send-input (input)
   (interactive "r")
   (let ((buf (get-buffer-create "*garden-json*")))
@@ -28,8 +34,9 @@
 
 (defun garden ()
   (interactive)
-  (let ((buf (get-buffer-create "*garden-json*")))
-    (start-process "garden" buf garden-executable "json")
+  (let* ((buf (get-buffer-create "*garden-json*"))
+         (proc (start-process "garden" buf garden-executable "json")))
+    (set-process-filter proc #'garden-process-filter)
     (message "Started session.")
     (switch-to-buffer buf)))
 

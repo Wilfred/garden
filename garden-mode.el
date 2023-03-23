@@ -18,8 +18,13 @@
 
 (defun garden-send (start end)
   (interactive "r")
+  (garden-send-input (buffer-substring-no-properties start end)))
+
+(defun garden-send-input (input)
+  (interactive "r")
   (let ((buf (get-buffer-create "*garden-json*")))
-    (process-send-region buf start end)))
+    (process-send-string buf (json-serialize `((input . ,input))))
+    (process-send-string buf "\n")))
 
 (defun garden ()
   (interactive)

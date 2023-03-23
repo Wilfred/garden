@@ -18,19 +18,19 @@ enum Method {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct EvalRequest {
+struct Request {
     method: Method,
     input: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-enum EvalResponse {
+enum Response {
     Error { message: String },
     Success { result: String },
 }
 
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
-    let response = EvalResponse::Success {
+    let response = Response::Success {
         result: "ready".into(),
     };
     let serialized = serde_json::to_string(&response).unwrap();
@@ -51,28 +51,28 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             .read_line(&mut line)
             .expect("Could not read line");
 
-        let response = match serde_json::from_str::<EvalRequest>(&line) {
+        let response = match serde_json::from_str::<Request>(&line) {
             Ok(req) => match parse_toplevel_from_str(&req.input) {
                 Ok(stmts) => match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
-                    Ok(result) => EvalResponse::Success {
+                    Ok(result) => Response::Success {
                         result: format!("{}", result),
                     },
-                    Err(EvalError::Aborted) => EvalResponse::Error {
+                    Err(EvalError::Aborted) => Response::Error {
                         message: format!("Aborted"),
                     },
-                    Err(EvalError::UserError(e)) => EvalResponse::Error {
+                    Err(EvalError::UserError(e)) => Response::Error {
                         message: format!("Error: {}", e),
                     },
                 },
-                Err(e) => EvalResponse::Error {
+                Err(e) => Response::Error {
                     message: format!("Could not parse input: {:?}", e),
                 },
             },
-            Err(_) => EvalResponse::Error {
+            Err(_) => Response::Error {
                 message: format!(
                     "Could not parse request: {}. A valid request looks like: {}",
                     line,
-                    serde_json::to_string(&EvalRequest {
+                    serde_json::to_string(&Request {
                         method: Method::RunCommand,
                         input: ":help".into(),
                     })

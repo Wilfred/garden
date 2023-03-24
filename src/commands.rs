@@ -61,7 +61,7 @@ impl Command {
     }
 }
 
-fn print_available_commands<T: Write>(buf: &mut T) {
+pub fn print_available_commands<T: Write>(buf: &mut T) {
     write!(buf, "The available commands are").unwrap();
 
     let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string().into()).collect();
@@ -128,10 +128,6 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
         Some(Command::Abort) => Err(CommandError::Abort),
         Some(Command::Quit) => {
             std::process::exit(0);
-        }
-        None if input.starts_with(':') => {
-            print_available_commands(&mut std::io::stdout());
-            Ok(())
         }
         None => Err(CommandError::NotACommand),
     }

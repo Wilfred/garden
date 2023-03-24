@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -59,22 +61,22 @@ impl Command {
     }
 }
 
-fn print_available_commands() {
-    print!("The available commands are");
+fn print_available_commands<T: Write>(buf: &mut T) {
+    write!(buf, "The available commands are").unwrap();
 
     let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string().into()).collect();
     command_names.sort();
 
     for (i, name) in command_names.iter().enumerate() {
         if i == command_names.len() - 1 {
-            print!(" and {}.", name.green());
+            write!(buf, " and {}.", name.green()).unwrap();
         } else if i == command_names.len() - 2 {
-            print!(" {}", name.green());
+            write!(buf, " {}", name.green()).unwrap();
         } else {
-            print!(" {},", name.green());
+            write!(buf, " {},", name.green()).unwrap();
         }
     }
-    println!();
+    writeln!(buf).unwrap();
 }
 
 #[derive(Debug)]
@@ -87,7 +89,7 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
     match Command::from_string(&input) {
         Some(Command::Help) => {
             println!("{}\n", HELP_TOPICS[0].1);
-            print_available_commands();
+            print_available_commands(&mut std::io::stdout());
             Ok(())
         }
         Some(Command::Source) => {
@@ -128,7 +130,7 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
             std::process::exit(0);
         }
         None if input.starts_with(':') => {
-            print_available_commands();
+            print_available_commands(&mut std::io::stdout());
             Ok(())
         }
         None => Err(CommandError::NotACommand),

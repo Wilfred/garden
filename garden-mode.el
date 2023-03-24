@@ -56,7 +56,11 @@
   `((,(regexp-opt
        '("let" "fun" "true" "false" "if" "else" "while")
        'symbols)
-     . font-lock-keyword-face)))
+     . font-lock-keyword-face)
+    (,(regexp-opt
+       '("print" "int_to_string")
+       'symbols)
+     . font-lock-constant-face)))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

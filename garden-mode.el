@@ -52,7 +52,17 @@
     (message "Started session.")
     (switch-to-buffer buf)))
 
-(garden)
+(defconst garden-mode-font-lock-keywords
+  `((,(regexp-opt
+       '("let" "fun" "true" "false" "if" "else" "while")
+       'symbols)
+     . font-lock-keyword-face)))
+
+(define-derived-mode garden-mode prog-mode "Garden"
+  "Major mode for editing Garden programs.
+
+\\{garden-mode-map\\}"
+  (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
 
 (provide 'garden-mode)
 ;;; garden-mode.el ends here

@@ -12,6 +12,7 @@ use crate::eval::{Env, EvalError};
 use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 enum Method {
     Evaluate,
     RunCommand,

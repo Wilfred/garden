@@ -60,7 +60,7 @@
     (,(regexp-opt
        '("print" "int_to_string")
        'symbols)
-     . font-lock-constant-face)))
+     . font-lock-builtin-face)))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

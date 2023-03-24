@@ -9,7 +9,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    commands::Commands,
+    commands::Command,
     eval::{Env, EvalError},
 };
 use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
@@ -73,7 +73,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         message: format!("Could not parse input: {:?}", e),
                     },
                 },
-                Method::RunCommand => match Commands::from_string(&req.input) {
+                Method::RunCommand => match Command::from_string(&req.input) {
                     Some(command) => Response::Error {
                         message: format!("TODO: implement {:?}", command),
                     },

@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Debug, EnumIter)]
-pub enum Commands {
+pub enum Command {
     Abort,
     Help,
     Globals,
@@ -24,20 +24,20 @@ const HELP_TOPICS: &[(&str, &str)] = &[
     ("syntax", "Garden uses curly braces."),
 ];
 
-impl Commands {
+impl Command {
     pub fn from_string(s: &str) -> Option<Self> {
         match s.to_lowercase().trim() {
-            ":abort" => Some(Commands::Abort),
-            ":help" => Some(Commands::Help),
-            ":globals" => Some(Commands::Globals),
-            ":locals" => Some(Commands::Locals),
-            ":source" => Some(Commands::Source),
-            ":stack" => Some(Commands::Stack),
-            ":quit" => Some(Commands::Quit),
+            ":abort" => Some(Command::Abort),
+            ":help" => Some(Command::Help),
+            ":globals" => Some(Command::Globals),
+            ":locals" => Some(Command::Locals),
+            ":source" => Some(Command::Source),
+            ":stack" => Some(Command::Stack),
+            ":quit" => Some(Command::Quit),
             _ => {
                 // TODO: allow :parse without any trailing whitespace.
                 if let Some(src) = s.strip_prefix(":parse ") {
-                    Some(Commands::Parse(src.to_owned()))
+                    Some(Command::Parse(src.to_owned()))
                 } else {
                     None
                 }
@@ -47,14 +47,14 @@ impl Commands {
 
     pub fn to_string(&self) -> &str {
         match self {
-            Commands::Abort => ":abort",
-            Commands::Help => ":help",
-            Commands::Globals => ":globals",
-            Commands::Locals => ":locals",
-            Commands::Parse(_) => ":parse",
-            Commands::Source => ":source",
-            Commands::Stack => ":stack",
-            Commands::Quit => ":quit",
+            Command::Abort => ":abort",
+            Command::Help => ":help",
+            Command::Globals => ":globals",
+            Command::Locals => ":locals",
+            Command::Parse(_) => ":parse",
+            Command::Source => ":source",
+            Command::Stack => ":stack",
+            Command::Quit => ":quit",
         }
     }
 }
@@ -62,7 +62,7 @@ impl Commands {
 fn print_available_commands() {
     print!("The available commands are");
 
-    let mut command_names: Vec<String> = Commands::iter().map(|c| c.to_string().into()).collect();
+    let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string().into()).collect();
     command_names.sort();
 
     for (i, name) in command_names.iter().enumerate() {
@@ -84,24 +84,24 @@ pub enum CommandError {
 }
 
 pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), CommandError> {
-    match Commands::from_string(&input) {
-        Some(Commands::Help) => {
+    match Command::from_string(&input) {
+        Some(Command::Help) => {
             println!("{}\n", HELP_TOPICS[0].1);
             print_available_commands();
             Ok(())
         }
-        Some(Commands::Source) => {
+        Some(Command::Source) => {
             print!("{}", complete_src);
             Ok(())
         }
-        Some(Commands::Globals) => {
+        Some(Command::Globals) => {
             for (var_name, value) in &env.file_scope {
                 println!("{}\t{}", var_name.0.bright_green(), value);
             }
 
             Ok(())
         }
-        Some(Commands::Locals) => {
+        Some(Command::Locals) => {
             if let Some((_, fun_scope)) = env.fun_scopes.last() {
                 for (var_name, value) in fun_scope {
                     println!("{}\t{}", var_name.0.bright_green(), value);
@@ -110,11 +110,11 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
 
             Ok(())
         }
-        Some(Commands::Stack) => {
+        Some(Command::Stack) => {
             print_stack(env);
             Ok(())
         }
-        Some(Commands::Parse(src)) => {
+        Some(Command::Parse(src)) => {
             match parse_toplevel_from_str(&src) {
                 Ok(ast) => println!("{:?}", ast),
                 Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
@@ -123,8 +123,8 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
             };
             Ok(())
         }
-        Some(Commands::Abort) => Err(CommandError::Abort),
-        Some(Commands::Quit) => {
+        Some(Command::Abort) => Err(CommandError::Abort),
+        Some(Command::Quit) => {
             std::process::exit(0);
         }
         None if input.starts_with(':') => {

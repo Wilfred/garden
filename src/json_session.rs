@@ -8,7 +8,10 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::eval::{Env, EvalError};
+use crate::{
+    commands::Commands,
+    eval::{Env, EvalError},
+};
 use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -70,7 +73,15 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         message: format!("Could not parse input: {:?}", e),
                     },
                 },
-                Method::RunCommand => todo!(),
+                Method::RunCommand => match Commands::from_string(&req.input) {
+                    Some(command) => Response::Error {
+                        message: format!("TODO: implement {:?}", command),
+                    },
+                    None => Response::Error {
+                        // TODO: report the valid errors
+                        message: format!("No such command {:?}", &req.input),
+                    },
+                },
             },
             Err(_) => Response::Error {
                 message: format!(

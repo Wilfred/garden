@@ -75,7 +75,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                             Err(EvalError::Aborted) => {}
                             Err(EvalError::UserError(e)) => {
                                 println!("{}: {}", "Error".bright_red(), e);
-                                print_stack(&env);
+                                print_stack(&mut std::io::stdout(), &env);
                             }
                         }
                     }

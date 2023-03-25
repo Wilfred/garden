@@ -92,32 +92,32 @@ pub fn run_command<T: Write>(
 ) -> Result<(), CommandError> {
     match cmd {
         Command::Help => {
-            println!("{}\n", HELP_TOPICS[0].1);
+            writeln!(buf, "{}\n", HELP_TOPICS[0].1).unwrap();
             print_available_commands(buf);
         }
         Command::Source => {
-            print!("{}", complete_src);
+            write!(buf, "{}", complete_src).unwrap();
         }
         Command::Globals => {
             for (var_name, value) in &env.file_scope {
-                println!("{}\t{}", var_name.0.bright_green(), value);
+                writeln!(buf, "{}\t{}", var_name.0.bright_green(), value).unwrap();
             }
         }
         Command::Locals => {
             if let Some((_, fun_scope)) = env.fun_scopes.last() {
                 for (var_name, value) in fun_scope {
-                    println!("{}\t{}", var_name.0.bright_green(), value);
+                    writeln!(buf, "{}\t{}", var_name.0.bright_green(), value).unwrap();
                 }
             }
         }
         Command::Stack => {
-            print_stack(env);
+            print_stack(buf, env);
         }
         Command::Parse(src) => {
             match parse_toplevel_from_str(&src) {
-                Ok(ast) => println!("{:?}", ast),
+                Ok(ast) => writeln!(buf, "{:?}", ast).unwrap(),
                 Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
-                    println!("{}: {}", "Error".bright_red(), e);
+                    writeln!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
                 }
             };
         }
@@ -131,8 +131,8 @@ pub fn run_command<T: Write>(
     Ok(())
 }
 
-pub fn print_stack(env: &Env) {
+pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (description, _) in env.fun_scopes.iter().rev() {
-        println!("In {}", description.0);
+        writeln!(buf, "In {}", description.0).unwrap();
     }
 }

@@ -127,7 +127,7 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
             Ok(input) => {
                 match Command::from_string(&input) {
                     Some(cmd) => {
-                        match run_command(&cmd, &env, &complete_src) {
+                        match run_command(&mut std::io::stdout(), &cmd, &env, &complete_src) {
                             Ok(()) => {
                                 println!();
                                 continue;

@@ -84,11 +84,16 @@ pub enum CommandError {
     Abort,
 }
 
-pub fn run_command(cmd: &Command, env: &Env, complete_src: &str) -> Result<(), CommandError> {
+pub fn run_command<T: Write>(
+    buf: &mut T,
+    cmd: &Command,
+    env: &Env,
+    complete_src: &str,
+) -> Result<(), CommandError> {
     match cmd {
         Command::Help => {
             println!("{}\n", HELP_TOPICS[0].1);
-            print_available_commands(&mut std::io::stdout());
+            print_available_commands(buf);
         }
         Command::Source => {
             print!("{}", complete_src);

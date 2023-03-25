@@ -3,9 +3,7 @@ use std::io::Write;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::commands::{
-    print_available_commands, print_stack, run_command, Command, CommandError,
-};
+use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
 use crate::eval;
 use crate::eval::EvalError;
 use crate::parse::ParseError;
@@ -48,7 +46,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                             Ok(()) => {
                                 continue;
                             }
-                            Err(CommandError::NotACommand) => {}
                             Err(CommandError::Abort) => {
                                 // Nothing to do, we're in the top level.
                             }

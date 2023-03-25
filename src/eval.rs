@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
-use crate::commands::{run_if_command, CommandError};
+use crate::commands::{run_command, Command, CommandError};
 use crate::parse::{
     parse_toplevel_from_str, Expression, Expression_, ParseError, Statement_, VariableName,
 };
@@ -125,20 +125,24 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
     loop {
         match rl.readline(&prompt_symbol(1)) {
             Ok(input) => {
-                match run_if_command(&input, env, complete_src) {
-                    Ok(()) => {
-                        println!();
-                        continue;
-                    }
-                    Err(CommandError::NotACommand) => {}
-                    Err(CommandError::Abort) => {
-                        // Pop to toplevel.
-                        while env.fun_scopes.len() > 1 {
-                            env.pop_fun_scope();
-                        }
+                match Command::from_string(&input) {
+                    Some(cmd) => {
+                        match run_command(&cmd, &env, &complete_src) {
+                            Ok(()) => {
+                                println!();
+                                continue;
+                            }
+                            Err(CommandError::Abort) => {
+                                // Pop to toplevel.
+                                while env.fun_scopes.len() > 1 {
+                                    env.pop_fun_scope();
+                                }
 
-                        return Err(EvalError::Aborted);
+                                return Err(EvalError::Aborted);
+                            }
+                        }
                     }
+                    None => {}
                 }
 
                 let mut asts: Vec<Statement> =

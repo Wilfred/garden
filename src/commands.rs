@@ -81,7 +81,6 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
 #[derive(Debug)]
 pub enum CommandError {
-    NotACommand,
     Abort,
 }
 
@@ -125,58 +124,6 @@ pub fn run_command(cmd: &Command, env: &Env, complete_src: &str) -> Result<(), C
         }
     }
     Ok(())
-}
-
-pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), CommandError> {
-    match Command::from_string(&input) {
-        Some(Command::Help) => {
-            println!("{}\n", HELP_TOPICS[0].1);
-            print_available_commands(&mut std::io::stdout());
-            Ok(())
-        }
-        Some(Command::Source) => {
-            print!("{}", complete_src);
-            Ok(())
-        }
-        Some(Command::Globals) => {
-            for (var_name, value) in &env.file_scope {
-                println!("{}\t{}", var_name.0.bright_green(), value);
-            }
-
-            Ok(())
-        }
-        Some(Command::Locals) => {
-            if let Some((_, fun_scope)) = env.fun_scopes.last() {
-                if fun_scope.is_empty() {
-                    println!("(empty)");
-                }
-
-                for (var_name, value) in fun_scope {
-                    println!("{}\t{}", var_name.0.bright_green(), value);
-                }
-            }
-
-            Ok(())
-        }
-        Some(Command::Stack) => {
-            print_stack(env);
-            Ok(())
-        }
-        Some(Command::Parse(src)) => {
-            match parse_toplevel_from_str(&src) {
-                Ok(ast) => println!("{:?}", ast),
-                Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
-                    println!("{}: {}", "Error".bright_red(), e);
-                }
-            };
-            Ok(())
-        }
-        Some(Command::Abort) => Err(CommandError::Abort),
-        Some(Command::Quit) => {
-            std::process::exit(0);
-        }
-        None => Err(CommandError::NotACommand),
-    }
 }
 
 pub fn print_stack(env: &Env) {

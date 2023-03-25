@@ -4,7 +4,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::commands::{
-    print_available_commands, print_stack, run_if_command, Command, CommandError,
+    print_available_commands, print_stack, run_command, Command, CommandError,
 };
 use crate::eval;
 use crate::eval::EvalError;
@@ -43,22 +43,22 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
-                    Some(_cmd) => {}
+                    Some(cmd) => {
+                        match run_command(&cmd, &env, &complete_src) {
+                            Ok(()) => {
+                                continue;
+                            }
+                            Err(CommandError::NotACommand) => {}
+                            Err(CommandError::Abort) => {
+                                // Nothing to do, we're in the top level.
+                            }
+                        }
+                    }
                     None => {
                         if input.trim().starts_with(':') {
                             print_available_commands(&mut std::io::stdout());
                             continue;
                         }
-                    }
-                }
-
-                match run_if_command(&input, &env, &complete_src) {
-                    Ok(()) => {
-                        continue;
-                    }
-                    Err(CommandError::NotACommand) => {}
-                    Err(CommandError::Abort) => {
-                        // Nothing to do, we're in the top level.
                     }
                 }
 

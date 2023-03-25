@@ -85,6 +85,48 @@ pub enum CommandError {
     Abort,
 }
 
+pub fn run_command(cmd: &Command, env: &Env, complete_src: &str) -> Result<(), CommandError> {
+    match cmd {
+        Command::Help => {
+            println!("{}\n", HELP_TOPICS[0].1);
+            print_available_commands(&mut std::io::stdout());
+        }
+        Command::Source => {
+            print!("{}", complete_src);
+        }
+        Command::Globals => {
+            for (var_name, value) in &env.file_scope {
+                println!("{}\t{}", var_name.0.bright_green(), value);
+            }
+        }
+        Command::Locals => {
+            if let Some((_, fun_scope)) = env.fun_scopes.last() {
+                for (var_name, value) in fun_scope {
+                    println!("{}\t{}", var_name.0.bright_green(), value);
+                }
+            }
+        }
+        Command::Stack => {
+            print_stack(env);
+        }
+        Command::Parse(src) => {
+            match parse_toplevel_from_str(&src) {
+                Ok(ast) => println!("{:?}", ast),
+                Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
+                    println!("{}: {}", "Error".bright_red(), e);
+                }
+            };
+        }
+        Command::Abort => {
+            return Err(CommandError::Abort);
+        }
+        Command::Quit => {
+            std::process::exit(0);
+        }
+    }
+    Ok(())
+}
+
 pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), CommandError> {
     match Command::from_string(&input) {
         Some(Command::Help) => {
@@ -105,6 +147,10 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
         }
         Some(Command::Locals) => {
             if let Some((_, fun_scope)) = env.fun_scopes.last() {
+                if fun_scope.is_empty(){
+                    println!("(empty)");
+                }
+                
                 for (var_name, value) in fun_scope {
                     println!("{}\t{}", var_name.0.bright_green(), value);
                 }

@@ -147,10 +147,10 @@ pub fn run_if_command(input: &str, env: &Env, complete_src: &str) -> Result<(), 
         }
         Some(Command::Locals) => {
             if let Some((_, fun_scope)) = env.fun_scopes.last() {
-                if fun_scope.is_empty(){
+                if fun_scope.is_empty() {
                     println!("(empty)");
                 }
-                
+
                 for (var_name, value) in fun_scope {
                     println!("{}\t{}", var_name.0.bright_green(), value);
                 }

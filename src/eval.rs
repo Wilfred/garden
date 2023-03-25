@@ -125,8 +125,6 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
     loop {
         match rl.readline(&prompt_symbol(1)) {
             Ok(input) => {
-                let input = input.trim().to_string();
-
                 match run_if_command(&input, env, complete_src) {
                     Ok(()) => {
                         println!();

@@ -9,7 +9,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    commands::Command,
+    commands::{run_command, Command, CommandError},
     eval::{Env, EvalError},
 };
 use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
@@ -74,9 +74,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     },
                 },
                 Method::RunCommand => match Command::from_string(&req.input) {
-                    Some(command) => Response::Error {
-                        message: format!("TODO: implement {:?}", command),
-                    },
+                    Some(command) => {
+                        let mut out_buf: Vec<u8> = vec![];
+                        match run_command(&mut out_buf, &command, &mut env, &complete_src) {
+                            Ok(()) => Response::Success {
+                                result: format!("{}", String::from_utf8_lossy(&out_buf)),
+                            },
+                            Err(CommandError::Abort) => Response::Success {
+                                result: format!("Aborted"),
+                            },
+                        }
+                    }
                     None => Response::Error {
                         // TODO: report the valid errors
                         message: format!("No such command {:?}", &req.input),

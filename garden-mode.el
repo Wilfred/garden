@@ -38,6 +38,10 @@
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 
+(defun garden-send-help ()
+  (interactive)
+  (garden-send-command ":help"))
+
 (defun garden-new-session ()
   (interactive)
   (let ((buf (get-buffer-create "*garden-json*")))

@@ -112,12 +112,18 @@ impl Env {
 }
 
 #[derive(Debug)]
+pub struct Session<'a> {
+    pub history: String,
+    pub interrupted: &'a Arc<AtomicBool>,
+}
+
+#[derive(Debug)]
 pub enum EvalError {
     UserError(String),
     Aborted,
 }
 
-fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Statement, EvalError> {
+fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<Statement, EvalError> {
     println!("{}: {}", "Error".bright_red(), message);
     println!("What value would you like to use instead?\n");
 
@@ -127,7 +133,7 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
             Ok(input) => {
                 match Command::from_string(&input) {
                     Some(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, &env, &complete_src) {
+                        match run_command(&mut std::io::stdout(), &cmd, &env, session) {
                             Ok(()) => {
                                 println!();
                                 continue;
@@ -170,8 +176,7 @@ fn error_prompt(message: &str, env: &mut Env, complete_src: &str) -> Result<Stat
 pub fn eval_stmts(
     stmts: &[Statement],
     env: &mut Env,
-    complete_src: &str,
-    interrupted: &Arc<AtomicBool>,
+    session: &mut Session,
 ) -> Result<Value, EvalError> {
     let mut stmts_to_eval = vec![];
     for stmt in stmts.iter().rev() {
@@ -184,7 +189,7 @@ pub fn eval_stmts(
     loop {
         if let Some(stmts_to_eval) = stmts_to_eval_per_fun.last_mut() {
             if let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
-                if interrupted.load(Ordering::SeqCst) {
+                if session.interrupted.load(Ordering::SeqCst) {
                     // TODO: prompt for what to do next.
                     println!("Got ctrl-c");
                     break;
@@ -323,7 +328,7 @@ pub fn eval_stmts(
                             let stmt = error_prompt(
                                 &format!("Undefined variable: {}", name.0),
                                 env,
-                                complete_src,
+                                &session,
                             )?;
                             stmts_to_eval.push((false, stmt));
                         }
@@ -655,7 +660,12 @@ mod tests {
 
     fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, EvalError> {
         let interrupted = Arc::new(AtomicBool::new(false));
-        super::eval_stmts(stmts, env, "", &interrupted)
+        let mut session = Session {
+            history: String::new(),
+            interrupted: &interrupted,
+        };
+
+        super::eval_stmts(stmts, env, &mut session)
     }
 
     #[test]

@@ -5,7 +5,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::{
-    eval::Env,
+    eval::{Env, Session},
     parse::{parse_toplevel_from_str, ParseError},
 };
 
@@ -88,7 +88,7 @@ pub fn run_command<T: Write>(
     buf: &mut T,
     cmd: &Command,
     env: &Env,
-    complete_src: &str,
+    session: &Session
 ) -> Result<(), CommandError> {
     match cmd {
         Command::Help => {
@@ -96,7 +96,7 @@ pub fn run_command<T: Write>(
             print_available_commands(buf);
         }
         Command::Source => {
-            write!(buf, "{}", complete_src).unwrap();
+            write!(buf, "{}", session.history).unwrap();
         }
         Command::Globals => {
             for (var_name, value) in &env.file_scope {

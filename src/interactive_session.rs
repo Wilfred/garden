@@ -4,8 +4,8 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
-use crate::eval;
 use crate::eval::EvalError;
+use crate::eval::{self, Session};
 use crate::parse::ParseError;
 use crate::parse::Statement;
 use crate::{
@@ -26,7 +26,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
     println!("Type {} if you're new here.", ":help".bold().green(),);
 
     let mut env = Env::default();
-    let mut complete_src = String::new();
+    let mut session = Session {
+        history: String::new(),
+        interrupted,
+    };
 
     let mut rl: Editor<()> = Editor::new().unwrap();
     // TODO: put this in the home directory rather than the current directory.
@@ -42,7 +45,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 match Command::from_string(&input) {
                     Some(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, &env, &complete_src) {
+                        match run_command(&mut std::io::stdout(), &cmd, &env, &session) {
                             Ok(()) => {
                                 continue;
                             }
@@ -61,11 +64,11 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 match read_multiline_syntax(&input, &mut rl) {
                     Ok((src, stmts)) => {
-                        complete_src.push_str(&src);
-                        complete_src.push('\n');
+                        session.history.push_str(&src);
+                        session.history.push('\n');
                         log_src(input).unwrap();
 
-                        match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
+                        match eval_stmts(&stmts, &mut env, &mut session) {
                             Ok(result) => match result {
                                 eval::Value::Void => {}
                                 v => {

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     commands::{run_command, Command, CommandError},
-    eval::{Env, EvalError},
+    eval::{Env, EvalError, Session},
 };
 use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
 
@@ -42,6 +42,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
 
     let mut env = Env::default();
     let mut complete_src = String::new();
+    let mut session = Session {
+        history: String::new(),
+        interrupted,
+    };
 
     loop {
         if interrupted.load(Ordering::SeqCst) {
@@ -60,19 +64,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                 Method::Evaluate => {
                     complete_src.push_str(&req.input);
                     match parse_toplevel_from_str(&req.input) {
-                        Ok(stmts) => {
-                            match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
-                                Ok(result) => Response::Success {
-                                    result: format!("{}", result),
-                                },
-                                Err(EvalError::Aborted) => Response::Error {
-                                    message: format!("Aborted"),
-                                },
-                                Err(EvalError::UserError(e)) => Response::Error {
-                                    message: format!("Error: {}", e),
-                                },
-                            }
-                        }
+                        Ok(stmts) => match eval_stmts(&stmts, &mut env, &mut session) {
+                            Ok(result) => Response::Success {
+                                result: format!("{}", result),
+                            },
+                            Err(EvalError::Aborted) => Response::Error {
+                                message: format!("Aborted"),
+                            },
+                            Err(EvalError::UserError(e)) => Response::Error {
+                                message: format!("Error: {}", e),
+                            },
+                        },
                         Err(e) => Response::Error {
                             message: format!("Could not parse input: {:?}", e),
                         },
@@ -81,7 +83,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                 Method::RunCommand => match Command::from_string(&req.input) {
                     Some(command) => {
                         let mut out_buf: Vec<u8> = vec![];
-                        match run_command(&mut out_buf, &command, &mut env, &complete_src) {
+                        match run_command(&mut out_buf, &command, &mut env, &session) {
                             Ok(()) => Response::Success {
                                 result: format!("{}", String::from_utf8_lossy(&out_buf)),
                             },

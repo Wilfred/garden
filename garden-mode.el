@@ -51,19 +51,16 @@
   (interactive)
   (garden-send-command ":abort"))
 
-(defun garden-new-session ()
+(defun garden-stop ()
   (interactive)
   (let ((buf (get-buffer-create "*garden-json*")))
-    (kill-buffer buf)
-    (get-buffer-create "*garden-json*")))
+    (kill-buffer buf)))
 
-(defun garden ()
+(defun garden-start ()
   (interactive)
   (let* ((buf (get-buffer-create "*garden-json*"))
          (proc (start-process "garden" buf garden-executable "json")))
-    (set-process-filter proc #'garden-process-filter)
-    (message "Started session.")
-    (switch-to-buffer buf)))
+    (set-process-filter proc #'garden-process-filter)))
 
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt

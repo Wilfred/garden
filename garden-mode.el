@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -72,10 +72,20 @@
        'symbols)
      . font-lock-builtin-face)))
 
+(defvar garden-mode-syntax-table
+  (let ((table (make-syntax-table)))
+    (modify-syntax-entry ?/ ". 12" table)
+    (modify-syntax-entry ?\n ">" table)
+    table))
+
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.
 
 \\{garden-mode-map\\}"
+  :syntax-table garden-mode-syntax-table
+  (setq-local comment-start "// ")
+  (setq-local comment-end "")
+
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
 
 (provide 'garden-mode)

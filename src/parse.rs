@@ -496,6 +496,16 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
     'outer: while offset < s.len() {
         let s = &s[offset..];
 
+        // Skip over comments.
+        if s.starts_with("//") {
+            if let Some(i) = s.find("\n") {
+                offset = i;
+                continue;
+            } else {
+                break;
+            }
+        }
+
         // Skip over whitespace.
         if let Some(first_char) = s.chars().next() {
             if first_char.is_whitespace() {
@@ -599,6 +609,11 @@ mod tests {
                 Statement_::Expr(Expression(0, Expression_::BoolLiteral(true)))
             )]
         );
+    }
+
+    #[test]
+    fn test_lex_comment() {
+        assert_eq!(lex("// 2\n1").unwrap(), vec![(5, "1")]);
     }
 
     #[test]

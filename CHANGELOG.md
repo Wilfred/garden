@@ -1,6 +1,7 @@
 # 0.3 (unreleased)
 
-Syntax: Allow `if` without `else`, as well as `else if (...) { ... }`.
+Syntax: Added `//` comment syntax. Allow `if` without `else`, as well
+as `else if (...) { ... }`.
 
 Interactive interpreter: added `:abort` and `:quit` commands.
 

@@ -57,22 +57,27 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
 
         let response = match serde_json::from_str::<Request>(&line) {
             Ok(req) => match req.method {
-                Method::Evaluate => match parse_toplevel_from_str(&req.input) {
-                    Ok(stmts) => match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
-                        Ok(result) => Response::Success {
-                            result: format!("{}", result),
+                Method::Evaluate => {
+                    complete_src.push_str(&req.input);
+                    match parse_toplevel_from_str(&req.input) {
+                        Ok(stmts) => {
+                            match eval_stmts(&stmts, &mut env, &complete_src, &interrupted) {
+                                Ok(result) => Response::Success {
+                                    result: format!("{}", result),
+                                },
+                                Err(EvalError::Aborted) => Response::Error {
+                                    message: format!("Aborted"),
+                                },
+                                Err(EvalError::UserError(e)) => Response::Error {
+                                    message: format!("Error: {}", e),
+                                },
+                            }
+                        }
+                        Err(e) => Response::Error {
+                            message: format!("Could not parse input: {:?}", e),
                         },
-                        Err(EvalError::Aborted) => Response::Error {
-                            message: format!("Aborted"),
-                        },
-                        Err(EvalError::UserError(e)) => Response::Error {
-                            message: format!("Error: {}", e),
-                        },
-                    },
-                    Err(e) => Response::Error {
-                        message: format!("Could not parse input: {:?}", e),
-                    },
-                },
+                    }
+                }
                 Method::RunCommand => match Command::from_string(&req.input) {
                     Some(command) => {
                         let mut out_buf: Vec<u8> = vec![];

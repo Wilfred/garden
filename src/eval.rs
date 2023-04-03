@@ -317,6 +317,9 @@ pub fn eval_stmts(
                         if let Some(value) = env.get(&name) {
                             evalled_values.push(value);
                         } else {
+                            // TODO: don't use error_prompt without
+                            // checking whether the session is JSON or
+                            // stdout.
                             let stmt = error_prompt(
                                 &format!("Undefined variable: {}", name.0),
                                 env,

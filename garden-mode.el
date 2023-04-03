@@ -24,7 +24,12 @@
   (let ((buf (process-buffer proc)))
     (with-current-buffer buf
       (insert output))
-    (message "%s" (json-parse-string output :object-type 'plist))))
+    (let* ((response (json-parse-string output :object-type 'plist))
+           (success-info (plist-get response :Success)))
+      (if success-info
+          (message "%s" (plist-get success-info :result))
+        (let ((error-info (plist-get response :Error)))
+          (message "%s" (plist-get error-info :message)))))))
 
 (defun garden-send-input (input)
   (interactive "r")

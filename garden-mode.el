@@ -42,6 +42,10 @@
   (interactive)
   (garden-send-command ":help"))
 
+(defun garden-send-abort ()
+  (interactive)
+  (garden-send-command ":abort"))
+
 (defun garden-new-session ()
   (interactive)
   (let ((buf (get-buffer-create "*garden-json*")))

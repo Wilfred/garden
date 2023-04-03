@@ -29,6 +29,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
     let mut session = Session {
         history: String::new(),
         interrupted,
+        has_attached_stdout: true,
     };
 
     let mut rl: Editor<()> = Editor::new().unwrap();

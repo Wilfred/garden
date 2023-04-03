@@ -115,6 +115,7 @@ impl Env {
 pub struct Session<'a> {
     pub history: String,
     pub interrupted: &'a Arc<AtomicBool>,
+    pub has_attached_stdout: bool,
 }
 
 #[derive(Debug)]
@@ -322,15 +323,20 @@ pub fn eval_stmts(
                         if let Some(value) = env.get(&name) {
                             evalled_values.push(value);
                         } else {
-                            // TODO: don't use error_prompt without
-                            // checking whether the session is JSON or
-                            // stdout.
-                            let stmt = error_prompt(
-                                &format!("Undefined variable: {}", name.0),
-                                env,
-                                &session,
-                            )?;
-                            stmts_to_eval.push((false, stmt));
+                            if session.has_attached_stdout {
+                                let stmt = error_prompt(
+                                    &format!("Undefined variable: {}", name.0),
+                                    env,
+                                    &session,
+                                )?;
+                                stmts_to_eval.push((false, stmt));
+                            } else {
+                                // TODO: add equivalent to error_prompt in JSON sessions.
+                                return Err(EvalError::UserError(format!(
+                                    "Undefined variable: {}",
+                                    name.0
+                                )));
+                            }
                         }
                     }
                     Statement_::Expr(Expression(
@@ -663,6 +669,7 @@ mod tests {
         let mut session = Session {
             history: String::new(),
             interrupted: &interrupted,
+            has_attached_stdout: false,
         };
 
         super::eval_stmts(stmts, env, &mut session)

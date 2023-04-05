@@ -290,6 +290,7 @@ pub fn eval_stmts(
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
+                    Statement_::Return(_) => unimplemented!(),
                     Statement_::Assign(variable, expr) => {
                         if done_children {
                             if !env.fun_scope_has_var(&variable) {

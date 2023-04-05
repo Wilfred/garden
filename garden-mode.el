@@ -64,7 +64,7 @@
 
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
-       '("let" "fun" "true" "false" "if" "else" "while")
+       '("let" "fun" "true" "false" "if" "else" "while" "return")
        'symbols)
      . font-lock-keyword-face)
     (,(regexp-opt

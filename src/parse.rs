@@ -50,6 +50,7 @@ pub enum Statement_ {
     While(Expression, Vec<Statement>),
     Assign(VariableName, Expression),
     Let(VariableName, Expression),
+    Return(Expression),
     Expr(Expression),
 }
 
@@ -201,6 +202,14 @@ fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> 
     Ok(Statement(offset, Statement_::While(condition, body)))
 }
 
+fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+    let offset = require_token(tokens, "return")?;
+
+    let expr = parse_expression(tokens)?;
+    let _ = require_token(tokens, ";")?;
+    Ok(Statement(offset, Statement_::Return(expr)))
+}
+
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     if let Some((offset, token)) = peek_token(tokens) {
         if token == "(" {
@@ -344,6 +353,9 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
         if token == "while" {
             return parse_while_stmt(tokens);
         }
+        if token == "return" {
+            return parse_return_stmt(tokens);
+        }
     }
 
     let expr = parse_expression(tokens)?;
@@ -417,7 +429,9 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     Ok(Statement(offset, Statement_::Fun(name, params, body)))
 }
 
-const RESERVED_WORDS: &[&str] = &["let", "fun", "true", "false", "if", "else", "while"];
+const RESERVED_WORDS: &[&str] = &[
+    "let", "fun", "true", "false", "if", "else", "while", "return",
+];
 
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName), ParseError> {
     // TODO: this is duplicated with lex().
@@ -717,6 +731,22 @@ mod tests {
                     vec![],
                     vec![],
                 )
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_return() {
+        let src = "return true;";
+        let tokens = lex(src).unwrap();
+        let mut token_ptr = &tokens[..];
+        let ast = parse_toplevel(&mut token_ptr).unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Statement(
+                0,
+                Statement_::Return(Expression(7, Expression_::BoolLiteral(true)),)
             )]
         );
     }

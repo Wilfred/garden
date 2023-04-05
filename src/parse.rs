@@ -46,10 +46,10 @@ pub struct Expression(pub usize, pub Expression_);
 pub enum Statement_ {
     // TODO: is Statement the best place for Fun?
     Fun(VariableName, Vec<VariableName>, Vec<Statement>),
-    If(Box<Expression>, Vec<Statement>, Vec<Statement>),
-    While(Box<Expression>, Vec<Statement>),
-    Assign(VariableName, Box<Expression>),
-    Let(VariableName, Box<Expression>),
+    If(Expression, Vec<Statement>, Vec<Statement>),
+    While(Expression, Vec<Statement>),
+    Assign(VariableName, Expression),
+    Let(VariableName, Expression),
     Expr(Expression),
 }
 
@@ -90,7 +90,10 @@ fn require_a_token<'a>(
 ) -> Result<Token<'a>, ParseError> {
     match pop_token(tokens) {
         Some(token) => Ok(token),
-        None => Err(ParseError::Incomplete(format!("Expected {}, got EOF", token_description))),
+        None => Err(ParseError::Incomplete(format!(
+            "Expected {}, got EOF",
+            token_description
+        ))),
     }
 }
 
@@ -182,7 +185,7 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
 
     Ok(Statement(
         offset,
-        Statement_::If(Box::new(condition), then_body, else_body),
+        Statement_::If(condition, then_body, else_body),
     ))
 }
 
@@ -195,10 +198,7 @@ fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> 
 
     let body = parse_block(tokens)?;
 
-    Ok(Statement(
-        offset,
-        Statement_::While(Box::new(condition), body),
-    ))
+    Ok(Statement(offset, Statement_::While(condition, body)))
 }
 
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -451,7 +451,7 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let expr = parse_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
-    Ok(Statement(offset, Statement_::Let(variable, Box::new(expr))))
+    Ok(Statement(offset, Statement_::Let(variable, expr)))
 }
 
 fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
@@ -461,10 +461,7 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
     let expr = parse_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
-    Ok(Statement(
-        offset,
-        Statement_::Assign(variable, Box::new(expr)),
-    ))
+    Ok(Statement(offset, Statement_::Assign(variable, expr)))
 }
 
 pub fn parse_toplevel_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
@@ -547,7 +544,10 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
     }
 
     if offset != s.len() {
-        return Err(ParseError::OtherError(format!("Unrecognized syntax: '{}'", &s[offset..])));
+        return Err(ParseError::OtherError(format!(
+            "Unrecognized syntax: '{}'",
+            &s[offset..]
+        )));
     }
 
     Ok(res)
@@ -648,7 +648,7 @@ mod tests {
                 0,
                 Statement_::Let(
                     VariableName("x".into()),
-                    Box::new(Expression(8, Expression_::IntLiteral(1)))
+                    Expression(8, Expression_::IntLiteral(1))
                 )
             )]
         );
@@ -666,7 +666,7 @@ mod tests {
             vec![Statement(
                 0,
                 Statement_::If(
-                    Box::new(Expression(4, Expression_::BoolLiteral(true))),
+                    Expression(4, Expression_::BoolLiteral(true)),
                     vec![],
                     vec![],
                 )
@@ -686,18 +686,12 @@ mod tests {
             vec![Statement(
                 0,
                 Statement_::If(
-                    Box::new(Expression(
-                        4,
-                        Expression_::Variable(VariableName("x".into()))
-                    )),
+                    Expression(4, Expression_::Variable(VariableName("x".into()))),
                     vec![],
                     vec![Statement(
                         15,
                         Statement_::If(
-                            Box::new(Expression(
-                                19,
-                                Expression_::Variable(VariableName("y".into()))
-                            )),
+                            Expression(19, Expression_::Variable(VariableName("y".into()))),
                             vec![],
                             vec![],
                         )
@@ -719,7 +713,7 @@ mod tests {
             vec![Statement(
                 0,
                 Statement_::If(
-                    Box::new(Expression(4, Expression_::BoolLiteral(true))),
+                    Expression(4, Expression_::BoolLiteral(true)),
                     vec![],
                     vec![],
                 )

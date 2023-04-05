@@ -232,7 +232,7 @@ pub fn eval_stmts(
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval.push((
                                 false,
-                                Statement(condition.0, Statement_::Expr(*condition.clone())),
+                                Statement(condition.0, Statement_::Expr(condition.clone())),
                             ));
                         }
                     }
@@ -266,7 +266,7 @@ pub fn eval_stmts(
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval.push((
                                 false,
-                                Statement(condition.0, Statement_::Expr(*condition.clone())),
+                                Statement(condition.0, Statement_::Expr(condition.clone())),
                             ));
                         }
                     }
@@ -287,7 +287,7 @@ pub fn eval_stmts(
                         } else {
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval
-                                .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
+                                .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
                     Statement_::Assign(variable, expr) => {
@@ -307,7 +307,7 @@ pub fn eval_stmts(
                         } else {
                             stmts_to_eval.push((true, Statement(offset, stmt_copy)));
                             stmts_to_eval
-                                .push((false, Statement(expr.0, Statement_::Expr(*expr.clone()))));
+                                .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
@@ -695,7 +695,7 @@ mod tests {
             0,
             Statement_::Let(
                 VariableName("foo".into()),
-                Box::new(Expression(0, Expression_::BoolLiteral(true))),
+                Expression(0, Expression_::BoolLiteral(true)),
             ),
         )];
         eval_stmts(&stmts, &mut env).unwrap();

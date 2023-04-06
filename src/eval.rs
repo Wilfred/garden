@@ -290,7 +290,16 @@ pub fn eval_stmts(
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
-                    Statement_::Return(_) => unimplemented!(),
+                    Statement_::Return(expr) => {
+                        if done_children {
+                            // No more statements to evaluate in this function.
+                            stmts_to_eval.clear();
+                        } else {
+                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stmts_to_eval
+                                .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
+                        }
+                    }
                     Statement_::Assign(variable, expr) => {
                         if done_children {
                             if !env.fun_scope_has_var(&variable) {
@@ -797,5 +806,14 @@ mod tests {
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(0));
+    }
+
+    #[test]
+    fn test_eval_return() {
+        let stmts = parse_toplevel_from_str("fun f() { return 1; 2; } f();").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_stmts(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(1));
     }
 }

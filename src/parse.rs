@@ -746,7 +746,7 @@ mod tests {
             ast,
             vec![Statement(
                 0,
-                Statement_::Return(Expression(7, Expression_::BoolLiteral(true)),)
+                Statement_::Return(Expression(7, Expression_::BoolLiteral(true)))
             )]
         );
     }

@@ -4,7 +4,7 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: languages
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "24.3") (s "1.11.0"))
 ;; Version: 0.3
 
 ;; This file is distributed under the terms of the MIT license.
@@ -15,6 +15,8 @@
 
 ;;; Code:
 
+(require 's)
+
 (defvar garden-executable
   "/home/wilfred/projects/garden/target/debug/garden")
 
@@ -23,16 +25,21 @@
   (garden-send-input (buffer-substring-no-properties start end))
   (deactivate-mark))
 
-(defun garden-process-filter (proc output)
-  (let ((buf (process-buffer proc)))
-    (with-current-buffer buf
-      (insert output))
-    (let* ((response (json-parse-string output :object-type 'plist))
+(defun garden--handle-responses (output)
+  (dolist (line (s-split "\n" (s-trim output)))
+    (let* ((response (json-parse-string line :object-type 'plist))
            (success-info (plist-get response :Success)))
       (if success-info
           (message "%s" (plist-get success-info :result))
         (let ((error-info (plist-get response :Error)))
           (message "%s" (plist-get error-info :message)))))))
+
+(defun garden-process-filter (proc output)
+  (let ((buf (process-buffer proc)))
+    (with-current-buffer buf
+      (insert output))
+    (message "output: %S" output)
+    (garden--handle-responses output)))
 
 (defun garden-send-input (input)
   (interactive "r")

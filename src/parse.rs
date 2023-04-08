@@ -498,28 +498,6 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
     Ok(Statement(offset, Statement_::Assign(variable, expr)))
 }
 
-fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
-    let mut res = vec![];
-
-    while !tokens.is_empty() {
-        res.push(parse_statement(tokens)?);
-    }
-
-    Ok(res)
-}
-
-pub fn parse_stmts_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
-    let tokens = lex(s)?;
-    let mut token_ptr = &tokens[..];
-
-    let mut res = vec![];
-    while !token_ptr.is_empty() {
-        res.push(parse_statement(&mut token_ptr)?);
-    }
-
-    Ok(res)
-}
-
 pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
@@ -620,6 +598,19 @@ fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
 }
 
 #[cfg(test)]
+pub fn parse_stmts_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
+    let tokens = lex(s)?;
+    let mut token_ptr = &tokens[..];
+
+    let mut res = vec![];
+    while !token_ptr.is_empty() {
+        res.push(parse_statement(&mut token_ptr)?);
+    }
+
+    Ok(res)
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -659,10 +650,7 @@ mod tests {
 
     #[test]
     fn test_parse_bool_literal() {
-        let src = "true;";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("true;").unwrap();
 
         assert_eq!(
             ast,
@@ -680,10 +668,7 @@ mod tests {
 
     #[test]
     fn test_parse_variable() {
-        let src = "abc_def;";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("abc_def;").unwrap();
 
         assert_eq!(
             ast,
@@ -699,10 +684,7 @@ mod tests {
 
     #[test]
     fn test_parse_let() {
-        let src = "let x = 1;";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("let x = 1;").unwrap();
 
         assert_eq!(
             ast,
@@ -718,10 +700,7 @@ mod tests {
 
     #[test]
     fn test_parse_if_else() {
-        let src = "if (true) {} else {}";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("if (true) {} else {}").unwrap();
 
         assert_eq!(
             ast,
@@ -738,10 +717,7 @@ mod tests {
 
     #[test]
     fn test_parse_else_if() {
-        let src = "if (x) {} else if (y) {}";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("if (x) {} else if (y) {}").unwrap();
 
         assert_eq!(
             ast,
@@ -765,10 +741,7 @@ mod tests {
 
     #[test]
     fn test_parse_if() {
-        let src = "if (true) {}";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("if (true) {}").unwrap();
 
         assert_eq!(
             ast,
@@ -785,10 +758,7 @@ mod tests {
 
     #[test]
     fn test_parse_return() {
-        let src = "return true;";
-        let tokens = lex(src).unwrap();
-        let mut token_ptr = &tokens[..];
-        let ast = parse_toplevel(&mut token_ptr).unwrap();
+        let ast = parse_stmts_from_str("return true;").unwrap();
 
         assert_eq!(
             ast,

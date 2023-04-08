@@ -57,6 +57,12 @@ pub enum Statement_ {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Statement(pub usize, pub Statement_);
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum DefinitionsOrExpression {
+    Defs(Vec<Statement>),
+    Expr(Expression),
+}
+
 type Token<'a> = (usize, &'a str);
 
 fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
@@ -492,6 +498,28 @@ fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseErro
     }
 
     Ok(res)
+}
+
+pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {
+    // Parsing advances the tokens pointer, so create a copy for
+    // trying an expression parse.
+    let mut tokens_copy = tokens.clone();
+    if let Ok(expr) = parse_expression(&mut tokens_copy) {
+        return Ok(DefinitionsOrExpression::Expr(expr));
+    }
+
+    let mut stmts = vec![];
+    while !tokens.is_empty() {
+        stmts.push(parse_statement(tokens)?);
+    }
+
+    Ok(DefinitionsOrExpression::Defs(stmts))
+}
+
+pub fn parse_def_or_expr_from_str(s: &str) -> Result<DefinitionsOrExpression, ParseError> {
+    let tokens = lex(s)?;
+    let mut token_ptr = &tokens[..];
+    parse_def_or_expr(&mut token_ptr)
 }
 
 lazy_static! {

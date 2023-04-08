@@ -88,7 +88,7 @@ pub fn run_command<T: Write>(
     buf: &mut T,
     cmd: &Command,
     env: &Env,
-    session: &Session
+    session: &Session,
 ) -> Result<(), CommandError> {
     match cmd {
         Command::Help => {

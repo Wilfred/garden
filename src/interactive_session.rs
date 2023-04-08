@@ -4,15 +4,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
-use crate::eval::EvalError;
 use crate::eval::{self, Session};
-use crate::parse::ParseError;
-use crate::parse::Statement;
-use crate::{
-    eval::{eval_stmts, Env},
-    parse::parse_toplevel_from_str,
-    prompt::prompt_symbol,
-};
+use crate::eval::{eval_def_or_exprs, EvalError};
+use crate::parse::{parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError};
+use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 
@@ -64,12 +59,12 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 }
 
                 match read_multiline_syntax(&input, &mut rl) {
-                    Ok((src, stmts)) => {
+                    Ok((src, items)) => {
                         session.history.push_str(&src);
                         session.history.push('\n');
                         log_src(input).unwrap();
 
-                        match eval_stmts(&stmts, &mut env, &mut session) {
+                        match eval_def_or_exprs(&items, &mut env, &mut session) {
                             Ok(result) => match result {
                                 eval::Value::Void => {}
                                 v => {
@@ -99,13 +94,13 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
-) -> Result<(String, Vec<Statement>), ParseError> {
+) -> Result<(String, DefinitionsOrExpression), ParseError> {
     let mut src = first_line.to_string();
 
     loop {
-        match parse_toplevel_from_str(&src) {
-            Ok(stmts) => {
-                return Ok((src, stmts));
+        match parse_def_or_expr_from_str(&src) {
+            Ok(items) => {
+                return Ok((src, items));
             }
             Err(e @ ParseError::Incomplete(_)) => match rl.readline(&prompt_symbol(1)) {
                 Ok(input) => {

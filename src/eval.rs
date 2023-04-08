@@ -4,7 +4,8 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::commands::{run_command, Command, CommandError};
 use crate::parse::{
-    parse_toplevel_from_str, Expression, Expression_, ParseError, Statement_, VariableName,
+    parse_toplevel_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
+    Statement_, VariableName,
 };
 use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
@@ -172,6 +173,18 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
             }
         }
     }
+}
+
+pub fn eval_def_or_exprs(
+    items: &DefinitionsOrExpression,
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<Value, EvalError> {
+    let stmts = match items {
+        DefinitionsOrExpression::Defs(stmts) => stmts.clone(),
+        DefinitionsOrExpression::Expr(e) => vec![Statement(0, Statement_::Expr(e.clone()))],
+    };
+    eval_stmts(&stmts, env, session)
 }
 
 pub fn eval_stmts(

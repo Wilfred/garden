@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     commands::{run_command, Command, CommandError},
-    eval::{Env, EvalError, Session},
+    eval::{eval_def_or_exprs, Env, EvalError, Session},
+    parse::parse_def_or_expr_from_str,
 };
-use crate::{eval::eval_stmts, parse::parse_toplevel_from_str};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -64,8 +64,8 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             Ok(req) => match req.method {
                 Method::Evaluate => {
                     complete_src.push_str(&req.input);
-                    match parse_toplevel_from_str(&req.input) {
-                        Ok(stmts) => match eval_stmts(&stmts, &mut env, &mut session) {
+                    match parse_def_or_expr_from_str(&req.input) {
+                        Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
                             Ok(result) => Response::Success {
                                 result: format!("{}", result),
                             },

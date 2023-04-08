@@ -18,7 +18,8 @@
 
 (defun garden-send (start end)
   (interactive "r")
-  (garden-send-input (buffer-substring-no-properties start end)))
+  (garden-send-input (buffer-substring-no-properties start end))
+  (deactivate-mark))
 
 (defun garden-process-filter (proc output)
   (let ((buf (process-buffer proc)))

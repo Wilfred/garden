@@ -28,7 +28,7 @@ struct Request {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-enum Response {
+pub enum Response {
     Error { message: String },
     Success { result: String },
 }

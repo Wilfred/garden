@@ -3,6 +3,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::commands::{run_command, Command, CommandError};
+use crate::json_session::Response;
 use crate::parse::{
     parse_def_or_expr_from_str, Definition, Definition_, DefinitionsOrExpression, Expression,
     Expression_, ParseError, Statement_, VariableName,
@@ -611,7 +612,17 @@ pub fn eval_stmts(
                                             )));
                                         }
                                         match &arg_values[0] {
-                                            Value::String(s) => println!("{}", s),
+                                            Value::String(s) => {
+                                                if session.has_attached_stdout {
+                                                    println!("{}", s);
+                                                } else {
+                                                    let response =
+                                                        Response::Success { result: s.clone() };
+                                                    let serialized =
+                                                        serde_json::to_string(&response).unwrap();
+                                                    println!("{}", serialized);
+                                                }
+                                            }
                                             v => {
                                                 return Err(EvalError::UserError(format!(
                                                     "Expected a string, but got: {}",

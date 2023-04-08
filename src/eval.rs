@@ -4,8 +4,8 @@ use std::{collections::HashMap, fmt::Display};
 
 use crate::commands::{run_command, Command, CommandError};
 use crate::parse::{
-    parse_toplevel_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
-    Statement_, VariableName,
+    parse_def_or_expr_from_str, Definition, Definition_, DefinitionsOrExpression, Expression,
+    Expression_, ParseError, Statement_, VariableName,
 };
 use crate::parse::{BinaryOperatorKind, Statement};
 use crate::prompt::prompt_symbol;
@@ -153,20 +153,22 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
                     None => {}
                 }
 
-                let mut asts: Vec<Statement> =
-                    parse_toplevel_from_str(&input).map_err(|e| match e {
-                        ParseError::OtherError(e) | ParseError::Incomplete(e) => {
-                            EvalError::UserError(e)
-                        }
-                    })?;
-                if asts.len() != 1 {
-                    return Err(EvalError::UserError(format!(
-                        "Expected to read a single statement, got {} items",
-                        asts.len()
-                    )));
+                let asts = parse_def_or_expr_from_str(&input).map_err(|e| match e {
+                    ParseError::OtherError(e) | ParseError::Incomplete(e) => {
+                        EvalError::UserError(e)
+                    }
+                })?;
+                match asts {
+                    DefinitionsOrExpression::Defs(defs) => {
+                        return Err(EvalError::UserError(format!(
+                            "Expected to read a single statement, got {} definitoins",
+                            defs.len()
+                        )));
+                    }
+                    DefinitionsOrExpression::Expr(e) => {
+                        return Ok(Statement(e.0, Statement_::Expr(e)));
+                    }
                 }
-
-                return Ok(asts.pop().unwrap());
             }
             Err(e) => {
                 return Err(EvalError::UserError(format!("Input failed: {}", e)));
@@ -180,11 +182,29 @@ pub fn eval_def_or_exprs(
     env: &mut Env,
     session: &mut Session,
 ) -> Result<Value, EvalError> {
-    let stmts = match items {
-        DefinitionsOrExpression::Defs(stmts) => stmts.clone(),
-        DefinitionsOrExpression::Expr(e) => vec![Statement(0, Statement_::Expr(e.clone()))],
-    };
-    eval_stmts(&stmts, env, session)
+    match items {
+        DefinitionsOrExpression::Defs(defs) => {
+            eval_defs(defs, env);
+            Ok(Value::Void)
+        }
+        DefinitionsOrExpression::Expr(e) => {
+            let stmts = vec![Statement(0, Statement_::Expr(e.clone()))];
+            eval_stmts(&stmts, env, session)
+        }
+    }
+}
+
+pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
+    for definition in definitions {
+        match &definition.1 {
+            Definition_::Fun(name, params, body) => {
+                env.set_with_file_scope(
+                    name,
+                    Value::Fun(name.clone(), params.clone(), body.clone()),
+                );
+            }
+        }
+    }
 }
 
 pub fn eval_stmts(
@@ -211,12 +231,6 @@ pub fn eval_stmts(
 
                 let stmt_copy = stmt_.clone();
                 match stmt_ {
-                    Statement_::Fun(name, params, body) => {
-                        env.set_with_file_scope(
-                            &name,
-                            Value::Fun(name.clone(), params.clone(), body.clone()),
-                        );
-                    }
                     Statement_::If(condition, ref then_body, ref else_body) => {
                         if done_children {
                             let condition_value = evalled_values
@@ -685,6 +699,8 @@ pub fn eval_stmts(
 
 #[cfg(test)]
 mod tests {
+    use crate::parse::parse_stmts_from_str;
+
     use super::*;
 
     fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, EvalError> {
@@ -735,7 +751,7 @@ mod tests {
 
     #[test]
     fn test_eval_multiple_stmts() {
-        let stmts = parse_toplevel_from_str("true; false;").unwrap();
+        let stmts = parse_stmts_from_str("true; false;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -744,7 +760,7 @@ mod tests {
 
     #[test]
     fn test_eval_add() {
-        let stmts = parse_toplevel_from_str("1 + 2;").unwrap();
+        let stmts = parse_stmts_from_str("1 + 2;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -753,7 +769,7 @@ mod tests {
 
     #[test]
     fn test_eval_let() {
-        let stmts = parse_toplevel_from_str("let foo = true; foo;").unwrap();
+        let stmts = parse_stmts_from_str("let foo = true; foo;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -762,7 +778,7 @@ mod tests {
 
     #[test]
     fn test_eval_let_twice() {
-        let stmts = parse_toplevel_from_str("let foo = true; let foo = false;").unwrap();
+        let stmts = parse_stmts_from_str("let foo = true; let foo = false;").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env);
@@ -778,34 +794,52 @@ mod tests {
 
     #[test]
     fn test_eval_call() {
-        let stmts = parse_toplevel_from_str("fun f() { true; } f();").unwrap();
-
         let mut env = Env::default();
+
+        let defs = match parse_def_or_expr_from_str("fun f() { true; }").unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+        eval_defs(&defs, &mut env);
+
+        let stmts = parse_stmts_from_str("f();").unwrap();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
     #[test]
     fn test_eval_call_with_arg() {
-        let stmts = parse_toplevel_from_str("fun f(x) { x; } f(123);").unwrap();
-
         let mut env = Env::default();
+
+        let defs = match parse_def_or_expr_from_str("fun f(x) {x; }").unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+        eval_defs(&defs, &mut env);
+
+        let stmts = parse_stmts_from_str("f(123);").unwrap();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(123));
     }
 
     #[test]
     fn test_eval_call_second_arg() {
-        let stmts = parse_toplevel_from_str("fun f(x, y) { y; } f(1, 2);").unwrap();
-
         let mut env = Env::default();
+
+        let defs = match parse_def_or_expr_from_str("fun f(x, y) { y; }").unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+        eval_defs(&defs, &mut env);
+
+        let stmts = parse_stmts_from_str("f(1, 2);").unwrap();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
 
     #[test]
     fn test_eval_while() {
-        let stmts = parse_toplevel_from_str("let i = 0; while (i < 5) { i = i + 1;}").unwrap();
+        let stmts = parse_stmts_from_str("let i = 0; while (i < 5) { i = i + 1;}").unwrap();
 
         let mut env = Env::default();
         let value = eval_stmts(&stmts, &mut env).unwrap();
@@ -814,18 +848,30 @@ mod tests {
 
     #[test]
     fn test_eval_env_after_call() {
-        let stmts = parse_toplevel_from_str("fun id(x) { x; } let i = 0; id(i); i;").unwrap();
-
         let mut env = Env::default();
+
+        let defs = match parse_def_or_expr_from_str("fun id(x) { x; }").unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+        eval_defs(&defs, &mut env);
+
+        let stmts = parse_stmts_from_str("let i = 0; id(i); i;").unwrap();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(0));
     }
 
     #[test]
     fn test_eval_return() {
-        let stmts = parse_toplevel_from_str("fun f() { return 1; 2; } f();").unwrap();
-
         let mut env = Env::default();
+
+        let defs = match parse_def_or_expr_from_str("fun f() { return 1; 2; }").unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+        eval_defs(&defs, &mut env);
+
+        let stmts = parse_stmts_from_str("f();").unwrap();
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }

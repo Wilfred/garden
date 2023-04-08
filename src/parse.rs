@@ -44,8 +44,6 @@ pub struct Expression(pub usize, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement_ {
-    // TODO: is Statement the best place for Fun?
-    Fun(VariableName, Vec<VariableName>, Vec<Statement>),
     If(Expression, Vec<Statement>, Vec<Statement>),
     While(Expression, Vec<Statement>),
     Assign(VariableName, Expression),
@@ -58,8 +56,16 @@ pub enum Statement_ {
 pub struct Statement(pub usize, pub Statement_);
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum Definition_ {
+    Fun(VariableName, Vec<VariableName>, Vec<Statement>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Definition(pub usize, pub Definition_);
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionsOrExpression {
-    Defs(Vec<Statement>),
+    Defs(Vec<Definition>),
     Expr(Expression),
 }
 
@@ -347,9 +353,6 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     }
 
     if let Some((_, token)) = peek_token(tokens) {
-        if token == "fun" {
-            return parse_function(tokens);
-        }
         if token == "let" {
             return parse_let_stmt(tokens);
         }
@@ -367,6 +370,17 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let expr = parse_expression(tokens)?;
     require_token(tokens, ";")?;
     Ok(Statement(expr.0, Statement_::Expr(expr)))
+}
+
+fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+    if let Some((_, token)) = peek_token(tokens) {
+        if token == "fun" {
+            return parse_function(tokens);
+        }
+    }
+
+    // TODO: Include the token in the error message.
+    Err(ParseError::OtherError("Expected a definition".to_string()))
 }
 
 fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>, ParseError> {
@@ -426,13 +440,13 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
     Ok(stmts)
 }
 
-fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let offset = require_token(tokens, "fun")?;
     let (_, name) = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
     let body = parse_function_body(tokens)?;
 
-    Ok(Statement(offset, Statement_::Fun(name, params, body)))
+    Ok(Definition(offset, Definition_::Fun(name, params, body)))
 }
 
 const RESERVED_WORDS: &[&str] = &[
@@ -484,17 +498,23 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
     Ok(Statement(offset, Statement_::Assign(variable, expr)))
 }
 
-pub fn parse_toplevel_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
-    let tokens = lex(s)?;
-    let mut token_ptr = &tokens[..];
-    parse_toplevel(&mut token_ptr)
-}
-
 fn parse_toplevel(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
     let mut res = vec![];
 
     while !tokens.is_empty() {
         res.push(parse_statement(tokens)?);
+    }
+
+    Ok(res)
+}
+
+pub fn parse_stmts_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
+    let tokens = lex(s)?;
+    let mut token_ptr = &tokens[..];
+
+    let mut res = vec![];
+    while !token_ptr.is_empty() {
+        res.push(parse_statement(&mut token_ptr)?);
     }
 
     Ok(res)
@@ -508,12 +528,12 @@ pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpre
         return Ok(DefinitionsOrExpression::Expr(expr));
     }
 
-    let mut stmts = vec![];
+    let mut defs = vec![];
     while !tokens.is_empty() {
-        stmts.push(parse_statement(tokens)?);
+        defs.push(parse_definition(tokens)?);
     }
 
-    Ok(DefinitionsOrExpression::Defs(stmts))
+    Ok(DefinitionsOrExpression::Defs(defs))
 }
 
 pub fn parse_def_or_expr_from_str(s: &str) -> Result<DefinitionsOrExpression, ParseError> {

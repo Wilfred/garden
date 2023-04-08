@@ -6,7 +6,7 @@ use strum_macros::EnumIter;
 
 use crate::{
     eval::{Env, Session},
-    parse::{parse_toplevel_from_str, ParseError},
+    parse::{parse_def_or_expr_from_str, ParseError},
 };
 
 #[derive(Debug, EnumIter)]
@@ -114,7 +114,7 @@ pub fn run_command<T: Write>(
             print_stack(buf, env);
         }
         Command::Parse(src) => {
-            match parse_toplevel_from_str(&src) {
+            match parse_def_or_expr_from_str(&src) {
                 Ok(ast) => writeln!(buf, "{:?}", ast).unwrap(),
                 Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
                     writeln!(buf, "{}: {}", "Error".bright_red(), e).unwrap();

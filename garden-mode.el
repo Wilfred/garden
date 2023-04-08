@@ -4,12 +4,14 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: languages
+;; Package-Requires: ((emacs "24.3"))
+;; Version: 0.3
 
 ;; This file is distributed under the terms of the MIT license.
 
 ;;; Commentary:
 
-;;
+;; Major mode and interactive execution for Garden programs.
 
 ;;; Code:
 

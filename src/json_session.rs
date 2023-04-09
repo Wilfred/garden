@@ -72,11 +72,11 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 value: Ok(format!("Aborted")),
                             },
                             Err(EvalError::UserError(e)) => Response {
-                                value: Ok(format!("Error: {}", e)),
+                                value: Err(format!("Error: {}", e)),
                             },
                         },
                         Err(e) => Response {
-                            value: Ok(format!("Could not parse input: {:?}", e)),
+                            value: Err(format!("Could not parse input: {:?}", e)),
                         },
                     }
                 }
@@ -94,7 +94,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     }
                     None => Response {
                         // TODO: report the valid errors
-                        value: Ok(format!("No such command {:?}", &req.input)),
+                        value: Err(format!("No such command {:?}", &req.input)),
                     },
                 },
             },

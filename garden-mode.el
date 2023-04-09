@@ -32,7 +32,7 @@
            (response-ok-value (plist-get response-value :Ok)))
       (if response-ok-value
           (message "%s" response-ok-value)
-        (let ((error-info (plist-get response :Err)))
+        (let ((error-info (plist-get response-value :Err)))
           (message "%s" error-info))))))
 
 (defun garden-process-filter (proc output)

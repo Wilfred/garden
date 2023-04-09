@@ -72,6 +72,11 @@
          (proc (start-process "garden" buf garden-executable "json")))
     (set-process-filter proc #'garden-process-filter)))
 
+(defun garden-restart ()
+  (interactive)
+  (garden-stop)
+  (garden-start))
+
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
        '("let" "fun" "true" "false" "if" "else" "while" "return")

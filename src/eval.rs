@@ -616,7 +616,6 @@ pub fn eval_stmts(
                                                 if session.has_attached_stdout {
                                                     println!("{}", s);
                                                 } else {
-                                                    // TODO: define a distinct response kind for print output vs eval results.
                                                     let response = Response {
                                                         kind: ResponseKind::Printed,
                                                         value: Ok(s.clone()),

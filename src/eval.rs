@@ -618,7 +618,7 @@ pub fn eval_stmts(
                                                 } else {
                                                     let response = Response {
                                                         kind: ResponseKind::Printed,
-                                                        value: Ok(s.clone()),
+                                                        value: Ok(format!("{}\n", s)),
                                                     };
                                                     let serialized =
                                                         serde_json::to_string(&response).unwrap();

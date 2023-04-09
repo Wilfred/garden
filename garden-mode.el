@@ -29,9 +29,19 @@
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
            (response-value (plist-get response :value))
+           (response-kind (plist-get response :kind))
            (response-ok-value (plist-get response-value :Ok)))
       (if response-ok-value
-          (message "%s" response-ok-value)
+          (progn
+            ;; Always print the value in the minibuffer.
+            (message "%s" response-ok-value)
+
+            ;; If this output from print(), write it to the stdout
+            ;; buffer too.
+            (when (string= response-kind "printed")
+              (with-current-buffer (garden--stdout-buffer)
+                (let ((inhibit-read-only t))
+                  (insert response-ok-value)))))
         (let ((error-info (plist-get response-value :Err)))
           (message "%s" error-info))))))
 
@@ -44,6 +54,15 @@
 
 (defun garden--json-buffer ()
   (let* ((buf-name "*garden-json*")
+         (buf (get-buffer buf-name)))
+    (unless buf
+      (setq buf (get-buffer-create buf-name))
+      (with-current-buffer buf
+        (setq buffer-read-only t)))
+    buf))
+
+(defun garden--stdout-buffer ()
+  (let* ((buf-name "*garden-stdout*")
          (buf (get-buffer buf-name)))
     (unless buf
       (setq buf (get-buffer-create buf-name))

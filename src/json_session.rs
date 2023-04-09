@@ -28,14 +28,13 @@ struct Request {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub enum Response {
-    Error { message: String },
-    Success { result: String },
+pub struct Response {
+    pub value: Result<String, String>,
 }
 
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
-    let response = Response::Success {
-        result: "ready".into(),
+    let response = Response {
+        value: Ok("ready".into()),
     };
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
@@ -66,18 +65,18 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     complete_src.push_str(&req.input);
                     match parse_def_or_expr_from_str(&req.input) {
                         Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
-                            Ok(result) => Response::Success {
-                                result: format!("{}", result),
+                            Ok(result) => Response {
+                                value: Ok(format!("{}", result)),
                             },
-                            Err(EvalError::Aborted) => Response::Error {
-                                message: format!("Aborted"),
+                            Err(EvalError::Aborted) => Response {
+                                value: Ok(format!("Aborted")),
                             },
-                            Err(EvalError::UserError(e)) => Response::Error {
-                                message: format!("Error: {}", e),
+                            Err(EvalError::UserError(e)) => Response {
+                                value: Ok(format!("Error: {}", e)),
                             },
                         },
-                        Err(e) => Response::Error {
-                            message: format!("Could not parse input: {:?}", e),
+                        Err(e) => Response {
+                            value: Ok(format!("Could not parse input: {:?}", e)),
                         },
                     }
                 }
@@ -85,22 +84,22 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     Some(command) => {
                         let mut out_buf: Vec<u8> = vec![];
                         match run_command(&mut out_buf, &command, &mut env, &session) {
-                            Ok(()) => Response::Success {
-                                result: format!("{}", String::from_utf8_lossy(&out_buf)),
+                            Ok(()) => Response {
+                                value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
                             },
-                            Err(CommandError::Abort) => Response::Success {
-                                result: format!("Aborted"),
+                            Err(CommandError::Abort) => Response {
+                                value: Ok(format!("Aborted")),
                             },
                         }
                     }
-                    None => Response::Error {
+                    None => Response {
                         // TODO: report the valid errors
-                        message: format!("No such command {:?}", &req.input),
+                        value: Ok(format!("No such command {:?}", &req.input)),
                     },
                 },
             },
-            Err(_) => Response::Error {
-                message: format!(
+            Err(_) => Response {
+                value: Err(format!(
                     "Could not parse request: {}. A valid request looks like: {}",
                     line,
                     serde_json::to_string(&Request {
@@ -108,7 +107,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         input: ":help".into(),
                     })
                     .unwrap()
-                ),
+                )),
             },
         };
         let serialized = serde_json::to_string(&response).unwrap();

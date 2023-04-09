@@ -617,8 +617,9 @@ pub fn eval_stmts(
                                                     println!("{}", s);
                                                 } else {
                                                     // TODO: define a distinct response kind for print output vs eval results.
-                                                    let response =
-                                                        Response::Success { result: s.clone() };
+                                                    let response = Response {
+                                                        value: Ok(s.clone()),
+                                                    };
                                                     let serialized =
                                                         serde_json::to_string(&response).unwrap();
                                                     println!("{}", serialized);

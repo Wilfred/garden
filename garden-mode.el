@@ -28,11 +28,12 @@
 (defun garden--handle-responses (output)
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
-           (success-info (plist-get response :Success)))
-      (if success-info
-          (message "%s" (plist-get success-info :result))
-        (let ((error-info (plist-get response :Error)))
-          (message "%s" (plist-get error-info :message)))))))
+           (response-value (plist-get response :value))
+           (response-ok-value (plist-get response-value :Ok)))
+      (if response-ok-value
+          (message "%s" response-ok-value)
+        (let ((error-info (plist-get response :Err)))
+          (message "%s" error-info))))))
 
 (defun garden-process-filter (proc output)
   (let ((buf (process-buffer proc)))

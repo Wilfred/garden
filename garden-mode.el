@@ -39,7 +39,6 @@
   (let ((buf (process-buffer proc)))
     (with-current-buffer buf
       (insert output))
-    (message "output: %S" output)
     (garden--handle-responses output)))
 
 (defun garden-send-input (input)

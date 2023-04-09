@@ -38,18 +38,28 @@
 (defun garden-process-filter (proc output)
   (let ((buf (process-buffer proc)))
     (with-current-buffer buf
-      (insert output))
+      (let ((inhibit-read-only t))
+        (insert output)))
     (garden--handle-responses output)))
+
+(defun garden--json-buffer ()
+  (let* ((buf-name "*garden-json*")
+         (buf (get-buffer buf-name)))
+    (unless buf
+      (setq buf (get-buffer-create buf-name))
+      (with-current-buffer buf
+        (setq buffer-read-only t)))
+    buf))
 
 (defun garden-send-input (input)
   (interactive "r")
-  (let ((buf (get-buffer-create "*garden-json*")))
+  (let ((buf (garden--json-buffer)))
     (process-send-string buf (json-serialize `((method . "evaluate") (input . ,input))))
     (process-send-string buf "\n")))
 
 (defun garden-send-command (input)
   (interactive)
-  (let ((buf (get-buffer-create "*garden-json*")))
+  (let ((buf (garden--json-buffer)))
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 
@@ -63,12 +73,12 @@
 
 (defun garden-stop ()
   (interactive)
-  (let ((buf (get-buffer-create "*garden-json*")))
+  (let ((buf (garden--json-buffer)))
     (kill-buffer buf)))
 
 (defun garden-start ()
   (interactive)
-  (let* ((buf (get-buffer-create "*garden-json*"))
+  (let* ((buf (garden--json-buffer))
          (proc (start-process "garden" buf garden-executable "json")))
     (set-process-filter proc #'garden-process-filter)))
 

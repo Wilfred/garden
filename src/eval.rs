@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::commands::{run_command, Command, CommandError};
-use crate::json_session::Response;
+use crate::json_session::{Response, ResponseKind};
 use crate::parse::{
     parse_def_or_expr_from_str, Definition, Definition_, DefinitionsOrExpression, Expression,
     Expression_, ParseError, Statement_, VariableName,
@@ -618,6 +618,7 @@ pub fn eval_stmts(
                                                 } else {
                                                     // TODO: define a distinct response kind for print output vs eval results.
                                                     let response = Response {
+                                                        kind: ResponseKind::Printed,
                                                         value: Ok(s.clone()),
                                                     };
                                                     let serialized =

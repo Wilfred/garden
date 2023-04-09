@@ -28,12 +28,24 @@ struct Request {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ResponseKind {
+    Evaluate,
+    RunCommand,
+    Ready,
+    Malformed,
+    Printed,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Response {
+    pub kind: ResponseKind,
     pub value: Result<String, String>,
 }
 
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
     let response = Response {
+        kind: ResponseKind::Ready,
         value: Ok("ready".into()),
     };
     let serialized = serde_json::to_string(&response).unwrap();
@@ -66,16 +78,20 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     match parse_def_or_expr_from_str(&req.input) {
                         Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
                             Ok(result) => Response {
+                                kind: ResponseKind::Evaluate,
                                 value: Ok(format!("{}", result)),
                             },
                             Err(EvalError::Aborted) => Response {
+                                kind: ResponseKind::Evaluate,
                                 value: Ok(format!("Aborted")),
                             },
                             Err(EvalError::UserError(e)) => Response {
+                                kind: ResponseKind::Evaluate,
                                 value: Err(format!("Error: {}", e)),
                             },
                         },
                         Err(e) => Response {
+                            kind: ResponseKind::Evaluate,
                             value: Err(format!("Could not parse input: {:?}", e)),
                         },
                     }
@@ -85,20 +101,24 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         let mut out_buf: Vec<u8> = vec![];
                         match run_command(&mut out_buf, &command, &mut env, &session) {
                             Ok(()) => Response {
+                                kind: ResponseKind::RunCommand,
                                 value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
                             },
                             Err(CommandError::Abort) => Response {
+                                kind: ResponseKind::RunCommand,
                                 value: Ok(format!("Aborted")),
                             },
                         }
                     }
                     None => Response {
                         // TODO: report the valid errors
+                        kind: ResponseKind::RunCommand,
                         value: Err(format!("No such command {:?}", &req.input)),
                     },
                 },
             },
             Err(_) => Response {
+                kind: ResponseKind::Malformed,
                 value: Err(format!(
                     "Could not parse request: {}. A valid request looks like: {}",
                     line,

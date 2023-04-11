@@ -69,7 +69,11 @@ pub enum DefinitionsOrExpression {
     Expr(Expression),
 }
 
-type Token<'a> = (usize, &'a str);
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Token<'a> {
+    offset: usize,
+    text: &'a str,
+}
 
 fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
     if tokens.is_empty() {
@@ -86,7 +90,7 @@ fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
 }
 
 fn next_token_is(tokens: &[Token<'_>], token: &str) -> bool {
-    tokens.first().map(|t| t.1 == token).unwrap_or(false)
+    tokens.first().map(|t| t.text == token).unwrap_or(false)
 }
 
 fn peek_two_tokens<'a>(tokens: &[Token<'a>]) -> Option<(Token<'a>, Token<'a>)> {
@@ -112,13 +116,13 @@ fn require_a_token<'a>(
 
 fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize, ParseError> {
     match pop_token(tokens) {
-        Some((offset, token)) => {
-            if token == expected {
-                Ok(offset)
+        Some(token) => {
+            if token.text == expected {
+                Ok(token.offset)
             } else {
                 Err(ParseError::OtherError(format!(
                     "Expected `{}`, got `{}`",
-                    expected, token
+                    expected, token.text
                 )))
             }
         }
@@ -132,14 +136,14 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize,
 fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let re = Regex::new(r"^[0-9]+$").unwrap();
 
-    let (offset, token) = require_a_token(tokens, "integer literal")?;
-    if re.is_match(token) {
-        let i: i64 = token.parse().unwrap();
-        Ok(Expression(offset, Expression_::IntLiteral(i)))
+    let token = require_a_token(tokens, "integer literal")?;
+    if re.is_match(token.text) {
+        let i: i64 = token.text.parse().unwrap();
+        Ok(Expression(token.offset, Expression_::IntLiteral(i)))
     } else {
         Err(ParseError::OtherError(format!(
             "Not a valid integer literal: {}",
-            token
+            token.text
         )))
     }
 }
@@ -223,40 +227,40 @@ fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
 }
 
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    if let Some((offset, token)) = peek_token(tokens) {
-        if token == "(" {
+    if let Some(token) = peek_token(tokens) {
+        if token.text == "(" {
             return parse_parenthesis_expression(tokens);
         }
 
-        if token == "true" {
+        if token.text == "true" {
             pop_token(tokens);
-            return Ok(Expression(offset, Expression_::BoolLiteral(true)));
+            return Ok(Expression(token.offset, Expression_::BoolLiteral(true)));
         }
-        if token == "false" {
+        if token.text == "false" {
             pop_token(tokens);
-            return Ok(Expression(offset, Expression_::BoolLiteral(false)));
+            return Ok(Expression(token.offset, Expression_::BoolLiteral(false)));
         }
 
         let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
-        if re.is_match(token) {
+        if re.is_match(token.text) {
             return parse_variable_expression(tokens);
         }
 
-        if token.starts_with("\"") {
+        if token.text.starts_with("\"") {
             pop_token(tokens);
             return Ok(Expression(
-                offset,
-                Expression_::StringLiteral(token[1..token.len() - 1].to_owned()),
+                token.offset,
+                Expression_::StringLiteral(token.text[1..token.text.len() - 1].to_owned()),
             ));
         }
 
-        if INTEGER_RE.is_match(token) {
+        if INTEGER_RE.is_match(token.text) {
             return parse_integer(tokens);
         }
 
         return Err(ParseError::OtherError(format!(
             "Expected an expression, got: {}",
-            token
+            token.text
         )));
     }
 
@@ -275,15 +279,15 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
         let arg = parse_expression(tokens)?;
         args.push(arg);
 
-        if let Some((_, token)) = peek_token(tokens) {
-            if token == "," {
+        if let Some(token) = peek_token(tokens) {
+            if token.text == "," {
                 pop_token(tokens);
-            } else if token == ")" {
+            } else if token.text == ")" {
                 break;
             } else {
                 return Err(ParseError::OtherError(format!(
                     "Invalid syntax: Expected `,` or `)` here, but got `{}`",
-                    token
+                    token.text
                 )));
             }
         } else {
@@ -311,8 +315,8 @@ fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expressi
     Ok(expr)
 }
 
-fn token_as_binary_op(token: &str) -> Option<BinaryOperatorKind> {
-    match token {
+fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
+    match token.text {
         "+" => Some(BinaryOperatorKind::Add),
         "-" => Some(BinaryOperatorKind::Subtract),
         "*" => Some(BinaryOperatorKind::Multiply),
@@ -330,7 +334,7 @@ fn token_as_binary_op(token: &str) -> Option<BinaryOperatorKind> {
 fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
-    if let Some((_, token)) = peek_token(tokens) {
+    if let Some(token) = peek_token(tokens) {
         if let Some(op) = token_as_binary_op(token) {
             pop_token(tokens);
 
@@ -346,23 +350,23 @@ fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError>
 }
 
 fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    if let Some((_, (_, token))) = peek_two_tokens(tokens) {
-        if token == "=" {
+    if let Some((_, token)) = peek_two_tokens(tokens) {
+        if token.text == "=" {
             return parse_assign_stmt(tokens);
         }
     }
 
-    if let Some((_, token)) = peek_token(tokens) {
-        if token == "let" {
+    if let Some(token) = peek_token(tokens) {
+        if token.text == "let" {
             return parse_let_stmt(tokens);
         }
-        if token == "if" {
+        if token.text == "if" {
             return parse_if_stmt(tokens);
         }
-        if token == "while" {
+        if token.text == "while" {
             return parse_while_stmt(tokens);
         }
-        if token == "return" {
+        if token.text == "return" {
             return parse_return_stmt(tokens);
         }
     }
@@ -373,8 +377,8 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
 }
 
 fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
-    if let Some((_, token)) = peek_token(tokens) {
-        if token == "fun" {
+    if let Some(token) = peek_token(tokens) {
+        if token.text == "fun" {
             return parse_function(tokens);
         }
     }
@@ -395,15 +399,15 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
         let (_, param) = parse_variable_name(tokens)?;
         params.push(param);
 
-        if let Some((_, token)) = peek_token(tokens) {
-            if token == "," {
+        if let Some(token) = peek_token(tokens) {
+            if token.text == "," {
                 pop_token(tokens);
-            } else if token == ")" {
+            } else if token.text == ")" {
                 break;
             } else {
                 return Err(ParseError::OtherError(format!(
                     "Invalid syntax: Expected `,` or `)` here, but got `{}`",
-                    token
+                    token.text
                 )));
             }
         } else {
@@ -422,8 +426,8 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
 
     let mut stmts = vec![];
     loop {
-        if let Some((_, token)) = peek_token(tokens) {
-            if token == "}" {
+        if let Some(token) = peek_token(tokens) {
+            if token.text == "}" {
                 break;
             }
         } else {
@@ -457,24 +461,27 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
 
-    let (offset, variable) = require_a_token(tokens, "variable name")?;
-    if !variable_re.is_match(variable) {
+    let variable_token = require_a_token(tokens, "variable name")?;
+    if !variable_re.is_match(variable_token.text) {
         return Err(ParseError::OtherError(format!(
             "Invalid variable name: '{}'",
-            variable
+            variable_token.text
         )));
     }
 
     for reserved in RESERVED_WORDS {
-        if variable == *reserved {
+        if variable_token.text == *reserved {
             return Err(ParseError::OtherError(format!(
                 "'{}' is a reserved word that cannot be used as a variable",
-                variable
+                variable_token.text
             )));
         }
     }
 
-    Ok((offset, VariableName(variable.to_string())))
+    Ok((
+        variable_token.offset,
+        VariableName(variable_token.text.to_string()),
+    ))
 }
 
 fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
@@ -527,7 +534,7 @@ lazy_static! {
 }
 
 fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError> {
-    let mut res: Vec<(usize, &str)> = vec![];
+    let mut res: Vec<Token<'a>> = vec![];
 
     let mut offset = offset;
     'outer: while offset < s.len() {
@@ -555,7 +562,10 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
 
         for token_str in ["==", "!=", "&&", "||"] {
             if s.starts_with(token_str) {
-                res.push((offset, &s[0..token_str.len()]));
+                res.push(Token {
+                    offset,
+                    text: &s[0..token_str.len()],
+                });
                 offset += token_str.len();
                 continue 'outer;
             }
@@ -564,19 +574,31 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
             '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>',
         ] {
             if s.starts_with(token_char) {
-                res.push((offset, &s[0..1]));
+                res.push(Token {
+                    offset,
+                    text: &s[0..1],
+                });
                 offset += 1;
                 continue 'outer;
             }
         }
         if let Some(integer_match) = INTEGER_RE.find(s) {
-            res.push((offset, integer_match.as_str()));
+            res.push(Token {
+                offset,
+                text: integer_match.as_str(),
+            });
             offset += integer_match.end();
         } else if let Some(string_match) = STRING_RE.find(s) {
-            res.push((offset, string_match.as_str()));
+            res.push(Token {
+                offset,
+                text: string_match.as_str(),
+            });
             offset += string_match.end();
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
-            res.push((offset, variable_match.as_str()));
+            res.push(Token {
+                offset,
+                text: variable_match.as_str(),
+            });
             offset += variable_match.end();
         } else {
             break;
@@ -616,12 +638,24 @@ mod tests {
 
     #[test]
     fn test_lex_no_offset() {
-        assert_eq!(lex("1").unwrap(), vec![(0, "1")]);
+        assert_eq!(
+            lex("1").unwrap(),
+            vec![Token {
+                offset: 0,
+                text: "1"
+            }]
+        );
     }
 
     #[test]
     fn test_lex_with_offset() {
-        assert_eq!(lex(" a").unwrap(), vec![(1, "a")]);
+        assert_eq!(
+            lex(" a").unwrap(),
+            vec![Token {
+                offset: 1,
+                text: "a"
+            }]
+        );
     }
 
     #[test]
@@ -630,7 +664,7 @@ mod tests {
             lex("1 + 2")
                 .unwrap()
                 .iter()
-                .map(|token| token.1)
+                .map(|token| token.text)
                 .collect::<Vec<_>>(),
             vec!["1", "+", "2"]
         );
@@ -642,7 +676,7 @@ mod tests {
             lex("1+2")
                 .unwrap()
                 .iter()
-                .map(|token| token.1)
+                .map(|token| token.text)
                 .collect::<Vec<_>>(),
             vec!["1", "+", "2"]
         );
@@ -663,7 +697,13 @@ mod tests {
 
     #[test]
     fn test_lex_comment() {
-        assert_eq!(lex("// 2\n1").unwrap(), vec![(5, "1")]);
+        assert_eq!(
+            lex("// 2\n1").unwrap(),
+            vec![Token {
+                offset: 5,
+                text: "1"
+            }]
+        );
     }
 
     #[test]

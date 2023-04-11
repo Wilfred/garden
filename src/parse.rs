@@ -73,6 +73,7 @@ pub enum DefinitionsOrExpression {
 pub struct Token<'a> {
     offset: usize,
     text: &'a str,
+    preceding_comments: Vec<&'a str>,
 }
 
 fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
@@ -536,6 +537,7 @@ lazy_static! {
 fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError> {
     let mut res: Vec<Token<'a>> = vec![];
 
+    let mut preceding_comments = vec![];
     let mut offset = offset;
     'outer: while offset < s.len() {
         let s = &s[offset..];
@@ -543,6 +545,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
         // Skip over comments.
         if s.starts_with("//") {
             if let Some(i) = s.find("\n") {
+                preceding_comments.push(&s["//".len()..i]);
                 offset = i;
                 continue;
             } else {
@@ -565,7 +568,10 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
                 res.push(Token {
                     offset,
                     text: &s[0..token_str.len()],
+                    preceding_comments,
                 });
+                preceding_comments = vec![];
+
                 offset += token_str.len();
                 continue 'outer;
             }
@@ -577,7 +583,10 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
                 res.push(Token {
                     offset,
                     text: &s[0..1],
+                    preceding_comments,
                 });
+                preceding_comments = vec![];
+
                 offset += 1;
                 continue 'outer;
             }
@@ -586,19 +595,28 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
             res.push(Token {
                 offset,
                 text: integer_match.as_str(),
+                preceding_comments,
             });
+            preceding_comments = vec![];
+
             offset += integer_match.end();
         } else if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
                 offset,
                 text: string_match.as_str(),
+                preceding_comments,
             });
+            preceding_comments = vec![];
+
             offset += string_match.end();
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push(Token {
                 offset,
                 text: variable_match.as_str(),
+                preceding_comments,
             });
+            preceding_comments = vec![];
+
             offset += variable_match.end();
         } else {
             break;
@@ -642,7 +660,8 @@ mod tests {
             lex("1").unwrap(),
             vec![Token {
                 offset: 0,
-                text: "1"
+                text: "1",
+                preceding_comments: vec![],
             }]
         );
     }
@@ -653,7 +672,8 @@ mod tests {
             lex(" a").unwrap(),
             vec![Token {
                 offset: 1,
-                text: "a"
+                text: "a",
+                preceding_comments: vec![],
             }]
         );
     }
@@ -701,7 +721,8 @@ mod tests {
             lex("// 2\n1").unwrap(),
             vec![Token {
                 offset: 5,
-                text: "1"
+                text: "1",
+                preceding_comments: vec![" 2"],
             }]
         );
     }

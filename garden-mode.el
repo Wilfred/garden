@@ -132,5 +132,8 @@
 
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
 
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))
+
 (provide 'garden-mode)
 ;;; garden-mode.el ends here

@@ -69,7 +69,7 @@ pub enum DefinitionsOrExpression {
     Expr(Expression),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
     offset: usize,
     text: &'a str,
@@ -80,13 +80,13 @@ fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
         return None;
     }
 
-    let token = tokens[0];
+    let token = tokens[0].clone();
     *tokens = &tokens[1..];
     Some(token)
 }
 
 fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
-    tokens.first().copied()
+    tokens.first().map(|t| t.clone())
 }
 
 fn next_token_is(tokens: &[Token<'_>], token: &str) -> bool {
@@ -95,7 +95,7 @@ fn next_token_is(tokens: &[Token<'_>], token: &str) -> bool {
 
 fn peek_two_tokens<'a>(tokens: &[Token<'a>]) -> Option<(Token<'a>, Token<'a>)> {
     if tokens.len() > 1 {
-        Some((tokens[0], tokens[1]))
+        Some((tokens[0].clone(), tokens[1].clone()))
     } else {
         None
     }

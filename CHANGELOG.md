@@ -5,7 +5,7 @@
 Syntax: Added `//` comment syntax. Added `return`. Allowed `if`
 without `else`, as well as `else if (...) { ... }`.
 
-Interactive interpreter: added `:abort` and `:quit` commands.
+Interactive interpreter: added `:abort`, `:doc` and `:quit` commands.
 
 # 0.2 (released 14 March 2023)
 

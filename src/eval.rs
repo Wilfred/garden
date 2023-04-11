@@ -30,6 +30,25 @@ pub enum BuiltinFunctionKind {
     IntToString,
 }
 
+pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
+    match kind {
+        BuiltinFunctionKind::Print => {
+            "Write a string to stdout.
+
+```
+print(\"hello world\");
+```"
+        }
+        BuiltinFunctionKind::IntToString => {
+            "Convert an integer to its decimal representation as a string.
+
+```
+int_to_string(123); // \"123\"
+```"
+        }
+    }
+}
+
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

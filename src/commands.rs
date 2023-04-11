@@ -5,13 +5,14 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::{
-    eval::{Env, Session},
-    parse::{parse_def_or_expr_from_str, ParseError},
+    eval::{builtin_fun_doc, Env, Session, Value},
+    parse::{parse_def_or_expr_from_str, ParseError, VariableName},
 };
 
 #[derive(Debug, EnumIter)]
 pub enum Command {
     Abort,
+    Doc(String),
     Help,
     Globals,
     Locals,
@@ -40,6 +41,8 @@ impl Command {
                 // TODO: allow :parse without any trailing whitespace.
                 if let Some(src) = s.strip_prefix(":parse ") {
                     Some(Command::Parse(src.to_owned()))
+                } else if let Some(src) = s.strip_prefix(":doc ") {
+                    Some(Command::Doc(src.to_owned()))
                 } else {
                     None
                 }
@@ -50,6 +53,7 @@ impl Command {
     pub fn to_string(&self) -> &str {
         match self {
             Command::Abort => ":abort",
+            Command::Doc(_) => ":doc",
             Command::Help => ":help",
             Command::Globals => ":globals",
             Command::Locals => ":locals",
@@ -94,6 +98,23 @@ pub fn run_command<T: Write>(
         Command::Help => {
             writeln!(buf, "{}\n", HELP_TOPICS[0].1).unwrap();
             print_available_commands(buf);
+        }
+        Command::Doc(name) => {
+            if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
+                match value {
+                    Value::Fun(_, _, _) => {
+                        writeln!(buf, "TODO: allow docs on user functions.").unwrap()
+                    }
+                    Value::BuiltinFunction(kind) => {
+                        writeln!(buf, "{}", builtin_fun_doc(kind)).unwrap()
+                    }
+                    _ => {
+                        writeln!(buf, "`{}` is not a function.", name).unwrap();
+                    }
+                }
+            } else {
+                writeln!(buf, "No function defined named `{}`.", name).unwrap();
+            }
         }
         Command::Source => {
             write!(buf, "{}", session.history).unwrap();

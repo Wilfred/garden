@@ -121,11 +121,11 @@ fn require_a_token<'a>(
     }
 }
 
-fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<usize, ParseError> {
+fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<'a>, ParseError> {
     match pop_token(tokens) {
         Some(token) => {
             if token.text == expected {
-                Ok(token.offset)
+                Ok(token)
             } else {
                 Err(ParseError::OtherError(format!(
                     "Expected `{}`, got `{}`",
@@ -187,7 +187,7 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> 
 }
 
 fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let offset = require_token(tokens, "if")?;
+    let if_token = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
     let condition = parse_expression(tokens)?;
@@ -208,13 +208,13 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     };
 
     Ok(Statement(
-        offset,
+        if_token.offset,
         Statement_::If(condition, then_body, else_body),
     ))
 }
 
 fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let offset = require_token(tokens, "while")?;
+    let while_token = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
     let condition = parse_expression(tokens)?;
@@ -222,15 +222,18 @@ fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> 
 
     let body = parse_block(tokens)?;
 
-    Ok(Statement(offset, Statement_::While(condition, body)))
+    Ok(Statement(
+        while_token.offset,
+        Statement_::While(condition, body),
+    ))
 }
 
 fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let offset = require_token(tokens, "return")?;
+    let return_token = require_token(tokens, "return")?;
 
     let expr = parse_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
-    Ok(Statement(offset, Statement_::Return(expr)))
+    Ok(Statement(return_token.offset, Statement_::Return(expr)))
 }
 
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -452,13 +455,13 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
 }
 
 fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
-    let offset = require_token(tokens, "fun")?;
+    let fun_token = require_token(tokens, "fun")?;
     let (_, name) = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
     let body = parse_function_body(tokens)?;
 
     Ok(Definition(
-        offset,
+        fun_token.offset,
         Definition_::Fun(None, name, params, body),
     ))
 }
@@ -495,14 +498,14 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName
 }
 
 fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let offset = require_token(tokens, "let")?;
+    let let_token = require_token(tokens, "let")?;
     let (_, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
     let expr = parse_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
-    Ok(Statement(offset, Statement_::Let(variable, expr)))
+    Ok(Statement(let_token.offset, Statement_::Let(variable, expr)))
 }
 
 fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {

@@ -57,7 +57,13 @@ pub struct Statement(pub usize, pub Statement_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
-    Fun(VariableName, Vec<VariableName>, Vec<Statement>),
+    // TODO: define a FunDetails struct.
+    Fun(
+        Option<String>,
+        VariableName,
+        Vec<VariableName>,
+        Vec<Statement>,
+    ),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -451,7 +457,10 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let params = parse_function_params(tokens)?;
     let body = parse_function_body(tokens)?;
 
-    Ok(Definition(offset, Definition_::Fun(name, params, body)))
+    Ok(Definition(
+        offset,
+        Definition_::Fun(None, name, params, body),
+    ))
 }
 
 const RESERVED_WORDS: &[&str] = &[

@@ -456,13 +456,18 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
 
 fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
+    let mut doc_comment = None;
+    if !fun_token.preceding_comments.is_empty() {
+        doc_comment = Some(fun_token.preceding_comments.join("\n"));
+    }
+
     let (_, name) = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
     let body = parse_function_body(tokens)?;
 
     Ok(Definition(
         fun_token.offset,
-        Definition_::Fun(None, name, params, body),
+        Definition_::Fun(doc_comment, name, params, body),
     ))
 }
 

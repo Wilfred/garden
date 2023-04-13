@@ -454,11 +454,19 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
     Ok(stmts)
 }
 
+fn join_comments(comments: &[&str]) -> String {
+    comments
+        .iter()
+        .map(|comment| comment.strip_prefix(" ").unwrap_or(comment))
+        .collect::<Vec<_>>()
+        .join("")
+}
+
 fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
     let mut doc_comment = None;
     if !fun_token.preceding_comments.is_empty() {
-        doc_comment = Some(fun_token.preceding_comments.join("\n"));
+        doc_comment = Some(join_comments(&fun_token.preceding_comments));
     }
 
     let (_, name) = parse_variable_name(tokens)?;
@@ -845,6 +853,27 @@ mod tests {
             vec![Statement(
                 0,
                 Statement_::Return(Expression(7, Expression_::BoolLiteral(true)))
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_function() {
+        let ast = match parse_def_or_expr_from_str("// Hello\n// World\nfun foo() {}").unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+
+        assert_eq!(
+            ast,
+            vec![Definition(
+                18,
+                Definition_::Fun(
+                    Some("Hello\nWorld\n".into()),
+                    VariableName("foo".into()),
+                    vec![],
+                    vec![]
+                )
             )]
         );
     }

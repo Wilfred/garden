@@ -102,9 +102,11 @@ pub fn run_command<T: Write>(
         Command::Doc(name) => {
             if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
                 match value {
-                    Value::Fun(_, _, _, _) => {
-                        writeln!(buf, "TODO: allow docs on user functions.").unwrap()
+                    Value::Fun(doc_comment, name, _, _) => match doc_comment {
+                        Some(doc_comment) => writeln!(buf, "{}", doc_comment),
+                        None => writeln!(buf, "`{}` has no documentation comment.", name.0),
                     }
+                    .unwrap(),
                     Value::BuiltinFunction(kind) => {
                         writeln!(buf, "{}", builtin_fun_doc(kind)).unwrap()
                     }

@@ -18,7 +18,12 @@ use rustyline::Editor;
 pub enum Value {
     Integer(i64),
     Boolean(bool),
-    Fun(VariableName, Vec<VariableName>, Vec<Statement>),
+    Fun(
+        Option<String>,
+        VariableName,
+        Vec<VariableName>,
+        Vec<Statement>,
+    ),
     BuiltinFunction(BuiltinFunctionKind),
     String(String),
     Void,
@@ -54,7 +59,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(name, _, _) => write!(f, "(function: {})", name.0),
+            Value::Fun(_, name, _, _) => write!(f, "(function: {})", name.0),
             Value::BuiltinFunction(kind) => {
                 let name = match kind {
                     BuiltinFunctionKind::Print => "print",
@@ -217,10 +222,15 @@ pub fn eval_def_or_exprs(
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     for definition in definitions {
         match &definition.1 {
-            Definition_::Fun(_, name, params, body) => {
+            Definition_::Fun(doc_comment, name, params, body) => {
                 env.set_with_file_scope(
                     name,
-                    Value::Fun(name.clone(), params.clone(), body.clone()),
+                    Value::Fun(
+                        doc_comment.clone(),
+                        name.clone(),
+                        params.clone(),
+                        body.clone(),
+                    ),
                 );
             }
         }
@@ -600,7 +610,7 @@ pub fn eval_stmts(
                             }
 
                             match receiver_value {
-                                Value::Fun(name, params, body) => {
+                                Value::Fun(_, name, params, body) => {
                                     if params.len() != arg_values.len() {
                                         return Err(EvalError::UserError(format!(
                                             "Expected {} arguments to function {}, but got {}",

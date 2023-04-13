@@ -102,7 +102,7 @@ pub fn run_command<T: Write>(
         Command::Doc(name) => {
             if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
                 match value {
-                    Value::Fun(_, _, _) => {
+                    Value::Fun(_, _, _, _) => {
                         writeln!(buf, "TODO: allow docs on user functions.").unwrap()
                     }
                     Value::BuiltinFunction(kind) => {

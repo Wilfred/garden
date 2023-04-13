@@ -563,7 +563,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
         if s.starts_with("//") {
             if let Some(i) = s.find("\n") {
                 preceding_comments.push(&s["//".len()..i]);
-                offset = i;
+                offset += i;
                 continue;
             } else {
                 // TODO: allow comments on the last line, even if not

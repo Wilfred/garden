@@ -574,8 +574,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
                 offset += i + 1;
                 continue;
             } else {
-                // TODO: allow comments on the last line, even if not
-                // newline terminated.
+                offset = s.len();
                 break;
             }
         }
@@ -752,6 +751,11 @@ mod tests {
                 preceding_comments: vec![" 2\n"],
             }]
         );
+    }
+
+    #[test]
+    fn test_lex_standalone_comment() {
+        assert_eq!(lex("// foo").unwrap(), vec![]);
     }
 
     #[test]

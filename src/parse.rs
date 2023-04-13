@@ -561,6 +561,8 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
                 offset = i;
                 continue;
             } else {
+                // TODO: allow comments on the last line, even if not
+                // newline terminated.
                 break;
             }
         }

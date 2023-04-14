@@ -99,9 +99,25 @@ fn read_multiline_syntax(
 
     loop {
         match parse_def_or_expr_from_str(&src) {
-            Ok(items) => {
-                return Ok((src, items));
-            }
+            Ok(items) => match items {
+                DefinitionsOrExpression::Defs(ref defs)
+                    if defs.is_empty() && !src.trim().is_empty() =>
+                {
+                    // If we didn't parse anything, but the text isn't
+                    // just whitespace, it's probably a comment that
+                    // will become a doc comment
+                    match rl.readline(&prompt_symbol(1)) {
+                        Ok(input) => {
+                            src.push('\n');
+                            src.push_str(&input);
+                        }
+                        Err(_) => return Ok((src, items)),
+                    }
+                }
+                _ => {
+                    return Ok((src, items));
+                }
+            },
             Err(e @ ParseError::Incomplete(_)) => match rl.readline(&prompt_symbol(1)) {
                 Ok(input) => {
                     src.push('\n');

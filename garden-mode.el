@@ -82,11 +82,11 @@
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 
-(defun garden-send-help ()
+(defun garden-help-command ()
   (interactive)
   (garden-send-command ":help"))
 
-(defun garden-send-abort ()
+(defun garden-abort-command ()
   (interactive)
   (garden-send-command ":abort"))
 

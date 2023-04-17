@@ -39,3 +39,7 @@ Expressions evaluated are written to a log, so users can copy them
 Unbounded stack (stored on heap).
 
 Combine type and value information when inspecting bad stacks.
+
+## Conventional Syntax and Semantics
+
+Innovate on the tooling, not the language syntax.

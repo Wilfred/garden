@@ -80,7 +80,6 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
             write!(buf, " {},", name.green()).unwrap();
         }
     }
-    writeln!(buf).unwrap();
 }
 
 #[derive(Debug)]
@@ -96,40 +95,54 @@ pub fn run_command<T: Write>(
 ) -> Result<(), CommandError> {
     match cmd {
         Command::Help => {
-            writeln!(buf, "{}\n", HELP_TOPICS[0].1).unwrap();
+            write!(buf, "{}", HELP_TOPICS[0].1).unwrap();
             print_available_commands(buf);
         }
         Command::Doc(name) => {
             if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
                 match value {
                     Value::Fun(doc_comment, name, _, _) => match doc_comment {
-                        Some(doc_comment) => writeln!(buf, "{}", doc_comment),
+                        Some(doc_comment) => write!(buf, "{}", doc_comment),
                         None => writeln!(buf, "`{}` has no documentation comment.", name.0),
                     }
                     .unwrap(),
                     Value::BuiltinFunction(kind) => {
-                        writeln!(buf, "{}", builtin_fun_doc(kind)).unwrap()
+                        write!(buf, "{}", builtin_fun_doc(kind)).unwrap()
                     }
                     _ => {
-                        writeln!(buf, "`{}` is not a function.", name).unwrap();
+                        write!(buf, "`{}` is not a function.", name).unwrap();
                     }
                 }
             } else {
-                writeln!(buf, "No function defined named `{}`.", name).unwrap();
+                write!(buf, "No function defined named `{}`.", name).unwrap();
             }
         }
         Command::Source => {
             write!(buf, "{}", session.history).unwrap();
         }
         Command::Globals => {
-            for (var_name, value) in &env.file_scope {
-                writeln!(buf, "{}\t{}", var_name.0.bright_green(), value).unwrap();
+            for (i, (var_name, value)) in env.file_scope.iter().enumerate() {
+                write!(
+                    buf,
+                    "{}{}\t{}",
+                    if i == 0 { "" } else { "\n" },
+                    var_name.0.bright_green(),
+                    value
+                )
+                .unwrap();
             }
         }
         Command::Locals => {
             if let Some((_, fun_scope)) = env.fun_scopes.last() {
-                for (var_name, value) in fun_scope {
-                    writeln!(buf, "{}\t{}", var_name.0.bright_green(), value).unwrap();
+                for (i, (var_name, value)) in fun_scope.iter().enumerate() {
+                    write!(
+                        buf,
+                        "{}{}\t{}",
+                        if i == 0 { "" } else { "\n" },
+                        var_name.0.bright_green(),
+                        value
+                    )
+                    .unwrap();
                 }
             }
         }
@@ -138,9 +151,9 @@ pub fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             match parse_def_or_expr_from_str(&src) {
-                Ok(ast) => writeln!(buf, "{:?}", ast).unwrap(),
+                Ok(ast) => write!(buf, "{:?}", ast).unwrap(),
                 Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
-                    writeln!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
+                    write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
                 }
             };
         }
@@ -155,7 +168,13 @@ pub fn run_command<T: Write>(
 }
 
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
-    for (description, _) in env.fun_scopes.iter().rev() {
-        writeln!(buf, "In {}", description.0).unwrap();
+    for (i, (description, _)) in env.fun_scopes.iter().rev().enumerate() {
+        write!(
+            buf,
+            "{}In {}",
+            if i == 0 { "" } else { "\n" },
+            description.0
+        )
+        .unwrap();
     }
 }

@@ -43,6 +43,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     Some(cmd) => {
                         match run_command(&mut std::io::stdout(), &cmd, &env, &session) {
                             Ok(()) => {
+                                println!();
                                 continue;
                             }
                             Err(CommandError::Abort) => {

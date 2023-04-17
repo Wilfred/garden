@@ -455,11 +455,16 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
 }
 
 fn join_comments(comments: &[&str]) -> String {
-    comments
+    let mut comment_texts = comments
         .iter()
         .map(|comment| comment.strip_prefix(" ").unwrap_or(comment))
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<Vec<_>>();
+
+    if let Some(comment_text) = comment_texts.last_mut() {
+        *comment_text = comment_text.strip_suffix("\n").unwrap_or(&comment_text)
+    }
+
+    comment_texts.join("")
 }
 
 fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
@@ -873,7 +878,7 @@ mod tests {
             vec![Definition(
                 18,
                 Definition_::Fun(
-                    Some("Hello\nWorld\n".into()),
+                    Some("Hello\nWorld".into()),
                     VariableName("foo".into()),
                     vec![],
                     vec![]

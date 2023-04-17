@@ -87,6 +87,37 @@ pub enum CommandError {
     Abort,
 }
 
+fn describe_fun(value: &Value) -> Option<String> {
+    match value {
+        Value::Fun(doc_comment, name, params, _) => {
+            let mut res = String::new();
+            match doc_comment {
+                Some(doc_comment) => {
+                    res.push_str(&doc_comment);
+                }
+                None => res.push_str(&format!("`{}` has no documentation comment.", name.0)),
+            }
+            res.push_str("\n\n");
+
+            res.push_str(&format!(
+                "fn {}({}) {{ ... }}",
+                name.0,
+                params
+                    .iter()
+                    .map(|p| p.0.clone())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+            Some(res)
+        }
+        Value::BuiltinFunction(kind) => {
+            // TODO: show signature of built-in functions.
+            Some(builtin_fun_doc(kind).to_owned())
+        }
+        _ => None,
+    }
+}
+
 pub fn run_command<T: Write>(
     buf: &mut T,
     cmd: &Command,
@@ -100,19 +131,11 @@ pub fn run_command<T: Write>(
         }
         Command::Doc(name) => {
             if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
-                match value {
-                    Value::Fun(doc_comment, name, _, _) => match doc_comment {
-                        Some(doc_comment) => write!(buf, "{}", doc_comment),
-                        None => write!(buf, "`{}` has no documentation comment.", name.0),
-                    }
-                    .unwrap(),
-                    Value::BuiltinFunction(kind) => {
-                        write!(buf, "{}", builtin_fun_doc(kind)).unwrap()
-                    }
-                    _ => {
-                        write!(buf, "`{}` is not a function.", name).unwrap();
-                    }
+                match describe_fun(value) {
+                    Some(description) => write!(buf, "{}", description),
+                    None => write!(buf, "`{}` is not a function.", name),
                 }
+                .unwrap();
             } else {
                 write!(buf, "No function defined named `{}`.", name).unwrap();
             }

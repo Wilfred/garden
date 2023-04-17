@@ -80,7 +80,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                         }
                     }
                     Err(ParseError::Incomplete(e)) => {
-                        println!("Parsing failed: {}", e);
+                        println!("Parsing failed (incomplete): {}", e);
                     }
                     Err(ParseError::OtherError(e)) => {
                         println!("Parsing failed: {}", e);

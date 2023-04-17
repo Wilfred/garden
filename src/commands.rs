@@ -103,7 +103,7 @@ pub fn run_command<T: Write>(
                 match value {
                     Value::Fun(doc_comment, name, _, _) => match doc_comment {
                         Some(doc_comment) => write!(buf, "{}", doc_comment),
-                        None => writeln!(buf, "`{}` has no documentation comment.", name.0),
+                        None => write!(buf, "`{}` has no documentation comment.", name.0),
                     }
                     .unwrap(),
                     Value::BuiltinFunction(kind) => {

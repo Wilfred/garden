@@ -579,7 +579,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
                 offset += i + 1;
                 continue;
             } else {
-                offset = s.len();
+                offset += s.len();
                 break;
             }
         }
@@ -756,6 +756,11 @@ mod tests {
                 preceding_comments: vec![" 2\n"],
             }]
         );
+    }
+
+    #[test]
+    fn test_lex_comment_leading_newline() {
+        assert_eq!(lex("\n// 2").unwrap(), vec![]);
     }
 
     #[test]

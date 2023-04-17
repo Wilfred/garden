@@ -90,6 +90,14 @@
   (interactive)
   (garden-send-command ":abort"))
 
+(defun garden-doc-command ()
+  (interactive)
+  (let ((sym (thing-at-point 'symbol)))
+    ;; TODO: should arguments be a JSON payload rather than string
+    ;; concatenation?
+    (when sym
+      (garden-send-command (format ":doc %s" sym)))))
+
 (defun garden-stop ()
   (interactive)
   (let ((buf (garden--json-buffer)))

@@ -95,7 +95,7 @@ pub fn run_command<T: Write>(
 ) -> Result<(), CommandError> {
     match cmd {
         Command::Help => {
-            write!(buf, "{}", HELP_TOPICS[0].1).unwrap();
+            write!(buf, "{} ", HELP_TOPICS[0].1).unwrap();
             print_available_commands(buf);
         }
         Command::Doc(name) => {

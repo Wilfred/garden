@@ -33,7 +33,7 @@ pub enum ResponseKind {
     Evaluate,
     RunCommand,
     Ready,
-    Malformed,
+    MalformedRequest,
     Printed,
 }
 
@@ -118,7 +118,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                 },
             },
             Err(_) => Response {
-                kind: ResponseKind::Malformed,
+                kind: ResponseKind::MalformedRequest,
                 value: Err(format!(
                     "Could not parse request: {}. A valid request looks like: {}",
                     line,

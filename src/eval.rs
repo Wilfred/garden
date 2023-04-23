@@ -78,6 +78,7 @@ impl Display for Value {
 pub struct StackFrame {
     pub fun_name: VariableName,
     pub bindings: HashMap<VariableName, Value>,
+    pub stmts_to_eval: Vec<(bool, Statement)>,
 }
 
 #[derive(Debug)]
@@ -103,50 +104,28 @@ impl Default for Env {
             stack: vec![StackFrame {
                 fun_name: VariableName("toplevel".into()),
                 bindings: HashMap::new(),
+                stmts_to_eval: vec![],
             }],
         }
     }
 }
 
 impl Env {
-    pub fn get(&self, name: &VariableName) -> Option<Value> {
-        if let Some(stack_frame) = self.stack.last() {
-            if let Some(value) = stack_frame.bindings.get(name) {
-                return Some(value.clone());
-            }
-        }
-
-        if let Some(value) = self.file_scope.get(name) {
-            return Some(value.clone());
-        }
-
-        None
-    }
-
-    pub fn push_new_fun_scope(&mut self, fun_name: &VariableName) {
-        self.stack.push(StackFrame {
-            fun_name: fun_name.clone(),
-            bindings: HashMap::new(),
-        });
-    }
-
-    pub fn pop_fun_scope(&mut self) {
-        self.stack.pop().unwrap();
-    }
-
     pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }
+}
 
-    pub fn set_with_fun_scope(&mut self, name: &VariableName, value: Value) {
-        let stack_frame = &mut self.stack.last_mut().unwrap();
-        stack_frame.bindings.insert(name.clone(), value);
+fn get_var(name: &VariableName, stack_frame: &StackFrame, env: &Env) -> Option<Value> {
+    if let Some(value) = stack_frame.bindings.get(name) {
+        return Some(value.clone());
     }
 
-    pub fn fun_scope_has_var(&self, name: &VariableName) -> bool {
-        let stack_frame = self.stack.last().unwrap();
-        stack_frame.bindings.contains_key(name)
+    if let Some(value) = env.file_scope.get(name) {
+        return Some(value.clone());
     }
+
+    None
 }
 
 #[derive(Debug)]
@@ -180,7 +159,7 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
                             Err(CommandError::Abort) => {
                                 // Pop to toplevel.
                                 while env.stack.len() > 1 {
-                                    env.pop_fun_scope();
+                                    env.stack.pop();
                                 }
 
                                 return Err(EvalError::Aborted);
@@ -260,12 +239,16 @@ pub fn eval_stmts(
         stmts_to_eval.push((false, stmt.clone()));
     }
 
-    let mut stmts_to_eval_per_fun: Vec<Vec<(bool, Statement)>> = vec![stmts_to_eval];
+    let top_stack = env.stack.last_mut().unwrap();
+    // TODO: do this setup outside of this function.
+    top_stack.stmts_to_eval = stmts_to_eval;
+
     let mut evalled_values: Vec<Value> = vec![Value::Void];
 
     loop {
-        if let Some(stmts_to_eval) = stmts_to_eval_per_fun.last_mut() {
-            if let Some((done_children, Statement(offset, stmt_))) = stmts_to_eval.pop() {
+        if let Some(mut stack_frame) = env.stack.pop() {
+            if let Some((done_children, Statement(offset, stmt_))) = stack_frame.stmts_to_eval.pop()
+            {
                 if session.interrupted.load(Ordering::SeqCst) {
                     // TODO: prompt for what to do next.
                     println!("Got ctrl-c");
@@ -283,11 +266,11 @@ pub fn eval_stmts(
                                 Value::Boolean(b) => {
                                     if b {
                                         for stmt in then_body.iter().rev() {
-                                            stmts_to_eval.push((false, stmt.clone()));
+                                            stack_frame.stmts_to_eval.push((false, stmt.clone()));
                                         }
                                     } else {
                                         for stmt in else_body.iter().rev() {
-                                            stmts_to_eval.push((false, stmt.clone()));
+                                            stack_frame.stmts_to_eval.push((false, stmt.clone()));
                                         }
                                     }
                                 }
@@ -299,8 +282,10 @@ pub fn eval_stmts(
                                 }
                             }
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval.push((
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame.stmts_to_eval.push((
                                 false,
                                 Statement(condition.0, Statement_::Expr(condition.clone())),
                             ));
@@ -315,11 +300,13 @@ pub fn eval_stmts(
                                 Value::Boolean(b) => {
                                     if b {
                                         // Start loop evaluation again.
-                                        stmts_to_eval.push((false, Statement(offset, stmt_copy)));
+                                        stack_frame
+                                            .stmts_to_eval
+                                            .push((false, Statement(offset, stmt_copy)));
 
                                         // Evaluate the body.
                                         for stmt in body.iter().rev() {
-                                            stmts_to_eval.push((false, stmt.clone()));
+                                            stack_frame.stmts_to_eval.push((false, stmt.clone()));
                                         }
                                     } else {
                                         evalled_values.push(Value::Void);
@@ -333,8 +320,10 @@ pub fn eval_stmts(
                                 }
                             }
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval.push((
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame.stmts_to_eval.push((
                                 false,
                                 Statement(condition.0, Statement_::Expr(condition.clone())),
                             ));
@@ -342,7 +331,7 @@ pub fn eval_stmts(
                     }
                     Statement_::Let(variable, expr) => {
                         if done_children {
-                            if env.fun_scope_has_var(&variable) {
+                            if stack_frame.bindings.contains_key(&variable) {
                                 return Err(EvalError::UserError(format!(
                                     "{} is already bound. Try `{} = something` instead.",
                                     variable.0, variable.0
@@ -352,27 +341,33 @@ pub fn eval_stmts(
                             let expr_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for let value");
-                            env.set_with_fun_scope(&variable, expr_value.clone());
+                            stack_frame.bindings.insert(variable, expr_value.clone());
                             evalled_values.push(expr_value);
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
                     Statement_::Return(expr) => {
                         if done_children {
                             // No more statements to evaluate in this function.
-                            stmts_to_eval.clear();
+                            stack_frame.stmts_to_eval.clear();
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
                     Statement_::Assign(variable, expr) => {
                         if done_children {
-                            if !env.fun_scope_has_var(&variable) {
+                            if !stack_frame.bindings.contains_key(&variable) {
                                 return Err(EvalError::UserError(format!(
                                     "{} is not currently bound. Try `let {} = something`.",
                                     variable.0, variable.0
@@ -382,11 +377,14 @@ pub fn eval_stmts(
                             let expr_value = evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for let value");
-                            env.set_with_fun_scope(&variable, expr_value.clone());
+                            stack_frame.bindings.insert(variable, expr_value.clone());
                             evalled_values.push(expr_value);
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
@@ -400,7 +398,7 @@ pub fn eval_stmts(
                         evalled_values.push(Value::String(s));
                     }
                     Statement_::Expr(Expression(_, Expression_::Variable(name))) => {
-                        if let Some(value) = env.get(&name) {
+                        if let Some(value) = get_var(&name, &stack_frame, &env) {
                             evalled_values.push(value);
                         } else {
                             if session.has_attached_stdout {
@@ -409,7 +407,7 @@ pub fn eval_stmts(
                                     env,
                                     &session,
                                 )?;
-                                stmts_to_eval.push((false, stmt));
+                                stack_frame.stmts_to_eval.push((false, stmt));
                             } else {
                                 // TODO: add equivalent to error_prompt in JSON sessions.
                                 return Err(EvalError::UserError(format!(
@@ -493,10 +491,14 @@ pub fn eval_stmts(
                                 }
                             }
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
                         }
                     }
@@ -548,10 +550,14 @@ pub fn eval_stmts(
                                 _ => unreachable!(),
                             }
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
                         }
                     }
@@ -601,10 +607,14 @@ pub fn eval_stmts(
                             }
                         } else {
                             // TODO: do short-circuit evaluation of && and ||.
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(rhs.0, Statement_::Expr(*rhs.clone()))));
-                            stmts_to_eval
+                            stack_frame
+                                .stmts_to_eval
                                 .push((false, Statement(lhs.0, Statement_::Expr(*lhs.clone()))));
                         }
                     }
@@ -633,16 +643,24 @@ pub fn eval_stmts(
                                         )));
                                     }
 
-                                    env.push_new_fun_scope(&name);
-                                    for (param, value) in params.iter().zip(arg_values.iter()) {
-                                        env.set_with_fun_scope(param, value.clone());
-                                    }
+                                    env.stack.push(stack_frame);
 
                                     let mut fun_subexprs = vec![];
                                     for stmt in body.iter().rev() {
                                         fun_subexprs.push((false, stmt.clone()));
                                     }
-                                    stmts_to_eval_per_fun.push(fun_subexprs);
+
+                                    let mut fun_bindings = HashMap::new();
+                                    for (param, value) in params.iter().zip(arg_values.iter()) {
+                                        fun_bindings.insert(param.clone(), value.clone());
+                                    }
+
+                                    env.stack.push(StackFrame {
+                                        fun_name: name.clone(),
+                                        bindings: fun_bindings,
+                                        stmts_to_eval: fun_subexprs,
+                                    });
+
                                     continue;
                                 }
                                 Value::BuiltinFunction(kind) => match kind {
@@ -705,31 +723,37 @@ pub fn eval_stmts(
                                 }
                             }
                         } else {
-                            stmts_to_eval.push((true, Statement(offset, stmt_copy)));
+                            stack_frame
+                                .stmts_to_eval
+                                .push((true, Statement(offset, stmt_copy)));
 
-                            stmts_to_eval.push((
+                            stack_frame.stmts_to_eval.push((
                                 false,
                                 Statement(receiver.0, Statement_::Expr(*receiver.clone())),
                             ));
                             for arg in args {
-                                stmts_to_eval
+                                stack_frame
+                                    .stmts_to_eval
                                     .push((false, Statement(arg.0, Statement_::Expr(arg.clone()))));
                             }
                         }
                     }
                 }
-            } else {
-                assert!(stmts_to_eval.is_empty());
-                stmts_to_eval_per_fun.pop();
+            }
 
-                // Reached end of this block. Pop to the parent.
-                if env.stack.len() > 1 {
+            if stack_frame.stmts_to_eval.is_empty() {
+                // No more statements in this stack frame.
+                if env.stack.is_empty() {
                     // Don't pop the outer scope: that's for the top level environment.
-                    env.pop_fun_scope();
+                    env.stack.push(stack_frame);
+                    break;
                 }
+            } else {
+                // Keep going on this stack frame.
+                env.stack.push(stack_frame);
             }
         } else {
-            break;
+            unreachable!();
         }
     }
 

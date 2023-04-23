@@ -202,6 +202,7 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
     }
 }
 
+// TODO: result is really Result<Value, ErrorWithSuspendedEnv>
 pub fn eval_def_or_exprs(
     items: &DefinitionsOrExpression,
     env: &mut Env,

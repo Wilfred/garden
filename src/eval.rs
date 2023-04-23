@@ -75,9 +75,15 @@ impl Display for Value {
 }
 
 #[derive(Debug)]
+pub struct StackFrame {
+    pub fun_name: VariableName,
+    pub bindings: HashMap<VariableName, Value>,
+}
+
+#[derive(Debug)]
 pub struct Env {
     pub file_scope: HashMap<VariableName, Value>,
-    pub fun_scopes: Vec<(VariableName, HashMap<VariableName, Value>)>,
+    pub stack: Vec<StackFrame>,
 }
 
 impl Default for Env {
@@ -94,15 +100,18 @@ impl Default for Env {
 
         Self {
             file_scope,
-            fun_scopes: vec![(VariableName("toplevel".into()), HashMap::new())],
+            stack: vec![StackFrame {
+                fun_name: VariableName("toplevel".into()),
+                bindings: HashMap::new(),
+            }],
         }
     }
 }
 
 impl Env {
     pub fn get(&self, name: &VariableName) -> Option<Value> {
-        if let Some((_, fun_scope)) = self.fun_scopes.last() {
-            if let Some(value) = fun_scope.get(name) {
+        if let Some(stack_frame) = self.stack.last() {
+            if let Some(value) = stack_frame.bindings.get(name) {
                 return Some(value.clone());
             }
         }
@@ -114,12 +123,15 @@ impl Env {
         None
     }
 
-    pub fn push_new_fun_scope(&mut self, description: &VariableName) {
-        self.fun_scopes.push((description.clone(), HashMap::new()));
+    pub fn push_new_fun_scope(&mut self, fun_name: &VariableName) {
+        self.stack.push(StackFrame {
+            fun_name: fun_name.clone(),
+            bindings: HashMap::new(),
+        });
     }
 
     pub fn pop_fun_scope(&mut self) {
-        self.fun_scopes.pop().unwrap();
+        self.stack.pop().unwrap();
     }
 
     pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
@@ -127,13 +139,13 @@ impl Env {
     }
 
     pub fn set_with_fun_scope(&mut self, name: &VariableName, value: Value) {
-        let (_, fun_scope) = &mut self.fun_scopes.last_mut().unwrap();
-        fun_scope.insert(name.clone(), value);
+        let stack_frame = &mut self.stack.last_mut().unwrap();
+        stack_frame.bindings.insert(name.clone(), value);
     }
 
     pub fn fun_scope_has_var(&self, name: &VariableName) -> bool {
-        let (_, fun_scope) = self.fun_scopes.last().unwrap();
-        fun_scope.contains_key(name)
+        let stack_frame = self.stack.last().unwrap();
+        stack_frame.bindings.contains_key(name)
     }
 }
 
@@ -167,7 +179,7 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
                             }
                             Err(CommandError::Abort) => {
                                 // Pop to toplevel.
-                                while env.fun_scopes.len() > 1 {
+                                while env.stack.len() > 1 {
                                     env.pop_fun_scope();
                                 }
 
@@ -711,7 +723,7 @@ pub fn eval_stmts(
                 stmts_to_eval_per_fun.pop();
 
                 // Reached end of this block. Pop to the parent.
-                if env.fun_scopes.len() > 1 {
+                if env.stack.len() > 1 {
                     // Don't pop the outer scope: that's for the top level environment.
                     env.pop_fun_scope();
                 }

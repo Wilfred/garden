@@ -156,8 +156,8 @@ pub fn run_command<T: Write>(
             }
         }
         Command::Locals => {
-            if let Some((_, fun_scope)) = env.fun_scopes.last() {
-                for (i, (var_name, value)) in fun_scope.iter().enumerate() {
+            if let Some(stack_frame) = env.stack.last() {
+                for (i, (var_name, value)) in stack_frame.bindings.iter().enumerate() {
                     write!(
                         buf,
                         "{}{}\t{}",
@@ -191,12 +191,12 @@ pub fn run_command<T: Write>(
 }
 
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
-    for (i, (description, _)) in env.fun_scopes.iter().rev().enumerate() {
+    for (i, stack_frame) in env.stack.iter().rev().enumerate() {
         write!(
             buf,
             "{}In {}",
             if i == 0 { "" } else { "\n" },
-            description.0
+            stack_frame.fun_name.0
         )
         .unwrap();
     }

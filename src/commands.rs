@@ -12,11 +12,11 @@ use crate::{
 #[derive(Debug, EnumIter)]
 pub enum Command {
     Abort,
-    Doc(String),
+    Doc(Option<String>),
     Help,
     Globals,
     Locals,
-    Parse(String),
+    Parse(Option<String>),
     Source,
     Stack,
     Quit,
@@ -38,11 +38,11 @@ impl Command {
             ":stack" => Some(Command::Stack),
             ":quit" => Some(Command::Quit),
             _ => {
-                // TODO: allow :parse without any trailing whitespace.
-                if let Some(src) = s.strip_prefix(":parse ") {
-                    Some(Command::Parse(src.to_owned()))
-                } else if let Some(src) = s.strip_prefix(":doc ") {
-                    Some(Command::Doc(src.to_owned()))
+                // TODO: require a word break after :parse and :doc
+                if let Some(src) = s.strip_prefix(":parse") {
+                    Some(Command::Parse(Some(src.trim_start().to_owned())))
+                } else if let Some(src) = s.strip_prefix(":doc") {
+                    Some(Command::Doc(Some(src.trim_start().to_owned())))
                 } else {
                     None
                 }
@@ -130,14 +130,18 @@ pub fn run_command<T: Write>(
             print_available_commands(buf);
         }
         Command::Doc(name) => {
-            if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
-                match describe_fun(value) {
-                    Some(description) => write!(buf, "{}", description),
-                    None => write!(buf, "`{}` is not a function.", name),
+            if let Some(name) = name {
+                if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
+                    match describe_fun(value) {
+                        Some(description) => write!(buf, "{}", description),
+                        None => write!(buf, "`{}` is not a function.", name),
+                    }
+                    .unwrap();
+                } else {
+                    write!(buf, "No function defined named `{}`.", name).unwrap();
                 }
-                .unwrap();
             } else {
-                write!(buf, "No function defined named `{}`.", name).unwrap();
+                write!(buf, ":doc requires a name, e.g. `:doc print`").unwrap();
             }
         }
         Command::Source => {
@@ -173,12 +177,16 @@ pub fn run_command<T: Write>(
             print_stack(buf, env);
         }
         Command::Parse(src) => {
-            match parse_def_or_expr_from_str(&src) {
-                Ok(ast) => write!(buf, "{:?}", ast).unwrap(),
-                Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
-                    write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
-                }
-            };
+            if let Some(src) = src {
+                match parse_def_or_expr_from_str(&src) {
+                    Ok(ast) => write!(buf, "{:?}", ast).unwrap(),
+                    Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
+                        write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
+                    }
+                };
+            } else {
+                write!(buf, ":parse requires a code snippet, e.g. `:parse 1 + 2`").unwrap();
+            }
         }
         Command::Abort => {
             return Err(CommandError::Abort);

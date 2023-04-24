@@ -48,6 +48,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                             }
                             Err(CommandError::Abort) => {
                                 // Nothing to do, we're in the top level.
+                                continue;
                             }
                         }
                     }

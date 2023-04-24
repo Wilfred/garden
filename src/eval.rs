@@ -79,6 +79,7 @@ pub struct StackFrame {
     pub fun_name: VariableName,
     pub bindings: HashMap<VariableName, Value>,
     pub stmts_to_eval: Vec<(bool, Statement)>,
+    pub evalled_values: Vec<Value>,
 }
 
 #[derive(Debug)]
@@ -105,6 +106,7 @@ impl Default for Env {
                 fun_name: VariableName("toplevel".into()),
                 bindings: HashMap::new(),
                 stmts_to_eval: vec![],
+                evalled_values: vec![Value::Void],
             }],
         }
     }
@@ -243,8 +245,6 @@ pub fn eval_stmts(
     // TODO: do this setup outside of this function.
     top_stack.stmts_to_eval = stmts_to_eval;
 
-    let mut evalled_values: Vec<Value> = vec![Value::Void];
-
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
             if let Some((done_children, Statement(offset, stmt_))) = stack_frame.stmts_to_eval.pop()
@@ -259,7 +259,8 @@ pub fn eval_stmts(
                 match stmt_ {
                     Statement_::If(condition, ref then_body, ref else_body) => {
                         if done_children {
-                            let condition_value = evalled_values
+                            let condition_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for if condition");
                             match condition_value {
@@ -293,7 +294,8 @@ pub fn eval_stmts(
                     }
                     Statement_::While(condition, ref body) => {
                         if done_children {
-                            let condition_value = evalled_values
+                            let condition_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for if condition");
                             match condition_value {
@@ -309,7 +311,7 @@ pub fn eval_stmts(
                                             stack_frame.stmts_to_eval.push((false, stmt.clone()));
                                         }
                                     } else {
-                                        evalled_values.push(Value::Void);
+                                        stack_frame.evalled_values.push(Value::Void);
                                     }
                                 }
                                 v => {
@@ -338,11 +340,12 @@ pub fn eval_stmts(
                                 )));
                             }
 
-                            let expr_value = evalled_values
+                            let expr_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for let value");
                             stack_frame.bindings.insert(variable, expr_value.clone());
-                            evalled_values.push(expr_value);
+                            stack_frame.evalled_values.push(expr_value);
                         } else {
                             stack_frame
                                 .stmts_to_eval
@@ -374,11 +377,12 @@ pub fn eval_stmts(
                                 )));
                             }
 
-                            let expr_value = evalled_values
+                            let expr_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for let value");
                             stack_frame.bindings.insert(variable, expr_value.clone());
-                            evalled_values.push(expr_value);
+                            stack_frame.evalled_values.push(expr_value);
                         } else {
                             stack_frame
                                 .stmts_to_eval
@@ -389,17 +393,17 @@ pub fn eval_stmts(
                         }
                     }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
-                        evalled_values.push(Value::Integer(i));
+                        stack_frame.evalled_values.push(Value::Integer(i));
                     }
                     Statement_::Expr(Expression(_, Expression_::BoolLiteral(b))) => {
-                        evalled_values.push(Value::Boolean(b));
+                        stack_frame.evalled_values.push(Value::Boolean(b));
                     }
                     Statement_::Expr(Expression(_, Expression_::StringLiteral(s))) => {
-                        evalled_values.push(Value::String(s));
+                        stack_frame.evalled_values.push(Value::String(s));
                     }
                     Statement_::Expr(Expression(_, Expression_::Variable(name))) => {
                         if let Some(value) = get_var(&name, &stack_frame, &env) {
-                            evalled_values.push(value);
+                            stack_frame.evalled_values.push(value);
                         } else {
                             if session.has_attached_stdout {
                                 let stmt = error_prompt(
@@ -431,10 +435,12 @@ pub fn eval_stmts(
                         ),
                     )) => {
                         if done_children {
-                            let rhs_value = evalled_values
+                            let rhs_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = evalled_values
+                            let lhs_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for LHS of binary operator");
 
@@ -459,15 +465,18 @@ pub fn eval_stmts(
 
                             match op {
                                 BinaryOperatorKind::Add => {
-                                    evalled_values
+                                    stack_frame
+                                        .evalled_values
                                         .push(Value::Integer(lhs_num.wrapping_add(rhs_num)));
                                 }
                                 BinaryOperatorKind::Subtract => {
-                                    evalled_values
+                                    stack_frame
+                                        .evalled_values
                                         .push(Value::Integer(lhs_num.wrapping_sub(rhs_num)));
                                 }
                                 BinaryOperatorKind::Multiply => {
-                                    evalled_values
+                                    stack_frame
+                                        .evalled_values
                                         .push(Value::Integer(lhs_num.wrapping_mul(rhs_num)));
                                 }
                                 BinaryOperatorKind::Divide => {
@@ -478,13 +487,19 @@ pub fn eval_stmts(
                                         )));
                                     }
 
-                                    evalled_values.push(Value::Integer(lhs_num / rhs_num));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Integer(lhs_num / rhs_num));
                                 }
                                 BinaryOperatorKind::LessThan => {
-                                    evalled_values.push(Value::Boolean(lhs_num < rhs_num));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Boolean(lhs_num < rhs_num));
                                 }
                                 BinaryOperatorKind::GreaterThan => {
-                                    evalled_values.push(Value::Boolean(lhs_num > rhs_num));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Boolean(lhs_num > rhs_num));
                                 }
                                 _ => {
                                     unreachable!()
@@ -511,10 +526,12 @@ pub fn eval_stmts(
                         ),
                     )) => {
                         if done_children {
-                            let rhs_value = evalled_values
+                            let rhs_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = evalled_values
+                            let lhs_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for LHS of binary operator");
 
@@ -542,10 +559,14 @@ pub fn eval_stmts(
 
                             match op {
                                 BinaryOperatorKind::Equal => {
-                                    evalled_values.push(Value::Boolean(lhs_num == rhs_num));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Boolean(lhs_num == rhs_num));
                                 }
                                 BinaryOperatorKind::NotEqual => {
-                                    evalled_values.push(Value::Boolean(lhs_num != rhs_num));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Boolean(lhs_num != rhs_num));
                                 }
                                 _ => unreachable!(),
                             }
@@ -570,10 +591,12 @@ pub fn eval_stmts(
                         ),
                     )) => {
                         if done_children {
-                            let rhs_value = evalled_values
+                            let rhs_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = evalled_values
+                            let lhs_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for LHS of binary operator");
 
@@ -598,10 +621,14 @@ pub fn eval_stmts(
 
                             match op {
                                 BinaryOperatorKind::And => {
-                                    evalled_values.push(Value::Boolean(lhs_bool && rhs_bool));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Boolean(lhs_bool && rhs_bool));
                                 }
                                 BinaryOperatorKind::Or => {
-                                    evalled_values.push(Value::Boolean(lhs_bool || rhs_bool));
+                                    stack_frame
+                                        .evalled_values
+                                        .push(Value::Boolean(lhs_bool || rhs_bool));
                                 }
                                 _ => unreachable!(),
                             }
@@ -620,13 +647,14 @@ pub fn eval_stmts(
                     }
                     Statement_::Expr(Expression(_, Expression_::Call(receiver, ref args))) => {
                         if done_children {
-                            let receiver_value = evalled_values
+                            let receiver_value = stack_frame
+                                .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for call receiver");
                             let mut arg_values = vec![];
                             for _ in 0..args.len() {
                                 arg_values.push(
-                                    evalled_values.pop().expect(
+                                    stack_frame.evalled_values.pop().expect(
                                         "Popped an empty value for stack for call arguments",
                                     ),
                                 );
@@ -659,6 +687,7 @@ pub fn eval_stmts(
                                         fun_name: name.clone(),
                                         bindings: fun_bindings,
                                         stmts_to_eval: fun_subexprs,
+                                        evalled_values: vec![Value::Void],
                                     });
 
                                     continue;
@@ -692,7 +721,7 @@ pub fn eval_stmts(
                                                 )));
                                             }
                                         }
-                                        evalled_values.push(Value::Void);
+                                        stack_frame.evalled_values.push(Value::Void);
                                     }
                                     BuiltinFunctionKind::IntToString => {
                                         if args.len() != 1 {
@@ -703,7 +732,8 @@ pub fn eval_stmts(
                                         }
                                         match &arg_values[0] {
                                             Value::Integer(i) => {
-                                                evalled_values
+                                                stack_frame
+                                                    .evalled_values
                                                     .push(Value::String(format!("{}", i)));
                                             }
                                             v => {
@@ -747,6 +777,15 @@ pub fn eval_stmts(
                     // Don't pop the outer scope: that's for the top level environment.
                     env.stack.push(stack_frame);
                     break;
+                } else {
+                    // The final evaluation result of the function
+                    // call should be used in the previous stack
+                    // frame.
+                    let result = stack_frame
+                        .evalled_values
+                        .pop()
+                        .expect("Should have a value");
+                    env.stack.last_mut().unwrap().evalled_values.push(result);
                 }
             } else {
                 // Keep going on this stack frame.
@@ -757,9 +796,14 @@ pub fn eval_stmts(
         }
     }
 
-    Ok(evalled_values
-        .pop()
-        .expect("Should have a value from the last expression"))
+    Ok(env
+        .stack
+        .last()
+        .expect("toplevel stack frame should exist")
+        .evalled_values
+        .last()
+        .expect("Should have a value from the last expression")
+        .clone())
 }
 
 // fn read_replacement(msg: &str) -> Result<Expression, String> {

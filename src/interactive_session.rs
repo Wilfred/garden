@@ -41,7 +41,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 match Command::from_string(&input) {
                     Some(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, &env, &session) {
+                        match run_command(&mut std::io::stdout(), &cmd, &mut env, &session) {
                             Ok(()) => {
                                 println!();
                                 continue;

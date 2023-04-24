@@ -158,7 +158,7 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
             Ok(input) => {
                 match Command::from_string(&input) {
                     Some(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, &env, session) {
+                        match run_command(&mut std::io::stdout(), &cmd, env, session) {
                             Ok(()) => {
                                 println!();
                                 continue;

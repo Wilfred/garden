@@ -121,7 +121,7 @@ fn describe_fun(value: &Value) -> Option<String> {
 pub fn run_command<T: Write>(
     buf: &mut T,
     cmd: &Command,
-    env: &Env,
+    env: &mut Env,
     session: &Session,
 ) -> Result<(), CommandError> {
     match cmd {
@@ -189,6 +189,7 @@ pub fn run_command<T: Write>(
             }
         }
         Command::Abort => {
+            env.pop_to_toplevel();
             return Err(CommandError::Abort);
         }
         Command::Quit => {

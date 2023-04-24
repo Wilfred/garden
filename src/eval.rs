@@ -113,6 +113,10 @@ impl Default for Env {
 }
 
 impl Env {
+    pub fn pop_to_toplevel(&mut self) {
+        self.stack.truncate(1);
+    }
+
     pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }
@@ -140,6 +144,7 @@ pub struct Session<'a> {
 #[derive(Debug)]
 pub enum EvalError {
     UserError(String),
+    // ResumableError(String),
     Aborted,
 }
 
@@ -276,6 +281,7 @@ pub fn eval_stmts(
                                     }
                                 }
                                 v => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected a boolean, but got: {}",
                                         v
@@ -315,6 +321,7 @@ pub fn eval_stmts(
                                     }
                                 }
                                 v => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected a boolean, but got: {}",
                                         v
@@ -334,6 +341,7 @@ pub fn eval_stmts(
                     Statement_::Let(variable, expr) => {
                         if done_children {
                             if stack_frame.bindings.contains_key(&variable) {
+                                env.pop_to_toplevel();
                                 return Err(EvalError::UserError(format!(
                                     "{} is already bound. Try `{} = something` instead.",
                                     variable.0, variable.0
@@ -371,6 +379,7 @@ pub fn eval_stmts(
                     Statement_::Assign(variable, expr) => {
                         if done_children {
                             if !stack_frame.bindings.contains_key(&variable) {
+                                env.pop_to_toplevel();
                                 return Err(EvalError::UserError(format!(
                                     "{} is not currently bound. Try `let {} = something`.",
                                     variable.0, variable.0
@@ -414,6 +423,7 @@ pub fn eval_stmts(
                                 stack_frame.stmts_to_eval.push((false, stmt));
                             } else {
                                 // TODO: add equivalent to error_prompt in JSON sessions.
+                                env.pop_to_toplevel();
                                 return Err(EvalError::UserError(format!(
                                     "Undefined variable: {}",
                                     name.0
@@ -447,6 +457,7 @@ pub fn eval_stmts(
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
@@ -456,6 +467,7 @@ pub fn eval_stmts(
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",
                                         rhs_value
@@ -481,6 +493,7 @@ pub fn eval_stmts(
                                 }
                                 BinaryOperatorKind::Divide => {
                                     if rhs_num == 0 {
+                                        env.pop_to_toplevel();
                                         return Err(EvalError::UserError(format!(
                                             "Tried to divide {} by zero.",
                                             rhs_value
@@ -538,6 +551,7 @@ pub fn eval_stmts(
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
@@ -547,6 +561,7 @@ pub fn eval_stmts(
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         // TODO: use the term 'int' or 'integer' in error messages?
                                         // int: reflects code
@@ -603,6 +618,7 @@ pub fn eval_stmts(
                             let lhs_bool = match lhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected a bool, but got: {}",
                                         lhs_value
@@ -612,6 +628,7 @@ pub fn eval_stmts(
                             let rhs_bool = match rhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected a bool, but got: {}",
                                         rhs_value
@@ -663,6 +680,7 @@ pub fn eval_stmts(
                             match receiver_value {
                                 Value::Fun(_, name, params, body) => {
                                     if params.len() != arg_values.len() {
+                                        env.pop_to_toplevel();
                                         return Err(EvalError::UserError(format!(
                                             "Expected {} arguments to function {}, but got {}",
                                             params.len(),
@@ -695,6 +713,7 @@ pub fn eval_stmts(
                                 Value::BuiltinFunction(kind) => match kind {
                                     BuiltinFunctionKind::Print => {
                                         if args.len() != 1 {
+                                            env.pop_to_toplevel();
                                             return Err(EvalError::UserError(format!(
                                                 "Function print requires 1 argument, but got: {}",
                                                 args.len()
@@ -715,6 +734,7 @@ pub fn eval_stmts(
                                                 }
                                             }
                                             v => {
+                                                env.pop_to_toplevel();
                                                 return Err(EvalError::UserError(format!(
                                                     "Expected a string, but got: {}",
                                                     v
@@ -725,6 +745,7 @@ pub fn eval_stmts(
                                     }
                                     BuiltinFunctionKind::IntToString => {
                                         if args.len() != 1 {
+                                            env.pop_to_toplevel();
                                             return Err(EvalError::UserError(format!(
                                                 "Function print requires 1 argument, but got: {}",
                                                 args.len()
@@ -737,6 +758,7 @@ pub fn eval_stmts(
                                                     .push(Value::String(format!("{}", i)));
                                             }
                                             v => {
+                                                env.pop_to_toplevel();
                                                 return Err(EvalError::UserError(format!(
                                                     "Expected an integer, but got: {}",
                                                     v
@@ -746,6 +768,7 @@ pub fn eval_stmts(
                                     }
                                 },
                                 v => {
+                                    env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected a function, but got: {}",
                                         v

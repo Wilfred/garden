@@ -184,7 +184,7 @@ fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<State
                 match asts {
                     DefinitionsOrExpression::Defs(defs) => {
                         return Err(EvalError::UserError(format!(
-                            "Expected to read a single statement, got {} definitoins",
+                            "Expected to read a single statement, got {} definitions",
                             defs.len()
                         )));
                     }

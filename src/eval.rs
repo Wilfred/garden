@@ -236,7 +236,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     }
 }
 
-pub fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
+pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
             if let Some((done_children, Statement(offset, stmt_))) = stack_frame.stmts_to_eval.pop()
@@ -268,6 +268,10 @@ pub fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
                                     }
                                 }
                                 v => {
+                                    stack_frame
+                                        .stmts_to_eval
+                                        .push((done_children, Statement(offset, stmt_copy)));
+                                    env.stack.push(stack_frame);
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean, but got: {}",
                                         v
@@ -829,7 +833,7 @@ pub fn eval_stmts(
     // TODO: do this setup outside of this function.
     top_stack.stmts_to_eval = stmts_to_eval;
 
-    eval(env, session)
+    eval_env(env, session)
 }
 
 // fn read_replacement(msg: &str) -> Result<Expression, String> {

@@ -4,7 +4,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
-use crate::eval::{self, Session};
+use crate::eval::{self, eval_env, Session};
 use crate::eval::{eval_def_or_exprs, EvalError};
 use crate::parse::{
     parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
@@ -77,7 +77,9 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                 }
                             },
                             Err(EvalError::Aborted) => {}
-                            Err(EvalError::ResumableError(_)) => {
+                            Err(EvalError::ResumableError(msg)) => {
+                                println!("{}", msg);
+
                                 let stack_frame = env.stack.last_mut().unwrap();
                                 // Proof of concept: use true as a value and keep going.
                                 stack_frame.stmts_to_eval.push((
@@ -91,9 +93,19 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                     ),
                                 ));
 
-                                // TODO: handle errors from this case.
-                                // TODO: define an eval function that just uses the env.
-                                // eval_def_or_exprs(&items, &mut env, &mut session);
+                                // TODO: loop.
+                                if let Ok(result) = eval_env(&mut env, &mut session) {
+                                    match result {
+                                        eval::Value::Void => {}
+                                        v => {
+                                            println!("{}", v)
+                                        }
+                                    }
+                                } else {
+                                    println!(
+                                        "todo: handle error in evaluating after prompting user"
+                                    );
+                                }
                             }
                             Err(EvalError::UserError(e)) => {
                                 println!("{}: {}", "Error".bright_red(), e);

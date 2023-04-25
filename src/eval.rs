@@ -144,7 +144,7 @@ pub struct Session<'a> {
 #[derive(Debug)]
 pub enum EvalError {
     UserError(String),
-    // ResumableError(String),
+    ResumableError(String),
     Aborted,
 }
 
@@ -281,8 +281,7 @@ pub fn eval_stmts(
                                     }
                                 }
                                 v => {
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
+                                    return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean, but got: {}",
                                         v
                                     )));

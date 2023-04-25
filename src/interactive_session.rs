@@ -6,7 +6,10 @@ use std::sync::Arc;
 use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
 use crate::eval::{self, Session};
 use crate::eval::{eval_def_or_exprs, EvalError};
-use crate::parse::{parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError};
+use crate::parse::{
+    parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
+    Statement, Statement_,
+};
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
 use rustyline::Editor;
@@ -74,6 +77,24 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                 }
                             },
                             Err(EvalError::Aborted) => {}
+                            Err(EvalError::ResumableError(_)) => {
+                                let stack_frame = env.stack.last_mut().unwrap();
+                                // Proof of concept: use true as a value and keep going.
+                                stack_frame.stmts_to_eval.push((
+                                    false,
+                                    Statement(
+                                        0,
+                                        Statement_::Expr(Expression(
+                                            0,
+                                            Expression_::BoolLiteral(true),
+                                        )),
+                                    ),
+                                ));
+
+                                // TODO: handle errors from this case.
+                                // TODO: define an eval function that just uses the env.
+                                // eval_def_or_exprs(&items, &mut env, &mut session);
+                            }
                             Err(EvalError::UserError(e)) => {
                                 println!("{}: {}", "Error".bright_red(), e);
                                 print_stack(&mut std::io::stdout(), &env);

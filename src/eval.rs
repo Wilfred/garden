@@ -236,20 +236,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     }
 }
 
-pub fn eval_stmts(
-    stmts: &[Statement],
-    env: &mut Env,
-    session: &mut Session,
-) -> Result<Value, EvalError> {
-    let mut stmts_to_eval = vec![];
-    for stmt in stmts.iter().rev() {
-        stmts_to_eval.push((false, stmt.clone()));
-    }
-
-    let top_stack = env.stack.last_mut().unwrap();
-    // TODO: do this setup outside of this function.
-    top_stack.stmts_to_eval = stmts_to_eval;
-
+pub fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
             if let Some((done_children, Statement(offset, stmt_))) = stack_frame.stmts_to_eval.pop()
@@ -826,6 +813,23 @@ pub fn eval_stmts(
         .last()
         .expect("Should have a value from the last expression")
         .clone())
+}
+
+pub fn eval_stmts(
+    stmts: &[Statement],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<Value, EvalError> {
+    let mut stmts_to_eval = vec![];
+    for stmt in stmts.iter().rev() {
+        stmts_to_eval.push((false, stmt.clone()));
+    }
+
+    let top_stack = env.stack.last_mut().unwrap();
+    // TODO: do this setup outside of this function.
+    top_stack.stmts_to_eval = stmts_to_eval;
+
+    eval(env, session)
 }
 
 // fn read_replacement(msg: &str) -> Result<Expression, String> {

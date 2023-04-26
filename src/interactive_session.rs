@@ -109,15 +109,26 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     Err(EvalError::ResumableError(msg)) => {
                         println!("{}", msg);
 
-                        let stack_frame = env.stack.last_mut().unwrap();
-                        // Proof of concept: use true as a value and keep going.
-                        stack_frame.stmts_to_eval.push((
-                            false,
-                            Statement(
-                                0,
-                                Statement_::Expr(Expression(0, Expression_::BoolLiteral(true))),
-                            ),
-                        ));
+                        match read_expr(&mut env, &session, &mut rl, 1) {
+                            Ok((_src, items)) => {
+                                match items {
+                                    DefinitionsOrExpression::Defs(_) => {
+                                        // TODO: could probably just eval this def and try again.
+                                    },
+                                    DefinitionsOrExpression::Expr(expr) => {
+                                        let stack_frame = env.stack.last_mut().unwrap();
+                                        stack_frame.stmts_to_eval.push((
+                                            false,
+                                            Statement(expr.0, Statement_::Expr(expr)),
+                                        ));
+                                    }
+                                }
+
+                            }
+                            Err(_) => {
+                                break;
+                            }
+                        }
 
                         // TODO: loop.
                         if let Ok(result) = eval_env(&mut env, &mut session) {

@@ -14,6 +14,61 @@ use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 
+enum ReadError {
+    Aborted,
+    ReadlineError,
+}
+
+fn read_expr(
+    env: &mut Env,
+    session: &Session,
+    rl: &mut Editor<()>,
+    depth: usize,
+) -> Result<(String, DefinitionsOrExpression), ReadError> {
+    loop {
+        match rl.readline(&prompt_symbol(depth)) {
+            Ok(input) => {
+                rl.add_history_entry(input.as_str());
+                let _ = rl.save_history(".history");
+
+                match Command::from_string(&input) {
+                    Some(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, &session) {
+                        Ok(()) => {
+                            println!();
+                            println!();
+                            continue;
+                        }
+                        Err(CommandError::Abort) => {
+                            return Err(ReadError::Aborted);
+                        }
+                    },
+                    None => {
+                        if input.trim().starts_with(':') {
+                            print_available_commands(&mut std::io::stdout());
+                            continue;
+                        }
+                    }
+                }
+
+                match read_multiline_syntax(&input, rl) {
+                    Ok((src, items)) => {
+                        return Ok((src, items));
+                    }
+                    Err(ParseError::Incomplete(e)) => {
+                        println!("Parsing failed (incomplete): {}", e);
+                    }
+                    Err(ParseError::OtherError(e)) => {
+                        println!("Parsing failed: {}", e);
+                    }
+                }
+            }
+            Err(_) => return Err(ReadError::ReadlineError),
+        }
+
+        println!();
+    }
+}
+
 pub fn repl(interrupted: &Arc<AtomicBool>) {
     println!(
         "{} {}{}",
@@ -37,91 +92,56 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
     loop {
         println!();
 
-        match rl.readline(&prompt_symbol(0)) {
-            Ok(input) => {
-                rl.add_history_entry(input.as_str());
-                let _ = rl.save_history(".history");
+        match read_expr(&mut env, &session, &mut rl, 0) {
+            Ok((src, items)) => {
+                session.history.push_str(&src);
+                session.history.push('\n');
+                log_src(src).unwrap();
 
-                match Command::from_string(&input) {
-                    Some(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, &mut env, &session) {
-                            Ok(()) => {
-                                println!();
-                                continue;
-                            }
-                            Err(CommandError::Abort) => {
-                                // Nothing to do, we're in the top level.
-                                continue;
-                            }
+                match eval_def_or_exprs(&items, &mut env, &mut session) {
+                    Ok(result) => match result {
+                        eval::Value::Void => {}
+                        v => {
+                            println!("{}", v)
                         }
-                    }
-                    None => {
-                        if input.trim().starts_with(':') {
-                            print_available_commands(&mut std::io::stdout());
-                            continue;
-                        }
-                    }
-                }
+                    },
+                    Err(EvalError::Aborted) => {}
+                    Err(EvalError::ResumableError(msg)) => {
+                        println!("{}", msg);
 
-                match read_multiline_syntax(&input, &mut rl) {
-                    Ok((src, items)) => {
-                        session.history.push_str(&src);
-                        session.history.push('\n');
-                        log_src(input).unwrap();
+                        let stack_frame = env.stack.last_mut().unwrap();
+                        // Proof of concept: use true as a value and keep going.
+                        stack_frame.stmts_to_eval.push((
+                            false,
+                            Statement(
+                                0,
+                                Statement_::Expr(Expression(0, Expression_::BoolLiteral(true))),
+                            ),
+                        ));
 
-                        match eval_def_or_exprs(&items, &mut env, &mut session) {
-                            Ok(result) => match result {
+                        // TODO: loop.
+                        if let Ok(result) = eval_env(&mut env, &mut session) {
+                            match result {
                                 eval::Value::Void => {}
                                 v => {
                                     println!("{}", v)
                                 }
-                            },
-                            Err(EvalError::Aborted) => {}
-                            Err(EvalError::ResumableError(msg)) => {
-                                println!("{}", msg);
-
-                                let stack_frame = env.stack.last_mut().unwrap();
-                                // Proof of concept: use true as a value and keep going.
-                                stack_frame.stmts_to_eval.push((
-                                    false,
-                                    Statement(
-                                        0,
-                                        Statement_::Expr(Expression(
-                                            0,
-                                            Expression_::BoolLiteral(true),
-                                        )),
-                                    ),
-                                ));
-
-                                // TODO: loop.
-                                if let Ok(result) = eval_env(&mut env, &mut session) {
-                                    match result {
-                                        eval::Value::Void => {}
-                                        v => {
-                                            println!("{}", v)
-                                        }
-                                    }
-                                } else {
-                                    println!(
-                                        "todo: handle error in evaluating after prompting user"
-                                    );
-                                }
                             }
-                            Err(EvalError::UserError(e)) => {
-                                println!("{}: {}", "Error".bright_red(), e);
-                                print_stack(&mut std::io::stdout(), &env);
-                            }
+                        } else {
+                            println!("todo: handle error in evaluating after prompting user");
                         }
                     }
-                    Err(ParseError::Incomplete(e)) => {
-                        println!("Parsing failed (incomplete): {}", e);
-                    }
-                    Err(ParseError::OtherError(e)) => {
-                        println!("Parsing failed: {}", e);
+                    Err(EvalError::UserError(e)) => {
+                        println!("{}: {}", "Error".bright_red(), e);
+                        print_stack(&mut std::io::stdout(), &env);
                     }
                 }
             }
-            Err(_) => break,
+            Err(ReadError::Aborted) => {
+                // Nothing to do, we're in the top level.
+                continue;
+            }
+            Err(ReadError::ReadlineError) => break,
         }
     }
 }

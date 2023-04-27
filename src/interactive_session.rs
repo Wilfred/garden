@@ -70,13 +70,7 @@ fn read_expr(
 }
 
 pub fn repl(interrupted: &Arc<AtomicBool>) {
-    println!(
-        "{} {}{}",
-        "Garden".bold().green(),
-        env!("CARGO_PKG_VERSION").bold(),
-        ": good programs take time to grow.".bold()
-    );
-    println!("Type {} if you're new here.", ":help".bold().green(),);
+    print_repl_header();
 
     let mut env = Env::default();
     let mut session = Session {
@@ -155,6 +149,16 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::ReadlineError) => break,
         }
     }
+}
+
+fn print_repl_header() {
+    println!(
+        "{} {}{}",
+        "Garden".bold().green(),
+        env!("CARGO_PKG_VERSION").bold(),
+        ": good programs take time to grow.".bold()
+    );
+    println!("Type {} if you're new here.", ":help".bold().green());
 }
 
 fn read_multiline_syntax(

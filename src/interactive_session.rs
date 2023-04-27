@@ -7,8 +7,7 @@ use crate::commands::{print_available_commands, print_stack, run_command, Comman
 use crate::eval::{self, eval_env, Session};
 use crate::eval::{eval_def_or_exprs, EvalError};
 use crate::parse::{
-    parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
-    Statement, Statement_,
+    parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -21,10 +20,10 @@ enum ReadError {
 
 fn read_expr(
     env: &mut Env,
-    session: &Session,
+    session: &mut Session,
     rl: &mut Editor<()>,
     depth: usize,
-) -> Result<(String, DefinitionsOrExpression), ReadError> {
+) -> Result<DefinitionsOrExpression, ReadError> {
     loop {
         match rl.readline(&prompt_symbol(depth)) {
             Ok(input) => {
@@ -52,7 +51,11 @@ fn read_expr(
 
                 match read_multiline_syntax(&input, rl) {
                     Ok((src, items)) => {
-                        return Ok((src, items));
+                        session.history.push_str(&src);
+                        session.history.push('\n');
+                        log_src(src).unwrap();
+
+                        return Ok(items);
                     }
                     Err(ParseError::Incomplete(e)) => {
                         println!("Parsing failed (incomplete): {}", e);
@@ -83,12 +86,8 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
     loop {
         println!();
 
-        match read_expr(&mut env, &session, &mut rl, 0) {
-            Ok((src, items)) => {
-                session.history.push_str(&src);
-                session.history.push('\n');
-                log_src(src).unwrap();
-
+        match read_expr(&mut env, &mut session, &mut rl, 0) {
+            Ok(items) => {
                 match eval_def_or_exprs(&items, &mut env, &mut session) {
                     Ok(result) => match result {
                         eval::Value::Void => {}
@@ -100,8 +99,8 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     Err(EvalError::ResumableError(msg)) => {
                         println!("{}", msg);
 
-                        match read_expr(&mut env, &session, &mut rl, 1) {
-                            Ok((_src, items)) => {
+                        match read_expr(&mut env, &mut session, &mut rl, 1) {
+                            Ok(items) => {
                                 match items {
                                     DefinitionsOrExpression::Defs(_) => {
                                         // TODO: could probably just eval this def and try again.

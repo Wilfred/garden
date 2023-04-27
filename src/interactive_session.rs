@@ -79,10 +79,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
         has_attached_stdout: true,
     };
 
-    let mut rl: Editor<()> = Editor::new().unwrap();
-    // TODO: put this in the home directory rather than the current directory.
-    let _ = rl.load_history(".history");
-
+    let mut rl = new_editor();
     loop {
         println!();
 
@@ -148,6 +145,13 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::ReadlineError) => break,
         }
     }
+}
+
+fn new_editor() -> Editor<()> {
+    let mut rl: Editor<()> = Editor::new().unwrap();
+    // TODO: put this in the home directory rather than the current directory.
+    let _ = rl.load_history(".history");
+    rl
 }
 
 fn print_repl_header() {

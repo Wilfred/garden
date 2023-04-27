@@ -108,7 +108,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                 match items {
                                     DefinitionsOrExpression::Defs(_) => {
                                         // TODO: could probably just eval this def and try again.
-                                    },
+                                    }
                                     DefinitionsOrExpression::Expr(expr) => {
                                         let stack_frame = env.stack.last_mut().unwrap();
                                         stack_frame.stmts_to_eval.push((
@@ -117,7 +117,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                         ));
                                     }
                                 }
-
                             }
                             Err(_) => {
                                 break;

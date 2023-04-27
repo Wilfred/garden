@@ -4,8 +4,8 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
-use crate::eval::{self, eval_env, Session};
-use crate::eval::{eval_def_or_exprs, EvalError};
+use crate::eval::EvalError;
+use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::parse::{
     parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_,
 };
@@ -83,65 +83,59 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
     };
 
     let mut rl = new_editor();
+    let mut depth = 0;
     loop {
         println!();
 
-        match read_expr(&mut env, &mut session, &mut rl, 0) {
+        match read_expr(&mut env, &mut session, &mut rl, depth) {
             Ok(items) => {
-                match eval_def_or_exprs(&items, &mut env, &mut session) {
-                    Ok(result) => match result {
-                        eval::Value::Void => {}
-                        v => {
-                            println!("{}", v)
-                        }
-                    },
-                    Err(EvalError::Aborted) => {}
-                    Err(EvalError::ResumableError(msg)) => {
-                        println!("{}", msg);
-
-                        match read_expr(&mut env, &mut session, &mut rl, 1) {
-                            Ok(items) => {
-                                match items {
-                                    DefinitionsOrExpression::Defs(_) => {
-                                        // TODO: could probably just eval this def and try again.
-                                    }
-                                    DefinitionsOrExpression::Expr(expr) => {
-                                        let stack_frame = env.stack.last_mut().unwrap();
-                                        stack_frame.stmts_to_eval.push((
-                                            false,
-                                            Statement(expr.0, Statement_::Expr(expr)),
-                                        ));
-                                    }
-                                }
-                            }
-                            Err(_) => {
-                                break;
-                            }
-                        }
-
-                        // TODO: loop.
-                        if let Ok(result) = eval_env(&mut env, &mut session) {
-                            match result {
-                                eval::Value::Void => {}
-                                v => {
-                                    println!("{}", v)
-                                }
-                            }
-                        } else {
-                            println!("todo: handle error in evaluating after prompting user");
-                        }
+                match items.clone() {
+                    DefinitionsOrExpression::Defs(defs) => {
+                        eval_defs(&defs, &mut env);
                     }
-                    Err(EvalError::UserError(e)) => {
-                        println!("{}: {}", "Error".bright_red(), e);
-                        print_stack(&mut std::io::stdout(), &env);
+                    DefinitionsOrExpression::Expr(expr) => {
+                        let stack_frame = env.stack.last_mut().unwrap();
+                        stack_frame
+                            .stmts_to_eval
+                            .push((false, Statement(expr.0, Statement_::Expr(expr))));
+
+                        match eval_env(&mut env, &mut session) {
+                            Ok(result) => {
+                                match result {
+                                    eval::Value::Void => {}
+                                    v => {
+                                        println!("{}", v)
+                                    }
+                                }
+                                depth = 0;
+                            }
+                            Err(EvalError::Aborted) => {
+                                depth = 0;
+                            }
+                            Err(EvalError::ResumableError(msg)) => {
+                                println!("{}: {}", "Error".bright_red(), msg);
+                                println!("Resumable error.");
+                                depth += 1;
+                            }
+                            Err(EvalError::UserError(e)) => {
+                                // Unrecoverable.
+                                println!("{}: {}", "Error".bright_red(), e);
+                                print_stack(&mut std::io::stdout(), &env);
+                                depth = 0;
+                            }
+                        }
                     }
                 }
             }
             Err(ReadError::Aborted) => {
-                // Nothing to do, we're in the top level.
-                continue;
+                depth = 0;
             }
-            Err(ReadError::ReadlineError) => break,
+            Err(ReadError::ReadlineError) => {
+                if depth > 1 {
+                    println!("Readline error");
+                }
+                break;
+            }
         }
     }
 }

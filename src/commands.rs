@@ -146,7 +146,16 @@ pub fn run_command<T: Write>(
             }
         }
         Command::Source => {
-            write!(buf, "{}", session.history).unwrap();
+            write!(
+                buf,
+                "{}",
+                if session.history == "" {
+                    "(empty)"
+                } else {
+                    &session.history
+                }
+            )
+            .unwrap();
         }
         Command::Globals => {
             for (i, (var_name, value)) in env.file_scope.iter().enumerate() {

@@ -44,6 +44,7 @@ fn read_expr(
                     None => {
                         if input.trim().starts_with(':') {
                             print_available_commands(&mut std::io::stdout());
+                            println!();
                             continue;
                         }
                     }

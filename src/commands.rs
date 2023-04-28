@@ -80,6 +80,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
             write!(buf, " {},", name.green()).unwrap();
         }
     }
+    write!(buf, "\n").unwrap();
 }
 
 #[derive(Debug)]

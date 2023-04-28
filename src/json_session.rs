@@ -86,10 +86,6 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             Err(EvalError::ResumableError(_)) => {
                                 todo!();
                             }
-                            Err(EvalError::Aborted) => Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Ok(format!("Aborted")),
-                            },
                             Err(EvalError::UserError(e)) => Response {
                                 kind: ResponseKind::Evaluate,
                                 value: Err(format!("Error: {}", e)),

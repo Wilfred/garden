@@ -2,17 +2,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
-use crate::commands::{run_command, Command, CommandError};
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{
-    parse_def_or_expr_from_str, Definition, Definition_, DefinitionsOrExpression, Expression,
-    Expression_, ParseError, Statement_, VariableName,
-};
 use crate::parse::{BinaryOperatorKind, Statement};
-use crate::prompt::prompt_symbol;
-
-use owo_colors::OwoColorize;
-use rustyline::Editor;
+use crate::parse::{
+    Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, Statement_,
+    VariableName,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -145,59 +140,6 @@ pub struct Session<'a> {
 pub enum EvalError {
     UserError(String),
     ResumableError(String),
-    Aborted,
-}
-
-fn error_prompt(message: &str, env: &mut Env, session: &Session) -> Result<Statement, EvalError> {
-    println!("{}: {}", "Error".bright_red(), message);
-    println!("What value would you like to use instead?\n");
-
-    let mut rl: Editor<()> = Editor::new().unwrap();
-    loop {
-        match rl.readline(&prompt_symbol(1)) {
-            Ok(input) => {
-                match Command::from_string(&input) {
-                    Some(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, env, session) {
-                            Ok(()) => {
-                                println!();
-                                continue;
-                            }
-                            Err(CommandError::Abort) => {
-                                // Pop to toplevel.
-                                while env.stack.len() > 1 {
-                                    env.stack.pop();
-                                }
-
-                                return Err(EvalError::Aborted);
-                            }
-                        }
-                    }
-                    None => {}
-                }
-
-                let asts = parse_def_or_expr_from_str(&input).map_err(|e| match e {
-                    ParseError::OtherError(e) | ParseError::Incomplete(e) => {
-                        EvalError::UserError(e)
-                    }
-                })?;
-                match asts {
-                    DefinitionsOrExpression::Defs(defs) => {
-                        return Err(EvalError::UserError(format!(
-                            "Expected to read a single statement, got {} definitions",
-                            defs.len()
-                        )));
-                    }
-                    DefinitionsOrExpression::Expr(e) => {
-                        return Ok(Statement(e.0, Statement_::Expr(e)));
-                    }
-                }
-            }
-            Err(e) => {
-                return Err(EvalError::UserError(format!("Input failed: {}", e)));
-            }
-        }
-    }
 }
 
 // TODO: result is really Result<Value, ErrorWithSuspendedEnv>
@@ -407,21 +349,11 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name, &stack_frame, &env) {
                             stack_frame.evalled_values.push(value);
                         } else {
-                            if session.has_attached_stdout {
-                                let stmt = error_prompt(
-                                    &format!("Undefined variable: {}", name.0),
-                                    env,
-                                    &session,
-                                )?;
-                                stack_frame.stmts_to_eval.push((false, stmt));
-                            } else {
-                                // TODO: add equivalent to error_prompt in JSON sessions.
-                                env.pop_to_toplevel();
-                                return Err(EvalError::UserError(format!(
-                                    "Undefined variable: {}",
-                                    name.0
-                                )));
-                            }
+                            env.stack.push(stack_frame);
+                            return Err(EvalError::ResumableError(format!(
+                                "Undefined variable: {}. What value would you like to use instead?",
+                                name.0
+                            )));
                         }
                     }
                     Statement_::Expr(Expression(

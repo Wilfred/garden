@@ -382,6 +382,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
+                                    // TODO: allow resuming here too.
                                     env.pop_to_toplevel();
                                     return Err(EvalError::UserError(format!(
                                         "Expected an integer, but got: {}",

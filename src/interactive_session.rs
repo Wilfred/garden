@@ -115,6 +115,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let (_, stmt) = stack_frame.stmts_to_eval.pop().unwrap();
                 assert!(matches!(stmt.1, Statement_::FinishedLastInput));
+
+                if depth > 0 {
+                    depth -= 1;
+                }
             }
             Err(ReadError::ReadlineError) => {
                 break;

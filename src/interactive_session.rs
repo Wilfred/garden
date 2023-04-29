@@ -121,6 +121,9 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                 print_stack(&mut std::io::stdout(), &env);
                                 depth = 0;
                             }
+                            Err(EvalError::FinishedLastInput) => {
+                                todo!();
+                            }
                         }
                     }
                 }

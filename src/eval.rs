@@ -140,6 +140,7 @@ pub struct Session<'a> {
 pub enum EvalError {
     UserError(String),
     ResumableError(String),
+    FinishedLastInput,
 }
 
 // TODO: result is really Result<Value, ErrorWithSuspendedEnv>
@@ -716,6 +717,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     .push((false, Statement(arg.0, Statement_::Expr(arg.clone()))));
                             }
                         }
+                    }
+                    Statement_::FinishedLastInput => {
+                        return Err(EvalError::FinishedLastInput);
                     }
                 }
             }

@@ -50,6 +50,7 @@ pub enum Statement_ {
     Let(VariableName, Expression),
     Return(Expression),
     Expr(Expression),
+    FinishedLastInput,
 }
 
 #[derive(Debug, Clone, PartialEq)]

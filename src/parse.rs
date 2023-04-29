@@ -56,6 +56,15 @@ pub enum Statement_ {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Statement(pub usize, pub Statement_);
 
+impl Default for Statement {
+    fn default() -> Self {
+        Statement(
+            0,
+            Statement_::Expr(Expression(0, Expression_::IntLiteral(12345))),
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     // TODO: define a FunDetails struct.

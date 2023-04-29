@@ -122,6 +122,16 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                 depth = 0;
                             }
                             Err(EvalError::FinishedLastInput) => {
+                                let stack_frame = env.stack.last_mut().unwrap();
+                                let result = stack_frame.evalled_values.pop().unwrap();
+                                match result {
+                                    eval::Value::Void => {
+                                        println!("void")
+                                    }
+                                    v => {
+                                        println!("{}", v)
+                                    }
+                                }
                                 println!("Finished with input. Now what?");
                             }
                         }

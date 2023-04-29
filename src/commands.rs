@@ -19,6 +19,7 @@ pub enum Command {
     FrameValues,
     FrameStatements,
     Parse(Option<String>),
+    Resume,
     Source,
     Stack,
     Quit,
@@ -38,6 +39,7 @@ impl Command {
             ":globals" => Some(Command::Globals),
             ":help" => Some(Command::Help),
             ":locals" => Some(Command::Locals),
+            ":resume" => Some(Command::Resume),
             ":source" => Some(Command::Source),
             ":stack" => Some(Command::Stack),
             ":quit" => Some(Command::Quit),
@@ -64,6 +66,7 @@ impl Command {
             Command::Help => ":help",
             Command::Locals => ":locals",
             Command::Parse(_) => ":parse",
+            Command::Resume => ":resume",
             Command::Source => ":source",
             Command::Stack => ":stack",
             Command::Quit => ":quit",
@@ -91,6 +94,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
 #[derive(Debug)]
 pub enum CommandError {
+    Resume,
     Abort,
 }
 
@@ -150,6 +154,9 @@ pub fn run_command<T: Write>(
             } else {
                 write!(buf, ":doc requires a name, e.g. `:doc print`").unwrap();
             }
+        }
+        Command::Resume => {
+            return Err(CommandError::Resume);
         }
         Command::Source => {
             write!(

@@ -15,6 +15,7 @@ use rustyline::Editor;
 
 enum ReadError {
     Aborted,
+    Resumed,
     ReadlineError,
 }
 
@@ -39,6 +40,9 @@ fn read_expr(
                         }
                         Err(CommandError::Abort) => {
                             return Err(ReadError::Aborted);
+                        }
+                        Err(CommandError::Resume) => {
+                            return Err(ReadError::Resumed);
                         }
                     },
                     None => {
@@ -140,6 +144,9 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             }
             Err(ReadError::Aborted) => {
                 depth = 0;
+            }
+            Err(ReadError::Resumed) => {
+                todo!("call eval_env()");
             }
             Err(ReadError::ReadlineError) => {
                 if depth > 1 {

@@ -198,7 +198,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for if condition");
-                            match condition_value {
+                            match condition_value.clone() {
                                 Value::Boolean(b) => {
                                     if b {
                                         for stmt in then_body.iter().rev() {
@@ -211,6 +211,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     }
                                 }
                                 v => {
+                                    stack_frame.evalled_values.push(condition_value);
                                     stack_frame
                                         .stmts_to_eval
                                         .push((done_children, Statement(offset, stmt_copy)));

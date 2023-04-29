@@ -16,6 +16,7 @@ pub enum Command {
     Help,
     Globals,
     Locals,
+    FrameValues,
     Parse(Option<String>),
     Source,
     Stack,
@@ -31,8 +32,9 @@ impl Command {
     pub fn from_string(s: &str) -> Option<Self> {
         match s.to_lowercase().trim() {
             ":abort" => Some(Command::Abort),
-            ":help" => Some(Command::Help),
+            ":fvalues" => Some(Command::FrameValues),
             ":globals" => Some(Command::Globals),
+            ":help" => Some(Command::Help),
             ":locals" => Some(Command::Locals),
             ":source" => Some(Command::Source),
             ":stack" => Some(Command::Stack),
@@ -54,8 +56,9 @@ impl Command {
         match self {
             Command::Abort => ":abort",
             Command::Doc(_) => ":doc",
-            Command::Help => ":help",
+            Command::FrameValues => ":fvalues",
             Command::Globals => ":globals",
+            Command::Help => ":help",
             Command::Locals => ":locals",
             Command::Parse(_) => ":parse",
             Command::Source => ":source",
@@ -167,6 +170,21 @@ pub fn run_command<T: Write>(
                     value
                 )
                 .unwrap();
+            }
+        }
+        Command::FrameValues => {
+            if let Some(stack_frame) = env.stack.last() {
+                for value in &stack_frame.evalled_values {
+                    match value {
+                        Value::Void => {
+                            writeln!(buf, "void")
+                        }
+                        v => {
+                            writeln!(buf, "{}", v)
+                        }
+                    }
+                    .unwrap();
+                }
             }
         }
         Command::Locals => {

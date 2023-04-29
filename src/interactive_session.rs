@@ -122,7 +122,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                                 depth = 0;
                             }
                             Err(EvalError::FinishedLastInput) => {
-                                todo!();
+                                println!("Finished with input. Now what?");
                             }
                         }
                     }

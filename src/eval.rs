@@ -214,6 +214,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame
                                         .stmts_to_eval
                                         .push((done_children, Statement(offset, stmt_copy)));
+                                    stack_frame.stmts_to_eval.push((
+                                        false,
+                                        Statement(offset, Statement_::FinishedLastInput),
+                                    ));
                                     env.stack.push(stack_frame);
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean, but got: {}",

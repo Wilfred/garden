@@ -117,9 +117,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 assert!(matches!(stmt.1, Statement_::FinishedLastInput));
             }
             Err(ReadError::ReadlineError) => {
-                if depth > 1 {
-                    println!("Readline error");
-                }
                 break;
             }
         }

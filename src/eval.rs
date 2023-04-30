@@ -137,9 +137,14 @@ pub struct Session<'a> {
 }
 
 #[derive(Debug)]
+pub enum ErrorKind {
+    BadValue,
+}
+
+#[derive(Debug)]
 pub enum EvalError {
     UserError(String),
-    ResumableError(String),
+    ResumableError(ErrorKind, String),
     FinishedLastInput,
 }
 
@@ -221,10 +226,13 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     ));
                                     env.stack.push(stack_frame);
 
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected a boolean when evaluating `if`, but got: {}",
-                                        v
-                                    )));
+                                    return Err(EvalError::ResumableError(
+                                        ErrorKind::BadValue,
+                                        format!(
+                                            "Expected a boolean when evaluating `if`, but got: {}",
+                                            v
+                                        ),
+                                    ));
                                 }
                             }
                         } else {
@@ -270,7 +278,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     ));
                                     env.stack.push(stack_frame);
 
-                                    return Err(EvalError::ResumableError(format!(
+                                    return Err(EvalError::ResumableError(ErrorKind::BadValue, format!(
                                         "Expected a boolean when evaluating `while`, but got: {}",
                                         v
                                     )));
@@ -363,7 +371,8 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.evalled_values.push(value);
                         } else {
                             env.stack.push(stack_frame);
-                            return Err(EvalError::ResumableError(format!(
+                            // TODO: this isn't a bad value.
+                            return Err(EvalError::ResumableError(ErrorKind::BadValue, format!(
                                 "Undefined variable: {}. What value would you like to use instead?",
                                 name.0
                             )));

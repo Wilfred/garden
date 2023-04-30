@@ -222,7 +222,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     env.stack.push(stack_frame);
 
                                     return Err(EvalError::ResumableError(format!(
-                                        "Expected a boolean, but got: {}",
+                                        "Expected a boolean when evaluating `if`, but got: {}",
                                         v
                                     )));
                                 }
@@ -271,7 +271,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     env.stack.push(stack_frame);
 
                                     return Err(EvalError::ResumableError(format!(
-                                        "Expected a boolean, but got: {}",
+                                        "Expected a boolean when evaluating `while`, but got: {}",
                                         v
                                     )));
                                 }

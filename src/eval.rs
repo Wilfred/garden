@@ -145,7 +145,7 @@ pub enum ErrorKind {
 #[derive(Debug)]
 pub enum EvalError {
     UserError(String),
-    ResumableError(ErrorKind, String),
+    ResumableError(String),
     FinishedLastInput,
 }
 
@@ -232,13 +232,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     ));
                                     env.stack.push(stack_frame);
 
-                                    return Err(EvalError::ResumableError(
-                                        ErrorKind::BadValue,
-                                        format!(
-                                            "Expected a boolean when evaluating `if`, but got: {}",
-                                            v
-                                        ),
-                                    ));
+                                    return Err(EvalError::ResumableError(format!(
+                                        "Expected a boolean when evaluating `if`, but got: {}",
+                                        v
+                                    )));
                                 }
                             }
                         } else {
@@ -289,13 +286,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     ));
                                     env.stack.push(stack_frame);
 
-                                    return Err(EvalError::ResumableError(
-                                        ErrorKind::BadValue,
-                                        format!(
+                                    return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean when evaluating `while`, but got: {}",
                                         v
-                                    ),
-                                    ));
+                                    )));
                                 }
                             }
                         } else {
@@ -384,14 +378,18 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name, &stack_frame, &env) {
                             stack_frame.evalled_values.push(value);
                         } else {
+                            stack_frame.stmts_to_eval.push((
+                                false,
+                                Statement(
+                                    offset,
+                                    Statement_::FinishedLastInput(Some(ErrorKind::BadExpression)),
+                                ),
+                            ));
                             env.stack.push(stack_frame);
-                            return Err(EvalError::ResumableError(
-                                ErrorKind::BadExpression,
-                                format!(
+                            return Err(EvalError::ResumableError(format!(
                                 "Undefined variable: {}. What value would you like to use instead?",
                                 name.0
-                            ),
-                            ));
+                            )));
                         }
                     }
                     Statement_::Expr(Expression(

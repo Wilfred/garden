@@ -6,7 +6,10 @@ use strum_macros::EnumIter;
 
 use crate::{
     eval::{builtin_fun_doc, Env, Session, Value},
-    parse::{parse_def_or_expr_from_str, ParseError, Statement, VariableName},
+    parse::{
+        parse_def_or_expr_from_str, parse_expr_from_str, ParseError, Statement, Statement_,
+        VariableName,
+    },
 };
 
 #[derive(Debug, EnumIter)]
@@ -50,7 +53,17 @@ impl Command {
                     Some(Command::Parse(Some(src.trim_start().to_owned())))
                 } else if let Some(src) = s.strip_prefix(":replace") {
                     let src = src.trim_start().to_owned();
-                    Some(Command::Replace(None))
+                    match parse_expr_from_str(&src) {
+                        Ok(expr) => {
+                            let stmt = Statement(expr.0, Statement_::Expr(expr));
+                            Some(Command::Replace(Some(stmt)))
+                        }
+                        Err(e) => {
+                            // TODO: this breaks JSON sessions.
+                            println!("Error during parse of replacement: {:?}", e);
+                            Some(Command::Replace(None))
+                        }
+                    }
                 } else if let Some(src) = s.strip_prefix(":doc") {
                     Some(Command::Doc(Some(src.trim_start().to_owned())))
                 } else {

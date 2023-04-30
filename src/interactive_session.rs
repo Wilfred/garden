@@ -124,8 +124,13 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     depth -= 1;
                 }
             }
-            Err(ReadError::Replaced(_)) => {
-                todo!()
+            Err(ReadError::Replaced(stmt)) => {
+                let stack_frame = env.stack.last_mut().unwrap();
+                let (_, prev_stmt) = stack_frame.stmts_to_eval.pop().unwrap();
+                assert!(matches!(prev_stmt.1, Statement_::FinishedLastInput));
+
+                stack_frame.evalled_values.pop();
+                stack_frame.stmts_to_eval.push((false, stmt));
             }
             Err(ReadError::ReadlineError) => {
                 break;

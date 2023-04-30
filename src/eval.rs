@@ -139,6 +139,7 @@ pub struct Session<'a> {
 #[derive(Debug)]
 pub enum ErrorKind {
     BadValue,
+    BadExpression,
 }
 
 #[derive(Debug)]
@@ -371,8 +372,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.evalled_values.push(value);
                         } else {
                             env.stack.push(stack_frame);
-                            // TODO: this isn't a bad value.
-                            return Err(EvalError::ResumableError(ErrorKind::BadValue, format!(
+                            return Err(EvalError::ResumableError(ErrorKind::BadExpression, format!(
                                 "Undefined variable: {}. What value would you like to use instead?",
                                 name.0
                             )));

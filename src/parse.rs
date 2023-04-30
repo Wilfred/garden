@@ -559,6 +559,12 @@ pub fn parse_def_or_expr_from_str(s: &str) -> Result<DefinitionsOrExpression, Pa
     parse_def_or_expr(&mut token_ptr)
 }
 
+pub fn parse_expr_from_str(s: &str) -> Result<Expression, ParseError> {
+    let tokens = lex(s)?;
+    let mut token_ptr = &tokens[..];
+    parse_expression(&mut token_ptr)
+}
+
 lazy_static! {
     static ref INTEGER_RE: Regex = Regex::new(r"^[0-9]+").unwrap();
     static ref STRING_RE: Regex = Regex::new(r##"^"[^"]*""##).unwrap();

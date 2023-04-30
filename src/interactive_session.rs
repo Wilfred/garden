@@ -14,6 +14,7 @@ use owo_colors::OwoColorize;
 use rustyline::Editor;
 
 enum ReadError {
+    Replaced(Statement),
     Aborted,
     Resumed,
     ReadlineError,
@@ -43,6 +44,9 @@ fn read_expr(
                         }
                         Err(CommandError::Resume) => {
                             return Err(ReadError::Resumed);
+                        }
+                        Err(CommandError::Replace(stmt)) => {
+                            return Err(ReadError::Replaced(stmt));
                         }
                     },
                     None => {
@@ -119,6 +123,9 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 if depth > 0 {
                     depth -= 1;
                 }
+            }
+            Err(ReadError::Replaced(_)) => {
+                todo!()
             }
             Err(ReadError::ReadlineError) => {
                 break;

@@ -6,7 +6,7 @@ use strum_macros::EnumIter;
 
 use crate::{
     eval::{builtin_fun_doc, Env, Session, Value},
-    parse::{parse_def_or_expr_from_str, ParseError, VariableName},
+    parse::{parse_def_or_expr_from_str, ParseError, Statement, VariableName},
 };
 
 #[derive(Debug, EnumIter)]
@@ -19,6 +19,7 @@ pub enum Command {
     FrameValues,
     FrameStatements,
     Parse(Option<String>),
+    Replace(Option<Statement>),
     Resume,
     Source,
     Stack,
@@ -47,6 +48,9 @@ impl Command {
                 // TODO: require a word break after :parse and :doc
                 if let Some(src) = s.strip_prefix(":parse") {
                     Some(Command::Parse(Some(src.trim_start().to_owned())))
+                } else if let Some(src) = s.strip_prefix(":replace") {
+                    let src = src.trim_start().to_owned();
+                    Some(Command::Replace(None))
                 } else if let Some(src) = s.strip_prefix(":doc") {
                     Some(Command::Doc(Some(src.trim_start().to_owned())))
                 } else {
@@ -66,6 +70,7 @@ impl Command {
             Command::Help => ":help",
             Command::Locals => ":locals",
             Command::Parse(_) => ":parse",
+            Command::Replace(_) => ":replace",
             Command::Resume => ":resume",
             Command::Source => ":source",
             Command::Stack => ":stack",
@@ -94,6 +99,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
 #[derive(Debug)]
 pub enum CommandError {
+    Replace(Statement),
     Resume,
     Abort,
 }
@@ -153,6 +159,13 @@ pub fn run_command<T: Write>(
                 }
             } else {
                 write!(buf, ":doc requires a name, e.g. `:doc print`").unwrap();
+            }
+        }
+        Command::Replace(stmt) => {
+            if let Some(stmt) = stmt {
+                return Err(CommandError::Replace(stmt.clone()));
+            } else {
+                return Ok(());
             }
         }
         Command::Resume => {

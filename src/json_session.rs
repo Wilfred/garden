@@ -113,6 +113,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 value: Ok(format!("Aborted")),
                             },
                             Err(CommandError::Resume) => todo!(),
+                            Err(CommandError::Replace(_)) => todo!(),
                         }
                     }
                     None => Response {

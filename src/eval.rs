@@ -136,7 +136,7 @@ pub struct Session<'a> {
     pub has_attached_stdout: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ErrorKind {
     BadValue,
     BadExpression,
@@ -223,7 +223,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         .push((done_children, Statement(offset, stmt_copy)));
                                     stack_frame.stmts_to_eval.push((
                                         false,
-                                        Statement(offset, Statement_::FinishedLastInput),
+                                        Statement(
+                                            offset,
+                                            Statement_::FinishedLastInput(Some(
+                                                ErrorKind::BadValue,
+                                            )),
+                                        ),
                                     ));
                                     env.stack.push(stack_frame);
 
@@ -275,14 +280,22 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         .push((done_children, Statement(offset, stmt_copy)));
                                     stack_frame.stmts_to_eval.push((
                                         false,
-                                        Statement(offset, Statement_::FinishedLastInput),
+                                        Statement(
+                                            offset,
+                                            Statement_::FinishedLastInput(Some(
+                                                ErrorKind::BadValue,
+                                            )),
+                                        ),
                                     ));
                                     env.stack.push(stack_frame);
 
-                                    return Err(EvalError::ResumableError(ErrorKind::BadValue, format!(
+                                    return Err(EvalError::ResumableError(
+                                        ErrorKind::BadValue,
+                                        format!(
                                         "Expected a boolean when evaluating `while`, but got: {}",
                                         v
-                                    )));
+                                    ),
+                                    ));
                                 }
                             }
                         } else {
@@ -372,10 +385,13 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.evalled_values.push(value);
                         } else {
                             env.stack.push(stack_frame);
-                            return Err(EvalError::ResumableError(ErrorKind::BadExpression, format!(
+                            return Err(EvalError::ResumableError(
+                                ErrorKind::BadExpression,
+                                format!(
                                 "Undefined variable: {}. What value would you like to use instead?",
                                 name.0
-                            )));
+                            ),
+                            ));
                         }
                     }
                     Statement_::Expr(Expression(
@@ -739,10 +755,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             }
                         }
                     }
-                    Statement_::FinishedLastInput => {
+                    Statement_::FinishedLastInput(e) => {
                         stack_frame
                             .stmts_to_eval
-                            .push((false, Statement(offset, Statement_::FinishedLastInput)));
+                            .push((false, Statement(offset, Statement_::FinishedLastInput(e))));
                         env.stack.push(stack_frame);
                         return Err(EvalError::FinishedLastInput);
                     }

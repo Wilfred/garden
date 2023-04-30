@@ -1,6 +1,8 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
+use crate::eval::ErrorKind;
+
 // #[derive(Debug, Clone, PartialEq)]
 // pub struct Position {
 //     line: usize,
@@ -50,7 +52,7 @@ pub enum Statement_ {
     Let(VariableName, Expression),
     Return(Expression),
     Expr(Expression),
-    FinishedLastInput,
+    FinishedLastInput(Option<ErrorKind>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

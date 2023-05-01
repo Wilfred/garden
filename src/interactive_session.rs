@@ -158,7 +158,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 print_stack(&mut std::io::stdout(), &env);
                 depth = 0;
             }
-            Err(EvalError::Stop) => {
+            Err(EvalError::Stop(_)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let result = stack_frame.evalled_values.pop().unwrap();
                 match result {

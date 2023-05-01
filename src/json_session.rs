@@ -86,7 +86,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             Err(EvalError::ResumableError(_)) => {
                                 todo!();
                             }
-                            Err(EvalError::Stop) => {
+                            Err(EvalError::Stop(_)) => {
                                 todo!();
                             }
                             Err(EvalError::UserError(e)) => Response {

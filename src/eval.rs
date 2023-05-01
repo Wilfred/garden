@@ -146,7 +146,7 @@ pub enum ErrorKind {
 pub enum EvalError {
     UserError(String),
     ResumableError(String),
-    Stop,
+    Stop(Option<ErrorKind>),
 }
 
 // TODO: result is really Result<Value, ErrorWithSuspendedEnv>
@@ -758,7 +758,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             .stmts_to_eval
                             .push((false, Statement(offset, Statement_::Stop(e))));
                         env.stack.push(stack_frame);
-                        return Err(EvalError::Stop);
+                        return Err(EvalError::Stop(e));
                     }
                 }
             }

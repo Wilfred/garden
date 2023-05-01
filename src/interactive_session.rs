@@ -4,8 +4,8 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
-use crate::eval::EvalError;
 use crate::eval::{self, eval_defs, eval_env, Session};
+use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
     parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_,
 };
@@ -126,11 +126,32 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             }
             Err(ReadError::Replaced(stmt)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
-                let (_, prev_stmt) = stack_frame.stmts_to_eval.pop().unwrap();
-                assert!(matches!(prev_stmt.1, Statement_::Stop(_)));
+                let (_, prev_stmt) = stack_frame.stmts_to_eval.last().unwrap();
 
-                stack_frame.evalled_values.pop();
-                stack_frame.stmts_to_eval.push((false, stmt));
+                let err_kind = match prev_stmt.1 {
+                    Statement_::Stop(e) => e,
+                    _ => {
+                        println!(":replace failed: expected to be at an evaluation stopping point");
+                        continue;
+                    }
+                };
+
+                match err_kind {
+                    Some(err_kind) => {
+                        stack_frame.stmts_to_eval.pop();
+                        match err_kind {
+                            ErrorKind::BadValue => {
+                                stack_frame.evalled_values.pop();
+                            }
+                            ErrorKind::BadExpression => {}
+                        }
+                        stack_frame.stmts_to_eval.push((false, stmt));
+                    }
+                    None => {
+                        println!(":replace failed: can't replace without an error.");
+                        continue;
+                    }
+                }
             }
             Err(ReadError::ReadlineError) => {
                 break;

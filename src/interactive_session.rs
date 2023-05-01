@@ -118,7 +118,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::Resumed) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let (_, stmt) = stack_frame.stmts_to_eval.pop().unwrap();
-                assert!(matches!(stmt.1, Statement_::FinishedLastInput(_)));
+                assert!(matches!(stmt.1, Statement_::Stop(_)));
 
                 if depth > 0 {
                     depth -= 1;
@@ -127,7 +127,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::Replaced(stmt)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let (_, prev_stmt) = stack_frame.stmts_to_eval.pop().unwrap();
-                assert!(matches!(prev_stmt.1, Statement_::FinishedLastInput(_)));
+                assert!(matches!(prev_stmt.1, Statement_::Stop(_)));
 
                 stack_frame.evalled_values.pop();
                 stack_frame.stmts_to_eval.push((false, stmt));
@@ -158,7 +158,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 print_stack(&mut std::io::stdout(), &env);
                 depth = 0;
             }
-            Err(EvalError::FinishedLastInput) => {
+            Err(EvalError::Stop) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let result = stack_frame.evalled_values.pop().unwrap();
                 match result {

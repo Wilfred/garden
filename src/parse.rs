@@ -52,7 +52,7 @@ pub enum Statement_ {
     Let(VariableName, Expression),
     Return(Expression),
     Expr(Expression),
-    FinishedLastInput(Option<ErrorKind>),
+    Stop(Option<ErrorKind>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -225,9 +225,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         false,
                                         Statement(
                                             offset,
-                                            Statement_::Stop(Some(
-                                                ErrorKind::BadValue,
-                                            )),
+                                            Statement_::Stop(Some(ErrorKind::BadValue)),
                                         ),
                                     ));
                                     env.stack.push(stack_frame);
@@ -279,9 +277,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         false,
                                         Statement(
                                             offset,
-                                            Statement_::Stop(Some(
-                                                ErrorKind::BadValue,
-                                            )),
+                                            Statement_::Stop(Some(ErrorKind::BadValue)),
                                         ),
                                     ));
                                     env.stack.push(stack_frame);
@@ -378,12 +374,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name, &stack_frame, &env) {
                             stack_frame.evalled_values.push(value);
                         } else {
+                            stack_frame
+                                .stmts_to_eval
+                                .push((done_children, Statement(offset, stmt_copy)));
                             stack_frame.stmts_to_eval.push((
                                 false,
-                                Statement(
-                                    offset,
-                                    Statement_::Stop(Some(ErrorKind::BadExpression)),
-                                ),
+                                Statement(offset, Statement_::Stop(Some(ErrorKind::BadExpression))),
                             ));
                             env.stack.push(stack_frame);
                             return Err(EvalError::ResumableError(format!(

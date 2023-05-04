@@ -114,6 +114,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             },
                             Err(CommandError::Resume) => todo!(),
                             Err(CommandError::Replace(_)) => todo!(),
+                            Err(CommandError::Skip) => todo!(),
                         }
                     }
                     None => Response {

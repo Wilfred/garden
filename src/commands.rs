@@ -24,6 +24,7 @@ pub enum Command {
     Parse(Option<String>),
     Replace(Option<Statement>),
     Resume,
+    Skip,
     Source,
     Stack,
     Quit,
@@ -44,6 +45,7 @@ impl Command {
             ":help" => Some(Command::Help),
             ":locals" => Some(Command::Locals),
             ":resume" => Some(Command::Resume),
+            ":skip" => Some(Command::Skip),
             ":source" => Some(Command::Source),
             ":stack" => Some(Command::Stack),
             ":quit" => Some(Command::Quit),
@@ -85,6 +87,7 @@ impl Command {
             Command::Parse(_) => ":parse",
             Command::Replace(_) => ":replace",
             Command::Resume => ":resume",
+            Command::Skip => ":skip",
             Command::Source => ":source",
             Command::Stack => ":stack",
             Command::Quit => ":quit",
@@ -115,6 +118,7 @@ pub enum CommandError {
     Replace(Statement),
     Resume,
     Abort,
+    Skip,
 }
 
 fn describe_fun(value: &Value) -> Option<String> {
@@ -183,6 +187,9 @@ pub fn run_command<T: Write>(
         }
         Command::Resume => {
             return Err(CommandError::Resume);
+        }
+        Command::Skip => {
+            return Err(CommandError::Skip);
         }
         Command::Source => {
             write!(

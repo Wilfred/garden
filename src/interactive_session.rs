@@ -17,6 +17,7 @@ enum ReadError {
     Replaced(Statement),
     Aborted,
     Resumed,
+    Skipped,
     ReadlineError,
 }
 
@@ -44,6 +45,9 @@ fn read_expr(
                         }
                         Err(CommandError::Resume) => {
                             return Err(ReadError::Resumed);
+                        }
+                        Err(CommandError::Skip) => {
+                            return Err(ReadError::Skipped);
                         }
                         Err(CommandError::Replace(stmt)) => {
                             return Err(ReadError::Replaced(stmt));
@@ -155,6 +159,21 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     }
                 }
             }
+            Err(ReadError::Skipped) => {
+                let stack_frame = env.stack.last_mut().unwrap();
+                // Skip the Stop statement.
+                stack_frame.stmts_to_eval.pop();
+
+                stack_frame
+                    .stmts_to_eval
+                    .pop()
+                    .expect("Tried to skip a statement, but none in this frame.");
+
+                if depth > 0 {
+                    depth -= 1;
+                }
+            }
+
             Err(ReadError::ReadlineError) => {
                 break;
             }

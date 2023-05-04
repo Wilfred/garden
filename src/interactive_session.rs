@@ -14,10 +14,7 @@ use owo_colors::OwoColorize;
 use rustyline::Editor;
 
 enum ReadError {
-    Replaced(Statement),
-    Aborted,
-    Resumed,
-    Skipped,
+    CommandError(CommandError),
     ReadlineError,
 }
 
@@ -40,17 +37,8 @@ fn read_expr(
                             println!();
                             continue;
                         }
-                        Err(CommandError::Abort) => {
-                            return Err(ReadError::Aborted);
-                        }
-                        Err(CommandError::Resume) => {
-                            return Err(ReadError::Resumed);
-                        }
-                        Err(CommandError::Skip) => {
-                            return Err(ReadError::Skipped);
-                        }
-                        Err(CommandError::Replace(stmt)) => {
-                            return Err(ReadError::Replaced(stmt));
+                        Err(e) => {
+                            return Err(ReadError::CommandError(e));
                         }
                     },
                     None => {
@@ -113,13 +101,13 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                         .push((false, Statement(expr.0, Statement_::Expr(expr))));
                 }
             },
-            Err(ReadError::Aborted) => {
+            Err(ReadError::CommandError(CommandError::Abort)) => {
                 // TODO: doesn't this need to pop the stack to the toplevel?
                 // It seems to be working already.
                 depth = 0;
                 continue;
             }
-            Err(ReadError::Resumed) => {
+            Err(ReadError::CommandError(CommandError::Resume)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let (_, stmt) = stack_frame.stmts_to_eval.pop().unwrap();
                 assert!(matches!(stmt.1, Statement_::Stop(_)));
@@ -128,7 +116,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     depth -= 1;
                 }
             }
-            Err(ReadError::Replaced(stmt)) => {
+            Err(ReadError::CommandError(CommandError::Replace(stmt))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let (_, prev_stmt) = stack_frame.stmts_to_eval.last().unwrap();
 
@@ -159,7 +147,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     }
                 }
             }
-            Err(ReadError::Skipped) => {
+            Err(ReadError::CommandError(CommandError::Skip)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 // Skip the Stop statement.
                 stack_frame.stmts_to_eval.pop();

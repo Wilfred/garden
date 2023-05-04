@@ -301,8 +301,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Statement_::Let(variable, expr) => {
                         if done_children {
                             if stack_frame.bindings.contains_key(&variable) {
-                                env.pop_to_toplevel();
-                                return Err(EvalError::UserError(format!(
+                                stack_frame
+                                    .stmts_to_eval
+                                    .push((done_children, Statement(offset, stmt_copy)));
+                                stack_frame.stmts_to_eval.push((
+                                    false,
+                                    Statement(
+                                        offset,
+                                        Statement_::Stop(Some(ErrorKind::BadExpression)),
+                                    ),
+                                ));
+                                env.stack.push(stack_frame);
+
+                                return Err(EvalError::ResumableError(format!(
                                     "{} is already bound. Try `{} = something` instead.",
                                     variable.0, variable.0
                                 )));
@@ -339,8 +350,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Statement_::Assign(variable, expr) => {
                         if done_children {
                             if !stack_frame.bindings.contains_key(&variable) {
-                                env.pop_to_toplevel();
-                                return Err(EvalError::UserError(format!(
+                                stack_frame
+                                    .stmts_to_eval
+                                    .push((done_children, Statement(offset, stmt_copy)));
+                                stack_frame.stmts_to_eval.push((
+                                    false,
+                                    Statement(
+                                        offset,
+                                        Statement_::Stop(Some(ErrorKind::BadExpression)),
+                                    ),
+                                ));
+                                env.stack.push(stack_frame);
+
+                                return Err(EvalError::ResumableError(format!(
                                     "{} is not currently bound. Try `let {} = something`.",
                                     variable.0, variable.0
                                 )));

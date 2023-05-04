@@ -538,8 +538,14 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[lhs_value.clone(), rhs_value],
+                                    );
+
+                                    return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
                                     )));
@@ -548,8 +554,13 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[lhs_value, rhs_value.clone()],
+                                    );
+                                    return Err(EvalError::ResumableError(format!(
                                         // TODO: use the term 'int' or 'integer' in error messages?
                                         // int: reflects code
                                         // integer: conventional maths

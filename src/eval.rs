@@ -827,7 +827,7 @@ pub fn eval_stmts(
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::parse_stmts_from_str;
+    use crate::parse::{parse_def_or_expr_from_str, parse_stmts_from_str};
 
     use super::*;
 

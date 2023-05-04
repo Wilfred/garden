@@ -185,6 +185,27 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     }
 }
 
+fn restore_stack_frame(
+    env: &mut Env,
+    mut stack_frame: StackFrame,
+    stmt_to_eval: (bool, Statement),
+    evalled_values: &[Value],
+) {
+    for value in evalled_values {
+        stack_frame.evalled_values.push(value.clone());
+    }
+
+    let offset = stmt_to_eval.1 .0;
+    stack_frame.stmts_to_eval.push(stmt_to_eval);
+    stack_frame.stmts_to_eval.push((
+        false,
+        // TODO: let users specify the error kind.
+        Statement(offset, Statement_::Stop(Some(ErrorKind::BadValue))),
+    ));
+
+    env.stack.push(stack_frame);
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -217,19 +238,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     }
                                 }
                                 v => {
-                                    stack_frame.evalled_values.push(condition_value);
-                                    stack_frame
-                                        .stmts_to_eval
-                                        .push((done_children, Statement(offset, stmt_copy)));
-                                    stack_frame.stmts_to_eval.push((
-                                        false,
-                                        Statement(
-                                            offset,
-                                            Statement_::Stop(Some(ErrorKind::BadValue)),
-                                        ),
-                                    ));
-                                    env.stack.push(stack_frame);
-
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[condition_value],
+                                    );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean when evaluating `if`, but got: {}",
                                         v
@@ -269,19 +283,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     }
                                 }
                                 v => {
-                                    stack_frame.evalled_values.push(condition_value);
-                                    stack_frame
-                                        .stmts_to_eval
-                                        .push((done_children, Statement(offset, stmt_copy)));
-                                    stack_frame.stmts_to_eval.push((
-                                        false,
-                                        Statement(
-                                            offset,
-                                            Statement_::Stop(Some(ErrorKind::BadValue)),
-                                        ),
-                                    ));
-                                    env.stack.push(stack_frame);
-
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[condition_value],
+                                    );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean when evaluating `while`, but got: {}",
                                         v
@@ -301,18 +308,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Statement_::Let(variable, expr) => {
                         if done_children {
                             if stack_frame.bindings.contains_key(&variable) {
-                                stack_frame
-                                    .stmts_to_eval
-                                    .push((done_children, Statement(offset, stmt_copy)));
-                                stack_frame.stmts_to_eval.push((
-                                    false,
-                                    Statement(
-                                        offset,
-                                        Statement_::Stop(Some(ErrorKind::BadExpression)),
-                                    ),
-                                ));
-                                env.stack.push(stack_frame);
-
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Statement(offset, stmt_copy)),
+                                    &[],
+                                );
                                 return Err(EvalError::ResumableError(format!(
                                     "{} is already bound. Try `{} = something` instead.",
                                     variable.0, variable.0
@@ -350,18 +351,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Statement_::Assign(variable, expr) => {
                         if done_children {
                             if !stack_frame.bindings.contains_key(&variable) {
-                                stack_frame
-                                    .stmts_to_eval
-                                    .push((done_children, Statement(offset, stmt_copy)));
-                                stack_frame.stmts_to_eval.push((
-                                    false,
-                                    Statement(
-                                        offset,
-                                        Statement_::Stop(Some(ErrorKind::BadExpression)),
-                                    ),
-                                ));
-                                env.stack.push(stack_frame);
-
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Statement(offset, stmt_copy)),
+                                    &[],
+                                );
                                 return Err(EvalError::ResumableError(format!(
                                     "{} is not currently bound. Try `let {} = something`.",
                                     variable.0, variable.0
@@ -396,14 +391,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name, &stack_frame, &env) {
                             stack_frame.evalled_values.push(value);
                         } else {
-                            stack_frame
-                                .stmts_to_eval
-                                .push((done_children, Statement(offset, stmt_copy)));
-                            stack_frame.stmts_to_eval.push((
-                                false,
-                                Statement(offset, Statement_::Stop(Some(ErrorKind::BadExpression))),
-                            ));
-                            env.stack.push(stack_frame);
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Statement(offset, stmt_copy)),
+                                &[],
+                            );
                             return Err(EvalError::ResumableError(format!(
                                 "Undefined variable: {}. What value would you like to use instead?",
                                 name.0
@@ -436,20 +429,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    stack_frame.evalled_values.push(lhs_value.clone());
-                                    stack_frame.evalled_values.push(rhs_value);
-                                    stack_frame
-                                        .stmts_to_eval
-                                        .push((done_children, Statement(offset, stmt_copy)));
-                                    stack_frame.stmts_to_eval.push((
-                                        false,
-                                        Statement(
-                                            offset,
-                                            Statement_::Stop(Some(ErrorKind::BadValue)),
-                                        ),
-                                    ));
-                                    env.stack.push(stack_frame);
-
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[lhs_value.clone(), rhs_value],
+                                    );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
@@ -459,20 +444,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    stack_frame.evalled_values.push(lhs_value.clone());
-                                    stack_frame.evalled_values.push(rhs_value.clone());
-                                    stack_frame
-                                        .stmts_to_eval
-                                        .push((done_children, Statement(offset, stmt_copy)));
-                                    stack_frame.stmts_to_eval.push((
-                                        false,
-                                        Statement(
-                                            offset,
-                                            Statement_::Stop(Some(ErrorKind::BadExpression)),
-                                        ),
-                                    ));
-                                    env.stack.push(stack_frame);
-
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[lhs_value, rhs_value.clone()],
+                                    );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
                                         rhs_value
@@ -498,20 +475,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 }
                                 BinaryOperatorKind::Divide => {
                                     if rhs_num == 0 {
-                                        stack_frame.evalled_values.push(lhs_value);
-                                        stack_frame.evalled_values.push(rhs_value.clone());
-                                        stack_frame
-                                            .stmts_to_eval
-                                            .push((done_children, Statement(offset, stmt_copy)));
-                                        stack_frame.stmts_to_eval.push((
-                                            false,
-                                            Statement(
-                                                offset,
-                                                Statement_::Stop(Some(ErrorKind::BadValue)),
-                                            ),
-                                        ));
-                                        env.stack.push(stack_frame);
-
+                                        restore_stack_frame(
+                                            env,
+                                            stack_frame,
+                                            (done_children, Statement(offset, stmt_copy)),
+                                            &[lhs_value, rhs_value.clone()],
+                                        );
                                         return Err(EvalError::ResumableError(format!(
                                             "Tried to divide {} by zero.",
                                             rhs_value

@@ -436,9 +436,21 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    // TODO: allow resuming here too.
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
+                                    stack_frame.evalled_values.push(lhs_value.clone());
+                                    stack_frame.evalled_values.push(rhs_value);
+                                    stack_frame
+                                        .stmts_to_eval
+                                        .push((done_children, Statement(offset, stmt_copy)));
+                                    stack_frame.stmts_to_eval.push((
+                                        false,
+                                        Statement(
+                                            offset,
+                                            Statement_::Stop(Some(ErrorKind::BadValue)),
+                                        ),
+                                    ));
+                                    env.stack.push(stack_frame);
+
+                                    return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
                                         lhs_value
                                     )));
@@ -447,8 +459,21 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
+                                    stack_frame.evalled_values.push(lhs_value.clone());
+                                    stack_frame.evalled_values.push(rhs_value.clone());
+                                    stack_frame
+                                        .stmts_to_eval
+                                        .push((done_children, Statement(offset, stmt_copy)));
+                                    stack_frame.stmts_to_eval.push((
+                                        false,
+                                        Statement(
+                                            offset,
+                                            Statement_::Stop(Some(ErrorKind::BadExpression)),
+                                        ),
+                                    ));
+                                    env.stack.push(stack_frame);
+
+                                    return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
                                         rhs_value
                                     )));
@@ -473,8 +498,21 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 }
                                 BinaryOperatorKind::Divide => {
                                     if rhs_num == 0 {
-                                        env.pop_to_toplevel();
-                                        return Err(EvalError::UserError(format!(
+                                        stack_frame.evalled_values.push(lhs_value);
+                                        stack_frame.evalled_values.push(rhs_value.clone());
+                                        stack_frame
+                                            .stmts_to_eval
+                                            .push((done_children, Statement(offset, stmt_copy)));
+                                        stack_frame.stmts_to_eval.push((
+                                            false,
+                                            Statement(
+                                                offset,
+                                                Statement_::Stop(Some(ErrorKind::BadValue)),
+                                            ),
+                                        ));
+                                        env.stack.push(stack_frame);
+
+                                        return Err(EvalError::ResumableError(format!(
                                             "Tried to divide {} by zero.",
                                             rhs_value
                                         )));

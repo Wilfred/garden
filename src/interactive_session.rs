@@ -179,7 +179,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             }
             Err(EvalError::ResumableError(msg)) => {
                 println!("{}: {}", "Error".bright_red(), msg);
-                println!("Resumable error.");
                 depth += 1;
             }
             Err(EvalError::UserError(e)) => {

@@ -63,8 +63,20 @@ impl Display for Value {
                 write!(f, "(function: {})", name)
             }
             Value::Void => write!(f, "void"),
-            // TODO: escape inner double quotes.
-            Value::String(s) => write!(f, "\"{}\"", s),
+            Value::String(s) => {
+                write!(f, "\"")?;
+
+                // Escape inner double quotes and backslashes.
+                for c in s.chars() {
+                    match c {
+                        '"' => write!(f, "\\\"")?,
+                        '\\' => write!(f, "\\\\")?,
+                        _ => write!(f, "{}", c)?,
+                    }
+                }
+
+                write!(f, "\"")
+            }
         }
     }
 }

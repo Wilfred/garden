@@ -1055,4 +1055,10 @@ mod tests {
         let value = eval_stmts(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }
+
+    #[test]
+    fn test_display_value_for_string_with_doublequote() {
+        let value = Value::String("foo \\ \" bar".into());
+        assert_eq!(format!("{}", value), "\"foo \\\\ \\\" bar\"");
+    }
 }

@@ -628,9 +628,14 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_bool = match lhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
-                                        "Expected a bool, but got: {}",
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[lhs_value.clone(), rhs_value],
+                                    );
+                                    return Err(EvalError::ResumableError(format!(
+                                        "Expected a boolean, but got: {}",
                                         lhs_value
                                     )));
                                 }
@@ -638,8 +643,13 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_bool = match rhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
-                                    env.pop_to_toplevel();
-                                    return Err(EvalError::UserError(format!(
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Statement(offset, stmt_copy)),
+                                        &[lhs_value, rhs_value.clone()],
+                                    );
+                                    return Err(EvalError::ResumableError(format!(
                                         "Expected a bool, but got: {}",
                                         rhs_value
                                     )));
@@ -687,14 +697,26 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 );
                             }
 
-                            match receiver_value {
+                            match &receiver_value {
                                 Value::Fun(_, name, params, body) => {
                                     if params.len() != arg_values.len() {
-                                        env.pop_to_toplevel();
-                                        return Err(EvalError::UserError(format!(
-                                            "Expected {} arguments to function {}, but got {}",
+                                        let mut saved_values = vec![];
+                                        for value in arg_values.iter().rev() {
+                                            saved_values.push(value.clone());
+                                        }
+                                        saved_values.push(receiver_value.clone());
+
+                                        restore_stack_frame(
+                                            env,
+                                            stack_frame,
+                                            (done_children, Statement(offset, stmt_copy)),
+                                            &saved_values,
+                                        );
+
+                                        return Err(EvalError::ResumableError(format!(
+                                            "Function {} expects {} arguments, but got {}",
+                                            name.0.clone(),
                                             params.len(),
-                                            name.0,
                                             arg_values.len()
                                         )));
                                     }

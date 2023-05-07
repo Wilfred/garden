@@ -95,7 +95,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     continue;
                 }
                 DefinitionsOrExpression::Expr(expr) => {
-                    let stack_frame = env.stack.last_mut().unwrap();
+                    let stack_frame = env
+                        .stack
+                        .last_mut()
+                        .expect("Should always have the toplevel stack frame");
                     stack_frame
                         .stmts_to_eval
                         .push((false, Statement(expr.0, Statement_::Expr(expr))));

@@ -121,14 +121,14 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             }
             Err(ReadError::CommandError(CommandError::Replace(stmt))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
-                let (_, prev_stmt) = stack_frame.stmts_to_eval.last().unwrap();
 
-                let err_kind = match prev_stmt.1 {
-                    Statement_::Stop(e) => e,
-                    _ => {
-                        println!(":replace failed: expected to be at an evaluation stopping point");
-                        continue;
-                    }
+                let err_kind = if let Some((_, Statement(_, Statement_::Stop(e)))) =
+                    stack_frame.stmts_to_eval.last()
+                {
+                    e.clone()
+                } else {
+                    println!(":replace failed: expected to be at an evaluation stopping point");
+                    continue;
                 };
 
                 match err_kind {

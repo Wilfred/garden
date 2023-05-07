@@ -885,12 +885,11 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
 
     Ok(env
         .stack
-        .last()
+        .last_mut()
         .expect("toplevel stack frame should exist")
         .evalled_values
-        .last()
-        .expect("Should have a value from the last expression")
-        .clone())
+        .pop()
+        .expect("Should have a value from the last expression"))
 }
 
 pub fn eval_stmts(

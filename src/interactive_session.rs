@@ -3,7 +3,7 @@ use std::io::Write;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::commands::{print_available_commands, print_stack, run_command, Command, CommandError};
+use crate::commands::{print_available_commands, run_command, Command, CommandError};
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
@@ -183,12 +183,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(EvalError::ResumableError(msg)) => {
                 println!("{}: {}", "Error".bright_red(), msg);
                 depth += 1;
-            }
-            Err(EvalError::UserError(e)) => {
-                // Unrecoverable.
-                println!("{}: {}", "Error".bright_red(), e);
-                print_stack(&mut std::io::stdout(), &env);
-                depth = 0;
             }
             Err(EvalError::Stop(_)) => {
                 let stack_frame = env.stack.last_mut().unwrap();

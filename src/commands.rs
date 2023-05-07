@@ -26,6 +26,7 @@ pub enum Command {
     Resume,
     Skip,
     Source,
+    Trace,
     Stack,
     Quit,
 }
@@ -48,6 +49,7 @@ impl Command {
             ":skip" => Some(Command::Skip),
             ":source" => Some(Command::Source),
             ":stack" => Some(Command::Stack),
+            ":trace" => Some(Command::Trace),
             ":quit" => Some(Command::Quit),
             _ => {
                 // TODO: require a word break after :parse and :doc
@@ -90,6 +92,7 @@ impl Command {
             Command::Skip => ":skip",
             Command::Source => ":source",
             Command::Stack => ":stack",
+            Command::Trace => ":trace",
             Command::Quit => ":quit",
         }
     }
@@ -253,6 +256,19 @@ pub fn run_command<T: Write>(
         }
         Command::Stack => {
             print_stack(buf, env);
+        }
+        Command::Trace => {
+            env.trace_exprs = !env.trace_exprs;
+            write!(
+                buf,
+                "Expression tracing {}.",
+                if env.trace_exprs {
+                    "enabled"
+                } else {
+                    "disabled"
+                }
+            )
+            .unwrap();
         }
         Command::Parse(src) => {
             if let Some(src) = src {

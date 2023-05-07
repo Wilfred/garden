@@ -91,6 +91,7 @@ pub struct StackFrame {
 
 #[derive(Debug)]
 pub struct Env {
+    pub trace_exprs: bool,
     pub file_scope: HashMap<VariableName, Value>,
     pub stack: Vec<StackFrame>,
 }
@@ -108,6 +109,7 @@ impl Default for Env {
         );
 
         Self {
+            trace_exprs: false,
             file_scope,
             stack: vec![StackFrame {
                 fun_name: VariableName("toplevel".into()),
@@ -231,6 +233,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                 }
 
                 let stmt_copy = stmt_.clone();
+                if env.trace_exprs {
+                    println!("{:?} {}", stmt_, done_children);
+                }
                 match stmt_ {
                     Statement_::If(condition, ref then_body, ref else_body) => {
                         if done_children {

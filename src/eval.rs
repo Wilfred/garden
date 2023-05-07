@@ -807,8 +807,20 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     }
                                     BuiltinFunctionKind::IntToString => {
                                         if args.len() != 1 {
-                                            env.pop_to_toplevel();
-                                            return Err(EvalError::UserError(format!(
+                                            let mut saved_values = vec![];
+                                            for value in arg_values.iter().rev() {
+                                                saved_values.push(value.clone());
+                                            }
+                                            saved_values.push(receiver_value.clone());
+
+                                            restore_stack_frame(
+                                                env,
+                                                stack_frame,
+                                                (done_children, Statement(offset, stmt_copy)),
+                                                &saved_values,
+                                            );
+
+                                            return Err(EvalError::ResumableError(format!(
                                                 "Function int_to_string requires 1 argument, but got: {}",
                                                 args.len()
                                             )));
@@ -820,8 +832,20 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     .push(Value::String(format!("{}", i)));
                                             }
                                             v => {
-                                                env.pop_to_toplevel();
-                                                return Err(EvalError::UserError(format!(
+                                                let mut saved_values = vec![];
+                                                for value in arg_values.iter().rev() {
+                                                    saved_values.push(value.clone());
+                                                }
+                                                saved_values.push(receiver_value.clone());
+
+                                                restore_stack_frame(
+                                                    env,
+                                                    stack_frame,
+                                                    (done_children, Statement(offset, stmt_copy)),
+                                                    &saved_values,
+                                                );
+
+                                                return Err(EvalError::ResumableError(format!(
                                                     "Expected an integer, but got: {}",
                                                     v
                                                 )));

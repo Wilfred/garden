@@ -804,7 +804,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         if args.len() != 1 {
                                             env.pop_to_toplevel();
                                             return Err(EvalError::UserError(format!(
-                                                "Function print requires 1 argument, but got: {}",
+                                                "Function int_to_string requires 1 argument, but got: {}",
                                                 args.len()
                                             )));
                                         }

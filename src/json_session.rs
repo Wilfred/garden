@@ -87,6 +87,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 kind: ResponseKind::Evaluate,
                                 value: Err(format!("Error: {}", e)),
                             },
+                            Err(EvalError::Interrupted) => Response {
+                                kind: ResponseKind::Evaluate,
+                                value: Err(format!("Interrupted")),
+                            },
                             Err(EvalError::Stop(_)) => {
                                 todo!();
                             }

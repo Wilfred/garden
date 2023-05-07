@@ -184,6 +184,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 println!("{}: {}", "Error".bright_red(), msg);
                 depth += 1;
             }
+            Err(EvalError::Interrupted) => {
+                println!("Interrupted. You can take a look around, or use :resume to continue.");
+                depth += 1;
+            }
             Err(EvalError::Stop(_)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let result = stack_frame.evalled_values.pop().unwrap();

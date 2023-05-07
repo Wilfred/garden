@@ -159,6 +159,7 @@ pub enum ErrorKind {
 
 #[derive(Debug)]
 pub enum EvalError {
+    Interrupted,
     ResumableError(String),
     Stop(Option<ErrorKind>),
 }
@@ -226,9 +227,14 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
             if let Some((done_children, Statement(offset, stmt_))) = stack_frame.stmts_to_eval.pop()
             {
                 if session.interrupted.load(Ordering::SeqCst) {
-                    // TODO: prompt for what to do next.
-                    println!("Got ctrl-c");
-                    break;
+                    session.interrupted.store(false, Ordering::SeqCst);
+                    restore_stack_frame(
+                        env,
+                        stack_frame,
+                        (done_children, Statement(offset, stmt_)),
+                        &[],
+                    );
+                    return Err(EvalError::Interrupted);
                 }
 
                 let stmt_copy = stmt_.clone();

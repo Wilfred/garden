@@ -272,8 +272,8 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
         }
 
         return Err(ParseError::OtherError(format!(
-            "Expected an expression, got: {}",
-            token.text
+            "Expected an expression, got: {} (offset {})",
+            token.text, token.offset
         )));
     }
 

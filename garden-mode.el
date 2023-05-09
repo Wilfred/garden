@@ -16,6 +16,7 @@
 ;;; Code:
 
 (require 's)
+(require 'comint)
 
 (defvar garden-executable
   "/home/wilfred/projects/garden/target/debug/garden")
@@ -49,14 +50,17 @@
   (let ((buf (process-buffer proc)))
     (with-current-buffer buf
       (insert
-       (propertize output 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only))))
+       (propertize output 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+      (set-marker (process-mark proc) (point)))
     (garden--handle-responses output)))
 
 (defun garden--buffer ()
   (let* ((buf-name "*garden*")
          (buf (get-buffer buf-name)))
     (unless buf
-      (setq buf (get-buffer-create buf-name)))
+      (setq buf (get-buffer-create buf-name))
+      (with-current-buffer buf
+        (garden-session-mode)))
     buf))
 
 (defun garden--session-active-p ()
@@ -157,6 +161,9 @@
   (setq-local comment-end "")
 
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
+
+(define-derived-mode garden-session-mode comint-mode "Garden Session"
+  :syntax-table garden-mode-syntax-table)
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))

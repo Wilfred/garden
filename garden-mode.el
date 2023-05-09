@@ -26,7 +26,7 @@
   (garden-send-input (buffer-substring-no-properties start end))
   (deactivate-mark))
 
-(defun garden--handle-responses (output)
+(defun garden-process-filter (proc output)
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
            (response-value (plist-get response :value))
@@ -44,15 +44,16 @@
                 (let ((inhibit-read-only t))
                   (insert response-ok-value)))))
         (let ((error-info (plist-get response-value :Err)))
-          (message "%s" error-info))))))
+          (message "%s" error-info)))
 
-(defun garden-process-filter (proc output)
-  (let ((buf (process-buffer proc)))
-    (with-current-buffer buf
-      (insert
-       (propertize output 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
-      (set-marker (process-mark proc) (point)))
-    (garden--handle-responses output)))
+      (with-current-buffer (process-buffer proc)
+        (let ((s (if (and (equal response-kind "evaluate")
+                          response-ok-value)
+                     (concat response-ok-value "\n")
+                   output)))
+          (insert
+           (propertize s 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+          (set-marker (process-mark proc) (point)))))))
 
 (defun garden--buffer ()
   (let* ((buf-name "*garden*")

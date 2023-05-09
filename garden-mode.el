@@ -68,7 +68,7 @@
 (defun garden--active-buffer ()
   (unless (garden--session-active-p)
     (if (yes-or-no-p "No Garden process is running. Start it?")
-        (garden-start)
+        (garden--start)
       (user-error "No Garden process available")))
   (garden--buffer))
 
@@ -114,16 +114,20 @@
   (let ((buf (garden--buffer)))
     (kill-buffer buf)))
 
-(defun garden-start ()
-  (interactive)
+(defun garden--start ()
   (let* ((buf (garden--buffer))
          (proc (start-process "garden" buf garden-executable "json")))
     (set-process-filter proc #'garden-process-filter)))
 
+(defun garden-start ()
+  (interactive)
+  (garden--start)
+  (switch-to-buffer (garden--buffer)))
+
 (defun garden-restart ()
   (interactive)
   (garden-stop)
-  (garden-start))
+  (garden--start))
 
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt

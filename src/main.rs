@@ -4,6 +4,7 @@ mod interactive_session;
 mod json_session;
 mod parse;
 mod prompt;
+mod colors;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;

@@ -5,6 +5,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::{
+    colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
     parse::{
         parse_def_or_expr_from_str, parse_expr_from_str, ParseError, Statement, Statement_,
@@ -106,11 +107,11 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
     for (i, name) in command_names.iter().enumerate() {
         if i == command_names.len() - 1 {
-            write!(buf, " and {}.", name.green()).unwrap();
+            write!(buf, " and {}.", green(name)).unwrap();
         } else if i == command_names.len() - 2 {
-            write!(buf, " {}", name.green()).unwrap();
+            write!(buf, " {}", green(name)).unwrap();
         } else {
-            write!(buf, " {},", name.green()).unwrap();
+            write!(buf, " {},", green(name)).unwrap();
         }
     }
     write!(buf, "\n").unwrap();

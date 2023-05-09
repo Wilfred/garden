@@ -148,6 +148,9 @@
 
 \\{garden-mode-map\\}"
   :syntax-table garden-mode-syntax-table
+
+  (setq mode-name
+        '(:eval (if (garden--session-active-p) "Garden[active]" "Garden")))
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 

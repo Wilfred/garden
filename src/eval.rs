@@ -711,10 +711,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Statement_::Expr(Expression(_, Expression_::Call(receiver, ref args))) => {
                         if done_children {
-                            let receiver_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for call receiver");
                             let mut arg_values = vec![];
                             for _ in 0..args.len() {
                                 arg_values.push(
@@ -723,16 +719,18 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     ),
                                 );
                             }
+                            let receiver_value = stack_frame
+                                .evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for call receiver");
 
                             match &receiver_value {
                                 Value::Fun(_, name, params, body) => {
                                     if params.len() != arg_values.len() {
-                                        let mut saved_values = vec![];
+                                        let mut saved_values = vec![receiver_value.clone()];
                                         for value in arg_values.iter().rev() {
                                             saved_values.push(value.clone());
                                         }
-                                        saved_values.push(receiver_value.clone());
-
                                         restore_stack_frame(
                                             env,
                                             stack_frame,
@@ -773,12 +771,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 Value::BuiltinFunction(kind) => match kind {
                                     BuiltinFunctionKind::Print => {
                                         if args.len() != 1 {
-                                            let mut saved_values = vec![];
+                                            let mut saved_values = vec![receiver_value.clone()];
                                             for value in arg_values.iter().rev() {
                                                 saved_values.push(value.clone());
                                             }
-                                            saved_values.push(receiver_value.clone());
-
                                             restore_stack_frame(
                                                 env,
                                                 stack_frame,
@@ -812,7 +808,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     saved_values.push(value.clone());
                                                 }
                                                 saved_values.push(receiver_value.clone());
-
                                                 restore_stack_frame(
                                                     env,
                                                     stack_frame,
@@ -836,7 +831,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                 saved_values.push(value.clone());
                                             }
                                             saved_values.push(receiver_value.clone());
-
                                             restore_stack_frame(
                                                 env,
                                                 stack_frame,
@@ -862,7 +856,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     saved_values.push(value.clone());
                                                 }
                                                 saved_values.push(receiver_value.clone());
-
                                                 restore_stack_frame(
                                                     env,
                                                     stack_frame,
@@ -885,7 +878,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         saved_values.push(value.clone());
                                     }
                                     saved_values.push(receiver_value.clone());
-
                                     restore_stack_frame(
                                         env,
                                         stack_frame,
@@ -905,15 +897,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .stmts_to_eval
                                 .push((true, Statement(offset, stmt_copy)));
 
-                            stack_frame.stmts_to_eval.push((
-                                false,
-                                Statement(receiver.0, Statement_::Expr(*receiver.clone())),
-                            ));
                             for arg in args {
                                 stack_frame
                                     .stmts_to_eval
                                     .push((false, Statement(arg.0, Statement_::Expr(arg.clone()))));
                             }
+                            // Push the receiver after arguments, so
+                            // we evaluate it before arguments. This
+                            // makes it easier to use :replace on bad
+                            // functions.
+                            stack_frame.stmts_to_eval.push((
+                                false,
+                                Statement(receiver.0, Statement_::Expr(*receiver.clone())),
+                            ));
                         }
                     }
                     Statement_::Stop(e) => {

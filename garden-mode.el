@@ -52,8 +52,8 @@
         (insert output)))
     (garden--handle-responses output)))
 
-(defun garden--json-buffer ()
-  (let* ((buf-name "*garden-json*")
+(defun garden--buffer ()
+  (let* ((buf-name "*garden*")
          (buf (get-buffer buf-name)))
     (unless buf
       (setq buf (get-buffer-create buf-name))
@@ -62,17 +62,17 @@
     buf))
 
 (defun garden--session-active-p ()
-  (let* ((buf-name "*garden-json*")
+  (let* ((buf-name "*garden*")
          (buf (get-buffer buf-name)))
     (when (and buf (get-buffer-process buf))
       t)))
 
-(defun garden--json-buffer-with-proc ()
+(defun garden--active-buffer ()
   (unless (garden--session-active-p)
     (if (yes-or-no-p "No Garden process is running. Start it?")
         (garden-start)
       (user-error "No Garden process available")))
-  (garden--json-buffer))
+  (garden--buffer))
 
 (defun garden--stdout-buffer ()
   (let* ((buf-name "*garden-stdout*")
@@ -85,13 +85,13 @@
 
 (defun garden-send-input (input)
   (interactive "r")
-  (let ((buf (garden--json-buffer-with-proc)))
+  (let ((buf (garden--active-buffer)))
     (process-send-string buf (json-serialize `((method . "evaluate") (input . ,input))))
     (process-send-string buf "\n")))
 
 (defun garden-send-command (input)
   (interactive)
-  (let ((buf (garden--json-buffer-with-proc)))
+  (let ((buf (garden--active-buffer)))
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 
@@ -113,12 +113,12 @@
 
 (defun garden-stop ()
   (interactive)
-  (let ((buf (garden--json-buffer)))
+  (let ((buf (garden--buffer)))
     (kill-buffer buf)))
 
 (defun garden-start ()
   (interactive)
-  (let* ((buf (garden--json-buffer))
+  (let* ((buf (garden--buffer))
          (proc (start-process "garden" buf garden-executable "json")))
     (set-process-filter proc #'garden-process-filter)))
 

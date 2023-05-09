@@ -61,15 +61,18 @@
         (setq buffer-read-only t)))
     buf))
 
+(defun garden--session-active-p ()
+  (let* ((buf-name "*garden-json*")
+         (buf (get-buffer buf-name)))
+    (when (and buf (get-buffer-process buf))
+      t)))
+
 (defun garden--json-buffer-with-proc ()
-  (let ((buf (garden--json-buffer)))
-    (if (get-buffer-process buf)
-        buf
-      (if (yes-or-no-p "No Garden process is running. Start it?")
-          (progn
-            (garden-start)
-            buf)
-        (user-error "No Garden process available")))))
+  (unless (garden--session-active-p)
+    (if (yes-or-no-p "No Garden process is running. Start it?")
+        (garden-start)
+      (user-error "No Garden process available")))
+  (garden--json-buffer))
 
 (defun garden--stdout-buffer ()
   (let* ((buf-name "*garden-stdout*")

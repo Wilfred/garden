@@ -153,8 +153,12 @@ pub struct Session<'a> {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum ErrorKind {
+    /// An inappropriate value for the current expression, such as a
+    /// type error or divide by zero.
     BadValue,
-    BadExpression,
+    /// A malformed expression, such as an arity error or assigning to
+    /// an undefined variable.
+    MalformedExpression,
 }
 
 #[derive(Debug)]
@@ -205,6 +209,7 @@ fn restore_stack_frame(
     mut stack_frame: StackFrame,
     stmt_to_eval: (bool, Statement),
     evalled_values: &[Value],
+    error_kind: Option<ErrorKind>,
 ) {
     for value in evalled_values {
         stack_frame.evalled_values.push(value.clone());
@@ -212,11 +217,9 @@ fn restore_stack_frame(
 
     let offset = stmt_to_eval.1 .0;
     stack_frame.stmts_to_eval.push(stmt_to_eval);
-    stack_frame.stmts_to_eval.push((
-        false,
-        // TODO: let users specify the error kind.
-        Statement(offset, Statement_::Stop(Some(ErrorKind::BadValue))),
-    ));
+    stack_frame
+        .stmts_to_eval
+        .push((false, Statement(offset, Statement_::Stop(error_kind))));
 
     env.stack.push(stack_frame);
 }
@@ -233,6 +236,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         stack_frame,
                         (done_children, Statement(offset, stmt_)),
                         &[],
+                        None,
                     );
                     return Err(EvalError::Interrupted);
                 }
@@ -266,6 +270,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[condition_value],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean when evaluating `if`, but got: {}",
@@ -311,6 +316,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[condition_value],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean when evaluating `while`, but got: {}",
@@ -336,6 +342,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Statement(offset, stmt_copy)),
                                     &[],
+                                    Some(ErrorKind::MalformedExpression),
                                 );
                                 return Err(EvalError::ResumableError(format!(
                                     "{} is already bound. Try `{} = something` instead.",
@@ -379,6 +386,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Statement(offset, stmt_copy)),
                                     &[],
+                                    Some(ErrorKind::MalformedExpression),
                                 );
                                 return Err(EvalError::ResumableError(format!(
                                     "{} is not currently bound. Try `let {} = something`.",
@@ -419,6 +427,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 stack_frame,
                                 (done_children, Statement(offset, stmt_copy)),
                                 &[],
+                                Some(ErrorKind::MalformedExpression),
                             );
                             return Err(EvalError::ResumableError(format!(
                                 "Undefined variable: {}. What value would you like to use instead?",
@@ -457,6 +466,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[lhs_value.clone(), rhs_value],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
@@ -472,6 +482,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[lhs_value, rhs_value.clone()],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected an integer, but got: {}",
@@ -503,6 +514,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                             stack_frame,
                                             (done_children, Statement(offset, stmt_copy)),
                                             &[lhs_value, rhs_value.clone()],
+                                            Some(ErrorKind::BadValue),
                                         );
                                         return Err(EvalError::ResumableError(format!(
                                             "Tried to divide {} by zero.",
@@ -566,6 +578,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[lhs_value.clone(), rhs_value],
+                                        Some(ErrorKind::BadValue),
                                     );
 
                                     return Err(EvalError::ResumableError(format!(
@@ -582,6 +595,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[lhs_value, rhs_value.clone()],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         // TODO: use the term 'int' or 'integer' in error messages?
@@ -644,6 +658,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[lhs_value.clone(), rhs_value],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a boolean, but got: {}",
@@ -659,6 +674,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &[lhs_value, rhs_value.clone()],
+                                        Some(ErrorKind::BadValue),
                                     );
                                     return Err(EvalError::ResumableError(format!(
                                         "Expected a bool, but got: {}",
@@ -722,6 +738,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                             stack_frame,
                                             (done_children, Statement(offset, stmt_copy)),
                                             &saved_values,
+                                            Some(ErrorKind::MalformedExpression),
                                         );
 
                                         return Err(EvalError::ResumableError(format!(
@@ -767,6 +784,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                 stack_frame,
                                                 (done_children, Statement(offset, stmt_copy)),
                                                 &saved_values,
+                                                Some(ErrorKind::MalformedExpression),
                                             );
 
                                             return Err(EvalError::ResumableError(format!(
@@ -800,6 +818,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     stack_frame,
                                                     (done_children, Statement(offset, stmt_copy)),
                                                     &saved_values,
+                                                    Some(ErrorKind::BadValue),
                                                 );
 
                                                 return Err(EvalError::ResumableError(format!(
@@ -823,6 +842,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                 stack_frame,
                                                 (done_children, Statement(offset, stmt_copy)),
                                                 &saved_values,
+                                                Some(ErrorKind::MalformedExpression),
                                             );
 
                                             return Err(EvalError::ResumableError(format!(
@@ -848,6 +868,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     stack_frame,
                                                     (done_children, Statement(offset, stmt_copy)),
                                                     &saved_values,
+                                                    Some(ErrorKind::BadValue),
                                                 );
 
                                                 return Err(EvalError::ResumableError(format!(
@@ -870,6 +891,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Statement(offset, stmt_copy)),
                                         &saved_values,
+                                        Some(ErrorKind::BadValue),
                                     );
 
                                     return Err(EvalError::ResumableError(format!(

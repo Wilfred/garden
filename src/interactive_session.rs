@@ -138,7 +138,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                             ErrorKind::BadValue => {
                                 stack_frame.evalled_values.pop();
                             }
-                            ErrorKind::BadExpression => {
+                            ErrorKind::MalformedExpression => {
                                 stack_frame.stmts_to_eval.pop();
                             }
                         }

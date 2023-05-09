@@ -97,6 +97,10 @@
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 
+(defun garden--send-evaluate (proc string)
+  (process-send-string proc (json-serialize `((method . "evaluate") (input . ,string))))
+  (process-send-string proc "\n"))
+
 (defun garden-help-command ()
   (interactive)
   (garden-send-command ":help"))
@@ -169,7 +173,8 @@
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
 
 (define-derived-mode garden-session-mode comint-mode "Garden Session"
-  :syntax-table garden-mode-syntax-table)
+  :syntax-table garden-mode-syntax-table
+  (setq comint-input-sender #'garden--send-evaluate))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))

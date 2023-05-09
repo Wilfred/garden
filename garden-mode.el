@@ -149,6 +149,12 @@
     (modify-syntax-entry ?\n ">" table)
     table))
 
+(defvar garden-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-x C-e") #'garden-send)
+    map)
+  "Keymap for `garden-mode'.")
+
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.
 

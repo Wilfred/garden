@@ -48,17 +48,15 @@
 (defun garden-process-filter (proc output)
   (let ((buf (process-buffer proc)))
     (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (insert output)))
+      (insert
+       (propertize output 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only))))
     (garden--handle-responses output)))
 
 (defun garden--buffer ()
   (let* ((buf-name "*garden*")
          (buf (get-buffer buf-name)))
     (unless buf
-      (setq buf (get-buffer-create buf-name))
-      (with-current-buffer buf
-        (setq buffer-read-only t)))
+      (setq buf (get-buffer-create buf-name)))
     buf))
 
 (defun garden--session-active-p ()

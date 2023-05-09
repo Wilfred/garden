@@ -61,6 +61,16 @@
         (setq buffer-read-only t)))
     buf))
 
+(defun garden--json-buffer-with-proc ()
+  (let ((buf (garden--json-buffer)))
+    (if (get-buffer-process buf)
+        buf
+      (if (yes-or-no-p "No Garden process is running. Start it?")
+          (progn
+            (garden-start)
+            buf)
+        (user-error "No Garden process available")))))
+
 (defun garden--stdout-buffer ()
   (let* ((buf-name "*garden-stdout*")
          (buf (get-buffer buf-name)))
@@ -72,13 +82,13 @@
 
 (defun garden-send-input (input)
   (interactive "r")
-  (let ((buf (garden--json-buffer)))
+  (let ((buf (garden--json-buffer-with-proc)))
     (process-send-string buf (json-serialize `((method . "evaluate") (input . ,input))))
     (process-send-string buf "\n")))
 
 (defun garden-send-command (input)
   (interactive)
-  (let ((buf (garden--json-buffer)))
+  (let ((buf (garden--json-buffer-with-proc)))
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 

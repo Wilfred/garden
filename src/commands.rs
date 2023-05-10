@@ -55,8 +55,14 @@ fn split_first_word<'a>(s: &'a str, word: &str) -> Option<&'a str> {
     }
 }
 
+#[derive(Debug)]
+pub enum CommandParseError {
+    NoSuchCommand,
+    NotCommandSyntax,
+}
+
 impl Command {
-    pub fn from_string(s: &str) -> Result<Self, ()> {
+    pub fn from_string(s: &str) -> Result<Self, CommandParseError> {
         match s.to_lowercase().trim() {
             ":abort" => Ok(Command::Abort),
             ":fstmts" => Ok(Command::FrameStatements),
@@ -91,7 +97,11 @@ impl Command {
                     };
                 }
 
-                Err(())
+                if s.starts_with(":") {
+                    Err(CommandParseError::NoSuchCommand)
+                } else {
+                    Err(CommandParseError::NotCommandSyntax)
+                }
             }
         }
     }

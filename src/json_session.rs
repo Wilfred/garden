@@ -1,3 +1,4 @@
+use std::io::Write;
 use std::{
     io::BufRead,
     sync::{
@@ -9,7 +10,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    commands::{run_command, Command, CommandError},
+    commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
     parse::parse_def_or_expr_from_str,
 };
@@ -92,7 +93,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             Err(CommandError::Skip) => todo!(),
                         }
                     }
-                    Err(()) => {
+                    Err(CommandParseError::NoSuchCommand) => {
+                        let mut out_buf: Vec<u8> = vec![];
+                        write!(&mut out_buf, "No such command. ").unwrap();
+                        print_available_commands(&mut out_buf);
+
+                        Response {
+                            kind: ResponseKind::RunCommand,
+                            value: Err(format!("{}", String::from_utf8_lossy(&out_buf))),
+                        }
+                    }
+                    Err(CommandParseError::NotCommandSyntax) => {
                         complete_src.push_str(&req.input);
                         match parse_def_or_expr_from_str(&req.input) {
                             Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
@@ -136,10 +147,19 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             Err(CommandError::Skip) => todo!(),
                         }
                     }
-                    Err(()) => Response {
-                        // TODO: report the valid errors
+                    Err(CommandParseError::NoSuchCommand) => {
+                        let mut out_buf: Vec<u8> = vec![];
+                        write!(&mut out_buf, "No such command. ").unwrap();
+                        print_available_commands(&mut out_buf);
+
+                        Response {
+                            kind: ResponseKind::RunCommand,
+                            value: Err(format!("{}", String::from_utf8_lossy(&out_buf))),
+                        }
+                    }
+                    Err(CommandParseError::NotCommandSyntax) => Response {
                         kind: ResponseKind::RunCommand,
-                        value: Err(format!("No such command {:?}", &req.input)),
+                        value: Err(format!("Invalid command syntax: {:?}", &req.input)),
                     },
                 },
             },

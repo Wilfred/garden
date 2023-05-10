@@ -3,7 +3,9 @@ use std::io::Write;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::commands::{print_available_commands, run_command, Command, CommandError};
+use crate::commands::{
+    print_available_commands, run_command, Command, CommandError, CommandParseError,
+};
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
@@ -41,12 +43,13 @@ fn read_expr(
                             return Err(ReadError::CommandError(e));
                         }
                     },
-                    Err(()) => {
-                        if input.trim().starts_with(':') {
-                            print_available_commands(&mut std::io::stdout());
-                            println!();
-                            continue;
-                        }
+                    Err(CommandParseError::NoSuchCommand) => {
+                        print_available_commands(&mut std::io::stdout());
+                        println!();
+                        continue;
+                    }
+                    Err(CommandParseError::NotCommandSyntax) => {
+                        // Continue with expression parsing.
                     }
                 }
 

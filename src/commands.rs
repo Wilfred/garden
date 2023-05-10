@@ -38,41 +38,41 @@ const HELP_TOPICS: &[(&str, &str)] = &[
 ];
 
 impl Command {
-    pub fn from_string(s: &str) -> Option<Self> {
+    pub fn from_string(s: &str) -> Result<Self, ()> {
         match s.to_lowercase().trim() {
-            ":abort" => Some(Command::Abort),
-            ":fstmts" => Some(Command::FrameStatements),
-            ":fvalues" => Some(Command::FrameValues),
-            ":globals" => Some(Command::Globals),
-            ":help" => Some(Command::Help),
-            ":locals" => Some(Command::Locals),
-            ":resume" => Some(Command::Resume),
-            ":skip" => Some(Command::Skip),
-            ":source" => Some(Command::Source),
-            ":stack" => Some(Command::Stack),
-            ":trace" => Some(Command::Trace),
-            ":quit" => Some(Command::Quit),
+            ":abort" => Ok(Command::Abort),
+            ":fstmts" => Ok(Command::FrameStatements),
+            ":fvalues" => Ok(Command::FrameValues),
+            ":globals" => Ok(Command::Globals),
+            ":help" => Ok(Command::Help),
+            ":locals" => Ok(Command::Locals),
+            ":resume" => Ok(Command::Resume),
+            ":skip" => Ok(Command::Skip),
+            ":source" => Ok(Command::Source),
+            ":stack" => Ok(Command::Stack),
+            ":trace" => Ok(Command::Trace),
+            ":quit" => Ok(Command::Quit),
             _ => {
                 // TODO: require a word break after :parse and :doc
                 if let Some(src) = s.strip_prefix(":parse") {
-                    Some(Command::Parse(Some(src.trim_start().to_owned())))
+                    Ok(Command::Parse(Some(src.trim_start().to_owned())))
                 } else if let Some(src) = s.strip_prefix(":replace") {
                     let src = src.trim_start().to_owned();
                     match parse_expr_from_str(&src) {
                         Ok(expr) => {
                             let stmt = Statement(expr.0, Statement_::Expr(expr));
-                            Some(Command::Replace(Some(stmt)))
+                            Ok(Command::Replace(Some(stmt)))
                         }
                         Err(e) => {
                             // TODO: this breaks JSON sessions.
                             println!("Error during parse of replacement: {:?}", e);
-                            Some(Command::Replace(None))
+                            Ok(Command::Replace(None))
                         }
                     }
                 } else if let Some(src) = s.strip_prefix(":doc") {
-                    Some(Command::Doc(Some(src.trim_start().to_owned())))
+                    Ok(Command::Doc(Some(src.trim_start().to_owned())))
                 } else {
-                    None
+                    Err(())
                 }
             }
         }

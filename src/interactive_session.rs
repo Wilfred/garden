@@ -31,7 +31,7 @@ fn read_expr(
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
-                    Some(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, &session) {
+                    Ok(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, &session) {
                         Ok(()) => {
                             println!();
                             println!();
@@ -41,7 +41,7 @@ fn read_expr(
                             return Err(ReadError::CommandError(e));
                         }
                     },
-                    None => {
+                    Err(()) => {
                         if input.trim().starts_with(':') {
                             print_available_commands(&mut std::io::stdout());
                             println!();

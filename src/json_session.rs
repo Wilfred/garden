@@ -76,7 +76,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
         let response = match serde_json::from_str::<Request>(&line) {
             Ok(req) => match req.method {
                 Method::Run => match Command::from_string(&req.input) {
-                    Some(command) => {
+                    Ok(command) => {
                         let mut out_buf: Vec<u8> = vec![];
                         match run_command(&mut out_buf, &command, &mut env, &session) {
                             Ok(()) => Response {
@@ -92,7 +92,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             Err(CommandError::Skip) => todo!(),
                         }
                     }
-                    None => {
+                    Err(()) => {
                         complete_src.push_str(&req.input);
                         match parse_def_or_expr_from_str(&req.input) {
                             Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
@@ -120,7 +120,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     }
                 },
                 Method::RunCommand => match Command::from_string(&req.input) {
-                    Some(command) => {
+                    Ok(command) => {
                         let mut out_buf: Vec<u8> = vec![];
                         match run_command(&mut out_buf, &command, &mut env, &session) {
                             Ok(()) => Response {
@@ -136,7 +136,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             Err(CommandError::Skip) => todo!(),
                         }
                     }
-                    None => Response {
+                    Err(()) => Response {
                         // TODO: report the valid errors
                         kind: ResponseKind::RunCommand,
                         value: Err(format!("No such command {:?}", &req.input)),

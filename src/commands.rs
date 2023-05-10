@@ -142,7 +142,6 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
             write!(buf, " {},", green(name)).unwrap();
         }
     }
-    write!(buf, "\n").unwrap();
 }
 
 #[derive(Debug)]
@@ -191,8 +190,8 @@ pub fn run_command<T: Write>(
     session: &Session,
 ) -> Result<(), CommandError> {
     match cmd {
-        Command::Help => {
-            write!(buf, "{} ", HELP_TOPICS[0].1).unwrap();
+        Command::Help(txt) => {
+            write!(buf, "{}\n\n", HELP_TOPICS[0].1).unwrap();
             print_available_commands(buf);
         }
         Command::Doc(name) => {

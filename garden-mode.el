@@ -26,10 +26,13 @@
   (garden-send-input (buffer-substring-no-properties start end))
   (deactivate-mark))
 
-(defun garden--fontify-value (output)
+(defun garden--propertize-read-only (s)
   (propertize
-   output
+   s
    'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+
+(defun garden--fontify-value (output)
+  (garden--propertize-read-only output))
 
 (defun garden--fontify-prompt (text)
   (propertize
@@ -37,29 +40,36 @@
    'font-lock-face font-lock-builtin-face
    'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
 
+(defun garden--fontify-error (text)
+  (propertize
+   text
+   'font-lock-face 'error
+   'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+
 (defun garden-process-filter (proc output)
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
            (response-value (plist-get response :value))
            (response-kind (plist-get response :kind))
-           (response-ok-value (plist-get response-value :Ok)))
+           (response-ok-value (plist-get response-value :Ok))
+           (response-err-value (plist-get response-value :Err)))
       (with-current-buffer (process-buffer proc)
         (let ((s
                (cond
+                (response-err-value
+                 (garden--fontify-error (concat response-err-value "\n")))
                 ((string= response-kind "printed")
-                 response-ok-value)
+                 (garden--fontify-value response-ok-value))
                 ((string= response-kind "runCommand")
-                 response-ok-value)
+                 (garden--propertize-read-only response-ok-value))
                 ((and (string= response-kind "evaluate")
                       response-ok-value)
                  (message "%s" response-ok-value)
-                 (concat response-ok-value "\n"))
+                 (garden--fontify-value (concat response-ok-value "\n")))
                 (t
                  output))))
           (goto-char (point-max))
-          (insert
-           (garden--fontify-value s)
-           (garden--fontify-prompt "\n> "))
+          (insert s (garden--fontify-prompt "\n>") " ")
           (set-marker (process-mark proc) (point)))))))
 
 (defun garden--buffer ()

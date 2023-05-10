@@ -144,6 +144,7 @@
     (set-process-filter proc #'garden-process-filter)))
 
 (defun garden-start ()
+  "Start a Garden session and switch to the session buffer."
   (interactive)
   (garden--start)
   (switch-to-buffer (garden--buffer)))
@@ -151,7 +152,7 @@
 (defun garden-restart ()
   (interactive)
   (garden-stop)
-  (garden--start))
+  (garden-start))
 
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt

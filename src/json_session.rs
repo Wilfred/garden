@@ -9,6 +9,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::eval::eval_env;
+use crate::parse::Statement_;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
@@ -88,7 +90,35 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 kind: ResponseKind::RunCommand,
                                 value: Ok(format!("Aborted")),
                             },
-                            Err(CommandError::Resume) => todo!(),
+                            Err(CommandError::Resume) => {
+                                let stack_frame = env.stack.last_mut().unwrap();
+                                if let Some((_, stmt)) = stack_frame.stmts_to_eval.pop() {
+                                    assert!(matches!(stmt.1, Statement_::Stop(_)));
+
+                                    match eval_env(&mut env, &mut session) {
+                                        Ok(result) => Response {
+                                            kind: ResponseKind::Evaluate,
+                                            value: Ok(format!("{}", result)),
+                                        },
+                                        Err(EvalError::ResumableError(e)) => Response {
+                                            kind: ResponseKind::Evaluate,
+                                            value: Err(format!("Error: {}", e)),
+                                        },
+                                        Err(EvalError::Interrupted) => Response {
+                                            kind: ResponseKind::Evaluate,
+                                            value: Err(format!("Interrupted")),
+                                        },
+                                        Err(EvalError::Stop(_)) => {
+                                            todo!();
+                                        }
+                                    }
+                                } else {
+                                    Response {
+                                        kind: ResponseKind::Evaluate,
+                                        value: Ok("(nothing to resume)".into()),
+                                    }
+                                }
+                            }
                             Err(CommandError::Replace(_)) => todo!(),
                             Err(CommandError::Skip) => todo!(),
                         }

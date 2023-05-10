@@ -51,7 +51,7 @@ pub struct Response {
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
     let response = Response {
         kind: ResponseKind::Ready,
-        value: Ok("ready".into()),
+        value: Ok("The Garden: Good programs take time to grow.".into()),
     };
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);

@@ -64,6 +64,8 @@
                (cond
                 (response-err-value
                  (garden--fontify-error (concat response-err-value "\n")))
+                ((string= response-kind "ready")
+                 (garden--propertize-read-only (concat response-ok-value "\n")))
                 ((string= response-kind "printed")
                  (garden--fontify-value response-ok-value))
                 ((string= response-kind "runCommand")

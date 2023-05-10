@@ -114,13 +114,17 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 continue;
             }
             Err(ReadError::CommandError(CommandError::Resume)) => {
-                let stack_frame = env.stack.last_mut().unwrap();
-                let (_, stmt) = stack_frame.stmts_to_eval.pop().unwrap();
-                assert!(matches!(stmt.1, Statement_::Stop(_)));
-
                 if depth > 0 {
                     depth -= 1;
                 }
+
+                let stack_frame = env.stack.last_mut().unwrap();
+                if let Some((_, stmt)) = stack_frame.stmts_to_eval.pop() {
+                    assert!(matches!(stmt.1, Statement_::Stop(_)));
+                } else {
+                    continue;
+                }
+
             }
             Err(ReadError::CommandError(CommandError::Replace(stmt))) => {
                 let stack_frame = env.stack.last_mut().unwrap();

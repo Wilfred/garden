@@ -17,7 +17,7 @@ use crate::{
 pub enum Command {
     Abort,
     Doc(Option<String>),
-    Help,
+    Help(Option<String>),
     Globals,
     Locals,
     FrameValues,
@@ -31,11 +31,6 @@ pub enum Command {
     Stack,
     Quit,
 }
-
-const HELP_TOPICS: &[(&str, &str)] = &[
-    ("intro", "Garden is a programming language."),
-    ("syntax", "Garden uses curly braces."),
-];
 
 /// Returns Some if `s` starts with `word` and is followed by a word
 /// boundary.
@@ -68,7 +63,6 @@ impl Command {
             ":fstmts" => Ok(Command::FrameStatements),
             ":fvalues" => Ok(Command::FrameValues),
             ":globals" => Ok(Command::Globals),
-            ":help" => Ok(Command::Help),
             ":locals" => Ok(Command::Locals),
             ":resume" => Ok(Command::Resume),
             ":skip" => Ok(Command::Skip),
@@ -79,6 +73,9 @@ impl Command {
             _ => {
                 if let Some(src) = split_first_word(s, ":doc") {
                     return Ok(Command::Doc(Some(src.to_owned())));
+                }
+                if let Some(src) = split_first_word(s, ":help") {
+                    return Ok(Command::Help(Some(src.to_owned())));
                 }
                 if let Some(src) = split_first_word(s, ":parse") {
                     return Ok(Command::Parse(Some(src.to_owned())));
@@ -113,7 +110,7 @@ impl Command {
             Command::FrameStatements => ":fstmts",
             Command::FrameValues => ":fvalues",
             Command::Globals => ":globals",
-            Command::Help => ":help",
+            Command::Help(_) => ":help",
             Command::Locals => ":locals",
             Command::Parse(_) => ":parse",
             Command::Replace(_) => ":replace",
@@ -190,9 +187,26 @@ pub fn run_command<T: Write>(
     session: &Session,
 ) -> Result<(), CommandError> {
     match cmd {
-        Command::Help(txt) => {
-            write!(buf, "{}\n\n", HELP_TOPICS[0].1).unwrap();
-            print_available_commands(buf);
+        Command::Help(text) => {
+            let text = text.clone().unwrap_or_default();
+
+            match Command::from_string(&text) {
+                Ok(command) => {
+                    write!(buf, "{}", command_help(command)).unwrap();
+                }
+                Err(CommandParseError::NoSuchCommand) => {
+                    print_available_commands(buf);
+                }
+                Err(CommandParseError::NotCommandSyntax) => {
+                    write!(
+                        buf,
+                        "{}\n\n",
+                        "This is the help command for interacting with Garden programs. Welcome."
+                    )
+                    .unwrap();
+                    print_available_commands(buf);
+                }
+            }
         }
         Command::Doc(name) => {
             if let Some(name) = name {
@@ -319,6 +333,26 @@ pub fn run_command<T: Write>(
         }
     }
     Ok(())
+}
+
+fn command_help(command: Command) -> &'static str {
+    match command {
+        Command::Abort => "The :abort command stops evaluation of the current expression, brining you back to the toplevel.\n\nExample usage:\n\n:abort",
+        Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
+        Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
+        Command::Globals => "The :globals command displays information about toplevel definitions.\n\nExample:\n\n:globals",
+        Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
+        Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
+        Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
+        Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
+        Command::Replace(_) => "The :replace command discards the top value in the value stack and replaces it with the expression provided.\n\nExample:\n\n:replace 123",
+        Command::Resume => "The :resume command restarts evaluation if it's previously stopped.\n\nExample:\n\n:resume",
+        Command::Skip => "The :skip command discards the current expression, and execution continues from the next expression.\n\nExample:\n\n:skip",
+        Command::Source => "The :source command displays the history of all code evaluated in the current session.\n\nExample:\n\n:source",
+        Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",
+        Command::Stack => "The :stack command prints the current call stack.\n\nExample:\n\n:stack",
+        Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
+    }
 }
 
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {

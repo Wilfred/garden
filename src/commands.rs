@@ -37,6 +37,24 @@ const HELP_TOPICS: &[(&str, &str)] = &[
     ("syntax", "Garden uses curly braces."),
 ];
 
+/// Returns Some if `s` starts with `word` and is followed by a word
+/// boundary.
+fn split_first_word<'a>(s: &'a str, word: &str) -> Option<&'a str> {
+    if let Some(suffix) = s.strip_prefix(word) {
+        if suffix == "" {
+            return Some("");
+        }
+
+        if let Some(rest) = suffix.strip_prefix(" ") {
+            Some(rest)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
 impl Command {
     pub fn from_string(s: &str) -> Result<Self, ()> {
         match s.to_lowercase().trim() {
@@ -53,12 +71,14 @@ impl Command {
             ":trace" => Ok(Command::Trace),
             ":quit" => Ok(Command::Quit),
             _ => {
-                // TODO: require a word break after :parse and :doc
-                if let Some(src) = s.strip_prefix(":parse") {
-                    Ok(Command::Parse(Some(src.trim_start().to_owned())))
-                } else if let Some(src) = s.strip_prefix(":replace") {
-                    let src = src.trim_start().to_owned();
-                    match parse_expr_from_str(&src) {
+                if let Some(src) = split_first_word(s, ":doc") {
+                    return Ok(Command::Doc(Some(src.to_owned())));
+                }
+                if let Some(src) = split_first_word(s, ":parse") {
+                    return Ok(Command::Parse(Some(src.to_owned())));
+                }
+                if let Some(src) = split_first_word(s, ":replace") {
+                    return match parse_expr_from_str(&src) {
                         Ok(expr) => {
                             let stmt = Statement(expr.0, Statement_::Expr(expr));
                             Ok(Command::Replace(Some(stmt)))
@@ -68,12 +88,10 @@ impl Command {
                             println!("Error during parse of replacement: {:?}", e);
                             Ok(Command::Replace(None))
                         }
-                    }
-                } else if let Some(src) = s.strip_prefix(":doc") {
-                    Ok(Command::Doc(Some(src.trim_start().to_owned())))
-                } else {
-                    Err(())
+                    };
                 }
+
+                Err(())
             }
         }
     }

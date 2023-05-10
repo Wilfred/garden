@@ -32,6 +32,12 @@
    'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
 
 (defun garden--fontify-value (output)
+  (propertize
+   output
+   'font-lock-face font-lock-constant-face
+   'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+
+(defun garden--fontify-command-output (output)
   (garden--propertize-read-only output))
 
 (defun garden--fontify-prompt (text)
@@ -61,7 +67,8 @@
                 ((string= response-kind "printed")
                  (garden--fontify-value response-ok-value))
                 ((string= response-kind "runCommand")
-                 (garden--propertize-read-only response-ok-value))
+                 (garden--fontify-command-output
+                  (concat response-ok-value "\n")))
                 ((and (string= response-kind "evaluate")
                       response-ok-value)
                  (message "%s" response-ok-value)

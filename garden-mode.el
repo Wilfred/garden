@@ -32,12 +32,6 @@
            (response-value (plist-get response :value))
            (response-kind (plist-get response :kind))
            (response-ok-value (plist-get response-value :Ok)))
-      (if response-ok-value
-          ;; Always print the value in the minibuffer.
-          (message "%s" response-ok-value)
-        (let ((error-info (plist-get response-value :Err)))
-          (message "%s" error-info)))
-
       (with-current-buffer (process-buffer proc)
         (let ((s
                (cond
@@ -45,11 +39,13 @@
                  response-ok-value)
                 ((and (string= response-kind "evaluate")
                       response-ok-value)
+                 (message "%s" response-ok-value)
                  (concat response-ok-value "\n"))
                 (t
                  output))))
+          (goto-char (point-max))
           (insert
-           (propertize s 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+           (propertize (concat s "\n> ") 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
           (set-marker (process-mark proc) (point)))))))
 
 (defun garden--buffer ()

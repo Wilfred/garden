@@ -26,6 +26,17 @@
   (garden-send-input (buffer-substring-no-properties start end))
   (deactivate-mark))
 
+(defun garden--fontify-value (output)
+  (propertize
+   output
+   'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+
+(defun garden--fontify-prompt (text)
+  (propertize
+   text
+   'font-lock-face font-lock-builtin-face
+   'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+
 (defun garden-process-filter (proc output)
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
@@ -47,9 +58,8 @@
                  output))))
           (goto-char (point-max))
           (insert
-           (propertize s 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
-          (insert
-           (propertize "\n> " 'font-lock-face font-lock-builtin-face 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+           (garden--fontify-value s)
+           (garden--fontify-prompt "\n> "))
           (set-marker (process-mark proc) (point)))))))
 
 (defun garden--buffer ()

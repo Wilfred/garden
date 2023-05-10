@@ -17,8 +17,8 @@ use crate::{
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 enum Method {
-    Evaluate,
     RunCommand,
+    Run,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -75,32 +75,50 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
 
         let response = match serde_json::from_str::<Request>(&line) {
             Ok(req) => match req.method {
-                Method::Evaluate => {
-                    complete_src.push_str(&req.input);
-                    match parse_def_or_expr_from_str(&req.input) {
-                        Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
-                            Ok(result) => Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Ok(format!("{}", result)),
+                Method::Run => match Command::from_string(&req.input) {
+                    Some(command) => {
+                        let mut out_buf: Vec<u8> = vec![];
+                        match run_command(&mut out_buf, &command, &mut env, &session) {
+                            Ok(()) => Response {
+                                kind: ResponseKind::RunCommand,
+                                value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
                             },
-                            Err(EvalError::ResumableError(e)) => Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Err(format!("Error: {}", e)),
+                            Err(CommandError::Abort) => Response {
+                                kind: ResponseKind::RunCommand,
+                                value: Ok(format!("Aborted")),
                             },
-                            Err(EvalError::Interrupted) => Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Err(format!("Interrupted")),
-                            },
-                            Err(EvalError::Stop(_)) => {
-                                todo!();
-                            }
-                        },
-                        Err(e) => Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Err(format!("Could not parse input: {:?}", e)),
-                        },
+                            Err(CommandError::Resume) => todo!(),
+                            Err(CommandError::Replace(_)) => todo!(),
+                            Err(CommandError::Skip) => todo!(),
+                        }
                     }
-                }
+                    None => {
+                        complete_src.push_str(&req.input);
+                        match parse_def_or_expr_from_str(&req.input) {
+                            Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
+                                Ok(result) => Response {
+                                    kind: ResponseKind::Evaluate,
+                                    value: Ok(format!("{}", result)),
+                                },
+                                Err(EvalError::ResumableError(e)) => Response {
+                                    kind: ResponseKind::Evaluate,
+                                    value: Err(format!("Error: {}", e)),
+                                },
+                                Err(EvalError::Interrupted) => Response {
+                                    kind: ResponseKind::Evaluate,
+                                    value: Err(format!("Interrupted")),
+                                },
+                                Err(EvalError::Stop(_)) => {
+                                    todo!();
+                                }
+                            },
+                            Err(e) => Response {
+                                kind: ResponseKind::Evaluate,
+                                value: Err(format!("Could not parse input: {:?}", e)),
+                            },
+                        }
+                    }
+                },
                 Method::RunCommand => match Command::from_string(&req.input) {
                     Some(command) => {
                         let mut out_buf: Vec<u8> = vec![];

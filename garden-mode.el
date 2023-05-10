@@ -37,6 +37,8 @@
                (cond
                 ((string= response-kind "printed")
                  response-ok-value)
+                ((string= response-kind "runCommand")
+                 response-ok-value)
                 ((and (string= response-kind "evaluate")
                       response-ok-value)
                  (message "%s" response-ok-value)
@@ -84,8 +86,8 @@
     (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
     (process-send-string buf "\n")))
 
-(defun garden--send-evaluate (proc string)
-  (process-send-string proc (json-serialize `((method . "evaluate") (input . ,string))))
+(defun garden--send-run (proc string)
+  (process-send-string proc (json-serialize `((method . "run") (input . ,string))))
   (process-send-string proc "\n"))
 
 (defun garden-help-command ()
@@ -161,7 +163,7 @@
 
 (define-derived-mode garden-session-mode comint-mode "Garden Session"
   :syntax-table garden-mode-syntax-table
-  (setq comint-input-sender #'garden--send-evaluate))
+  (setq comint-input-sender #'garden--send-run))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))

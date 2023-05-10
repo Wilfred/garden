@@ -45,7 +45,9 @@
                  output))))
           (goto-char (point-max))
           (insert
-           (propertize (concat s "\n> ") 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+           (propertize s 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
+          (insert
+           (propertize "\n> " 'font-lock-face font-lock-builtin-face 'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
           (set-marker (process-mark proc) (point)))))))
 
 (defun garden--buffer ()

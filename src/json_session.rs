@@ -20,7 +20,6 @@ use crate::{
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 enum Method {
-    RunCommand,
     Run,
 }
 
@@ -160,38 +159,6 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         }
                     }
                 },
-                Method::RunCommand => match Command::from_string(&req.input) {
-                    Ok(command) => {
-                        let mut out_buf: Vec<u8> = vec![];
-                        match run_command(&mut out_buf, &command, &mut env, &session) {
-                            Ok(()) => Response {
-                                kind: ResponseKind::RunCommand,
-                                value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
-                            },
-                            Err(CommandError::Abort) => Response {
-                                kind: ResponseKind::RunCommand,
-                                value: Ok(format!("Aborted")),
-                            },
-                            Err(CommandError::Resume) => todo!(),
-                            Err(CommandError::Replace(_)) => todo!(),
-                            Err(CommandError::Skip) => todo!(),
-                        }
-                    }
-                    Err(CommandParseError::NoSuchCommand) => {
-                        let mut out_buf: Vec<u8> = vec![];
-                        write!(&mut out_buf, "No such command. ").unwrap();
-                        print_available_commands(&mut out_buf);
-
-                        Response {
-                            kind: ResponseKind::RunCommand,
-                            value: Err(format!("{}", String::from_utf8_lossy(&out_buf))),
-                        }
-                    }
-                    Err(CommandParseError::NotCommandSyntax) => Response {
-                        kind: ResponseKind::RunCommand,
-                        value: Err(format!("Invalid command syntax: {:?}", &req.input)),
-                    },
-                },
             },
             Err(_) => Response {
                 kind: ResponseKind::MalformedRequest,
@@ -199,8 +166,8 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     "Could not parse request: {}. A valid request looks like: {}",
                     line,
                     serde_json::to_string(&Request {
-                        method: Method::RunCommand,
-                        input: ":help".into(),
+                        method: Method::Run,
+                        input: "1 + 2".into(),
                     })
                     .unwrap()
                 )),

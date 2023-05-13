@@ -109,23 +109,21 @@
     (process-send-string buf (json-serialize `((method . "evaluate") (input . ,input))))
     (process-send-string buf "\n")))
 
-(defun garden-send-command (input)
-  (interactive)
-  (let ((buf (garden--active-buffer)))
-    (process-send-string buf (json-serialize `((method . "runCommand") (input . ,input))))
-    (process-send-string buf "\n")))
-
 (defun garden--send-run (proc string)
   (process-send-string proc (json-serialize `((method . "run") (input . ,string))))
   (process-send-string proc "\n"))
 
+(defun garden--send-run-to-active (string)
+  (let ((buf (garden--active-buffer)))
+    (garden--send-run (get-buffer-process buf) string)))
+
 (defun garden-help-command ()
   (interactive)
-  (garden-send-command ":help"))
+  (garden--send-run-to-active ":help"))
 
 (defun garden-abort-command ()
   (interactive)
-  (garden-send-command ":abort"))
+  (garden--send-run-to-active ":abort"))
 
 (defun garden-doc-command ()
   (interactive)
@@ -133,7 +131,7 @@
     ;; TODO: should arguments be a JSON payload rather than string
     ;; concatenation?
     (when sym
-      (garden-send-command (format ":doc %s" sym)))))
+      (garden--send-run-to-active (format ":doc %s" sym)))))
 
 (defun garden-stop ()
   (interactive)

@@ -86,9 +86,7 @@ impl Command {
                             let stmt = Statement(expr.0, Statement_::Expr(expr));
                             Ok(Command::Replace(Some(stmt)))
                         }
-                        Err(e) => {
-                            // TODO: this breaks JSON sessions.
-                            println!("Error during parse of replacement: {:?}", e);
+                        Err(_) => {
                             Ok(Command::Replace(None))
                         }
                     };
@@ -227,6 +225,7 @@ pub fn run_command<T: Write>(
             if let Some(stmt) = stmt {
                 return Err(CommandError::Replace(stmt.clone()));
             } else {
+                write!(buf, ":replace requires a valid expression, e.g. `:replace 42`").unwrap();
                 return Ok(());
             }
         }

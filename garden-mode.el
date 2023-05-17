@@ -52,6 +52,15 @@
    'font-lock-face 'error
    'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
 
+(defun garden--prompt-empty-p ()
+  "Is the current prompt still just '> '?
+If so, this means we're processing an event that didn't start by
+the user entering a value in the *garden* buffer."
+  (string=
+   "> "
+   (buffer-substring (line-beginning-position)
+                     (line-end-position))))
+
 (defun garden-process-filter (proc output)
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
@@ -78,7 +87,13 @@
                 (t
                  output))))
           (goto-char (point-max))
-          (insert s (garden--fontify-prompt "\n>") " ")
+          (if (garden--prompt-empty-p)
+              (let ((inhibit-read-only t))
+                (forward-line -1)
+                (line-beginning-position)
+                (insert "\n" s)
+                (goto-char (point-max)))
+            (insert s (garden--fontify-prompt "\n>") " "))
           (set-marker (process-mark proc) (point)))))))
 
 (defun garden--buffer ()

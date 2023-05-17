@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, Statement};
+use crate::parse::{BinaryOperatorKind, Statement, Position};
 use crate::parse::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, Statement_,
     VariableName,
@@ -180,7 +180,7 @@ pub fn eval_def_or_exprs(
             Ok(Value::Void)
         }
         DefinitionsOrExpression::Expr(e) => {
-            let stmts = vec![Statement(0, Statement_::Expr(e.clone()))];
+            let stmts = vec![Statement(Position(0), Statement_::Expr(e.clone()))];
             eval_stmts(&stmts, env, session)
         }
     }
@@ -1007,8 +1007,8 @@ mod tests {
     #[test]
     fn test_eval_bool_literal() {
         let stmts = vec![Statement(
-            0,
-            Statement_::Expr(Expression(0, Expression_::BoolLiteral(true))),
+            Position(0),
+            Statement_::Expr(Expression(Position(0), Expression_::BoolLiteral(true))),
         )];
 
         let mut env = Env::default();
@@ -1021,18 +1021,18 @@ mod tests {
         let mut env = Env::default();
 
         let stmts = vec![Statement(
-            0,
+            Position(0),
             Statement_::Let(
                 VariableName("foo".into()),
-                Expression(0, Expression_::BoolLiteral(true)),
+                Expression(Position(0), Expression_::BoolLiteral(true)),
             ),
         )];
         eval_stmts(&stmts, &mut env).unwrap();
 
         let stmts = vec![Statement(
-            0,
+            Position(0),
             Statement_::Expr(Expression(
-                0,
+                Position(0),
                 Expression_::Variable(VariableName("foo".into())),
             )),
         )];

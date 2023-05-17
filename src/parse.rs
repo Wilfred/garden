@@ -3,10 +3,9 @@ use regex::Regex;
 
 use crate::eval::ErrorKind;
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub struct Position {
-//     line: usize,
-// }
+/// A position is an offset into source code.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Position(pub usize);
 
 #[derive(Debug)]
 pub enum ParseError {
@@ -42,7 +41,7 @@ pub enum Expression_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Expression(pub usize, pub Expression_);
+pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement_ {
@@ -56,7 +55,7 @@ pub enum Statement_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Statement(pub usize, pub Statement_);
+pub struct Statement(pub Position, pub Statement_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
@@ -70,7 +69,7 @@ pub enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Definition(pub usize, pub Definition_);
+pub struct Definition(pub Position, pub Definition_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionsOrExpression {
@@ -80,7 +79,7 @@ pub enum DefinitionsOrExpression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
-    offset: usize,
+    offset: Position,
     text: &'a str,
     preceding_comments: Vec<&'a str>,
 }
@@ -273,7 +272,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 
         return Err(ParseError::OtherError(format!(
             "Expected an expression, got: {} (offset {})",
-            token.text, token.offset
+            token.text, token.offset.0
         )));
     }
 
@@ -491,7 +490,7 @@ const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "true", "false", "if", "else", "while", "return",
 ];
 
-fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(usize, VariableName), ParseError> {
+fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableName), ParseError> {
     // TODO: this is duplicated with lex().
     let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
 
@@ -606,7 +605,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
         for token_str in ["==", "!=", "&&", "||"] {
             if s.starts_with(token_str) {
                 res.push(Token {
-                    offset,
+                    offset: Position(offset),
                     text: &s[0..token_str.len()],
                     preceding_comments,
                 });
@@ -621,7 +620,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {
-                    offset,
+                    offset: Position(offset),
                     text: &s[0..1],
                     preceding_comments,
                 });
@@ -633,7 +632,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
         }
         if let Some(integer_match) = INTEGER_RE.find(s) {
             res.push(Token {
-                offset,
+                offset: Position(offset),
                 text: integer_match.as_str(),
                 preceding_comments,
             });
@@ -642,7 +641,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
             offset += integer_match.end();
         } else if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
-                offset,
+                offset: Position(offset),
                 text: string_match.as_str(),
                 preceding_comments,
             });
@@ -651,7 +650,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
             offset += string_match.end();
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push(Token {
-                offset,
+                offset: Position(offset),
                 text: variable_match.as_str(),
                 preceding_comments,
             });
@@ -699,7 +698,7 @@ mod tests {
         assert_eq!(
             lex("1").unwrap(),
             vec![Token {
-                offset: 0,
+                offset: Position(0),
                 text: "1",
                 preceding_comments: vec![],
             }]
@@ -711,7 +710,7 @@ mod tests {
         assert_eq!(
             lex(" a").unwrap(),
             vec![Token {
-                offset: 1,
+                offset: Position(1),
                 text: "a",
                 preceding_comments: vec![],
             }]
@@ -749,8 +748,8 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
-                Statement_::Expr(Expression(0, Expression_::BoolLiteral(true)))
+                Position(0),
+                Statement_::Expr(Expression(Position(0), Expression_::BoolLiteral(true)))
             )]
         );
     }
@@ -760,7 +759,7 @@ mod tests {
         assert_eq!(
             lex("// 2\n1").unwrap(),
             vec![Token {
-                offset: 5,
+                offset: Position(5),
                 text: "1",
                 preceding_comments: vec![" 2\n"],
             }]
@@ -784,9 +783,9 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
+                Position(0),
                 Statement_::Expr(Expression(
-                    0,
+                    Position(0),
                     Expression_::Variable(VariableName("abc_def".to_string()))
                 ))
             )]
@@ -800,10 +799,10 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
+                Position(0),
                 Statement_::Let(
                     VariableName("x".into()),
-                    Expression(8, Expression_::IntLiteral(1))
+                    Expression(Position(8), Expression_::IntLiteral(1))
                 )
             )]
         );
@@ -816,9 +815,9 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
+                Position(0),
                 Statement_::If(
-                    Expression(4, Expression_::BoolLiteral(true)),
+                    Expression(Position(4), Expression_::BoolLiteral(true)),
                     vec![],
                     vec![],
                 )
@@ -833,14 +832,14 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
+                Position(0),
                 Statement_::If(
-                    Expression(4, Expression_::Variable(VariableName("x".into()))),
+                    Expression(Position(4), Expression_::Variable(VariableName("x".into()))),
                     vec![],
                     vec![Statement(
-                        15,
+                        Position(15),
                         Statement_::If(
-                            Expression(19, Expression_::Variable(VariableName("y".into()))),
+                            Expression(Position(19), Expression_::Variable(VariableName("y".into()))),
                             vec![],
                             vec![],
                         )
@@ -857,9 +856,9 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
+                Position(0),
                 Statement_::If(
-                    Expression(4, Expression_::BoolLiteral(true)),
+                    Expression(Position(4), Expression_::BoolLiteral(true)),
                     vec![],
                     vec![],
                 )
@@ -874,8 +873,8 @@ mod tests {
         assert_eq!(
             ast,
             vec![Statement(
-                0,
-                Statement_::Return(Expression(7, Expression_::BoolLiteral(true)))
+                Position(0),
+                Statement_::Return(Expression(Position(7), Expression_::BoolLiteral(true)))
             )]
         );
     }
@@ -890,7 +889,7 @@ mod tests {
         assert_eq!(
             ast,
             vec![Definition(
-                18,
+                Position(18),
                 Definition_::Fun(
                     Some("Hello\nWorld".into()),
                     VariableName("foo".into()),

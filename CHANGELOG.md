@@ -1,4 +1,6 @@
-# 0.3 (unreleased)
+# 0.4 (unreleased)
+
+# 0.3 (released 17 May 2023)
 
 **Goal: Basic Emacs integration**
 

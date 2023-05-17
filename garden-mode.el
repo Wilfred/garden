@@ -67,7 +67,7 @@
                 ((string= response-kind "ready")
                  (garden--propertize-read-only (concat response-ok-value "\n")))
                 ((string= response-kind "printed")
-                 (garden--fontify-value response-ok-value))
+                 (garden--propertize-read-only response-ok-value))
                 ((string= response-kind "runCommand")
                  (garden--fontify-command-output
                   (concat response-ok-value "\n")))

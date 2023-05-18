@@ -412,6 +412,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Statement_::Expr(Expression(_, Expression_::Return(_))) => {
                         todo!()
                     }
+                    Statement_::Expr(Expression(_, Expression_::Let(_, _))) => {
+                        todo!()
+                    }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
                         stack_frame.evalled_values.push(Value::Integer(i));
                     }

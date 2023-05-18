@@ -32,6 +32,7 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
+    Let(VariableName, Box<Expression>),
     Return(Box<Expression>),
     IntLiteral(i64),
     StringLiteral(String),
@@ -361,6 +362,9 @@ fn parse_general_expression(
 ) -> Result<Expression, ParseError> {
     if !is_inline {
         if let Some(token) = peek_token(tokens) {
+            if token.text == "let" {
+                return parse_let_expression(tokens);
+            }
             if token.text == "return" {
                 return parse_return_expression(tokens);
             }
@@ -553,6 +557,20 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let _ = require_token(tokens, ";")?;
 
     Ok(Statement(let_token.offset, Statement_::Let(variable, expr)))
+}
+
+fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let let_token = require_token(tokens, "let")?;
+    let (_, variable) = parse_variable_name(tokens)?;
+
+    require_token(tokens, "=")?;
+    let expr = parse_expression(tokens)?;
+    let _ = require_token(tokens, ";")?;
+
+    Ok(Expression(
+        let_token.offset,
+        Expression_::Let(variable, Box::new(expr)),
+    ))
 }
 
 fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {

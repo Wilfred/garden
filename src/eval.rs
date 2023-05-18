@@ -409,6 +409,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
+                    Statement_::Expr(Expression(_, Expression_::While(_, _))) => {
+                        todo!()
+                    }
                     Statement_::Expr(Expression(_, Expression_::Return(_))) => {
                         todo!()
                     }

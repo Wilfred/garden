@@ -32,6 +32,7 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
+    While(Box<Expression>, Vec<Expression>),
     Assign(VariableName, Box<Expression>),
     Let(VariableName, Box<Expression>),
     Return(Box<Expression>),
@@ -191,6 +192,24 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> 
     Ok(res)
 }
 
+fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
+    let mut res = vec![];
+
+    require_token(tokens, "{")?;
+
+    while !tokens.is_empty() {
+        if next_token_is(tokens, "}") {
+            break;
+        }
+
+        res.push(parse_general_expression(tokens, false)?);
+    }
+
+    require_token(tokens, "}")?;
+
+    Ok(res)
+}
+
 fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let if_token = require_token(tokens, "if")?;
 
@@ -230,6 +249,21 @@ fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> 
     Ok(Statement(
         while_token.offset,
         Statement_::While(condition, body),
+    ))
+}
+
+fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let while_token = require_token(tokens, "while")?;
+
+    require_token(tokens, "(")?;
+    let condition = parse_expression(tokens)?;
+    require_token(tokens, ")")?;
+
+    let body = parse_block_expressions(tokens)?;
+
+    Ok(Expression(
+        while_token.offset,
+        Expression_::While(Box::new(condition), body),
     ))
 }
 
@@ -376,6 +410,9 @@ fn parse_general_expression(
             }
             if token.text == "return" {
                 return parse_return_expression(tokens);
+            }
+            if token.text == "while" {
+                return parse_while_expression(tokens);
             }
         }
     }

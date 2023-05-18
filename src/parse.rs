@@ -32,6 +32,7 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
+    Return(Box<Expression>),
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
@@ -238,6 +239,17 @@ fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
     Ok(Statement(return_token.offset, Statement_::Return(expr)))
 }
 
+fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let return_token = require_token(tokens, "return")?;
+
+    let expr = parse_expression(tokens)?;
+    let _ = require_token(tokens, ";")?;
+    Ok(Expression(
+        return_token.offset,
+        Expression_::Return(Box::new(expr)),
+    ))
+}
+
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "(" {
@@ -343,6 +355,21 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
     }
 }
 
+fn parse_general_expression(
+    tokens: &mut &[Token<'_>],
+    is_inline: bool,
+) -> Result<Expression, ParseError> {
+    if !is_inline {
+        if let Some(token) = peek_token(tokens) {
+            if token.text == "return" {
+                return parse_return_expression(tokens);
+            }
+        }
+    }
+
+    parse_expression(tokens)
+}
+
 fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
@@ -383,7 +410,7 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
         }
     }
 
-    let expr = parse_expression(tokens)?;
+    let expr = parse_general_expression(tokens, true)?;
     require_token(tokens, ";")?;
     Ok(Statement(expr.0, Statement_::Expr(expr)))
 }
@@ -839,7 +866,10 @@ mod tests {
                     vec![Statement(
                         Position(15),
                         Statement_::If(
-                            Expression(Position(19), Expression_::Variable(VariableName("y".into()))),
+                            Expression(
+                                Position(19),
+                                Expression_::Variable(VariableName("y".into()))
+                            ),
                             vec![],
                             vec![],
                         )

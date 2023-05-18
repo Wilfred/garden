@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, Statement, Position};
+use crate::parse::{BinaryOperatorKind, Position, Statement};
 use crate::parse::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, Statement_,
     VariableName,
@@ -408,6 +408,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .stmts_to_eval
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
+                    }
+                    Statement_::Expr(Expression(_, Expression_::Return(_))) => {
+                        todo!()
                     }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
                         stack_frame.evalled_values.push(Value::Integer(i));

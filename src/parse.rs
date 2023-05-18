@@ -32,6 +32,7 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
+    Assign(VariableName, Box<Expression>),
     Let(VariableName, Box<Expression>),
     Return(Box<Expression>),
     IntLiteral(i64),
@@ -361,6 +362,14 @@ fn parse_general_expression(
     is_inline: bool,
 ) -> Result<Expression, ParseError> {
     if !is_inline {
+        // TODO: Matching on tokens will prevent us from doing more
+        // complex assignments like `foo.bar = 1;`.
+        if let Some((_, token)) = peek_two_tokens(tokens) {
+            if token.text == "=" {
+                return parse_assign_expression(tokens);
+            }
+        }
+
         if let Some(token) = peek_token(tokens) {
             if token.text == "let" {
                 return parse_let_expression(tokens);
@@ -581,6 +590,19 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
     let _ = require_token(tokens, ";")?;
 
     Ok(Statement(offset, Statement_::Assign(variable, expr)))
+}
+
+fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let (offset, variable) = parse_variable_name(tokens)?;
+
+    require_token(tokens, "=")?;
+    let expr = parse_expression(tokens)?;
+    let _ = require_token(tokens, ";")?;
+
+    Ok(Expression(
+        offset,
+        Expression_::Assign(variable, Box::new(expr)),
+    ))
 }
 
 pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {

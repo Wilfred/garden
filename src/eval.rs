@@ -477,8 +477,48 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *condition.clone()));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::While(_, _))) => {
-                        todo!()
+                    Statement_::Expr(Expression(_, Expression_::While(condition, ref body))) => {
+                        if done_children {
+                            let condition_value = stack_frame
+                                .evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for if condition");
+                            match condition_value.clone() {
+                                Value::Boolean(b) => {
+                                    if b {
+                                        // Start loop evaluation again.
+                                        stack_frame
+                                            .exprs_to_eval
+                                            .push((false, Expression(offset, expr_copy)));
+
+                                        // Evaluate the body.
+                                        for expr in body.iter().rev() {
+                                            stack_frame.exprs_to_eval.push((false, expr.clone()));
+                                        }
+                                    } else {
+                                        stack_frame.evalled_values.push(Value::Void);
+                                    }
+                                }
+                                v => {
+                                    restore_stack_frame_expr(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Expression(offset, expr_copy)),
+                                        &[condition_value],
+                                        Some(ErrorKind::BadValue),
+                                    );
+                                    return Err(EvalError::ResumableError(format!(
+                                        "Expected a boolean when evaluating `while`, but got: {}",
+                                        v
+                                    )));
+                                }
+                            }
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(offset, expr_copy)));
+                            stack_frame.exprs_to_eval.push((false, *condition.clone()));
+                        }
                     }
                     Statement_::Expr(Expression(_, Expression_::Return(_))) => {
                         todo!()

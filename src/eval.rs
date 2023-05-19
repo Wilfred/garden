@@ -226,6 +226,26 @@ fn restore_stack_frame(
     env.stack.push(stack_frame);
 }
 
+fn restore_stack_frame_expr(
+    env: &mut Env,
+    mut stack_frame: StackFrame,
+    expr_to_eval: (bool, Expression),
+    evalled_values: &[Value],
+    error_kind: Option<ErrorKind>,
+) {
+    for value in evalled_values {
+        stack_frame.evalled_values.push(value.clone());
+    }
+
+    let offset = expr_to_eval.1 .0;
+    stack_frame.exprs_to_eval.push(expr_to_eval);
+    stack_frame
+        .exprs_to_eval
+        .push((false, Expression(offset, Expression_::Stop(error_kind))));
+
+    env.stack.push(stack_frame);
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -244,6 +264,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                 }
 
                 let stmt_copy = stmt_.clone();
+
+                // TODO
+                let expr_copy = Expression_::IntLiteral(1234);
+
                 if env.trace_exprs {
                     println!("{:?} {}", stmt_, done_children);
                 }
@@ -411,8 +435,47 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .push((false, Statement(expr.0, Statement_::Expr(expr.clone()))));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::If(_, _, _))) => {
-                        todo!()
+                    Statement_::Expr(Expression(
+                        _,
+                        Expression_::If(condition, ref then_body, ref else_body),
+                    )) => {
+                        if done_children {
+                            let condition_value = stack_frame
+                                .evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for if condition");
+                            match condition_value.clone() {
+                                Value::Boolean(b) => {
+                                    if b {
+                                        for expr in then_body.iter().rev() {
+                                            stack_frame.exprs_to_eval.push((false, expr.clone()));
+                                        }
+                                    } else {
+                                        for expr in else_body.iter().rev() {
+                                            stack_frame.exprs_to_eval.push((false, expr.clone()));
+                                        }
+                                    }
+                                }
+                                v => {
+                                    restore_stack_frame_expr(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Expression(offset, expr_copy)),
+                                        &[condition_value],
+                                        Some(ErrorKind::BadValue),
+                                    );
+                                    return Err(EvalError::ResumableError(format!(
+                                        "Expected a boolean when evaluating `if`, but got: {}",
+                                        v
+                                    )));
+                                }
+                            }
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(offset, expr_copy)));
+                            stack_frame.exprs_to_eval.push((false, *condition.clone()));
+                        }
                     }
                     Statement_::Expr(Expression(_, Expression_::While(_, _))) => {
                         todo!()

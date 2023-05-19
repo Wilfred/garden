@@ -32,6 +32,7 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
+    If(Box<Expression>, Vec<Expression>, Vec<Expression>),
     While(Box<Expression>, Vec<Expression>),
     Assign(VariableName, Box<Expression>),
     Let(VariableName, Box<Expression>),
@@ -208,6 +209,33 @@ fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>,
     require_token(tokens, "}")?;
 
     Ok(res)
+}
+
+fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let if_token = require_token(tokens, "if")?;
+
+    require_token(tokens, "(")?;
+    let condition = parse_expression(tokens)?;
+    require_token(tokens, ")")?;
+
+    let then_body = parse_block_expressions(tokens)?;
+
+    let else_body = if next_token_is(tokens, "else") {
+        pop_token(tokens);
+
+        if next_token_is(tokens, "if") {
+            vec![parse_if_expression(tokens)?]
+        } else {
+            parse_block_expressions(tokens)?
+        }
+    } else {
+        vec![]
+    };
+
+    Ok(Expression(
+        if_token.offset,
+        Expression_::If(Box::new(condition), then_body, else_body),
+    ))
 }
 
 fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
@@ -405,6 +433,9 @@ fn parse_general_expression(
         }
 
         if let Some(token) = peek_token(tokens) {
+            if token.text == "if" {
+                return parse_if_expression(tokens);
+            }
             if token.text == "let" {
                 return parse_let_expression(tokens);
             }

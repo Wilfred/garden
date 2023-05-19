@@ -43,6 +43,8 @@ pub enum Expression_ {
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),
+    Stop(Option<ErrorKind>),
+
 }
 
 #[derive(Debug, Clone, PartialEq)]

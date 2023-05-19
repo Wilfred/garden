@@ -520,8 +520,16 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *condition.clone()));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::Return(_))) => {
-                        todo!()
+                    Statement_::Expr(Expression(_, Expression_::Return(expr))) => {
+                        if done_children {
+                            // No more expressions to evaluate in this function.
+                            stack_frame.exprs_to_eval.clear();
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(offset, expr_copy)));
+                            stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                        }
                     }
                     Statement_::Expr(Expression(_, Expression_::Assign(_, _))) => {
                         todo!()

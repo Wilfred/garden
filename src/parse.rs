@@ -169,7 +169,7 @@ fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pa
 
 fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     require_token(tokens, "(")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
     Ok(expr)
@@ -203,7 +203,7 @@ fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>,
             break;
         }
 
-        res.push(parse_general_expression(tokens, false)?);
+        res.push(parse_block_expression(tokens)?);
     }
 
     require_token(tokens, "}")?;
@@ -215,7 +215,7 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseErr
     let if_token = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_expression(tokens)?;
+    let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
     let then_body = parse_block_expressions(tokens)?;
@@ -242,7 +242,7 @@ fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let if_token = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_expression(tokens)?;
+    let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
     let then_body = parse_block(tokens)?;
@@ -269,7 +269,7 @@ fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> 
     let while_token = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_expression(tokens)?;
+    let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
     let body = parse_block(tokens)?;
@@ -284,7 +284,7 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
     let while_token = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_expression(tokens)?;
+    let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
     let body = parse_block_expressions(tokens)?;
@@ -298,7 +298,7 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
 fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
     Ok(Statement(return_token.offset, Statement_::Return(expr)))
 }
@@ -306,7 +306,7 @@ fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
 fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
     Ok(Expression(
         return_token.offset,
@@ -364,7 +364,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
             break;
         }
 
-        let arg = parse_expression(tokens)?;
+        let arg = parse_inline_expression(tokens)?;
         args.push(arg);
 
         if let Some(token) = peek_token(tokens) {
@@ -419,6 +419,14 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
     }
 }
 
+fn parse_inline_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    parse_general_expression(tokens, true)
+}
+
+fn parse_block_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    parse_general_expression(tokens, false)
+}
+
 fn parse_general_expression(
     tokens: &mut &[Token<'_>],
     is_inline: bool,
@@ -448,10 +456,10 @@ fn parse_general_expression(
         }
     }
 
-    parse_expression(tokens)
+    parse_simple_expression_or_binop(tokens)
 }
 
-fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some(token) = peek_token(tokens) {
@@ -491,7 +499,7 @@ fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
         }
     }
 
-    let expr = parse_general_expression(tokens, true)?;
+    let expr = parse_inline_expression(tokens)?;
     require_token(tokens, ";")?;
     Ok(Statement(expr.0, Statement_::Expr(expr)))
 }
@@ -630,7 +638,7 @@ fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
     let (_, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Statement(let_token.offset, Statement_::Let(variable, expr)))
@@ -641,7 +649,7 @@ fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseEr
     let (_, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
@@ -654,7 +662,7 @@ fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError>
     let (offset, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Statement(offset, Statement_::Assign(variable, expr)))
@@ -664,7 +672,7 @@ fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     let (offset, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
@@ -677,7 +685,7 @@ pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpre
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_expression(&mut tokens_copy) {
+    if let Ok(expr) = parse_inline_expression(&mut tokens_copy) {
         return Ok(DefinitionsOrExpression::Expr(expr));
     }
 
@@ -698,7 +706,7 @@ pub fn parse_def_or_expr_from_str(s: &str) -> Result<DefinitionsOrExpression, Pa
 pub fn parse_expr_from_str(s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(s)?;
     let mut token_ptr = &tokens[..];
-    parse_expression(&mut token_ptr)
+    parse_inline_expression(&mut token_ptr)
 }
 
 lazy_static! {

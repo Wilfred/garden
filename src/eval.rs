@@ -531,8 +531,34 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *expr.clone()));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::Assign(_, _))) => {
-                        todo!()
+                    Statement_::Expr(Expression(_, Expression_::Assign(variable, expr))) => {
+                        if done_children {
+                            if !stack_frame.bindings.contains_key(&variable) {
+                                restore_stack_frame_expr(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(offset, expr_copy)),
+                                    &[],
+                                    Some(ErrorKind::MalformedExpression),
+                                );
+                                return Err(EvalError::ResumableError(format!(
+                                    "{} is not currently bound. Try `let {} = something`.",
+                                    variable.0, variable.0
+                                )));
+                            }
+
+                            let expr_value = stack_frame
+                                .evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for let value");
+                            stack_frame.bindings.insert(variable, expr_value.clone());
+                            stack_frame.evalled_values.push(expr_value);
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(offset, expr_copy)));
+                            stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                        }
                     }
                     Statement_::Expr(Expression(_, Expression_::Let(_, _))) => {
                         todo!()

@@ -86,6 +86,7 @@ pub struct StackFrame {
     pub fun_name: VariableName,
     pub bindings: HashMap<VariableName, Value>,
     pub stmts_to_eval: Vec<(bool, Statement)>,
+    pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<Value>,
 }
 
@@ -115,6 +116,7 @@ impl Default for Env {
                 fun_name: VariableName("toplevel".into()),
                 bindings: HashMap::new(),
                 stmts_to_eval: vec![],
+                exprs_to_eval: vec![],
                 evalled_values: vec![Value::Void],
             }],
         }
@@ -778,6 +780,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         fun_name: name.clone(),
                                         bindings: fun_bindings,
                                         stmts_to_eval: fun_subexprs,
+                                        exprs_to_eval: vec![], // TODO
                                         evalled_values: vec![Value::Void],
                                     });
 

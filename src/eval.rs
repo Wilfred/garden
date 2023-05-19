@@ -589,8 +589,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *expr.clone()));
                         }
                     }
-                    Statement_::Expr(Expression(_, Expression_::Stop(_))) => {
-                        todo!()
+                    Statement_::Expr(Expression(_, Expression_::Stop(e))) => {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((false, Expression(offset, Expression_::Stop(e))));
+                        env.stack.push(stack_frame);
+                        return Err(EvalError::Stop(e));
                     }
                     Statement_::Expr(Expression(_, Expression_::IntLiteral(i))) => {
                         stack_frame.evalled_values.push(Value::Integer(i));

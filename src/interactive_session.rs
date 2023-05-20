@@ -10,7 +10,6 @@ use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
     parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
-    Statement, Statement_,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -103,9 +102,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                         .stack
                         .last_mut()
                         .expect("Should always have the toplevel stack frame");
-                    stack_frame
-                        .stmts_to_eval
-                        .push((false, Statement(expr.0, Statement_::Expr(expr))));
+                    stack_frame.exprs_to_eval.push((false, expr));
                 }
             },
             Err(ReadError::CommandError(CommandError::Abort)) => {
@@ -160,12 +157,12 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::CommandError(CommandError::Skip)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 // Skip the Stop statement.
-                stack_frame.stmts_to_eval.pop();
+                stack_frame.exprs_to_eval.pop();
 
                 stack_frame
-                    .stmts_to_eval
+                    .exprs_to_eval
                     .pop()
-                    .expect("Tried to skip a statement, but none in this frame.");
+                    .expect("Tried to skip an expression, but none in this frame.");
 
                 if depth > 0 {
                     depth -= 1;

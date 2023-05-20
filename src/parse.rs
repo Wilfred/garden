@@ -71,7 +71,7 @@ pub enum Definition_ {
         Option<String>,
         VariableName,
         Vec<VariableName>,
-        Vec<Statement>,
+        Vec<Expression>,
     ),
 }
 
@@ -551,10 +551,10 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
     Ok(params)
 }
 
-fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
+fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     require_token(tokens, "{")?;
 
-    let mut stmts = vec![];
+    let mut exprs = vec![];
     loop {
         if let Some(token) = peek_token(tokens) {
             if token.text == "}" {
@@ -566,12 +566,12 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
             ));
         }
 
-        let stmt = parse_statement(tokens)?;
-        stmts.push(stmt);
+        let expr = parse_block_expression(tokens)?;
+        exprs.push(expr);
     }
 
     require_token(tokens, "}")?;
-    Ok(stmts)
+    Ok(exprs)
 }
 
 fn join_comments(comments: &[&str]) -> String {

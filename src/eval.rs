@@ -17,7 +17,7 @@ pub enum Value {
         Option<String>,
         VariableName,
         Vec<VariableName>,
-        Vec<Statement>,
+        Vec<Expression>,
     ),
     BuiltinFunction(BuiltinFunctionKind),
     String(String),

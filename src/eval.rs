@@ -209,26 +209,6 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
 fn restore_stack_frame(
     env: &mut Env,
     mut stack_frame: StackFrame,
-    stmt_to_eval: (bool, Statement),
-    evalled_values: &[Value],
-    error_kind: Option<ErrorKind>,
-) {
-    for value in evalled_values {
-        stack_frame.evalled_values.push(value.clone());
-    }
-
-    let offset = stmt_to_eval.1 .0;
-    stack_frame.stmts_to_eval.push(stmt_to_eval);
-    stack_frame
-        .stmts_to_eval
-        .push((false, Statement(offset, Statement_::Stop(error_kind))));
-
-    env.stack.push(stack_frame);
-}
-
-fn restore_stack_frame_expr(
-    env: &mut Env,
-    mut stack_frame: StackFrame,
     expr_to_eval: (bool, Expression),
     evalled_values: &[Value],
     error_kind: Option<ErrorKind>,
@@ -254,7 +234,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
             {
                 if session.interrupted.load(Ordering::SeqCst) {
                     session.interrupted.store(false, Ordering::SeqCst);
-                    restore_stack_frame_expr(
+                    restore_stack_frame(
                         env,
                         stack_frame,
                         (done_children, Expression(offset, expr_)),
@@ -289,7 +269,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     }
                                 }
                                 v => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -332,7 +312,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     }
                                 }
                                 v => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -366,7 +346,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Expression_::Assign(variable, expr) => {
                         if done_children {
                             if !stack_frame.bindings.contains_key(&variable) {
-                                restore_stack_frame_expr(
+                                restore_stack_frame(
                                     env,
                                     stack_frame,
                                     (done_children, Expression(offset, expr_copy)),
@@ -395,7 +375,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     Expression_::Let(variable, expr) => {
                         if done_children {
                             if stack_frame.bindings.contains_key(&variable) {
-                                restore_stack_frame_expr(
+                                restore_stack_frame(
                                     env,
                                     stack_frame,
                                     (done_children, Expression(offset, expr_copy)),
@@ -441,7 +421,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name, &stack_frame, &env) {
                             stack_frame.evalled_values.push(value);
                         } else {
-                            restore_stack_frame_expr(
+                            restore_stack_frame(
                                 env,
                                 stack_frame,
                                 (done_children, Expression(offset, expr_copy)),
@@ -477,7 +457,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -493,7 +473,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -525,7 +505,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 }
                                 BinaryOperatorKind::Divide => {
                                     if rhs_num == 0 {
-                                        restore_stack_frame_expr(
+                                        restore_stack_frame(
                                             env,
                                             stack_frame,
                                             (done_children, Expression(offset, expr_copy)),
@@ -582,7 +562,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_num = match lhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -599,7 +579,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_num = match rhs_value {
                                 Value::Integer(i) => i,
                                 _ => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -655,7 +635,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let lhs_bool = match lhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -671,7 +651,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             let rhs_bool = match rhs_value {
                                 Value::Boolean(b) => b,
                                 _ => {
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
@@ -729,7 +709,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         for value in arg_values.iter().rev() {
                                             saved_values.push(value.clone());
                                         }
-                                        restore_stack_frame_expr(
+                                        restore_stack_frame(
                                             env,
                                             stack_frame,
                                             (done_children, Expression(offset, expr_copy)),
@@ -774,7 +754,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                             for value in arg_values.iter().rev() {
                                                 saved_values.push(value.clone());
                                             }
-                                            restore_stack_frame_expr(
+                                            restore_stack_frame(
                                                 env,
                                                 stack_frame,
                                                 (done_children, Expression(offset, expr_copy)),
@@ -807,7 +787,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     saved_values.push(value.clone());
                                                 }
                                                 saved_values.push(receiver_value.clone());
-                                                restore_stack_frame_expr(
+                                                restore_stack_frame(
                                                     env,
                                                     stack_frame,
                                                     (done_children, Expression(offset, expr_copy)),
@@ -830,7 +810,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                 saved_values.push(value.clone());
                                             }
                                             saved_values.push(receiver_value.clone());
-                                            restore_stack_frame_expr(
+                                            restore_stack_frame(
                                                 env,
                                                 stack_frame,
                                                 (done_children, Expression(offset, expr_copy)),
@@ -855,7 +835,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                     saved_values.push(value.clone());
                                                 }
                                                 saved_values.push(receiver_value.clone());
-                                                restore_stack_frame_expr(
+                                                restore_stack_frame(
                                                     env,
                                                     stack_frame,
                                                     (done_children, Expression(offset, expr_copy)),
@@ -877,7 +857,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         saved_values.push(value.clone());
                                     }
                                     saved_values.push(receiver_value.clone());
-                                    restore_stack_frame_expr(
+                                    restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),

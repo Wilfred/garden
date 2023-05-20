@@ -9,7 +9,7 @@ use crate::commands::{
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
-    parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_,
+    parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_, Expression_, Expression,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -119,18 +119,17 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 }
 
                 let stack_frame = env.stack.last_mut().unwrap();
-                if let Some((_, stmt)) = stack_frame.stmts_to_eval.pop() {
-                    assert!(matches!(stmt.1, Statement_::Stop(_)));
+                if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+                    assert!(matches!(expr.1, Expression_::Stop(_)));
                 } else {
                     continue;
                 }
-
             }
             Err(ReadError::CommandError(CommandError::Replace(stmt))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
-                let err_kind = if let Some((_, Statement(_, Statement_::Stop(e)))) =
-                    stack_frame.stmts_to_eval.last()
+                let err_kind = if let Some((_, Expression(_, Expression_::Stop(e)))) =
+                    stack_frame.exprs_to_eval.last()
                 {
                     e.clone()
                 } else {

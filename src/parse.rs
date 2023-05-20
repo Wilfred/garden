@@ -44,7 +44,6 @@ pub enum Expression_ {
     Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),
     Stop(Option<ErrorKind>),
-
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -52,13 +51,7 @@ pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement_ {
-    If(Expression, Vec<Statement>, Vec<Statement>),
-    While(Expression, Vec<Statement>),
-    Assign(VariableName, Expression),
-    Let(VariableName, Expression),
-    Return(Expression),
     Expr(Expression),
-    Stop(Option<ErrorKind>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -177,24 +170,6 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
     Ok(expr)
 }
 
-fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
-    let mut res = vec![];
-
-    require_token(tokens, "{")?;
-
-    while !tokens.is_empty() {
-        if next_token_is(tokens, "}") {
-            break;
-        }
-
-        res.push(parse_statement(tokens)?);
-    }
-
-    require_token(tokens, "}")?;
-
-    Ok(res)
-}
-
 fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     let mut res = vec![];
 
@@ -240,48 +215,6 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseErr
     ))
 }
 
-fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let if_token = require_token(tokens, "if")?;
-
-    require_token(tokens, "(")?;
-    let condition = parse_inline_expression(tokens)?;
-    require_token(tokens, ")")?;
-
-    let then_body = parse_block(tokens)?;
-
-    let else_body = if next_token_is(tokens, "else") {
-        pop_token(tokens);
-
-        if next_token_is(tokens, "if") {
-            vec![parse_if_stmt(tokens)?]
-        } else {
-            parse_block(tokens)?
-        }
-    } else {
-        vec![]
-    };
-
-    Ok(Statement(
-        if_token.offset,
-        Statement_::If(condition, then_body, else_body),
-    ))
-}
-
-fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let while_token = require_token(tokens, "while")?;
-
-    require_token(tokens, "(")?;
-    let condition = parse_inline_expression(tokens)?;
-    require_token(tokens, ")")?;
-
-    let body = parse_block(tokens)?;
-
-    Ok(Statement(
-        while_token.offset,
-        Statement_::While(condition, body),
-    ))
-}
-
 fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let while_token = require_token(tokens, "while")?;
 
@@ -295,14 +228,6 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
         while_token.offset,
         Expression_::While(Box::new(condition), body),
     ))
-}
-
-fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let return_token = require_token(tokens, "return")?;
-
-    let expr = parse_inline_expression(tokens)?;
-    let _ = require_token(tokens, ";")?;
-    Ok(Statement(return_token.offset, Statement_::Return(expr)))
 }
 
 fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -479,33 +404,6 @@ fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Express
     Ok(expr)
 }
 
-fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    if let Some((_, token)) = peek_two_tokens(tokens) {
-        if token.text == "=" {
-            return parse_assign_stmt(tokens);
-        }
-    }
-
-    if let Some(token) = peek_token(tokens) {
-        if token.text == "let" {
-            return parse_let_stmt(tokens);
-        }
-        if token.text == "if" {
-            return parse_if_stmt(tokens);
-        }
-        if token.text == "while" {
-            return parse_while_stmt(tokens);
-        }
-        if token.text == "return" {
-            return parse_return_stmt(tokens);
-        }
-    }
-
-    let expr = parse_inline_expression(tokens)?;
-    require_token(tokens, ";")?;
-    Ok(Statement(expr.0, Statement_::Expr(expr)))
-}
-
 fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
@@ -635,17 +533,6 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableN
     ))
 }
 
-fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let let_token = require_token(tokens, "let")?;
-    let (_, variable) = parse_variable_name(tokens)?;
-
-    require_token(tokens, "=")?;
-    let expr = parse_inline_expression(tokens)?;
-    let _ = require_token(tokens, ";")?;
-
-    Ok(Statement(let_token.offset, Statement_::Let(variable, expr)))
-}
-
 fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let let_token = require_token(tokens, "let")?;
     let (_, variable) = parse_variable_name(tokens)?;
@@ -658,16 +545,6 @@ fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseEr
         let_token.offset,
         Expression_::Let(variable, Box::new(expr)),
     ))
-}
-
-fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    let (offset, variable) = parse_variable_name(tokens)?;
-
-    require_token(tokens, "=")?;
-    let expr = parse_inline_expression(tokens)?;
-    let _ = require_token(tokens, ";")?;
-
-    Ok(Statement(offset, Statement_::Assign(variable, expr)))
 }
 
 fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -822,13 +699,13 @@ fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
 }
 
 #[cfg(test)]
-pub fn parse_stmts_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
+pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
     let tokens = lex(s)?;
     let mut token_ptr = &tokens[..];
 
     let mut res = vec![];
     while !token_ptr.is_empty() {
-        res.push(parse_statement(&mut token_ptr)?);
+        res.push(parse_block_expression(&mut token_ptr)?);
     }
 
     Ok(res)
@@ -888,7 +765,7 @@ mod tests {
 
     #[test]
     fn test_parse_bool_literal() {
-        let ast = parse_stmts_from_str("true;").unwrap();
+        let ast = parse_exprs_from_str("true;").unwrap();
 
         assert_eq!(
             ast,
@@ -923,7 +800,7 @@ mod tests {
 
     #[test]
     fn test_parse_variable() {
-        let ast = parse_stmts_from_str("abc_def;").unwrap();
+        let ast = parse_exprs_from_str("abc_def;").unwrap();
 
         assert_eq!(
             ast,
@@ -939,7 +816,7 @@ mod tests {
 
     #[test]
     fn test_parse_let() {
-        let ast = parse_stmts_from_str("let x = 1;").unwrap();
+        let ast = parse_exprs_from_str("let x = 1;").unwrap();
 
         assert_eq!(
             ast,
@@ -955,7 +832,7 @@ mod tests {
 
     #[test]
     fn test_parse_if_else() {
-        let ast = parse_stmts_from_str("if (true) {} else {}").unwrap();
+        let ast = parse_exprs_from_str("if (true) {} else {}").unwrap();
 
         assert_eq!(
             ast,
@@ -972,7 +849,7 @@ mod tests {
 
     #[test]
     fn test_parse_else_if() {
-        let ast = parse_stmts_from_str("if (x) {} else if (y) {}").unwrap();
+        let ast = parse_exprs_from_str("if (x) {} else if (y) {}").unwrap();
 
         assert_eq!(
             ast,
@@ -999,7 +876,7 @@ mod tests {
 
     #[test]
     fn test_parse_if() {
-        let ast = parse_stmts_from_str("if (true) {}").unwrap();
+        let ast = parse_exprs_from_str("if (true) {}").unwrap();
 
         assert_eq!(
             ast,
@@ -1016,7 +893,7 @@ mod tests {
 
     #[test]
     fn test_parse_return() {
-        let ast = parse_stmts_from_str("return true;").unwrap();
+        let ast = parse_exprs_from_str("return true;").unwrap();
 
         assert_eq!(
             ast,

@@ -3,10 +3,9 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, Position, Statement};
+use crate::parse::BinaryOperatorKind;
 use crate::parse::{
-    Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, Statement_,
-    VariableName,
+    Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -180,8 +179,8 @@ pub fn eval_def_or_exprs(
             Ok(Value::Void)
         }
         DefinitionsOrExpression::Expr(e) => {
-            let stmts = vec![Statement(Position(0), Statement_::Expr(e.clone()))];
-            eval_stmts(&stmts, env, session)
+            let exprs = vec![e.clone()];
+            eval_exprs(&exprs, env, session)
         }
     }
 }
@@ -920,19 +919,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
         .expect("Should have a value from the last expression"))
 }
 
-pub fn eval_stmts(
-    stmts: &[Statement],
+pub fn eval_exprs(
+    exprs: &[Expression],
     env: &mut Env,
     session: &mut Session,
 ) -> Result<Value, EvalError> {
-    let mut stmts_to_eval = vec![];
-    for stmt in stmts.iter().rev() {
-        stmts_to_eval.push((false, stmt.clone()));
+    let mut exprs_to_eval = vec![];
+    for expr in exprs.iter().rev() {
+        exprs_to_eval.push((false, expr.clone()));
     }
 
     let top_stack = env.stack.last_mut().unwrap();
     // TODO: do this setup outside of this function.
-    top_stack.stmts_to_eval = stmts_to_eval;
+    top_stack.exprs_to_eval = exprs_to_eval;
 
     eval_env(env, session)
 }
@@ -965,7 +964,7 @@ mod tests {
             has_attached_stdout: false,
         };
 
-        super::eval_stmts(stmts, env, &mut session)
+        super::eval_exprs(stmts, env, &mut session)
     }
 
     #[test]

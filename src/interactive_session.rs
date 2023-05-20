@@ -9,7 +9,8 @@ use crate::commands::{
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
-    parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_, Expression_, Expression,
+    parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
+    Statement, Statement_,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -125,7 +126,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     continue;
                 }
             }
-            Err(ReadError::CommandError(CommandError::Replace(stmt))) => {
+            Err(ReadError::CommandError(CommandError::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
                 let err_kind = if let Some((_, Expression(_, Expression_::Stop(e)))) =
@@ -139,16 +140,16 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 match err_kind {
                     Some(err_kind) => {
-                        stack_frame.stmts_to_eval.pop();
+                        stack_frame.exprs_to_eval.pop();
                         match err_kind {
                             ErrorKind::BadValue => {
                                 stack_frame.evalled_values.pop();
                             }
                             ErrorKind::MalformedExpression => {
-                                stack_frame.stmts_to_eval.pop();
+                                stack_frame.exprs_to_eval.pop();
                             }
                         }
-                        stack_frame.stmts_to_eval.push((false, stmt));
+                        stack_frame.exprs_to_eval.push((false, expr));
                     }
                     None => {
                         println!(":replace failed: can't replace without an error.");

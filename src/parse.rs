@@ -761,10 +761,7 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
-                Position(0),
-                Statement_::Expr(Expression(Position(0), Expression_::BoolLiteral(true)))
-            )]
+            vec![Expression(Position(0), Expression_::BoolLiteral(true))]
         );
     }
 
@@ -796,12 +793,9 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::Expr(Expression(
-                    Position(0),
-                    Expression_::Variable(VariableName("abc_def".to_string()))
-                ))
+                Expression_::Variable(VariableName("abc_def".to_string()))
             )]
         );
     }
@@ -812,11 +806,11 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::Let(
+                Expression_::Let(
                     VariableName("x".into()),
-                    Expression(Position(8), Expression_::IntLiteral(1))
+                    Box::new(Expression(Position(8), Expression_::IntLiteral(1)))
                 )
             )]
         );
@@ -828,10 +822,10 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::If(
-                    Expression(Position(4), Expression_::BoolLiteral(true)),
+                Expression_::If(
+                    Box::new(Expression(Position(4), Expression_::BoolLiteral(true))),
                     vec![],
                     vec![],
                 )
@@ -845,18 +839,21 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::If(
-                    Expression(Position(4), Expression_::Variable(VariableName("x".into()))),
+                Expression_::If(
+                    Box::new(Expression(
+                        Position(4),
+                        Expression_::Variable(VariableName("x".into()))
+                    )),
                     vec![],
-                    vec![Statement(
+                    vec![Expression(
                         Position(15),
-                        Statement_::If(
-                            Expression(
+                        Expression_::If(
+                            Box::new(Expression(
                                 Position(19),
                                 Expression_::Variable(VariableName("y".into()))
-                            ),
+                            )),
                             vec![],
                             vec![],
                         )
@@ -872,10 +869,10 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::If(
-                    Expression(Position(4), Expression_::BoolLiteral(true)),
+                Expression_::If(
+                    Box::new(Expression(Position(4), Expression_::BoolLiteral(true))),
                     vec![],
                     vec![],
                 )
@@ -889,9 +886,12 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::Return(Expression(Position(7), Expression_::BoolLiteral(true)))
+                Expression_::Return(Box::new(Expression(
+                    Position(7),
+                    Expression_::BoolLiteral(true)
+                )))
             )]
         );
     }

@@ -952,11 +952,11 @@ pub fn eval_exprs(
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::{parse_def_or_expr_from_str, parse_exprs_from_str};
+    use crate::parse::{parse_def_or_expr_from_str, parse_exprs_from_str, Position};
 
     use super::*;
 
-    fn eval_stmts(stmts: &[Statement], env: &mut Env) -> Result<Value, EvalError> {
+    fn eval_exprs(exprs: &[Expression], env: &mut Env) -> Result<Value, EvalError> {
         let interrupted = Arc::new(AtomicBool::new(false));
         let mut session = Session {
             history: String::new(),
@@ -964,18 +964,15 @@ mod tests {
             has_attached_stdout: false,
         };
 
-        super::eval_exprs(stmts, env, &mut session)
+        super::eval_exprs(exprs, env, &mut session)
     }
 
     #[test]
     fn test_eval_bool_literal() {
-        let stmts = vec![Statement(
-            Position(0),
-            Statement_::Expr(Expression(Position(0), Expression_::BoolLiteral(true))),
-        )];
+        let exprs = vec![Expression(Position(0), Expression_::BoolLiteral(true))];
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
@@ -983,23 +980,14 @@ mod tests {
     fn test_eval_persist_env() {
         let mut env = Env::default();
 
-        let stmts = vec![Statement(
-            Position(0),
-            Statement_::Let(
-                VariableName("foo".into()),
-                Expression(Position(0), Expression_::BoolLiteral(true)),
-            ),
-        )];
-        eval_stmts(&stmts, &mut env).unwrap();
+        let exprs = vec![Expression(Position(0), Expression_::BoolLiteral(true))];
+        eval_exprs(&exprs, &mut env).unwrap();
 
-        let stmts = vec![Statement(
+        let exprs = vec![Expression(
             Position(0),
-            Statement_::Expr(Expression(
-                Position(0),
-                Expression_::Variable(VariableName("foo".into())),
-            )),
+            Expression_::Variable(VariableName("foo".into())),
         )];
-        eval_stmts(&stmts, &mut env).unwrap();
+        eval_exprs(&exprs, &mut env).unwrap();
     }
 
     #[test]
@@ -1007,7 +995,7 @@ mod tests {
         let stmts = parse_exprs_from_str("true; false;").unwrap();
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(false));
     }
 
@@ -1016,7 +1004,7 @@ mod tests {
         let stmts = parse_exprs_from_str("1 + 2;").unwrap();
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(3));
     }
 
@@ -1025,7 +1013,7 @@ mod tests {
         let stmts = parse_exprs_from_str("let foo = true; foo;").unwrap();
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
@@ -1034,14 +1022,14 @@ mod tests {
         let stmts = parse_exprs_from_str("let foo = true; let foo = false;").unwrap();
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env);
+        let value = eval_exprs(&stmts, &mut env);
         assert!(value.is_err());
     }
 
     #[test]
     fn test_eval_empty() {
         let mut env = Env::default();
-        let value = eval_stmts(&[], &mut env).unwrap();
+        let value = eval_exprs(&[], &mut env).unwrap();
         assert_eq!(value, Value::Void);
     }
 
@@ -1056,7 +1044,7 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("f();").unwrap();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
     }
 
@@ -1071,7 +1059,7 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("f(123);").unwrap();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(123));
     }
 
@@ -1086,7 +1074,7 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("f(1, 2);").unwrap();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
 
@@ -1095,7 +1083,7 @@ mod tests {
         let stmts = parse_exprs_from_str("let i = 0; while (i < 5) { i = i + 1;}").unwrap();
 
         let mut env = Env::default();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Void);
     }
 
@@ -1110,7 +1098,7 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("let i = 0; id(i); i;").unwrap();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(0));
     }
 
@@ -1125,7 +1113,7 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("f();").unwrap();
-        let value = eval_stmts(&stmts, &mut env).unwrap();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }
 

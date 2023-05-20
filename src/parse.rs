@@ -50,14 +50,6 @@ pub enum Expression_ {
 pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Statement_ {
-    Expr(Expression),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Statement(pub Position, pub Statement_);
-
-#[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     // TODO: define a FunDetails struct.
     Fun(

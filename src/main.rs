@@ -1,15 +1,18 @@
+mod colors;
 mod commands;
 mod eval;
 mod interactive_session;
 mod json_session;
 mod parse;
 mod prompt;
-mod colors;
 
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
+use eval::{eval_def_or_exprs, Env, EvalError, Session};
+use parse::parse_def_or_expr_from_str;
 
 #[derive(Debug, Parser)]
 #[command(name = "git")]
@@ -25,6 +28,8 @@ enum Commands {
     Repl,
     /// Start a session over JSON RPC.
     Json,
+    /// Execute a Garden program at the path specified.
+    Run { path: PathBuf },
 }
 
 fn main() {
@@ -40,5 +45,46 @@ fn main() {
     match args.command {
         Commands::Repl => interactive_session::repl(&interrupted),
         Commands::Json => json_session::json_session(&interrupted),
+        Commands::Run { path } => match std::fs::read(&path) {
+            Ok(src_bytes) => run_file(src_bytes, &path, &interrupted),
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+    }
+}
+
+fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
+    match String::from_utf8(src_bytes) {
+        Ok(src) => match parse_def_or_expr_from_str(&src) {
+            Ok(stmts) => {
+                let mut env = Env::default();
+                let mut session = Session {
+                    history: src.clone(),
+                    interrupted,
+                    has_attached_stdout: false,
+                };
+
+                // TODO: files should only contain defs, not expressions.
+                match eval_def_or_exprs(&stmts, &mut env, &mut session) {
+                    Ok(_) => {}
+                    Err(EvalError::ResumableError(e)) => {
+                        eprintln!("Error: {}", e);
+                    }
+                    Err(EvalError::Interrupted) => {
+                        eprintln!("Interrupted");
+                    }
+                    Err(EvalError::Stop(_)) => {
+                        eprintln!("Error (stopped)");
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Parse error: {:?}", e);
+            }
+        },
+        Err(e) => {
+            eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
+        }
     }
 }

@@ -568,6 +568,11 @@ pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpre
         return Ok(DefinitionsOrExpression::Expr(expr));
     }
 
+    let mut tokens_copy = tokens.clone();
+    if let Ok(expr) = parse_block_expression(&mut tokens_copy) {
+        return Ok(DefinitionsOrExpression::Expr(expr));
+    }
+
     let mut defs = vec![];
     while !tokens.is_empty() {
         defs.push(parse_definition(tokens)?);
@@ -922,6 +927,25 @@ mod tests {
                     vec![]
                 )
             )]
+        );
+    }
+
+    #[test]
+    fn test_parse_block_expression() {
+        let ast = match parse_def_or_expr_from_str("let x = 1;").unwrap() {
+            DefinitionsOrExpression::Defs(_) => unreachable!(),
+            DefinitionsOrExpression::Expr(e) => e,
+        };
+
+        assert_eq!(
+            ast,
+            Expression(
+                Position(0),
+                Expression_::Let(
+                    VariableName("x".into()),
+                    Box::new(Expression(Position(8), Expression_::IntLiteral(1)))
+                )
+            )
         );
     }
 }

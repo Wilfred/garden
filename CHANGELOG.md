@@ -1,5 +1,11 @@
 # 0.4 (unreleased)
 
+Syntax: `if` is now an expression, so the following is legal:
+
+```
+let x = if (y) { 1; } else { 2; };
+```
+
 # 0.3 (released 17 May 2023)
 
 **Goal: Basic Emacs integration**

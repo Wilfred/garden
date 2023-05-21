@@ -10,7 +10,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::eval::eval_env;
-use crate::parse::Statement_;
+use crate::parse::Expression_;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
@@ -91,8 +91,8 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             },
                             Err(CommandError::Resume) => {
                                 let stack_frame = env.stack.last_mut().unwrap();
-                                if let Some((_, stmt)) = stack_frame.stmts_to_eval.pop() {
-                                    assert!(matches!(stmt.1, Statement_::Stop(_)));
+                                if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+                                    assert!(matches!(expr.1, Expression_::Stop(_)));
 
                                     match eval_env(&mut env, &mut session) {
                                         Ok(result) => Response {

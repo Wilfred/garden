@@ -9,7 +9,7 @@ use crate::commands::{
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
-    parse_def_or_expr_from_str, DefinitionsOrExpression, ParseError, Statement, Statement_,
+    parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_, ParseError,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -102,9 +102,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                         .stack
                         .last_mut()
                         .expect("Should always have the toplevel stack frame");
-                    stack_frame
-                        .stmts_to_eval
-                        .push((false, Statement(expr.0, Statement_::Expr(expr))));
+                    stack_frame.exprs_to_eval.push((false, expr));
                 }
             },
             Err(ReadError::CommandError(CommandError::Abort)) => {
@@ -119,18 +117,17 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 }
 
                 let stack_frame = env.stack.last_mut().unwrap();
-                if let Some((_, stmt)) = stack_frame.stmts_to_eval.pop() {
-                    assert!(matches!(stmt.1, Statement_::Stop(_)));
+                if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+                    assert!(matches!(expr.1, Expression_::Stop(_)));
                 } else {
                     continue;
                 }
-
             }
-            Err(ReadError::CommandError(CommandError::Replace(stmt))) => {
+            Err(ReadError::CommandError(CommandError::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
-                let err_kind = if let Some((_, Statement(_, Statement_::Stop(e)))) =
-                    stack_frame.stmts_to_eval.last()
+                let err_kind = if let Some((_, Expression(_, Expression_::Stop(e)))) =
+                    stack_frame.exprs_to_eval.last()
                 {
                     e.clone()
                 } else {
@@ -140,16 +137,16 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 match err_kind {
                     Some(err_kind) => {
-                        stack_frame.stmts_to_eval.pop();
+                        stack_frame.exprs_to_eval.pop();
                         match err_kind {
                             ErrorKind::BadValue => {
                                 stack_frame.evalled_values.pop();
                             }
                             ErrorKind::MalformedExpression => {
-                                stack_frame.stmts_to_eval.pop();
+                                stack_frame.exprs_to_eval.pop();
                             }
                         }
-                        stack_frame.stmts_to_eval.push((false, stmt));
+                        stack_frame.exprs_to_eval.push((false, expr));
                     }
                     None => {
                         println!(":replace failed: can't replace without an error.");
@@ -160,12 +157,12 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::CommandError(CommandError::Skip)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 // Skip the Stop statement.
-                stack_frame.stmts_to_eval.pop();
+                stack_frame.exprs_to_eval.pop();
 
                 stack_frame
-                    .stmts_to_eval
+                    .exprs_to_eval
                     .pop()
-                    .expect("Tried to skip a statement, but none in this frame.");
+                    .expect("Tried to skip an expression, but none in this frame.");
 
                 if depth > 0 {
                     depth -= 1;

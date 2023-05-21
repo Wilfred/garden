@@ -8,8 +8,7 @@ use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
     parse::{
-        parse_def_or_expr_from_str, parse_expr_from_str, ParseError, Statement, Statement_,
-        VariableName,
+        parse_def_or_expr_from_str, parse_expr_from_str, Expression, ParseError, VariableName,
     },
 };
 
@@ -23,7 +22,7 @@ pub enum Command {
     FrameValues,
     FrameStatements,
     Parse(Option<String>),
-    Replace(Option<Statement>),
+    Replace(Option<Expression>),
     Resume,
     Skip,
     Source,
@@ -82,13 +81,8 @@ impl Command {
                 }
                 if let Some(src) = split_first_word(s, ":replace") {
                     return match parse_expr_from_str(&src) {
-                        Ok(expr) => {
-                            let stmt = Statement(expr.0, Statement_::Expr(expr));
-                            Ok(Command::Replace(Some(stmt)))
-                        }
-                        Err(_) => {
-                            Ok(Command::Replace(None))
-                        }
+                        Ok(expr) => Ok(Command::Replace(Some(expr))),
+                        Err(_) => Ok(Command::Replace(None)),
                     };
                 }
 
@@ -141,7 +135,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
 #[derive(Debug)]
 pub enum CommandError {
-    Replace(Statement),
+    Replace(Expression),
     Resume,
     Abort,
     Skip,
@@ -225,7 +219,11 @@ pub fn run_command<T: Write>(
             if let Some(stmt) = stmt {
                 return Err(CommandError::Replace(stmt.clone()));
             } else {
-                write!(buf, ":replace requires a valid expression, e.g. `:replace 42`").unwrap();
+                write!(
+                    buf,
+                    ":replace requires a valid expression, e.g. `:replace 42`"
+                )
+                .unwrap();
                 return Ok(());
             }
         }
@@ -261,8 +259,8 @@ pub fn run_command<T: Write>(
         }
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.last() {
-                for (_, stmt) in stack_frame.stmts_to_eval.iter().rev() {
-                    writeln!(buf, "{:?}", stmt.1).unwrap();
+                for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
+                    writeln!(buf, "{:?}", expr.1).unwrap();
                 }
             }
         }

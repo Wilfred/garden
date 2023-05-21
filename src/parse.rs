@@ -32,30 +32,22 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
+    If(Box<Expression>, Vec<Expression>, Vec<Expression>),
+    While(Box<Expression>, Vec<Expression>),
+    Assign(VariableName, Box<Expression>),
+    Let(VariableName, Box<Expression>),
+    Return(Box<Expression>),
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Expression(pub Position, pub Expression_);
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Statement_ {
-    If(Expression, Vec<Statement>, Vec<Statement>),
-    While(Expression, Vec<Statement>),
-    Assign(VariableName, Expression),
-    Let(VariableName, Expression),
-    Return(Expression),
-    Expr(Expression),
     Stop(Option<ErrorKind>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Statement(pub Position, pub Statement_);
+pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
@@ -64,7 +56,7 @@ pub enum Definition_ {
         Option<String>,
         VariableName,
         Vec<VariableName>,
-        Vec<Statement>,
+        Vec<Expression>,
     ),
 }
 
@@ -164,13 +156,13 @@ fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pa
 
 fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     require_token(tokens, "(")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
     Ok(expr)
 }
 
-fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
+fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     let mut res = vec![];
 
     require_token(tokens, "{")?;
@@ -180,7 +172,7 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> 
             break;
         }
 
-        res.push(parse_statement(tokens)?);
+        res.push(parse_block_expression(tokens)?);
     }
 
     require_token(tokens, "}")?;
@@ -188,54 +180,57 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> 
     Ok(res)
 }
 
-fn parse_if_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let if_token = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_expression(tokens)?;
+    let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
-    let then_body = parse_block(tokens)?;
+    let then_body = parse_block_expressions(tokens)?;
 
     let else_body = if next_token_is(tokens, "else") {
         pop_token(tokens);
 
         if next_token_is(tokens, "if") {
-            vec![parse_if_stmt(tokens)?]
+            vec![parse_if_expression(tokens)?]
         } else {
-            parse_block(tokens)?
+            parse_block_expressions(tokens)?
         }
     } else {
         vec![]
     };
 
-    Ok(Statement(
+    Ok(Expression(
         if_token.offset,
-        Statement_::If(condition, then_body, else_body),
+        Expression_::If(Box::new(condition), then_body, else_body),
     ))
 }
 
-fn parse_while_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let while_token = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_expression(tokens)?;
+    let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
-    let body = parse_block(tokens)?;
+    let body = parse_block_expressions(tokens)?;
 
-    Ok(Statement(
+    Ok(Expression(
         while_token.offset,
-        Statement_::While(condition, body),
+        Expression_::While(Box::new(condition), body),
     ))
 }
 
-fn parse_return_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
-    Ok(Statement(return_token.offset, Statement_::Return(expr)))
+    Ok(Expression(
+        return_token.offset,
+        Expression_::Return(Box::new(expr)),
+    ))
 }
 
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -288,7 +283,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
             break;
         }
 
-        let arg = parse_expression(tokens)?;
+        let arg = parse_inline_expression(tokens)?;
         args.push(arg);
 
         if let Some(token) = peek_token(tokens) {
@@ -343,7 +338,55 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
     }
 }
 
-fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_inline_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    parse_general_expression(tokens, true)
+}
+
+fn parse_block_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    parse_general_expression(tokens, false)
+}
+
+fn parse_general_expression(
+    tokens: &mut &[Token<'_>],
+    is_inline: bool,
+) -> Result<Expression, ParseError> {
+    if !is_inline {
+        // TODO: Matching on tokens will prevent us from doing more
+        // complex assignments like `foo.bar = 1;`.
+        if let Some((_, token)) = peek_two_tokens(tokens) {
+            if token.text == "=" {
+                return parse_assign_expression(tokens);
+            }
+        }
+
+        if let Some(token) = peek_token(tokens) {
+            if token.text == "let" {
+                return parse_let_expression(tokens);
+            }
+            if token.text == "return" {
+                return parse_return_expression(tokens);
+            }
+            if token.text == "while" {
+                return parse_while_expression(tokens);
+            }
+        }
+    }
+
+    if let Some(token) = peek_token(tokens) {
+        if token.text == "if" {
+            return parse_if_expression(tokens);
+        }
+    }
+
+    let expr = parse_simple_expression_or_binop(tokens)?;
+    if !is_inline {
+        let _ = require_token(tokens, ";")?;
+    }
+
+    Ok(expr)
+}
+
+fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 
     if let Some(token) = peek_token(tokens) {
@@ -359,33 +402,6 @@ fn parse_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError>
     }
 
     Ok(expr)
-}
-
-fn parse_statement(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
-    if let Some((_, token)) = peek_two_tokens(tokens) {
-        if token.text == "=" {
-            return parse_assign_stmt(tokens);
-        }
-    }
-
-    if let Some(token) = peek_token(tokens) {
-        if token.text == "let" {
-            return parse_let_stmt(tokens);
-        }
-        if token.text == "if" {
-            return parse_if_stmt(tokens);
-        }
-        if token.text == "while" {
-            return parse_while_stmt(tokens);
-        }
-        if token.text == "return" {
-            return parse_return_stmt(tokens);
-        }
-    }
-
-    let expr = parse_expression(tokens)?;
-    require_token(tokens, ";")?;
-    Ok(Statement(expr.0, Statement_::Expr(expr)))
 }
 
 fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
@@ -433,10 +449,10 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
     Ok(params)
 }
 
-fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, ParseError> {
+fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     require_token(tokens, "{")?;
 
-    let mut stmts = vec![];
+    let mut exprs = vec![];
     loop {
         if let Some(token) = peek_token(tokens) {
             if token.text == "}" {
@@ -448,12 +464,12 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Statement>, Pars
             ));
         }
 
-        let stmt = parse_statement(tokens)?;
-        stmts.push(stmt);
+        let expr = parse_block_expression(tokens)?;
+        exprs.push(expr);
     }
 
     require_token(tokens, "}")?;
-    Ok(stmts)
+    Ok(exprs)
 }
 
 fn join_comments(comments: &[&str]) -> String {
@@ -517,32 +533,38 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableN
     ))
 }
 
-fn parse_let_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let let_token = require_token(tokens, "let")?;
     let (_, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
-    Ok(Statement(let_token.offset, Statement_::Let(variable, expr)))
+    Ok(Expression(
+        let_token.offset,
+        Expression_::Let(variable, Box::new(expr)),
+    ))
 }
 
-fn parse_assign_stmt(tokens: &mut &[Token<'_>]) -> Result<Statement, ParseError> {
+fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let (offset, variable) = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_expression(tokens)?;
+    let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
-    Ok(Statement(offset, Statement_::Assign(variable, expr)))
+    Ok(Expression(
+        offset,
+        Expression_::Assign(variable, Box::new(expr)),
+    ))
 }
 
 pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_expression(&mut tokens_copy) {
+    if let Ok(expr) = parse_inline_expression(&mut tokens_copy) {
         return Ok(DefinitionsOrExpression::Expr(expr));
     }
 
@@ -563,7 +585,7 @@ pub fn parse_def_or_expr_from_str(s: &str) -> Result<DefinitionsOrExpression, Pa
 pub fn parse_expr_from_str(s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(s)?;
     let mut token_ptr = &tokens[..];
-    parse_expression(&mut token_ptr)
+    parse_inline_expression(&mut token_ptr)
 }
 
 lazy_static! {
@@ -677,13 +699,13 @@ fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
 }
 
 #[cfg(test)]
-pub fn parse_stmts_from_str(s: &str) -> Result<Vec<Statement>, ParseError> {
+pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
     let tokens = lex(s)?;
     let mut token_ptr = &tokens[..];
 
     let mut res = vec![];
     while !token_ptr.is_empty() {
-        res.push(parse_statement(&mut token_ptr)?);
+        res.push(parse_block_expression(&mut token_ptr)?);
     }
 
     Ok(res)
@@ -743,14 +765,11 @@ mod tests {
 
     #[test]
     fn test_parse_bool_literal() {
-        let ast = parse_stmts_from_str("true;").unwrap();
+        let ast = parse_exprs_from_str("true;").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
-                Position(0),
-                Statement_::Expr(Expression(Position(0), Expression_::BoolLiteral(true)))
-            )]
+            vec![Expression(Position(0), Expression_::BoolLiteral(true))]
         );
     }
 
@@ -778,31 +797,28 @@ mod tests {
 
     #[test]
     fn test_parse_variable() {
-        let ast = parse_stmts_from_str("abc_def;").unwrap();
+        let ast = parse_exprs_from_str("abc_def;").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::Expr(Expression(
-                    Position(0),
-                    Expression_::Variable(VariableName("abc_def".to_string()))
-                ))
+                Expression_::Variable(VariableName("abc_def".to_string()))
             )]
         );
     }
 
     #[test]
     fn test_parse_let() {
-        let ast = parse_stmts_from_str("let x = 1;").unwrap();
+        let ast = parse_exprs_from_str("let x = 1;").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::Let(
+                Expression_::Let(
                     VariableName("x".into()),
-                    Expression(Position(8), Expression_::IntLiteral(1))
+                    Box::new(Expression(Position(8), Expression_::IntLiteral(1)))
                 )
             )]
         );
@@ -810,14 +826,14 @@ mod tests {
 
     #[test]
     fn test_parse_if_else() {
-        let ast = parse_stmts_from_str("if (true) {} else {}").unwrap();
+        let ast = parse_exprs_from_str("if (true) {} else {}").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::If(
-                    Expression(Position(4), Expression_::BoolLiteral(true)),
+                Expression_::If(
+                    Box::new(Expression(Position(4), Expression_::BoolLiteral(true))),
                     vec![],
                     vec![],
                 )
@@ -827,19 +843,25 @@ mod tests {
 
     #[test]
     fn test_parse_else_if() {
-        let ast = parse_stmts_from_str("if (x) {} else if (y) {}").unwrap();
+        let ast = parse_exprs_from_str("if (x) {} else if (y) {}").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::If(
-                    Expression(Position(4), Expression_::Variable(VariableName("x".into()))),
+                Expression_::If(
+                    Box::new(Expression(
+                        Position(4),
+                        Expression_::Variable(VariableName("x".into()))
+                    )),
                     vec![],
-                    vec![Statement(
+                    vec![Expression(
                         Position(15),
-                        Statement_::If(
-                            Expression(Position(19), Expression_::Variable(VariableName("y".into()))),
+                        Expression_::If(
+                            Box::new(Expression(
+                                Position(19),
+                                Expression_::Variable(VariableName("y".into()))
+                            )),
                             vec![],
                             vec![],
                         )
@@ -851,14 +873,14 @@ mod tests {
 
     #[test]
     fn test_parse_if() {
-        let ast = parse_stmts_from_str("if (true) {}").unwrap();
+        let ast = parse_exprs_from_str("if (true) {}").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::If(
-                    Expression(Position(4), Expression_::BoolLiteral(true)),
+                Expression_::If(
+                    Box::new(Expression(Position(4), Expression_::BoolLiteral(true))),
                     vec![],
                     vec![],
                 )
@@ -868,13 +890,16 @@ mod tests {
 
     #[test]
     fn test_parse_return() {
-        let ast = parse_stmts_from_str("return true;").unwrap();
+        let ast = parse_exprs_from_str("return true;").unwrap();
 
         assert_eq!(
             ast,
-            vec![Statement(
+            vec![Expression(
                 Position(0),
-                Statement_::Return(Expression(Position(7), Expression_::BoolLiteral(true)))
+                Expression_::Return(Box::new(Expression(
+                    Position(7),
+                    Expression_::BoolLiteral(true)
+                )))
             )]
         );
     }

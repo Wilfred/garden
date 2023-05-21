@@ -360,9 +360,6 @@ fn parse_general_expression(
         }
 
         if let Some(token) = peek_token(tokens) {
-            if token.text == "if" {
-                return parse_if_expression(tokens);
-            }
             if token.text == "let" {
                 return parse_let_expression(tokens);
             }
@@ -372,6 +369,12 @@ fn parse_general_expression(
             if token.text == "while" {
                 return parse_while_expression(tokens);
             }
+        }
+    }
+
+    if let Some(token) = peek_token(tokens) {
+        if token.text == "if" {
+            return parse_if_expression(tokens);
         }
     }
 

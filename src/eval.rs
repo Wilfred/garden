@@ -1033,6 +1033,15 @@ mod tests {
     }
 
     #[test]
+    fn test_eval_if() {
+        let stmts = parse_exprs_from_str("let foo = if (true) { 1; } else { 2; }; foo;").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(1));
+    }
+
+    #[test]
     fn test_eval_empty() {
         let mut env = Env::default();
         let value = eval_exprs(&[], &mut env).unwrap();

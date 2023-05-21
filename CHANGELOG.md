@@ -6,6 +6,13 @@ Syntax: `if` is now an expression, so the following is legal:
 let x = if (y) { 1; } else { 2; };
 ```
 
+Garden executable: Added the `run` command, so the following now
+works:
+
+```
+$ garden run sample_programs/hello_world.gdn
+```
+
 # 0.3 (released 17 May 2023)
 
 **Goal: Basic Emacs integration**

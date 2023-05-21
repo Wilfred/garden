@@ -62,11 +62,26 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 let mut session = Session {
                     history: src.clone(),
                     interrupted,
-                    has_attached_stdout: false,
+                    has_attached_stdout: true,
                 };
 
-                // TODO: files should only contain defs, not expressions.
+                // TODO: files should only contain defs, not
+                // expressions. Ignore the expressions.
                 match eval_def_or_exprs(&stmts, &mut env, &mut session) {
+                    Ok(_) => {}
+                    Err(EvalError::ResumableError(e)) => {
+                        eprintln!("Error: {}", e);
+                    }
+                    Err(EvalError::Interrupted) => {
+                        eprintln!("Interrupted");
+                    }
+                    Err(EvalError::Stop(_)) => {
+                        eprintln!("Error (stopped)");
+                    }
+                }
+
+                let main_call_exprs = parse_def_or_expr_from_str("main();").unwrap();
+                match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(e)) => {
                         eprintln!("Error: {}", e);

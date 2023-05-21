@@ -375,7 +375,12 @@ fn parse_general_expression(
         }
     }
 
-    parse_simple_expression_or_binop(tokens)
+    let expr = parse_simple_expression_or_binop(tokens)?;
+    if !is_inline {
+        let _ = require_token(tokens, ";")?;
+    }
+
+    Ok(expr)
 }
 
 fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {

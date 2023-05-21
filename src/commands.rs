@@ -8,7 +8,7 @@ use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
     parse::{
-        parse_def_or_expr_from_str, parse_expr_from_str, Expression, ParseError, VariableName,
+        parse_def_or_expr_from_str, parse_inline_expr_from_str, Expression, ParseError, VariableName,
     },
 };
 
@@ -80,7 +80,7 @@ impl Command {
                     return Ok(Command::Parse(Some(src.to_owned())));
                 }
                 if let Some(src) = split_first_word(s, ":replace") {
-                    return match parse_expr_from_str(&src) {
+                    return match parse_inline_expr_from_str(&src) {
                         Ok(expr) => Ok(Command::Replace(Some(expr))),
                         Err(_) => Ok(Command::Replace(None)),
                     };

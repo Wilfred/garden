@@ -980,7 +980,13 @@ mod tests {
     fn test_eval_persist_env() {
         let mut env = Env::default();
 
-        let exprs = vec![Expression(Position(0), Expression_::BoolLiteral(true))];
+        let exprs = vec![Expression(
+            Position(0),
+            Expression_::Let(
+                VariableName("foo".into()),
+                Box::new(Expression(Position(0), Expression_::BoolLiteral(true))),
+            ),
+        )];
         eval_exprs(&exprs, &mut env).unwrap();
 
         let exprs = vec![Expression(

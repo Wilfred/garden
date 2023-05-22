@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
@@ -27,6 +28,7 @@ pub enum Value {
 pub enum BuiltinFunctionKind {
     Print,
     IntToString,
+    Shell,
 }
 
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
@@ -45,6 +47,13 @@ print(\"hello world\");
 int_to_string(123); // \"123\"
 ```"
         }
+        BuiltinFunctionKind::Shell => {
+            "Execute the given string as a shell command, and return stdout concatenated with stderr.
+
+```
+shell(\"ls\");
+```"
+        }
     }
 }
 
@@ -58,6 +67,7 @@ impl Display for Value {
                 let name = match kind {
                     BuiltinFunctionKind::Print => "print",
                     BuiltinFunctionKind::IntToString => "int_to_string",
+                    BuiltinFunctionKind::Shell => "shell",
                 };
                 write!(f, "(function: {})", name)
             }
@@ -105,6 +115,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("int_to_string".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::IntToString),
+        );
+        file_scope.insert(
+            VariableName("shell".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::Shell),
         );
 
         Self {
@@ -776,6 +790,69 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                         serde_json::to_string(&response).unwrap();
                                                     println!("{}", serialized);
                                                 }
+                                            }
+                                            v => {
+                                                let mut saved_values = vec![];
+                                                for value in arg_values.iter().rev() {
+                                                    saved_values.push(value.clone());
+                                                }
+                                                saved_values.push(receiver_value.clone());
+                                                restore_stack_frame(
+                                                    env,
+                                                    stack_frame,
+                                                    (done_children, Expression(offset, expr_copy)),
+                                                    &saved_values,
+                                                    Some(ErrorKind::BadValue),
+                                                );
+
+                                                return Err(EvalError::ResumableError(format!(
+                                                    "Expected a string, but got: {}",
+                                                    v
+                                                )));
+                                            }
+                                        }
+                                        stack_frame.evalled_values.push(Value::Void);
+                                    }
+                                    BuiltinFunctionKind::Shell => {
+                                        if args.len() != 1 {
+                                            let mut saved_values = vec![receiver_value.clone()];
+                                            for value in arg_values.iter().rev() {
+                                                saved_values.push(value.clone());
+                                            }
+                                            restore_stack_frame(
+                                                env,
+                                                stack_frame,
+                                                (done_children, Expression(offset, expr_copy)),
+                                                &saved_values,
+                                                Some(ErrorKind::MalformedExpression),
+                                            );
+
+                                            return Err(EvalError::ResumableError(format!(
+                                                "Function shell requires 1 argument, but got: {}",
+                                                args.len()
+                                            )));
+                                        }
+                                        match &arg_values[0] {
+                                            Value::String(s) => {
+                                                // TODO: define a result type in garden to report errors to the user.
+                                                let output = std::process::Command::new(&s)
+                                                    .arg("/")
+                                                    .output()
+                                                    .expect("failed to execute process");
+
+                                                let mut s = String::new();
+                                                // TODO: complain if output is not UTF-8.
+                                                s.write_str(&String::from_utf8_lossy(
+                                                    &output.stdout,
+                                                ))
+                                                .unwrap();
+                                                s.write_str(&String::from_utf8_lossy(
+                                                    &output.stderr,
+                                                ))
+                                                .unwrap();
+
+                                                // TODO: why does shell('ls") evaluate to void?
+                                                stack_frame.evalled_values.push(Value::String(s));
                                             }
                                             v => {
                                                 let mut saved_values = vec![];

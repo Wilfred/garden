@@ -80,6 +80,7 @@ impl Display for Value {
                     match c {
                         '"' => write!(f, "\\\"")?,
                         '\\' => write!(f, "\\\\")?,
+                        '\n' => write!(f, "\\n")?,
                         _ => write!(f, "{}", c)?,
                     }
                 }
@@ -1211,7 +1212,7 @@ mod tests {
 
     #[test]
     fn test_display_value_for_string_with_doublequote() {
-        let value = Value::String("foo \\ \" bar".into());
-        assert_eq!(format!("{}", value), "\"foo \\\\ \\\" bar\"");
+        let value = Value::String("foo \\ \" \n bar".into());
+        assert_eq!(format!("{}", value), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

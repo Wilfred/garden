@@ -1126,6 +1126,18 @@ mod tests {
     }
 
     #[test]
+    fn test_eval_list_literal() {
+        let stmts = parse_exprs_from_str("[1 + 2, 3 * 4];").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
+        assert_eq!(
+            value,
+            Value::List(vec![Value::Integer(3), Value::Integer(12)])
+        );
+    }
+
+    #[test]
     fn test_eval_let() {
         let stmts = parse_exprs_from_str("let foo = true; foo;").unwrap();
 

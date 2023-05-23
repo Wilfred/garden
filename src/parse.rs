@@ -163,6 +163,44 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
     Ok(expr)
 }
 
+fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let open_brace = require_token(tokens, "[")?;
+
+    let mut items = vec![];
+    loop {
+        if next_token_is(tokens, "]") {
+            break;
+        }
+
+        let item = parse_inline_expression(tokens)?;
+        items.push(item);
+
+        if let Some(token) = peek_token(tokens) {
+            if token.text == "," {
+                pop_token(tokens);
+            } else if token.text == "]" {
+                break;
+            } else {
+                return Err(ParseError::OtherError(format!(
+                    "Invalid syntax: Expected `,` or `]` here, but got `{}`",
+                    token.text
+                )));
+            }
+        } else {
+            return Err(ParseError::Incomplete(
+                "Invalid syntax: Expected `,` or `]` here, but got EOF".to_string(),
+            ));
+        }
+    }
+
+    require_token(tokens, "]")?;
+
+    Ok(Expression(
+        open_brace.offset,
+        Expression_::ListLiteral(items),
+    ))
+}
+
 fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     let mut res = vec![];
 
@@ -279,6 +317,10 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     if let Some(token) = peek_token(tokens) {
         if token.text == "(" {
             return parse_parenthesis_expression(tokens);
+        }
+
+        if token.text == "[" {
+            return parse_list_expression(tokens);
         }
 
         if token.text == "true" {
@@ -685,7 +727,7 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
             }
         }
         for token_char in [
-            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>',
+            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']',
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {

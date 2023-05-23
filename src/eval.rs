@@ -875,7 +875,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                                 )));
                                             }
                                         }
-                                        stack_frame.evalled_values.push(Value::Void);
                                     }
                                     BuiltinFunctionKind::IntToString => {
                                         if args.len() != 1 {

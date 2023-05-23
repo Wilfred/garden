@@ -458,7 +458,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .exprs_to_eval
                                 .push((true, Expression(offset, expr_copy)));
 
-                            for item in items.iter().rev() {
+                            for item in items.iter() {
                                 stack_frame.exprs_to_eval.push((false, item.clone()));
                             }
                         }

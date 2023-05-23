@@ -233,6 +233,47 @@ fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     ))
 }
 
+fn unescape_string(s: &str) -> String {
+    // Trim doublequotes.
+    let s = &s[1..s.len() - 1];
+
+    let mut res = String::with_capacity(s.len());
+
+    let mut i = 0;
+    let chars: Vec<_> = s.chars().collect();
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '\\' {
+            match chars.get(i + 1) {
+                Some('n') => {
+                    res.push('\n');
+                    i += 2;
+                }
+                Some('\\') => {
+                    res.push('\\');
+                    i += 2;
+                }
+                Some('"') => {
+                    res.push('"');
+                    i += 2;
+                }
+                _ => {
+                    // TODO: an invalid escape sequence such as \z
+                    // should be a parse error.
+                    res.push(c);
+
+                    i += 1;
+                }
+            }
+        } else {
+            res.push(c);
+            i += 1;
+        }
+    }
+
+    res
+}
+
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "(" {
@@ -257,7 +298,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             pop_token(tokens);
             return Ok(Expression(
                 token.offset,
-                Expression_::StringLiteral(token.text[1..token.text.len() - 1].to_owned()),
+                Expression_::StringLiteral(unescape_string(token.text)),
             ));
         }
 
@@ -595,7 +636,7 @@ pub fn parse_inline_expr_from_str(s: &str) -> Result<Expression, ParseError> {
 
 lazy_static! {
     static ref INTEGER_RE: Regex = Regex::new(r"^[0-9]+").unwrap();
-    static ref STRING_RE: Regex = Regex::new(r##"^"[^"]*""##).unwrap();
+    static ref STRING_RE: Regex = Regex::new(r##"^"(\\"|[^"])*""##).unwrap();
     static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 }
 
@@ -775,6 +816,19 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(Position(0), Expression_::BoolLiteral(true))]
+        );
+    }
+
+    #[test]
+    fn test_parse_string_literal() {
+        let ast = parse_exprs_from_str("\"a\\nb\\\\c\\\"d\";").unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Expression(
+                Position(0),
+                Expression_::StringLiteral("a\nb\\c\"d".into())
+            )]
         );
     }
 

@@ -6,6 +6,9 @@ Syntax: `if` is now an expression, so the following is legal:
 let x = if (y) { 1; } else { 2; };
 ```
 
+Syntax: Added support for escaping in string literals, so `"\n"`,
+`"\\"` and `"\""` now work correctly.
+
 Garden executable: Added the `run` command, so the following now
 works:
 

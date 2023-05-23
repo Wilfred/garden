@@ -40,6 +40,7 @@ pub enum Expression_ {
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
+    ListLiteral(Vec<Expression>),
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),

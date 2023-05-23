@@ -21,6 +21,7 @@ pub enum Value {
     ),
     BuiltinFunction(BuiltinFunctionKind),
     String(String),
+    List(Vec<Value>),
     Void,
 }
 
@@ -86,6 +87,19 @@ impl Display for Value {
                 }
 
                 write!(f, "\"")
+            }
+            Value::List(items) => {
+                write!(f, "[")?;
+
+                for (i, item) in items.iter().enumerate() {
+                    if i != 0 {
+                        write!(f, ", ")?;
+                    }
+
+                    write!(f, "{}", item)?;
+                }
+
+                write!(f, "]")
             }
         }
     }
@@ -428,6 +442,26 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::StringLiteral(s) => {
                         stack_frame.evalled_values.push(Value::String(s));
+                    }
+                    Expression_::ListLiteral(items) => {
+                        if done_children {
+                            let mut list_values = Vec::with_capacity(items.len());
+                            for _ in 0..items.len() {
+                                list_values.push(stack_frame.evalled_values.pop().expect(
+                                    "Value stack should have sufficient items for the list literal",
+                                ));
+                            }
+
+                            stack_frame.evalled_values.push(Value::List(list_values));
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(offset, expr_copy)));
+
+                            for item in items.iter().rev() {
+                                stack_frame.exprs_to_eval.push((false, item.clone()));
+                            }
+                        }
                     }
                     Expression_::Variable(name) => {
                         if let Some(value) = get_var(&name, &stack_frame, &env) {

@@ -5,6 +5,8 @@
 Garden is an experimental programming language exploring PL design on
 running programs.
 
+Status: Pre-alpha, almost nothing works yet.
+
 ## License
 
 MIT.

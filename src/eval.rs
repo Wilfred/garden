@@ -52,7 +52,7 @@ int_to_string(123); // \"123\"
             "Execute the given string as a shell command, and return stdout concatenated with stderr.
 
 ```
-shell(\"ls\");
+shell(\"ls\", [\"-l\", \"/\"]);
 ```"
         }
     }
@@ -229,6 +229,29 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                 );
             }
         }
+    }
+}
+
+// If value is a list of strings, return the strings as a vec. Return
+// an error otherwise.
+fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
+    match value {
+        Value::List(items) => {
+            let mut res: Vec<String> = vec![];
+            for item in items {
+                match item {
+                    Value::String(s) => {
+                        res.push(s.clone());
+                    }
+                    _ => {
+                        return Err(item.clone());
+                    }
+                }
+            }
+
+            Ok(res)
+        }
+        _ => Err(value.clone()),
     }
 }
 
@@ -849,7 +872,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame.evalled_values.push(Value::Void);
                                     }
                                     BuiltinFunctionKind::Shell => {
-                                        if args.len() != 1 {
+                                        if args.len() != 2 {
                                             let mut saved_values = vec![receiver_value.clone()];
                                             for value in arg_values.iter().rev() {
                                                 saved_values.push(value.clone());
@@ -863,31 +886,65 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                             );
 
                                             return Err(EvalError::ResumableError(format!(
-                                                "Function shell requires 1 argument, but got: {}",
+                                                "Function shell requires 2 arguments, but got: {}",
                                                 args.len()
                                             )));
                                         }
                                         match &arg_values[0] {
                                             Value::String(s) => {
-                                                // TODO: define a result type in garden to report errors to the user.
-                                                let output = std::process::Command::new(&s)
-                                                    .arg("/")
-                                                    .output()
-                                                    .expect("failed to execute process");
+                                                match as_string_list(&arg_values[1]) {
+                                                    Ok(items) => {
+                                                        let mut command =
+                                                            std::process::Command::new(&s);
+                                                        for item in items {
+                                                            command.arg(item);
+                                                        }
 
-                                                let mut s = String::new();
-                                                // TODO: complain if output is not UTF-8.
-                                                s.write_str(&String::from_utf8_lossy(
-                                                    &output.stdout,
-                                                ))
-                                                .unwrap();
-                                                s.write_str(&String::from_utf8_lossy(
-                                                    &output.stderr,
-                                                ))
-                                                .unwrap();
+                                                        // TODO: define a result type in garden to report errors to the user.
+                                                        let output = command
+                                                            .output()
+                                                            .expect("failed to execute process");
 
-                                                // TODO: why does shell('ls") evaluate to void?
-                                                stack_frame.evalled_values.push(Value::String(s));
+                                                        let mut s = String::new();
+                                                        // TODO: complain if output is not UTF-8.
+                                                        s.write_str(&String::from_utf8_lossy(
+                                                            &output.stdout,
+                                                        ))
+                                                        .unwrap();
+                                                        s.write_str(&String::from_utf8_lossy(
+                                                            &output.stderr,
+                                                        ))
+                                                        .unwrap();
+
+                                                        stack_frame
+                                                            .evalled_values
+                                                            .push(Value::String(s));
+                                                    }
+                                                    Err(v) => {
+                                                        let mut saved_values = vec![];
+                                                        for value in arg_values.iter().rev() {
+                                                            saved_values.push(value.clone());
+                                                        }
+                                                        saved_values.push(receiver_value.clone());
+                                                        restore_stack_frame(
+                                                            env,
+                                                            stack_frame,
+                                                            (
+                                                                done_children,
+                                                                Expression(offset, expr_copy),
+                                                            ),
+                                                            &saved_values,
+                                                            Some(ErrorKind::BadValue),
+                                                        );
+
+                                                        return Err(EvalError::ResumableError(
+                                                            format!(
+                                                                "Expected a list, but got: {}",
+                                                                v
+                                                            ),
+                                                        ));
+                                                    }
+                                                }
                                             }
                                             v => {
                                                 let mut saved_values = vec![];

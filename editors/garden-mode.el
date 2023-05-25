@@ -21,10 +21,19 @@
 (defvar garden-executable
   "/home/wilfred/projects/garden/target/debug/garden")
 
-(defun garden-send (start end)
-  (interactive "r")
-  (garden-send-input (buffer-substring-no-properties start end))
-  (deactivate-mark))
+(defun garden-send ()
+  (interactive)
+  (let ((src
+         (if (region-active-p)
+             (buffer-substring-no-properties (region-beginning) (region-end))
+           ;; TODO: send the expression before point, not just the whole line.
+           (buffer-substring-no-properties
+            (line-beginning-position)
+            (line-end-position)))))
+    ;; TODO: report error immediately if any occurred.
+    (garden-send-input src)
+    (when (region-active-p)
+      (deactivate-mark))))
 
 (defun garden--propertize-read-only (s)
   (propertize

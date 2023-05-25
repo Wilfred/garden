@@ -81,6 +81,7 @@ the user entering a value in the *garden* buffer."
         (let ((s
                (cond
                 (response-err-value
+                 (message "%s" response-err-value)
                  (garden--fontify-error (concat response-err-value "\n")))
                 ((string= response-kind "ready")
                  (garden--propertize-read-only (concat response-ok-value "\n")))

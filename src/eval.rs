@@ -30,6 +30,7 @@ pub enum BuiltinFunctionKind {
     Print,
     IntToString,
     Shell,
+    ListAppend,
 }
 
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
@@ -48,11 +49,18 @@ print(\"hello world\");
 int_to_string(123); // \"123\"
 ```"
         }
-        BuiltinFunctionKind::Shell => {
+        BuiltinFunctionKind::Shell =>{
             "Execute the given string as a shell command, and return stdout concatenated with stderr.
 
 ```
 shell(\"ls\", [\"-l\", \"/\"]);
+```"
+        }
+        BuiltinFunctionKind::ListAppend =>{
+            "Return a new list with the value added to the end.
+
+```
+list_append([10], 11); // [10, 11]
 ```"
         }
     }
@@ -69,6 +77,7 @@ impl Display for Value {
                     BuiltinFunctionKind::Print => "print",
                     BuiltinFunctionKind::IntToString => "int_to_string",
                     BuiltinFunctionKind::Shell => "shell",
+                    BuiltinFunctionKind::ListAppend => "list_append",
                 };
                 write!(f, "(function: {})", name)
             }
@@ -130,6 +139,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("int_to_string".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::IntToString),
+        );
+        file_scope.insert(
+            VariableName("list_append".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::ListAppend),
         );
         file_scope.insert(
             VariableName("shell".to_owned()),
@@ -967,6 +980,54 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                             }
                                         }
                                     }
+                                    BuiltinFunctionKind::ListAppend => {
+                                        if args.len() != 2 {
+                                            let mut saved_values = vec![receiver_value.clone()];
+                                            for value in arg_values.iter().rev() {
+                                                saved_values.push(value.clone());
+                                            }
+                                            restore_stack_frame(
+                                                env,
+                                                stack_frame,
+                                                (done_children, Expression(offset, expr_copy)),
+                                                &saved_values,
+                                                Some(ErrorKind::MalformedExpression),
+                                            );
+
+                                            return Err(EvalError::ResumableError(format!(
+                                                "Function list_append requires 2 arguments, but got: {}",
+                                                args.len()
+                                            )));
+                                        }
+                                        match &arg_values[0] {
+                                            Value::List(items) => {
+                                                let mut new_items = items.clone();
+                                                new_items.push(arg_values[1].clone());
+                                                stack_frame
+                                                    .evalled_values
+                                                    .push(Value::List(new_items));
+                                            }
+                                            v => {
+                                                let mut saved_values = vec![];
+                                                for value in arg_values.iter().rev() {
+                                                    saved_values.push(value.clone());
+                                                }
+                                                saved_values.push(receiver_value.clone());
+                                                restore_stack_frame(
+                                                    env,
+                                                    stack_frame,
+                                                    (done_children, Expression(offset, expr_copy)),
+                                                    &saved_values,
+                                                    Some(ErrorKind::BadValue),
+                                                );
+
+                                                return Err(EvalError::ResumableError(format!(
+                                                    "Expected a list, but got: {}",
+                                                    v
+                                                )));
+                                            }
+                                        }
+                                    }
                                     BuiltinFunctionKind::IntToString => {
                                         if args.len() != 1 {
                                             let mut saved_values = vec![];
@@ -1226,6 +1287,22 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&[], &mut env).unwrap();
         assert_eq!(value, Value::Void);
+    }
+
+    #[test]
+    fn test_eval_list_append() {
+        let stmts = parse_exprs_from_str("list_append([1, 2], 3);").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
+        assert_eq!(
+            value,
+            Value::List(vec![
+                Value::Integer(1),
+                Value::Integer(2),
+                Value::Integer(3)
+            ])
+        );
     }
 
     #[test]

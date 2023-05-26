@@ -363,6 +363,26 @@ fn eval_while(
     Ok(())
 }
 
+fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorMessage> {
+    if !stack_frame.bindings.contains_key(&variable) {
+        return Err(ErrorMessage(format!(
+            "{} is not currently bound. Try `let {} = something`.",
+            variable.0, variable.0
+        )));
+    }
+
+    let expr_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for let value");
+    stack_frame
+        .bindings
+        .insert(variable.clone(), expr_value.clone());
+    stack_frame.evalled_values.push(expr_value);
+
+    Ok(())
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -454,7 +474,8 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Assign(variable, expr) => {
                         if done_children {
-                            if !stack_frame.bindings.contains_key(&variable) {
+                            if let Err(ErrorMessage(msg)) = eval_assign(&mut stack_frame, &variable)
+                            {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
@@ -462,18 +483,8 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &[],
                                     Some(ErrorKind::MalformedExpression),
                                 );
-                                return Err(EvalError::ResumableError(format!(
-                                    "{} is not currently bound. Try `let {} = something`.",
-                                    variable.0, variable.0
-                                )));
+                                return Err(EvalError::ResumableError(msg));
                             }
-
-                            let expr_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for let value");
-                            stack_frame.bindings.insert(variable, expr_value.clone());
-                            stack_frame.evalled_values.push(expr_value);
                         } else {
                             stack_frame
                                 .exprs_to_eval

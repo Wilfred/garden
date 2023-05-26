@@ -301,6 +301,37 @@ fn restore_stack_frame(
     env.stack.push(stack_frame);
 }
 
+struct ErrorMessage(String);
+
+fn eval_if(
+    stack_frame: &mut StackFrame,
+    condition: &Value,
+    then_body: &[Expression],
+    else_body: &[Expression],
+) -> Result<(), ErrorMessage> {
+    match condition {
+        Value::Boolean(b) => {
+            if *b {
+                for expr in then_body.iter().rev() {
+                    stack_frame.exprs_to_eval.push((false, expr.clone()));
+                }
+            } else {
+                for expr in else_body.iter().rev() {
+                    stack_frame.exprs_to_eval.push((false, expr.clone()));
+                }
+            }
+        }
+        v => {
+            return Err(ErrorMessage(format!(
+                "Expected a boolean when evaluating `if`, but got: {}",
+                v
+            )));
+        }
+    }
+
+    Ok(())
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -331,31 +362,17 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for if condition");
-                            match condition_value.clone() {
-                                Value::Boolean(b) => {
-                                    if b {
-                                        for expr in then_body.iter().rev() {
-                                            stack_frame.exprs_to_eval.push((false, expr.clone()));
-                                        }
-                                    } else {
-                                        for expr in else_body.iter().rev() {
-                                            stack_frame.exprs_to_eval.push((false, expr.clone()));
-                                        }
-                                    }
-                                }
-                                v => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[condition_value],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected a boolean when evaluating `if`, but got: {}",
-                                        v
-                                    )));
-                                }
+                            if let Err(ErrorMessage(msg)) =
+                                eval_if(&mut stack_frame, &condition_value, then_body, else_body)
+                            {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(offset, expr_copy)),
+                                    &[condition_value],
+                                    Some(ErrorKind::BadValue),
+                                );
+                                return Err(EvalError::ResumableError(msg));
                             }
                         } else {
                             stack_frame

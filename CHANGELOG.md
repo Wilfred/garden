@@ -11,7 +11,8 @@ Syntax: Added support for escaping in string literals, so `"\n"`,
 
 Syntax: Added list literals, e.g. `[1, 2 + 3]`.
 
-Standard library: Added the function `list_append`.
+Standard library: Added the functions `list_append` and
+`string_length`.
 
 Garden executable: Added the `run` command, so the following now
 works:

@@ -31,6 +31,7 @@ pub enum BuiltinFunctionKind {
     IntToString,
     Shell,
     ListAppend,
+    StringLength,
 }
 
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
@@ -63,6 +64,13 @@ shell(\"ls\", [\"-l\", \"/\"]);
 list_append([10], 11); // [10, 11]
 ```"
         }
+        BuiltinFunctionKind::StringLength => {
+            "Return the number of characters (codepoints) in the string.
+
+```
+string_length(\"abc\"); // 3
+```"
+        }
     }
 }
 
@@ -78,6 +86,7 @@ impl Display for Value {
                     BuiltinFunctionKind::IntToString => "int_to_string",
                     BuiltinFunctionKind::Shell => "shell",
                     BuiltinFunctionKind::ListAppend => "list_append",
+                    BuiltinFunctionKind::StringLength => "string_length",
                 };
                 write!(f, "(function: {})", name)
             }
@@ -147,6 +156,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("shell".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::Shell),
+        );
+        file_scope.insert(
+            VariableName("string_length".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::StringLength),
         );
 
         Self {
@@ -884,6 +897,52 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         }
                                         stack_frame.evalled_values.push(Value::Void);
                                     }
+                                    BuiltinFunctionKind::StringLength => {
+                                        if args.len() != 1 {
+                                            let mut saved_values = vec![receiver_value.clone()];
+                                            for value in arg_values.iter().rev() {
+                                                saved_values.push(value.clone());
+                                            }
+                                            restore_stack_frame(
+                                                env,
+                                                stack_frame,
+                                                (done_children, Expression(offset, expr_copy)),
+                                                &saved_values,
+                                                Some(ErrorKind::MalformedExpression),
+                                            );
+
+                                            return Err(EvalError::ResumableError(format!(
+                                                "Function string_length requires 1 argument, but got: {}",
+                                                args.len()
+                                            )));
+                                        }
+                                        match &arg_values[0] {
+                                            Value::String(s) => {
+                                                stack_frame
+                                                    .evalled_values
+                                                    .push(Value::Integer(s.chars().count() as i64));
+                                            }
+                                            v => {
+                                                let mut saved_values = vec![];
+                                                for value in arg_values.iter().rev() {
+                                                    saved_values.push(value.clone());
+                                                }
+                                                saved_values.push(receiver_value.clone());
+                                                restore_stack_frame(
+                                                    env,
+                                                    stack_frame,
+                                                    (done_children, Expression(offset, expr_copy)),
+                                                    &saved_values,
+                                                    Some(ErrorKind::BadValue),
+                                                );
+
+                                                return Err(EvalError::ResumableError(format!(
+                                                    "Expected a string, but got: {}",
+                                                    v
+                                                )));
+                                            }
+                                        }
+                                    }
                                     BuiltinFunctionKind::Shell => {
                                         if args.len() != 2 {
                                             let mut saved_values = vec![receiver_value.clone()];
@@ -1303,6 +1362,15 @@ mod tests {
                 Value::Integer(3)
             ])
         );
+    }
+
+    #[test]
+    fn test_eval_string_length() {
+        let stmts = parse_exprs_from_str("string_length(\"abc\");").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(3));
     }
 
     #[test]

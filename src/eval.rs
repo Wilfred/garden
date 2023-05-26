@@ -332,6 +332,37 @@ fn eval_if(
     Ok(())
 }
 
+fn eval_while(
+    stack_frame: &mut StackFrame,
+    expr: Expression,
+    condition: &Value,
+    body: &[Expression],
+) -> Result<(), ErrorMessage> {
+    match condition {
+        Value::Boolean(b) => {
+            if *b {
+                // Start loop evaluation again.
+                stack_frame.exprs_to_eval.push((false, expr));
+
+                // Evaluate the body.
+                for expr in body.iter().rev() {
+                    stack_frame.exprs_to_eval.push((false, expr.clone()));
+                }
+            } else {
+                stack_frame.evalled_values.push(Value::Void);
+            }
+        }
+        v => {
+            return Err(ErrorMessage(format!(
+                "Expected a boolean when evaluating `while`, but got: {}",
+                v
+            )));
+        }
+    }
+
+    Ok(())
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -387,35 +418,21 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .evalled_values
                                 .pop()
                                 .expect("Popped an empty value stack for if condition");
-                            match condition_value.clone() {
-                                Value::Boolean(b) => {
-                                    if b {
-                                        // Start loop evaluation again.
-                                        stack_frame
-                                            .exprs_to_eval
-                                            .push((false, Expression(offset, expr_copy)));
 
-                                        // Evaluate the body.
-                                        for expr in body.iter().rev() {
-                                            stack_frame.exprs_to_eval.push((false, expr.clone()));
-                                        }
-                                    } else {
-                                        stack_frame.evalled_values.push(Value::Void);
-                                    }
-                                }
-                                v => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[condition_value],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected a boolean when evaluating `while`, but got: {}",
-                                        v
-                                    )));
-                                }
+                            if let Err(ErrorMessage(msg)) = eval_while(
+                                &mut stack_frame,
+                                Expression(offset, expr_copy.clone()),
+                                &condition_value,
+                                body,
+                            ) {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(offset, expr_copy)),
+                                    &[condition_value],
+                                    Some(ErrorKind::BadValue),
+                                );
+                                return Err(EvalError::ResumableError(msg));
                             }
                         } else {
                             stack_frame

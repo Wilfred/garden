@@ -344,10 +344,14 @@ fn eval_if(
 fn eval_while(
     stack_frame: &mut StackFrame,
     expr: Expression,
-    condition: &Value,
     body: &[Expression],
-) -> Result<(), ErrorMessage> {
-    match condition {
+) -> Result<(), ErrorInfo> {
+    let condition_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for if condition");
+
+    match &condition_value {
         Value::Boolean(b) => {
             if *b {
                 // Start loop evaluation again.
@@ -362,10 +366,10 @@ fn eval_while(
             }
         }
         v => {
-            return Err(ErrorMessage(format!(
-                "Expected a boolean when evaluating `while`, but got: {}",
-                v
-            )));
+            return Err(ErrorInfo {
+                message: format!("Expected a boolean when evaluating `while`, but got: {}", v),
+                restore_values: vec![condition_value],
+            });
         }
     }
 
@@ -460,25 +464,22 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::While(condition, ref body) => {
                         if done_children {
-                            let condition_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for if condition");
-
-                            if let Err(ErrorMessage(msg)) = eval_while(
+                            if let Err(ErrorInfo {
+                                message,
+                                restore_values,
+                            }) = eval_while(
                                 &mut stack_frame,
                                 Expression(offset, expr_copy.clone()),
-                                &condition_value,
                                 body,
                             ) {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
                                     (done_children, Expression(offset, expr_copy)),
-                                    &[condition_value],
+                                    &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
-                                return Err(EvalError::ResumableError(msg));
+                                return Err(EvalError::ResumableError(message));
                             }
                         } else {
                             stack_frame

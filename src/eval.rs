@@ -376,12 +376,15 @@ fn eval_while(
     Ok(())
 }
 
-fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorMessage> {
+fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
     if !stack_frame.bindings.contains_key(&variable) {
-        return Err(ErrorMessage(format!(
-            "{} is not currently bound. Try `let {} = something`.",
-            variable.0, variable.0
-        )));
+        return Err(ErrorInfo {
+            message: format!(
+                "{} is not currently bound. Try `let {} = something`.",
+                variable.0, variable.0
+            ),
+            restore_values: vec![],
+        });
     }
 
     let expr_value = stack_frame
@@ -501,16 +504,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Assign(variable, expr) => {
                         if done_children {
-                            if let Err(ErrorMessage(msg)) = eval_assign(&mut stack_frame, &variable)
+                            if let Err(ErrorInfo {
+                                message,
+                                restore_values,
+                            }) = eval_assign(&mut stack_frame, &variable)
                             {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
                                     (done_children, Expression(offset, expr_copy)),
-                                    &[],
+                                    &restore_values,
                                     Some(ErrorKind::MalformedExpression),
                                 );
-                                return Err(EvalError::ResumableError(msg));
+                                return Err(EvalError::ResumableError(message));
                             }
                         } else {
                             stack_frame

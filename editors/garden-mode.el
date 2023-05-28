@@ -27,13 +27,20 @@
          (if (region-active-p)
              (buffer-substring-no-properties (region-beginning) (region-end))
            ;; TODO: send the expression before point, not just the whole line.
-           (buffer-substring-no-properties
-            (line-beginning-position)
-            (line-end-position)))))
+           (let* ((start-pos (line-beginning-position))
+                  (end-pos (line-end-position)))
+             (garden--flash-region start-pos end-pos)
+             (buffer-substring-no-properties start-pos end-pos)))))
     ;; TODO: report error immediately if any occurred.
     (garden-send-input src)
     (when (region-active-p)
       (deactivate-mark))))
+
+(defun garden--flash-region (start end)
+  "Temporarily highlight from START to END."
+  (let* ((overlay (make-overlay start end)))
+    (overlay-put overlay 'face 'highlight)
+    (run-with-timer 0.5 nil 'delete-overlay overlay)))
 
 (defun garden--propertize-read-only (s)
   (propertize

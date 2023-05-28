@@ -7,7 +7,8 @@ use crate::eval::ErrorKind;
 
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Position(pub usize);
+// TODO: consider just storing a pointer to the path.
+pub struct Position(pub usize, pub PathBuf);
 
 #[derive(Debug)]
 pub enum ParseError {
@@ -499,7 +500,7 @@ fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Express
     Ok(expr)
 }
 
-fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_definition(path: &PathBuf, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
             return parse_function(tokens);
@@ -514,7 +515,7 @@ fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError>
 
     // TODO: return a more meaningful position (e.g. EOF)
     Err(ParseError::OtherError(
-        Position(0),
+        Position(0, path.clone()),
         "Expected a definition, got EOF".to_string(),
     ))
 }
@@ -670,7 +671,10 @@ fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     ))
 }
 
-fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {
+fn parse_def_or_expr(
+    path: &PathBuf,
+    tokens: &mut &[Token<'_>],
+) -> Result<DefinitionsOrExpression, ParseError> {
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();
@@ -685,16 +689,19 @@ fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpressio
 
     let mut defs = vec![];
     while !tokens.is_empty() {
-        defs.push(parse_definition(tokens)?);
+        defs.push(parse_definition(path, tokens)?);
     }
 
     Ok(DefinitionsOrExpression::Defs(defs))
 }
 
-pub fn parse_def_or_expr_from_str(path: &PathBuf, s: &str) -> Result<DefinitionsOrExpression, ParseError> {
+pub fn parse_def_or_expr_from_str(
+    path: &PathBuf,
+    s: &str,
+) -> Result<DefinitionsOrExpression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
-    parse_def_or_expr(&mut token_ptr)
+    parse_def_or_expr(path, &mut token_ptr)
 }
 
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
@@ -742,7 +749,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         for token_str in ["==", "!=", "&&", "||"] {
             if s.starts_with(token_str) {
                 res.push(Token {
-                    offset: Position(offset),
+                    offset: Position(offset, path.clone()),
                     text: &s[0..token_str.len()],
                     preceding_comments,
                 });
@@ -757,7 +764,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {
-                    offset: Position(offset),
+                    offset: Position(offset, path.clone()),
                     text: &s[0..1],
                     preceding_comments,
                 });
@@ -769,7 +776,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         }
         if let Some(integer_match) = INTEGER_RE.find(s) {
             res.push(Token {
-                offset: Position(offset),
+                offset: Position(offset, path.clone()),
                 text: integer_match.as_str(),
                 preceding_comments,
             });
@@ -778,7 +785,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             offset += integer_match.end();
         } else if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
-                offset: Position(offset),
+                offset: Position(offset, path.clone()),
                 text: string_match.as_str(),
                 preceding_comments,
             });
@@ -787,7 +794,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             offset += string_match.end();
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push(Token {
-                offset: Position(offset),
+                offset: Position(offset, path.clone()),
                 text: variable_match.as_str(),
                 preceding_comments,
             });
@@ -801,7 +808,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
 
     if offset != s.len() {
         return Err(ParseError::OtherError(
-            Position(offset),
+            Position(offset, path.clone()),
             format!("Unrecognized syntax: '{}'", &s[offset..]),
         ));
     }

@@ -597,7 +597,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 Some(ErrorKind::MalformedExpression),
                             );
                             return Err(EvalError::ResumableError(format!(
-                                "Undefined variable: {}. What value would you like to use instead?",
+                                "Undefined variable: {}.",
                                 name.0
                             )));
                         }

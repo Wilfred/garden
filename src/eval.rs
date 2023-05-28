@@ -1297,20 +1297,6 @@ pub fn eval_exprs(
     eval_env(env, session)
 }
 
-// fn read_replacement(msg: &str) -> Result<Expression, String> {
-//     println!("{}: {}", "Unexpected error".bright_red(), msg);
-//     println!("What value should be used instead?\n");
-
-//     let mut rl: Editor<()> = Editor::new().unwrap();
-//     let input = rl
-//         .readline(&prompt_symbol(1))
-//         .expect("error: unable to read user input");
-
-//     let tokens = lex(input.trim())?;
-//     let mut token_ptr = &tokens[..];
-//     parse_expression(&mut token_ptr)
-// }
-
 #[cfg(test)]
 mod tests {
     use crate::parse::{parse_def_or_expr_from_str, parse_exprs_from_str, Position};

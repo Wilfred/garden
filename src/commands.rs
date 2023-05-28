@@ -8,7 +8,8 @@ use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
     parse::{
-        parse_def_or_expr_from_str, parse_inline_expr_from_str, Expression, ParseError, VariableName,
+        parse_def_or_expr_from_str, parse_inline_expr_from_str, Expression, ParseError,
+        VariableName,
     },
 };
 
@@ -313,7 +314,7 @@ pub fn run_command<T: Write>(
             if let Some(src) = src {
                 match parse_def_or_expr_from_str(&src) {
                     Ok(ast) => write!(buf, "{:?}", ast).unwrap(),
-                    Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(e)) => {
+                    Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(_, e)) => {
                         write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
                     }
                 };

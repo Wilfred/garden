@@ -9,7 +9,7 @@ pub struct Position(pub usize);
 
 #[derive(Debug)]
 pub enum ParseError {
-    OtherError(String),
+    OtherError(Position, String),
     Incomplete(String),
 }
 
@@ -122,10 +122,10 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<
             if token.text == expected {
                 Ok(token)
             } else {
-                Err(ParseError::OtherError(format!(
-                    "Expected `{}`, got `{}`",
-                    expected, token.text
-                )))
+                Err(ParseError::OtherError(
+                    token.offset,
+                    format!("Expected `{}`, got `{}`", expected, token.text),
+                ))
             }
         }
         None => Err(ParseError::Incomplete(format!(
@@ -143,10 +143,10 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
         let i: i64 = token.text.parse().unwrap();
         Ok(Expression(token.offset, Expression_::IntLiteral(i)))
     } else {
-        Err(ParseError::OtherError(format!(
-            "Not a valid integer literal: {}",
-            token.text
-        )))
+        Err(ParseError::OtherError(
+            token.offset,
+            format!("Not a valid integer literal: {}", token.text),
+        ))
     }
 }
 
@@ -181,10 +181,13 @@ fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseE
             } else if token.text == "]" {
                 break;
             } else {
-                return Err(ParseError::OtherError(format!(
-                    "Invalid syntax: Expected `,` or `]` here, but got `{}`",
-                    token.text
-                )));
+                return Err(ParseError::OtherError(
+                    token.offset,
+                    format!(
+                        "Invalid syntax: Expected `,` or `]` here, but got `{}`",
+                        token.text
+                    ),
+                ));
             }
         } else {
             return Err(ParseError::Incomplete(
@@ -349,10 +352,13 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             return parse_integer(tokens);
         }
 
-        return Err(ParseError::OtherError(format!(
-            "Expected an expression, got: {} (offset {})",
-            token.text, token.offset.0
-        )));
+        return Err(ParseError::OtherError(
+            token.offset,
+            format!(
+                "Expected an expression, got: {} (offset {})",
+                token.text, token.offset.0
+            ),
+        ));
     }
 
     Err(ParseError::Incomplete("Expected an expression".to_owned()))
@@ -376,10 +382,13 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
             } else if token.text == ")" {
                 break;
             } else {
-                return Err(ParseError::OtherError(format!(
-                    "Invalid syntax: Expected `,` or `)` here, but got `{}`",
-                    token.text
-                )));
+                return Err(ParseError::OtherError(
+                    token.offset,
+                    format!(
+                        "Invalid syntax: Expected `,` or `)` here, but got `{}`",
+                        token.text
+                    ),
+                ));
             }
         } else {
             return Err(ParseError::Incomplete(
@@ -493,10 +502,19 @@ fn parse_definition(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError>
         if token.text == "fun" {
             return parse_function(tokens);
         }
+
+        // TODO: Include the token in the error message.
+        return Err(ParseError::OtherError(
+            token.offset,
+            "Expected a definition".to_string(),
+        ));
     }
 
-    // TODO: Include the token in the error message.
-    Err(ParseError::OtherError("Expected a definition".to_string()))
+    // TODO: return a more meaningful position (e.g. EOF)
+    Err(ParseError::OtherError(
+        Position(0),
+        "Expected a definition, got EOF".to_string(),
+    ))
 }
 
 fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>, ParseError> {
@@ -517,10 +535,13 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
             } else if token.text == ")" {
                 break;
             } else {
-                return Err(ParseError::OtherError(format!(
-                    "Invalid syntax: Expected `,` or `)` here, but got `{}`",
-                    token.text
-                )));
+                return Err(ParseError::OtherError(
+                    token.offset,
+                    format!(
+                        "Invalid syntax: Expected `,` or `)` here, but got `{}`",
+                        token.text
+                    ),
+                ));
             }
         } else {
             return Err(ParseError::Incomplete(
@@ -596,18 +617,21 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableN
 
     let variable_token = require_a_token(tokens, "variable name")?;
     if !variable_re.is_match(variable_token.text) {
-        return Err(ParseError::OtherError(format!(
-            "Invalid variable name: '{}'",
-            variable_token.text
-        )));
+        return Err(ParseError::OtherError(
+            variable_token.offset,
+            format!("Invalid variable name: '{}'", variable_token.text),
+        ));
     }
 
     for reserved in RESERVED_WORDS {
         if variable_token.text == *reserved {
-            return Err(ParseError::OtherError(format!(
-                "'{}' is a reserved word that cannot be used as a variable",
-                variable_token.text
-            )));
+            return Err(ParseError::OtherError(
+                variable_token.offset,
+                format!(
+                    "'{}' is a reserved word that cannot be used as a variable",
+                    variable_token.text
+                ),
+            ));
         }
     }
 
@@ -774,10 +798,10 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
     }
 
     if offset != s.len() {
-        return Err(ParseError::OtherError(format!(
-            "Unrecognized syntax: '{}'",
-            &s[offset..]
-        )));
+        return Err(ParseError::OtherError(
+            Position(offset),
+            format!("Unrecognized syntax: '{}'", &s[offset..]),
+        ));
     }
 
     Ok(res)

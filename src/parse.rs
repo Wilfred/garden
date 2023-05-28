@@ -4,7 +4,7 @@ use regex::Regex;
 use crate::eval::ErrorKind;
 
 /// A position is an offset into source code.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Position(pub usize);
 
 #[derive(Debug)]
@@ -353,7 +353,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
         }
 
         return Err(ParseError::OtherError(
-            token.offset,
+            token.offset.clone(),
             format!(
                 "Expected an expression, got: {} (offset {})",
                 token.text, token.offset.0
@@ -407,7 +407,7 @@ fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expressi
     if next_token_is(tokens, "(") {
         let arguments = parse_call_arguments(tokens)?;
         return Ok(Expression(
-            expr.0,
+            expr.0.clone(),
             Expression_::Call(Box::new(expr), arguments),
         ));
     }
@@ -488,7 +488,7 @@ fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Express
 
             let rhs_expr = parse_simple_expression_or_call(tokens)?;
             expr = Expression(
-                expr.0,
+                expr.0.clone(),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
             );
         }

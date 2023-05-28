@@ -292,7 +292,7 @@ fn restore_stack_frame(
         stack_frame.evalled_values.push(value.clone());
     }
 
-    let offset = expr_to_eval.1 .0;
+    let offset = expr_to_eval.1.0.clone();
     stack_frame.exprs_to_eval.push(expr_to_eval);
     stack_frame
         .exprs_to_eval
@@ -473,7 +473,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 restore_values,
                             }) = eval_while(
                                 &mut stack_frame,
-                                Expression(offset, expr_copy.clone()),
+                                Expression(offset.clone(), expr_copy.clone()),
                                 body,
                             ) {
                                 restore_stack_frame(

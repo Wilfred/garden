@@ -56,7 +56,7 @@ fn main() {
 
 fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
-        Ok(src) => match parse_def_or_expr_from_str(&src) {
+        Ok(src) => match parse_def_or_expr_from_str(path, &src) {
             Ok(stmts) => {
                 let mut env = Env::default();
                 let mut session = Session {
@@ -80,7 +80,8 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     }
                 }
 
-                let main_call_exprs = parse_def_or_expr_from_str("main();").unwrap();
+                let main_call_exprs =
+                    parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), "main();").unwrap();
                 match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(e)) => {

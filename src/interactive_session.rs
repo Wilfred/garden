@@ -1,5 +1,6 @@
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
@@ -233,7 +234,7 @@ fn read_multiline_syntax(
     let mut src = first_line.to_string();
 
     loop {
-        match parse_def_or_expr_from_str(&src) {
+        match parse_def_or_expr_from_str(&PathBuf::from("__interactive_session__"), &src) {
             Ok(items) => match items {
                 DefinitionsOrExpression::Defs(ref defs)
                     if defs.is_empty() && !src.trim().is_empty() =>

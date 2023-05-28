@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, path::PathBuf};
 
 use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
@@ -81,7 +81,11 @@ impl Command {
                     return Ok(Command::Parse(Some(src.to_owned())));
                 }
                 if let Some(src) = split_first_word(s, ":replace") {
-                    return match parse_inline_expr_from_str(&src) {
+                    // TODO: find a better name for this.
+                    return match parse_inline_expr_from_str(
+                        &PathBuf::from("__interactive_inline__"),
+                        &src,
+                    ) {
                         Ok(expr) => Ok(Command::Replace(Some(expr))),
                         Err(_) => Ok(Command::Replace(None)),
                     };
@@ -312,7 +316,7 @@ pub fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                match parse_def_or_expr_from_str(&src) {
+                match parse_def_or_expr_from_str(&PathBuf::from("__interactive__"), &src) {
                     Ok(ast) => write!(buf, "{:?}", ast).unwrap(),
                     Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(_, e)) => {
                         write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();

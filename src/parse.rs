@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use lazy_static::lazy_static;
 use regex::Regex;
 
@@ -689,14 +691,14 @@ pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpre
     Ok(DefinitionsOrExpression::Defs(defs))
 }
 
-pub fn parse_def_or_expr_from_str(s: &str) -> Result<DefinitionsOrExpression, ParseError> {
-    let tokens = lex(s)?;
+pub fn parse_def_or_expr_from_str(path: &PathBuf, s: &str) -> Result<DefinitionsOrExpression, ParseError> {
+    let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
     parse_def_or_expr(&mut token_ptr)
 }
 
-pub fn parse_inline_expr_from_str(s: &str) -> Result<Expression, ParseError> {
-    let tokens = lex(s)?;
+pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
+    let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
     parse_inline_expression(&mut token_ptr)
 }
@@ -707,7 +709,7 @@ lazy_static! {
     static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 }
 
-fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError> {
+fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError> {
     let mut res: Vec<Token<'a>> = vec![];
 
     let mut preceding_comments = vec![];
@@ -807,8 +809,8 @@ fn lex_from<'a>(s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError>
     Ok(res)
 }
 
-fn lex<'a>(s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
-    lex_from(s, 0)
+fn lex<'a>(path: &PathBuf, s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
+    lex_from(path, s, 0)
 }
 
 #[cfg(test)]

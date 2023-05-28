@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::path::PathBuf;
 use std::{
     io::BufRead,
     sync::{
@@ -134,7 +135,11 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     }
                     Err(CommandParseError::NotCommandSyntax) => {
                         complete_src.push_str(&req.input);
-                        match parse_def_or_expr_from_str(&req.input) {
+                        // TODO: JSON requests should pass the path.
+                        match parse_def_or_expr_from_str(
+                            &PathBuf::from("__json_session_todo__"),
+                            &req.input,
+                        ) {
                             Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
                                 Ok(result) => Response {
                                     kind: ResponseKind::Evaluate,

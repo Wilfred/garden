@@ -94,8 +94,11 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     }
                 }
             }
-            Err(e) => {
-                eprintln!("Parse error: {:?}", e);
+            Err(parse::ParseError::OtherError(_, e)) => {
+                eprintln!("Parse error: {}", e);
+            }
+            Err(parse::ParseError::Incomplete(e)) => {
+                eprintln!("Parse error (incomplete input): {}", e);
             }
         },
         Err(e) => {

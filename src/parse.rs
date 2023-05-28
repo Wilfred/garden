@@ -670,7 +670,7 @@ fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     ))
 }
 
-pub fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {
+fn parse_def_or_expr(tokens: &mut &[Token<'_>]) -> Result<DefinitionsOrExpression, ParseError> {
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();

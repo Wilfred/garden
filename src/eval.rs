@@ -419,6 +419,85 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(),
     Ok(())
 }
 
+fn eval_integer_binop(
+    stack_frame: &mut StackFrame,
+    op: BinaryOperatorKind,
+) -> Result<(), ErrorInfo> {
+    {
+        let rhs_value = stack_frame
+            .evalled_values
+            .pop()
+            .expect("Popped an empty value stack for RHS of binary operator");
+        let lhs_value = stack_frame
+            .evalled_values
+            .pop()
+            .expect("Popped an empty value stack for LHS of binary operator");
+
+        let lhs_num = match lhs_value {
+            Value::Integer(i) => i,
+            _ => {
+                return Err(ErrorInfo {
+                    message: format!("Expected an integer, but got: {}", lhs_value),
+                    restore_values: vec![lhs_value.clone(), rhs_value],
+                });
+            }
+        };
+        let rhs_num = match rhs_value {
+            Value::Integer(i) => i,
+            _ => {
+                return Err(ErrorInfo {
+                    message: format!("Expected an integer, but got: {}", rhs_value),
+                    restore_values: vec![lhs_value, rhs_value.clone()],
+                });
+            }
+        };
+
+        match op {
+            BinaryOperatorKind::Add => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Integer(lhs_num.wrapping_add(rhs_num)));
+            }
+            BinaryOperatorKind::Subtract => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Integer(lhs_num.wrapping_sub(rhs_num)));
+            }
+            BinaryOperatorKind::Multiply => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Integer(lhs_num.wrapping_mul(rhs_num)));
+            }
+            BinaryOperatorKind::Divide => {
+                if rhs_num == 0 {
+                    return Err(ErrorInfo {
+                        message: format!("Tried to divide {} by zero.", rhs_value),
+                        restore_values: vec![lhs_value, rhs_value.clone()],
+                    });
+                }
+
+                stack_frame
+                    .evalled_values
+                    .push(Value::Integer(lhs_num / rhs_num));
+            }
+            BinaryOperatorKind::LessThan => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Boolean(lhs_num < rhs_num));
+            }
+            BinaryOperatorKind::GreaterThan => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Boolean(lhs_num > rhs_num));
+            }
+            _ => {
+                unreachable!()
+            }
+        }
+    }
+    Ok(())
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -613,96 +692,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         rhs,
                     ) => {
                         if done_children {
-                            let rhs_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for LHS of binary operator");
-
-                            let lhs_num = match lhs_value {
-                                Value::Integer(i) => i,
-                                _ => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[lhs_value.clone(), rhs_value],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected an integer, but got: {}",
-                                        lhs_value
-                                    )));
-                                }
-                            };
-                            let rhs_num = match rhs_value {
-                                Value::Integer(i) => i,
-                                _ => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[lhs_value, rhs_value.clone()],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected an integer, but got: {}",
-                                        rhs_value
-                                    )));
-                                }
-                            };
-
-                            match op {
-                                BinaryOperatorKind::Add => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Integer(lhs_num.wrapping_add(rhs_num)));
-                                }
-                                BinaryOperatorKind::Subtract => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Integer(lhs_num.wrapping_sub(rhs_num)));
-                                }
-                                BinaryOperatorKind::Multiply => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Integer(lhs_num.wrapping_mul(rhs_num)));
-                                }
-                                BinaryOperatorKind::Divide => {
-                                    if rhs_num == 0 {
-                                        restore_stack_frame(
-                                            env,
-                                            stack_frame,
-                                            (done_children, Expression(offset, expr_copy)),
-                                            &[lhs_value, rhs_value.clone()],
-                                            Some(ErrorKind::BadValue),
-                                        );
-                                        return Err(EvalError::ResumableError(format!(
-                                            "Tried to divide {} by zero.",
-                                            rhs_value
-                                        )));
-                                    }
-
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Integer(lhs_num / rhs_num));
-                                }
-                                BinaryOperatorKind::LessThan => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Boolean(lhs_num < rhs_num));
-                                }
-                                BinaryOperatorKind::GreaterThan => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Boolean(lhs_num > rhs_num));
-                                }
-                                _ => {
-                                    unreachable!()
-                                }
+                            if let Err(ErrorInfo {
+                                message,
+                                restore_values,
+                            }) = eval_integer_binop(&mut stack_frame, op)
+                            {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(offset, expr_copy)),
+                                    &restore_values,
+                                    Some(ErrorKind::BadValue),
+                                );
+                                return Err(EvalError::ResumableError(message));
                             }
                         } else {
                             stack_frame
@@ -1319,7 +1321,10 @@ mod tests {
     #[test]
     fn test_eval_bool_literal() {
         let exprs = vec![Expression(
-            Position { offset: 0, path: PathBuf::from("__test.gdn") },
+            Position {
+                offset: 0,
+                path: PathBuf::from("__test.gdn"),
+            },
             Expression_::BoolLiteral(true),
         )];
 
@@ -1333,11 +1338,17 @@ mod tests {
         let mut env = Env::default();
 
         let exprs = vec![Expression(
-            Position { offset: 0, path: PathBuf::from("__test.gdn") },
+            Position {
+                offset: 0,
+                path: PathBuf::from("__test.gdn"),
+            },
             Expression_::Let(
                 VariableName("foo".into()),
                 Box::new(Expression(
-                    Position { offset: 0, path: PathBuf::from("__test.gdn") },
+                    Position {
+                        offset: 0,
+                        path: PathBuf::from("__test.gdn"),
+                    },
                     Expression_::BoolLiteral(true),
                 )),
             ),
@@ -1345,7 +1356,10 @@ mod tests {
         eval_exprs(&exprs, &mut env).unwrap();
 
         let exprs = vec![Expression(
-            Position { offset: 0, path: PathBuf::from("__test.gdn") },
+            Position {
+                offset: 0,
+                path: PathBuf::from("__test.gdn"),
+            },
             Expression_::Variable(VariableName("foo".into())),
         )];
         eval_exprs(&exprs, &mut env).unwrap();

@@ -596,6 +596,293 @@ fn eval_integer_binop(
     Ok(())
 }
 
+fn eval_call(
+    stack_frame: &mut StackFrame,
+    args: &[Expression],
+    session: &Session,
+) -> Result<Option<StackFrame>, ErrorInfo> {
+    let mut arg_values = vec![];
+    for _ in 0..args.len() {
+        arg_values.push(
+            stack_frame
+                .evalled_values
+                .pop()
+                .expect("Popped an empty value for stack for call arguments"),
+        );
+    }
+    let receiver_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for call receiver");
+
+    match &receiver_value {
+        Value::Fun(_, name, params, body) => {
+            if params.len() != arg_values.len() {
+                let mut saved_values = vec![receiver_value.clone()];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+
+                return Err(ErrorInfo {
+                    message: format!(
+                        "Function {} expects {} arguments, but got {}",
+                        name.0.clone(),
+                        params.len(),
+                        arg_values.len()
+                    ),
+                    restore_values: saved_values,
+                });
+            }
+
+            let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
+            for expr in body.iter().rev() {
+                fun_subexprs.push((false, expr.clone()));
+            }
+
+            let mut fun_bindings = HashMap::new();
+            for (param, value) in params.iter().zip(arg_values.iter()) {
+                fun_bindings.insert(param.clone(), value.clone());
+            }
+
+            return Ok(Some(StackFrame {
+                fun_name: name.clone(),
+                bindings: fun_bindings,
+                exprs_to_eval: fun_subexprs,
+                evalled_values: vec![Value::Void],
+            }));
+        }
+        Value::BuiltinFunction(kind) => match kind {
+            BuiltinFunctionKind::Print => {
+                if args.len() != 1 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function print requires 1 argument, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                    });
+                }
+                match &arg_values[0] {
+                    Value::String(s) => {
+                        if session.has_attached_stdout {
+                            println!("{}", s);
+                        } else {
+                            let response = Response {
+                                kind: ResponseKind::Printed,
+                                value: Ok(format!("{}\n", s)),
+                            };
+                            let serialized = serde_json::to_string(&response).unwrap();
+                            println!("{}", serialized);
+                        }
+                    }
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a string, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                }
+                stack_frame.evalled_values.push(Value::Void);
+            }
+            BuiltinFunctionKind::StringLength => {
+                if args.len() != 1 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function string_length requires 1 argument, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                    });
+                }
+                match &arg_values[0] {
+                    Value::String(s) => {
+                        stack_frame
+                            .evalled_values
+                            .push(Value::Integer(s.chars().count() as i64));
+                    }
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a string, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                }
+            }
+            BuiltinFunctionKind::Shell => {
+                if args.len() != 2 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function shell requires 2 arguments, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                    });
+                }
+                match &arg_values[0] {
+                    Value::String(s) => {
+                        match as_string_list(&arg_values[1]) {
+                            Ok(items) => {
+                                let mut command = std::process::Command::new(&s);
+                                for item in items {
+                                    command.arg(item);
+                                }
+
+                                // TODO: define a result type in garden to report errors to the user.
+                                let output = command.output().expect("failed to execute process");
+
+                                let mut s = String::new();
+                                // TODO: complain if output is not UTF-8.
+                                s.write_str(&String::from_utf8_lossy(&output.stdout))
+                                    .unwrap();
+                                s.write_str(&String::from_utf8_lossy(&output.stderr))
+                                    .unwrap();
+
+                                stack_frame.evalled_values.push(Value::String(s));
+                            }
+                            Err(v) => {
+                                let mut saved_values = vec![];
+                                for value in arg_values.iter().rev() {
+                                    saved_values.push(value.clone());
+                                }
+                                saved_values.push(receiver_value.clone());
+
+                                return Err(ErrorInfo {
+                                    message: format!("Expected a list, but got: {}", v),
+                                    restore_values: saved_values,
+                                });
+                            }
+                        }
+                    }
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a string, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                }
+            }
+            BuiltinFunctionKind::ListAppend => {
+                if args.len() != 2 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function list_append requires 2 arguments, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                    });
+                }
+                match &arg_values[0] {
+                    Value::List(items) => {
+                        let mut new_items = items.clone();
+                        new_items.push(arg_values[1].clone());
+                        stack_frame.evalled_values.push(Value::List(new_items));
+                    }
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a list, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                }
+            }
+            BuiltinFunctionKind::IntToString => {
+                if args.len() != 1 {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function int_to_string requires 1 argument, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                    });
+                }
+                match &arg_values[0] {
+                    Value::Integer(i) => {
+                        stack_frame
+                            .evalled_values
+                            .push(Value::String(format!("{}", i)));
+                    }
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected an integer, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                }
+            }
+        },
+        v => {
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            return Err(ErrorInfo {
+                message: format!("Expected a function, but got: {}", v),
+                restore_values: saved_values,
+            });
+        }
+    }
+
+    Ok(None)
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -871,375 +1158,29 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Call(receiver, ref args) => {
                         if done_children {
-                            let mut arg_values = vec![];
-                            for _ in 0..args.len() {
-                                arg_values.push(
-                                    stack_frame.evalled_values.pop().expect(
-                                        "Popped an empty value for stack for call arguments",
-                                    ),
-                                );
-                            }
-                            let receiver_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for call receiver");
-
-                            match &receiver_value {
-                                Value::Fun(_, name, params, body) => {
-                                    if params.len() != arg_values.len() {
-                                        let mut saved_values = vec![receiver_value.clone()];
-                                        for value in arg_values.iter().rev() {
-                                            saved_values.push(value.clone());
-                                        }
-                                        restore_stack_frame(
-                                            env,
-                                            stack_frame,
-                                            (done_children, Expression(offset, expr_copy)),
-                                            &saved_values,
-                                            Some(ErrorKind::MalformedExpression),
-                                        );
-
-                                        return Err(EvalError::ResumableError(format!(
-                                            "Function {} expects {} arguments, but got {}",
-                                            name.0.clone(),
-                                            params.len(),
-                                            arg_values.len()
-                                        )));
-                                    }
-
+                            match eval_call(&mut stack_frame, args, session) {
+                                Ok(Some(new_stack_frame)) => {
                                     env.stack.push(stack_frame);
-
-                                    let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
-                                    for expr in body.iter().rev() {
-                                        fun_subexprs.push((false, expr.clone()));
-                                    }
-
-                                    let mut fun_bindings = HashMap::new();
-                                    for (param, value) in params.iter().zip(arg_values.iter()) {
-                                        fun_bindings.insert(param.clone(), value.clone());
-                                    }
-
-                                    env.stack.push(StackFrame {
-                                        fun_name: name.clone(),
-                                        bindings: fun_bindings,
-                                        exprs_to_eval: fun_subexprs,
-                                        evalled_values: vec![Value::Void],
-                                    });
-
+                                    env.stack.push(new_stack_frame);
                                     continue;
                                 }
-                                Value::BuiltinFunction(kind) => match kind {
-                                    BuiltinFunctionKind::Print => {
-                                        if args.len() != 1 {
-                                            let mut saved_values = vec![receiver_value.clone()];
-                                            for value in arg_values.iter().rev() {
-                                                saved_values.push(value.clone());
-                                            }
-                                            restore_stack_frame(
-                                                env,
-                                                stack_frame,
-                                                (done_children, Expression(offset, expr_copy)),
-                                                &saved_values,
-                                                Some(ErrorKind::MalformedExpression),
-                                            );
-
-                                            return Err(EvalError::ResumableError(format!(
-                                                "Function print requires 1 argument, but got: {}",
-                                                args.len()
-                                            )));
-                                        }
-                                        match &arg_values[0] {
-                                            Value::String(s) => {
-                                                if session.has_attached_stdout {
-                                                    println!("{}", s);
-                                                } else {
-                                                    let response = Response {
-                                                        kind: ResponseKind::Printed,
-                                                        value: Ok(format!("{}\n", s)),
-                                                    };
-                                                    let serialized =
-                                                        serde_json::to_string(&response).unwrap();
-                                                    println!("{}", serialized);
-                                                }
-                                            }
-                                            v => {
-                                                let mut saved_values = vec![];
-                                                for value in arg_values.iter().rev() {
-                                                    saved_values.push(value.clone());
-                                                }
-                                                saved_values.push(receiver_value.clone());
-                                                restore_stack_frame(
-                                                    env,
-                                                    stack_frame,
-                                                    (done_children, Expression(offset, expr_copy)),
-                                                    &saved_values,
-                                                    Some(ErrorKind::BadValue),
-                                                );
-
-                                                return Err(EvalError::ResumableError(format!(
-                                                    "Expected a string, but got: {}",
-                                                    v
-                                                )));
-                                            }
-                                        }
-                                        stack_frame.evalled_values.push(Value::Void);
-                                    }
-                                    BuiltinFunctionKind::StringLength => {
-                                        if args.len() != 1 {
-                                            let mut saved_values = vec![receiver_value.clone()];
-                                            for value in arg_values.iter().rev() {
-                                                saved_values.push(value.clone());
-                                            }
-                                            restore_stack_frame(
-                                                env,
-                                                stack_frame,
-                                                (done_children, Expression(offset, expr_copy)),
-                                                &saved_values,
-                                                Some(ErrorKind::MalformedExpression),
-                                            );
-
-                                            return Err(EvalError::ResumableError(format!(
-                                                "Function string_length requires 1 argument, but got: {}",
-                                                args.len()
-                                            )));
-                                        }
-                                        match &arg_values[0] {
-                                            Value::String(s) => {
-                                                stack_frame
-                                                    .evalled_values
-                                                    .push(Value::Integer(s.chars().count() as i64));
-                                            }
-                                            v => {
-                                                let mut saved_values = vec![];
-                                                for value in arg_values.iter().rev() {
-                                                    saved_values.push(value.clone());
-                                                }
-                                                saved_values.push(receiver_value.clone());
-                                                restore_stack_frame(
-                                                    env,
-                                                    stack_frame,
-                                                    (done_children, Expression(offset, expr_copy)),
-                                                    &saved_values,
-                                                    Some(ErrorKind::BadValue),
-                                                );
-
-                                                return Err(EvalError::ResumableError(format!(
-                                                    "Expected a string, but got: {}",
-                                                    v
-                                                )));
-                                            }
-                                        }
-                                    }
-                                    BuiltinFunctionKind::Shell => {
-                                        if args.len() != 2 {
-                                            let mut saved_values = vec![receiver_value.clone()];
-                                            for value in arg_values.iter().rev() {
-                                                saved_values.push(value.clone());
-                                            }
-                                            restore_stack_frame(
-                                                env,
-                                                stack_frame,
-                                                (done_children, Expression(offset, expr_copy)),
-                                                &saved_values,
-                                                Some(ErrorKind::MalformedExpression),
-                                            );
-
-                                            return Err(EvalError::ResumableError(format!(
-                                                "Function shell requires 2 arguments, but got: {}",
-                                                args.len()
-                                            )));
-                                        }
-                                        match &arg_values[0] {
-                                            Value::String(s) => {
-                                                match as_string_list(&arg_values[1]) {
-                                                    Ok(items) => {
-                                                        let mut command =
-                                                            std::process::Command::new(&s);
-                                                        for item in items {
-                                                            command.arg(item);
-                                                        }
-
-                                                        // TODO: define a result type in garden to report errors to the user.
-                                                        let output = command
-                                                            .output()
-                                                            .expect("failed to execute process");
-
-                                                        let mut s = String::new();
-                                                        // TODO: complain if output is not UTF-8.
-                                                        s.write_str(&String::from_utf8_lossy(
-                                                            &output.stdout,
-                                                        ))
-                                                        .unwrap();
-                                                        s.write_str(&String::from_utf8_lossy(
-                                                            &output.stderr,
-                                                        ))
-                                                        .unwrap();
-
-                                                        stack_frame
-                                                            .evalled_values
-                                                            .push(Value::String(s));
-                                                    }
-                                                    Err(v) => {
-                                                        let mut saved_values = vec![];
-                                                        for value in arg_values.iter().rev() {
-                                                            saved_values.push(value.clone());
-                                                        }
-                                                        saved_values.push(receiver_value.clone());
-                                                        restore_stack_frame(
-                                                            env,
-                                                            stack_frame,
-                                                            (
-                                                                done_children,
-                                                                Expression(offset, expr_copy),
-                                                            ),
-                                                            &saved_values,
-                                                            Some(ErrorKind::BadValue),
-                                                        );
-
-                                                        return Err(EvalError::ResumableError(
-                                                            format!(
-                                                                "Expected a list, but got: {}",
-                                                                v
-                                                            ),
-                                                        ));
-                                                    }
-                                                }
-                                            }
-                                            v => {
-                                                let mut saved_values = vec![];
-                                                for value in arg_values.iter().rev() {
-                                                    saved_values.push(value.clone());
-                                                }
-                                                saved_values.push(receiver_value.clone());
-                                                restore_stack_frame(
-                                                    env,
-                                                    stack_frame,
-                                                    (done_children, Expression(offset, expr_copy)),
-                                                    &saved_values,
-                                                    Some(ErrorKind::BadValue),
-                                                );
-
-                                                return Err(EvalError::ResumableError(format!(
-                                                    "Expected a string, but got: {}",
-                                                    v
-                                                )));
-                                            }
-                                        }
-                                    }
-                                    BuiltinFunctionKind::ListAppend => {
-                                        if args.len() != 2 {
-                                            let mut saved_values = vec![receiver_value.clone()];
-                                            for value in arg_values.iter().rev() {
-                                                saved_values.push(value.clone());
-                                            }
-                                            restore_stack_frame(
-                                                env,
-                                                stack_frame,
-                                                (done_children, Expression(offset, expr_copy)),
-                                                &saved_values,
-                                                Some(ErrorKind::MalformedExpression),
-                                            );
-
-                                            return Err(EvalError::ResumableError(format!(
-                                                "Function list_append requires 2 arguments, but got: {}",
-                                                args.len()
-                                            )));
-                                        }
-                                        match &arg_values[0] {
-                                            Value::List(items) => {
-                                                let mut new_items = items.clone();
-                                                new_items.push(arg_values[1].clone());
-                                                stack_frame
-                                                    .evalled_values
-                                                    .push(Value::List(new_items));
-                                            }
-                                            v => {
-                                                let mut saved_values = vec![];
-                                                for value in arg_values.iter().rev() {
-                                                    saved_values.push(value.clone());
-                                                }
-                                                saved_values.push(receiver_value.clone());
-                                                restore_stack_frame(
-                                                    env,
-                                                    stack_frame,
-                                                    (done_children, Expression(offset, expr_copy)),
-                                                    &saved_values,
-                                                    Some(ErrorKind::BadValue),
-                                                );
-
-                                                return Err(EvalError::ResumableError(format!(
-                                                    "Expected a list, but got: {}",
-                                                    v
-                                                )));
-                                            }
-                                        }
-                                    }
-                                    BuiltinFunctionKind::IntToString => {
-                                        if args.len() != 1 {
-                                            let mut saved_values = vec![];
-                                            for value in arg_values.iter().rev() {
-                                                saved_values.push(value.clone());
-                                            }
-                                            saved_values.push(receiver_value.clone());
-                                            restore_stack_frame(
-                                                env,
-                                                stack_frame,
-                                                (done_children, Expression(offset, expr_copy)),
-                                                &saved_values,
-                                                Some(ErrorKind::MalformedExpression),
-                                            );
-
-                                            return Err(EvalError::ResumableError(format!(
-                                                "Function int_to_string requires 1 argument, but got: {}",
-                                                args.len()
-                                            )));
-                                        }
-                                        match &arg_values[0] {
-                                            Value::Integer(i) => {
-                                                stack_frame
-                                                    .evalled_values
-                                                    .push(Value::String(format!("{}", i)));
-                                            }
-                                            v => {
-                                                let mut saved_values = vec![];
-                                                for value in arg_values.iter().rev() {
-                                                    saved_values.push(value.clone());
-                                                }
-                                                saved_values.push(receiver_value.clone());
-                                                restore_stack_frame(
-                                                    env,
-                                                    stack_frame,
-                                                    (done_children, Expression(offset, expr_copy)),
-                                                    &saved_values,
-                                                    Some(ErrorKind::BadValue),
-                                                );
-
-                                                return Err(EvalError::ResumableError(format!(
-                                                    "Expected an integer, but got: {}",
-                                                    v
-                                                )));
-                                            }
-                                        }
-                                    }
-                                },
-                                v => {
-                                    let mut saved_values = vec![];
-                                    for value in arg_values.iter().rev() {
-                                        saved_values.push(value.clone());
-                                    }
-                                    saved_values.push(receiver_value.clone());
+                                Ok(None) => {}
+                                Err(ErrorInfo {
+                                    message,
+                                    restore_values,
+                                }) => {
                                     restore_stack_frame(
                                         env,
                                         stack_frame,
                                         (done_children, Expression(offset, expr_copy)),
-                                        &saved_values,
-                                        Some(ErrorKind::BadValue),
+                                        &restore_values,
+                                        // TODO: let ErrorInfo specify
+                                        // kind, as not all errors on
+                                        // calling functions are this
+                                        // kind.
+                                        Some(ErrorKind::MalformedExpression),
                                     );
-
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected a function, but got: {}",
-                                        v
-                                    )));
+                                    return Err(EvalError::ResumableError(message));
                                 }
                             }
                         } else {

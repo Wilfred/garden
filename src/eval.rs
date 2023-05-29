@@ -1319,7 +1319,7 @@ mod tests {
     #[test]
     fn test_eval_bool_literal() {
         let exprs = vec![Expression(
-            Position(0, PathBuf::from("__test.gdn")),
+            Position { offset: 0, path: PathBuf::from("__test.gdn") },
             Expression_::BoolLiteral(true),
         )];
 
@@ -1333,11 +1333,11 @@ mod tests {
         let mut env = Env::default();
 
         let exprs = vec![Expression(
-            Position(0, PathBuf::from("__test.gdn")),
+            Position { offset: 0, path: PathBuf::from("__test.gdn") },
             Expression_::Let(
                 VariableName("foo".into()),
                 Box::new(Expression(
-                    Position(0, PathBuf::from("__test.gdn")),
+                    Position { offset: 0, path: PathBuf::from("__test.gdn") },
                     Expression_::BoolLiteral(true),
                 )),
             ),
@@ -1345,7 +1345,7 @@ mod tests {
         eval_exprs(&exprs, &mut env).unwrap();
 
         let exprs = vec![Expression(
-            Position(0, PathBuf::from("__test.gdn")),
+            Position { offset: 0, path: PathBuf::from("__test.gdn") },
             Expression_::Variable(VariableName("foo".into())),
         )];
         eval_exprs(&exprs, &mut env).unwrap();

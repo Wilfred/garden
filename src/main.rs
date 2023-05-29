@@ -116,9 +116,9 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 }
             }
             Err(parse::ParseError::OtherError(pos, e)) => {
-                eprintln!("--> {}", pos.1.display());
+                eprintln!("--> {}", pos.path.display());
 
-                let (line_src, line_i, line_offset) = line_of_offset(&src, pos.0);
+                let (line_src, line_i, line_offset) = line_of_offset(&src, pos.offset);
                 let formatted_line_num = format!("{} | ", line_i + 1);
                 eprintln!("{}{}", formatted_line_num, line_src);
 

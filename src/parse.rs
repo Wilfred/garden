@@ -7,8 +7,11 @@ use crate::eval::ErrorKind;
 
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq)]
-// TODO: consider just storing a pointer to the path.
-pub struct Position(pub usize, pub PathBuf);
+pub struct Position {
+    pub offset: usize,
+    // TODO: consider storing a &Path to reduce memory usage.
+    pub path: PathBuf,
+}
 
 #[derive(Debug)]
 pub enum ParseError {
@@ -359,7 +362,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             token.offset.clone(),
             format!(
                 "Expected an expression, got: {} (offset {})",
-                token.text, token.offset.0
+                token.text, token.offset.offset
             ),
         ));
     }
@@ -515,7 +518,10 @@ fn parse_definition(path: &PathBuf, tokens: &mut &[Token<'_>]) -> Result<Definit
 
     // TODO: return a more meaningful position (e.g. EOF)
     Err(ParseError::OtherError(
-        Position(0, path.clone()),
+        Position {
+            offset: 0,
+            path: path.clone(),
+        },
         "Expected a definition, got EOF".to_string(),
     ))
 }
@@ -749,7 +755,10 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         for token_str in ["==", "!=", "&&", "||"] {
             if s.starts_with(token_str) {
                 res.push(Token {
-                    offset: Position(offset, path.clone()),
+                    offset: Position {
+                        offset,
+                        path: path.clone(),
+                    },
                     text: &s[0..token_str.len()],
                     preceding_comments,
                 });
@@ -764,7 +773,10 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {
-                    offset: Position(offset, path.clone()),
+                    offset: Position {
+                        offset,
+                        path: path.clone(),
+                    },
                     text: &s[0..1],
                     preceding_comments,
                 });
@@ -776,7 +788,10 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         }
         if let Some(integer_match) = INTEGER_RE.find(s) {
             res.push(Token {
-                offset: Position(offset, path.clone()),
+                offset: Position {
+                    offset,
+                    path: path.clone(),
+                },
                 text: integer_match.as_str(),
                 preceding_comments,
             });
@@ -785,7 +800,10 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             offset += integer_match.end();
         } else if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
-                offset: Position(offset, path.clone()),
+                offset: Position {
+                    offset,
+                    path: path.clone(),
+                },
                 text: string_match.as_str(),
                 preceding_comments,
             });
@@ -794,7 +812,10 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             offset += string_match.end();
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push(Token {
-                offset: Position(offset, path.clone()),
+                offset: Position {
+                    offset,
+                    path: path.clone(),
+                },
                 text: variable_match.as_str(),
                 preceding_comments,
             });
@@ -808,7 +829,10 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
 
     if offset != s.len() {
         return Err(ParseError::OtherError(
-            Position(offset, path.clone()),
+            Position {
+                offset,
+                path: path.clone(),
+            },
             format!("Unrecognized syntax: '{}'", &s[offset..]),
         ));
     }
@@ -842,7 +866,10 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "1").unwrap(),
             vec![Token {
-                offset: Position(0, PathBuf::from("__test.gdn")),
+                offset: Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 text: "1",
                 preceding_comments: vec![],
             }]
@@ -854,7 +881,10 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), " a").unwrap(),
             vec![Token {
-                offset: Position(1, PathBuf::from("__test.gdn")),
+                offset: Position {
+                    offset: 1,
+                    path: PathBuf::from("__test.gdn")
+                },
                 text: "a",
                 preceding_comments: vec![],
             }]
@@ -892,7 +922,10 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::BoolLiteral(true)
             )]
         );
@@ -905,7 +938,10 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::StringLiteral("a\nb\\c\"d".into())
             )]
         );
@@ -916,7 +952,10 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap(),
             vec![Token {
-                offset: Position(5, PathBuf::from("__test.gdn"),),
+                offset: Position {
+                    offset: 5,
+                    path: PathBuf::from("__test.gdn")
+                },
                 text: "1",
                 preceding_comments: vec![" 2\n"],
             }]
@@ -940,7 +979,10 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::Variable(VariableName("abc_def".to_string()))
             )]
         );
@@ -953,11 +995,17 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::Let(
                     VariableName("x".into()),
                     Box::new(Expression(
-                        Position(8, PathBuf::from("__test.gdn")),
+                        Position {
+                            offset: 8,
+                            path: PathBuf::from("__test.gdn")
+                        },
                         Expression_::IntLiteral(1)
                     ))
                 )
@@ -972,10 +1020,16 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::If(
                     Box::new(Expression(
-                        Position(4, PathBuf::from("__test.gdn")),
+                        Position {
+                            offset: 4,
+                            path: PathBuf::from("__test.gdn")
+                        },
                         Expression_::BoolLiteral(true)
                     )),
                     vec![],
@@ -992,18 +1046,30 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::If(
                     Box::new(Expression(
-                        Position(4, PathBuf::from("__test.gdn")),
+                        Position {
+                            offset: 4,
+                            path: PathBuf::from("__test.gdn")
+                        },
                         Expression_::Variable(VariableName("x".into()))
                     )),
                     vec![],
                     vec![Expression(
-                        Position(15, PathBuf::from("__test.gdn")),
+                        Position {
+                            offset: 15,
+                            path: PathBuf::from("__test.gdn")
+                        },
                         Expression_::If(
                             Box::new(Expression(
-                                Position(19, PathBuf::from("__test.gdn")),
+                                Position {
+                                    offset: 19,
+                                    path: PathBuf::from("__test.gdn")
+                                },
                                 Expression_::Variable(VariableName("y".into()))
                             )),
                             vec![],
@@ -1022,10 +1088,16 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::If(
                     Box::new(Expression(
-                        Position(4, PathBuf::from("__test.gdn")),
+                        Position {
+                            offset: 4,
+                            path: PathBuf::from("__test.gdn")
+                        },
                         Expression_::BoolLiteral(true)
                     )),
                     vec![],
@@ -1042,9 +1114,15 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::Return(Box::new(Expression(
-                    Position(7, PathBuf::from("__test.gdn")),
+                    Position {
+                        offset: 7,
+                        path: PathBuf::from("__test.gdn")
+                    },
                     Expression_::BoolLiteral(true)
                 )))
             )]
@@ -1066,7 +1144,10 @@ mod tests {
         assert_eq!(
             ast,
             vec![Definition(
-                Position(18, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 18,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Definition_::Fun(
                     Some("Hello\nWorld".into()),
                     VariableName("foo".into()),
@@ -1088,11 +1169,17 @@ mod tests {
         assert_eq!(
             ast,
             Expression(
-                Position(0, PathBuf::from("__test.gdn")),
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
                 Expression_::Let(
                     VariableName("x".into()),
                     Box::new(Expression(
-                        Position(8, PathBuf::from("__test.gdn")),
+                        Position {
+                            offset: 8,
+                            path: PathBuf::from("__test.gdn")
+                        },
                         Expression_::IntLiteral(1)
                     ))
                 )

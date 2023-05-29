@@ -419,6 +419,56 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(),
     Ok(())
 }
 
+fn eval_boolean_binop(
+    stack_frame: &mut StackFrame,
+    op: BinaryOperatorKind,
+) -> Result<(), ErrorInfo> {
+    {
+        let rhs_value = stack_frame
+            .evalled_values
+            .pop()
+            .expect("Popped an empty value stack for RHS of binary operator");
+        let lhs_value = stack_frame
+            .evalled_values
+            .pop()
+            .expect("Popped an empty value stack for LHS of binary operator");
+
+        let lhs_bool = match lhs_value {
+            Value::Boolean(b) => b,
+            _ => {
+                return Err(ErrorInfo {
+                    message: format!("Expected a bool, but got: {}", lhs_value),
+                    restore_values: vec![lhs_value, rhs_value],
+                });
+            }
+        };
+        let rhs_bool = match rhs_value {
+            Value::Boolean(b) => b,
+            _ => {
+                return Err(ErrorInfo {
+                    message: format!("Expected a bool, but got: {}", rhs_value),
+                    restore_values: vec![lhs_value, rhs_value],
+                });
+            }
+        };
+
+        match op {
+            BinaryOperatorKind::And => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Boolean(lhs_bool && rhs_bool));
+            }
+            BinaryOperatorKind::Or => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::Boolean(lhs_bool || rhs_bool));
+            }
+            _ => unreachable!(),
+        }
+    }
+    Ok(())
+}
+
 fn eval_equality_binop(
     stack_frame: &mut StackFrame,
     op: BinaryOperatorKind,
@@ -796,60 +846,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         rhs,
                     ) => {
                         if done_children {
-                            let rhs_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for LHS of binary operator");
-
-                            let lhs_bool = match lhs_value {
-                                Value::Boolean(b) => b,
-                                _ => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[lhs_value.clone(), rhs_value],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected a boolean, but got: {}",
-                                        lhs_value
-                                    )));
-                                }
-                            };
-                            let rhs_bool = match rhs_value {
-                                Value::Boolean(b) => b,
-                                _ => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[lhs_value, rhs_value.clone()],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected a bool, but got: {}",
-                                        rhs_value
-                                    )));
-                                }
-                            };
-
-                            match op {
-                                BinaryOperatorKind::And => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Boolean(lhs_bool && rhs_bool));
-                                }
-                                BinaryOperatorKind::Or => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Boolean(lhs_bool || rhs_bool));
-                                }
-                                _ => unreachable!(),
+                            if let Err(ErrorInfo {
+                                message,
+                                restore_values,
+                            }) = eval_boolean_binop(&mut stack_frame, op)
+                            {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(offset, expr_copy)),
+                                    &restore_values,
+                                    Some(ErrorKind::BadValue),
+                                );
+                                return Err(EvalError::ResumableError(message));
                             }
                         } else {
                             // TODO: do short-circuit evaluation of && and ||.

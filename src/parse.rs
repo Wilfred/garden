@@ -1053,7 +1053,12 @@ mod tests {
 
     #[test]
     fn test_parse_function() {
-        let ast = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "// Hello\n// World\nfun foo() {}").unwrap() {
+        let ast = match parse_def_or_expr_from_str(
+            &PathBuf::from("__test.gdn"),
+            "// Hello\n// World\nfun foo() {}",
+        )
+        .unwrap()
+        {
             DefinitionsOrExpression::Defs(defs) => defs,
             DefinitionsOrExpression::Expr(_) => unreachable!(),
         };
@@ -1074,10 +1079,11 @@ mod tests {
 
     #[test]
     fn test_parse_block_expression() {
-        let ast = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "let x = 1;").unwrap() {
-            DefinitionsOrExpression::Defs(_) => unreachable!(),
-            DefinitionsOrExpression::Expr(e) => e,
-        };
+        let ast =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "let x = 1;").unwrap() {
+                DefinitionsOrExpression::Defs(_) => unreachable!(),
+                DefinitionsOrExpression::Expr(e) => e,
+            };
 
         assert_eq!(
             ast,

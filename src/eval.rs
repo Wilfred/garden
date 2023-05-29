@@ -419,6 +419,54 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(),
     Ok(())
 }
 
+fn eval_equality_binop(
+    stack_frame: &mut StackFrame,
+    op: BinaryOperatorKind,
+) -> Result<(), ErrorInfo> {
+    let rhs_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for RHS of binary operator");
+    let lhs_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for LHS of binary operator");
+
+    let lhs_num = match lhs_value {
+        Value::Integer(i) => i,
+        _ => {
+            return Err(ErrorInfo {
+                message: format!("Expected an integer, but got: {}", lhs_value),
+                restore_values: vec![lhs_value, rhs_value],
+            });
+        }
+    };
+    let rhs_num = match rhs_value {
+        Value::Integer(i) => i,
+        _ => {
+            return Err(ErrorInfo {
+                message: format!("Expected an integer, but got: {}", rhs_value),
+                restore_values: vec![lhs_value, rhs_value],
+            });
+        }
+    };
+
+    match op {
+        BinaryOperatorKind::Equal => {
+            stack_frame
+                .evalled_values
+                .push(Value::Boolean(lhs_num == rhs_num));
+        }
+        BinaryOperatorKind::NotEqual => {
+            stack_frame
+                .evalled_values
+                .push(Value::Boolean(lhs_num != rhs_num));
+        }
+        _ => unreachable!(),
+    }
+    Ok(())
+}
+
 fn eval_integer_binop(
     stack_frame: &mut StackFrame,
     op: BinaryOperatorKind,
@@ -720,64 +768,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         rhs,
                     ) => {
                         if done_children {
-                            let rhs_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for RHS of binary operator");
-                            let lhs_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for LHS of binary operator");
-
-                            let lhs_num = match lhs_value {
-                                Value::Integer(i) => i,
-                                _ => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[lhs_value.clone(), rhs_value],
-                                        Some(ErrorKind::BadValue),
-                                    );
-
-                                    return Err(EvalError::ResumableError(format!(
-                                        "Expected an integer, but got: {}",
-                                        lhs_value
-                                    )));
-                                }
-                            };
-                            let rhs_num = match rhs_value {
-                                Value::Integer(i) => i,
-                                _ => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
-                                        &[lhs_value, rhs_value.clone()],
-                                        Some(ErrorKind::BadValue),
-                                    );
-                                    return Err(EvalError::ResumableError(format!(
-                                        // TODO: use the term 'int' or 'integer' in error messages?
-                                        // int: reflects code
-                                        // integer: conventional maths
-                                        "Expected an integer, but got: {}",
-                                        rhs_value
-                                    )));
-                                }
-                            };
-
-                            match op {
-                                BinaryOperatorKind::Equal => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Boolean(lhs_num == rhs_num));
-                                }
-                                BinaryOperatorKind::NotEqual => {
-                                    stack_frame
-                                        .evalled_values
-                                        .push(Value::Boolean(lhs_num != rhs_num));
-                                }
-                                _ => unreachable!(),
+                            if let Err(ErrorInfo {
+                                message,
+                                restore_values,
+                            }) = eval_equality_binop(&mut stack_frame, op)
+                            {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(offset, expr_copy)),
+                                    &restore_values,
+                                    Some(ErrorKind::BadValue),
+                                );
+                                return Err(EvalError::ResumableError(message));
                             }
                         } else {
                             stack_frame

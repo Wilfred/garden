@@ -292,7 +292,7 @@ fn restore_stack_frame(
         stack_frame.evalled_values.push(value.clone());
     }
 
-    let offset = expr_to_eval.1.0.clone();
+    let offset = expr_to_eval.1 .0.clone();
     stack_frame.exprs_to_eval.push(expr_to_eval);
     stack_frame
         .exprs_to_eval
@@ -1299,6 +1299,8 @@ pub fn eval_exprs(
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use crate::parse::{parse_def_or_expr_from_str, parse_exprs_from_str, Position};
 
     use super::*;
@@ -1316,7 +1318,10 @@ mod tests {
 
     #[test]
     fn test_eval_bool_literal() {
-        let exprs = vec![Expression(Position(0), Expression_::BoolLiteral(true))];
+        let exprs = vec![Expression(
+            Position(0, PathBuf::from("__test.gdn")),
+            Expression_::BoolLiteral(true),
+        )];
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -1328,16 +1333,19 @@ mod tests {
         let mut env = Env::default();
 
         let exprs = vec![Expression(
-            Position(0),
+            Position(0, PathBuf::from("__test.gdn")),
             Expression_::Let(
                 VariableName("foo".into()),
-                Box::new(Expression(Position(0), Expression_::BoolLiteral(true))),
+                Box::new(Expression(
+                    Position(0, PathBuf::from("__test.gdn")),
+                    Expression_::BoolLiteral(true),
+                )),
             ),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
 
         let exprs = vec![Expression(
-            Position(0),
+            Position(0, PathBuf::from("__test.gdn")),
             Expression_::Variable(VariableName("foo".into())),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
@@ -1436,10 +1444,13 @@ mod tests {
     fn test_eval_call() {
         let mut env = Env::default();
 
-        let defs = match parse_def_or_expr_from_str("fun f() { true; }").unwrap() {
-            DefinitionsOrExpression::Defs(defs) => defs,
-            DefinitionsOrExpression::Expr(_) => unreachable!(),
-        };
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f() { true; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("f();").unwrap();
@@ -1451,7 +1462,9 @@ mod tests {
     fn test_eval_call_with_arg() {
         let mut env = Env::default();
 
-        let defs = match parse_def_or_expr_from_str("fun f(x) {x; }").unwrap() {
+        let defs = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f(x) {x; }")
+            .unwrap()
+        {
             DefinitionsOrExpression::Defs(defs) => defs,
             DefinitionsOrExpression::Expr(_) => unreachable!(),
         };
@@ -1466,10 +1479,13 @@ mod tests {
     fn test_eval_call_second_arg() {
         let mut env = Env::default();
 
-        let defs = match parse_def_or_expr_from_str("fun f(x, y) { y; }").unwrap() {
-            DefinitionsOrExpression::Defs(defs) => defs,
-            DefinitionsOrExpression::Expr(_) => unreachable!(),
-        };
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f(x, y) { y; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("f(1, 2);").unwrap();
@@ -1490,10 +1506,13 @@ mod tests {
     fn test_eval_env_after_call() {
         let mut env = Env::default();
 
-        let defs = match parse_def_or_expr_from_str("fun id(x) { x; }").unwrap() {
-            DefinitionsOrExpression::Defs(defs) => defs,
-            DefinitionsOrExpression::Expr(_) => unreachable!(),
-        };
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun id(x) { x; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
         eval_defs(&defs, &mut env);
 
         let stmts = parse_exprs_from_str("let i = 0; id(i); i;").unwrap();
@@ -1505,7 +1524,12 @@ mod tests {
     fn test_eval_return() {
         let mut env = Env::default();
 
-        let defs = match parse_def_or_expr_from_str("fun f() { return 1; 2; }").unwrap() {
+        let defs = match parse_def_or_expr_from_str(
+            &PathBuf::from("__test.gdn"),
+            "fun f() { return 1; 2; }",
+        )
+        .unwrap()
+        {
             DefinitionsOrExpression::Defs(defs) => defs,
             DefinitionsOrExpression::Expr(_) => unreachable!(),
         };

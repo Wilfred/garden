@@ -822,7 +822,7 @@ fn lex<'a>(path: &PathBuf, s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
 
 #[cfg(test)]
 pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
-    let tokens = lex(s)?;
+    let tokens = lex(&PathBuf::from("__test.gdn"), s)?;
     let mut token_ptr = &tokens[..];
 
     let mut res = vec![];
@@ -840,9 +840,9 @@ mod tests {
     #[test]
     fn test_lex_no_offset() {
         assert_eq!(
-            lex("1").unwrap(),
+            lex(&PathBuf::from("__test.gdn"), "1").unwrap(),
             vec![Token {
-                offset: Position(0),
+                offset: Position(0, PathBuf::from("__test.gdn")),
                 text: "1",
                 preceding_comments: vec![],
             }]
@@ -852,9 +852,9 @@ mod tests {
     #[test]
     fn test_lex_with_offset() {
         assert_eq!(
-            lex(" a").unwrap(),
+            lex(&PathBuf::from("__test.gdn"), " a").unwrap(),
             vec![Token {
-                offset: Position(1),
+                offset: Position(1, PathBuf::from("__test.gdn")),
                 text: "a",
                 preceding_comments: vec![],
             }]
@@ -864,7 +864,7 @@ mod tests {
     #[test]
     fn test_lex_spaces() {
         assert_eq!(
-            lex("1 + 2")
+            lex(&PathBuf::from("__test.gdn"), "1 + 2")
                 .unwrap()
                 .iter()
                 .map(|token| token.text)
@@ -876,7 +876,7 @@ mod tests {
     #[test]
     fn test_lex_no_spaces() {
         assert_eq!(
-            lex("1+2")
+            lex(&PathBuf::from("__test.gdn"), "1+2")
                 .unwrap()
                 .iter()
                 .map(|token| token.text)
@@ -891,7 +891,10 @@ mod tests {
 
         assert_eq!(
             ast,
-            vec![Expression(Position(0), Expression_::BoolLiteral(true))]
+            vec![Expression(
+                Position(0, PathBuf::from("__test.gdn")),
+                Expression_::BoolLiteral(true)
+            )]
         );
     }
 
@@ -902,7 +905,7 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::StringLiteral("a\nb\\c\"d".into())
             )]
         );
@@ -911,9 +914,9 @@ mod tests {
     #[test]
     fn test_lex_comment() {
         assert_eq!(
-            lex("// 2\n1").unwrap(),
+            lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap(),
             vec![Token {
-                offset: Position(5),
+                offset: Position(5, PathBuf::from("__test.gdn"),),
                 text: "1",
                 preceding_comments: vec![" 2\n"],
             }]
@@ -922,12 +925,12 @@ mod tests {
 
     #[test]
     fn test_lex_comment_leading_newline() {
-        assert_eq!(lex("\n// 2").unwrap(), vec![]);
+        assert_eq!(lex(&PathBuf::from("__test.gdn"), "\n// 2").unwrap(), vec![]);
     }
 
     #[test]
     fn test_lex_standalone_comment() {
-        assert_eq!(lex("// foo").unwrap(), vec![]);
+        assert_eq!(lex(&PathBuf::from("__test.gdn"), "// foo").unwrap(), vec![]);
     }
 
     #[test]
@@ -937,7 +940,7 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::Variable(VariableName("abc_def".to_string()))
             )]
         );
@@ -950,10 +953,13 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::Let(
                     VariableName("x".into()),
-                    Box::new(Expression(Position(8), Expression_::IntLiteral(1)))
+                    Box::new(Expression(
+                        Position(8, PathBuf::from("__test.gdn")),
+                        Expression_::IntLiteral(1)
+                    ))
                 )
             )]
         );
@@ -966,9 +972,12 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::If(
-                    Box::new(Expression(Position(4), Expression_::BoolLiteral(true))),
+                    Box::new(Expression(
+                        Position(4, PathBuf::from("__test.gdn")),
+                        Expression_::BoolLiteral(true)
+                    )),
                     vec![],
                     vec![],
                 )
@@ -983,18 +992,18 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::If(
                     Box::new(Expression(
-                        Position(4),
+                        Position(4, PathBuf::from("__test.gdn")),
                         Expression_::Variable(VariableName("x".into()))
                     )),
                     vec![],
                     vec![Expression(
-                        Position(15),
+                        Position(15, PathBuf::from("__test.gdn")),
                         Expression_::If(
                             Box::new(Expression(
-                                Position(19),
+                                Position(19, PathBuf::from("__test.gdn")),
                                 Expression_::Variable(VariableName("y".into()))
                             )),
                             vec![],
@@ -1013,9 +1022,12 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::If(
-                    Box::new(Expression(Position(4), Expression_::BoolLiteral(true))),
+                    Box::new(Expression(
+                        Position(4, PathBuf::from("__test.gdn")),
+                        Expression_::BoolLiteral(true)
+                    )),
                     vec![],
                     vec![],
                 )
@@ -1030,9 +1042,9 @@ mod tests {
         assert_eq!(
             ast,
             vec![Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::Return(Box::new(Expression(
-                    Position(7),
+                    Position(7, PathBuf::from("__test.gdn")),
                     Expression_::BoolLiteral(true)
                 )))
             )]
@@ -1041,7 +1053,7 @@ mod tests {
 
     #[test]
     fn test_parse_function() {
-        let ast = match parse_def_or_expr_from_str("// Hello\n// World\nfun foo() {}").unwrap() {
+        let ast = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "// Hello\n// World\nfun foo() {}").unwrap() {
             DefinitionsOrExpression::Defs(defs) => defs,
             DefinitionsOrExpression::Expr(_) => unreachable!(),
         };
@@ -1049,7 +1061,7 @@ mod tests {
         assert_eq!(
             ast,
             vec![Definition(
-                Position(18),
+                Position(18, PathBuf::from("__test.gdn")),
                 Definition_::Fun(
                     Some("Hello\nWorld".into()),
                     VariableName("foo".into()),
@@ -1062,7 +1074,7 @@ mod tests {
 
     #[test]
     fn test_parse_block_expression() {
-        let ast = match parse_def_or_expr_from_str("let x = 1;").unwrap() {
+        let ast = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "let x = 1;").unwrap() {
             DefinitionsOrExpression::Defs(_) => unreachable!(),
             DefinitionsOrExpression::Expr(e) => e,
         };
@@ -1070,10 +1082,13 @@ mod tests {
         assert_eq!(
             ast,
             Expression(
-                Position(0),
+                Position(0, PathBuf::from("__test.gdn")),
                 Expression_::Let(
                     VariableName("x".into()),
-                    Box::new(Expression(Position(8), Expression_::IntLiteral(1)))
+                    Box::new(Expression(
+                        Position(8, PathBuf::from("__test.gdn")),
+                        Expression_::IntLiteral(1)
+                    ))
                 )
             )
         );

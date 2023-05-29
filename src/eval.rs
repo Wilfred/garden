@@ -375,7 +375,7 @@ fn eval_while(
 }
 
 fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
-    if !stack_frame.bindings.contains_key(&variable) {
+    if !stack_frame.bindings.contains_key(variable) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is not currently bound. Try `let {} = something`.",
@@ -398,7 +398,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<
 }
 
 fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
-    if stack_frame.bindings.contains_key(&variable) {
+    if stack_frame.bindings.contains_key(variable) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is already bound. Try `{} = something` instead.",
@@ -536,7 +536,7 @@ fn eval_integer_binop(
             _ => {
                 return Err(ErrorInfo {
                     message: format!("Expected an integer, but got: {}", lhs_value),
-                    restore_values: vec![lhs_value.clone(), rhs_value],
+                    restore_values: vec![lhs_value, rhs_value],
                 });
             }
         };
@@ -545,7 +545,7 @@ fn eval_integer_binop(
             _ => {
                 return Err(ErrorInfo {
                     message: format!("Expected an integer, but got: {}", rhs_value),
-                    restore_values: vec![lhs_value, rhs_value.clone()],
+                    restore_values: vec![lhs_value, rhs_value],
                 });
             }
         };
@@ -570,7 +570,7 @@ fn eval_integer_binop(
                 if rhs_num == 0 {
                     return Err(ErrorInfo {
                         message: format!("Tried to divide {} by zero.", rhs_value),
-                        restore_values: vec![lhs_value, rhs_value.clone()],
+                        restore_values: vec![lhs_value, rhs_value],
                     });
                 }
 
@@ -749,7 +749,7 @@ fn eval_call(
                     Value::String(s) => {
                         match as_string_list(&arg_values[1]) {
                             Ok(items) => {
-                                let mut command = std::process::Command::new(&s);
+                                let mut command = std::process::Command::new(s);
                                 for item in items {
                                     command.arg(item);
                                 }
@@ -1050,7 +1050,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         }
                     }
                     Expression_::Variable(name) => {
-                        if let Some(value) = get_var(&name, &stack_frame, &env) {
+                        if let Some(value) = get_var(&name, &stack_frame, env) {
                             stack_frame.evalled_values.push(value);
                         } else {
                             restore_stack_frame(

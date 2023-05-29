@@ -34,7 +34,7 @@ fn read_expr(
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
-                    Ok(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, &session) {
+                    Ok(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, session) {
                         Ok(()) => {
                             println!();
                             println!();
@@ -130,7 +130,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 let err_kind = if let Some((_, Expression(_, Expression_::Stop(e)))) =
                     stack_frame.exprs_to_eval.last()
                 {
-                    e.clone()
+                    *e
                 } else {
                     println!(":replace failed: expected to be at an evaluation stopping point");
                     continue;

@@ -54,7 +54,7 @@ fn main() {
     }
 }
 
-fn line_of_offset<'a>(src: &'a str, byte_offset: usize) -> (&'a str, usize, usize) {
+fn line_of_offset(src: &str, byte_offset: usize) -> (&str, usize, usize) {
     let mut line_start_offset = 0;
 
     for (i, line) in src.lines().enumerate() {

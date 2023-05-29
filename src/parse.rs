@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -94,7 +94,7 @@ fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
 }
 
 fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
-    tokens.first().map(|t| t.clone())
+    tokens.first().cloned()
 }
 
 fn next_token_is(tokens: &[Token<'_>], token: &str) -> bool {
@@ -503,7 +503,7 @@ fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Express
     Ok(expr)
 }
 
-fn parse_definition(path: &PathBuf, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
             return parse_function(tokens);
@@ -520,7 +520,7 @@ fn parse_definition(path: &PathBuf, tokens: &mut &[Token<'_>]) -> Result<Definit
     Err(ParseError::OtherError(
         Position {
             offset: 0,
-            path: path.clone(),
+            path: path.into(),
         },
         "Expected a definition, got EOF".to_string(),
     ))

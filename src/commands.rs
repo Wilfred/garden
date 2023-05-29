@@ -36,7 +36,7 @@ pub enum Command {
 /// boundary.
 fn split_first_word<'a>(s: &'a str, word: &str) -> Option<&'a str> {
     if let Some(suffix) = s.strip_prefix(word) {
-        if suffix == "" {
+        if suffix.is_empty() {
             return Some("");
         }
 
@@ -84,7 +84,7 @@ impl Command {
                     // TODO: find a better name for this.
                     return match parse_inline_expr_from_str(
                         &PathBuf::from("__interactive_inline__"),
-                        &src,
+                        src,
                     ) {
                         Ok(expr) => Ok(Command::Replace(Some(expr))),
                         Err(_) => Ok(Command::Replace(None)),
@@ -152,7 +152,7 @@ fn describe_fun(value: &Value) -> Option<String> {
             let mut res = String::new();
             match doc_comment {
                 Some(doc_comment) => {
-                    res.push_str(&doc_comment);
+                    res.push_str(doc_comment);
                 }
                 None => res.push_str(&format!("`{}` has no documentation comment.", name.0)),
             }
@@ -316,7 +316,7 @@ pub fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                match parse_def_or_expr_from_str(&PathBuf::from("__interactive__"), &src) {
+                match parse_def_or_expr_from_str(&PathBuf::from("__interactive__"), src) {
                     Ok(ast) => write!(buf, "{:?}", ast).unwrap(),
                     Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(_, e)) => {
                         write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();

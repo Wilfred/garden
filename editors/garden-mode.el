@@ -32,7 +32,7 @@
              (garden--flash-region start-pos end-pos)
              (buffer-substring-no-properties start-pos end-pos)))))
     ;; TODO: report error immediately if any occurred.
-    (garden-send-input src)
+    (garden-send-input src (buffer-file-name))
     (when (region-active-p)
       (deactivate-mark))))
 
@@ -135,13 +135,16 @@ the user entering a value in the *garden* buffer."
       (user-error "No Garden process available")))
   (garden--buffer))
 
-(defun garden--send-run (proc string)
-  (process-send-string proc (json-serialize `((method . "run") (input . ,string))))
-  (process-send-string proc "\n"))
+(defun garden--send-run (proc string &optional path)
+  (let ((args `((method . "run") (input . ,string))))
+    (when path
+      (setq args `(,@args (path . ,path))))
+    (process-send-string proc (json-serialize args))
+    (process-send-string proc "\n")))
 
-(defun garden-send-input (string)
+(defun garden-send-input (string &optional path)
   (let ((buf (garden--active-buffer)))
-    (garden--send-run (get-buffer-process buf) string)))
+    (garden--send-run (get-buffer-process buf) string path)))
 
 (defun garden-help-command ()
   (interactive)

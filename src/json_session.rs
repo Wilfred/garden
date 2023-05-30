@@ -147,7 +147,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         complete_src.push_str(&req.input);
                         // TODO: JSON requests should pass the path.
                         match parse_def_or_expr_from_str(
-                            &PathBuf::from("__json_session_todo__"),
+                            &req.path.unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
                             &req.input,
                         ) {
                             Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {

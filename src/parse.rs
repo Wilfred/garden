@@ -407,6 +407,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
 fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let expr = parse_simple_expression(tokens)?;
 
+    // TODO: support foo()() syntax.
     if next_token_is(tokens, "(") {
         let arguments = parse_call_arguments(tokens)?;
         return Ok(Expression(

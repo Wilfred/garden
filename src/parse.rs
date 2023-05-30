@@ -679,13 +679,17 @@ fn parse_def_or_expr(
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_inline_expression(&mut tokens_copy) {
-        return Ok(DefinitionsOrExpression::Expr(expr));
+    if let Ok(expr) = parse_block_expression(&mut tokens_copy) {
+        if tokens_copy.is_empty() {
+            return Ok(DefinitionsOrExpression::Expr(expr));
+        }
     }
 
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_block_expression(&mut tokens_copy) {
-        return Ok(DefinitionsOrExpression::Expr(expr));
+    if let Ok(expr) = parse_inline_expression(&mut tokens_copy) {
+        if tokens_copy.is_empty() {
+            return Ok(DefinitionsOrExpression::Expr(expr));
+        }
     }
 
     let mut defs = vec![];
@@ -1173,6 +1177,14 @@ mod tests {
                 )
             )]
         );
+    }
+
+    #[test]
+    fn test_incomplete_expression() {
+        assert!(matches!(
+            parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "1; 2"),
+            Err(_)
+        ));
     }
 
     #[test]

@@ -32,6 +32,7 @@ pub enum BuiltinFunctionKind {
     Shell,
     ListAppend,
     StringLength,
+    StringSubstring,
 }
 
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
@@ -71,6 +72,13 @@ list_append([10], 11); // [10, 11]
 string_length(\"abc\"); // 3
 ```"
         }
+        BuiltinFunctionKind::StringSubstring => {
+            "Return the substring of the string between the indexes specified.
+
+```
+string_substring(\"abcdef\", 1, 3); // \"bc\"
+```"
+        }
     }
 }
 
@@ -87,6 +95,7 @@ impl Display for Value {
                     BuiltinFunctionKind::Shell => "shell",
                     BuiltinFunctionKind::ListAppend => "list_append",
                     BuiltinFunctionKind::StringLength => "string_length",
+                    BuiltinFunctionKind::StringSubstring => "string_substring",
                 };
                 write!(f, "(function: {})", name)
             }
@@ -160,6 +169,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("string_length".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::StringLength),
+        );
+        file_scope.insert(
+            VariableName("string_substring".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::StringSubstring),
         );
 
         Self {
@@ -865,6 +878,88 @@ fn eval_call(
                     }
                 }
             }
+            BuiltinFunctionKind::StringSubstring => {
+                if args.len() != 3 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function string_substring requires 3 arguments, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                    });
+                }
+                let s_arg = match &arg_values[0] {
+                    Value::String(s) => s,
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a string, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                };
+                let from_arg = match &arg_values[1] {
+                    Value::Integer(i) => i,
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected an integer, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                };
+                let to_arg = match &arg_values[2] {
+                    Value::Integer(i) => i,
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected an integer, but got: {}", v),
+                            restore_values: saved_values,
+                        });
+                    }
+                };
+
+                if from_arg > to_arg {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("The first argument to string_substring cannot be greater than the first, but got: {} and {}", from_arg, to_arg),
+                        restore_values: saved_values,
+                    });
+                }
+
+                stack_frame.evalled_values.push(Value::String(
+                    s_arg
+                        .chars()
+                        .skip(*from_arg as usize)
+                        .take((to_arg - from_arg) as usize)
+                        .collect(),
+                ));
+            }
         },
         v => {
             let mut saved_values = vec![];
@@ -1405,6 +1500,15 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&stmts, &mut env).unwrap();
         assert_eq!(value, Value::Integer(3));
+    }
+
+    #[test]
+    fn test_eval_string_substring() {
+        let stmts = parse_exprs_from_str("string_substring(\"abcdef\", 1, 3);").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&stmts, &mut env).unwrap();
+        assert_eq!(value, Value::String("bc".into()));
     }
 
     #[test]

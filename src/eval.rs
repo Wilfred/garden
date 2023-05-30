@@ -135,6 +135,7 @@ impl Display for Value {
 #[derive(Debug)]
 pub struct StackFrame {
     pub fun_name: VariableName,
+    // TODO: Variables should be block scoped, not function scoped.
     pub bindings: HashMap<VariableName, Value>,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<Value>,

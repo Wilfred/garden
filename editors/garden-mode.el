@@ -159,7 +159,7 @@ the user entering a value in the *garden* buffer."
     (when sym
       (garden-send-input (format ":doc %s" sym)))))
 
-(defun garden-stop ()
+(defun garden-stop-session ()
   (interactive)
   (let ((buf (garden--buffer)))
     (kill-buffer buf)))
@@ -169,16 +169,16 @@ the user entering a value in the *garden* buffer."
          (proc (start-process "garden" buf garden-executable "json")))
     (set-process-filter proc #'garden-process-filter)))
 
-(defun garden-start ()
+(defun garden-start-session ()
   "Start a Garden session and switch to the session buffer."
   (interactive)
   (garden--start)
   (switch-to-buffer (garden--buffer)))
 
-(defun garden-restart ()
+(defun garden-new-session ()
   (interactive)
-  (garden-stop)
-  (garden-start))
+  (garden-stop-session)
+  (garden-start-session))
 
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt

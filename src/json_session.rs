@@ -28,6 +28,7 @@ enum Method {
 struct Request {
     method: Method,
     input: String,
+    path: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -46,6 +47,15 @@ pub enum ResponseKind {
 pub struct Response {
     pub kind: ResponseKind,
     pub value: Result<String, String>,
+}
+
+pub fn sample_request_as_json() -> String {
+    serde_json::to_string(&Request {
+        method: Method::Run,
+        input: "1 + 2".into(),
+        path: Some(PathBuf::from("/foo/bar.gdn")),
+    })
+    .unwrap()
 }
 
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
@@ -170,11 +180,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                 value: Err(format!(
                     "Could not parse request: {}. A valid request looks like: {}",
                     line,
-                    serde_json::to_string(&Request {
-                        method: Method::Run,
-                        input: "1 + 2".into(),
-                    })
-                    .unwrap()
+                    sample_request_as_json(),
                 )),
             },
         };

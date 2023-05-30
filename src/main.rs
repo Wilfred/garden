@@ -28,6 +28,8 @@ enum Commands {
     Repl,
     /// Start a session over JSON RPC.
     Json,
+    /// Print an example JSON request that's valid in JSON sessions.
+    JsonExample,
     /// Execute a Garden program at the path specified.
     Run { path: PathBuf },
 }
@@ -51,6 +53,9 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
+        Commands::JsonExample => {
+            println!("{}", json_session::sample_request_as_json());
+        }
     }
 }
 

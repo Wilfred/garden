@@ -939,6 +939,19 @@ fn eval_call(
                     }
                 };
 
+                if *from_arg < 0 {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("The first argument to string_substring must be greater than 0, but got: {}", from_arg),
+                        restore_values: saved_values,
+                    });
+                }
+
                 if from_arg > to_arg {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
@@ -947,7 +960,7 @@ fn eval_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("The first argument to string_substring cannot be greater than the first, but got: {} and {}", from_arg, to_arg),
+                        message: format!("The first argument to string_substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg),
                         restore_values: saved_values,
                     });
                 }

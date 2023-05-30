@@ -495,35 +495,16 @@ fn eval_equality_binop(
         .pop()
         .expect("Popped an empty value stack for LHS of binary operator");
 
-    let lhs_num = match lhs_value {
-        Value::Integer(i) => i,
-        _ => {
-            return Err(ErrorInfo {
-                message: format!("Expected an integer, but got: {}", lhs_value),
-                restore_values: vec![lhs_value, rhs_value],
-            });
-        }
-    };
-    let rhs_num = match rhs_value {
-        Value::Integer(i) => i,
-        _ => {
-            return Err(ErrorInfo {
-                message: format!("Expected an integer, but got: {}", rhs_value),
-                restore_values: vec![lhs_value, rhs_value],
-            });
-        }
-    };
-
     match op {
         BinaryOperatorKind::Equal => {
             stack_frame
                 .evalled_values
-                .push(Value::Boolean(lhs_num == rhs_num));
+                .push(Value::Boolean(lhs_value == rhs_value));
         }
         BinaryOperatorKind::NotEqual => {
             stack_frame
                 .evalled_values
-                .push(Value::Boolean(lhs_num != rhs_num));
+                .push(Value::Boolean(lhs_value != rhs_value));
         }
         _ => unreachable!(),
     }
@@ -1392,6 +1373,15 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
+    }
+
+    #[test]
+    fn test_eval_equality() {
+        let exprs = parse_exprs_from_str("\"a\" == \"b\";").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(false));
     }
 
     #[test]

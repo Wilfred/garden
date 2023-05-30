@@ -150,7 +150,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             &req.path.unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
                             &req.input,
                         ) {
-                            Ok(stmts) => match eval_def_or_exprs(&stmts, &mut env, &mut session) {
+                            Ok(exprs) => match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                                 Ok(result) => Response {
                                     kind: ResponseKind::Evaluate,
                                     value: Ok(format!("{}", result)),

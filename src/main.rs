@@ -82,7 +82,7 @@ fn line_of_offset(src: &str, byte_offset: usize) -> (&str, usize, usize) {
 fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
         Ok(src) => match parse_def_or_expr_from_str(path, &src) {
-            Ok(stmts) => {
+            Ok(exprs) => {
                 let mut env = Env::default();
                 let mut session = Session {
                     history: src.clone(),
@@ -92,7 +92,7 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
 
                 // TODO: files should only contain defs, not
                 // expressions. Ignore the expressions.
-                match eval_def_or_exprs(&stmts, &mut env, &mut session) {
+                match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(e)) => {
                         eprintln!("Error: {}", e);

@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -142,10 +142,8 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<
 }
 
 fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    let re = Regex::new(r"^[0-9]+$").unwrap();
-
     let token = require_a_token(tokens, "integer literal")?;
-    if re.is_match(token.text) {
+    if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
         Ok(Expression(token.offset, Expression_::IntLiteral(i)))
     } else {
@@ -341,8 +339,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             return Ok(Expression(token.offset, Expression_::BoolLiteral(false)));
         }
 
-        let re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
-        if re.is_match(token.text) {
+        if VARIABLE_RE.is_match(token.text) {
             return parse_variable_expression(tokens);
         }
 
@@ -621,11 +618,8 @@ const RESERVED_WORDS: &[&str] = &[
 ];
 
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableName), ParseError> {
-    // TODO: this is duplicated with lex().
-    let variable_re = Regex::new(r"^[a-z_][a-z0-9_]*$").unwrap();
-
     let variable_token = require_a_token(tokens, "variable name")?;
-    if !variable_re.is_match(variable_token.text) {
+    if !VARIABLE_RE.is_match(variable_token.text) {
         return Err(ParseError::OtherError(
             variable_token.offset,
             format!("Invalid variable name: '{}'", variable_token.text),

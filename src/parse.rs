@@ -711,7 +711,7 @@ pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression,
 }
 
 lazy_static! {
-    static ref INTEGER_RE: Regex = Regex::new(r"^[0-9]+").unwrap();
+    static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
     static ref STRING_RE: Regex = Regex::new(r##"^"(\\"|[^"])*""##).unwrap();
     static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 }
@@ -762,6 +762,24 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
                 continue 'outer;
             }
         }
+
+        // Match integers before binary operators, so -1 is treated as
+        // a single integer literal, not the tokens - followed by 1.
+        if let Some(integer_match) = INTEGER_RE.find(s) {
+            res.push(Token {
+                offset: Position {
+                    offset,
+                    path: path.clone(),
+                },
+                text: integer_match.as_str(),
+                preceding_comments,
+            });
+            preceding_comments = vec![];
+
+            offset += integer_match.end();
+            continue;
+        }
+
         for token_char in [
             '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']',
         ] {
@@ -780,19 +798,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
                 continue 'outer;
             }
         }
-        if let Some(integer_match) = INTEGER_RE.find(s) {
-            res.push(Token {
-                offset: Position {
-                    offset,
-                    path: path.clone(),
-                },
-                text: integer_match.as_str(),
-                preceding_comments,
-            });
-            preceding_comments = vec![];
-
-            offset += integer_match.end();
-        } else if let Some(string_match) = STRING_RE.find(s) {
+        if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
                 offset: Position {
                     offset,
@@ -921,6 +927,22 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::BoolLiteral(true)
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_int_literal() {
+        let ast = parse_exprs_from_str("-123;").unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Expression(
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
+                Expression_::IntLiteral(-123)
             )]
         );
     }

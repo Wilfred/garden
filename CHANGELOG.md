@@ -11,6 +11,8 @@ Syntax: Added support for escaping in string literals, so `"\n"`,
 
 Syntax: Added list literals, e.g. `[1, 2 + 3]`.
 
+Syntax: Added negative int literals, e.g. `-123`.
+
 Standard library: Added the functions `list_append`,
 `string_substring` and `string_length`.
 

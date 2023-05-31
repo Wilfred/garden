@@ -51,6 +51,7 @@ pub enum Expression_ {
     Variable(VariableName),
     Call(Box<Expression>, Vec<Expression>),
     Stop(Option<ErrorKind>),
+    Block(Vec<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -322,6 +323,11 @@ fn unescape_string(s: &str) -> String {
 
 fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     if let Some(token) = peek_token(tokens) {
+        if token.text == "{" {
+            let exprs = parse_block(tokens)?;
+            return Ok(Expression(token.offset, Expression_::Block(exprs)));
+        }
+
         if token.text == "(" {
             return parse_parenthesis_expression(tokens);
         }
@@ -561,7 +567,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
     Ok(params)
 }
 
-fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
+fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     require_token(tokens, "{")?;
 
     let mut exprs = vec![];
@@ -606,7 +612,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
 
     let (_, name) = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
-    let body = parse_function_body(tokens)?;
+    let body = parse_block(tokens)?;
 
     Ok(Definition(
         fun_token.offset,

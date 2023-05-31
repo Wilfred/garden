@@ -1288,6 +1288,11 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *receiver.clone()));
                         }
                     }
+                    Expression_::Block(exprs) => {
+                        for expr in exprs.iter().rev() {
+                            stack_frame.exprs_to_eval.push((false, expr.clone()));
+                        }
+                    }
                 }
             }
 
@@ -1445,6 +1450,15 @@ mod tests {
             value,
             Value::List(vec![Value::Integer(3), Value::Integer(12)])
         );
+    }
+
+    #[test]
+    fn test_eval_block() {
+        let exprs = parse_exprs_from_str("{ let x = 1; x + 1; };").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(2));
     }
 
     #[test]

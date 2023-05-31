@@ -18,6 +18,9 @@ Syntax: Added negative int literals, e.g. `-123`.
 
 Syntax: `==` and `!=` now work for all types.
 
+Syntax: Added block expressions, e.g. `{ foo(); bar(); }` evaluates
+`foo()` and returns the value of `bar()`.
+
 Standard library: Added the functions `list_append`,
 `string_substring` and `string_length`.
 

@@ -1341,8 +1341,17 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         }
                     }
                     Expression_::Block(exprs) => {
-                        for expr in exprs.iter().rev() {
-                            stack_frame.exprs_to_eval.push((false, expr.clone()));
+                        if done_children {
+                            stack_frame.exit_block();
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(offset, expr_copy)));
+
+                            stack_frame.enter_block();
+                            for expr in exprs.iter().rev() {
+                                stack_frame.exprs_to_eval.push((false, expr.clone()));
+                            }
                         }
                     }
                 }
@@ -1511,6 +1520,14 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
+    }
+
+    #[test]
+    fn test_eval_block_scope_should_not_leak() {
+        let exprs = parse_exprs_from_str("{ let x = 1; }; x;").unwrap();
+
+        let mut env = Env::default();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

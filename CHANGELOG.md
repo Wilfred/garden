@@ -1,5 +1,8 @@
 # 0.4 (unreleased)
 
+Interactive sessions: Added the `:search` command for finding
+definitions with a given name.
+
 Syntax: `if` is now an expression, so the following is legal:
 
 ```

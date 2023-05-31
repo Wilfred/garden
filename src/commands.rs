@@ -26,6 +26,7 @@ pub enum Command {
     Replace(Option<Expression>),
     Resume,
     Skip,
+    Search(Option<String>),
     Source,
     Trace,
     Stack,
@@ -80,6 +81,9 @@ impl Command {
                 if let Some(src) = split_first_word(s, ":parse") {
                     return Ok(Command::Parse(Some(src.to_owned())));
                 }
+                if let Some(src) = split_first_word(s, ":search") {
+                    return Ok(Command::Search(Some(src.to_owned())));
+                }
                 if let Some(src) = split_first_word(s, ":replace") {
                     // TODO: find a better name for this.
                     return match parse_inline_expr_from_str(
@@ -112,6 +116,7 @@ impl Command {
             Command::Parse(_) => ":parse",
             Command::Replace(_) => ":replace",
             Command::Resume => ":resume",
+            Command::Search(_) => ":search",
             Command::Skip => ":skip",
             Command::Source => ":source",
             Command::Stack => ":stack",
@@ -238,6 +243,24 @@ pub fn run_command<T: Write>(
         Command::Skip => {
             return Err(CommandError::Skip);
         }
+        Command::Search(text) => {
+            let text = text.clone().unwrap_or_default();
+
+            // TODO: search doc comments too.
+            let mut matching_defs = vec![];
+            for (global_def, _) in env.file_scope.iter() {
+                if global_def.0.contains(&text) {
+                    matching_defs.push(global_def);
+                }
+            }
+
+            for name in &matching_defs {
+                writeln!(buf, "function: {}", name.0).unwrap();
+            }
+            write!(buf, "{} definitions found.", matching_defs.len()).unwrap();
+
+            return Ok(());
+        }
         Command::Source => {
             write!(
                 buf,
@@ -349,6 +372,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
         Command::Replace(_) => "The :replace command discards the top value in the value stack and replaces it with the expression provided.\n\nExample:\n\n:replace 123",
         Command::Resume => "The :resume command restarts evaluation if it's previously stopped.\n\nExample:\n\n:resume",
+        Command::Search(_) => "The :search command shows all the definitions whose name contains the search term.\n\nExample:\n\n:search string",
         Command::Skip => "The :skip command discards the current expression, and execution continues from the next expression.\n\nExample:\n\n:skip",
         Command::Source => "The :source command displays the history of all code evaluated in the current session.\n\nExample:\n\n:source",
         Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",

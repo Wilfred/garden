@@ -423,12 +423,12 @@ fn eval_while(
         Value::Boolean(b) => {
             if *b {
                 // Start loop evaluation again.
-                stack_frame.exprs_to_eval.push((false, expr));
+                stack_frame.exprs_to_eval.push((false, expr.clone()));
 
                 // Evaluate the body.
-                for expr in body.iter().rev() {
-                    stack_frame.exprs_to_eval.push((false, expr.clone()));
-                }
+                stack_frame
+                    .exprs_to_eval
+                    .push((false, Expression(expr.0, Expression_::Block(body.into()))))
             } else {
                 stack_frame.evalled_values.push(Value::Void);
             }
@@ -1658,6 +1658,15 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Void);
+    }
+
+    #[test]
+    fn test_eval_while_block_scope_does_not_leak() {
+        let exprs =
+            parse_exprs_from_str("let i = 0; while (i < 5) { i = i + 1; let x = 1; }").unwrap();
+
+        let mut env = Env::default();
+        assert!(eval_exprs(&exprs, &mut env).is_ok());
     }
 
     #[test]

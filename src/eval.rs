@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::BinaryOperatorKind;
+use crate::parse::{BinaryOperatorKind, Position};
 use crate::parse::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
@@ -378,6 +378,7 @@ struct ErrorInfo {
 
 fn eval_if(
     stack_frame: &mut StackFrame,
+    position: &Position,
     then_body: &[Expression],
     else_body: &[Expression],
 ) -> Result<(), ErrorInfo> {
@@ -389,13 +390,15 @@ fn eval_if(
     match &condition_value {
         Value::Boolean(b) => {
             if *b {
-                for expr in then_body.iter().rev() {
-                    stack_frame.exprs_to_eval.push((false, expr.clone()));
-                }
+                stack_frame.exprs_to_eval.push((
+                    false,
+                    Expression(position.clone(), Expression_::Block(then_body.into())),
+                ));
             } else {
-                for expr in else_body.iter().rev() {
-                    stack_frame.exprs_to_eval.push((false, expr.clone()));
-                }
+                stack_frame.exprs_to_eval.push((
+                    false,
+                    Expression(position.clone(), Expression_::Block(else_body.into())),
+                ));
             }
         }
         v => {
@@ -1054,7 +1057,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                            }) = eval_if(&mut stack_frame, then_body, else_body)
+                            }) = eval_if(&mut stack_frame, &offset, then_body, else_body)
                             {
                                 restore_stack_frame(
                                     env,
@@ -1555,6 +1558,14 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
+    }
+
+    #[test]
+    fn test_eval_if_block_scope() {
+        let exprs = parse_exprs_from_str("if (true) { let x = 1; } x;").unwrap();
+
+        let mut env = Env::default();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

@@ -21,6 +21,9 @@ Syntax: `==` and `!=` now work for all types.
 Syntax: Added block expressions, e.g. `{ foo(); bar(); }` evaluates
 `foo()` and returns the value of `bar()`.
 
+Syntax: `if` and `while` now have block scope, so local variables
+introduced there are only available until the end of the block.
+
 Standard library: Added the functions `list_append`,
 `string_substring` and `string_length`.
 

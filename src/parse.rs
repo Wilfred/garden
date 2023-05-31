@@ -218,7 +218,7 @@ fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>,
             break;
         }
 
-        res.push(parse_block_expression(tokens)?);
+        res.push(parse_block_member_expression(tokens)?);
     }
 
     require_token(tokens, "}")?;
@@ -439,7 +439,7 @@ fn parse_inline_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     parse_general_expression(tokens, true)
 }
 
-fn parse_block_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_block_member_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     parse_general_expression(tokens, false)
 }
 
@@ -576,7 +576,7 @@ fn parse_function_body(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Par
             ));
         }
 
-        let expr = parse_block_expression(tokens)?;
+        let expr = parse_block_member_expression(tokens)?;
         exprs.push(expr);
     }
 
@@ -679,7 +679,7 @@ fn parse_def_or_expr(
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_block_expression(&mut tokens_copy) {
+    if let Ok(expr) = parse_block_member_expression(&mut tokens_copy) {
         if tokens_copy.is_empty() {
             return Ok(DefinitionsOrExpression::Expr(expr));
         }
@@ -856,7 +856,7 @@ pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
 
     let mut res = vec![];
     while !token_ptr.is_empty() {
-        res.push(parse_block_expression(&mut token_ptr)?);
+        res.push(parse_block_member_expression(&mut token_ptr)?);
     }
 
     Ok(res)

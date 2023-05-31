@@ -309,7 +309,7 @@ pub fn run_command<T: Write>(
         }
         Command::Locals => {
             if let Some(stack_frame) = env.stack.last() {
-                for (i, (var_name, value)) in stack_frame.bindings.iter().enumerate() {
+                for (i, (var_name, value)) in stack_frame.all_bindings().iter().enumerate() {
                     write!(
                         buf,
                         "{}{}\t{}",

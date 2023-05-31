@@ -135,10 +135,66 @@ impl Display for Value {
 #[derive(Debug)]
 pub struct StackFrame {
     pub fun_name: VariableName,
-    // TODO: Variables should be block scoped, not function scoped.
-    pub bindings: HashMap<VariableName, Value>,
+    pub bindings: Vec<HashMap<VariableName, Value>>,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<Value>,
+}
+
+impl StackFrame {
+    fn get_binding(&self, name: &VariableName) -> Option<Value> {
+        // TODO: this allows shadowing. Is that desirable -- does it
+        // make REPL workflows less convenient when it's harder to inspect?
+        //
+        // (Probably not, as long as users can inspect everything.)
+        for bindings in self.bindings.iter().rev() {
+            if let Some(value) = bindings.get(name) {
+                return Some(value.clone());
+            }
+        }
+        None
+    }
+
+    fn add_binding(&mut self, name: &VariableName, value: Value) {
+        let bindings = self
+            .bindings
+            .last_mut()
+            .expect("Vec of bindings should always be non-empty");
+        bindings.insert(name.clone(), value);
+    }
+
+    fn set_existing_binding(&mut self, name: &VariableName, value: Value) {
+        for bindings in self.bindings.iter_mut().rev() {
+            if bindings.contains_key(name) {
+                bindings.insert(name.clone(), value);
+                return;
+            }
+        }
+        unreachable!()
+    }
+
+    fn has_binding(&self, name: &VariableName) -> bool {
+        self.get_binding(name).is_some()
+    }
+
+    fn enter_block(&mut self) {
+        self.bindings.push(HashMap::new());
+    }
+
+    fn exit_block(&mut self) {
+        self.bindings.pop();
+        assert!(!self.bindings.is_empty());
+    }
+
+    pub fn all_bindings(&self) -> Vec<(&VariableName, &Value)> {
+        let mut res = vec![];
+        for bindings in self.bindings.iter().rev() {
+            for (k, v) in bindings.iter() {
+                res.push((k, v));
+            }
+        }
+
+        res
+    }
 }
 
 #[derive(Debug)]
@@ -181,7 +237,7 @@ impl Default for Env {
             file_scope,
             stack: vec![StackFrame {
                 fun_name: VariableName("toplevel".into()),
-                bindings: HashMap::new(),
+                bindings: vec![HashMap::new()],
                 exprs_to_eval: vec![],
                 evalled_values: vec![Value::Void],
             }],
@@ -201,7 +257,7 @@ impl Env {
 }
 
 fn get_var(name: &VariableName, stack_frame: &StackFrame, env: &Env) -> Option<Value> {
-    if let Some(value) = stack_frame.bindings.get(name) {
+    if let Some(value) = stack_frame.get_binding(name) {
         return Some(value.clone());
     }
 
@@ -389,7 +445,7 @@ fn eval_while(
 }
 
 fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
-    if !stack_frame.bindings.contains_key(variable) {
+    if !stack_frame.has_binding(variable) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is not currently bound. Try `let {} = something`.",
@@ -403,16 +459,14 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame
-        .bindings
-        .insert(variable.clone(), expr_value.clone());
+    stack_frame.set_existing_binding(variable, expr_value.clone());
     stack_frame.evalled_values.push(expr_value);
 
     Ok(())
 }
 
 fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
-    if stack_frame.bindings.contains_key(variable) {
+    if stack_frame.has_binding(variable) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is already bound. Try `{} = something` instead.",
@@ -426,9 +480,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(),
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame
-        .bindings
-        .insert(variable.clone(), expr_value.clone());
+    stack_frame.add_binding(variable, expr_value.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }
@@ -641,7 +693,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 fun_name: name.clone(),
-                bindings: fun_bindings,
+                bindings: vec![fun_bindings],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::Void],
             }));

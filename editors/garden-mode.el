@@ -26,15 +26,25 @@
   (let ((src
          (if (region-active-p)
              (buffer-substring-no-properties (region-beginning) (region-end))
-           ;; TODO: send the expression before point, not just the whole line.
-           (let* ((start-pos (line-beginning-position))
-                  (end-pos (line-end-position)))
-             (garden--flash-region start-pos end-pos)
-             (buffer-substring-no-properties start-pos end-pos)))))
+           (garden--previous-expr))))
     ;; TODO: report error immediately if any occurred.
     (garden-send-input src (buffer-file-name))
     (when (region-active-p)
       (deactivate-mark))))
+
+(defun garden--previous-expr ()
+  "Return the text of the expression before point."
+  (save-excursion
+    (let ((end-pos (point))
+          start-pos)
+      (when (looking-back (rx "}") 1)
+        (backward-sexp 1))
+      (setq start-pos (line-beginning-position))
+
+      (garden--flash-region start-pos end-pos)
+      (buffer-substring-no-properties start-pos end-pos))))
+
+(looking-back (rx "}") 1)
 
 (defun garden--flash-region (start end)
   "Temporarily highlight from START to END."

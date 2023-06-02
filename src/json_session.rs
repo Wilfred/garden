@@ -2,10 +2,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::{
     io::BufRead,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    sync::{atomic::AtomicBool, Arc},
 };
 
 use serde::{Deserialize, Serialize};
@@ -75,10 +72,6 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
     };
 
     loop {
-        if interrupted.load(Ordering::SeqCst) {
-            break;
-        }
-
         let mut line = String::new();
         let stdin = std::io::stdin();
         stdin

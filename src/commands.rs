@@ -159,16 +159,16 @@ fn describe_fun(value: &Value) -> Option<String> {
                 Some(doc_comment) => {
                     res.push_str(doc_comment);
                 }
-                None => res.push_str(&format!("`{}` has no documentation comment.", name.0)),
+                None => res.push_str(&format!("`{}` has no documentation comment.", name.1 .0)),
             }
             res.push_str("\n\n");
 
             res.push_str(&format!(
                 "fn {}({}) {{ ... }}",
-                name.0,
+                name.1.0,
                 params
                     .iter()
-                    .map(|p| p.0.clone())
+                    .map(|p| p.1.0.clone())
                     .collect::<Vec<_>>()
                     .join(", ")
             ));

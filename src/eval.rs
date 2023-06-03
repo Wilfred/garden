@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, Position};
+use crate::parse::{BinaryOperatorKind, Position, Variable};
 use crate::parse::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
@@ -13,12 +13,7 @@ use crate::parse::{
 pub enum Value {
     Integer(i64),
     Boolean(bool),
-    Fun(
-        Option<String>,
-        VariableName,
-        Vec<VariableName>,
-        Vec<Expression>,
-    ),
+    Fun(Option<String>, Variable, Vec<Variable>, Vec<Expression>),
     BuiltinFunction(BuiltinFunctionKind),
     String(String),
     List(Vec<Value>),
@@ -87,7 +82,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(_, name, _, _) => write!(f, "(function: {})", name.0),
+            Value::Fun(_, name, _, _) => write!(f, "(function: {})", name.1 .0),
             Value::BuiltinFunction(kind) => {
                 let name = match kind {
                     BuiltinFunctionKind::Print => "print",
@@ -134,6 +129,7 @@ impl Display for Value {
 
 #[derive(Debug)]
 pub struct StackFrame {
+    // TODO: use Variable in here so we have the function position.
     pub fun_name: VariableName,
     pub bindings: Vec<HashMap<VariableName, Value>>,
     pub exprs_to_eval: Vec<(bool, Expression)>,
@@ -315,7 +311,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
         match &definition.1 {
             Definition_::Fun(doc_comment, name, params, body) => {
                 env.set_with_file_scope(
-                    name,
+                    &name.1,
                     Value::Fun(
                         doc_comment.clone(),
                         name.clone(),
@@ -447,12 +443,13 @@ fn eval_while(
     Ok(())
 }
 
-fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
-    if !stack_frame.has_binding(variable) {
+fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
+    let var_name = &variable.1;
+    if !stack_frame.has_binding(&var_name) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is not currently bound. Try `let {} = something`.",
-                variable.0, variable.0
+                var_name.0, var_name.0
             ),
             restore_values: vec![],
         });
@@ -462,18 +459,19 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame.set_existing_binding(variable, expr_value.clone());
+    stack_frame.set_existing_binding(&var_name, expr_value.clone());
     stack_frame.evalled_values.push(expr_value);
 
     Ok(())
 }
 
-fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(), ErrorInfo> {
-    if stack_frame.has_binding(variable) {
+fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
+    let var_name = &variable.1;
+    if stack_frame.has_binding(&var_name) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is already bound. Try `{} = something` instead.",
-                variable.0, variable.0
+                var_name.0, var_name.0
             ),
             restore_values: vec![],
         });
@@ -483,7 +481,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &VariableName) -> Result<(),
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame.add_binding(variable, expr_value.clone());
+    stack_frame.add_binding(&var_name, expr_value.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }
@@ -676,7 +674,7 @@ fn eval_call(
                 return Err(ErrorInfo {
                     message: format!(
                         "Function {} expects {} arguments, but got {}",
-                        name.0.clone(),
+                        name.1 .0.clone(),
                         params.len(),
                         arg_values.len()
                     ),
@@ -691,11 +689,11 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in params.iter().zip(arg_values.iter()) {
-                fun_bindings.insert(param.clone(), value.clone());
+                fun_bindings.insert(param.1.clone(), value.clone());
             }
 
             return Ok(Some(StackFrame {
-                fun_name: name.clone(),
+                fun_name: name.1.clone(),
                 bindings: vec![fun_bindings],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::Void],
@@ -1195,7 +1193,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         }
                     }
                     Expression_::Variable(name) => {
-                        if let Some(value) = get_var(&name, &stack_frame, env) {
+                        if let Some(value) = get_var(&name.1, &stack_frame, env) {
                             stack_frame.evalled_values.push(value);
                         } else {
                             restore_stack_frame(
@@ -1207,7 +1205,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             );
                             return Err(EvalError::ResumableError(format!(
                                 "Undefined variable: {}.",
-                                name.0
+                                name.1 .0
                             )));
                         }
                     }
@@ -1464,7 +1462,13 @@ mod tests {
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
-                VariableName("foo".into()),
+                Variable(
+                    Position {
+                        offset: 0,
+                        path: PathBuf::from("__test.gdn"),
+                    },
+                    VariableName("foo".into()),
+                ),
                 Box::new(Expression(
                     Position {
                         offset: 0,
@@ -1481,7 +1485,13 @@ mod tests {
                 offset: 0,
                 path: PathBuf::from("__test.gdn"),
             },
-            Expression_::Variable(VariableName("foo".into())),
+            Expression_::Variable(Variable(
+                Position {
+                    offset: 0,
+                    path: PathBuf::from("__test.gdn"),
+                },
+                VariableName("foo".into()),
+            )),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
     }

@@ -22,6 +22,9 @@ pub enum ParseError {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct VariableName(pub String);
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Variable(pub Position, pub VariableName);
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperatorKind {
     Add,
@@ -40,15 +43,15 @@ pub enum BinaryOperatorKind {
 pub enum Expression_ {
     If(Box<Expression>, Vec<Expression>, Vec<Expression>),
     While(Box<Expression>, Vec<Expression>),
-    Assign(VariableName, Box<Expression>),
-    Let(VariableName, Box<Expression>),
+    Assign(Variable, Box<Expression>),
+    Let(Variable, Box<Expression>),
     Return(Box<Expression>),
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
     ListLiteral(Vec<Expression>),
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
-    Variable(VariableName),
+    Variable(Variable),
     Call(Box<Expression>, Vec<Expression>),
     Stop(Option<ErrorKind>),
     Block(Vec<Expression>),
@@ -60,12 +63,7 @@ pub struct Expression(pub Position, pub Expression_);
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     // TODO: define a FunDetails struct.
-    Fun(
-        Option<String>,
-        VariableName,
-        Vec<VariableName>,
-        Vec<Expression>,
-    ),
+    Fun(Option<String>, Variable, Vec<Variable>, Vec<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -156,8 +154,11 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
 }
 
 fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    let (offset, variable) = parse_variable_name(tokens)?;
-    Ok(Expression(offset, Expression_::Variable(variable)))
+    let variable = parse_variable_name(tokens)?;
+    Ok(Expression(
+        variable.0.clone(),
+        Expression_::Variable(variable),
+    ))
 }
 
 fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -530,7 +531,7 @@ fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition
     ))
 }
 
-fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>, ParseError> {
+fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -539,7 +540,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<VariableName>,
             break;
         }
 
-        let (_, param) = parse_variable_name(tokens)?;
+        let param = parse_variable_name(tokens)?;
         params.push(param);
 
         if let Some(token) = peek_token(tokens) {
@@ -610,7 +611,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
         doc_comment = Some(join_comments(&fun_token.preceding_comments));
     }
 
-    let (_, name) = parse_variable_name(tokens)?;
+    let name = parse_variable_name(tokens)?;
     let params = parse_function_params(tokens)?;
     let body = parse_block(tokens)?;
 
@@ -624,7 +625,7 @@ const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "true", "false", "if", "else", "while", "return",
 ];
 
-fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableName), ParseError> {
+fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError> {
     let variable_token = require_a_token(tokens, "variable name")?;
     if !VARIABLE_RE.is_match(variable_token.text) {
         return Err(ParseError::OtherError(
@@ -645,7 +646,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableN
         }
     }
 
-    Ok((
+    Ok(Variable(
         variable_token.offset,
         VariableName(variable_token.text.to_string()),
     ))
@@ -653,7 +654,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<(Position, VariableN
 
 fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let let_token = require_token(tokens, "let")?;
-    let (_, variable) = parse_variable_name(tokens)?;
+    let variable = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(tokens)?;
@@ -666,14 +667,14 @@ fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseEr
 }
 
 fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    let (offset, variable) = parse_variable_name(tokens)?;
+    let variable = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
-        offset,
+        variable.0.clone(),
         Expression_::Assign(variable, Box::new(expr)),
     ))
 }
@@ -1010,7 +1011,13 @@ mod tests {
                     offset: 0,
                     path: PathBuf::from("__test.gdn")
                 },
-                Expression_::Variable(VariableName("abc_def".to_string()))
+                Expression_::Variable(Variable(
+                    Position {
+                        offset: 0,
+                        path: PathBuf::from("__test.gdn")
+                    },
+                    VariableName("abc_def".to_string())
+                ))
             )]
         );
     }
@@ -1027,7 +1034,13 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
-                    VariableName("x".into()),
+                    Variable(
+                        Position {
+                            offset: 4,
+                            path: PathBuf::from("__test.gdn")
+                        },
+                        VariableName("x".into())
+                    ),
                     Box::new(Expression(
                         Position {
                             offset: 8,
@@ -1083,7 +1096,13 @@ mod tests {
                             offset: 4,
                             path: PathBuf::from("__test.gdn")
                         },
-                        Expression_::Variable(VariableName("x".into()))
+                        Expression_::Variable(Variable(
+                            Position {
+                                offset: 4,
+                                path: PathBuf::from("__test.gdn")
+                            },
+                            VariableName("x".into())
+                        ))
                     )),
                     vec![],
                     vec![Expression(
@@ -1097,7 +1116,13 @@ mod tests {
                                     offset: 19,
                                     path: PathBuf::from("__test.gdn")
                                 },
-                                Expression_::Variable(VariableName("y".into()))
+                                Expression_::Variable(Variable(
+                                    Position {
+                                        offset: 19,
+                                        path: PathBuf::from("__test.gdn")
+                                    },
+                                    VariableName("y".into())
+                                ))
                             )),
                             vec![],
                             vec![],
@@ -1177,7 +1202,13 @@ mod tests {
                 },
                 Definition_::Fun(
                     Some("Hello\nWorld".into()),
-                    VariableName("foo".into()),
+                    Variable(
+                        Position {
+                            offset: 22,
+                            path: PathBuf::from("__test.gdn"),
+                        },
+                        VariableName("foo".into())
+                    ),
                     vec![],
                     vec![]
                 )
@@ -1209,7 +1240,13 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
-                    VariableName("x".into()),
+                    Variable(
+                        Position {
+                            offset: 4,
+                            path: PathBuf::from("__test.gdn")
+                        },
+                        VariableName("x".into())
+                    ),
                     Box::new(Expression(
                         Position {
                             offset: 8,

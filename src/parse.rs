@@ -13,6 +13,26 @@ pub struct Position {
     pub path: PathBuf,
 }
 
+pub fn line_of_offset(src: &str, byte_offset: usize) -> (&str, usize, usize) {
+    let mut line_start_offset = 0;
+
+    for (i, line) in src.lines().enumerate() {
+        if line.len() + line_start_offset >= byte_offset {
+            return (line, i, byte_offset - line_start_offset);
+        }
+
+        // TODO: This is wrong if src contains \r\n newlines.
+        line_start_offset += line.len() + 1;
+    }
+
+    let last_line = match src.lines().last() {
+        Some(line) => line,
+        None => src, // empty string
+    };
+
+    (last_line, 0, last_line.len())
+}
+
 #[derive(Debug)]
 pub enum ParseError {
     OtherError(Position, String),

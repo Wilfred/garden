@@ -14,6 +14,8 @@ use clap::{Parser, Subcommand};
 use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
+use crate::parse::line_of_offset;
+
 #[derive(Debug, Parser)]
 #[command(name = "git")]
 #[command(about = "A programming language for growing programs", long_about = None)]
@@ -57,26 +59,6 @@ fn main() {
             println!("{}", json_session::sample_request_as_json());
         }
     }
-}
-
-fn line_of_offset(src: &str, byte_offset: usize) -> (&str, usize, usize) {
-    let mut line_start_offset = 0;
-
-    for (i, line) in src.lines().enumerate() {
-        if line.len() + line_start_offset >= byte_offset {
-            return (line, i, byte_offset - line_start_offset);
-        }
-
-        // TODO: This is wrong if src contains \r\n newlines.
-        line_start_offset += line.len() + 1;
-    }
-
-    let last_line = match src.lines().last() {
-        Some(line) => line,
-        None => src, // empty string
-    };
-
-    (last_line, 0, last_line.len())
 }
 
 fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {

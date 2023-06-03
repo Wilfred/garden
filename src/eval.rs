@@ -284,7 +284,7 @@ pub enum ErrorKind {
 #[derive(Debug)]
 pub enum EvalError {
     Interrupted,
-    ResumableError(String),
+    ResumableError(Position, String),
     Stop(Option<ErrorKind>),
 }
 
@@ -1173,7 +1173,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             stack_frame
@@ -1201,7 +1201,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             stack_frame
@@ -1236,7 +1236,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::MalformedExpression),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             stack_frame
@@ -1260,7 +1260,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::MalformedExpression),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             stack_frame
@@ -1316,10 +1316,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 &[],
                                 Some(ErrorKind::MalformedExpression),
                             );
-                            return Err(EvalError::ResumableError(format!(
-                                "Undefined variable: {}.",
-                                name.1 .0
-                            )));
+                            return Err(EvalError::ResumableError(
+                                name.0.clone(),
+                                format!("Undefined variable: {}.", name.1 .0),
+                            ));
                         }
                     }
                     Expression_::BinaryOperator(
@@ -1346,7 +1346,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             stack_frame
@@ -1375,7 +1375,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             stack_frame
@@ -1404,7 +1404,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
-                                return Err(EvalError::ResumableError(message));
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         } else {
                             // TODO: do short-circuit evaluation of && and ||.
@@ -1440,7 +1440,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         // kind.
                                         Some(ErrorKind::MalformedExpression),
                                     );
-                                    return Err(EvalError::ResumableError(message));
+                                    return Err(EvalError::ResumableError(position, message));
                                 }
                             }
                         } else {

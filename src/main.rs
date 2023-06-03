@@ -94,7 +94,7 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 // expressions. Ignore the expressions.
                 match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                     Ok(_) => {}
-                    Err(EvalError::ResumableError(e)) => {
+                    Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {
@@ -109,7 +109,7 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), "main();").unwrap();
                 match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
-                    Err(EvalError::ResumableError(e)) => {
+                    Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {

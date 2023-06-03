@@ -103,7 +103,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                             kind: ResponseKind::Evaluate,
                                             value: Ok(format!("{}", result)),
                                         },
-                                        Err(EvalError::ResumableError(e)) => Response {
+                                        Err(EvalError::ResumableError(position, e)) => Response {
                                             kind: ResponseKind::Evaluate,
                                             value: Err(format!("Error: {}", e)),
                                         },
@@ -149,7 +149,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                     kind: ResponseKind::Evaluate,
                                     value: Ok(format!("{}", result)),
                                 },
-                                Err(EvalError::ResumableError(e)) => Response {
+                                Err(EvalError::ResumableError(position, e)) => Response {
                                     kind: ResponseKind::Evaluate,
                                     value: Err(format!("Error: {}", e)),
                                 },

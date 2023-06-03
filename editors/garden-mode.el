@@ -44,8 +44,6 @@
       (garden--flash-region start-pos end-pos)
       (buffer-substring-no-properties start-pos end-pos))))
 
-(looking-back (rx "}") 1)
-
 (defun garden--flash-region (start end)
   "Temporarily highlight from START to END."
   (let* ((overlay (make-overlay start end)))

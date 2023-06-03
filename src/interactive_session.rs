@@ -26,7 +26,7 @@ fn read_expr(
     session: &mut Session,
     rl: &mut Editor<()>,
     depth: usize,
-) -> Result<DefinitionsOrExpression, ReadError> {
+) -> Result<(String, DefinitionsOrExpression), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(depth)) {
             Ok(input) => {
@@ -58,9 +58,9 @@ fn read_expr(
                     Ok((src, items)) => {
                         session.history.push_str(&src);
                         session.history.push('\n');
-                        log_src(src).unwrap();
+                        log_src(&src).unwrap();
 
-                        return Ok(items);
+                        return Ok((src, items));
                     }
                     Err(ParseError::Incomplete(e)) => {
                         println!("Parsing failed (incomplete): {}", e);
@@ -89,23 +89,28 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
     let mut rl = new_editor();
     let mut depth = 0;
+    let mut last_src = String::new();
+
     loop {
         println!();
 
         match read_expr(&mut env, &mut session, &mut rl, depth) {
-            Ok(items) => match items.clone() {
-                DefinitionsOrExpression::Defs(defs) => {
-                    eval_defs(&defs, &mut env);
-                    continue;
+            Ok((src, items)) => {
+                last_src = src;
+                match items.clone() {
+                    DefinitionsOrExpression::Defs(defs) => {
+                        eval_defs(&defs, &mut env);
+                        continue;
+                    }
+                    DefinitionsOrExpression::Expr(expr) => {
+                        let stack_frame = env
+                            .stack
+                            .last_mut()
+                            .expect("Should always have the toplevel stack frame");
+                        stack_frame.exprs_to_eval.push((false, expr));
+                    }
                 }
-                DefinitionsOrExpression::Expr(expr) => {
-                    let stack_frame = env
-                        .stack
-                        .last_mut()
-                        .expect("Should always have the toplevel stack frame");
-                    stack_frame.exprs_to_eval.push((false, expr));
-                }
-            },
+            }
             Err(ReadError::CommandError(CommandError::Abort)) => {
                 // TODO: doesn't this need to pop the stack to the toplevel?
                 // It seems to be working already.
@@ -268,7 +273,7 @@ fn read_multiline_syntax(
     }
 }
 
-fn log_src(src: String) -> std::io::Result<()> {
+fn log_src(src: &str) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)

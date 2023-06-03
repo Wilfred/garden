@@ -50,6 +50,26 @@
     (overlay-put overlay 'face 'highlight)
     (run-with-timer 0.3 nil 'delete-overlay overlay)))
 
+(defcustom garden-indent-offset 2
+  "Indentation amount (in spaces) for Garden files."
+  :safe #'integerp)
+
+(defun garden-indent-line ()
+  "Indent the line at point."
+  (interactive)
+  (let* ((syntax-bol (syntax-ppss (line-beginning-position)))
+         (paren-depth (nth 0 syntax-bol))
+         (current-line (s-trim
+                        (buffer-substring
+                         (line-beginning-position)
+                         (line-end-position)))))
+    (when (or (s-starts-with-p "}" current-line)
+              (s-starts-with-p ")" current-line)
+              (s-starts-with-p "]" current-line))
+      (setq paren-depth (1- paren-depth)))
+
+    (indent-line-to (* garden-indent-offset paren-depth))))
+
 (defun garden--propertize-read-only (s)
   (propertize
    s
@@ -221,6 +241,8 @@ the user entering a value in the *garden* buffer."
 
   (setq mode-name
         '(:eval (if (garden--session-active-p) "Garden[active]" "Garden")))
+  (set (make-local-variable 'indent-line-function) #'garden-indent-line)
+
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 

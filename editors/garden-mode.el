@@ -135,7 +135,7 @@ the user entering a value in the *garden* buffer."
           (if (garden--prompt-empty-p)
               (let ((inhibit-read-only t))
                 (forward-line -1)
-                (line-beginning-position)
+                (beginning-of-line)
                 (insert "\n" s)
                 (goto-char (point-max)))
             (insert s (garden--fontify-prompt "\n>") " "))

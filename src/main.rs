@@ -77,6 +77,15 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
+                        eprintln!("--> {}", position.path.display());
+
+                        let (line_src, line_i, line_offset) = line_of_offset(&src, position.offset);
+                        let formatted_line_num = format!("{} | ", line_i + 1);
+                        eprintln!("{}{}", formatted_line_num, line_src);
+
+                        let caret_space = " ".repeat(formatted_line_num.len() + line_offset);
+                        eprintln!("{}^", caret_space);
+
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {
@@ -92,6 +101,19 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
+                        eprintln!("--> {}", position.path.display());
+
+                        // TODO: this is the wrong src if the position
+                        // is in the main call itself, e.g. if the
+                        // user has incorrectly defined main() with
+                        // more parameters.
+                        let (line_src, line_i, line_offset) = line_of_offset(&src, position.offset);
+                        let formatted_line_num = format!("{} | ", line_i + 1);
+                        eprintln!("{}{}", formatted_line_num, line_src);
+
+                        let caret_space = " ".repeat(formatted_line_num.len() + line_offset);
+                        eprintln!("{}^", caret_space);
+
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {

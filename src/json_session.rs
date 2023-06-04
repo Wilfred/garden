@@ -26,6 +26,7 @@ struct Request {
     method: Method,
     input: String,
     path: Option<PathBuf>,
+    offset: Option<usize>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -51,6 +52,7 @@ pub fn sample_request_as_json() -> String {
         method: Method::Run,
         input: "1 + 2".into(),
         path: Some(PathBuf::from("/foo/bar.gdn")),
+        offset: Some(100),
     })
     .unwrap()
 }
@@ -138,11 +140,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     }
                     Err(CommandParseError::NotCommandSyntax) => {
                         complete_src.push_str(&req.input);
+
+                        // Pad src with whitespace, so the position
+                        // offsets in the AST match the user's current
+                        // file state.
+                        let src = format!("{}{}", " ".repeat(req.offset.unwrap_or(0)), req.input);
+
                         // TODO: JSON requests should pass the path.
                         match parse_def_or_expr_from_str(
                             &req.path
                                 .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-                            &req.input,
+                            &src,
                         ) {
                             Ok(exprs) => match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                                 Ok(result) => Response {

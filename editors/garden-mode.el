@@ -55,6 +55,13 @@
     (overlay-put overlay 'face 'highlight)
     (run-with-timer 0.3 nil 'delete-overlay overlay)))
 
+(defun garden--flash-error-region (start end)
+  "Temporarily highlight from START to END."
+  (let* ((overlay (make-overlay start end)))
+    ;; TODO: find a better face.
+    (overlay-put overlay 'face 'underline)
+    (run-with-timer 2.0 nil 'delete-overlay overlay)))
+
 (defcustom garden-indent-offset 2
   "Indentation amount (in spaces) for Garden files."
   :safe #'integerp)
@@ -116,14 +123,18 @@ the user entering a value in the *garden* buffer."
            (response-value (plist-get response :value))
            (response-kind (plist-get response :kind))
            (response-ok-value (plist-get response-value :Ok))
-           (response-err-value (plist-get response-value :Err)))
+           (response-err-value (plist-get response-value :Err))
+           (buf (current-buffer)))
       (with-current-buffer (process-buffer proc)
         (let ((s
                (cond
                 (response-err-value
-                 (let ((position (elt response-err-value 0))
-                       (err-msg (elt response-err-value 1)))
-                   (message "positon %S" position)
+                 (let* ((position (elt response-err-value 0))
+                        (position-offset (plist-get position :offset))
+                        (err-msg (elt response-err-value 1)))
+                   ;; TODO: find the buffer with the path which matches this position.
+                   (with-current-buffer buf
+                     (garden--flash-error-region position-offset (+ position-offset 5)))
                    (message "%s" err-msg)
                    (garden--fontify-error (concat err-msg "\n"))))
                 ((string= response-kind "ready")

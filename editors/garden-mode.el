@@ -23,26 +23,31 @@
 
 (defun garden-send ()
   (interactive)
-  (let ((src
-         (if (region-active-p)
-             (buffer-substring-no-properties (region-beginning) (region-end))
-           (garden--previous-expr))))
-    ;; TODO: report error immediately if any occurred.
-    (garden-send-input src (buffer-file-name))
+  (let (start-pos end-pos)
+    (cond
+     ((region-active-p)
+      (setq start-pos (region-beginning))
+      (setq end-pos (region-end)))
+     (t
+      (save-excursion
+        (setq end-pos (point))
+        (garden--backward-expr)
+        (setq start-pos (point))
+        (garden--flash-region start-pos end-pos))))
+
+    (garden-send-input
+     (buffer-substring-no-properties start-pos end-pos)
+     (buffer-file-name)
+     start-pos)
+
     (when (region-active-p)
       (deactivate-mark))))
 
-(defun garden--previous-expr ()
-  "Return the text of the expression before point."
-  (save-excursion
-    (let ((end-pos (point))
-          start-pos)
-      (when (looking-back (rx "}") 1)
-        (backward-sexp 1))
-      (setq start-pos (line-beginning-position))
-
-      (garden--flash-region start-pos end-pos)
-      (buffer-substring-no-properties start-pos end-pos))))
+(defun garden--backward-expr ()
+  "Move point back to the start of the expression before point."
+  (when (looking-back (rx "}") 1)
+    (backward-sexp 1))
+  (beginning-of-line))
 
 (defun garden--flash-region (start end)
   "Temporarily highlight from START to END."
@@ -166,16 +171,18 @@ the user entering a value in the *garden* buffer."
       (user-error "No Garden process available")))
   (garden--buffer))
 
-(defun garden--send-run (proc string &optional path)
+(defun garden--send-run (proc string &optional path offset)
   (let ((args `((method . "run") (input . ,string))))
     (when path
       (setq args `(,@args (path . ,path))))
+    (when offset
+      (setq args `(,@args (offset . ,offset))))
     (process-send-string proc (json-serialize args))
     (process-send-string proc "\n")))
 
-(defun garden-send-input (string &optional path)
+(defun garden-send-input (string &optional path offset)
   (let ((buf (garden--active-buffer)))
-    (garden--send-run (get-buffer-process buf) string path)))
+    (garden--send-run (get-buffer-process buf) string path offset)))
 
 (defun garden-help-command ()
   (interactive)

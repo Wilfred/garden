@@ -116,8 +116,11 @@ the user entering a value in the *garden* buffer."
         (let ((s
                (cond
                 (response-err-value
-                 (message "%s" response-err-value)
-                 (garden--fontify-error (concat response-err-value "\n")))
+                 (let ((position (elt response-err-value 0))
+                       (err-msg (elt response-err-value 1)))
+                   (message "positon %S" position)
+                   (message "%s" err-msg)
+                   (garden--fontify-error (concat err-msg "\n"))))
                 ((string= response-kind "ready")
                  (garden--propertize-read-only (concat response-ok-value "\n")))
                 ((string= response-kind "printed")

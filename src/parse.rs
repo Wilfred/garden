@@ -2,11 +2,12 @@ use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 
 use crate::eval::ErrorKind;
 
 /// A position is an offset into source code.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub offset: usize,
     // TODO: consider storing a &Path to reduce memory usage.

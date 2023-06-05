@@ -16,6 +16,7 @@
 ;;; Code:
 
 (require 's)
+(require 'ansi-color)
 (require 'comint)
 
 (defvar garden-executable
@@ -94,7 +95,7 @@
    'read-only t 'front-sticky '(read-only) 'rear-nonsticky '(read-only)))
 
 (defun garden--fontify-command-output (output)
-  (garden--propertize-read-only output))
+  (garden--propertize-read-only (ansi-color-apply output)))
 
 (defun garden--fontify-prompt (text)
   (propertize

@@ -745,10 +745,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -795,10 +792,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -817,10 +811,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -838,10 +829,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -877,10 +865,7 @@ fn eval_call(
                                 return Err(ErrorInfo {
                                     message: format!("Expected a list, but got: {}", v),
                                     restore_values: saved_values,
-                                    position: Position {
-                                        offset: 0,
-                                        path: "".into(),
-                                    }, // TODO: position in evalled_values
+                                    position: arg_values[0].0.clone(),
                                 });
                             }
                         }
@@ -895,10 +880,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -916,10 +898,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -940,10 +919,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a list, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -962,10 +938,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -984,10 +957,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected an integer, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -1005,10 +975,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: position.clone(),
                     });
                 }
                 let s_arg = match &arg_values[0].1 {
@@ -1023,10 +990,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[0].0.clone(),
                         });
                     }
                 };
@@ -1042,10 +1006,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected an integer, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[1].0.clone(),
                         });
                     }
                 };
@@ -1061,10 +1022,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected an integer, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[2].0.clone(),
                         });
                     }
                 };

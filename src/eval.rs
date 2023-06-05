@@ -1073,7 +1073,7 @@ fn eval_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("The first argument to string_substring must be greater than 0, but got: {}", from_arg),
+                        message: format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg),
                         restore_values: saved_values,
                         position: Position {
                             offset: 0,
@@ -1090,7 +1090,7 @@ fn eval_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("The first argument to string_substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg),
+                        message: format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg),
                         restore_values: saved_values,
                         position: Position {
                             offset: 0,

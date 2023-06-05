@@ -366,11 +366,11 @@ fn restore_stack_frame(
         stack_frame.evalled_values.push(value.clone());
     }
 
-    let offset = expr_to_eval.1 .0.clone();
+    let position = expr_to_eval.1.0.clone();
     stack_frame.exprs_to_eval.push(expr_to_eval);
     stack_frame
         .exprs_to_eval
-        .push((false, Expression(offset, Expression_::Stop(error_kind))));
+        .push((false, Expression(position, Expression_::Stop(error_kind))));
 
     env.stack.push(stack_frame);
 }
@@ -1088,7 +1088,7 @@ fn eval_call(
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
-            if let Some((done_children, Expression(offset, expr_))) =
+            if let Some((done_children, Expression(expr_position, expr_))) =
                 stack_frame.exprs_to_eval.pop()
             {
                 if session.interrupted.load(Ordering::SeqCst) {
@@ -1096,7 +1096,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     restore_stack_frame(
                         env,
                         stack_frame,
-                        (done_children, Expression(offset, expr_)),
+                        (done_children, Expression(expr_position, expr_)),
                         &[],
                         None,
                     );
@@ -1117,7 +1117,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 error_position: position,
                             }) = eval_if(
                                 &mut stack_frame,
-                                &offset,
+                                &expr_position,
                                 &condition.0,
                                 then_body,
                                 else_body,
@@ -1125,7 +1125,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
@@ -1134,7 +1134,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *condition.clone()));
                         }
                     }
@@ -1147,13 +1147,13 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             }) = eval_while(
                                 &mut stack_frame,
                                 &condition.0,
-                                Expression(offset.clone(), expr_copy.clone()),
+                                Expression(expr_position.clone(), expr_copy.clone()),
                                 body,
                             ) {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
@@ -1162,7 +1162,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *condition.clone()));
                         }
                     }
@@ -1173,7 +1173,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *expr.clone()));
                         }
                     }
@@ -1188,7 +1188,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::MalformedExpression),
                                 );
@@ -1197,7 +1197,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *expr.clone()));
                         }
                     }
@@ -1212,7 +1212,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::MalformedExpression),
                                 );
@@ -1221,25 +1221,25 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *expr.clone()));
                         }
                     }
                     Expression_::Stop(e) => {
                         stack_frame
                             .exprs_to_eval
-                            .push((false, Expression(offset, Expression_::Stop(e))));
+                            .push((false, Expression(expr_position, Expression_::Stop(e))));
                         env.stack.push(stack_frame);
                         return Err(EvalError::Stop(e));
                     }
                     Expression_::IntLiteral(i) => {
-                        stack_frame.evalled_values.push((offset, Value::Integer(i)));
+                        stack_frame.evalled_values.push((expr_position, Value::Integer(i)));
                     }
                     Expression_::BoolLiteral(b) => {
-                        stack_frame.evalled_values.push((offset, Value::Boolean(b)));
+                        stack_frame.evalled_values.push((expr_position, Value::Boolean(b)));
                     }
                     Expression_::StringLiteral(s) => {
-                        stack_frame.evalled_values.push((offset, Value::String(s)));
+                        stack_frame.evalled_values.push((expr_position, Value::String(s)));
                     }
                     Expression_::ListLiteral(items) => {
                         if done_children {
@@ -1252,11 +1252,11 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
 
                             stack_frame
                                 .evalled_values
-                                .push((offset, Value::List(list_values)));
+                                .push((expr_position, Value::List(list_values)));
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
 
                             for item in items.iter() {
                                 stack_frame.exprs_to_eval.push((false, item.clone()));
@@ -1265,12 +1265,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Variable(name) => {
                         if let Some(value) = get_var(&name.1, &stack_frame, env) {
-                            stack_frame.evalled_values.push((offset, value));
+                            stack_frame.evalled_values.push((expr_position, value));
                         } else {
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, Expression(offset, expr_copy)),
+                                (done_children, Expression(expr_position, expr_copy)),
                                 &[],
                                 Some(ErrorKind::MalformedExpression),
                             );
@@ -1295,12 +1295,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 message,
                                 restore_values,
                                 error_position: position,
-                            }) = eval_integer_binop(&mut stack_frame, &offset, op)
+                            }) = eval_integer_binop(&mut stack_frame, &expr_position, op)
                             {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
@@ -1309,7 +1309,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *rhs.clone()));
                             stack_frame.exprs_to_eval.push((false, *lhs.clone()));
                         }
@@ -1324,12 +1324,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 message,
                                 restore_values,
                                 error_position: position,
-                            }) = eval_equality_binop(&mut stack_frame, &offset, op)
+                            }) = eval_equality_binop(&mut stack_frame, &expr_position, op)
                             {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
@@ -1338,7 +1338,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *rhs.clone()));
                             stack_frame.exprs_to_eval.push((false, *lhs.clone()));
                         }
@@ -1353,12 +1353,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 message,
                                 restore_values,
                                 error_position: position,
-                            }) = eval_boolean_binop(&mut stack_frame, &offset, op)
+                            }) = eval_boolean_binop(&mut stack_frame, &expr_position, op)
                             {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, Expression(offset, expr_copy)),
+                                    (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
                                     Some(ErrorKind::BadValue),
                                 );
@@ -1368,14 +1368,14 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             // TODO: do short-circuit evaluation of && and ||.
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *rhs.clone()));
                             stack_frame.exprs_to_eval.push((false, *lhs.clone()));
                         }
                     }
                     Expression_::Call(receiver, ref args) => {
                         if done_children {
-                            match eval_call(&mut stack_frame, &offset, args, session) {
+                            match eval_call(&mut stack_frame, &expr_position, args, session) {
                                 Ok(Some(new_stack_frame)) => {
                                     env.stack.push(stack_frame);
                                     env.stack.push(new_stack_frame);
@@ -1390,7 +1390,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     restore_stack_frame(
                                         env,
                                         stack_frame,
-                                        (done_children, Expression(offset, expr_copy)),
+                                        (done_children, Expression(expr_position, expr_copy)),
                                         &restore_values,
                                         // TODO: let ErrorInfo specify
                                         // kind, as not all errors on
@@ -1404,7 +1404,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
 
                             for arg in args {
                                 stack_frame.exprs_to_eval.push((false, arg.clone()));
@@ -1422,7 +1422,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         } else {
                             stack_frame
                                 .exprs_to_eval
-                                .push((true, Expression(offset, expr_copy)));
+                                .push((true, Expression(expr_position, expr_copy)));
 
                             stack_frame.enter_block();
                             for expr in exprs.iter().rev() {

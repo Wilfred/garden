@@ -98,7 +98,7 @@ pub enum DefinitionsOrExpression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
-    offset: Position,
+    position: Position,
     text: &'a str,
     preceding_comments: Vec<&'a str>,
 }
@@ -149,7 +149,7 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<
                 Ok(token)
             } else {
                 Err(ParseError::OtherError(
-                    token.offset,
+                    token.position,
                     format!("Expected `{}`, got `{}`", expected, token.text),
                 ))
             }
@@ -165,10 +165,10 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let token = require_a_token(tokens, "integer literal")?;
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
-        Ok(Expression(token.offset, Expression_::IntLiteral(i)))
+        Ok(Expression(token.position, Expression_::IntLiteral(i)))
     } else {
         Err(ParseError::OtherError(
-            token.offset,
+            token.position,
             format!("Not a valid integer literal: {}", token.text),
         ))
     }
@@ -209,7 +209,7 @@ fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseE
                 break;
             } else {
                 return Err(ParseError::OtherError(
-                    token.offset,
+                    token.position,
                     format!(
                         "Invalid syntax: Expected `,` or `]` here, but got `{}`",
                         token.text
@@ -226,7 +226,7 @@ fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseE
     require_token(tokens, "]")?;
 
     Ok(Expression(
-        open_brace.offset,
+        open_brace.position,
         Expression_::ListLiteral(items),
     ))
 }
@@ -271,7 +271,7 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseErr
     };
 
     Ok(Expression(
-        if_token.offset,
+        if_token.position,
         Expression_::If(Box::new(condition), then_body, else_body),
     ))
 }
@@ -286,7 +286,7 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
     let body = parse_block_expressions(tokens)?;
 
     Ok(Expression(
-        while_token.offset,
+        while_token.position,
         Expression_::While(Box::new(condition), body),
     ))
 }
@@ -297,7 +297,7 @@ fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
     Ok(Expression(
-        return_token.offset,
+        return_token.position,
         Expression_::Return(Box::new(expr)),
     ))
 }
@@ -347,7 +347,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     if let Some(token) = peek_token(tokens) {
         if token.text == "{" {
             let exprs = parse_block(tokens)?;
-            return Ok(Expression(token.offset, Expression_::Block(exprs)));
+            return Ok(Expression(token.position, Expression_::Block(exprs)));
         }
 
         if token.text == "(" {
@@ -360,11 +360,11 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 
         if token.text == "true" {
             pop_token(tokens);
-            return Ok(Expression(token.offset, Expression_::BoolLiteral(true)));
+            return Ok(Expression(token.position, Expression_::BoolLiteral(true)));
         }
         if token.text == "false" {
             pop_token(tokens);
-            return Ok(Expression(token.offset, Expression_::BoolLiteral(false)));
+            return Ok(Expression(token.position, Expression_::BoolLiteral(false)));
         }
 
         if VARIABLE_RE.is_match(token.text) {
@@ -374,7 +374,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
         if token.text.starts_with("\"") {
             pop_token(tokens);
             return Ok(Expression(
-                token.offset,
+                token.position,
                 Expression_::StringLiteral(unescape_string(token.text)),
             ));
         }
@@ -384,10 +384,10 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
         }
 
         return Err(ParseError::OtherError(
-            token.offset.clone(),
+            token.position.clone(),
             format!(
                 "Expected an expression, got: {} (offset {})",
-                token.text, token.offset.offset
+                token.text, token.position.offset
             ),
         ));
     }
@@ -414,7 +414,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
                 break;
             } else {
                 return Err(ParseError::OtherError(
-                    token.offset,
+                    token.position,
                     format!(
                         "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                         token.text
@@ -537,7 +537,7 @@ fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition
 
         // TODO: Include the token in the error message.
         return Err(ParseError::OtherError(
-            token.offset,
+            token.position,
             "Expected a definition".to_string(),
         ));
     }
@@ -571,7 +571,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, Par
                 break;
             } else {
                 return Err(ParseError::OtherError(
-                    token.offset,
+                    token.position,
                     format!(
                         "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                         token.text
@@ -637,7 +637,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let body = parse_block(tokens)?;
 
     Ok(Definition(
-        fun_token.offset,
+        fun_token.position,
         Definition_::Fun(doc_comment, name, params, body),
     ))
 }
@@ -650,7 +650,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError
     let variable_token = require_a_token(tokens, "variable name")?;
     if !VARIABLE_RE.is_match(variable_token.text) {
         return Err(ParseError::OtherError(
-            variable_token.offset,
+            variable_token.position,
             format!("Invalid variable name: '{}'", variable_token.text),
         ));
     }
@@ -658,7 +658,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError
     for reserved in RESERVED_WORDS {
         if variable_token.text == *reserved {
             return Err(ParseError::OtherError(
-                variable_token.offset,
+                variable_token.position,
                 format!(
                     "'{}' is a reserved word that cannot be used as a variable",
                     variable_token.text
@@ -668,7 +668,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError
     }
 
     Ok(Variable(
-        variable_token.offset,
+        variable_token.position,
         VariableName(variable_token.text.to_string()),
     ))
 }
@@ -682,7 +682,7 @@ fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseEr
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
-        let_token.offset,
+        let_token.position,
         Expression_::Let(variable, Box::new(expr)),
     ))
 }
@@ -782,7 +782,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         for token_str in ["==", "!=", "&&", "||"] {
             if s.starts_with(token_str) {
                 res.push(Token {
-                    offset: Position {
+                    position: Position {
                         offset,
                         path: path.clone(),
                     },
@@ -800,7 +800,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         // a single integer literal, not the tokens - followed by 1.
         if let Some(integer_match) = INTEGER_RE.find(s) {
             res.push(Token {
-                offset: Position {
+                position: Position {
                     offset,
                     path: path.clone(),
                 },
@@ -818,7 +818,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {
-                    offset: Position {
+                    position: Position {
                         offset,
                         path: path.clone(),
                     },
@@ -833,7 +833,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         }
         if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
-                offset: Position {
+                position: Position {
                     offset,
                     path: path.clone(),
                 },
@@ -845,7 +845,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             offset += string_match.end();
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push(Token {
-                offset: Position {
+                position: Position {
                     offset,
                     path: path.clone(),
                 },
@@ -899,7 +899,7 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "1").unwrap(),
             vec![Token {
-                offset: Position {
+                position: Position {
                     offset: 0,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -914,7 +914,7 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), " a").unwrap(),
             vec![Token {
-                offset: Position {
+                position: Position {
                     offset: 1,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1001,7 +1001,7 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap(),
             vec![Token {
-                offset: Position {
+                position: Position {
                     offset: 5,
                     path: PathBuf::from("__test.gdn")
                 },

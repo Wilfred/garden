@@ -376,7 +376,7 @@ fn restore_stack_frame(
 }
 
 struct ErrorInfo {
-    position: Position,
+    error_position: Position,
     message: String,
     restore_values: Vec<(Position, Value)>,
 }
@@ -411,7 +411,7 @@ fn eval_if(
             return Err(ErrorInfo {
                 message: format!("Expected a boolean when evaluating `if`, but got: {}", v),
                 restore_values: vec![condition_value],
-                position: bool_position.clone(),
+                error_position: bool_position.clone(),
             });
         }
     }
@@ -452,7 +452,7 @@ fn eval_while(
             return Err(ErrorInfo {
                 message: format!("Expected a boolean when evaluating `while`, but got: {}", v),
                 restore_values: vec![condition_value],
-                position: condition_pos.clone(),
+                error_position: condition_pos.clone(),
             });
         }
     }
@@ -469,7 +469,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
                 var_name.0, var_name.0
             ),
             restore_values: vec![],
-            position: variable.0.clone(),
+            error_position: variable.0.clone(),
         });
     }
 
@@ -492,7 +492,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), Err
                 var_name.0, var_name.0
             ),
             restore_values: vec![],
-            position: variable.0.clone(),
+            error_position: variable.0.clone(),
         });
     }
 
@@ -526,7 +526,7 @@ fn eval_boolean_binop(
                 return Err(ErrorInfo {
                     message: format!("Expected a bool, but got: {}", lhs_value.1),
                     restore_values: vec![lhs_value.clone(), rhs_value],
-                    position: lhs_value.0,
+                    error_position: lhs_value.0,
                 });
             }
         };
@@ -536,7 +536,7 @@ fn eval_boolean_binop(
                 return Err(ErrorInfo {
                     message: format!("Expected a bool, but got: {}", rhs_value.1),
                     restore_values: vec![lhs_value, rhs_value.clone()],
-                    position: rhs_value.0,
+                    error_position: rhs_value.0,
                 });
             }
         };
@@ -609,7 +609,7 @@ fn eval_integer_binop(
                 return Err(ErrorInfo {
                     message: format!("Expected an integer, but got: {}", lhs_value.1),
                     restore_values: vec![lhs_value.clone(), rhs_value],
-                    position: lhs_value.0,
+                    error_position: lhs_value.0,
                 });
             }
         };
@@ -619,7 +619,7 @@ fn eval_integer_binop(
                 return Err(ErrorInfo {
                     message: format!("Expected an integer, but got: {}", rhs_value.1),
                     restore_values: vec![lhs_value, rhs_value.clone()],
-                    position: rhs_value.0,
+                    error_position: rhs_value.0,
                 });
             }
         };
@@ -648,7 +648,7 @@ fn eval_integer_binop(
                     return Err(ErrorInfo {
                         message: format!("Tried to divide {} by zero.", rhs_value.1),
                         restore_values: vec![lhs_value, rhs_value.clone()],
-                        position: rhs_value.0,
+                        error_position: rhs_value.0,
                     });
                 }
 
@@ -710,7 +710,7 @@ fn eval_call(
                         arg_values.len()
                     ),
                     restore_values: saved_values,
-                    position: receiver_value.0,
+                    error_position: receiver_value.0,
                 });
             }
 
@@ -745,7 +745,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: position.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -771,7 +771,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[0].0.clone(),
+                            error_position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -792,7 +792,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: position.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -811,7 +811,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[0].0.clone(),
+                            error_position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -829,7 +829,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: position.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -865,7 +865,7 @@ fn eval_call(
                                 return Err(ErrorInfo {
                                     message: format!("Expected a list, but got: {}", v),
                                     restore_values: saved_values,
-                                    position: arg_values[0].0.clone(),
+                                    error_position: arg_values[0].0.clone(),
                                 });
                             }
                         }
@@ -880,7 +880,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[0].0.clone(),
+                            error_position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -898,7 +898,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: position.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -919,7 +919,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a list, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[0].0.clone(),
+                            error_position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -938,7 +938,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: position.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 match &arg_values[0].1 {
@@ -957,7 +957,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected an integer, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[0].0.clone(),
+                            error_position: arg_values[0].0.clone(),
                         });
                     }
                 }
@@ -975,7 +975,7 @@ fn eval_call(
                             args.len()
                         ),
                         restore_values: saved_values,
-                        position: position.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 let s_arg = match &arg_values[0].1 {
@@ -990,7 +990,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[0].0.clone(),
+                            error_position: arg_values[0].0.clone(),
                         });
                     }
                 };
@@ -1006,7 +1006,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected an integer, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[1].0.clone(),
+                            error_position: arg_values[1].0.clone(),
                         });
                     }
                 };
@@ -1022,7 +1022,7 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected an integer, but got: {}", v),
                             restore_values: saved_values,
-                            position: arg_values[2].0.clone(),
+                            error_position: arg_values[2].0.clone(),
                         });
                     }
                 };
@@ -1037,7 +1037,7 @@ fn eval_call(
                     return Err(ErrorInfo {
                         message: format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg),
                         restore_values: saved_values,
-                        position: arg_values[1].0.clone(),
+                        error_position: arg_values[1].0.clone(),
                     });
                 }
 
@@ -1051,7 +1051,7 @@ fn eval_call(
                     return Err(ErrorInfo {
                         message: format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg),
                         restore_values: saved_values,
-                        position: arg_values[1].0.clone(),
+                        error_position: arg_values[1].0.clone(),
                     });
                 }
 
@@ -1075,7 +1075,7 @@ fn eval_call(
             saved_values.push(receiver_value.clone());
 
             return Err(ErrorInfo {
-                position: receiver_value.0,
+                error_position: receiver_value.0,
                 message: format!("Expected a function, but got: {}", v),
                 restore_values: saved_values,
             });
@@ -1114,7 +1114,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_if(
                                 &mut stack_frame,
                                 &offset,
@@ -1143,7 +1143,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_while(
                                 &mut stack_frame,
                                 &condition.0,
@@ -1182,7 +1182,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_assign(&mut stack_frame, &variable)
                             {
                                 restore_stack_frame(
@@ -1206,7 +1206,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_let(&mut stack_frame, &variable)
                             {
                                 restore_stack_frame(
@@ -1294,7 +1294,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_integer_binop(&mut stack_frame, &offset, op)
                             {
                                 restore_stack_frame(
@@ -1323,7 +1323,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_equality_binop(&mut stack_frame, &offset, op)
                             {
                                 restore_stack_frame(
@@ -1352,7 +1352,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             if let Err(ErrorInfo {
                                 message,
                                 restore_values,
-                                position,
+                                error_position: position,
                             }) = eval_boolean_binop(&mut stack_frame, &offset, op)
                             {
                                 restore_stack_frame(
@@ -1385,7 +1385,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 Err(ErrorInfo {
                                     message,
                                     restore_values,
-                                    position,
+                                    error_position: position,
                                 }) => {
                                     restore_stack_frame(
                                         env,

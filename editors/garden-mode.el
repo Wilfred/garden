@@ -59,7 +59,7 @@
   "Temporarily highlight from START to END."
   (let* ((overlay (make-overlay start end)))
     ;; TODO: find a better face.
-    (overlay-put overlay 'face 'underline)
+    (overlay-put overlay 'face 'highlight)
     (run-with-timer 2.0 nil 'delete-overlay overlay)))
 
 (defcustom garden-indent-offset 2

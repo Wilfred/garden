@@ -1,4 +1,5 @@
 use std::fmt::Write;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
@@ -133,7 +134,7 @@ pub struct StackFrame {
     pub fun_name: VariableName,
     pub bindings: Vec<HashMap<VariableName, Value>>,
     pub exprs_to_eval: Vec<(bool, Expression)>,
-    pub evalled_values: Vec<Value>,
+    pub evalled_values: Vec<(Position, Value)>,
 }
 
 impl StackFrame {
@@ -235,7 +236,14 @@ impl Default for Env {
                 fun_name: VariableName("toplevel".into()),
                 bindings: vec![HashMap::new()],
                 exprs_to_eval: vec![],
-                evalled_values: vec![Value::Void],
+                evalled_values: vec![(
+                    Position {
+                        // TODO: do these values make sense?
+                        offset: 0,
+                        path: PathBuf::from("__toplevel__"),
+                    },
+                    Value::Void,
+                )],
             }],
         }
     }
@@ -351,7 +359,7 @@ fn restore_stack_frame(
     env: &mut Env,
     mut stack_frame: StackFrame,
     expr_to_eval: (bool, Expression),
-    evalled_values: &[Value],
+    evalled_values: &[(Position, Value)],
     error_kind: Option<ErrorKind>,
 ) {
     for value in evalled_values {
@@ -370,7 +378,7 @@ fn restore_stack_frame(
 struct ErrorInfo {
     position: Position,
     message: String,
-    restore_values: Vec<Value>,
+    restore_values: Vec<(Position, Value)>,
 }
 
 fn eval_if(
@@ -385,7 +393,7 @@ fn eval_if(
         .pop()
         .expect("Popped an empty value stack for if condition");
 
-    match &condition_value {
+    match &condition_value.1 {
         Value::Boolean(b) => {
             if *b {
                 stack_frame.exprs_to_eval.push((
@@ -422,7 +430,7 @@ fn eval_while(
         .pop()
         .expect("Popped an empty value stack for if condition");
 
-    match &condition_value {
+    match &condition_value.1 {
         Value::Boolean(b) => {
             if *b {
                 // Start loop evaluation again.
@@ -433,7 +441,11 @@ fn eval_while(
                     .exprs_to_eval
                     .push((false, Expression(expr.0, Expression_::Block(body.into()))))
             } else {
-                stack_frame.evalled_values.push(Value::Void);
+                // TODO: It's weird using the position of the
+                // condition when there's no else.
+                stack_frame
+                    .evalled_values
+                    .push((condition_pos.clone(), Value::Void));
             }
         }
         v => {
@@ -465,7 +477,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame.set_existing_binding(&var_name, expr_value.clone());
+    stack_frame.set_existing_binding(&var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
 
     Ok(())
@@ -488,13 +500,14 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), Err
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame.add_binding(&var_name, expr_value.clone());
+    stack_frame.add_binding(&var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }
 
 fn eval_boolean_binop(
     stack_frame: &mut StackFrame,
+    position: &Position,
     op: BinaryOperatorKind,
 ) -> Result<(), ErrorInfo> {
     {
@@ -507,29 +520,23 @@ fn eval_boolean_binop(
             .pop()
             .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_bool = match lhs_value {
+        let lhs_bool = match lhs_value.1 {
             Value::Boolean(b) => b,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected a bool, but got: {}", lhs_value),
-                    restore_values: vec![lhs_value, rhs_value],
-                    position: Position {
-                        offset: 0,
-                        path: "".into(),
-                    }, // TODO: position in evalled_values
+                    message: format!("Expected a bool, but got: {}", lhs_value.1),
+                    restore_values: vec![lhs_value.clone(), rhs_value],
+                    position: lhs_value.0,
                 });
             }
         };
-        let rhs_bool = match rhs_value {
+        let rhs_bool = match rhs_value.1 {
             Value::Boolean(b) => b,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected a bool, but got: {}", rhs_value),
-                    restore_values: vec![lhs_value, rhs_value],
-                    position: Position {
-                        offset: 0,
-                        path: "".into(),
-                    }, // TODO: position in evalled_values
+                    message: format!("Expected a bool, but got: {}", rhs_value.1),
+                    restore_values: vec![lhs_value, rhs_value.clone()],
+                    position: rhs_value.0,
                 });
             }
         };
@@ -538,12 +545,12 @@ fn eval_boolean_binop(
             BinaryOperatorKind::And => {
                 stack_frame
                     .evalled_values
-                    .push(Value::Boolean(lhs_bool && rhs_bool));
+                    .push((position.clone(), Value::Boolean(lhs_bool && rhs_bool)));
             }
             BinaryOperatorKind::Or => {
                 stack_frame
                     .evalled_values
-                    .push(Value::Boolean(lhs_bool || rhs_bool));
+                    .push((position.clone(), Value::Boolean(lhs_bool || rhs_bool)));
             }
             _ => unreachable!(),
         }
@@ -553,6 +560,7 @@ fn eval_boolean_binop(
 
 fn eval_equality_binop(
     stack_frame: &mut StackFrame,
+    position: &Position,
     op: BinaryOperatorKind,
 ) -> Result<(), ErrorInfo> {
     let rhs_value = stack_frame
@@ -568,12 +576,12 @@ fn eval_equality_binop(
         BinaryOperatorKind::Equal => {
             stack_frame
                 .evalled_values
-                .push(Value::Boolean(lhs_value == rhs_value));
+                .push((position.clone(), Value::Boolean(lhs_value.1 == rhs_value.1)));
         }
         BinaryOperatorKind::NotEqual => {
             stack_frame
                 .evalled_values
-                .push(Value::Boolean(lhs_value != rhs_value));
+                .push((position.clone(), Value::Boolean(lhs_value.1 != rhs_value.1)));
         }
         _ => unreachable!(),
     }
@@ -582,6 +590,7 @@ fn eval_equality_binop(
 
 fn eval_integer_binop(
     stack_frame: &mut StackFrame,
+    position: &Position,
     op: BinaryOperatorKind,
 ) -> Result<(), ErrorInfo> {
     {
@@ -594,74 +603,68 @@ fn eval_integer_binop(
             .pop()
             .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_num = match lhs_value {
+        let lhs_num = match lhs_value.1 {
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected an integer, but got: {}", lhs_value),
-                    restore_values: vec![lhs_value, rhs_value],
-                    position: Position {
-                        offset: 0,
-                        path: "".into(),
-                    }, // TODO: position in evalled_values
+                    message: format!("Expected an integer, but got: {}", lhs_value.1),
+                    restore_values: vec![lhs_value.clone(), rhs_value],
+                    position: lhs_value.0,
                 });
             }
         };
-        let rhs_num = match rhs_value {
+        let rhs_num = match rhs_value.1 {
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected an integer, but got: {}", rhs_value),
-                    restore_values: vec![lhs_value, rhs_value],
-                    position: Position {
-                        offset: 0,
-                        path: "".into(),
-                    }, // TODO: position in evalled_values
+                    message: format!("Expected an integer, but got: {}", rhs_value.1),
+                    restore_values: vec![lhs_value, rhs_value.clone()],
+                    position: rhs_value.0,
                 });
             }
         };
 
         match op {
             BinaryOperatorKind::Add => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num.wrapping_add(rhs_num)));
+                stack_frame.evalled_values.push((
+                    position.clone(),
+                    Value::Integer(lhs_num.wrapping_add(rhs_num)),
+                ));
             }
             BinaryOperatorKind::Subtract => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num.wrapping_sub(rhs_num)));
+                stack_frame.evalled_values.push((
+                    position.clone(),
+                    Value::Integer(lhs_num.wrapping_sub(rhs_num)),
+                ));
             }
             BinaryOperatorKind::Multiply => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num.wrapping_mul(rhs_num)));
+                stack_frame.evalled_values.push((
+                    position.clone(),
+                    Value::Integer(lhs_num.wrapping_mul(rhs_num)),
+                ));
             }
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
                     return Err(ErrorInfo {
-                        message: format!("Tried to divide {} by zero.", rhs_value),
-                        restore_values: vec![lhs_value, rhs_value],
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        message: format!("Tried to divide {} by zero.", rhs_value.1),
+                        restore_values: vec![lhs_value, rhs_value.clone()],
+                        position: rhs_value.0,
                     });
                 }
 
                 stack_frame
                     .evalled_values
-                    .push(Value::Integer(lhs_num / rhs_num));
+                    .push((position.clone(), Value::Integer(lhs_num / rhs_num)));
             }
             BinaryOperatorKind::LessThan => {
                 stack_frame
                     .evalled_values
-                    .push(Value::Boolean(lhs_num < rhs_num));
+                    .push((position.clone(), Value::Boolean(lhs_num < rhs_num)));
             }
             BinaryOperatorKind::GreaterThan => {
                 stack_frame
                     .evalled_values
-                    .push(Value::Boolean(lhs_num > rhs_num));
+                    .push((position.clone(), Value::Boolean(lhs_num > rhs_num)));
             }
             _ => {
                 unreachable!()
@@ -673,6 +676,7 @@ fn eval_integer_binop(
 
 fn eval_call(
     stack_frame: &mut StackFrame,
+    position: &Position,
     args: &[Expression],
     session: &Session,
 ) -> Result<Option<StackFrame>, ErrorInfo> {
@@ -690,7 +694,7 @@ fn eval_call(
         .pop()
         .expect("Popped an empty value stack for call receiver");
 
-    match &receiver_value {
+    match &receiver_value.1 {
         Value::Fun(_, name, params, body) => {
             if params.len() != arg_values.len() {
                 let mut saved_values = vec![receiver_value.clone()];
@@ -706,10 +710,7 @@ fn eval_call(
                         arg_values.len()
                     ),
                     restore_values: saved_values,
-                    position: Position {
-                        offset: 0,
-                        path: "".into(),
-                    }, // TODO: position in evalled_values
+                    position: receiver_value.0,
                 });
             }
 
@@ -720,14 +721,14 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in params.iter().zip(arg_values.iter()) {
-                fun_bindings.insert(param.1.clone(), value.clone());
+                fun_bindings.insert(param.1.clone(), value.1.clone());
             }
 
             return Ok(Some(StackFrame {
                 fun_name: name.1.clone(),
                 bindings: vec![fun_bindings],
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![Value::Void],
+                evalled_values: vec![(name.0.clone(), Value::Void)],
             }));
         }
         Value::BuiltinFunction(kind) => match kind {
@@ -750,7 +751,7 @@ fn eval_call(
                         }, // TODO: position in evalled_values
                     });
                 }
-                match &arg_values[0] {
+                match &arg_values[0].1 {
                     Value::String(s) => {
                         if session.has_attached_stdout {
                             println!("{}", s);
@@ -773,14 +774,13 @@ fn eval_call(
                         return Err(ErrorInfo {
                             message: format!("Expected a string, but got: {}", v),
                             restore_values: saved_values,
-                            position: Position {
-                                offset: 0,
-                                path: "".into(),
-                            }, // TODO: position in evalled_values
+                            position: arg_values[0].0.clone(),
                         });
                     }
                 }
-                stack_frame.evalled_values.push(Value::Void);
+                stack_frame
+                    .evalled_values
+                    .push((position.clone(), Value::Void));
             }
             BuiltinFunctionKind::StringLength => {
                 if args.len() != 1 {
@@ -801,11 +801,11 @@ fn eval_call(
                         }, // TODO: position in evalled_values
                     });
                 }
-                match &arg_values[0] {
+                match &arg_values[0].1 {
                     Value::String(s) => {
                         stack_frame
                             .evalled_values
-                            .push(Value::Integer(s.chars().count() as i64));
+                            .push((position.clone(), Value::Integer(s.chars().count() as i64)));
                     }
                     v => {
                         let mut saved_values = vec![];
@@ -844,9 +844,9 @@ fn eval_call(
                         }, // TODO: position in evalled_values
                     });
                 }
-                match &arg_values[0] {
+                match &arg_values[0].1 {
                     Value::String(s) => {
-                        match as_string_list(&arg_values[1]) {
+                        match as_string_list(&arg_values[1].1) {
                             Ok(items) => {
                                 let mut command = std::process::Command::new(s);
                                 for item in items {
@@ -863,7 +863,9 @@ fn eval_call(
                                 s.write_str(&String::from_utf8_lossy(&output.stderr))
                                     .unwrap();
 
-                                stack_frame.evalled_values.push(Value::String(s));
+                                stack_frame
+                                    .evalled_values
+                                    .push((position.clone(), Value::String(s)));
                             }
                             Err(v) => {
                                 let mut saved_values = vec![];
@@ -920,11 +922,13 @@ fn eval_call(
                         }, // TODO: position in evalled_values
                     });
                 }
-                match &arg_values[0] {
+                match &arg_values[0].1 {
                     Value::List(items) => {
                         let mut new_items = items.clone();
-                        new_items.push(arg_values[1].clone());
-                        stack_frame.evalled_values.push(Value::List(new_items));
+                        new_items.push(arg_values[1].1.clone());
+                        stack_frame
+                            .evalled_values
+                            .push((position.clone(), Value::List(new_items)));
                     }
                     v => {
                         let mut saved_values = vec![];
@@ -964,11 +968,11 @@ fn eval_call(
                         }, // TODO: position in evalled_values
                     });
                 }
-                match &arg_values[0] {
+                match &arg_values[0].1 {
                     Value::Integer(i) => {
                         stack_frame
                             .evalled_values
-                            .push(Value::String(format!("{}", i)));
+                            .push((position.clone(), Value::String(format!("{}", i))));
                     }
                     v => {
                         let mut saved_values = vec![];
@@ -1007,7 +1011,7 @@ fn eval_call(
                         }, // TODO: position in evalled_values
                     });
                 }
-                let s_arg = match &arg_values[0] {
+                let s_arg = match &arg_values[0].1 {
                     Value::String(s) => s,
                     v => {
                         let mut saved_values = vec![];
@@ -1026,7 +1030,7 @@ fn eval_call(
                         });
                     }
                 };
-                let from_arg = match &arg_values[1] {
+                let from_arg = match &arg_values[1].1 {
                     Value::Integer(i) => i,
                     v => {
                         let mut saved_values = vec![];
@@ -1045,7 +1049,7 @@ fn eval_call(
                         });
                     }
                 };
-                let to_arg = match &arg_values[2] {
+                let to_arg = match &arg_values[2].1 {
                     Value::Integer(i) => i,
                     v => {
                         let mut saved_values = vec![];
@@ -1075,10 +1079,7 @@ fn eval_call(
                     return Err(ErrorInfo {
                         message: format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: arg_values[1].0.clone(),
                     });
                 }
 
@@ -1092,19 +1093,19 @@ fn eval_call(
                     return Err(ErrorInfo {
                         message: format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg),
                         restore_values: saved_values,
-                        position: Position {
-                            offset: 0,
-                            path: "".into(),
-                        }, // TODO: position in evalled_values
+                        position: arg_values[1].0.clone(),
                     });
                 }
 
-                stack_frame.evalled_values.push(Value::String(
-                    s_arg
-                        .chars()
-                        .skip(*from_arg as usize)
-                        .take((to_arg - from_arg) as usize)
-                        .collect(),
+                stack_frame.evalled_values.push((
+                    position.clone(),
+                    Value::String(
+                        s_arg
+                            .chars()
+                            .skip(*from_arg as usize)
+                            .take((to_arg - from_arg) as usize)
+                            .collect(),
+                    ),
                 ));
             }
         },
@@ -1116,10 +1117,7 @@ fn eval_call(
             saved_values.push(receiver_value.clone());
 
             return Err(ErrorInfo {
-                position: Position {
-                    offset: 0,
-                    path: "".into(),
-                }, // TODO: position in evalled_values
+                position: receiver_value.0,
                 message: format!("Expected a function, but got: {}", v),
                 restore_values: saved_values,
             });
@@ -1277,24 +1275,26 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         return Err(EvalError::Stop(e));
                     }
                     Expression_::IntLiteral(i) => {
-                        stack_frame.evalled_values.push(Value::Integer(i));
+                        stack_frame.evalled_values.push((offset, Value::Integer(i)));
                     }
                     Expression_::BoolLiteral(b) => {
-                        stack_frame.evalled_values.push(Value::Boolean(b));
+                        stack_frame.evalled_values.push((offset, Value::Boolean(b)));
                     }
                     Expression_::StringLiteral(s) => {
-                        stack_frame.evalled_values.push(Value::String(s));
+                        stack_frame.evalled_values.push((offset, Value::String(s)));
                     }
                     Expression_::ListLiteral(items) => {
                         if done_children {
-                            let mut list_values = Vec::with_capacity(items.len());
+                            let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
                             for _ in 0..items.len() {
                                 list_values.push(stack_frame.evalled_values.pop().expect(
                                     "Value stack should have sufficient items for the list literal",
-                                ));
+                                ).1);
                             }
 
-                            stack_frame.evalled_values.push(Value::List(list_values));
+                            stack_frame
+                                .evalled_values
+                                .push((offset, Value::List(list_values)));
                         } else {
                             stack_frame
                                 .exprs_to_eval
@@ -1307,7 +1307,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Variable(name) => {
                         if let Some(value) = get_var(&name.1, &stack_frame, env) {
-                            stack_frame.evalled_values.push(value);
+                            stack_frame.evalled_values.push((offset, value));
                         } else {
                             restore_stack_frame(
                                 env,
@@ -1337,7 +1337,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 message,
                                 restore_values,
                                 position,
-                            }) = eval_integer_binop(&mut stack_frame, op)
+                            }) = eval_integer_binop(&mut stack_frame, &offset, op)
                             {
                                 restore_stack_frame(
                                     env,
@@ -1366,7 +1366,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 message,
                                 restore_values,
                                 position,
-                            }) = eval_equality_binop(&mut stack_frame, op)
+                            }) = eval_equality_binop(&mut stack_frame, &offset, op)
                             {
                                 restore_stack_frame(
                                     env,
@@ -1395,7 +1395,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 message,
                                 restore_values,
                                 position,
-                            }) = eval_boolean_binop(&mut stack_frame, op)
+                            }) = eval_boolean_binop(&mut stack_frame, &offset, op)
                             {
                                 restore_stack_frame(
                                     env,
@@ -1417,7 +1417,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Call(receiver, ref args) => {
                         if done_children {
-                            match eval_call(&mut stack_frame, args, session) {
+                            match eval_call(&mut stack_frame, &offset, args, session) {
                                 Ok(Some(new_stack_frame)) => {
                                     env.stack.push(stack_frame);
                                     env.stack.push(new_stack_frame);
@@ -1506,7 +1506,8 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
         .expect("toplevel stack frame should exist")
         .evalled_values
         .pop()
-        .expect("Should have a value from the last expression"))
+        .expect("Should have a value from the last expression")
+        .1)
 }
 
 pub fn eval_exprs(

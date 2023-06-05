@@ -213,7 +213,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(EvalError::Stop(_)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let result = stack_frame.evalled_values.pop().unwrap();
-                match result {
+                match result.1 {
                     eval::Value::Void => {
                         println!("void")
                     }

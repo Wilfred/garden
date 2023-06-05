@@ -295,7 +295,7 @@ pub fn run_command<T: Write>(
         Command::FrameValues => {
             if let Some(stack_frame) = env.stack.last() {
                 for value in stack_frame.evalled_values.iter().rev() {
-                    match value {
+                    match &value.1 {
                         Value::Void => {
                             writeln!(buf, "void")
                         }

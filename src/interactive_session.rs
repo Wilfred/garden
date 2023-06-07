@@ -1,3 +1,4 @@
+use std::cmp::max;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
@@ -10,7 +11,7 @@ use crate::commands::{
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
-    line_of_offset, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_,
+    line_of_position, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_,
     ParseError,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
@@ -196,13 +197,17 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
-                let display_line = line_of_offset(&last_src, position.offset);
+                let display_line = line_of_position(&last_src, &position);
                 let formatted_line_num = format!("{} | ", display_line.line_num + 1);
                 println!("{}{}", formatted_line_num, display_line.src);
 
                 let caret_space =
                     " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
-                println!("{}^", caret_space);
+                let caret_len = max(
+                    1,
+                    display_line.end_offset_on_line - display_line.offset_on_line,
+                );
+                println!("{}{}", caret_space, "^".repeat(caret_len));
 
                 println!("\n{}: {}", "Error".bright_red(), msg);
                 depth += 1;

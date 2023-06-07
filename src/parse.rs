@@ -19,18 +19,25 @@ pub struct DisplayLine {
     pub src: String,
     pub line_num: usize,
     pub offset_on_line: usize,
-    // pub end_offset_on_line: usize,
+    pub end_offset_on_line: usize,
 }
 
-pub fn line_of_offset(src: &str, byte_offset: usize) -> DisplayLine {
+pub fn line_of_position(src: &str, position: &Position) -> DisplayLine {
     let mut line_start_offset = 0;
 
     for (i, line) in src.lines().enumerate() {
-        if line.len() + line_start_offset >= byte_offset {
+        if line.len() + line_start_offset >= position.offset {
+            let end_offset_on_line = if position.end_offset <= (line_start_offset + line.len()) {
+                position.end_offset - line_start_offset
+            } else {
+                line.len()
+            };
+
             return DisplayLine {
                 src: line.into(),
                 line_num: i,
-                offset_on_line: byte_offset - line_start_offset,
+                offset_on_line: position.offset - line_start_offset,
+                end_offset_on_line,
             };
         }
 
@@ -48,6 +55,7 @@ pub fn line_of_offset(src: &str, byte_offset: usize) -> DisplayLine {
         src: last_line.into(),
         line_num: src.lines().count(),
         offset_on_line: last_line.len(),
+        end_offset_on_line: last_line.len(),
     }
 }
 

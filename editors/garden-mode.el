@@ -154,10 +154,10 @@ the user entering a value in the *garden* buffer."
         (let ((s
                (cond
                 (response-err-value
-                 (let* ((position (elt response-err-value 0))
+                 (let* ((position (plist-get response-err-value :position))
                         (position-offset (plist-get position :offset))
                         (end-offset (plist-get position :end_offset))
-                        (err-msg (elt response-err-value 1)))
+                        (err-msg (plist-get response-err-value :message)))
                    ;; TODO: find the buffer with the path which matches this position.
                    (with-current-buffer buf
                      (garden--flash-error-region position-offset end-offset))

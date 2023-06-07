@@ -42,7 +42,10 @@ pub enum ResponseKind {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ResponseError(Option<Position>, String);
+pub struct ResponseError {
+    position: Option<Position>,
+    message: String,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Response {
@@ -110,14 +113,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                         },
                                         Err(EvalError::ResumableError(position, e)) => Response {
                                             kind: ResponseKind::Evaluate,
-                                            value: Err(ResponseError(
-                                                Some(position),
-                                                format!("Error: {}", e),
-                                            )),
+                                            value: Err(ResponseError {
+                                                position: Some(position),
+                                                message: format!("Error: {}", e),
+                                            }),
                                         },
                                         Err(EvalError::Interrupted) => Response {
                                             kind: ResponseKind::Evaluate,
-                                            value: Err(ResponseError(None, format!("Interrupted"))),
+                                            value: Err(ResponseError {
+                                                position: None,
+                                                message: format!("Interrupted"),
+                                            }),
                                         },
                                         Err(EvalError::Stop(_)) => {
                                             todo!();
@@ -141,10 +147,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
 
                         Response {
                             kind: ResponseKind::RunCommand,
-                            value: Err(ResponseError(
-                                None,
-                                format!("{}", String::from_utf8_lossy(&out_buf)),
-                            )),
+                            value: Err(ResponseError {
+                                position: None,
+                                message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                            }),
                         }
                     }
                     Err(CommandParseError::NotCommandSyntax) => {
@@ -168,14 +174,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 },
                                 Err(EvalError::ResumableError(position, e)) => Response {
                                     kind: ResponseKind::Evaluate,
-                                    value: Err(ResponseError(
-                                        Some(position),
-                                        format!("Error: {}", e),
-                                    )),
+                                    value: Err(ResponseError {
+                                        position: Some(position),
+                                        message: format!("Error: {}", e),
+                                    }),
                                 },
                                 Err(EvalError::Interrupted) => Response {
                                     kind: ResponseKind::Evaluate,
-                                    value: Err(ResponseError(None, format!("Interrupted"))),
+                                    value: Err(ResponseError {
+                                        position: None,
+                                        message: format!("Interrupted"),
+                                    }),
                                 },
                                 Err(EvalError::Stop(_)) => {
                                     todo!();
@@ -183,10 +192,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             },
                             Err(e) => Response {
                                 kind: ResponseKind::Evaluate,
-                                value: Err(ResponseError(
-                                    None,
-                                    format!("Could not parse input: {:?}", e),
-                                )),
+                                value: Err(ResponseError {
+                                    position: None,
+                                    message: format!("Could not parse input: {:?}", e),
+                                }),
                             },
                         }
                     }
@@ -194,14 +203,14 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             },
             Err(_) => Response {
                 kind: ResponseKind::MalformedRequest,
-                value: Err(ResponseError(
-                    None,
-                    format!(
+                value: Err(ResponseError {
+                    position: None,
+                    message: format!(
                         "Could not parse request: {}. A valid request looks like: {}",
                         line,
                         sample_request_as_json(),
                     ),
-                )),
+                }),
             },
         };
         let serialized = serde_json::to_string(&response).unwrap();

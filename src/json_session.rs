@@ -42,9 +42,12 @@ pub enum ResponseKind {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct ResponseError(Option<Position>, String);
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Response {
     pub kind: ResponseKind,
-    pub value: Result<String, (Option<Position>, String)>,
+    pub value: Result<String, ResponseError>,
 }
 
 pub fn sample_request_as_json() -> String {
@@ -107,11 +110,14 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                         },
                                         Err(EvalError::ResumableError(position, e)) => Response {
                                             kind: ResponseKind::Evaluate,
-                                            value: Err((Some(position), (format!("Error: {}", e)))),
+                                            value: Err(ResponseError(
+                                                Some(position),
+                                                format!("Error: {}", e),
+                                            )),
                                         },
                                         Err(EvalError::Interrupted) => Response {
                                             kind: ResponseKind::Evaluate,
-                                            value: Err((None, format!("Interrupted"))),
+                                            value: Err(ResponseError(None, format!("Interrupted"))),
                                         },
                                         Err(EvalError::Stop(_)) => {
                                             todo!();
@@ -135,7 +141,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
 
                         Response {
                             kind: ResponseKind::RunCommand,
-                            value: Err((None, format!("{}", String::from_utf8_lossy(&out_buf)))),
+                            value: Err(ResponseError(
+                                None,
+                                format!("{}", String::from_utf8_lossy(&out_buf)),
+                            )),
                         }
                     }
                     Err(CommandParseError::NotCommandSyntax) => {
@@ -159,11 +168,14 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 },
                                 Err(EvalError::ResumableError(position, e)) => Response {
                                     kind: ResponseKind::Evaluate,
-                                    value: Err((Some(position), format!("Error: {}", e))),
+                                    value: Err(ResponseError(
+                                        Some(position),
+                                        format!("Error: {}", e),
+                                    )),
                                 },
                                 Err(EvalError::Interrupted) => Response {
                                     kind: ResponseKind::Evaluate,
-                                    value: Err((None, format!("Interrupted"))),
+                                    value: Err(ResponseError(None, format!("Interrupted"))),
                                 },
                                 Err(EvalError::Stop(_)) => {
                                     todo!();
@@ -171,7 +183,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             },
                             Err(e) => Response {
                                 kind: ResponseKind::Evaluate,
-                                value: Err((None, format!("Could not parse input: {:?}", e))),
+                                value: Err(ResponseError(
+                                    None,
+                                    format!("Could not parse input: {:?}", e),
+                                )),
                             },
                         }
                     }
@@ -179,7 +194,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             },
             Err(_) => Response {
                 kind: ResponseKind::MalformedRequest,
-                value: Err((
+                value: Err(ResponseError(
                     None,
                     format!(
                         "Could not parse request: {}. A valid request looks like: {}",

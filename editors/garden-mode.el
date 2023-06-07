@@ -118,6 +118,15 @@ the user entering a value in the *garden* buffer."
    (buffer-substring (line-beginning-position)
                      (line-end-position))))
 
+(defun garden--report-error (msg)
+  (let ((buf (get-buffer-create "*garden-error*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (delete-region (point-min) (point-max))
+        (insert msg))
+      (setq buffer-read-only t))
+    buf))
+
 (defun garden-process-filter (proc output)
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist))
@@ -125,7 +134,8 @@ the user entering a value in the *garden* buffer."
            (response-kind (plist-get response :kind))
            (response-ok-value (plist-get response-value :Ok))
            (response-err-value (plist-get response-value :Err))
-           (buf (current-buffer)))
+           (buf (current-buffer))
+           error-buf)
       (with-current-buffer (process-buffer proc)
         (let ((s
                (cond
@@ -137,6 +147,7 @@ the user entering a value in the *garden* buffer."
                    (with-current-buffer buf
                      (garden--flash-error-region position-offset (+ position-offset 5)))
                    (message "%s" err-msg)
+                   (setq error-buf (garden--report-error err-msg))
                    (garden--fontify-error (concat err-msg "\n"))))
                 ((string= response-kind "ready")
                  (garden--propertize-read-only (concat response-ok-value "\n")))
@@ -159,7 +170,10 @@ the user entering a value in the *garden* buffer."
                 (insert "\n" s)
                 (goto-char (point-max)))
             (insert s (garden--fontify-prompt "\n>") " "))
-          (set-marker (process-mark proc) (point)))))))
+          (set-marker (process-mark proc) (point))
+
+          (when error-buf
+            (pop-to-buffer error-buf)))))))
 
 (defun garden--buffer ()
   (let* ((buf-name "*garden*")

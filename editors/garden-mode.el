@@ -67,6 +67,9 @@
   "Indentation amount (in spaces) for Garden files."
   :safe #'integerp)
 
+(defvar garden-log-json t
+  "If not-nil, report raw JSON responses from Garden as messages.")
+
 (defun garden-indent-line ()
   "Indent the line at point."
   (interactive)
@@ -145,6 +148,8 @@ the user entering a value in the *garden* buffer."
            (response-err-value (plist-get response-value :Err))
            (buf (current-buffer))
            error-buf)
+      (when garden-log-json
+        (message "%S" response))
       (with-current-buffer (process-buffer proc)
         (let ((s
                (cond

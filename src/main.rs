@@ -79,11 +79,12 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("--> {}", position.path.display());
 
-                        let (line_src, line_i, line_offset) = line_of_offset(&src, position.offset);
-                        let formatted_line_num = format!("{} | ", line_i + 1);
-                        eprintln!("{}{}", formatted_line_num, line_src);
+                        let display_line = line_of_offset(&src, position.offset);
+                        let formatted_line_num = format!("{} | ", display_line.line_num + 1);
+                        eprintln!("{}{}", formatted_line_num, display_line.src);
 
-                        let caret_space = " ".repeat(formatted_line_num.len() + line_offset);
+                        let caret_space =
+                            " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
                         eprintln!("{}^", caret_space);
 
                         eprintln!("Error: {}", e);
@@ -107,11 +108,12 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                         // is in the main call itself, e.g. if the
                         // user has incorrectly defined main() with
                         // more parameters.
-                        let (line_src, line_i, line_offset) = line_of_offset(&src, position.offset);
-                        let formatted_line_num = format!("{} | ", line_i + 1);
-                        eprintln!("{}{}", formatted_line_num, line_src);
+                        let display_line = line_of_offset(&src, position.offset);
+                        let formatted_line_num = format!("{} | ", display_line.line_num + 1);
+                        eprintln!("{}{}", formatted_line_num, display_line.src);
 
-                        let caret_space = " ".repeat(formatted_line_num.len() + line_offset);
+                        let caret_space =
+                            " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
                         eprintln!("{}^", caret_space);
 
                         eprintln!("Error: {}", e);
@@ -127,11 +129,12 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
             Err(parse::ParseError::OtherError(pos, e)) => {
                 eprintln!("--> {}", pos.path.display());
 
-                let (line_src, line_i, line_offset) = line_of_offset(&src, pos.offset);
-                let formatted_line_num = format!("{} | ", line_i + 1);
-                eprintln!("{}{}", formatted_line_num, line_src);
+                let display_line = line_of_offset(&src, pos.offset);
+                let formatted_line_num = format!("{} | ", display_line.line_num + 1);
+                eprintln!("{}{}", formatted_line_num, display_line.src);
 
-                let caret_space = " ".repeat(formatted_line_num.len() + line_offset);
+                let caret_space =
+                    " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
                 eprintln!("{}^", caret_space);
 
                 eprintln!("\nParse error: {}", e);

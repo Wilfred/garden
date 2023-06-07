@@ -196,11 +196,12 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
-                let (line_src, line_i, line_offset) = line_of_offset(&last_src, position.offset);
-                let formatted_line_num = format!("{} | ", line_i + 1);
-                println!("{}{}", formatted_line_num, line_src);
+                let display_line = line_of_offset(&last_src, position.offset);
+                let formatted_line_num = format!("{} | ", display_line.line_num + 1);
+                println!("{}{}", formatted_line_num, display_line.src);
 
-                let caret_space = " ".repeat(formatted_line_num.len() + line_offset);
+                let caret_space =
+                    " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
                 println!("{}^", caret_space);
 
                 println!("\n{}: {}", "Error".bright_red(), msg);

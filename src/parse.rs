@@ -15,12 +15,23 @@ pub struct Position {
     pub path: PathBuf,
 }
 
-pub fn line_of_offset(src: &str, byte_offset: usize) -> (&str, usize, usize) {
+pub struct DisplayLine {
+    pub src: String,
+    pub line_num: usize,
+    pub offset_on_line: usize,
+    // pub end_offset_on_line: usize,
+}
+
+pub fn line_of_offset(src: &str, byte_offset: usize) -> DisplayLine {
     let mut line_start_offset = 0;
 
     for (i, line) in src.lines().enumerate() {
         if line.len() + line_start_offset >= byte_offset {
-            return (line, i, byte_offset - line_start_offset);
+            return DisplayLine {
+                src: line.into(),
+                line_num: i,
+                offset_on_line: byte_offset - line_start_offset,
+            };
         }
 
         // TODO: This is wrong if src contains \r\n newlines.
@@ -32,7 +43,12 @@ pub fn line_of_offset(src: &str, byte_offset: usize) -> (&str, usize, usize) {
         None => src, // empty string
     };
 
-    (last_line, 0, last_line.len())
+    // Offset beyond EOF
+    DisplayLine {
+        src: last_line.into(),
+        line_num: src.lines().count(),
+        offset_on_line: last_line.len(),
+    }
 }
 
 #[derive(Debug)]

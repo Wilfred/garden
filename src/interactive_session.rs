@@ -27,10 +27,10 @@ fn read_expr(
     env: &mut Env,
     session: &mut Session,
     rl: &mut Editor<()>,
-    depth: usize,
+    is_stopped: bool,
 ) -> Result<(String, DefinitionsOrExpression), ReadError> {
     loop {
-        match rl.readline(&prompt_symbol(depth)) {
+        match rl.readline(&prompt_symbol(is_stopped)) {
             Ok(input) => {
                 rl.add_history_entry(input.as_str());
                 let _ = rl.save_history(".history");
@@ -90,13 +90,13 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
     };
 
     let mut rl = new_editor();
-    let mut depth = 0;
+    let mut is_stopped = false;
     let mut last_src = String::new();
 
     loop {
         println!();
 
-        match read_expr(&mut env, &mut session, &mut rl, depth) {
+        match read_expr(&mut env, &mut session, &mut rl, is_stopped) {
             Ok((src, items)) => {
                 last_src = src;
                 match items.clone() {
@@ -116,13 +116,11 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::CommandError(CommandError::Abort)) => {
                 // TODO: doesn't this need to pop the stack to the toplevel?
                 // It seems to be working already.
-                depth = 0;
+                is_stopped = false;
                 continue;
             }
             Err(ReadError::CommandError(CommandError::Resume)) => {
-                if depth > 0 {
-                    depth -= 1;
-                }
+                is_stopped = false;
 
                 let stack_frame = env.stack.last_mut().unwrap();
                 if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
@@ -172,9 +170,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     .pop()
                     .expect("Tried to skip an expression, but none in this frame.");
 
-                if depth > 0 {
-                    depth -= 1;
-                }
+                is_stopped = false;
             }
 
             Err(ReadError::ReadlineError) => {
@@ -190,7 +186,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                         println!("{}", v)
                     }
                 }
-                depth = 0;
+                is_stopped = false;
             }
             Err(EvalError::ResumableError(position, msg)) => {
                 println!("--> {}", position.path.display());
@@ -210,11 +206,11 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 println!("{}{}", caret_space, "^".repeat(caret_len));
 
                 println!("\n{}: {}", "Error".bright_red(), msg);
-                depth += 1;
+                is_stopped = true;
             }
             Err(EvalError::Interrupted) => {
                 println!("Interrupted. You can take a look around, or use :resume to continue.");
-                depth += 1;
+                is_stopped = true;
             }
             Err(EvalError::Stop(_)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
@@ -227,7 +223,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                         println!("{}", v)
                     }
                 }
-                println!("Finished with input. Now what?");
             }
         }
     }
@@ -265,7 +260,7 @@ fn read_multiline_syntax(
                     // If we didn't parse anything, but the text isn't
                     // just whitespace, it's probably a comment that
                     // will become a doc comment
-                    match rl.readline(&prompt_symbol(1)) {
+                    match rl.readline(&prompt_symbol(false)) {
                         Ok(input) => {
                             src.push('\n');
                             src.push_str(&input);
@@ -277,7 +272,7 @@ fn read_multiline_syntax(
                     return Ok((src, items));
                 }
             },
-            Err(e @ ParseError::Incomplete(_)) => match rl.readline(&prompt_symbol(1)) {
+            Err(e @ ParseError::Incomplete(_)) => match rl.readline(&prompt_symbol(false)) {
                 Ok(input) => {
                     src.push('\n');
                     src.push_str(&input);

@@ -1234,13 +1234,19 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         return Err(EvalError::Stop(e));
                     }
                     Expression_::IntLiteral(i) => {
-                        stack_frame.evalled_values.push((expr_position, Value::Integer(i)));
+                        stack_frame
+                            .evalled_values
+                            .push((expr_position, Value::Integer(i)));
                     }
                     Expression_::BoolLiteral(b) => {
-                        stack_frame.evalled_values.push((expr_position, Value::Boolean(b)));
+                        stack_frame
+                            .evalled_values
+                            .push((expr_position, Value::Boolean(b)));
                     }
                     Expression_::StringLiteral(s) => {
-                        stack_frame.evalled_values.push((expr_position, Value::String(s)));
+                        stack_frame
+                            .evalled_values
+                            .push((expr_position, Value::String(s)));
                     }
                     Expression_::ListLiteral(items) => {
                         if done_children {

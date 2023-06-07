@@ -45,6 +45,7 @@ pub enum ResponseKind {
 pub struct ResponseError {
     position: Option<Position>,
     message: String,
+    stack: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -116,6 +117,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                             value: Err(ResponseError {
                                                 position: Some(position),
                                                 message: format!("Error: {}", e),
+                                                stack: None,
                                             }),
                                         },
                                         Err(EvalError::Interrupted) => Response {
@@ -123,6 +125,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                             value: Err(ResponseError {
                                                 position: None,
                                                 message: format!("Interrupted"),
+                                                stack: None,
                                             }),
                                         },
                                         Err(EvalError::Stop(_)) => {
@@ -150,6 +153,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             value: Err(ResponseError {
                                 position: None,
                                 message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                                stack: None,
                             }),
                         }
                     }
@@ -177,6 +181,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                     value: Err(ResponseError {
                                         position: Some(position),
                                         message: format!("Error: {}", e),
+                                        stack: None,
                                     }),
                                 },
                                 Err(EvalError::Interrupted) => Response {
@@ -184,6 +189,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                     value: Err(ResponseError {
                                         position: None,
                                         message: format!("Interrupted"),
+                                        stack: None,
                                     }),
                                 },
                                 Err(EvalError::Stop(_)) => {
@@ -195,6 +201,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                 value: Err(ResponseError {
                                     position: None,
                                     message: format!("Could not parse input: {:?}", e),
+                                    stack: None,
                                 }),
                             },
                         }
@@ -210,6 +217,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         line,
                         sample_request_as_json(),
                     ),
+                    stack: None,
                 }),
             },
         };

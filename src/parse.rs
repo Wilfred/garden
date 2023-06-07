@@ -10,6 +10,7 @@ use crate::eval::ErrorKind;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub offset: usize,
+    pub end_offset: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
 }
@@ -546,6 +547,7 @@ fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition
     Err(ParseError::OtherError(
         Position {
             offset: 0,
+            end_offset: 0,
             path: path.into(),
         },
         "Expected a definition, got EOF".to_string(),
@@ -682,7 +684,7 @@ fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseEr
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
-        let_token.position,
+        let_token.position, // TODO: this should be a larger span.
         Expression_::Let(variable, Box::new(expr)),
     ))
 }
@@ -784,6 +786,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
                 res.push(Token {
                     position: Position {
                         offset,
+                        end_offset: offset + token_str.len(),
                         path: path.clone(),
                     },
                     text: &s[0..token_str.len()],
@@ -802,6 +805,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             res.push(Token {
                 position: Position {
                     offset,
+                    end_offset: offset + integer_match.end(),
                     path: path.clone(),
                 },
                 text: integer_match.as_str(),
@@ -820,6 +824,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
                 res.push(Token {
                     position: Position {
                         offset,
+                        end_offset: offset + 1,
                         path: path.clone(),
                     },
                     text: &s[0..1],
@@ -835,6 +840,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             res.push(Token {
                 position: Position {
                     offset,
+                    end_offset: offset + string_match.end(),
                     path: path.clone(),
                 },
                 text: string_match.as_str(),
@@ -847,6 +853,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
             res.push(Token {
                 position: Position {
                     offset,
+                    end_offset: offset + variable_match.end(),
                     path: path.clone(),
                 },
                 text: variable_match.as_str(),
@@ -864,6 +871,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
         return Err(ParseError::OtherError(
             Position {
                 offset,
+                end_offset: s.len(),
                 path: path.clone(),
             },
             format!("Unrecognized syntax: '{}'", &s[offset..]),
@@ -901,6 +909,7 @@ mod tests {
             vec![Token {
                 position: Position {
                     offset: 0,
+                    end_offset: 1,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
@@ -916,6 +925,7 @@ mod tests {
             vec![Token {
                 position: Position {
                     offset: 1,
+                    end_offset: 2,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "a",
@@ -957,6 +967,7 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 4,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::BoolLiteral(true)
@@ -973,6 +984,7 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 4,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::IntLiteral(-123)
@@ -989,6 +1001,7 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 12,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::StringLiteral("a\nb\\c\"d".into())
@@ -1003,6 +1016,7 @@ mod tests {
             vec![Token {
                 position: Position {
                     offset: 5,
+                    end_offset: 6,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
@@ -1030,11 +1044,13 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 7,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Variable(Variable(
                     Position {
                         offset: 0,
+                        end_offset: 7,
                         path: PathBuf::from("__test.gdn")
                     },
                     VariableName("abc_def".to_string())
@@ -1052,12 +1068,14 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 3,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
                     Variable(
                         Position {
                             offset: 4,
+                            end_offset: 5,
                             path: PathBuf::from("__test.gdn")
                         },
                         VariableName("x".into())
@@ -1065,6 +1083,7 @@ mod tests {
                     Box::new(Expression(
                         Position {
                             offset: 8,
+                            end_offset: 9,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::IntLiteral(1)
@@ -1083,12 +1102,14 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 2,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
                             offset: 4,
+                            end_offset: 8,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::BoolLiteral(true)
@@ -1109,17 +1130,20 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 2,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
                             offset: 4,
+                            end_offset: 5,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::Variable(Variable(
                             Position {
                                 offset: 4,
+                                end_offset: 5,
                                 path: PathBuf::from("__test.gdn")
                             },
                             VariableName("x".into())
@@ -1129,17 +1153,20 @@ mod tests {
                     vec![Expression(
                         Position {
                             offset: 15,
+                            end_offset: 17,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::If(
                             Box::new(Expression(
                                 Position {
                                     offset: 19,
+                                    end_offset: 20,
                                     path: PathBuf::from("__test.gdn")
                                 },
                                 Expression_::Variable(Variable(
                                     Position {
                                         offset: 19,
+                                        end_offset: 20,
                                         path: PathBuf::from("__test.gdn")
                                     },
                                     VariableName("y".into())
@@ -1163,12 +1190,14 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 2,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
                             offset: 4,
+                            end_offset: 8,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::BoolLiteral(true)
@@ -1189,11 +1218,13 @@ mod tests {
             vec![Expression(
                 Position {
                     offset: 0,
+                    end_offset: 6,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Return(Box::new(Expression(
                     Position {
                         offset: 7,
+                        end_offset: 11,
                         path: PathBuf::from("__test.gdn")
                     },
                     Expression_::BoolLiteral(true)
@@ -1219,6 +1250,7 @@ mod tests {
             vec![Definition(
                 Position {
                     offset: 18,
+                    end_offset: 21,
                     path: PathBuf::from("__test.gdn")
                 },
                 Definition_::Fun(
@@ -1226,6 +1258,7 @@ mod tests {
                     Variable(
                         Position {
                             offset: 22,
+                            end_offset: 25,
                             path: PathBuf::from("__test.gdn"),
                         },
                         VariableName("foo".into())
@@ -1258,12 +1291,14 @@ mod tests {
             Expression(
                 Position {
                     offset: 0,
+                    end_offset: 3,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
                     Variable(
                         Position {
                             offset: 4,
+                            end_offset: 5,
                             path: PathBuf::from("__test.gdn")
                         },
                         VariableName("x".into())
@@ -1271,6 +1306,7 @@ mod tests {
                     Box::new(Expression(
                         Position {
                             offset: 8,
+                            end_offset: 9,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::IntLiteral(1)

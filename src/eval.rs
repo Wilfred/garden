@@ -240,6 +240,7 @@ impl Default for Env {
                     Position {
                         // TODO: do these values make sense?
                         offset: 0,
+                        end_offset: 0,
                         path: PathBuf::from("__toplevel__"),
                     },
                     Value::Void,
@@ -367,7 +368,7 @@ fn restore_stack_frame(
         stack_frame.evalled_values.push(value.clone());
     }
 
-    let position = expr_to_eval.1.0.clone();
+    let position = expr_to_eval.1 .0.clone();
     stack_frame.exprs_to_eval.push(expr_to_eval);
     stack_frame
         .exprs_to_eval
@@ -1516,6 +1517,7 @@ mod tests {
         let exprs = vec![Expression(
             Position {
                 offset: 0,
+                end_offset: 4,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::BoolLiteral(true),
@@ -1542,12 +1544,14 @@ mod tests {
         let exprs = vec![Expression(
             Position {
                 offset: 0,
+                end_offset: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
                 Variable(
                     Position {
                         offset: 0,
+                        end_offset: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
                     VariableName("foo".into()),
@@ -1555,6 +1559,7 @@ mod tests {
                 Box::new(Expression(
                     Position {
                         offset: 0,
+                        end_offset: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
                     Expression_::BoolLiteral(true),
@@ -1566,11 +1571,13 @@ mod tests {
         let exprs = vec![Expression(
             Position {
                 offset: 0,
+                end_offset: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Variable(Variable(
                 Position {
                     offset: 0,
+                    end_offset: 0,
                     path: PathBuf::from("__test.gdn"),
                 },
                 VariableName("foo".into()),

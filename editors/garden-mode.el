@@ -61,7 +61,7 @@
   (let* ((overlay (make-overlay start end)))
     ;; TODO: find a better face.
     (overlay-put overlay 'face 'highlight)
-    (run-with-timer 2.0 nil 'delete-overlay overlay)))
+    (run-with-timer 3.0 nil 'delete-overlay overlay)))
 
 (defcustom garden-indent-offset 2
   "Indentation amount (in spaces) for Garden files."
@@ -142,10 +142,11 @@ the user entering a value in the *garden* buffer."
                 (response-err-value
                  (let* ((position (elt response-err-value 0))
                         (position-offset (plist-get position :offset))
+                        (end-offset (plist-get position :end_offset))
                         (err-msg (elt response-err-value 1)))
                    ;; TODO: find the buffer with the path which matches this position.
                    (with-current-buffer buf
-                     (garden--flash-error-region position-offset (+ position-offset 5)))
+                     (garden--flash-error-region position-offset end-offset))
                    (message "%s" err-msg)
                    (setq error-buf (garden--report-error err-msg))
                    (garden--fontify-error (concat err-msg "\n"))))

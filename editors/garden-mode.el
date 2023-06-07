@@ -124,6 +124,7 @@ the user entering a value in the *garden* buffer."
     (unless buf
       (setq buf (get-buffer-create buf-name))
       (with-current-buffer buf
+        (special-mode)
         (setq buffer-read-only t)))
     buf))
 

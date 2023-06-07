@@ -34,6 +34,8 @@ works:
 $ garden run sample_programs/hello_world.gdn
 ```
 
+Commands: `:abort` exits out of any blocks as well as functions.
+
 # 0.3 (released 17 May 2023)
 
 **Goal: Basic Emacs integration**

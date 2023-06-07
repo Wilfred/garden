@@ -253,6 +253,7 @@ impl Env {
     pub fn pop_to_toplevel(&mut self) {
         self.stack.truncate(1);
         self.stack[0].evalled_values.truncate(1);
+        self.stack[0].bindings.truncate(1);
     }
 
     pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {

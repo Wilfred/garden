@@ -118,13 +118,21 @@ the user entering a value in the *garden* buffer."
    (buffer-substring (line-beginning-position)
                      (line-end-position))))
 
+(defun garden--error-buffer ()
+  (let* ((buf-name "*garden-error*")
+         (buf (get-buffer buf-name)))
+    (unless buf
+      (setq buf (get-buffer-create buf-name))
+      (with-current-buffer buf
+        (setq buffer-read-only t)))
+    buf))
+
 (defun garden--report-error (msg)
-  (let ((buf (get-buffer-create "*garden-error*")))
+  (let ((buf (garden--error-buffer)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (delete-region (point-min) (point-max))
-        (insert msg))
-      (setq buffer-read-only t))
+        (insert msg)))
     buf))
 
 (defun garden-process-filter (proc output)

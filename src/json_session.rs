@@ -176,7 +176,6 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         };
                         let src = format!("{}{}", padding, req.input);
 
-                        // TODO: JSON requests should pass the path.
                         match parse_def_or_expr_from_str(
                             &req.path
                                 .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),

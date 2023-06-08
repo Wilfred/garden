@@ -163,7 +163,16 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         // Pad src with whitespace, so the position
                         // offsets in the AST match the user's current
                         // file state.
-                        let src = format!("{}{}", " ".repeat(req.offset.unwrap_or(0)), req.input);
+                        //
+                        // TODO: send the whole file but with a span
+                        // of where we're actually evaluating.
+                        let padding_amount = req.offset.unwrap_or(0);
+                        let padding = if padding_amount > 0 {
+                            format!("{}\n", " ".repeat(padding_amount - 1))
+                        } else {
+                            "".into()
+                        };
+                        let src = format!("{}{}", padding, req.input);
 
                         // TODO: JSON requests should pass the path.
                         match parse_def_or_expr_from_str(

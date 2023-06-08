@@ -131,11 +131,16 @@ the user entering a value in the *garden* buffer."
         (setq buffer-read-only t)))
     buf))
 
-(defun garden--report-error (msg)
-  (let ((buf (garden--error-buffer)))
+(defun garden--report-error (response-err-value)
+  (let* ((msg (plist-get response-err-value :message))
+         (stack (plist-get response-err-value :stack))
+         (buf (garden--error-buffer)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (delete-region (point-min) (point-max))
+
+        (when stack
+          (insert stack "\n"))
         (insert msg)))
     buf))
 
@@ -163,7 +168,7 @@ the user entering a value in the *garden* buffer."
                      (with-current-buffer buf
                        (garden--flash-error-region position-offset end-offset)))
                    (message "%s" err-msg)
-                   (setq error-buf (garden--report-error err-msg))
+                   (setq error-buf (garden--report-error response-err-value))
                    (garden--fontify-error (concat err-msg "\n"))))
                 ((string= response-kind "ready")
                  (garden--propertize-read-only (concat response-ok-value "\n")))

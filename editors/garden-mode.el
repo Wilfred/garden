@@ -147,7 +147,7 @@ the user entering a value in the *garden* buffer."
 
 (defun garden-process-filter (proc output)
   (dolist (line (s-split "\n" (s-trim output)))
-    (let* ((response (json-parse-string line :object-type 'plist))
+    (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
            (response-value (plist-get response :value))
            (response-kind (plist-get response :kind))
            (response-ok-value (plist-get response-value :Ok))

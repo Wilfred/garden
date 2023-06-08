@@ -27,6 +27,7 @@ struct Request {
     input: String,
     path: Option<PathBuf>,
     offset: Option<usize>,
+    end_offset: Option<usize>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -60,6 +61,7 @@ pub fn sample_request_as_json() -> String {
         input: "1 + 2".into(),
         path: Some(PathBuf::from("/foo/bar.gdn")),
         offset: Some(100),
+        end_offset: Some(110),
     })
     .unwrap()
 }

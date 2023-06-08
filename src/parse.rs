@@ -797,12 +797,19 @@ lazy_static! {
     static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
 }
 
-fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'a>>, ParseError> {
+fn lex_between<'a>(
+    path: &PathBuf,
+    s: &'a str,
+    offset: usize,
+    end_offset: usize,
+) -> Result<Vec<Token<'a>>, ParseError> {
+    assert!(end_offset <= s.len());
+
     let mut res: Vec<Token<'a>> = vec![];
 
     let mut preceding_comments = vec![];
     let mut offset = offset;
-    'outer: while offset < s.len() {
+    'outer: while offset < end_offset {
         let s = &s[offset..];
 
         // Skip over comments.
@@ -928,7 +935,7 @@ fn lex_from<'a>(path: &PathBuf, s: &'a str, offset: usize) -> Result<Vec<Token<'
 }
 
 fn lex<'a>(path: &PathBuf, s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
-    lex_from(path, s, 0)
+    lex_between(path, s, 0, s.len())
 }
 
 #[cfg(test)]

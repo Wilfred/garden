@@ -39,7 +39,8 @@
     (garden-send-input
      (buffer-substring-no-properties start-pos end-pos)
      (buffer-file-name)
-     start-pos)
+     start-pos
+     end-pos)
 
     (when (region-active-p)
       (deactivate-mark))))
@@ -218,18 +219,20 @@ the user entering a value in the *garden* buffer."
       (user-error "No Garden process available")))
   (garden--buffer))
 
-(defun garden--send-run (proc string &optional path offset)
+(defun garden--send-run (proc string &optional path offset end-offset)
   (let ((args `((method . "run") (input . ,string))))
     (when path
       (setq args `(,@args (path . ,path))))
     (when offset
       (setq args `(,@args (offset . ,offset))))
+    (when end-offset
+      (setq args `(,@args (end_offset . ,end-offset))))
     (process-send-string proc (json-serialize args))
     (process-send-string proc "\n")))
 
-(defun garden-send-input (string &optional path offset)
+(defun garden-send-input (string &optional path offset end-offset)
   (let ((buf (garden--active-buffer)))
-    (garden--send-run (get-buffer-process buf) string path offset)))
+    (garden--send-run (get-buffer-process buf) string path offset end-offset)))
 
 (defun garden-help-command ()
   (interactive)

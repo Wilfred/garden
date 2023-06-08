@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    cmp::max,
+    path::{Path, PathBuf},
+};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -13,6 +16,25 @@ pub struct Position {
     pub end_offset: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
+}
+
+pub fn format_position(src: &str, position: &Position) -> String {
+    let mut res = String::new();
+
+    res.push_str(&format!("--> {}", position.path.display()));
+
+    let display_line = line_of_position(src, &position);
+    let formatted_line_num = format!("{} | ", display_line.line_num + 1);
+    res.push_str(&format!("{}{}", formatted_line_num, display_line.src));
+
+    let caret_space = " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
+    let caret_len = max(
+        1,
+        display_line.end_offset_on_line - display_line.offset_on_line,
+    );
+    res.push_str(&format!("{}{}", caret_space, "^".repeat(caret_len)));
+
+    res
 }
 
 pub struct DisplayLine {

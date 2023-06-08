@@ -6,7 +6,6 @@ mod json_session;
 mod parse;
 mod prompt;
 
-use std::cmp::max;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -15,7 +14,7 @@ use clap::{Parser, Subcommand};
 use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
-use crate::parse::line_of_position;
+use crate::parse::format_position;
 
 #[derive(Debug, Parser)]
 #[command(name = "git")]
@@ -78,19 +77,7 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("--> {}", position.path.display());
-
-                        let display_line = line_of_position(&src, &position);
-                        let formatted_line_num = format!("{} | ", display_line.line_num + 1);
-                        eprintln!("{}{}", formatted_line_num, display_line.src);
-
-                        let caret_space =
-                            " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
-                        let caret_len = max(
-                            1,
-                            display_line.end_offset_on_line - display_line.offset_on_line,
-                        );
-                        eprintln!("{}{}", caret_space, "^".repeat(caret_len));
+                        eprintln!("{}", &format_position(&src, &position));
 
                         eprintln!("Error: {}", e);
                     }
@@ -107,24 +94,7 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                 match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("--> {}", position.path.display());
-
-                        // TODO: this is the wrong src if the position
-                        // is in the main call itself, e.g. if the
-                        // user has incorrectly defined main() with
-                        // more parameters.
-                        let display_line = line_of_position(&src, &position);
-                        let formatted_line_num = format!("{} | ", display_line.line_num + 1);
-                        eprintln!("{}{}", formatted_line_num, display_line.src);
-
-                        let caret_space =
-                            " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
-                        let caret_len = max(
-                            1,
-                            display_line.end_offset_on_line - display_line.offset_on_line,
-                        );
-                        eprintln!("{}{}", caret_space, "^".repeat(caret_len));
-
+                        eprintln!("{}", &format_position(&src, &position));
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {
@@ -135,21 +105,8 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     }
                 }
             }
-            Err(parse::ParseError::OtherError(pos, e)) => {
-                eprintln!("--> {}", pos.path.display());
-
-                let display_line = line_of_position(&src, &pos);
-                let formatted_line_num = format!("{} | ", display_line.line_num + 1);
-                eprintln!("{}{}", formatted_line_num, display_line.src);
-
-                let caret_space =
-                    " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
-                let caret_len = max(
-                    1,
-                    display_line.end_offset_on_line - display_line.offset_on_line,
-                );
-                eprintln!("{}{}", caret_space, "^".repeat(caret_len));
-
+            Err(parse::ParseError::OtherError(position, e)) => {
+                eprintln!("{}", &format_position(&src, &position));
                 eprintln!("\nParse error: {}", e);
             }
             Err(parse::ParseError::Incomplete(e)) => {

@@ -17,7 +17,6 @@ use parse::parse_def_or_expr_from_str;
 use crate::parse::format_position;
 
 #[derive(Debug, Parser)]
-#[command(name = "git")]
 #[command(about = "A programming language for growing programs", long_about = None)]
 struct Cli {
     #[command(subcommand)]

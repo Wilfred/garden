@@ -8,7 +8,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::eval::eval_env;
-use crate::parse::{Expression_, Position};
+use crate::parse::{format_position, Expression_, Position};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
@@ -176,14 +176,17 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                     kind: ResponseKind::Evaluate,
                                     value: Ok(format!("{}", result)),
                                 },
-                                Err(EvalError::ResumableError(position, e)) => Response {
-                                    kind: ResponseKind::Evaluate,
-                                    value: Err(ResponseError {
-                                        position: Some(position),
-                                        message: format!("Error: {}", e),
-                                        stack: None,
-                                    }),
-                                },
+                                Err(EvalError::ResumableError(position, e)) => {
+                                    let formatted_position = format_position(&src, &position);
+                                    Response {
+                                        kind: ResponseKind::Evaluate,
+                                        value: Err(ResponseError {
+                                            position: Some(position),
+                                            message: format!("Error: {}", e),
+                                            stack: Some(formatted_position),
+                                        }),
+                                    }
+                                }
                                 Err(EvalError::Interrupted) => Response {
                                     kind: ResponseKind::Evaluate,
                                     value: Err(ResponseError {

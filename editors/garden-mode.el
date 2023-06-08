@@ -159,8 +159,9 @@ the user entering a value in the *garden* buffer."
                         (end-offset (plist-get position :end_offset))
                         (err-msg (plist-get response-err-value :message)))
                    ;; TODO: find the buffer with the path which matches this position.
-                   (with-current-buffer buf
-                     (garden--flash-error-region position-offset end-offset))
+                   (when (and position-offset end-offset)
+                     (with-current-buffer buf
+                       (garden--flash-error-region position-offset end-offset)))
                    (message "%s" err-msg)
                    (setq error-buf (garden--report-error err-msg))
                    (garden--fontify-error (concat err-msg "\n"))))

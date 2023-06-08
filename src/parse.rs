@@ -21,11 +21,11 @@ pub struct Position {
 pub fn format_position(src: &str, position: &Position) -> String {
     let mut res = String::new();
 
-    res.push_str(&format!("--> {}", position.path.display()));
+    res.push_str(&format!("--> {}\n", position.path.display()));
 
     let display_line = line_of_position(src, &position);
     let formatted_line_num = format!("{} | ", display_line.line_num + 1);
-    res.push_str(&format!("{}{}", formatted_line_num, display_line.src));
+    res.push_str(&format!("{}{}\n", formatted_line_num, display_line.src));
 
     let caret_space = " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
     let caret_len = max(

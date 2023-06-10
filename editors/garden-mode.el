@@ -269,6 +269,12 @@ the user entering a value in the *garden* buffer."
 (defun garden-new-session ()
   (interactive)
   (garden-stop-session)
+
+  ;; Kill the previous *garden-error* as it will not apply to the new
+  ;; session.
+  (let ((err-buf (garden--error-buffer)))
+    (kill-buffer err-buf))
+
   (garden-start-session))
 
 (defconst garden-mode-font-lock-keywords

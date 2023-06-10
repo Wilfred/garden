@@ -1,2 +1,24 @@
+fun lines(s) {
+  let parts = [];
+
+  let line_start = 0;
+  let i = 0;
+  while (i < string_length(s)) {
+    let char = string_substring(s, i, i + 1);
+
+    if (char == "\n") {
+      parts = list_append(parts, string_substring(s, line_start, i));
+      line_start = i + 1;
+    }
+
+    i = i + 1;
+  }
+
+  // TODO: handle last line not being terminated with a newline.
+
+  parts;
+}
+
+lines("a\nb\n");
 
 shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]);

@@ -785,6 +785,17 @@ pub fn parse_def_or_expr_from_str(
     parse_def_or_expr(path, &mut token_ptr)
 }
 
+pub fn parse_def_or_expr_from_span(
+    path: &PathBuf,
+    s: &str,
+    offset: usize,
+    end_offset: usize,
+) -> Result<DefinitionsOrExpression, ParseError> {
+    let tokens = lex_between(path, s, offset, end_offset)?;
+    let mut token_ptr = &tokens[..];
+    parse_def_or_expr(path, &mut token_ptr)
+}
+
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
@@ -920,7 +931,7 @@ fn lex_between<'a>(
         }
     }
 
-    if offset != s.len() {
+    if offset != end_offset {
         return Err(ParseError::OtherError(
             Position {
                 offset,

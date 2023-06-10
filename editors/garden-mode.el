@@ -37,10 +37,13 @@
         (garden--flash-region start-pos end-pos))))
 
     (garden-send-input
-     (buffer-substring-no-properties start-pos end-pos)
+     (save-restriction
+       (widen)
+       (buffer-substring-no-properties (point-min) (point-max)))
      (buffer-file-name)
-     start-pos
-     end-pos)
+     ;; Emacs point is one-indexed, convert to zero-indexed.
+     (1- start-pos)
+     (1- end-pos))
 
     (when (region-active-p)
       (deactivate-mark))))
@@ -167,7 +170,8 @@ the user entering a value in the *garden* buffer."
                    ;; TODO: find the buffer with the path which matches this position.
                    (when (and position-offset end-offset)
                      (with-current-buffer buf
-                       (garden--flash-error-region position-offset end-offset)))
+                       ;; Convert to one-indexed Emacs point positions.
+                       (garden--flash-error-region (1+ position-offset) (1+ end-offset))))
                    (message "%s" err-msg)
                    (setq error-buf (garden--report-error response-err-value))
                    (garden--fontify-error (concat err-msg "\n"))))

@@ -8,11 +8,10 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::eval::eval_env;
-use crate::parse::{format_position, Expression_, Position};
+use crate::parse::{format_position, parse_def_or_expr_from_span, Expression_, Position};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
-    parse::parse_def_or_expr_from_str,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -162,24 +161,12 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     Err(CommandParseError::NotCommandSyntax) => {
                         complete_src.push_str(&req.input);
 
-                        // Pad src with whitespace, so the position
-                        // offsets in the AST match the user's current
-                        // file state.
-                        //
-                        // TODO: send the whole file but with a span
-                        // of where we're actually evaluating.
-                        let padding_amount = req.offset.unwrap_or(0);
-                        let padding = if padding_amount > 0 {
-                            format!("{}\n", " ".repeat(padding_amount - 1))
-                        } else {
-                            "".into()
-                        };
-                        let src = format!("{}{}", padding, req.input);
-
-                        match parse_def_or_expr_from_str(
+                        match parse_def_or_expr_from_span(
                             &req.path
                                 .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-                            &src,
+                            &req.input,
+                            req.offset.unwrap_or(0),
+                            req.end_offset.unwrap_or_else(|| req.input.len()),
                         ) {
                             Ok(exprs) => match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                                 Ok(result) => Response {
@@ -187,7 +174,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                                     value: Ok(format!("{}", result)),
                                 },
                                 Err(EvalError::ResumableError(position, e)) => {
-                                    let formatted_position = format_position(&src, &position);
+                                    let formatted_position = format_position(&req.input, &position);
                                     Response {
                                         kind: ResponseKind::Evaluate,
                                         value: Err(ResponseError {

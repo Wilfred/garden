@@ -1,5 +1,7 @@
 # 0.4 (unreleased)
 
+**Goal: Build up and evaluate blocks of code**
+
 Interactive sessions: Added the `:search` command for finding
 definitions with a given name.
 

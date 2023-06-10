@@ -1,4 +1,6 @@
-# 0.4 (unreleased)
+# 0.5 (unreleased)
+
+# 0.4 (released 9 June 2023)
 
 **Goal: Build up and evaluate blocks of code**
 

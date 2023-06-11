@@ -1,5 +1,9 @@
 # 0.5 (unreleased)
 
+### Stdlib
+
+Added `working_directory`.
+
 # 0.4 (released 9 June 2023)
 
 **Goal: Build up and evaluate blocks of code**

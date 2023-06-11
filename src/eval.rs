@@ -29,6 +29,7 @@ pub enum BuiltinFunctionKind {
     ListAppend,
     StringLength,
     StringSubstring,
+    WorkingDirectory,
 }
 
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
@@ -75,6 +76,13 @@ string_length(\"abc\"); // 3
 string_substring(\"abcdef\", 1, 3); // \"bc\"
 ```"
         }
+        BuiltinFunctionKind::WorkingDirectory => {
+            "Return the path of the current working directory.
+
+```
+working_directory(); // \"/home/yourname/awesome_garden_project\"
+```"
+        }
     }
 }
 
@@ -92,6 +100,7 @@ impl Display for Value {
                     BuiltinFunctionKind::ListAppend => "list_append",
                     BuiltinFunctionKind::StringLength => "string_length",
                     BuiltinFunctionKind::StringSubstring => "string_substring",
+                    BuiltinFunctionKind::WorkingDirectory => "working_directory",
                 };
                 write!(f, "(function: {})", name)
             }
@@ -227,6 +236,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("string_substring".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::StringSubstring),
+        );
+        file_scope.insert(
+            VariableName("working_directory".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::WorkingDirectory),
         );
 
         Self {
@@ -1067,6 +1080,31 @@ fn eval_call(
                             .collect(),
                     ),
                 ));
+            }
+            BuiltinFunctionKind::WorkingDirectory => {
+                if args.len() != 0 {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function working_directory requires 0 arguments, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                        error_position: position.clone(),
+                    });
+                }
+
+                // TODO: when we have a userland result type, use that.
+                let path = std::env::current_dir().unwrap_or_default();
+
+                stack_frame
+                    .evalled_values
+                    .push((position.clone(), Value::String(path.display().to_string())));
             }
         },
         v => {

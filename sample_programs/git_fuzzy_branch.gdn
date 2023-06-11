@@ -14,11 +14,15 @@ fun lines(s) {
     i = i + 1;
   }
 
-  // TODO: handle last line not being terminated with a newline.
+  // Append last line if it wasn't terminated with a newline.
+  if (line_start != string_length(s)) {
+    parts = list_append(parts,
+      string_substring(s, line_start, string_length(s)));
+  }
 
   parts;
 }
 
-lines("a\nb\n");
+lines("a\nb");
 
 shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]);

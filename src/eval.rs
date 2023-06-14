@@ -94,6 +94,26 @@ working_directory(); // \"/home/yourname/awesome_garden_project\"
     }
 }
 
+/// Convert "foo" to "\"foo\"", a representation that we can print as
+/// a valid Garden string literal.
+pub fn escape_string_literal(s: &str) -> String {
+    let mut res = String::new();
+    res.push('"');
+
+    // Escape inner double quotes and backslashes.
+    for c in s.chars() {
+        match c {
+            '"' => res.push_str("\\\""),
+            '\n' => res.push_str("\\n"),
+            '\\' => res.push_str("\\\\"),
+            _ => res.push(c),
+        }
+    }
+
+    res.push('"');
+    res
+}
+
 impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -115,19 +135,7 @@ impl Display for Value {
             }
             Value::Void => write!(f, "void"),
             Value::String(s) => {
-                write!(f, "\"")?;
-
-                // Escape inner double quotes and backslashes.
-                for c in s.chars() {
-                    match c {
-                        '"' => write!(f, "\\\"")?,
-                        '\\' => write!(f, "\\\\")?,
-                        '\n' => write!(f, "\\n")?,
-                        _ => write!(f, "{}", c)?,
-                    }
-                }
-
-                write!(f, "\"")
+                write!(f, "{}", escape_string_literal(s))
             }
             Value::List(items) => {
                 write!(f, "[")?;

@@ -820,6 +820,12 @@ fn lex_between<'a>(
 
     let mut preceding_comments = vec![];
     let mut offset = offset;
+
+    // Skip shebang if present at the beginning of the file.
+    if offset == 0 && s.starts_with("#") {
+        offset = s.find('\n').unwrap_or(s.len());
+    }
+
     'outer: while offset < end_offset {
         let s = &s[offset..];
 

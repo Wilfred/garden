@@ -1,3 +1,5 @@
+#!/usr/bin/env -S garden run
+
 fun main() {
   print("Hello, World!");
   0;

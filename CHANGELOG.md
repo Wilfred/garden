@@ -4,6 +4,11 @@
 
 Added `working_directory`.
 
+### Syntax
+
+If the first line of a file starts with `#`, it will be ignored,
+enabling use of `garden` in a shebang.
+
 # 0.4 (released 9 June 2023)
 
 **Goal: Build up and evaluate blocks of code**

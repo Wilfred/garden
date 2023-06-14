@@ -14,6 +14,7 @@ use clap::{Parser, Subcommand};
 use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
+use crate::eval::escape_string_literal;
 use crate::parse::format_position;
 
 #[derive(Debug, Parser)]
@@ -31,8 +32,12 @@ enum Commands {
     Json,
     /// Print an example JSON request that's valid in JSON sessions.
     JsonExample,
-    /// Execute a Garden program at the path specified.
-    Run { path: PathBuf },
+    /// Execute a Garden program at the path specified. Additional
+    /// arguments are passed as a list to the `main()` function.
+    Run {
+        path: PathBuf,
+        arguments: Vec<String>,
+    },
 }
 
 fn main() {
@@ -48,8 +53,8 @@ fn main() {
     match args.command {
         Commands::Repl => interactive_session::repl(&interrupted),
         Commands::Json => json_session::json_session(&interrupted),
-        Commands::Run { path } => match std::fs::read(&path) {
-            Ok(src_bytes) => run_file(src_bytes, &path, &interrupted),
+        Commands::Run { path, arguments } => match std::fs::read(&path) {
+            Ok(src_bytes) => run_file(src_bytes, &path, &arguments, &interrupted),
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
@@ -60,7 +65,12 @@ fn main() {
     }
 }
 
-fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
+fn run_file(
+    src_bytes: Vec<u8>,
+    path: &PathBuf,
+    arguments: &[String],
+    interrupted: &Arc<AtomicBool>,
+) {
     match String::from_utf8(src_bytes) {
         Ok(src) => match parse_def_or_expr_from_str(path, &src) {
             Ok(exprs) => {
@@ -88,14 +98,14 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     }
                 }
 
-                let main_call_src = "main();";
-                let main_call_exprs =
-                    parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), main_call_src).unwrap();
-                match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
+                let call_src = call_to_main_src(arguments);
+                let call_exprs =
+                    parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), &call_src).unwrap();
+                match eval_def_or_exprs(&call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
                         // TODO: this assumes the error was in the `__main_fun__` pseudofile.
-                        eprintln!("{}", &format_position(&main_call_src, &position));
+                        eprintln!("{}", &format_position(&call_src, &position));
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {
@@ -118,4 +128,9 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
     }
+}
+
+fn call_to_main_src(cli_args: &[String]) -> String {
+    let arg_literals: Vec<_> = cli_args.iter().map(|s| escape_string_literal(s)).collect();
+    format!("main([{}]);", arg_literals.join(", "))
 }

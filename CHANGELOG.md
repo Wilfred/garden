@@ -9,6 +9,11 @@ Added `dbg` and `working_directory`.
 If the first line of a file starts with `#`, it will be ignored,
 enabling use of `garden` in a shebang.
 
+### Interpreter
+
+`main` functions are now always called with one argument, the CLI
+arguments that are passed.
+
 # 0.4 (released 9 June 2023)
 
 **Goal: Build up and evaluate blocks of code**

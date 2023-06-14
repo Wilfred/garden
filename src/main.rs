@@ -88,12 +88,14 @@ fn run_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
                     }
                 }
 
+                let main_call_src = "main();";
                 let main_call_exprs =
-                    parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), "main();").unwrap();
+                    parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), main_call_src).unwrap();
                 match eval_def_or_exprs(&main_call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("{}", &format_position(&src, &position));
+                        // TODO: this assumes the error was in the `__main_fun__` pseudofile.
+                        eprintln!("{}", &format_position(&main_call_src, &position));
                         eprintln!("Error: {}", e);
                     }
                     Err(EvalError::Interrupted) => {

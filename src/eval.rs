@@ -732,9 +732,10 @@ fn eval_call(
 
                 return Err(ErrorInfo {
                     message: format!(
-                        "Function {} expects {} arguments, but got {}",
+                        "Function {} expects {} argument{}, but got {}",
                         name.1 .0.clone(),
                         params.len(),
+                        if params.len() == 1 { "" } else { "s" },
                         arg_values.len()
                     ),
                     restore_values: saved_values,

@@ -24,6 +24,7 @@ pub enum Value {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinFunctionKind {
     Print,
+    DebugPrint,
     IntToString,
     Shell,
     ListAppend,
@@ -39,6 +40,13 @@ pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
 
 ```
 print(\"hello world\");
+```"
+        }
+        BuiltinFunctionKind::DebugPrint => {
+            "Write an arbitrary value to stdout, along with debugging metadata.
+
+```
+dbg([1, 2]);
 ```"
         }
         BuiltinFunctionKind::IntToString => {
@@ -94,6 +102,7 @@ impl Display for Value {
             Value::Fun(_, name, _, _) => write!(f, "(function: {})", name.1 .0),
             Value::BuiltinFunction(kind) => {
                 let name = match kind {
+                    BuiltinFunctionKind::DebugPrint => "dbg",
                     BuiltinFunctionKind::Print => "print",
                     BuiltinFunctionKind::IntToString => "int_to_string",
                     BuiltinFunctionKind::Shell => "shell",
@@ -213,6 +222,10 @@ pub struct Env {
 impl Default for Env {
     fn default() -> Self {
         let mut file_scope = HashMap::new();
+        file_scope.insert(
+            VariableName("dbg".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::DebugPrint),
+        );
         file_scope.insert(
             VariableName("print".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::Print),
@@ -790,6 +803,41 @@ fn eval_call(
                         });
                     }
                 }
+                stack_frame
+                    .evalled_values
+                    .push((position.clone(), Value::Void));
+            }
+            BuiltinFunctionKind::DebugPrint => {
+                if args.len() != 1 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function dbg requires 1 argument, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                        error_position: position.clone(),
+                    });
+                }
+
+                // TODO: define a proper pretty-printer for values
+                // rather than using Rust's Debug.
+                let value = &arg_values[0].1;
+                if session.has_attached_stdout {
+                    println!("{:?}", value);
+                } else {
+                    let response = Response {
+                        kind: ResponseKind::Printed,
+                        value: Ok(format!("{:?}\n", value)),
+                    };
+                    let serialized = serde_json::to_string(&response).unwrap();
+                    println!("{}", serialized);
+                }
+
                 stack_frame
                     .evalled_values
                     .push((position.clone(), Value::Void));

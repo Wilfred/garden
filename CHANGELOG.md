@@ -2,7 +2,7 @@
 
 ### Stdlib
 
-Added `working_directory`.
+Added `dbg` and `working_directory`.
 
 ### Syntax
 

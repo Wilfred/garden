@@ -25,4 +25,4 @@ fun lines(s) {
 
 lines("a\nb");
 
-shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]);
+lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));

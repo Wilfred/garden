@@ -155,10 +155,25 @@ impl Display for Value {
 }
 
 #[derive(Debug)]
+pub struct Bindings(Vec<HashMap<VariableName, Value>>);
+
+impl Bindings {
+    fn new_with(outer_scope: HashMap<VariableName, Value>) -> Self {
+        Self(vec![outer_scope])
+    }
+}
+
+impl Default for Bindings {
+    fn default() -> Self {
+        Self(vec![HashMap::new()])
+    }
+}
+
+#[derive(Debug)]
 pub struct StackFrame {
     // TODO: use Variable in here so we have the function position.
     pub fun_name: VariableName,
-    pub bindings: Vec<HashMap<VariableName, Value>>,
+    pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
 }
@@ -169,7 +184,7 @@ impl StackFrame {
         // make REPL workflows less convenient when it's harder to inspect?
         //
         // (Probably not, as long as users can inspect everything.)
-        for bindings in self.bindings.iter().rev() {
+        for bindings in self.bindings.0.iter().rev() {
             if let Some(value) = bindings.get(name) {
                 return Some(value.clone());
             }
@@ -180,13 +195,14 @@ impl StackFrame {
     fn add_binding(&mut self, name: &VariableName, value: Value) {
         let bindings = self
             .bindings
+            .0
             .last_mut()
             .expect("Vec of bindings should always be non-empty");
         bindings.insert(name.clone(), value);
     }
 
     fn set_existing_binding(&mut self, name: &VariableName, value: Value) {
-        for bindings in self.bindings.iter_mut().rev() {
+        for bindings in self.bindings.0.iter_mut().rev() {
             if bindings.contains_key(name) {
                 bindings.insert(name.clone(), value);
                 return;
@@ -200,17 +216,17 @@ impl StackFrame {
     }
 
     fn enter_block(&mut self) {
-        self.bindings.push(HashMap::new());
+        self.bindings.0.push(HashMap::new());
     }
 
     fn exit_block(&mut self) {
-        self.bindings.pop();
-        assert!(!self.bindings.is_empty());
+        self.bindings.0.pop();
+        assert!(!self.bindings.0.is_empty());
     }
 
     pub fn all_bindings(&self) -> Vec<(&VariableName, &Value)> {
         let mut res = vec![];
-        for bindings in self.bindings.iter().rev() {
+        for bindings in self.bindings.0.iter().rev() {
             for (k, v) in bindings.iter() {
                 res.push((k, v));
             }
@@ -268,7 +284,7 @@ impl Default for Env {
             file_scope,
             stack: vec![StackFrame {
                 fun_name: VariableName("toplevel".into()),
-                bindings: vec![HashMap::new()],
+                bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
                     Position {
@@ -288,7 +304,7 @@ impl Env {
     pub fn pop_to_toplevel(&mut self) {
         self.stack.truncate(1);
         self.stack[0].evalled_values.truncate(1);
-        self.stack[0].bindings.truncate(1);
+        self.stack[0].bindings.0.truncate(1);
     }
 
     pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
@@ -763,7 +779,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 fun_name: name.1.clone(),
-                bindings: vec![fun_bindings],
+                bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],
             }));

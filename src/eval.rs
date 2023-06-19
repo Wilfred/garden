@@ -1512,6 +1512,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *lhs.clone()));
                         }
                     }
+                    Expression_::Lambda(..) => {
+                        todo!()
+                    }
                     Expression_::Call(receiver, ref args) => {
                         if done_children {
                             match eval_call(&mut stack_frame, &expr_position, args, session) {

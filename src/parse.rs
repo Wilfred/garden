@@ -121,6 +121,7 @@ pub enum Expression_ {
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(Variable),
     Call(Box<Expression>, Vec<Expression>),
+    Lambda(Vec<Variable>, Vec<Expression>),
     Stop(Option<ErrorKind>),
     Block(Vec<Expression>),
 }
@@ -285,6 +286,18 @@ fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseE
     ))
 }
 
+fn parse_lambda_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    let fun_keyword = require_token(tokens, "fun")?;
+
+    let params = parse_function_params(tokens)?;
+    let body = parse_block_expressions(tokens)?;
+
+    Ok(Expression(
+        fun_keyword.position,
+        Expression_::Lambda(params, body),
+    ))
+}
+
 fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
     let mut res = vec![];
 
@@ -410,6 +423,10 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 
         if token.text == "[" {
             return parse_list_expression(tokens);
+        }
+
+        if token.text == "fun" {
+            return parse_lambda_expression(tokens);
         }
 
         if token.text == "true" {

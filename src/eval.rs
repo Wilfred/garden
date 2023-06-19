@@ -1,5 +1,7 @@
+use std::cell::RefCell;
 use std::fmt::Write;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
@@ -155,11 +157,20 @@ impl Display for Value {
 }
 
 #[derive(Debug)]
-pub struct Bindings(Vec<HashMap<VariableName, Value>>);
+struct BlockBindings(Rc<RefCell<HashMap<VariableName, Value>>>);
+
+impl Default for BlockBindings {
+    fn default() -> Self {
+        Self(Rc::new(RefCell::new(HashMap::new())))
+    }
+}
+
+#[derive(Debug)]
+pub struct Bindings(Vec<BlockBindings>);
 
 impl Bindings {
     fn new_with(outer_scope: HashMap<VariableName, Value>) -> Self {
-        Self(vec![outer_scope])
+        Self(vec![BlockBindings(Rc::new(RefCell::new(outer_scope)))])
     }
 
     fn get(&self, name: &VariableName) -> Option<Value> {
@@ -168,7 +179,7 @@ impl Bindings {
         //
         // (Probably not, as long as users can inspect everything.)
         for block_bindings in self.0.iter().rev() {
-            if let Some(value) = block_bindings.get(name) {
+            if let Some(value) = block_bindings.0.borrow().get(name) {
                 return Some(value.clone());
             }
         }
@@ -184,24 +195,24 @@ impl Bindings {
             .0
             .last_mut()
             .expect("Vec of bindings should always be non-empty");
-        block_bindings.insert(name.clone(), value);
+        block_bindings.0.borrow_mut().insert(name.clone(), value);
     }
 
     fn set_existing(&mut self, name: &VariableName, value: Value) {
         for block_bindings in self.0.iter_mut().rev() {
-            if block_bindings.contains_key(name) {
-                block_bindings.insert(name.clone(), value);
+            if block_bindings.0.borrow().contains_key(name) {
+                block_bindings.0.borrow_mut().insert(name.clone(), value);
                 return;
             }
         }
         unreachable!()
     }
 
-    pub fn all(&self) -> Vec<(&VariableName, &Value)> {
+    pub fn all(&self) -> Vec<(VariableName, Value)> {
         let mut res = vec![];
         for block_bindings in self.0.iter().rev() {
-            for (k, v) in block_bindings.iter() {
-                res.push((k, v));
+            for (k, v) in block_bindings.0.borrow().iter() {
+                res.push((k.clone(), v.clone()));
             }
         }
 
@@ -211,7 +222,7 @@ impl Bindings {
 
 impl Default for Bindings {
     fn default() -> Self {
-        Self(vec![HashMap::new()])
+        Self(vec![BlockBindings::default()])
     }
 }
 
@@ -226,7 +237,7 @@ pub struct StackFrame {
 
 impl StackFrame {
     fn enter_block(&mut self) {
-        self.bindings.0.push(HashMap::new());
+        self.bindings.0.push(BlockBindings::default());
     }
 
     fn exit_block(&mut self) {

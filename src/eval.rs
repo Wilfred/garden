@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, Position, Variable};
+use crate::parse::{BinaryOperatorKind, FunInfo, Position, Variable};
 use crate::parse::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
@@ -19,7 +19,7 @@ pub enum Value {
     /// A boolean value.
     Boolean(bool),
     /// A reference to a user-defined function.
-    Fun(Option<String>, Variable, Vec<Variable>, Vec<Expression>),
+    Fun(FunInfo),
     /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind),
     /// A string value.
@@ -128,7 +128,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(_, name, _, _) => write!(f, "(function: {})", name.1 .0),
+            Value::Fun(FunInfo { name, .. }) => write!(f, "(function: {})", name.1 .0),
             Value::BuiltinFunction(kind) => {
                 let name = match kind {
                     BuiltinFunctionKind::DebugPrint => "dbg",
@@ -386,16 +386,8 @@ pub fn eval_def_or_exprs(
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     for definition in definitions {
         match &definition.1 {
-            Definition_::Fun(doc_comment, name, params, body) => {
-                env.set_with_file_scope(
-                    &name.1,
-                    Value::Fun(
-                        doc_comment.clone(),
-                        name.clone(),
-                        params.clone(),
-                        body.clone(),
-                    ),
-                );
+            Definition_::Fun(fun_info) => {
+                env.set_with_file_scope(&fun_info.name.1, Value::Fun(fun_info.clone()));
             }
         }
     }
@@ -768,7 +760,9 @@ fn eval_call(
         .expect("Popped an empty value stack for call receiver");
 
     match &receiver_value.1 {
-        Value::Fun(_, name, params, body) => {
+        Value::Fun(FunInfo {
+            name, params, body, ..
+        }) => {
             if params.len() != arg_values.len() {
                 let mut saved_values = vec![receiver_value.clone()];
                 for value in arg_values.iter().rev() {

@@ -8,7 +8,7 @@ use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
     parse::{
-        parse_def_or_expr_from_str, parse_inline_expr_from_str, Expression, ParseError,
+        parse_def_or_expr_from_str, parse_inline_expr_from_str, Expression, FunInfo, ParseError,
         VariableName,
     },
 };
@@ -153,7 +153,12 @@ pub enum CommandError {
 
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
-        Value::Fun(doc_comment, name, params, _) => {
+        Value::Fun(FunInfo {
+            doc_comment,
+            name,
+            params,
+            ..
+        }) => {
             let mut res = String::new();
             match doc_comment {
                 Some(doc_comment) => {

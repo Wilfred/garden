@@ -129,9 +129,16 @@ pub enum Expression_ {
 pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct FunInfo {
+    pub doc_comment: Option<String>,
+    pub name: Variable,
+    pub params: Vec<Variable>,
+    pub body: Vec<Expression>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
-    // TODO: define a FunDetails struct.
-    Fun(Option<String>, Variable, Vec<Variable>, Vec<Expression>),
+    Fun(FunInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -686,7 +693,12 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
 
     Ok(Definition(
         fun_token.position,
-        Definition_::Fun(doc_comment, name, params, body),
+        Definition_::Fun(FunInfo {
+            doc_comment,
+            name,
+            params,
+            body,
+        }),
     ))
 }
 
@@ -1323,9 +1335,9 @@ mod tests {
                     end_offset: 21,
                     path: PathBuf::from("__test.gdn")
                 },
-                Definition_::Fun(
-                    Some("Hello\nWorld".into()),
-                    Variable(
+                Definition_::Fun(FunInfo {
+                    doc_comment: Some("Hello\nWorld".into()),
+                    name: Variable(
                         Position {
                             offset: 22,
                             end_offset: 25,
@@ -1333,9 +1345,9 @@ mod tests {
                         },
                         VariableName("foo".into())
                     ),
-                    vec![],
-                    vec![]
-                )
+                    params: vec![],
+                    body: vec![]
+                })
             )]
         );
     }

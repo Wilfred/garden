@@ -361,6 +361,7 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
 fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
+    // TODO: allow `return;`
     let expr = parse_inline_expression(tokens)?;
     let _ = require_token(tokens, ";")?;
     Ok(Expression(

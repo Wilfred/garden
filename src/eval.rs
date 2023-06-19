@@ -20,6 +20,8 @@ pub enum Value {
     Boolean(bool),
     /// A reference to a user-defined function.
     Fun(FunInfo),
+    /// A closure value.
+    Closure(Vec<BlockBindings>, Vec<Variable>, Vec<Expression>),
     /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind),
     /// A string value.
@@ -129,6 +131,7 @@ impl Display for Value {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Fun(FunInfo { name, .. }) => write!(f, "(function: {})", name.1 .0),
+            Value::Closure(..) => write!(f, "(closure)"),
             Value::BuiltinFunction(kind) => {
                 let name = match kind {
                     BuiltinFunctionKind::DebugPrint => "dbg",
@@ -163,8 +166,10 @@ impl Display for Value {
     }
 }
 
-#[derive(Debug)]
-struct BlockBindings(Rc<RefCell<HashMap<VariableName, Value>>>);
+// TODO: Is it correct to define equality here? Closures should only
+// have reference equality probably.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BlockBindings(Rc<RefCell<HashMap<VariableName, Value>>>);
 
 impl Default for BlockBindings {
     fn default() -> Self {

@@ -167,8 +167,8 @@ impl Bindings {
         // make REPL workflows less convenient when it's harder to inspect?
         //
         // (Probably not, as long as users can inspect everything.)
-        for bindings in self.0.iter().rev() {
-            if let Some(value) = bindings.get(name) {
+        for block_bindings in self.0.iter().rev() {
+            if let Some(value) = block_bindings.get(name) {
                 return Some(value.clone());
             }
         }
@@ -180,17 +180,17 @@ impl Bindings {
     }
 
     fn add_new(&mut self, name: &VariableName, value: Value) {
-        let bindings = self
+        let block_bindings = self
             .0
             .last_mut()
             .expect("Vec of bindings should always be non-empty");
-        bindings.insert(name.clone(), value);
+        block_bindings.insert(name.clone(), value);
     }
 
     fn set_existing(&mut self, name: &VariableName, value: Value) {
-        for bindings in self.0.iter_mut().rev() {
-            if bindings.contains_key(name) {
-                bindings.insert(name.clone(), value);
+        for block_bindings in self.0.iter_mut().rev() {
+            if block_bindings.contains_key(name) {
+                block_bindings.insert(name.clone(), value);
                 return;
             }
         }
@@ -199,8 +199,8 @@ impl Bindings {
 
     pub fn all(&self) -> Vec<(&VariableName, &Value)> {
         let mut res = vec![];
-        for bindings in self.0.iter().rev() {
-            for (k, v) in bindings.iter() {
+        for block_bindings in self.0.iter().rev() {
+            for (k, v) in block_bindings.iter() {
                 res.push((k, v));
             }
         }

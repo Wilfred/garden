@@ -14,12 +14,19 @@ use crate::parse::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    /// An integer value.
     Integer(i64),
+    /// A boolean value.
     Boolean(bool),
+    /// A reference to a user-defined function.
     Fun(Option<String>, Variable, Vec<Variable>, Vec<Expression>),
+    /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind),
+    /// A string value.
     String(String),
+    /// A list value.
     List(Vec<Value>),
+    /// The void/unit value.
     Void,
 }
 

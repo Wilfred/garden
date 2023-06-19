@@ -165,10 +165,10 @@ fn describe_fun(value: &Value) -> Option<String> {
 
             res.push_str(&format!(
                 "fn {}({}) {{ ... }}",
-                name.1.0,
+                name.1 .0,
                 params
                     .iter()
-                    .map(|p| p.1.0.clone())
+                    .map(|p| p.1 .0.clone())
                     .collect::<Vec<_>>()
                     .join(", ")
             ));
@@ -309,7 +309,7 @@ pub fn run_command<T: Write>(
         }
         Command::Locals => {
             if let Some(stack_frame) = env.stack.last() {
-                for (i, (var_name, value)) in stack_frame.all_bindings().iter().enumerate() {
+                for (i, (var_name, value)) in stack_frame.bindings.all().iter().enumerate() {
                     write!(
                         buf,
                         "{}{}\t{}",

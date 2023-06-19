@@ -161,6 +161,52 @@ impl Bindings {
     fn new_with(outer_scope: HashMap<VariableName, Value>) -> Self {
         Self(vec![outer_scope])
     }
+
+    fn get(&self, name: &VariableName) -> Option<Value> {
+        // TODO: this allows shadowing. Is that desirable -- does it
+        // make REPL workflows less convenient when it's harder to inspect?
+        //
+        // (Probably not, as long as users can inspect everything.)
+        for bindings in self.0.iter().rev() {
+            if let Some(value) = bindings.get(name) {
+                return Some(value.clone());
+            }
+        }
+        None
+    }
+
+    fn has(&self, name: &VariableName) -> bool {
+        self.get(name).is_some()
+    }
+
+    fn add_new(&mut self, name: &VariableName, value: Value) {
+        let bindings = self
+            .0
+            .last_mut()
+            .expect("Vec of bindings should always be non-empty");
+        bindings.insert(name.clone(), value);
+    }
+
+    fn set_existing(&mut self, name: &VariableName, value: Value) {
+        for bindings in self.0.iter_mut().rev() {
+            if bindings.contains_key(name) {
+                bindings.insert(name.clone(), value);
+                return;
+            }
+        }
+        unreachable!()
+    }
+
+    pub fn all(&self) -> Vec<(&VariableName, &Value)> {
+        let mut res = vec![];
+        for bindings in self.0.iter().rev() {
+            for (k, v) in bindings.iter() {
+                res.push((k, v));
+            }
+        }
+
+        res
+    }
 }
 
 impl Default for Bindings {
@@ -179,42 +225,6 @@ pub struct StackFrame {
 }
 
 impl StackFrame {
-    fn get_binding(&self, name: &VariableName) -> Option<Value> {
-        // TODO: this allows shadowing. Is that desirable -- does it
-        // make REPL workflows less convenient when it's harder to inspect?
-        //
-        // (Probably not, as long as users can inspect everything.)
-        for bindings in self.bindings.0.iter().rev() {
-            if let Some(value) = bindings.get(name) {
-                return Some(value.clone());
-            }
-        }
-        None
-    }
-
-    fn add_binding(&mut self, name: &VariableName, value: Value) {
-        let bindings = self
-            .bindings
-            .0
-            .last_mut()
-            .expect("Vec of bindings should always be non-empty");
-        bindings.insert(name.clone(), value);
-    }
-
-    fn set_existing_binding(&mut self, name: &VariableName, value: Value) {
-        for bindings in self.bindings.0.iter_mut().rev() {
-            if bindings.contains_key(name) {
-                bindings.insert(name.clone(), value);
-                return;
-            }
-        }
-        unreachable!()
-    }
-
-    fn has_binding(&self, name: &VariableName) -> bool {
-        self.get_binding(name).is_some()
-    }
-
     fn enter_block(&mut self) {
         self.bindings.0.push(HashMap::new());
     }
@@ -222,17 +232,6 @@ impl StackFrame {
     fn exit_block(&mut self) {
         self.bindings.0.pop();
         assert!(!self.bindings.0.is_empty());
-    }
-
-    pub fn all_bindings(&self) -> Vec<(&VariableName, &Value)> {
-        let mut res = vec![];
-        for bindings in self.bindings.0.iter().rev() {
-            for (k, v) in bindings.iter() {
-                res.push((k, v));
-            }
-        }
-
-        res
     }
 }
 
@@ -313,7 +312,7 @@ impl Env {
 }
 
 fn get_var(name: &VariableName, stack_frame: &StackFrame, env: &Env) -> Option<Value> {
-    if let Some(value) = stack_frame.get_binding(name) {
+    if let Some(value) = stack_frame.bindings.get(name) {
         return Some(value.clone());
     }
 
@@ -514,7 +513,7 @@ fn eval_while(
 
 fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
     let var_name = &variable.1;
-    if !stack_frame.has_binding(&var_name) {
+    if !stack_frame.bindings.has(&var_name) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is not currently bound. Try `let {} = something`.",
@@ -529,7 +528,9 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame.set_existing_binding(&var_name, expr_value.1.clone());
+    stack_frame
+        .bindings
+        .set_existing(&var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
 
     Ok(())
@@ -537,7 +538,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
 
 fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
     let var_name = &variable.1;
-    if stack_frame.has_binding(&var_name) {
+    if stack_frame.bindings.has(&var_name) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is already bound. Try `{} = something` instead.",
@@ -552,7 +553,9 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), Err
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame.add_binding(&var_name, expr_value.1.clone());
+    stack_frame
+        .bindings
+        .add_new(&var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }

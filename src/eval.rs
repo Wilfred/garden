@@ -765,6 +765,49 @@ fn eval_call(
         .expect("Popped an empty value stack for call receiver");
 
     match &receiver_value.1 {
+        Value::Closure(bindings, params, body) => {
+            let mut bindings = bindings.clone();
+
+            if params.len() != arg_values.len() {
+                let mut saved_values = vec![receiver_value.clone()];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+
+                return Err(ErrorInfo {
+                    message: format!(
+                        "Closure expects {} argument{}, but got {}",
+                        params.len(),
+                        if params.len() == 1 { "" } else { "s" },
+                        arg_values.len()
+                    ),
+                    restore_values: saved_values,
+                    error_position: receiver_value.0,
+                });
+            }
+
+            let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
+            for expr in body.iter().rev() {
+                fun_subexprs.push((false, expr.clone()));
+            }
+
+            let mut fun_bindings = HashMap::new();
+            for (param, value) in params.iter().zip(arg_values.iter()) {
+                fun_bindings.insert(param.1.clone(), value.1.clone());
+            }
+
+            bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
+
+            return Ok(Some(StackFrame {
+                fun_name: VariableName("(closure)".to_string()),
+                bindings: Bindings(bindings),
+                exprs_to_eval: fun_subexprs,
+                // TODO: find a better position for the void value,
+                // perhaps the position of the curly brace function
+                // body.
+                evalled_values: vec![(receiver_value.0, Value::Void)],
+            }));
+        }
         Value::Fun(FunInfo {
             name, params, body, ..
         }) => {
@@ -1897,6 +1940,42 @@ mod tests {
         let exprs = parse_exprs_from_str("f(1, 2);").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
+    }
+
+    #[test]
+    fn test_eval_call_closure_immediately() {
+        let mut env = Env::default();
+
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f() { let x = 1; let f = fun() { x; }; f(); }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(1));
+    }
+
+    #[test]
+    fn test_eval_return_closure_and_call() {
+        let mut env = Env::default();
+
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f() { let x = 1; fun() { x; }; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("let y = f(); y();").unwrap();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(1));
     }
 
     #[test]

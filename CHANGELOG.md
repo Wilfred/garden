@@ -6,6 +6,8 @@ Added `dbg` and `working_directory`.
 
 ### Syntax
 
+Added closures, e.g. `fun(x, y) { x + y; }`.
+
 If the first line of a file starts with `#`, it will be ignored,
 enabling use of `garden` in a shebang.
 

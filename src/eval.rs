@@ -39,6 +39,7 @@ pub enum BuiltinFunctionKind {
     IntToString,
     Shell,
     ListAppend,
+    ListLength,
     StringLength,
     StringSubstring,
     WorkingDirectory,
@@ -79,6 +80,13 @@ shell(\"ls\", [\"-l\", \"/\"]);
 
 ```
 list_append([10], 11); // [10, 11]
+```"
+        }
+        BuiltinFunctionKind::ListLength =>{
+            "Return the length of the list.
+
+```
+list_length([10, 11, 12]); // 3
 ```"
         }
         BuiltinFunctionKind::StringLength => {
@@ -139,6 +147,7 @@ impl Display for Value {
                     BuiltinFunctionKind::IntToString => "int_to_string",
                     BuiltinFunctionKind::Shell => "shell",
                     BuiltinFunctionKind::ListAppend => "list_append",
+                    BuiltinFunctionKind::ListLength => "list_length",
                     BuiltinFunctionKind::StringLength => "string_length",
                     BuiltinFunctionKind::StringSubstring => "string_substring",
                     BuiltinFunctionKind::WorkingDirectory => "working_directory",
@@ -283,6 +292,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("list_append".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::ListAppend),
+        );
+        file_scope.insert(
+            VariableName("list_length".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::ListLength),
         );
         file_scope.insert(
             VariableName("shell".to_owned()),
@@ -1059,6 +1072,43 @@ fn eval_call(
                         stack_frame
                             .evalled_values
                             .push((position.clone(), Value::List(new_items)));
+                    }
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a list, but got: {}", v),
+                            restore_values: saved_values,
+                            error_position: arg_values[0].0.clone(),
+                        });
+                    }
+                }
+            }
+            BuiltinFunctionKind::ListLength => {
+                if args.len() != 1 {
+                    let mut saved_values = vec![receiver_value.clone()];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+
+                    return Err(ErrorInfo {
+                        message: format!(
+                            "Function list_length requires 2 arguments, but got: {}",
+                            args.len()
+                        ),
+                        restore_values: saved_values,
+                        error_position: position.clone(),
+                    });
+                }
+                match &arg_values[0].1 {
+                    Value::List(items) => {
+                        stack_frame
+                            .evalled_values
+                            .push((position.clone(), Value::Integer(items.len() as i64)));
                     }
                     v => {
                         let mut saved_values = vec![];
@@ -1872,6 +1922,15 @@ mod tests {
     }
 
     #[test]
+    fn test_eval_list_length() {
+        let exprs = parse_exprs_from_str("list_length([0, 1]);").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(2),);
+    }
+
+    #[test]
     fn test_eval_string_length() {
         let exprs = parse_exprs_from_str("string_length(\"abc\");").unwrap();
 
@@ -1946,13 +2005,15 @@ mod tests {
     fn test_eval_call_closure_immediately() {
         let mut env = Env::default();
 
-        let defs =
-            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f() { let x = 1; let f = fun() { x; }; f(); }")
-                .unwrap()
-            {
-                DefinitionsOrExpression::Defs(defs) => defs,
-                DefinitionsOrExpression::Expr(_) => unreachable!(),
-            };
+        let defs = match parse_def_or_expr_from_str(
+            &PathBuf::from("__test.gdn"),
+            "fun f() { let x = 1; let f = fun() { x; }; f(); }",
+        )
+        .unwrap()
+        {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f();").unwrap();
@@ -1964,13 +2025,15 @@ mod tests {
     fn test_eval_return_closure_and_call() {
         let mut env = Env::default();
 
-        let defs =
-            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f() { let x = 1; fun() { x; }; }")
-                .unwrap()
-            {
-                DefinitionsOrExpression::Defs(defs) => defs,
-                DefinitionsOrExpression::Expr(_) => unreachable!(),
-            };
+        let defs = match parse_def_or_expr_from_str(
+            &PathBuf::from("__test.gdn"),
+            "fun f() { let x = 1; fun() { x; }; }",
+        )
+        .unwrap()
+        {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("let y = f(); y();").unwrap();

@@ -757,6 +757,34 @@ fn eval_integer_binop(
     Ok(())
 }
 
+fn check_arity(
+    fun_name: &str,
+    receiver_value: &(Position, Value),
+    expected: usize,
+    arg_values: &[(Position, Value)],
+) -> Result<(), ErrorInfo> {
+    if arg_values.len() != expected {
+        let mut saved_values = vec![receiver_value.clone()];
+        for value in arg_values.iter().rev() {
+            saved_values.push(value.clone());
+        }
+
+        return Err(ErrorInfo {
+            message: format!(
+                "Function {} requires {} argument{}, but got: {}",
+                fun_name,
+                expected,
+                if expected == 1 { "" } else { "s" },
+                arg_values.len()
+            ),
+            restore_values: saved_values,
+            error_position: receiver_value.0.clone(),
+        });
+    }
+
+    Ok(())
+}
+
 fn eval_call(
     stack_frame: &mut StackFrame,
     position: &Position,
@@ -824,24 +852,7 @@ fn eval_call(
         Value::Fun(FunInfo {
             name, params, body, ..
         }) => {
-            if params.len() != arg_values.len() {
-                let mut saved_values = vec![receiver_value.clone()];
-                for value in arg_values.iter().rev() {
-                    saved_values.push(value.clone());
-                }
-
-                return Err(ErrorInfo {
-                    message: format!(
-                        "Function {} expects {} argument{}, but got {}",
-                        name.1 .0.clone(),
-                        params.len(),
-                        if params.len() == 1 { "" } else { "s" },
-                        arg_values.len()
-                    ),
-                    restore_values: saved_values,
-                    error_position: receiver_value.0,
-                });
-            }
+            check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
             for expr in body.iter().rev() {
@@ -862,21 +873,8 @@ fn eval_call(
         }
         Value::BuiltinFunction(kind) => match kind {
             BuiltinFunctionKind::Print => {
-                if args.len() != 1 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
+                check_arity("print", &receiver_value, 1, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function print requires 1 argument, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 match &arg_values[0].1 {
                     Value::String(s) => {
                         if session.has_attached_stdout {
@@ -909,21 +907,7 @@ fn eval_call(
                     .push((position.clone(), Value::Void));
             }
             BuiltinFunctionKind::DebugPrint => {
-                if args.len() != 1 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function dbg requires 1 argument, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
+                check_arity("dbg", &receiver_value, 1, &arg_values)?;
 
                 // TODO: define a proper pretty-printer for values
                 // rather than using Rust's Debug.
@@ -944,21 +928,8 @@ fn eval_call(
                     .push((position.clone(), Value::Void));
             }
             BuiltinFunctionKind::StringLength => {
-                if args.len() != 1 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
+                check_arity("string_length", &receiver_value, 1, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function string_length requires 1 argument, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 match &arg_values[0].1 {
                     Value::String(s) => {
                         stack_frame
@@ -981,21 +952,8 @@ fn eval_call(
                 }
             }
             BuiltinFunctionKind::Shell => {
-                if args.len() != 2 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
+                check_arity("shell", &receiver_value, 2, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function shell requires 2 arguments, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 match &arg_values[0].1 {
                     Value::String(s) => {
                         match as_string_list(&arg_values[1].1) {
@@ -1050,21 +1008,8 @@ fn eval_call(
                 }
             }
             BuiltinFunctionKind::ListAppend => {
-                if args.len() != 2 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
+                check_arity("list_append", &receiver_value, 2, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function list_append requires 2 arguments, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 match &arg_values[0].1 {
                     Value::List(items) => {
                         let mut new_items = items.clone();
@@ -1089,21 +1034,8 @@ fn eval_call(
                 }
             }
             BuiltinFunctionKind::ListLength => {
-                if args.len() != 1 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
+                check_arity("list_length", &receiver_value, 1, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function list_length requires 2 arguments, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 match &arg_values[0].1 {
                     Value::List(items) => {
                         stack_frame
@@ -1126,22 +1058,8 @@ fn eval_call(
                 }
             }
             BuiltinFunctionKind::IntToString => {
-                if args.len() != 1 {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
+                check_arity("int_to_string", &receiver_value, 1, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function int_to_string requires 1 argument, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 match &arg_values[0].1 {
                     Value::Integer(i) => {
                         stack_frame
@@ -1164,21 +1082,8 @@ fn eval_call(
                 }
             }
             BuiltinFunctionKind::StringSubstring => {
-                if args.len() != 3 {
-                    let mut saved_values = vec![receiver_value.clone()];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
+                check_arity("string_substring", &receiver_value, 3, &arg_values)?;
 
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function string_substring requires 3 arguments, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
                 let s_arg = match &arg_values[0].1 {
                     Value::String(s) => s,
                     v => {
@@ -1268,22 +1173,7 @@ fn eval_call(
                 ));
             }
             BuiltinFunctionKind::WorkingDirectory => {
-                if args.len() != 0 {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: format!(
-                            "Function working_directory requires 0 arguments, but got: {}",
-                            args.len()
-                        ),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
-                }
+                check_arity("working_directory", &receiver_value, 0, &arg_values)?;
 
                 // TODO: when we have a userland result type, use that.
                 let path = std::env::current_dir().unwrap_or_default();

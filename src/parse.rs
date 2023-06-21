@@ -535,14 +535,37 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
     }
 }
 
+/// Parse an inline expression. An inline expression can occur
+/// anywhere, and does not end with a semicolon.
+///
+/// Examples:
+///
+/// ```
+/// foo()
+/// x + 1
+/// if (a) { b } else { c }
+/// while (z) { foo(); }
+/// ```
 fn parse_inline_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     parse_general_expression(tokens, true)
 }
 
+/// Parse a block member expression. This is an expression that can
+/// occur at the top level of braces, such as a let expression.
+///
+/// Examples:
+///
+/// ```
+/// foo();
+/// let x = y + 1;
+/// if (a) { b; } else { c; }
+/// while (z) { foo(); }
+/// ```
 fn parse_block_member_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     parse_general_expression(tokens, false)
 }
 
+/// Parse an inline or block member expression.
 fn parse_general_expression(
     tokens: &mut &[Token<'_>],
     is_inline: bool,
@@ -569,6 +592,8 @@ fn parse_general_expression(
         }
     }
 
+    // `if` can occur as both an inline expression and a standalone
+    // expression.
     if let Some(token) = peek_token(tokens) {
         if token.text == "if" {
             return parse_if_expression(tokens);
@@ -583,6 +608,17 @@ fn parse_general_expression(
     Ok(expr)
 }
 
+/// In Garden, an expression can only contain a single binary
+/// operation, so `x + y + z` isn't legal. Users must use parentheses,
+/// e.g. `(x + y) + z`.
+///
+/// This ensures that every subexpression has trailing syntax that we
+/// can use to show intermediate values computed during evaluation.
+///
+/// To ensure binary operations aren't combined, we have a separate
+/// parser function that allows exactly one binary operation. This
+/// also has the nice side effect of not requiring precedence logic in
+/// the parser.
 fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_or_call(tokens)?;
 

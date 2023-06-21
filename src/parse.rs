@@ -504,16 +504,17 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
     Ok(args)
 }
 
+/// Parse an expression, and handle trailing parentheses if present.
+///
+/// We handle trailing syntax separately from
+/// `parse_simple_expression`, to avoid infinit recursion. This is
+/// essentially left-recursion from a grammar perspective.
 fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    let expr = parse_simple_expression(tokens)?;
+    let mut expr = parse_simple_expression(tokens)?;
 
-    // TODO: support foo()() syntax.
-    if next_token_is(tokens, "(") {
+    while next_token_is(tokens, "(") {
         let arguments = parse_call_arguments(tokens)?;
-        return Ok(Expression(
-            expr.0.clone(),
-            Expression_::Call(Box::new(expr), arguments),
-        ));
+        expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
     }
 
     Ok(expr)
@@ -1365,6 +1366,50 @@ mod tests {
                     },
                     Expression_::BoolLiteral(true)
                 )))
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_call_repeated() {
+        let ast = parse_exprs_from_str("foo()();").unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Expression(
+                Position {
+                    offset: 0,
+                    end_offset: 3,
+                    path: PathBuf::from("__test.gdn")
+                },
+                Expression_::Call(
+                    Box::new(Expression(
+                        Position {
+                            offset: 0,
+                            end_offset: 3,
+                            path: PathBuf::from("__test.gdn")
+                        },
+                        Expression_::Call(
+                            Box::new(Expression(
+                                Position {
+                                    offset: 0,
+                                    end_offset: 3,
+                                    path: PathBuf::from("__test.gdn")
+                                },
+                                Expression_::Variable(Variable(
+                                    Position {
+                                        offset: 0,
+                                        end_offset: 3,
+                                        path: PathBuf::from("__test.gdn")
+                                    },
+                                    VariableName("foo".into())
+                                ))
+                            )),
+                            vec![]
+                        )
+                    )),
+                    vec![]
+                )
             )]
         );
     }

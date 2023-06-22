@@ -397,3 +397,14 @@ pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
         .unwrap();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_help_takes_argument() {
+        let cmd = Command::from_string(":help print").unwrap();
+        assert!(matches!(cmd, Command::Help(_)));
+    }
+}

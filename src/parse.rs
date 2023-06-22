@@ -247,37 +247,7 @@ fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression,
 
 fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let open_brace = require_token(tokens, "[")?;
-
-    let mut items = vec![];
-    loop {
-        if next_token_is(tokens, "]") {
-            break;
-        }
-
-        let item = parse_inline_expression(tokens)?;
-        items.push(item);
-
-        if let Some(token) = peek_token(tokens) {
-            if token.text == "," {
-                pop_token(tokens);
-            } else if token.text == "]" {
-                break;
-            } else {
-                return Err(ParseError::OtherError(
-                    token.position,
-                    format!(
-                        "Invalid syntax: Expected `,` or `]` here, but got `{}`",
-                        token.text
-                    ),
-                ));
-            }
-        } else {
-            return Err(ParseError::Incomplete(
-                "Invalid syntax: Expected `,` or `]` here, but got EOF".to_string(),
-            ));
-        }
-    }
-
+    let items = parse_comma_separated_exprs(tokens, "]")?;
     require_token(tokens, "]")?;
 
     Ok(Expression(
@@ -467,39 +437,47 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     Err(ParseError::Incomplete("Expected an expression".to_owned()))
 }
 
-fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
-    require_token(tokens, "(")?;
-
-    let mut args = vec![];
+fn parse_comma_separated_exprs(
+    tokens: &mut &[Token<'_>],
+    terminator: &str,
+) -> Result<Vec<Expression>, ParseError> {
+    let mut items = vec![];
     loop {
-        if next_token_is(tokens, ")") {
+        if next_token_is(tokens, terminator) {
             break;
         }
 
         let arg = parse_inline_expression(tokens)?;
-        args.push(arg);
+        items.push(arg);
 
         if let Some(token) = peek_token(tokens) {
             if token.text == "," {
                 pop_token(tokens);
-            } else if token.text == ")" {
+            } else if token.text == terminator {
                 break;
             } else {
                 return Err(ParseError::OtherError(
                     token.position,
                     format!(
-                        "Invalid syntax: Expected `,` or `)` here, but got `{}`",
-                        token.text
+                        "Invalid syntax: Expected `,` or `{}` here, but got `{}`",
+                        terminator, token.text
                     ),
                 ));
             }
         } else {
-            return Err(ParseError::Incomplete(
-                "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
-            ));
+            return Err(ParseError::Incomplete(format!(
+                "Invalid syntax: Expected `,` or `{}` here, but got EOF",
+                terminator
+            )));
         }
     }
 
+    Ok(items)
+}
+
+fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
+    require_token(tokens, "(")?;
+    let args = parse_comma_separated_exprs(tokens, ")")?;
     require_token(tokens, ")")?;
     Ok(args)
 }
@@ -512,6 +490,7 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
 fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression(tokens)?;
 
+    // here
     while next_token_is(tokens, "(") {
         let arguments = parse_call_arguments(tokens)?;
         expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));

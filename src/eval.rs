@@ -39,6 +39,7 @@ pub enum BuiltinFunctionKind {
     IntToString,
     Shell,
     ListAppend,
+    ListGet,
     ListLength,
     StringLength,
     StringSubstring,
@@ -80,6 +81,14 @@ shell(\"ls\", [\"-l\", \"/\"]);
 
 ```
 list_append([10], 11); // [10, 11]
+```"
+        }
+        BuiltinFunctionKind::ListGet =>{
+            "Get the item in the list at the index specified.
+Errors if the index is less than 0 or greater than length - 1.
+
+```
+list_get([4, 5, 6], 1); // 5
 ```"
         }
         BuiltinFunctionKind::ListLength =>{
@@ -147,6 +156,7 @@ impl Display for Value {
                     BuiltinFunctionKind::IntToString => "int_to_string",
                     BuiltinFunctionKind::Shell => "shell",
                     BuiltinFunctionKind::ListAppend => "list_append",
+                    BuiltinFunctionKind::ListGet => "list_get",
                     BuiltinFunctionKind::ListLength => "list_length",
                     BuiltinFunctionKind::StringLength => "string_length",
                     BuiltinFunctionKind::StringSubstring => "string_substring",
@@ -292,6 +302,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("list_append".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::ListAppend),
+        );
+        file_scope.insert(
+            VariableName("list_get".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::ListGet),
         );
         file_scope.insert(
             VariableName("list_length".to_owned()),
@@ -1029,6 +1043,65 @@ fn eval_call(
                             message: format!("Expected a list, but got: {}", v),
                             restore_values: saved_values,
                             error_position: arg_values[0].0.clone(),
+                        });
+                    }
+                }
+            }
+            BuiltinFunctionKind::ListGet => {
+                check_arity("list_get", &receiver_value, 2, &arg_values)?;
+
+                match (&arg_values[0].1, &arg_values[1].1) {
+                    (Value::List(items), Value::Integer(i)) => {
+                        let index: usize = if *i >= items.len() as i64 || *i < 0 {
+                            let mut saved_values = vec![];
+                            for value in arg_values.iter().rev() {
+                                saved_values.push(value.clone());
+                            }
+                            saved_values.push(receiver_value.clone());
+
+                            let message = if items.is_empty() {
+                                format!("Tried to index into an empty list with index {}", *i)
+                            } else {
+                                format!("The list index must be between 0 and {} (inclusive), but got: {}", items.len() - 1, i)
+                            };
+
+                            return Err(ErrorInfo {
+                                message,
+                                restore_values: saved_values,
+                                error_position: arg_values[1].0.clone(),
+                            });
+                        } else {
+                            *i as usize
+                        };
+
+                        stack_frame
+                            .evalled_values
+                            .push((position.clone(), items[index].clone()));
+                    }
+                    (v, Value::Integer(_)) => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a list, but got: {}", v),
+                            restore_values: saved_values,
+                            error_position: arg_values[0].0.clone(),
+                        });
+                    }
+                    (_, v) => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected an integer, but got: {}", v),
+                            restore_values: saved_values,
+                            error_position: arg_values[1].0.clone(),
                         });
                     }
                 }
@@ -1812,12 +1885,37 @@ mod tests {
     }
 
     #[test]
+    fn test_eval_list_get() {
+        let exprs = parse_exprs_from_str("list_get([10, 11], 1);").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(11));
+    }
+
+    #[test]
+    fn test_eval_list_get_out_of_bounds() {
+        let exprs = parse_exprs_from_str("list_get([10, 11], 2);").unwrap();
+
+        let mut env = Env::default();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
+    fn test_eval_list_get_empty() {
+        let exprs = parse_exprs_from_str("list_get([], 0);").unwrap();
+
+        let mut env = Env::default();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
     fn test_eval_list_length() {
         let exprs = parse_exprs_from_str("list_length([0, 1]);").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(2),);
+        assert_eq!(value, Value::Integer(2));
     }
 
     #[test]

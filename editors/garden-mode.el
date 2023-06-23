@@ -149,6 +149,8 @@ the user entering a value in the *garden* buffer."
     buf))
 
 (defun garden-process-filter (proc output)
+  (when garden-log-json
+    (message "%S" output))
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
            (response-value (plist-get response :value))
@@ -157,8 +159,6 @@ the user entering a value in the *garden* buffer."
            (response-err-value (plist-get response-value :Err))
            (buf (current-buffer))
            error-buf)
-      (when garden-log-json
-        (message "%S" response))
       (with-current-buffer (process-buffer proc)
         (let ((s
                (cond

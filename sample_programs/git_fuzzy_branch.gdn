@@ -23,6 +23,25 @@ fun lines(s) {
   parts;
 }
 
+fun list_filter(items, f) {
+  let result = [];
+
+  let i = 0;
+  while (i < list_length(items)) {
+    let item = list_get(items, i);
+
+    if (f(item)) {
+      result = list_append(result, item);
+    }
+
+    // todo: handle parse errors better if this semicolon is missing.
+    i = i + 1;
+  }
+  result;
+}
+
+list_filter([1, 2, 3, 4], fun(x) { x > 2; });
+
 lines("a\nb");
 
 lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));

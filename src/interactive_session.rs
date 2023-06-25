@@ -10,8 +10,8 @@ use crate::commands::{
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
-    format_position, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_,
-    ParseError,
+    format_error, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression,
+    Expression_, ParseError,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -190,9 +190,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(EvalError::ResumableError(position, msg)) => {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
-                println!("{}", &format_position(&last_src, &position));
-
-                println!("\n{}: {}", "Error".bright_red(), msg);
+                println!("{}", &format_error(&msg, &position, &last_src));
                 is_stopped = true;
             }
             Err(EvalError::Interrupted) => {

@@ -15,7 +15,7 @@ use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
 use crate::eval::escape_string_literal;
-use crate::parse::format_position;
+use crate::parse::format_error;
 
 #[derive(Debug, Parser)]
 #[command(about = "A programming language for growing programs", long_about = None)]
@@ -86,9 +86,7 @@ fn run_file(
                 match eval_def_or_exprs(&exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("{}", &format_position(&src, &position));
-
-                        eprintln!("Error: {}", e);
+                        eprintln!("{}", &format_error(&e, &position, &src));
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
@@ -104,9 +102,10 @@ fn run_file(
                 match eval_def_or_exprs(&call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
-                        // TODO: this assumes the error was in the `__main_fun__` pseudofile.
-                        eprintln!("{}", &format_position(&call_src, &position));
-                        eprintln!("Error: {}", e);
+                        // TODO: if the error was in the
+                        // `__main_fun__` pseudofile, this shows the
+                        // wrong position.
+                        eprintln!("{}", &format_error(&e, &position, &src));
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
@@ -117,8 +116,10 @@ fn run_file(
                 }
             }
             Err(parse::ParseError::OtherError(position, e)) => {
-                eprintln!("{}", &format_position(&src, &position));
-                eprintln!("\nParse error: {}", e);
+                eprintln!(
+                    "{}",
+                    &format_error(&format!("Parse error: {}", e), &position, &src)
+                );
             }
             Err(parse::ParseError::Incomplete(e)) => {
                 eprintln!("Parse error (incomplete input): {}", e);

@@ -1,8 +1,6 @@
-use std::{
-    cmp::max,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
+use ariadne::{Config, Label, Report, ReportKind, Source};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -18,67 +16,19 @@ pub struct Position {
     pub path: PathBuf,
 }
 
-pub fn format_position(src: &str, position: &Position) -> String {
-    let mut res = String::new();
+pub fn format_error(message: &str, position: &Position, src: &str) -> String {
+    let mut res = Vec::new();
 
-    res.push_str(&format!("--> {}\n", position.path.display()));
+    let path_str = position.path.display().to_string();
+    let r = Report::build(ReportKind::Error, &path_str, position.offset)
+        .with_config(Config::default().with_compact(true))
+        .with_label(
+            Label::new((&path_str, position.offset..position.end_offset)).with_message(message),
+        )
+        .finish();
 
-    let display_line = line_of_position(src, &position);
-    let formatted_line_num = format!("{} | ", display_line.line_num + 1);
-    res.push_str(&format!("{}{}\n", formatted_line_num, display_line.src));
-
-    let caret_space = " ".repeat(formatted_line_num.len() + display_line.offset_on_line);
-    let caret_len = max(
-        1,
-        display_line.end_offset_on_line - display_line.offset_on_line,
-    );
-    res.push_str(&format!("{}{}", caret_space, "^".repeat(caret_len)));
-
-    res
-}
-
-pub struct DisplayLine {
-    pub src: String,
-    pub line_num: usize,
-    pub offset_on_line: usize,
-    pub end_offset_on_line: usize,
-}
-
-pub fn line_of_position(src: &str, position: &Position) -> DisplayLine {
-    let mut line_start_offset = 0;
-
-    for (i, line) in src.lines().enumerate() {
-        if line.len() + line_start_offset >= position.offset {
-            let end_offset_on_line = if position.end_offset <= (line_start_offset + line.len()) {
-                position.end_offset - line_start_offset
-            } else {
-                line.len()
-            };
-
-            return DisplayLine {
-                src: line.into(),
-                line_num: i,
-                offset_on_line: position.offset - line_start_offset,
-                end_offset_on_line,
-            };
-        }
-
-        // TODO: This is wrong if src contains \r\n newlines.
-        line_start_offset += line.len() + 1;
-    }
-
-    let last_line = match src.lines().last() {
-        Some(line) => line,
-        None => src, // empty string
-    };
-
-    // Offset beyond EOF
-    DisplayLine {
-        src: last_line.into(),
-        line_num: src.lines().count(),
-        offset_on_line: last_line.len(),
-        end_offset_on_line: last_line.len(),
-    }
+    r.write((&path_str, Source::from(src)), &mut res).unwrap();
+    String::from_utf8_lossy(&res).to_string()
 }
 
 #[derive(Debug)]

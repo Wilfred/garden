@@ -115,7 +115,11 @@ fn run_file(
                     }
                 }
             }
-            Err(parse::ParseError::Invalid { position, message: e }) => {
+            Err(parse::ParseError::Invalid {
+                position,
+                message: e,
+                additional,
+            }) => {
                 eprintln!(
                     "{}",
                     &format_error(&format!("Parse error: {}", e), &position, &src)

@@ -8,9 +8,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::eval::eval_env;
-use crate::parse::{
-    format_error, parse_def_or_expr_from_span, Expression_, Position,
-};
+use crate::parse::{format_error, parse_def_or_expr_from_span, Expression_, Position};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},

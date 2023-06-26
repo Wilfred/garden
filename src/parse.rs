@@ -33,7 +33,11 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
 
 #[derive(Debug)]
 pub enum ParseError {
-    Invalid { position: Position, message: String },
+    Invalid {
+        position: Position,
+        message: String,
+        additional: Vec<(Position, String)>,
+    },
     Incomplete(String),
 }
 
@@ -156,6 +160,7 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<
                 Err(ParseError::Invalid {
                     position: token.position,
                     message: format!("Expected `{}`, got `{}`", expected, token.text),
+                    additional: vec![],
                 })
             }
         }
@@ -175,6 +180,7 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
         Err(ParseError::Invalid {
             position: token.position,
             message: format!("Not a valid integer literal: {}", token.text),
+            additional: vec![],
         })
     }
 }
@@ -381,6 +387,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
                 "Expected an expression, got: {} (offset {})",
                 token.text, token.position.offset
             ),
+            additional: vec![],
         });
     }
 
@@ -412,6 +419,7 @@ fn parse_comma_separated_exprs(
                         "Invalid syntax: Expected `,` or `{}` here, but got `{}`",
                         terminator, token.text
                     ),
+                    additional: vec![],
                 });
             }
         } else {
@@ -577,6 +585,7 @@ fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition
         return Err(ParseError::Invalid {
             position: token.position,
             message: "Expected a definition".to_string(),
+            additional: vec![],
         });
     }
 
@@ -588,6 +597,7 @@ fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition
             path: path.into(),
         },
         message: "Expected a definition, got EOF".to_string(),
+        additional: vec![],
     })
 }
 
@@ -615,6 +625,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, Par
                         "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                         token.text
                     ),
+                    additional: vec![],
                 });
             }
         } else {
@@ -696,6 +707,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError
         return Err(ParseError::Invalid {
             position: variable_token.position,
             message: format!("Invalid variable name: '{}'", variable_token.text),
+            additional: vec![],
         });
     }
 
@@ -707,6 +719,7 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError
                     "'{}' is a reserved word that cannot be used as a variable",
                     variable_token.text
                 ),
+                additional: vec![],
             });
         }
     }
@@ -941,6 +954,7 @@ fn lex_between<'a>(
                 path: path.clone(),
             },
             message: format!("Unrecognized syntax: '{}'", &s[offset..]),
+            additional: vec![],
         });
     }
 

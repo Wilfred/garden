@@ -346,7 +346,7 @@ pub fn run_command<T: Write>(
             if let Some(src) = src {
                 match parse_def_or_expr_from_str(&PathBuf::from("__interactive__"), src) {
                     Ok(ast) => write!(buf, "{:#?}", ast).unwrap(),
-                    Err(ParseError::Incomplete(e)) | Err(ParseError::OtherError(_, e)) => {
+                    Err(ParseError::Incomplete(e)) | Err(ParseError::Invalid(_, e)) => {
                         write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
                     }
                 };

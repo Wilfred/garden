@@ -66,7 +66,7 @@ fn read_expr(
                     Err(ParseError::Incomplete(e)) => {
                         println!("Parsing failed (incomplete): {}", e);
                     }
-                    Err(ParseError::OtherError(_pos, e)) => {
+                    Err(ParseError::Invalid(_pos, e)) => {
                         println!("Parsing failed: {}", e);
                     }
                 }
@@ -264,7 +264,7 @@ fn read_multiline_syntax(
                 }
                 Err(_) => return Err(e),
             },
-            Err(e @ ParseError::OtherError(_, _)) => {
+            Err(e @ ParseError::Invalid(_, _)) => {
                 return Err(e);
             }
         }

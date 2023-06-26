@@ -24,6 +24,8 @@ struct Cli {
     command: Commands,
 }
 
+// TODO: if a user accidentally writes `garden foo.gdn`, suggest
+// `garden run foo.gdn`.
 #[derive(Debug, Subcommand)]
 enum Commands {
     /// Start a session directly in the CLI.

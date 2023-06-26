@@ -18,7 +18,7 @@ use crate::eval::escape_string_literal;
 use crate::parse::format_error;
 
 #[derive(Debug, Parser)]
-#[command(about = "A programming language for growing programs", long_about = None)]
+#[command(author, version, name="Garden", about = "A programming language for growing programs", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

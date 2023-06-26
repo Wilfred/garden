@@ -21,7 +21,6 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
 
     let path_str = position.path.display().to_string();
     let r = Report::build(ReportKind::Error, &path_str, position.offset)
-        .with_config(Config::default().with_compact(true))
         .with_label(
             Label::new((&path_str, position.offset..position.end_offset)).with_message(message),
         )

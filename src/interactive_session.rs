@@ -10,8 +10,8 @@ use crate::commands::{
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{
-    format_error, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression,
-    Expression_, ParseError,
+    format_error, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_,
+    ParseError,
 };
 use crate::{eval::Env, prompt::prompt_symbol};
 use owo_colors::OwoColorize;
@@ -66,7 +66,10 @@ fn read_expr(
                     Err(ParseError::Incomplete(e)) => {
                         println!("Parsing failed (incomplete): {}", e);
                     }
-                    Err(ParseError::Invalid(_pos, e)) => {
+                    Err(ParseError::Invalid {
+                        position: _,
+                        message: e,
+                    }) => {
                         println!("Parsing failed: {}", e);
                     }
                 }
@@ -264,7 +267,12 @@ fn read_multiline_syntax(
                 }
                 Err(_) => return Err(e),
             },
-            Err(e @ ParseError::Invalid(_, _)) => {
+            Err(
+                e @ ParseError::Invalid {
+                    position: _,
+                    message: _,
+                },
+            ) => {
                 return Err(e);
             }
         }

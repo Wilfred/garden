@@ -33,7 +33,7 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
 
 #[derive(Debug)]
 pub enum ParseError {
-    Invalid(Position, String),
+    Invalid { position: Position, message: String },
     Incomplete(String),
 }
 
@@ -153,10 +153,10 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<
             if token.text == expected {
                 Ok(token)
             } else {
-                Err(ParseError::Invalid(
-                    token.position,
-                    format!("Expected `{}`, got `{}`", expected, token.text),
-                ))
+                Err(ParseError::Invalid {
+                    position: token.position,
+                    message: format!("Expected `{}`, got `{}`", expected, token.text),
+                })
             }
         }
         None => Err(ParseError::Incomplete(format!(
@@ -172,10 +172,10 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
         let i: i64 = token.text.parse().unwrap();
         Ok(Expression(token.position, Expression_::IntLiteral(i)))
     } else {
-        Err(ParseError::Invalid(
-            token.position,
-            format!("Not a valid integer literal: {}", token.text),
-        ))
+        Err(ParseError::Invalid {
+            position: token.position,
+            message: format!("Not a valid integer literal: {}", token.text),
+        })
     }
 }
 
@@ -375,13 +375,13 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             return parse_integer(tokens);
         }
 
-        return Err(ParseError::Invalid(
-            token.position.clone(),
-            format!(
+        return Err(ParseError::Invalid {
+            position: token.position.clone(),
+            message: format!(
                 "Expected an expression, got: {} (offset {})",
                 token.text, token.position.offset
             ),
-        ));
+        });
     }
 
     Err(ParseError::Incomplete("Expected an expression".to_owned()))
@@ -406,13 +406,13 @@ fn parse_comma_separated_exprs(
             } else if token.text == terminator {
                 break;
             } else {
-                return Err(ParseError::Invalid(
-                    token.position,
-                    format!(
+                return Err(ParseError::Invalid {
+                    position: token.position,
+                    message: format!(
                         "Invalid syntax: Expected `,` or `{}` here, but got `{}`",
                         terminator, token.text
                     ),
-                ));
+                });
             }
         } else {
             return Err(ParseError::Incomplete(format!(
@@ -574,21 +574,21 @@ fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition
         }
 
         // TODO: Include the token in the error message.
-        return Err(ParseError::Invalid(
-            token.position,
-            "Expected a definition".to_string(),
-        ));
+        return Err(ParseError::Invalid {
+            position: token.position,
+            message: "Expected a definition".to_string(),
+        });
     }
 
     // TODO: return a more meaningful position (e.g. EOF)
-    Err(ParseError::Invalid(
-        Position {
+    Err(ParseError::Invalid {
+        position: Position {
             offset: 0,
             end_offset: 0,
             path: path.into(),
         },
-        "Expected a definition, got EOF".to_string(),
-    ))
+        message: "Expected a definition, got EOF".to_string(),
+    })
 }
 
 fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, ParseError> {
@@ -609,13 +609,13 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, Par
             } else if token.text == ")" {
                 break;
             } else {
-                return Err(ParseError::Invalid(
-                    token.position,
-                    format!(
+                return Err(ParseError::Invalid {
+                    position: token.position,
+                    message: format!(
                         "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                         token.text
                     ),
-                ));
+                });
             }
         } else {
             return Err(ParseError::Incomplete(
@@ -693,21 +693,21 @@ const RESERVED_WORDS: &[&str] = &[
 fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError> {
     let variable_token = require_a_token(tokens, "variable name")?;
     if !VARIABLE_RE.is_match(variable_token.text) {
-        return Err(ParseError::Invalid(
-            variable_token.position,
-            format!("Invalid variable name: '{}'", variable_token.text),
-        ));
+        return Err(ParseError::Invalid {
+            position: variable_token.position,
+            message: format!("Invalid variable name: '{}'", variable_token.text),
+        });
     }
 
     for reserved in RESERVED_WORDS {
         if variable_token.text == *reserved {
-            return Err(ParseError::Invalid(
-                variable_token.position,
-                format!(
+            return Err(ParseError::Invalid {
+                position: variable_token.position,
+                message: format!(
                     "'{}' is a reserved word that cannot be used as a variable",
                     variable_token.text
                 ),
-            ));
+            });
         }
     }
 
@@ -934,14 +934,14 @@ fn lex_between<'a>(
     }
 
     if offset != end_offset {
-        return Err(ParseError::Invalid(
-            Position {
+        return Err(ParseError::Invalid {
+            position: Position {
                 offset,
                 end_offset: s.len(),
                 path: path.clone(),
             },
-            format!("Unrecognized syntax: '{}'", &s[offset..]),
-        ));
+            message: format!("Unrecognized syntax: '{}'", &s[offset..]),
+        });
     }
 
     Ok(res)

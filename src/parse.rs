@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ariadne::{Config, Label, Report, ReportKind, Source};
+use ariadne::{Label, Report, ReportKind, Source};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Serialize};

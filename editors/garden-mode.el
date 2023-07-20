@@ -72,7 +72,12 @@
   :safe #'integerp)
 
 (defvar garden-log-json t
-  "If not-nil, report raw JSON responses from Garden as messages.")
+  "If non-nil, write raw JSON responses from Garden to the buffer *garden-json*.")
+
+(defun garden--log-json-to-buf (s)
+  (let ((buf (get-buffer-create "*garden-json*")))
+    (with-current-buffer buf
+      (insert s))))
 
 (defun garden-indent-line ()
   "Indent the line at point."
@@ -150,7 +155,7 @@ the user entering a value in the *garden* buffer."
 
 (defun garden-process-filter (proc output)
   (when garden-log-json
-    (message "%S" output))
+    (garden--log-json-to-buf output))
   (dolist (line (s-split "\n" (s-trim output)))
     (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
            (response-value (plist-get response :value))

@@ -41,6 +41,7 @@ pub enum BuiltinFunctionKind {
     ListAppend,
     ListGet,
     ListLength,
+    PathExists,
     StringLength,
     StringSubstring,
     WorkingDirectory,
@@ -98,7 +99,15 @@ list_get([4, 5, 6], 1); // 5
 list_length([10, 11, 12]); // 3
 ```"
         }
-        BuiltinFunctionKind::StringLength => {
+        BuiltinFunctionKind::PathExists =>{
+            "Return true if this path exists.
+Note that a path may exist without the current user having permission to read it.
+
+```
+path_exists(\"/\"); // true
+```"
+        }
+        BuiltinFunctionKind::StringLength =>{
             "Return the number of characters (codepoints) in the string.
 
 ```
@@ -158,6 +167,7 @@ impl Display for Value {
                     BuiltinFunctionKind::ListAppend => "list_append",
                     BuiltinFunctionKind::ListGet => "list_get",
                     BuiltinFunctionKind::ListLength => "list_length",
+                    BuiltinFunctionKind::PathExists => "path_exists",
                     BuiltinFunctionKind::StringLength => "string_length",
                     BuiltinFunctionKind::StringSubstring => "string_substring",
                     BuiltinFunctionKind::WorkingDirectory => "working_directory",
@@ -310,6 +320,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("list_length".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::ListLength),
+        );
+        file_scope.insert(
+            VariableName("path_exists".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::PathExists),
         );
         file_scope.insert(
             VariableName("shell".to_owned()),
@@ -1153,6 +1167,32 @@ fn eval_call(
                         });
                     }
                 }
+            }
+            BuiltinFunctionKind::PathExists => {
+                check_arity("path_exists", &receiver_value, 1, &arg_values)?;
+
+                // TODO: define a separate path type in Garden.
+                let path_s = match &arg_values[0].1 {
+                    Value::String(s) => s,
+                    v => {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        return Err(ErrorInfo {
+                            message: format!("Expected a string, but got: {}", v),
+                            restore_values: saved_values,
+                            error_position: arg_values[0].0.clone(),
+                        });
+                    }
+                };
+
+                let path = PathBuf::from(path_s);
+                stack_frame
+                    .evalled_values
+                    .push((position.clone(), Value::Boolean(path.exists())));
             }
             BuiltinFunctionKind::StringSubstring => {
                 check_arity("string_substring", &receiver_value, 3, &arg_values)?;

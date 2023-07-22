@@ -75,9 +75,16 @@
   "If non-nil, write raw JSON responses from Garden to the buffer *garden-json*.")
 
 (defun garden--log-json-to-buf (s)
-  (let ((buf (get-buffer-create "*garden-json*")))
+  (let* ((buf-name "*garden-json*")
+         (buf (get-buffer buf-name)))
+    (unless buf
+      (setq buf (get-buffer-create buf-name))
+      (with-current-buffer buf
+        (special-mode)))
     (with-current-buffer buf
-      (insert s))))
+      (let ((inhibit-read-only t))
+        (goto-char (point-max))
+        (insert s)))))
 
 (defun garden-indent-line ()
   "Indent the line at point."

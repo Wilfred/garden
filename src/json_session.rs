@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::eval::eval_env;
+use crate::eval::{eval_env, ToplevelEvalResult};
 use crate::parse::{format_error, parse_def_or_expr_from_span, Expression_, Position};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
@@ -169,10 +169,16 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             req.end_offset.unwrap_or_else(|| req.input.len()),
                         ) {
                             Ok(exprs) => match eval_def_or_exprs(&exprs, &mut env, &mut session) {
-                                Ok(result) => Response {
-                                    kind: ResponseKind::Evaluate,
-                                    value: Ok(format!("{}", result)),
-                                },
+                                Ok(result) => {
+                                    let value_summary = match result {
+                                        ToplevelEvalResult::Value(value) => format!("{}", value),
+                                        ToplevelEvalResult::Definition(summary) => summary,
+                                    };
+                                    Response {
+                                        kind: ResponseKind::Evaluate,
+                                        value: Ok(value_summary),
+                                    }
+                                }
                                 Err(EvalError::ResumableError(position, e)) => {
                                     // TODO: print the whole stack.
                                     let stack = Some(format_error(&e, &position, &req.input));

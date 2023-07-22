@@ -411,20 +411,30 @@ pub enum EvalError {
     Stop(Option<ErrorKind>),
 }
 
-// TODO: result is really Result<Value, ErrorWithSuspendedEnv>
+#[derive(Debug)]
+pub enum ToplevelEvalResult {
+    Value(Value),
+    Definition(String),
+}
+
 pub fn eval_def_or_exprs(
     items: &DefinitionsOrExpression,
     env: &mut Env,
     session: &mut Session,
-) -> Result<Value, EvalError> {
+) -> Result<ToplevelEvalResult, EvalError> {
     match items {
         DefinitionsOrExpression::Defs(defs) => {
             eval_defs(defs, env);
-            Ok(Value::Void)
+            Ok(ToplevelEvalResult::Definition(format!(
+                "Loaded {} definition{}.",
+                defs.len(),
+                if defs.len() == 1 { "" } else { "s" }
+            )))
         }
         DefinitionsOrExpression::Expr(e) => {
             let exprs = vec![e.clone()];
-            eval_exprs(&exprs, env, session)
+            let value = eval_exprs(&exprs, env, session)?;
+            Ok(ToplevelEvalResult::Value(value))
         }
     }
 }

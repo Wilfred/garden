@@ -204,6 +204,7 @@ pub fn run_command<T: Write>(
                 Err(CommandParseError::NoSuchCommand) => {
                     print_available_commands(buf);
                 }
+                // TODO: suggest :doc if user writes `:help foo`
                 Err(CommandParseError::NotCommandSyntax) => {
                     write!(
                         buf,

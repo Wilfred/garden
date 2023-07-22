@@ -305,6 +305,7 @@ the user entering a value in the *garden* buffer."
 (defvar garden-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-x C-e") #'garden-send)
+    (define-key map (kbd "C-c C-c") #'garden-send)
     map)
   "Keymap for `garden-mode'.")
 

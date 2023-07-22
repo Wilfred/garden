@@ -196,7 +196,8 @@ the user entering a value in the *garden* buffer."
                   (concat response-ok-value "\n")))
                 ((and (string= response-kind "evaluate")
                       response-ok-value)
-                 (message "%s" response-ok-value)
+                 (unless (string= response-ok-value "void")
+                   (message "%s" response-ok-value))
                  (garden--fontify-value (concat response-ok-value "\n")))
                 (t
                  output))))

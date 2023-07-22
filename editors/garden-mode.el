@@ -190,6 +190,7 @@ the user entering a value in the *garden* buffer."
                 ((string= response-kind "ready")
                  (garden--propertize-read-only (concat response-ok-value "\n")))
                 ((string= response-kind "printed")
+                 (message "%s" response-ok-value)
                  (garden--propertize-read-only response-ok-value))
                 ((string= response-kind "runCommand")
                  (garden--fontify-command-output

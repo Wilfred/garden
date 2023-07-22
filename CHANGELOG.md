@@ -5,6 +5,10 @@
 Added `dbg`, `list_get`, `list_length`, `path_exists` and
 `working_directory`.
 
+### Commands
+
+Renamed `:globals` to `:funs` to reflect its current purpose.
+
 ### Syntax
 
 Fixed parsing of repeated calls, e.g. `f()()` was previously not

@@ -18,7 +18,7 @@ pub enum Command {
     Abort,
     Doc(Option<String>),
     Help(Option<String>),
-    Globals,
+    Functions,
     Locals,
     FrameValues,
     FrameStatements,
@@ -63,7 +63,7 @@ impl Command {
             ":abort" => Ok(Command::Abort),
             ":fstmts" => Ok(Command::FrameStatements),
             ":fvalues" => Ok(Command::FrameValues),
-            ":globals" => Ok(Command::Globals),
+            ":funs" => Ok(Command::Functions),
             ":locals" => Ok(Command::Locals),
             ":resume" => Ok(Command::Resume),
             ":skip" => Ok(Command::Skip),
@@ -110,7 +110,7 @@ impl Command {
             Command::Doc(_) => ":doc",
             Command::FrameStatements => ":fstmts",
             Command::FrameValues => ":fvalues",
-            Command::Globals => ":globals",
+            Command::Functions => ":funs",
             Command::Help(_) => ":help",
             Command::Locals => ":locals",
             Command::Parse(_) => ":parse",
@@ -279,11 +279,18 @@ pub fn run_command<T: Write>(
             )
             .unwrap();
         }
-        Command::Globals => {
-            for (i, (var_name, value)) in env.file_scope.iter().enumerate() {
+        Command::Functions => {
+            let mut names_and_vals: Vec<(VariableName, Value)> = env
+                .file_scope
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect();
+            names_and_vals.sort_by(|(n1, _), (n2, _)| n1.0.cmp(&n2.0));
+
+            for (i, (var_name, value)) in names_and_vals.iter().enumerate() {
                 write!(
                     buf,
-                    "{}{}\t{}",
+                    "{}{:<20} {}",
                     if i == 0 { "" } else { "\n" },
                     var_name.0.bright_green(),
                     value
@@ -372,7 +379,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Abort => "The :abort command stops evaluation of the current expression, brining you back to the toplevel.\n\nExample usage:\n\n:abort",
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
-        Command::Globals => "The :globals command displays information about toplevel definitions.\n\nExample:\n\n:globals",
+        Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",

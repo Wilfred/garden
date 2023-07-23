@@ -156,7 +156,7 @@ the user entering a value in the *garden* buffer."
         (delete-region (point-min) (point-max))
 
         (when stack
-          (insert stack "\n"))
+          (insert (ansi-color-apply stack) "\n"))
         (insert msg)))
     buf))
 

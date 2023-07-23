@@ -823,6 +823,419 @@ fn check_arity(
     Ok(())
 }
 
+fn eval_builtin_call(
+    kind: BuiltinFunctionKind,
+    receiver_value: (Position, Value),
+    arg_values: &[(Position, Value)],
+    stack_frame: &mut StackFrame,
+    position: &Position,
+    session: &Session,
+) -> Result<(), ErrorInfo> {
+    match kind {
+        BuiltinFunctionKind::Print => {
+            check_arity("print", &receiver_value, 1, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::String(s) => {
+                    if session.has_attached_stdout {
+                        println!("{}", s);
+                    } else {
+                        let response = Response {
+                            kind: ResponseKind::Printed,
+                            value: Ok(format!("{}\n", s)),
+                        };
+                        let serialized = serde_json::to_string(&response).unwrap();
+                        println!("{}", serialized);
+                    }
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::Void));
+        }
+        BuiltinFunctionKind::DebugPrint => {
+            check_arity("dbg", &receiver_value, 1, &arg_values)?;
+
+            // TODO: define a proper pretty-printer for values
+            // rather than using Rust's Debug.
+            let value = &arg_values[0].1;
+            if session.has_attached_stdout {
+                println!("{:?}", value);
+            } else {
+                let response = Response {
+                    kind: ResponseKind::Printed,
+                    value: Ok(format!("{:?}\n", value)),
+                };
+                let serialized = serde_json::to_string(&response).unwrap();
+                println!("{}", serialized);
+            }
+
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::Void));
+        }
+        BuiltinFunctionKind::StringLength => {
+            check_arity("string_length", &receiver_value, 1, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::String(s) => {
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::Integer(s.chars().count() as i64)));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
+        BuiltinFunctionKind::Shell => {
+            check_arity("shell", &receiver_value, 2, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::String(s) => {
+                    match as_string_list(&arg_values[1].1) {
+                        Ok(items) => {
+                            let mut command = std::process::Command::new(s);
+                            for item in items {
+                                command.arg(item);
+                            }
+
+                            // TODO: define a result type in garden to report errors to the user.
+                            let output = command.output().expect("failed to execute process");
+
+                            let mut s = String::new();
+                            // TODO: complain if output is not UTF-8.
+                            s.write_str(&String::from_utf8_lossy(&output.stdout))
+                                .unwrap();
+                            s.write_str(&String::from_utf8_lossy(&output.stderr))
+                                .unwrap();
+
+                            stack_frame
+                                .evalled_values
+                                .push((position.clone(), Value::String(s)));
+                        }
+                        Err(v) => {
+                            let mut saved_values = vec![];
+                            for value in arg_values.iter().rev() {
+                                saved_values.push(value.clone());
+                            }
+                            saved_values.push(receiver_value.clone());
+
+                            return Err(ErrorInfo {
+                                message: format!("Expected a list, but got: {}", v),
+                                restore_values: saved_values,
+                                error_position: arg_values[0].0.clone(),
+                            });
+                        }
+                    }
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
+        BuiltinFunctionKind::ListAppend => {
+            check_arity("list_append", &receiver_value, 2, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::List(items) => {
+                    let mut new_items = items.clone();
+                    new_items.push(arg_values[1].1.clone());
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::List(new_items)));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a list, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
+        BuiltinFunctionKind::ListGet => {
+            check_arity("list_get", &receiver_value, 2, &arg_values)?;
+
+            match (&arg_values[0].1, &arg_values[1].1) {
+                (Value::List(items), Value::Integer(i)) => {
+                    let index: usize = if *i >= items.len() as i64 || *i < 0 {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        let message = if items.is_empty() {
+                            format!("Tried to index into an empty list with index {}", *i)
+                        } else {
+                            format!(
+                                "The list index must be between 0 and {} (inclusive), but got: {}",
+                                items.len() - 1,
+                                i
+                            )
+                        };
+
+                        return Err(ErrorInfo {
+                            message,
+                            restore_values: saved_values,
+                            error_position: arg_values[1].0.clone(),
+                        });
+                    } else {
+                        *i as usize
+                    };
+
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), items[index].clone()));
+                }
+                (v, Value::Integer(_)) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a list, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+                (_, v) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected an integer, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+                }
+            }
+        }
+        BuiltinFunctionKind::ListLength => {
+            check_arity("list_length", &receiver_value, 1, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::List(items) => {
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::Integer(items.len() as i64)));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a list, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
+        BuiltinFunctionKind::IntToString => {
+            check_arity("int_to_string", &receiver_value, 1, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::Integer(i) => {
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::String(format!("{}", i))));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected an integer, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
+        BuiltinFunctionKind::PathExists => {
+            check_arity("path_exists", &receiver_value, 1, &arg_values)?;
+
+            // TODO: define a separate path type in Garden.
+            let path_s = match &arg_values[0].1 {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            };
+
+            let path = PathBuf::from(path_s);
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::Boolean(path.exists())));
+        }
+        BuiltinFunctionKind::StringSubstring => {
+            check_arity("string_substring", &receiver_value, 3, &arg_values)?;
+
+            let s_arg = match &arg_values[0].1 {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            };
+            let from_arg = match &arg_values[1].1 {
+                Value::Integer(i) => i,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected an integer, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+                }
+            };
+            let to_arg = match &arg_values[2].1 {
+                Value::Integer(i) => i,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected an integer, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[2].0.clone(),
+                    });
+                }
+            };
+
+            if *from_arg < 0 {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err(ErrorInfo {
+                        message: format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+            }
+
+            if from_arg > to_arg {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err(ErrorInfo {
+                        message: format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+            }
+
+            stack_frame.evalled_values.push((
+                position.clone(),
+                Value::String(
+                    s_arg
+                        .chars()
+                        .skip(*from_arg as usize)
+                        .take((to_arg - from_arg) as usize)
+                        .collect(),
+                ),
+            ));
+        }
+        BuiltinFunctionKind::WorkingDirectory => {
+            check_arity("working_directory", &receiver_value, 0, &arg_values)?;
+
+            // TODO: when we have a userland result type, use that.
+            let path = std::env::current_dir().unwrap_or_default();
+
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::String(path.display().to_string())));
+        }
+    }
+
+    Ok(())
+}
+
 fn eval_call(
     stack_frame: &mut StackFrame,
     position: &Position,
@@ -909,403 +1322,14 @@ fn eval_call(
                 evalled_values: vec![(name.0.clone(), Value::Void)],
             }));
         }
-        Value::BuiltinFunction(kind) => match kind {
-            BuiltinFunctionKind::Print => {
-                check_arity("print", &receiver_value, 1, &arg_values)?;
-
-                match &arg_values[0].1 {
-                    Value::String(s) => {
-                        if session.has_attached_stdout {
-                            println!("{}", s);
-                        } else {
-                            let response = Response {
-                                kind: ResponseKind::Printed,
-                                value: Ok(format!("{}\n", s)),
-                            };
-                            let serialized = serde_json::to_string(&response).unwrap();
-                            println!("{}", serialized);
-                        }
-                    }
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a string, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                }
-                stack_frame
-                    .evalled_values
-                    .push((position.clone(), Value::Void));
-            }
-            BuiltinFunctionKind::DebugPrint => {
-                check_arity("dbg", &receiver_value, 1, &arg_values)?;
-
-                // TODO: define a proper pretty-printer for values
-                // rather than using Rust's Debug.
-                let value = &arg_values[0].1;
-                if session.has_attached_stdout {
-                    println!("{:?}", value);
-                } else {
-                    let response = Response {
-                        kind: ResponseKind::Printed,
-                        value: Ok(format!("{:?}\n", value)),
-                    };
-                    let serialized = serde_json::to_string(&response).unwrap();
-                    println!("{}", serialized);
-                }
-
-                stack_frame
-                    .evalled_values
-                    .push((position.clone(), Value::Void));
-            }
-            BuiltinFunctionKind::StringLength => {
-                check_arity("string_length", &receiver_value, 1, &arg_values)?;
-
-                match &arg_values[0].1 {
-                    Value::String(s) => {
-                        stack_frame
-                            .evalled_values
-                            .push((position.clone(), Value::Integer(s.chars().count() as i64)));
-                    }
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a string, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                }
-            }
-            BuiltinFunctionKind::Shell => {
-                check_arity("shell", &receiver_value, 2, &arg_values)?;
-
-                match &arg_values[0].1 {
-                    Value::String(s) => {
-                        match as_string_list(&arg_values[1].1) {
-                            Ok(items) => {
-                                let mut command = std::process::Command::new(s);
-                                for item in items {
-                                    command.arg(item);
-                                }
-
-                                // TODO: define a result type in garden to report errors to the user.
-                                let output = command.output().expect("failed to execute process");
-
-                                let mut s = String::new();
-                                // TODO: complain if output is not UTF-8.
-                                s.write_str(&String::from_utf8_lossy(&output.stdout))
-                                    .unwrap();
-                                s.write_str(&String::from_utf8_lossy(&output.stderr))
-                                    .unwrap();
-
-                                stack_frame
-                                    .evalled_values
-                                    .push((position.clone(), Value::String(s)));
-                            }
-                            Err(v) => {
-                                let mut saved_values = vec![];
-                                for value in arg_values.iter().rev() {
-                                    saved_values.push(value.clone());
-                                }
-                                saved_values.push(receiver_value.clone());
-
-                                return Err(ErrorInfo {
-                                    message: format!("Expected a list, but got: {}", v),
-                                    restore_values: saved_values,
-                                    error_position: arg_values[0].0.clone(),
-                                });
-                            }
-                        }
-                    }
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a string, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                }
-            }
-            BuiltinFunctionKind::ListAppend => {
-                check_arity("list_append", &receiver_value, 2, &arg_values)?;
-
-                match &arg_values[0].1 {
-                    Value::List(items) => {
-                        let mut new_items = items.clone();
-                        new_items.push(arg_values[1].1.clone());
-                        stack_frame
-                            .evalled_values
-                            .push((position.clone(), Value::List(new_items)));
-                    }
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a list, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                }
-            }
-            BuiltinFunctionKind::ListGet => {
-                check_arity("list_get", &receiver_value, 2, &arg_values)?;
-
-                match (&arg_values[0].1, &arg_values[1].1) {
-                    (Value::List(items), Value::Integer(i)) => {
-                        let index: usize = if *i >= items.len() as i64 || *i < 0 {
-                            let mut saved_values = vec![];
-                            for value in arg_values.iter().rev() {
-                                saved_values.push(value.clone());
-                            }
-                            saved_values.push(receiver_value.clone());
-
-                            let message = if items.is_empty() {
-                                format!("Tried to index into an empty list with index {}", *i)
-                            } else {
-                                format!("The list index must be between 0 and {} (inclusive), but got: {}", items.len() - 1, i)
-                            };
-
-                            return Err(ErrorInfo {
-                                message,
-                                restore_values: saved_values,
-                                error_position: arg_values[1].0.clone(),
-                            });
-                        } else {
-                            *i as usize
-                        };
-
-                        stack_frame
-                            .evalled_values
-                            .push((position.clone(), items[index].clone()));
-                    }
-                    (v, Value::Integer(_)) => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a list, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                    (_, v) => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected an integer, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[1].0.clone(),
-                        });
-                    }
-                }
-            }
-            BuiltinFunctionKind::ListLength => {
-                check_arity("list_length", &receiver_value, 1, &arg_values)?;
-
-                match &arg_values[0].1 {
-                    Value::List(items) => {
-                        stack_frame
-                            .evalled_values
-                            .push((position.clone(), Value::Integer(items.len() as i64)));
-                    }
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a list, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                }
-            }
-            BuiltinFunctionKind::IntToString => {
-                check_arity("int_to_string", &receiver_value, 1, &arg_values)?;
-
-                match &arg_values[0].1 {
-                    Value::Integer(i) => {
-                        stack_frame
-                            .evalled_values
-                            .push((position.clone(), Value::String(format!("{}", i))));
-                    }
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected an integer, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                }
-            }
-            BuiltinFunctionKind::PathExists => {
-                check_arity("path_exists", &receiver_value, 1, &arg_values)?;
-
-                // TODO: define a separate path type in Garden.
-                let path_s = match &arg_values[0].1 {
-                    Value::String(s) => s,
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a string, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                };
-
-                let path = PathBuf::from(path_s);
-                stack_frame
-                    .evalled_values
-                    .push((position.clone(), Value::Boolean(path.exists())));
-            }
-            BuiltinFunctionKind::StringSubstring => {
-                check_arity("string_substring", &receiver_value, 3, &arg_values)?;
-
-                let s_arg = match &arg_values[0].1 {
-                    Value::String(s) => s,
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected a string, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[0].0.clone(),
-                        });
-                    }
-                };
-                let from_arg = match &arg_values[1].1 {
-                    Value::Integer(i) => i,
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected an integer, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[1].0.clone(),
-                        });
-                    }
-                };
-                let to_arg = match &arg_values[2].1 {
-                    Value::Integer(i) => i,
-                    v => {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        return Err(ErrorInfo {
-                            message: format!("Expected an integer, but got: {}", v),
-                            restore_values: saved_values,
-                            error_position: arg_values[2].0.clone(),
-                        });
-                    }
-                };
-
-                if *from_arg < 0 {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg),
-                        restore_values: saved_values,
-                        error_position: arg_values[1].0.clone(),
-                    });
-                }
-
-                if from_arg > to_arg {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg),
-                        restore_values: saved_values,
-                        error_position: arg_values[1].0.clone(),
-                    });
-                }
-
-                stack_frame.evalled_values.push((
-                    position.clone(),
-                    Value::String(
-                        s_arg
-                            .chars()
-                            .skip(*from_arg as usize)
-                            .take((to_arg - from_arg) as usize)
-                            .collect(),
-                    ),
-                ));
-            }
-            BuiltinFunctionKind::WorkingDirectory => {
-                check_arity("working_directory", &receiver_value, 0, &arg_values)?;
-
-                // TODO: when we have a userland result type, use that.
-                let path = std::env::current_dir().unwrap_or_default();
-
-                stack_frame
-                    .evalled_values
-                    .push((position.clone(), Value::String(path.display().to_string())));
-            }
-        },
+        Value::BuiltinFunction(kind) => eval_builtin_call(
+            *kind,
+            receiver_value,
+            &arg_values,
+            stack_frame,
+            position,
+            session,
+        )?,
         v => {
             let mut saved_values = vec![];
             for value in arg_values.iter().rev() {

@@ -1236,6 +1236,10 @@ fn eval_builtin_call(
     Ok(())
 }
 
+/// Evaluate a function call.
+///
+/// If we're calling a userland function, return the new stackframe to
+/// evaluate next.
 fn eval_call(
     stack_frame: &mut StackFrame,
     position: &Position,

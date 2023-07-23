@@ -8,7 +8,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::eval::{eval_env, ToplevelEvalResult};
-use crate::parse::{format_error, parse_def_or_expr_from_span, Expression_, Position};
+use crate::parse::{format_error, parse_def_or_expr_from_span, Expression_, ParseError, Position};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
@@ -115,13 +115,30 @@ fn handle_eval_request(
                 todo!();
             }
         },
-        Err(e) => Response {
-            kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
-                position: None,
-                message: format!("Could not parse input: {:?}", e),
-                stack: None,
-            }),
+        Err(e) => match e {
+            ParseError::Invalid {
+                position,
+                message,
+                additional: _,
+            } => {
+                let stack = Some(format_error(&message, &position, &req.input));
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: Some(position),
+                        message,
+                        stack,
+                    }),
+                }
+            }
+            ParseError::Incomplete(message) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(ResponseError {
+                    position: None,
+                    message,
+                    stack: None,
+                }),
+            },
         },
     }
 }

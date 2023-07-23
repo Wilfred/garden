@@ -42,6 +42,7 @@ pub enum BuiltinFunctionKind {
     ListGet,
     ListLength,
     PathExists,
+    StringConcat,
     StringLength,
     StringSubstring,
     WorkingDirectory,
@@ -107,6 +108,13 @@ Note that a path may exist without the current user having permission to read it
 path_exists(\"/\"); // true
 ```"
         }
+        BuiltinFunctionKind::StringConcat =>{
+            "Return a new string with the two string arguments concatenated.
+
+```
+string_concat(\"foo\", \"bar\"); // \"foobar\"
+```"
+        }
         BuiltinFunctionKind::StringLength =>{
             "Return the number of characters (codepoints) in the string.
 
@@ -168,6 +176,7 @@ impl Display for Value {
                     BuiltinFunctionKind::ListGet => "list_get",
                     BuiltinFunctionKind::ListLength => "list_length",
                     BuiltinFunctionKind::PathExists => "path_exists",
+                    BuiltinFunctionKind::StringConcat => "string_concat",
                     BuiltinFunctionKind::StringLength => "string_length",
                     BuiltinFunctionKind::StringSubstring => "string_substring",
                     BuiltinFunctionKind::WorkingDirectory => "working_directory",
@@ -328,6 +337,10 @@ impl Default for Env {
         file_scope.insert(
             VariableName("shell".to_owned()),
             Value::BuiltinFunction(BuiltinFunctionKind::Shell),
+        );
+        file_scope.insert(
+            VariableName("string_concat".to_owned()),
+            Value::BuiltinFunction(BuiltinFunctionKind::StringConcat),
         );
         file_scope.insert(
             VariableName("string_length".to_owned()),
@@ -886,6 +899,47 @@ fn eval_builtin_call(
             stack_frame
                 .evalled_values
                 .push((position.clone(), Value::Void));
+        }
+        BuiltinFunctionKind::StringConcat => {
+            check_arity("string_concat", &receiver_value, 2, &arg_values)?;
+
+            let mut arg1 = match &arg_values[0].1 {
+                Value::String(s) => s.clone(),
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            };
+            let arg2 = match &arg_values[1].1 {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format!("Expected a string, but got: {}", v),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+                }
+            };
+
+            arg1.push_str(&arg2);
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::String(arg1)));
         }
         BuiltinFunctionKind::StringLength => {
             check_arity("string_length", &receiver_value, 1, &arg_values)?;

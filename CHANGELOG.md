@@ -2,8 +2,8 @@
 
 ### Stdlib
 
-Added `dbg`, `list_get`, `list_length`, `path_exists` and
-`working_directory`.
+Added `dbg`, `list_get`, `list_length`, `path_exists`, `string_concat`
+and `working_directory`.
 
 ### Commands
 

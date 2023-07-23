@@ -41,7 +41,7 @@ fn split_first_word<'a>(s: &'a str, word: &str) -> Option<&'a str> {
             return Some("");
         }
 
-        if let Some(rest) = suffix.strip_prefix(" ") {
+        if let Some(rest) = suffix.strip_prefix(' ') {
             Some(rest)
         } else {
             None
@@ -119,7 +119,7 @@ impl Command {
                     };
                 }
 
-                if s.starts_with(":") {
+                if s.starts_with(':') {
                     Err(CommandParseError::NoSuchCommand)
                 } else {
                     Err(CommandParseError::NotCommandSyntax)
@@ -132,7 +132,7 @@ impl Command {
 pub fn print_available_commands<T: Write>(buf: &mut T) {
     write!(buf, "The available commands are").unwrap();
 
-    let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string().into()).collect();
+    let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string()).collect();
     command_names.sort();
 
     for (i, name) in command_names.iter().enumerate() {
@@ -211,8 +211,7 @@ pub fn run_command<T: Write>(
                 Err(CommandParseError::NotCommandSyntax) => {
                     write!(
                         buf,
-                        "{}\n\n",
-                        "This is the help command for interacting with Garden programs. Welcome."
+                        "This is the help command for interacting with Garden programs. Welcome.\n\n"
                     )
                     .unwrap();
                     print_available_commands(buf);
@@ -274,7 +273,7 @@ pub fn run_command<T: Write>(
             write!(
                 buf,
                 "{}",
-                if session.history == "" {
+                if session.history.is_empty() {
                     "(empty)"
                 } else {
                     &session.history

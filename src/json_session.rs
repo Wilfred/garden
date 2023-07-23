@@ -78,7 +78,7 @@ fn handle_eval_request(
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         &req.input,
         req.offset.unwrap_or(0),
-        req.end_offset.unwrap_or_else(|| req.input.len()),
+        req.end_offset.unwrap_or(req.input.len()),
     ) {
         Ok(exprs) => match eval_def_or_exprs(&exprs, env, session) {
             Ok(result) => {
@@ -107,7 +107,7 @@ fn handle_eval_request(
                 kind: ResponseKind::Evaluate,
                 value: Err(ResponseError {
                     position: None,
-                    message: format!("Interrupted"),
+                    message: "Interrupted".to_string(),
                     stack: None,
                 }),
             },
@@ -153,14 +153,14 @@ fn handle_request(
         Method::Run => match Command::from_string(&req.input) {
             Ok(command) => {
                 let mut out_buf: Vec<u8> = vec![];
-                match run_command(&mut out_buf, &command, env, &session) {
+                match run_command(&mut out_buf, &command, env, session) {
                     Ok(()) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
                     },
                     Err(CommandError::Abort) => Response {
                         kind: ResponseKind::RunCommand,
-                        value: Ok(format!("Aborted")),
+                        value: Ok("Aborted".to_string()),
                     },
                     Err(CommandError::Resume) => {
                         let stack_frame = env.stack.last_mut().unwrap();
@@ -184,7 +184,7 @@ fn handle_request(
                                     kind: ResponseKind::Evaluate,
                                     value: Err(ResponseError {
                                         position: None,
-                                        message: format!("Interrupted"),
+                                        message: "Interrupted".to_string(),
                                         stack: None,
                                     }),
                                 },

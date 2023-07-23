@@ -581,7 +581,7 @@ fn eval_while(
 
 fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
     let var_name = &variable.1;
-    if !stack_frame.bindings.has(&var_name) {
+    if !stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is not currently bound. Try `let {} = something`.",
@@ -598,7 +598,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
         .expect("Popped an empty value stack for let value");
     stack_frame
         .bindings
-        .set_existing(&var_name, expr_value.1.clone());
+        .set_existing(var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
 
     Ok(())
@@ -606,7 +606,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
 
 fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
     let var_name = &variable.1;
-    if stack_frame.bindings.has(&var_name) {
+    if stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
             message: format!(
                 "{} is already bound. Try `{} = something` instead.",
@@ -623,7 +623,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), Err
         .expect("Popped an empty value stack for let value");
     stack_frame
         .bindings
-        .add_new(&var_name, expr_value.1.clone());
+        .add_new(var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }
@@ -835,7 +835,7 @@ fn eval_builtin_call(
 ) -> Result<(), ErrorInfo> {
     match kind {
         BuiltinFunctionKind::Print => {
-            check_arity("print", &receiver_value, 1, &arg_values)?;
+            check_arity("print", &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {
@@ -869,7 +869,7 @@ fn eval_builtin_call(
                 .push((position.clone(), Value::Void));
         }
         BuiltinFunctionKind::DebugPrint => {
-            check_arity("dbg", &receiver_value, 1, &arg_values)?;
+            check_arity("dbg", &receiver_value, 1, arg_values)?;
 
             // TODO: define a proper pretty-printer for values
             // rather than using Rust's Debug.
@@ -890,7 +890,7 @@ fn eval_builtin_call(
                 .push((position.clone(), Value::Void));
         }
         BuiltinFunctionKind::StringConcat => {
-            check_arity("string_concat", &receiver_value, 2, &arg_values)?;
+            check_arity("string_concat", &receiver_value, 2, arg_values)?;
 
             let mut arg1 = match &arg_values[0].1 {
                 Value::String(s) => s.clone(),
@@ -925,13 +925,13 @@ fn eval_builtin_call(
                 }
             };
 
-            arg1.push_str(&arg2);
+            arg1.push_str(arg2);
             stack_frame
                 .evalled_values
                 .push((position.clone(), Value::String(arg1)));
         }
         BuiltinFunctionKind::StringLength => {
-            check_arity("string_length", &receiver_value, 1, &arg_values)?;
+            check_arity("string_length", &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {
@@ -955,7 +955,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::Shell => {
-            check_arity("shell", &receiver_value, 2, &arg_values)?;
+            check_arity("shell", &receiver_value, 2, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {
@@ -1011,7 +1011,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::ListAppend => {
-            check_arity("list_append", &receiver_value, 2, &arg_values)?;
+            check_arity("list_append", &receiver_value, 2, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::List(items) => {
@@ -1037,7 +1037,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::ListGet => {
-            check_arity("list_get", &receiver_value, 2, &arg_values)?;
+            check_arity("list_get", &receiver_value, 2, arg_values)?;
 
             match (&arg_values[0].1, &arg_values[1].1) {
                 (Value::List(items), Value::Integer(i)) => {
@@ -1100,7 +1100,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::ListLength => {
-            check_arity("list_length", &receiver_value, 1, &arg_values)?;
+            check_arity("list_length", &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::List(items) => {
@@ -1124,7 +1124,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::IntToString => {
-            check_arity("int_to_string", &receiver_value, 1, &arg_values)?;
+            check_arity("int_to_string", &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::Integer(i) => {
@@ -1148,7 +1148,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::PathExists => {
-            check_arity("path_exists", &receiver_value, 1, &arg_values)?;
+            check_arity("path_exists", &receiver_value, 1, arg_values)?;
 
             // TODO: define a separate path type in Garden.
             let path_s = match &arg_values[0].1 {
@@ -1174,7 +1174,7 @@ fn eval_builtin_call(
                 .push((position.clone(), Value::Boolean(path.exists())));
         }
         BuiltinFunctionKind::StringSubstring => {
-            check_arity("string_substring", &receiver_value, 3, &arg_values)?;
+            check_arity("string_substring", &receiver_value, 3, arg_values)?;
 
             let s_arg = match &arg_values[0].1 {
                 Value::String(s) => s,
@@ -1265,7 +1265,7 @@ fn eval_builtin_call(
             ));
         }
         BuiltinFunctionKind::WorkingDirectory => {
-            check_arity("working_directory", &receiver_value, 0, &arg_values)?;
+            check_arity("working_directory", &receiver_value, 0, arg_values)?;
 
             // TODO: when we have a userland result type, use that.
             let path = std::env::current_dir().unwrap_or_default();

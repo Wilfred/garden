@@ -368,7 +368,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             return parse_variable_expression(tokens);
         }
 
-        if token.text.starts_with("\"") {
+        if token.text.starts_with('\"') {
             pop_token(tokens);
             return Ok(Expression(
                 token.position,
@@ -664,11 +664,11 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError>
 fn join_comments(comments: &[&str]) -> String {
     let mut comment_texts = comments
         .iter()
-        .map(|comment| comment.strip_prefix(" ").unwrap_or(comment))
+        .map(|comment| comment.strip_prefix(' ').unwrap_or(comment))
         .collect::<Vec<_>>();
 
     if let Some(comment_text) = comment_texts.last_mut() {
-        *comment_text = comment_text.strip_suffix("\n").unwrap_or(&comment_text)
+        *comment_text = comment_text.strip_suffix('\n').unwrap_or(comment_text)
     }
 
     comment_texts.join("")
@@ -817,7 +817,7 @@ lazy_static! {
 }
 
 fn lex_between<'a>(
-    path: &PathBuf,
+    path: &Path,
     s: &'a str,
     offset: usize,
     end_offset: usize,
@@ -830,7 +830,7 @@ fn lex_between<'a>(
     let mut offset = offset;
 
     // Skip shebang if present at the beginning of the file.
-    if offset == 0 && s.starts_with("#") {
+    if offset == 0 && s.starts_with('#') {
         offset = s.find('\n').unwrap_or(s.len());
     }
 
@@ -839,7 +839,7 @@ fn lex_between<'a>(
 
         // Skip over comments.
         if s.starts_with("//") {
-            if let Some(i) = s.find("\n") {
+            if let Some(i) = s.find('\n') {
                 preceding_comments.push(&s["//".len()..i + 1]);
                 offset += i + 1;
                 continue;
@@ -865,7 +865,7 @@ fn lex_between<'a>(
                     position: Position {
                         offset,
                         end_offset: offset + token_str.len(),
-                        path: path.clone(),
+                        path: path.to_path_buf(),
                     },
                     text: &s[0..token_str.len()],
                     preceding_comments,
@@ -884,7 +884,7 @@ fn lex_between<'a>(
                 position: Position {
                     offset,
                     end_offset: offset + integer_match.end(),
-                    path: path.clone(),
+                    path: path.to_path_buf(),
                 },
                 text: integer_match.as_str(),
                 preceding_comments,
@@ -903,7 +903,7 @@ fn lex_between<'a>(
                     position: Position {
                         offset,
                         end_offset: offset + 1,
-                        path: path.clone(),
+                        path: path.to_path_buf(),
                     },
                     text: &s[0..1],
                     preceding_comments,
@@ -919,7 +919,7 @@ fn lex_between<'a>(
                 position: Position {
                     offset,
                     end_offset: offset + string_match.end(),
-                    path: path.clone(),
+                    path: path.to_path_buf(),
                 },
                 text: string_match.as_str(),
                 preceding_comments,
@@ -932,7 +932,7 @@ fn lex_between<'a>(
                 position: Position {
                     offset,
                     end_offset: offset + variable_match.end(),
-                    path: path.clone(),
+                    path: path.to_path_buf(),
                 },
                 text: variable_match.as_str(),
                 preceding_comments,
@@ -950,7 +950,7 @@ fn lex_between<'a>(
             position: Position {
                 offset,
                 end_offset: s.len(),
-                path: path.clone(),
+                path: path.to_path_buf(),
             },
             message: format!("Unrecognized syntax: '{}'", &s[offset..]),
             additional: vec![],

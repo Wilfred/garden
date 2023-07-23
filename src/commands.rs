@@ -1,4 +1,4 @@
-use std::{io::Write, path::PathBuf};
+use std::{fmt::Display, io::Write, path::PathBuf};
 
 use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
@@ -57,6 +57,30 @@ pub enum CommandParseError {
     NotCommandSyntax,
 }
 
+impl Display for Command {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Command::Abort => ":abort",
+            Command::Doc(_) => ":doc",
+            Command::FrameStatements => ":fstmts",
+            Command::FrameValues => ":fvalues",
+            Command::Functions => ":funs",
+            Command::Help(_) => ":help",
+            Command::Locals => ":locals",
+            Command::Parse(_) => ":parse",
+            Command::Replace(_) => ":replace",
+            Command::Resume => ":resume",
+            Command::Search(_) => ":search",
+            Command::Skip => ":skip",
+            Command::Source => ":source",
+            Command::Stack => ":stack",
+            Command::Trace => ":trace",
+            Command::Quit => ":quit",
+        };
+        write!(f, "{}", name)
+    }
+}
+
 impl Command {
     pub fn from_string(s: &str) -> Result<Self, CommandParseError> {
         match s.to_lowercase().trim() {
@@ -101,27 +125,6 @@ impl Command {
                     Err(CommandParseError::NotCommandSyntax)
                 }
             }
-        }
-    }
-
-    pub fn to_string(&self) -> &str {
-        match self {
-            Command::Abort => ":abort",
-            Command::Doc(_) => ":doc",
-            Command::FrameStatements => ":fstmts",
-            Command::FrameValues => ":fvalues",
-            Command::Functions => ":funs",
-            Command::Help(_) => ":help",
-            Command::Locals => ":locals",
-            Command::Parse(_) => ":parse",
-            Command::Replace(_) => ":replace",
-            Command::Resume => ":resume",
-            Command::Search(_) => ":search",
-            Command::Skip => ":skip",
-            Command::Source => ":source",
-            Command::Stack => ":stack",
-            Command::Trace => ":trace",
-            Command::Quit => ":quit",
         }
     }
 }

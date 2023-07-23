@@ -65,6 +65,139 @@ pub fn sample_request_as_json() -> String {
     .unwrap()
 }
 
+fn handle_request(
+    req: Request,
+    env: &mut Env,
+    session: &mut Session,
+    complete_src: &mut String,
+) -> Response {
+    match req.method {
+        Method::Run => match Command::from_string(&req.input) {
+            Ok(command) => {
+                let mut out_buf: Vec<u8> = vec![];
+                match run_command(&mut out_buf, &command, env, &session) {
+                    Ok(()) => Response {
+                        kind: ResponseKind::RunCommand,
+                        value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
+                    },
+                    Err(CommandError::Abort) => Response {
+                        kind: ResponseKind::RunCommand,
+                        value: Ok(format!("Aborted")),
+                    },
+                    Err(CommandError::Resume) => {
+                        let stack_frame = env.stack.last_mut().unwrap();
+                        if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+                            assert!(matches!(expr.1, Expression_::Stop(_)));
+
+                            match eval_env(env, session) {
+                                Ok(result) => Response {
+                                    kind: ResponseKind::Evaluate,
+                                    value: Ok(format!("{}", result)),
+                                },
+                                Err(EvalError::ResumableError(position, e)) => Response {
+                                    kind: ResponseKind::Evaluate,
+                                    value: Err(ResponseError {
+                                        position: Some(position),
+                                        message: format!("Error: {}", e),
+                                        stack: None,
+                                    }),
+                                },
+                                Err(EvalError::Interrupted) => Response {
+                                    kind: ResponseKind::Evaluate,
+                                    value: Err(ResponseError {
+                                        position: None,
+                                        message: format!("Interrupted"),
+                                        stack: None,
+                                    }),
+                                },
+                                Err(EvalError::Stop(_)) => {
+                                    todo!();
+                                }
+                            }
+                        } else {
+                            Response {
+                                kind: ResponseKind::Evaluate,
+                                value: Ok("(nothing to resume)".into()),
+                            }
+                        }
+                    }
+                    Err(CommandError::Replace(_)) => todo!(),
+                    Err(CommandError::Skip) => todo!(),
+                }
+            }
+            Err(CommandParseError::NoSuchCommand) => {
+                let mut out_buf: Vec<u8> = vec![];
+                write!(&mut out_buf, "No such command. ").unwrap();
+                print_available_commands(&mut out_buf);
+
+                Response {
+                    kind: ResponseKind::RunCommand,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                        stack: None,
+                    }),
+                }
+            }
+            Err(CommandParseError::NotCommandSyntax) => {
+                complete_src.push_str(&req.input);
+
+                match parse_def_or_expr_from_span(
+                    &req.path
+                        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
+                    &req.input,
+                    req.offset.unwrap_or(0),
+                    req.end_offset.unwrap_or_else(|| req.input.len()),
+                ) {
+                    Ok(exprs) => match eval_def_or_exprs(&exprs, env, session) {
+                        Ok(result) => {
+                            let value_summary = match result {
+                                ToplevelEvalResult::Value(value) => format!("{}", value),
+                                ToplevelEvalResult::Definition(summary) => summary,
+                            };
+                            Response {
+                                kind: ResponseKind::Evaluate,
+                                value: Ok(value_summary),
+                            }
+                        }
+                        Err(EvalError::ResumableError(position, e)) => {
+                            // TODO: print the whole stack.
+                            let stack = Some(format_error(&e, &position, &req.input));
+                            Response {
+                                kind: ResponseKind::Evaluate,
+                                value: Err(ResponseError {
+                                    position: Some(position),
+                                    message: format!("Error: {}", e),
+                                    stack,
+                                }),
+                            }
+                        }
+                        Err(EvalError::Interrupted) => Response {
+                            kind: ResponseKind::Evaluate,
+                            value: Err(ResponseError {
+                                position: None,
+                                message: format!("Interrupted"),
+                                stack: None,
+                            }),
+                        },
+                        Err(EvalError::Stop(_)) => {
+                            todo!();
+                        }
+                    },
+                    Err(e) => Response {
+                        kind: ResponseKind::Evaluate,
+                        value: Err(ResponseError {
+                            position: None,
+                            message: format!("Could not parse input: {:?}", e),
+                            stack: None,
+                        }),
+                    },
+                }
+            }
+        },
+    }
+}
+
 pub fn json_session(interrupted: &Arc<AtomicBool>) {
     let response = Response {
         kind: ResponseKind::Ready,
@@ -90,131 +223,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             .expect("Could not read line");
 
         let response = match serde_json::from_str::<Request>(&line) {
-            Ok(req) => match req.method {
-                Method::Run => match Command::from_string(&req.input) {
-                    Ok(command) => {
-                        let mut out_buf: Vec<u8> = vec![];
-                        match run_command(&mut out_buf, &command, &mut env, &session) {
-                            Ok(()) => Response {
-                                kind: ResponseKind::RunCommand,
-                                value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
-                            },
-                            Err(CommandError::Abort) => Response {
-                                kind: ResponseKind::RunCommand,
-                                value: Ok(format!("Aborted")),
-                            },
-                            Err(CommandError::Resume) => {
-                                let stack_frame = env.stack.last_mut().unwrap();
-                                if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
-                                    assert!(matches!(expr.1, Expression_::Stop(_)));
-
-                                    match eval_env(&mut env, &mut session) {
-                                        Ok(result) => Response {
-                                            kind: ResponseKind::Evaluate,
-                                            value: Ok(format!("{}", result)),
-                                        },
-                                        Err(EvalError::ResumableError(position, e)) => Response {
-                                            kind: ResponseKind::Evaluate,
-                                            value: Err(ResponseError {
-                                                position: Some(position),
-                                                message: format!("Error: {}", e),
-                                                stack: None,
-                                            }),
-                                        },
-                                        Err(EvalError::Interrupted) => Response {
-                                            kind: ResponseKind::Evaluate,
-                                            value: Err(ResponseError {
-                                                position: None,
-                                                message: format!("Interrupted"),
-                                                stack: None,
-                                            }),
-                                        },
-                                        Err(EvalError::Stop(_)) => {
-                                            todo!();
-                                        }
-                                    }
-                                } else {
-                                    Response {
-                                        kind: ResponseKind::Evaluate,
-                                        value: Ok("(nothing to resume)".into()),
-                                    }
-                                }
-                            }
-                            Err(CommandError::Replace(_)) => todo!(),
-                            Err(CommandError::Skip) => todo!(),
-                        }
-                    }
-                    Err(CommandParseError::NoSuchCommand) => {
-                        let mut out_buf: Vec<u8> = vec![];
-                        write!(&mut out_buf, "No such command. ").unwrap();
-                        print_available_commands(&mut out_buf);
-
-                        Response {
-                            kind: ResponseKind::RunCommand,
-                            value: Err(ResponseError {
-                                position: None,
-                                message: format!("{}", String::from_utf8_lossy(&out_buf)),
-                                stack: None,
-                            }),
-                        }
-                    }
-                    Err(CommandParseError::NotCommandSyntax) => {
-                        complete_src.push_str(&req.input);
-
-                        match parse_def_or_expr_from_span(
-                            &req.path
-                                .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-                            &req.input,
-                            req.offset.unwrap_or(0),
-                            req.end_offset.unwrap_or_else(|| req.input.len()),
-                        ) {
-                            Ok(exprs) => match eval_def_or_exprs(&exprs, &mut env, &mut session) {
-                                Ok(result) => {
-                                    let value_summary = match result {
-                                        ToplevelEvalResult::Value(value) => format!("{}", value),
-                                        ToplevelEvalResult::Definition(summary) => summary,
-                                    };
-                                    Response {
-                                        kind: ResponseKind::Evaluate,
-                                        value: Ok(value_summary),
-                                    }
-                                }
-                                Err(EvalError::ResumableError(position, e)) => {
-                                    // TODO: print the whole stack.
-                                    let stack = Some(format_error(&e, &position, &req.input));
-                                    Response {
-                                        kind: ResponseKind::Evaluate,
-                                        value: Err(ResponseError {
-                                            position: Some(position),
-                                            message: format!("Error: {}", e),
-                                            stack,
-                                        }),
-                                    }
-                                }
-                                Err(EvalError::Interrupted) => Response {
-                                    kind: ResponseKind::Evaluate,
-                                    value: Err(ResponseError {
-                                        position: None,
-                                        message: format!("Interrupted"),
-                                        stack: None,
-                                    }),
-                                },
-                                Err(EvalError::Stop(_)) => {
-                                    todo!();
-                                }
-                            },
-                            Err(e) => Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Err(ResponseError {
-                                    position: None,
-                                    message: format!("Could not parse input: {:?}", e),
-                                    stack: None,
-                                }),
-                            },
-                        }
-                    }
-                },
-            },
+            Ok(req) => handle_request(req, &mut env, &mut session, &mut complete_src),
             Err(_) => Response {
                 kind: ResponseKind::MalformedRequest,
                 value: Err(ResponseError {

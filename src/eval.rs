@@ -6,6 +6,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
+use ordered_float::OrderedFloat;
+use strsim::normalized_levenshtein;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -353,6 +355,26 @@ impl Env {
     pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }
+}
+
+fn most_similar(available: &[&VariableName], name: &VariableName) -> Option<VariableName> {
+    let mut res: Vec<_> = available.iter().collect();
+    res.sort_by_key(|n| OrderedFloat(normalized_levenshtein(&n.0, &name.0)));
+    res.last().map(|n| (**n).clone())
+}
+
+fn most_similar_var(
+    name: &VariableName,
+    stack_frame: &StackFrame,
+    env: &Env,
+) -> Option<VariableName> {
+    let all_bindings = stack_frame.bindings.all();
+
+    let mut names: Vec<_> = all_bindings.iter().map(|(n, _)| n).collect();
+    let local_names: Vec<_> = env.file_scope.keys().collect();
+    names.extend_from_slice(&local_names);
+
+    most_similar(&names, name)
 }
 
 fn get_var(name: &VariableName, stack_frame: &StackFrame, env: &Env) -> Option<Value> {
@@ -1561,6 +1583,11 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name.1, &stack_frame, env) {
                             stack_frame.evalled_values.push((expr_position, value));
                         } else {
+                            let suggestion = match most_similar_var(&name.1, &stack_frame, env) {
+                                Some(closest_name) => format!(" Did you mean {}?", closest_name.0),
+                                None => "".to_owned(),
+                            };
+
                             restore_stack_frame(
                                 env,
                                 stack_frame,
@@ -1568,9 +1595,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 &[],
                                 Some(ErrorKind::MalformedExpression),
                             );
+
                             return Err(EvalError::ResumableError(
                                 name.0.clone(),
-                                format!("Undefined variable: {}.", name.1 .0),
+                                format!("Undefined variable: {}.{}", name.1 .0, suggestion),
                             ));
                         }
                     }

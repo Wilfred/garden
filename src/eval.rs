@@ -48,6 +48,26 @@ pub enum BuiltinFunctionKind {
     WorkingDirectory,
 }
 
+impl Display for BuiltinFunctionKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            BuiltinFunctionKind::DebugPrint => "dbg",
+            BuiltinFunctionKind::Print => "print",
+            BuiltinFunctionKind::IntToString => "int_to_string",
+            BuiltinFunctionKind::Shell => "shell",
+            BuiltinFunctionKind::ListAppend => "list_append",
+            BuiltinFunctionKind::ListGet => "list_get",
+            BuiltinFunctionKind::ListLength => "list_length",
+            BuiltinFunctionKind::PathExists => "path_exists",
+            BuiltinFunctionKind::StringConcat => "string_concat",
+            BuiltinFunctionKind::StringLength => "string_length",
+            BuiltinFunctionKind::StringSubstring => "string_substring",
+            BuiltinFunctionKind::WorkingDirectory => "working_directory",
+        };
+        write!(f, "{}", name)
+    }
+}
+
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
     match kind {
         BuiltinFunctionKind::Print => {
@@ -166,23 +186,7 @@ impl Display for Value {
             Value::Boolean(b) => write!(f, "{}", b),
             Value::Fun(FunInfo { name, .. }) => write!(f, "(function: {})", name.1 .0),
             Value::Closure(..) => write!(f, "(closure)"),
-            Value::BuiltinFunction(kind) => {
-                let name = match kind {
-                    BuiltinFunctionKind::DebugPrint => "dbg",
-                    BuiltinFunctionKind::Print => "print",
-                    BuiltinFunctionKind::IntToString => "int_to_string",
-                    BuiltinFunctionKind::Shell => "shell",
-                    BuiltinFunctionKind::ListAppend => "list_append",
-                    BuiltinFunctionKind::ListGet => "list_get",
-                    BuiltinFunctionKind::ListLength => "list_length",
-                    BuiltinFunctionKind::PathExists => "path_exists",
-                    BuiltinFunctionKind::StringConcat => "string_concat",
-                    BuiltinFunctionKind::StringLength => "string_length",
-                    BuiltinFunctionKind::StringSubstring => "string_substring",
-                    BuiltinFunctionKind::WorkingDirectory => "working_directory",
-                };
-                write!(f, "(function: {})", name)
-            }
+            Value::BuiltinFunction(kind) => write!(f, "(function: {})", kind),
             Value::Void => write!(f, "void"),
             Value::String(s) => {
                 write!(f, "{}", escape_string_literal(s))

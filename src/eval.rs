@@ -6,6 +6,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{collections::HashMap, fmt::Display};
 
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+
 use crate::json_session::{Response, ResponseKind};
 use crate::parse::{BinaryOperatorKind, FunInfo, Position, Variable};
 use crate::parse::{
@@ -32,7 +35,7 @@ pub enum Value {
     Void,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
 pub enum BuiltinFunctionKind {
     Print,
     DebugPrint,
@@ -310,54 +313,14 @@ pub struct Env {
 impl Default for Env {
     fn default() -> Self {
         let mut file_scope = HashMap::new();
-        file_scope.insert(
-            VariableName("dbg".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::DebugPrint),
-        );
-        file_scope.insert(
-            VariableName("print".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::Print),
-        );
-        file_scope.insert(
-            VariableName("int_to_string".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::IntToString),
-        );
-        file_scope.insert(
-            VariableName("list_append".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::ListAppend),
-        );
-        file_scope.insert(
-            VariableName("list_get".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::ListGet),
-        );
-        file_scope.insert(
-            VariableName("list_length".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::ListLength),
-        );
-        file_scope.insert(
-            VariableName("path_exists".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::PathExists),
-        );
-        file_scope.insert(
-            VariableName("shell".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::Shell),
-        );
-        file_scope.insert(
-            VariableName("string_concat".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::StringConcat),
-        );
-        file_scope.insert(
-            VariableName("string_length".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::StringLength),
-        );
-        file_scope.insert(
-            VariableName("string_substring".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::StringSubstring),
-        );
-        file_scope.insert(
-            VariableName("working_directory".to_owned()),
-            Value::BuiltinFunction(BuiltinFunctionKind::WorkingDirectory),
-        );
+
+        // Insert all the built-in functions.
+        for fun_kind in BuiltinFunctionKind::iter() {
+            file_scope.insert(
+                VariableName(format!("{}", fun_kind)),
+                Value::BuiltinFunction(fun_kind),
+            );
+        }
 
         Self {
             trace_exprs: false,

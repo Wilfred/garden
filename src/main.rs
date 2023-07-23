@@ -124,7 +124,7 @@ fn run_file(
             Err(parse::ParseError::Invalid {
                 position,
                 message: e,
-                additional,
+                additional: _,
             }) => {
                 eprintln!(
                     "{}",

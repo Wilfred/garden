@@ -65,6 +65,67 @@ pub fn sample_request_as_json() -> String {
     .unwrap()
 }
 
+fn handle_eval_request(
+    req: Request,
+    env: &mut Env,
+    session: &mut Session,
+    complete_src: &mut String,
+) -> Response {
+    complete_src.push_str(&req.input);
+
+    match parse_def_or_expr_from_span(
+        &req.path
+            .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
+        &req.input,
+        req.offset.unwrap_or(0),
+        req.end_offset.unwrap_or_else(|| req.input.len()),
+    ) {
+        Ok(exprs) => match eval_def_or_exprs(&exprs, env, session) {
+            Ok(result) => {
+                let value_summary = match result {
+                    ToplevelEvalResult::Value(value) => format!("{}", value),
+                    ToplevelEvalResult::Definition(summary) => summary,
+                };
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Ok(value_summary),
+                }
+            }
+            Err(EvalError::ResumableError(position, e)) => {
+                // TODO: print the whole stack.
+                let stack = Some(format_error(&e, &position, &req.input));
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: Some(position),
+                        message: format!("Error: {}", e),
+                        stack,
+                    }),
+                }
+            }
+            Err(EvalError::Interrupted) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(ResponseError {
+                    position: None,
+                    message: format!("Interrupted"),
+                    stack: None,
+                }),
+            },
+            Err(EvalError::Stop(_)) => {
+                todo!();
+            }
+        },
+        Err(e) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(ResponseError {
+                position: None,
+                message: format!("Could not parse input: {:?}", e),
+                stack: None,
+            }),
+        },
+    }
+}
+
 fn handle_request(
     req: Request,
     env: &mut Env,
@@ -140,59 +201,7 @@ fn handle_request(
                 }
             }
             Err(CommandParseError::NotCommandSyntax) => {
-                complete_src.push_str(&req.input);
-
-                match parse_def_or_expr_from_span(
-                    &req.path
-                        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-                    &req.input,
-                    req.offset.unwrap_or(0),
-                    req.end_offset.unwrap_or_else(|| req.input.len()),
-                ) {
-                    Ok(exprs) => match eval_def_or_exprs(&exprs, env, session) {
-                        Ok(result) => {
-                            let value_summary = match result {
-                                ToplevelEvalResult::Value(value) => format!("{}", value),
-                                ToplevelEvalResult::Definition(summary) => summary,
-                            };
-                            Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Ok(value_summary),
-                            }
-                        }
-                        Err(EvalError::ResumableError(position, e)) => {
-                            // TODO: print the whole stack.
-                            let stack = Some(format_error(&e, &position, &req.input));
-                            Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Err(ResponseError {
-                                    position: Some(position),
-                                    message: format!("Error: {}", e),
-                                    stack,
-                                }),
-                            }
-                        }
-                        Err(EvalError::Interrupted) => Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Err(ResponseError {
-                                position: None,
-                                message: format!("Interrupted"),
-                                stack: None,
-                            }),
-                        },
-                        Err(EvalError::Stop(_)) => {
-                            todo!();
-                        }
-                    },
-                    Err(e) => Response {
-                        kind: ResponseKind::Evaluate,
-                        value: Err(ResponseError {
-                            position: None,
-                            message: format!("Could not parse input: {:?}", e),
-                            stack: None,
-                        }),
-                    },
-                }
+                handle_eval_request(req, env, session, complete_src)
             }
         },
     }

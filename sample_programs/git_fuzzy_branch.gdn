@@ -42,6 +42,27 @@ fun list_filter(items, f) {
   result;
 }
 
+fun string_contains(haystack, needle) {
+  if (string_length(needle) > string_length(haystack)) {
+    return false;
+  }
+
+  // TODO: better parse error if this last parenthesis is missing.
+  // dbg(string_length(haystack) - string_length(needle));
+
+  let i = 0;
+  while (i < (string_length(haystack) - string_length(needle))) {
+    let section = string_substring(haystack, i, i + string_length(needle));
+    if (section == needle) {
+      return true;
+    }
+
+    i = i + 1;
+  }
+
+  false;
+}
+
 fun in_git_repo() {
   let git_dir_path = string_concat(working_directory(), "/.git");
   path_exists(git_dir_path);

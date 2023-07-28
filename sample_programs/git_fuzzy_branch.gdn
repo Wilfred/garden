@@ -69,12 +69,17 @@ fun in_git_repo() {
 }
 
 fun main(args) {
-  dbg(args);
+  if (list_length(args) != 1) {
+    print("Usage: git_fuzzy_branch <name substring>");
+    // TODO: support void values.
+    return false;
+  }
+  let needle = list_get(args, 0);
 
   if (in_git_repo()) {
-    list_filter([1, 2, 3, 4], fun(x) { x > 2; });
-
-    dbg(lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"])));
+    let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
+    let branches = list_filter(all_branches, fun(name) { string_contains(name, needle); });
+    dbg(branches);
   } else {
     print("Not in a git repository.");
   }

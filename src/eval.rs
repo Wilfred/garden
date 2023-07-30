@@ -287,8 +287,10 @@ impl Default for Bindings {
 
 #[derive(Debug)]
 pub struct StackFrame {
-    // TODO: use Variable in here so we have the function position.
-    pub fun_name: Option<VariableName>,
+    // TODO: arguably this should be the call position, and the name
+    // isn't relevant. The containing name of the call site is more
+    // interesting.
+    pub fun_name: Option<Variable>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -621,9 +623,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), Err
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame
-        .bindings
-        .add_new(var_name, expr_value.1.clone());
+    stack_frame.bindings.add_new(var_name, expr_value.1.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }
@@ -1338,7 +1338,10 @@ fn eval_call(
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
 
             return Ok(Some(StackFrame {
-                fun_name: Some(VariableName("(closure)".to_string())),
+                fun_name: Some(Variable(
+                    receiver_value.0.clone(),
+                    VariableName("(closure)".to_string()),
+                )),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
                 // TODO: find a better position for the void value,
@@ -1363,7 +1366,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
-                fun_name: Some(name.1.clone()),
+                fun_name: Some(name.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],

@@ -399,17 +399,12 @@ fn command_help(command: Command) -> &'static str {
 
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.iter().rev().enumerate() {
-        write!(
-            buf,
-            "{}In {}",
-            if i == 0 { "" } else { "\n" },
-            stack_frame
-                .fun_name
-                .clone()
-                .unwrap_or(VariableName("toplevel".into()))
-                .0
-        )
-        .unwrap();
+        let name = match &stack_frame.fun_name {
+            Some(v) => v.1.0.clone(),
+            None => "toplevel".to_owned(),
+        };
+
+        write!(buf, "{}In {}", if i == 0 { "" } else { "\n" }, name).unwrap();
     }
 }
 

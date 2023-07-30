@@ -112,6 +112,12 @@ fn run_file(
                         // `__main_fun__` pseudofile, this shows the
                         // wrong position.
                         eprintln!("{}", &format_error(&e, &position, &src));
+
+                        for stack_frame in env.stack.iter().rev() {
+                            if let Some(var) = &stack_frame.call_site {
+                                eprintln!("{}", &format_error("Called here", &var.0, &src));
+                            }
+                        }
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");

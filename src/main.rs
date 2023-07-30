@@ -113,8 +113,10 @@ fn run_file(
                         // wrong position.
                         eprintln!("{}", &format_error(&e, &position, &src));
 
-                        for stack_frame in env.stack.iter().rev() {
+                        for stack_frame in env.stack.iter().skip(2).rev() {
                             if let Some(var) = &stack_frame.call_site {
+                                // TODO: this assumes that all
+                                // positions are in the same file.
                                 eprintln!("{}", &format_error("Called here", &var.0, &src));
                             }
                         }

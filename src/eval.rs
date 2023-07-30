@@ -1339,7 +1339,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 call_site: Some(Variable(
-                    receiver_value.0.clone(),
+                    position.clone(),
                     VariableName("(closure)".to_string()),
                 )),
                 bindings: Bindings(bindings),
@@ -1366,7 +1366,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
-                call_site: Some(name.clone()),
+                call_site: Some(Variable(receiver_value.0.clone(), name.1.clone())),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],

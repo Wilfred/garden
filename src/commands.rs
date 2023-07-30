@@ -403,7 +403,11 @@ pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
             buf,
             "{}In {}",
             if i == 0 { "" } else { "\n" },
-            stack_frame.fun_name.0
+            stack_frame
+                .fun_name
+                .clone()
+                .unwrap_or(VariableName("toplevel".into()))
+                .0
         )
         .unwrap();
     }

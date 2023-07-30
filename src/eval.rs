@@ -288,7 +288,7 @@ impl Default for Bindings {
 #[derive(Debug)]
 pub struct StackFrame {
     // TODO: use Variable in here so we have the function position.
-    pub fun_name: VariableName,
+    pub fun_name: Option<VariableName>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -328,7 +328,7 @@ impl Default for Env {
             trace_exprs: false,
             file_scope,
             stack: vec![StackFrame {
-                fun_name: VariableName("toplevel".into()),
+                fun_name: None,
                 bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
@@ -1338,7 +1338,7 @@ fn eval_call(
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
 
             return Ok(Some(StackFrame {
-                fun_name: VariableName("(closure)".to_string()),
+                fun_name: Some(VariableName("(closure)".to_string())),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
                 // TODO: find a better position for the void value,
@@ -1363,7 +1363,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
-                fun_name: name.1.clone(),
+                fun_name: Some(name.1.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],

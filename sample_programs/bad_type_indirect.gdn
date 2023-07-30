@@ -1,0 +1,14 @@
+// TODO: Loading these one-by-one into REPL stops us getting positions
+fun g(b) {
+  if (b) {}
+}
+
+fun f(x) {
+  g(x);
+}
+
+fun call_g() { g("a string"); }
+
+fun main(args) {
+  f("not bool");
+}

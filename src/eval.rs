@@ -290,7 +290,7 @@ pub struct StackFrame {
     // TODO: arguably this should be the call position, and the name
     // isn't relevant. The containing name of the call site is more
     // interesting.
-    pub fun_name: Option<Variable>,
+    pub call_site: Option<Variable>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -330,7 +330,7 @@ impl Default for Env {
             trace_exprs: false,
             file_scope,
             stack: vec![StackFrame {
-                fun_name: None,
+                call_site: None,
                 bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
@@ -1338,7 +1338,7 @@ fn eval_call(
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
 
             return Ok(Some(StackFrame {
-                fun_name: Some(Variable(
+                call_site: Some(Variable(
                     receiver_value.0.clone(),
                     VariableName("(closure)".to_string()),
                 )),
@@ -1366,7 +1366,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
-                fun_name: Some(name.clone()),
+                call_site: Some(name.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],

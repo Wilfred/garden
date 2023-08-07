@@ -197,6 +197,7 @@ dependencies = [
  "clap",
  "ctrlc",
  "lazy_static",
+ "line-numbers",
  "ordered-float",
  "owo-colors",
  "regex",
@@ -285,6 +286,12 @@ name = "libc"
 version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
+
+[[package]]
+name = "line-numbers"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "890202d11a410e356d59dec0614c5287bc7f1c41575291514598e05bda548672"
 
 [[package]]
 name = "linux-raw-sys"

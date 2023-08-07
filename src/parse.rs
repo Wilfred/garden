@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 use ariadne::{Label, Report, ReportKind, Source};
 use lazy_static::lazy_static;
+use line_numbers::LinePositions;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +15,23 @@ pub struct Position {
     pub end_offset: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
+}
+
+pub fn simple_format_pos(position: &Position, src: &str) -> String {
+    let line_positions = LinePositions::from(src);
+    let line_num = line_positions.from_offset(position.offset);
+
+    let mut res = String::new();
+    res.push_str(&format!(
+        "--> {}:{}\n",
+        position.path.display(),
+        line_num.display()
+    ));
+
+    let s_lines: Vec<_> = src.lines().collect();
+    res.push_str(s_lines[line_num.as_usize()]);
+
+    res
 }
 
 pub fn format_error(message: &str, position: &Position, src: &str) -> String {

@@ -19,7 +19,7 @@ use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
 use crate::eval::escape_string_literal;
-use crate::parse::format_error;
+use crate::parse::{format_error, simple_format_pos};
 
 #[derive(Debug, Parser)]
 #[command(author, version, name="Garden", about = "A programming language for growing programs", long_about = None)]
@@ -107,17 +107,19 @@ fn run_file(
                     parse_def_or_expr_from_str(&PathBuf::from("__main_fun__"), &call_src).unwrap();
                 match eval_def_or_exprs(&call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
-                    Err(EvalError::ResumableError(position, e)) => {
+                    Err(EvalError::ResumableError(position, msg)) => {
                         // TODO: if the error was in the
                         // `__main_fun__` pseudofile, this shows the
                         // wrong position.
-                        eprintln!("{}", &format_error(&e, &position, &src));
+                        eprintln!("Error: {}\n", msg);
 
-                        for stack_frame in env.stack.iter().skip(2).rev() {
+                        eprintln!("{}", &simple_format_pos(&position, &src));
+
+                        for stack_frame in env.stack.iter().rev() {
                             if let Some(var) = &stack_frame.call_site {
                                 // TODO: this assumes that all
                                 // positions are in the same file.
-                                eprintln!("{}", &format_error("Called here", &var.0, &src));
+                                eprintln!("{}", &simple_format_pos(&var.0, &src));
                             }
                         }
                     }

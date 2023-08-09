@@ -436,7 +436,7 @@ pub fn eval_def_or_exprs(
             )))
         }
         DefinitionsOrExpression::Expr(e) => {
-            let exprs = vec![e.clone()];
+            let exprs = vec![e.1.clone()];
             let value = eval_exprs(&exprs, env, session)?;
             Ok(ToplevelEvalResult::Value(value))
         }

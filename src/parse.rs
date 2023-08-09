@@ -101,6 +101,9 @@ pub enum Expression_ {
 pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ToplevelExpression(pub String, pub Expression);
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct FunInfo {
     pub doc_comment: Option<String>,
     pub name: Variable,
@@ -119,7 +122,7 @@ pub struct Definition(pub String, pub Position, pub Definition_);
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionsOrExpression {
     Defs(Vec<Definition>),
-    Expr(Expression),
+    Expr(ToplevelExpression),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -789,14 +792,20 @@ fn parse_def_or_expr(
     let mut tokens_copy = tokens.clone();
     if let Ok(expr) = parse_block_member_expression(&mut tokens_copy) {
         if tokens_copy.is_empty() {
-            return Ok(DefinitionsOrExpression::Expr(expr));
+            let pos = &expr.0;
+            let toplevel_expr =
+                ToplevelExpression(src[pos.offset..pos.end_offset].to_owned(), expr);
+            return Ok(DefinitionsOrExpression::Expr(toplevel_expr));
         }
     }
 
     let mut tokens_copy = tokens.clone();
     if let Ok(expr) = parse_inline_expression(&mut tokens_copy) {
         if tokens_copy.is_empty() {
-            return Ok(DefinitionsOrExpression::Expr(expr));
+            let pos = &expr.0;
+            let toplevel_expr =
+                ToplevelExpression(src[pos.offset..pos.end_offset].to_owned(), expr);
+            return Ok(DefinitionsOrExpression::Expr(toplevel_expr));
         }
     }
 
@@ -1432,29 +1441,33 @@ mod tests {
 
         assert_eq!(
             ast,
-            Expression(
-                Position {
-                    offset: 0,
-                    end_offset: 3,
-                    path: PathBuf::from("__test.gdn")
-                },
-                Expression_::Let(
-                    Variable(
-                        Position {
-                            offset: 4,
-                            end_offset: 5,
-                            path: PathBuf::from("__test.gdn")
-                        },
-                        VariableName("x".into())
-                    ),
-                    Box::new(Expression(
-                        Position {
-                            offset: 8,
-                            end_offset: 9,
-                            path: PathBuf::from("__test.gdn")
-                        },
-                        Expression_::IntLiteral(1)
-                    ))
+            ToplevelExpression(
+                // TODO: this is wrong, it should be the whole expression
+                "let".into(),
+                Expression(
+                    Position {
+                        offset: 0,
+                        end_offset: 3,
+                        path: PathBuf::from("__test.gdn")
+                    },
+                    Expression_::Let(
+                        Variable(
+                            Position {
+                                offset: 4,
+                                end_offset: 5,
+                                path: PathBuf::from("__test.gdn")
+                            },
+                            VariableName("x".into())
+                        ),
+                        Box::new(Expression(
+                            Position {
+                                offset: 8,
+                                end_offset: 9,
+                                path: PathBuf::from("__test.gdn")
+                            },
+                            Expression_::IntLiteral(1)
+                        ))
+                    )
                 )
             )
         );

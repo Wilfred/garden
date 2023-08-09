@@ -108,7 +108,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                             .stack
                             .last_mut()
                             .expect("Should always have the toplevel stack frame");
-                        stack_frame.exprs_to_eval.push((false, expr));
+                        stack_frame.exprs_to_eval.push((false, expr.1));
                     }
                 }
             }

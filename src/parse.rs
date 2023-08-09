@@ -114,7 +114,7 @@ pub enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Definition(pub Position, pub Definition_);
+pub struct Definition(pub String, pub Position, pub Definition_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionsOrExpression {
@@ -592,10 +592,14 @@ fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Express
     Ok(expr)
 }
 
-fn parse_definition(path: &Path, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_definition(
+    path: &Path,
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
-            return parse_function(tokens);
+            return parse_function(src, tokens);
         }
 
         // TODO: Include the token in the error message.
@@ -692,7 +696,7 @@ fn join_comments(comments: &[&str]) -> String {
     comment_texts.join("")
 }
 
-fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
     let mut doc_comment = None;
     if !fun_token.preceding_comments.is_empty() {
@@ -704,6 +708,7 @@ fn parse_function(tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let body = parse_block(tokens)?;
 
     Ok(Definition(
+        src.to_owned(),
         fun_token.position,
         Definition_::Fun(FunInfo {
             doc_comment,
@@ -776,6 +781,7 @@ fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 
 fn parse_def_or_expr(
     path: &PathBuf,
+    src: &str,
     tokens: &mut &[Token<'_>],
 ) -> Result<DefinitionsOrExpression, ParseError> {
     // Parsing advances the tokens pointer, so create a copy for
@@ -796,7 +802,7 @@ fn parse_def_or_expr(
 
     let mut defs = vec![];
     while !tokens.is_empty() {
-        defs.push(parse_definition(path, tokens)?);
+        defs.push(parse_definition(path, src, tokens)?);
     }
 
     Ok(DefinitionsOrExpression::Defs(defs))
@@ -808,7 +814,7 @@ pub fn parse_def_or_expr_from_str(
 ) -> Result<DefinitionsOrExpression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
-    parse_def_or_expr(path, &mut token_ptr)
+    parse_def_or_expr(path, s, &mut token_ptr)
 }
 
 pub fn parse_def_or_expr_from_span(
@@ -819,7 +825,7 @@ pub fn parse_def_or_expr_from_span(
 ) -> Result<DefinitionsOrExpression, ParseError> {
     let tokens = lex_between(path, s, offset, end_offset)?;
     let mut token_ptr = &tokens[..];
-    parse_def_or_expr(path, &mut token_ptr)
+    parse_def_or_expr(path, s, &mut token_ptr)
 }
 
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
@@ -1376,12 +1382,8 @@ mod tests {
 
     #[test]
     fn test_parse_function() {
-        let ast = match parse_def_or_expr_from_str(
-            &PathBuf::from("__test.gdn"),
-            "// Hello\n// World\nfun foo() {}",
-        )
-        .unwrap()
-        {
+        let src = "// Hello\n// World\nfun foo() {}";
+        let ast = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), src).unwrap() {
             DefinitionsOrExpression::Defs(defs) => defs,
             DefinitionsOrExpression::Expr(_) => unreachable!(),
         };
@@ -1389,6 +1391,7 @@ mod tests {
         assert_eq!(
             ast,
             vec![Definition(
+                src.to_owned(),
                 Position {
                     offset: 18,
                     end_offset: 21,

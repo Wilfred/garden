@@ -4,16 +4,15 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
+use crate::ast;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError,
 };
 use crate::eval::{self, eval_defs, eval_env, Session};
 use crate::eval::{ErrorKind, EvalError};
-use crate::parse::{
-    format_error, parse_def_or_expr_from_str, DefinitionsOrExpression, Expression, Expression_,
-    ParseError,
-};
+use crate::parse::{format_error, parse_def_or_expr_from_str, ParseError};
 use crate::{eval::Env, prompt::prompt_symbol};
+
 use owo_colors::OwoColorize;
 use rustyline::Editor;
 
@@ -27,7 +26,7 @@ fn read_expr(
     session: &mut Session,
     rl: &mut Editor<()>,
     is_stopped: bool,
-) -> Result<(String, DefinitionsOrExpression), ReadError> {
+) -> Result<(String, ast::DefinitionsOrExpression), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
             Ok(input) => {
@@ -99,11 +98,11 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Ok((src, items)) => {
                 last_src = src;
                 match items.clone() {
-                    DefinitionsOrExpression::Defs(defs) => {
+                    ast::DefinitionsOrExpression::Defs(defs) => {
                         eval_defs(&defs, &mut env);
                         continue;
                     }
-                    DefinitionsOrExpression::Expr(expr) => {
+                    ast::DefinitionsOrExpression::Expr(expr) => {
                         let stack_frame = env
                             .stack
                             .last_mut()
@@ -123,7 +122,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 let stack_frame = env.stack.last_mut().unwrap();
                 if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
-                    assert!(matches!(expr.1, Expression_::Stop(_)));
+                    assert!(matches!(expr.1, ast::Expression_::Stop(_)));
                 } else {
                     continue;
                 }
@@ -131,7 +130,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::CommandError(CommandError::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
-                let err_kind = if let Some((_, Expression(_, Expression_::Stop(e)))) =
+                let err_kind = if let Some((_, ast::Expression(_, ast::Expression_::Stop(e)))) =
                     stack_frame.exprs_to_eval.last()
                 {
                     *e
@@ -233,13 +232,13 @@ fn print_repl_header() {
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
-) -> Result<(String, DefinitionsOrExpression), ParseError> {
+) -> Result<(String, ast::DefinitionsOrExpression), ParseError> {
     let mut src = first_line.to_string();
 
     loop {
         match parse_def_or_expr_from_str(&PathBuf::from("__interactive_session__"), &src) {
             Ok(items) => match items {
-                DefinitionsOrExpression::Defs(ref defs)
+                ast::DefinitionsOrExpression::Defs(ref defs)
                     if defs.is_empty() && !src.trim().is_empty() =>
                 {
                     // If we didn't parse anything, but the text isn't

@@ -4,13 +4,11 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+use crate::ast;
 use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
-    parse::{
-        parse_def_or_expr_from_str, parse_inline_expr_from_str, Expression, FunInfo, ParseError,
-        VariableName,
-    },
+    parse::{parse_def_or_expr_from_str, parse_inline_expr_from_str, ParseError},
 };
 
 #[derive(Debug, EnumIter)]
@@ -23,7 +21,7 @@ pub enum Command {
     FrameValues,
     FrameStatements,
     Parse(Option<String>),
-    Replace(Option<Expression>),
+    Replace(Option<ast::Expression>),
     Resume,
     Skip,
     Search(Option<String>),
@@ -148,7 +146,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
 #[derive(Debug)]
 pub enum CommandError {
-    Replace(Expression),
+    Replace(ast::Expression),
     Resume,
     Abort,
     Skip,
@@ -156,7 +154,7 @@ pub enum CommandError {
 
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
-        Value::Fun(FunInfo {
+        Value::Fun(ast::FunInfo {
             doc_comment,
             name,
             params,
@@ -220,7 +218,7 @@ pub fn run_command<T: Write>(
         }
         Command::Doc(name) => {
             if let Some(name) = name {
-                if let Some(value) = env.file_scope.get(&VariableName(name.to_string())) {
+                if let Some(value) = env.file_scope.get(&ast::VariableName(name.to_string())) {
                     match describe_fun(value) {
                         Some(description) => write!(buf, "{}", description),
                         None => write!(buf, "`{}` is not a function.", name),
@@ -282,7 +280,7 @@ pub fn run_command<T: Write>(
             .unwrap();
         }
         Command::Functions => {
-            let mut names_and_vals: Vec<(VariableName, Value)> = env
+            let mut names_and_vals: Vec<(ast::VariableName, Value)> = env
                 .file_scope
                 .iter()
                 .map(|(k, v)| (k.clone(), v.clone()))

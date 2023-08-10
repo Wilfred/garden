@@ -7,8 +7,9 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::ast;
 use crate::eval::{eval_env, ToplevelEvalResult};
-use crate::parse::{format_error, parse_def_or_expr_from_span, Expression_, ParseError, Position};
+use crate::parse::{format_error, parse_def_or_expr_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
@@ -43,7 +44,7 @@ pub enum ResponseKind {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ResponseError {
-    position: Option<Position>,
+    position: Option<ast::Position>,
     message: String,
     stack: Option<String>,
 }
@@ -165,7 +166,7 @@ fn handle_request(
                     Err(CommandError::Resume) => {
                         let stack_frame = env.stack.last_mut().unwrap();
                         if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
-                            assert!(matches!(expr.1, Expression_::Stop(_)));
+                            assert!(matches!(expr.1, ast::Expression_::Stop(_)));
 
                             match eval_env(env, session) {
                                 Ok(result) => Response {

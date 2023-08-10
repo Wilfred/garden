@@ -2,6 +2,7 @@
 // TODO: File an issue.
 #![allow(suspicious_double_ref_op)]
 
+mod ast;
 mod colors;
 mod commands;
 mod eval;

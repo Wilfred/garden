@@ -11,11 +11,11 @@ use strsim::normalized_levenshtein;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, Block, FunInfo, Position, Variable};
-use crate::parse::{
+use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, Variable};
+use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
+use crate::json_session::{Response, ResponseKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -1829,7 +1829,8 @@ pub fn eval_exprs(
 mod tests {
     use std::path::PathBuf;
 
-    use crate::parse::{parse_def_or_expr_from_str, parse_exprs_from_str, Position};
+    use crate::ast::Position;
+    use crate::parse::{parse_def_or_expr_from_str, parse_exprs_from_str};
 
     use super::*;
 

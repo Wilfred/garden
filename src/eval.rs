@@ -12,7 +12,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::json_session::{Response, ResponseKind};
-use crate::parse::{BinaryOperatorKind, FunInfo, Position, Variable};
+use crate::parse::{BinaryOperatorKind, Block, FunInfo, Position, Variable};
 use crate::parse::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
@@ -26,7 +26,7 @@ pub enum Value {
     /// A reference to a user-defined function.
     Fun(FunInfo),
     /// A closure value.
-    Closure(Vec<BlockBindings>, Vec<Variable>, Vec<Expression>),
+    Closure(Vec<BlockBindings>, Vec<Variable>, Block),
     /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind),
     /// A string value.
@@ -506,8 +506,8 @@ fn eval_if(
     stack_frame: &mut StackFrame,
     position: &Position,
     bool_position: &Position,
-    then_body: &[Expression],
-    else_body: &[Expression],
+    then_body: &Block,
+    else_body: Option<&Block>,
 ) -> Result<(), ErrorInfo> {
     let condition_value = stack_frame
         .evalled_values
@@ -519,13 +519,22 @@ fn eval_if(
             if *b {
                 stack_frame.exprs_to_eval.push((
                     false,
-                    Expression(position.clone(), Expression_::Block(then_body.into())),
+                    Expression(position.clone(), Expression_::Block(then_body.clone())),
                 ));
             } else {
-                stack_frame.exprs_to_eval.push((
-                    false,
-                    Expression(position.clone(), Expression_::Block(else_body.into())),
-                ));
+                match else_body {
+                    Some(else_body) => {
+                        stack_frame.exprs_to_eval.push((
+                            false,
+                            Expression(position.clone(), Expression_::Block(else_body.clone())),
+                        ));
+                    }
+                    None => {
+                        stack_frame
+                            .evalled_values
+                            .push((position.clone(), Value::Void));
+                    }
+                }
             }
         }
         v => {
@@ -544,7 +553,7 @@ fn eval_while(
     stack_frame: &mut StackFrame,
     condition_pos: &Position,
     expr: Expression,
-    body: &[Expression],
+    body: &Block,
 ) -> Result<(), ErrorInfo> {
     let condition_value = stack_frame
         .evalled_values
@@ -560,7 +569,7 @@ fn eval_while(
                 // Evaluate the body.
                 stack_frame
                     .exprs_to_eval
-                    .push((false, Expression(expr.0, Expression_::Block(body.into()))))
+                    .push((false, Expression(expr.0, Expression_::Block(body.clone()))))
             } else {
                 // TODO: It's weird using the position of the
                 // condition when there's no else.
@@ -1326,7 +1335,7 @@ fn eval_call(
             }
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
-            for expr in body.iter().rev() {
+            for expr in body.exprs.iter().rev() {
                 fun_subexprs.push((false, expr.clone()));
             }
 
@@ -1356,7 +1365,7 @@ fn eval_call(
             check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
-            for expr in body.iter().rev() {
+            for expr in body.exprs.iter().rev() {
                 fun_subexprs.push((false, expr.clone()));
             }
 
@@ -1433,7 +1442,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 &expr_position,
                                 &condition.0,
                                 then_body,
-                                else_body,
+                                else_body.as_ref(),
                             ) {
                                 restore_stack_frame(
                                     env,
@@ -1747,7 +1756,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *receiver.clone()));
                         }
                     }
-                    Expression_::Block(exprs) => {
+                    Expression_::Block(block) => {
                         if done_children {
                             stack_frame.exit_block();
                         } else {
@@ -1756,7 +1765,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .push((true, Expression(expr_position, expr_copy)));
 
                             stack_frame.enter_block();
-                            for expr in exprs.iter().rev() {
+                            for expr in block.exprs.iter().rev() {
                                 stack_frame.exprs_to_eval.push((false, expr.clone()));
                             }
                         }

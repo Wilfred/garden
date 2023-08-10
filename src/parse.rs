@@ -80,8 +80,8 @@ pub enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
-    If(Box<Expression>, Vec<Expression>, Vec<Expression>),
-    While(Box<Expression>, Vec<Expression>),
+    If(Box<Expression>, Block, Option<Block>),
+    While(Box<Expression>, Block),
     Assign(Variable, Box<Expression>),
     Let(Variable, Box<Expression>),
     Return(Box<Expression>),
@@ -92,13 +92,20 @@ pub enum Expression_ {
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(Variable),
     Call(Box<Expression>, Vec<Expression>),
-    Lambda(Vec<Variable>, Vec<Expression>),
+    Lambda(Vec<Variable>, Block),
     Stop(Option<ErrorKind>),
-    Block(Vec<Expression>),
+    Block(Block),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression(pub Position, pub Expression_);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Block {
+    pub open_brace: Position,
+    pub exprs: Vec<Expression>,
+    pub close_brace: Position,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ToplevelExpression(pub String, pub Expression);
@@ -108,7 +115,7 @@ pub struct FunInfo {
     pub doc_comment: Option<String>,
     pub name: Variable,
     pub params: Vec<Variable>,
-    pub body: Vec<Expression>,
+    pub body: Block,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -236,30 +243,12 @@ fn parse_lambda_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     let fun_keyword = require_token(tokens, "fun")?;
 
     let params = parse_function_params(tokens)?;
-    let body = parse_block_expressions(tokens)?;
+    let body = parse_block(tokens)?;
 
     Ok(Expression(
         fun_keyword.position,
         Expression_::Lambda(params, body),
     ))
-}
-
-fn parse_block_expressions(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
-    let mut res = vec![];
-
-    require_token(tokens, "{")?;
-
-    while !tokens.is_empty() {
-        if next_token_is(tokens, "}") {
-            break;
-        }
-
-        res.push(parse_block_member_expression(tokens)?);
-    }
-
-    require_token(tokens, "}")?;
-
-    Ok(res)
 }
 
 fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -269,18 +258,26 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseErr
     let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
-    let then_body = parse_block_expressions(tokens)?;
+    let then_body = parse_block(tokens)?;
 
-    let else_body = if next_token_is(tokens, "else") {
+    let else_body: Option<Block> = if next_token_is(tokens, "else") {
         pop_token(tokens);
 
         if next_token_is(tokens, "if") {
-            vec![parse_if_expression(tokens)?]
+            let if_expr = parse_if_expression(tokens)?;
+            Some(Block {
+                // TODO: when there is a chain of if/else if
+                // expressions, the open brace isn't meaningful. This
+                // is an ugly hack.
+                open_brace: if_expr.0.clone(),
+                close_brace: if_expr.0.clone(),
+                exprs: vec![if_expr],
+            })
         } else {
-            parse_block_expressions(tokens)?
+            Some(parse_block(tokens)?)
         }
     } else {
-        vec![]
+        None
     };
 
     Ok(Expression(
@@ -296,7 +293,7 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
     let condition = parse_inline_expression(tokens)?;
     require_token(tokens, ")")?;
 
-    let body = parse_block_expressions(tokens)?;
+    let body = parse_block(tokens)?;
 
     Ok(Expression(
         while_token.position,
@@ -663,8 +660,8 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, Par
     Ok(params)
 }
 
-fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
-    require_token(tokens, "{")?;
+fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Block, ParseError> {
+    let open_brace = require_token(tokens, "{")?;
 
     let mut exprs = vec![];
     loop {
@@ -682,8 +679,12 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError>
         exprs.push(expr);
     }
 
-    require_token(tokens, "}")?;
-    Ok(exprs)
+    let close_brace = require_token(tokens, "}")?;
+    Ok(Block {
+        open_brace: open_brace.position,
+        exprs,
+        close_brace: close_brace.position,
+    })
 }
 
 fn join_comments(comments: &[&str]) -> String {
@@ -1207,6 +1208,7 @@ mod tests {
 
     #[test]
     fn test_parse_if_else() {
+        let path = PathBuf::from("__test.gdn");
         let ast = parse_exprs_from_str("if (true) {} else {}").unwrap();
 
         assert_eq!(
@@ -1215,19 +1217,43 @@ mod tests {
                 Position {
                     offset: 0,
                     end_offset: 2,
-                    path: PathBuf::from("__test.gdn")
+                    path: path.clone()
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
                             offset: 4,
                             end_offset: 8,
-                            path: PathBuf::from("__test.gdn")
+                            path: path.clone()
                         },
                         Expression_::BoolLiteral(true)
                     )),
-                    vec![],
-                    vec![],
+                    Block {
+                        open_brace: Position {
+                            offset: 10,
+                            end_offset: 11,
+                            path: path.clone()
+                        },
+                        close_brace: Position {
+                            offset: 11,
+                            end_offset: 12,
+                            path: path.clone()
+                        },
+                        exprs: vec![]
+                    },
+                    Some(Block {
+                        open_brace: Position {
+                            offset: 18,
+                            end_offset: 19,
+                            path: path.clone()
+                        },
+                        close_brace: Position {
+                            offset: 19,
+                            end_offset: 20,
+                            path: path.clone()
+                        },
+                        exprs: vec![]
+                    }),
                 )
             )]
         );
@@ -1235,6 +1261,7 @@ mod tests {
 
     #[test]
     fn test_parse_else_if() {
+        let path = PathBuf::from("__test.gdn");
         let ast = parse_exprs_from_str("if (x) {} else if (y) {}").unwrap();
 
         assert_eq!(
@@ -1243,51 +1270,87 @@ mod tests {
                 Position {
                     offset: 0,
                     end_offset: 2,
-                    path: PathBuf::from("__test.gdn")
+                    path: path.clone()
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
                             offset: 4,
                             end_offset: 5,
-                            path: PathBuf::from("__test.gdn")
+                            path: path.clone()
                         },
                         Expression_::Variable(Variable(
                             Position {
                                 offset: 4,
                                 end_offset: 5,
-                                path: PathBuf::from("__test.gdn")
+                                path: path.clone()
                             },
                             VariableName("x".into())
                         ))
                     )),
-                    vec![],
-                    vec![Expression(
-                        Position {
+                    Block {
+                        open_brace: Position {
+                            offset: 7,
+                            end_offset: 8,
+                            path: path.clone()
+                        },
+                        close_brace: Position {
+                            offset: 8,
+                            end_offset: 9,
+                            path: path.clone()
+                        },
+                        exprs: vec![]
+                    },
+                    Some(Block {
+                        open_brace: Position {
                             offset: 15,
                             end_offset: 17,
-                            path: PathBuf::from("__test.gdn")
+                            path: path.clone()
                         },
-                        Expression_::If(
-                            Box::new(Expression(
-                                Position {
-                                    offset: 19,
-                                    end_offset: 20,
-                                    path: PathBuf::from("__test.gdn")
-                                },
-                                Expression_::Variable(Variable(
+                        close_brace: Position {
+                            offset: 15,
+                            end_offset: 17,
+                            path: path.clone()
+                        },
+                        exprs: vec![Expression(
+                            Position {
+                                offset: 15,
+                                end_offset: 17,
+                                path: path.clone()
+                            },
+                            Expression_::If(
+                                Box::new(Expression(
                                     Position {
                                         offset: 19,
                                         end_offset: 20,
-                                        path: PathBuf::from("__test.gdn")
+                                        path: path.clone()
                                     },
-                                    VariableName("y".into())
-                                ))
-                            )),
-                            vec![],
-                            vec![],
-                        )
-                    )],
+                                    Expression_::Variable(Variable(
+                                        Position {
+                                            offset: 19,
+                                            end_offset: 20,
+                                            path: path.clone()
+                                        },
+                                        VariableName("y".into())
+                                    ))
+                                )),
+                                Block {
+                                    open_brace: Position {
+                                        offset: 22,
+                                        end_offset: 23,
+                                        path: path.clone()
+                                    },
+                                    close_brace: Position {
+                                        offset: 23,
+                                        end_offset: 24,
+                                        path: path.clone()
+                                    },
+                                    exprs: vec![]
+                                },
+                                None,
+                            )
+                        )]
+                    }),
                 )
             )]
         );
@@ -1295,6 +1358,7 @@ mod tests {
 
     #[test]
     fn test_parse_if() {
+        let path = PathBuf::from("__test.gdn");
         let ast = parse_exprs_from_str("if (true) {}").unwrap();
 
         assert_eq!(
@@ -1303,19 +1367,31 @@ mod tests {
                 Position {
                     offset: 0,
                     end_offset: 2,
-                    path: PathBuf::from("__test.gdn")
+                    path: path.clone()
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
                             offset: 4,
                             end_offset: 8,
-                            path: PathBuf::from("__test.gdn")
+                            path: path.clone()
                         },
                         Expression_::BoolLiteral(true)
                     )),
-                    vec![],
-                    vec![],
+                    Block {
+                        open_brace: Position {
+                            offset: 10,
+                            end_offset: 11,
+                            path: path.clone()
+                        },
+                        close_brace: Position {
+                            offset: 11,
+                            end_offset: 12,
+                            path: path.clone()
+                        },
+                        exprs: vec![]
+                    },
+                    None,
                 )
             )]
         );
@@ -1391,8 +1467,9 @@ mod tests {
 
     #[test]
     fn test_parse_function() {
+        let path = PathBuf::from("__test.gdn");
         let src = "// Hello\n// World\nfun foo() {}";
-        let ast = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), src).unwrap() {
+        let ast = match parse_def_or_expr_from_str(&path, src).unwrap() {
             DefinitionsOrExpression::Defs(defs) => defs,
             DefinitionsOrExpression::Expr(_) => unreachable!(),
         };
@@ -1404,7 +1481,7 @@ mod tests {
                 Position {
                     offset: 18,
                     end_offset: 21,
-                    path: PathBuf::from("__test.gdn")
+                    path: path.clone()
                 },
                 Definition_::Fun(FunInfo {
                     doc_comment: Some("Hello\nWorld".into()),
@@ -1412,12 +1489,24 @@ mod tests {
                         Position {
                             offset: 22,
                             end_offset: 25,
-                            path: PathBuf::from("__test.gdn"),
+                            path: path.clone(),
                         },
                         VariableName("foo".into())
                     ),
                     params: vec![],
-                    body: vec![]
+                    body: Block {
+                        open_brace: Position {
+                            offset: 28,
+                            end_offset: 29,
+                            path: path.clone()
+                        },
+                        close_brace: Position {
+                            offset: 29,
+                            end_offset: 30,
+                            path: path.clone()
+                        },
+                        exprs: vec![]
+                    },
                 })
             )]
         );

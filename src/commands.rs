@@ -400,7 +400,7 @@ fn command_help(command: Command) -> &'static str {
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.iter().rev().enumerate() {
         let name = match &stack_frame.call_site {
-            Some(v) => v.1.0.clone(),
+            Some(v) => v.1 .0.clone(),
             None => "toplevel".to_owned(),
         };
 

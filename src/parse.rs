@@ -636,11 +636,18 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     }
 
     let name = parse_variable_name(tokens)?;
+
     let params = parse_function_params(tokens)?;
     let body = parse_block(tokens)?;
 
+    let start_offset = fun_token.position.start_offset;
+    // if let Some(comment) = fun_token.preceding_comments.last() {
+    //     start_offset = comment;
+    // }
+    let end_offset = body.close_brace.end_offset;
+
     Ok(Definition(
-        src.to_owned(),
+        src[start_offset..end_offset].to_owned(),
         fun_token.position,
         Definition_::Fun(FunInfo {
             doc_comment,
@@ -1394,7 +1401,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_function() {
+    fn test_parse_function_with_doc_comment() {
         let path = PathBuf::from("__test.gdn");
         let src = "// Hello\n// World\nfun foo() {}";
         let ast = match parse_def_or_expr_from_str(&path, src).unwrap() {
@@ -1405,7 +1412,7 @@ mod tests {
         assert_eq!(
             ast,
             vec![Definition(
-                src.to_owned(),
+                "fun foo() {}".to_owned(),
                 Position {
                     start_offset: 18,
                     end_offset: 21,

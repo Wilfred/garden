@@ -14,6 +14,7 @@ use crate::ast::Expression;
 use crate::ast::Expression_;
 use crate::ast::FunInfo;
 use crate::ast::Position;
+use crate::ast::SourceString;
 use crate::ast::ToplevelExpression;
 use crate::ast::Variable;
 use crate::ast::VariableName;
@@ -646,8 +647,13 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     // }
     let end_offset = body.close_brace.end_offset;
 
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
     Ok(Definition(
-        src[start_offset..end_offset].to_owned(),
+        src_string,
         fun_token.position,
         Definition_::Fun(FunInfo {
             doc_comment,
@@ -1412,7 +1418,10 @@ mod tests {
         assert_eq!(
             ast,
             vec![Definition(
-                "fun foo() {}".to_owned(),
+                SourceString {
+                    offset: 18,
+                    src: "fun foo() {}".to_owned()
+                },
                 Position {
                     start_offset: 18,
                     end_offset: 21,

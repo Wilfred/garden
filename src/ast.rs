@@ -15,6 +15,16 @@ pub struct Position {
     pub path: PathBuf,
 }
 
+/// An owned string of the source text associated with a definition.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SourceString {
+    /// The offset of this string into the defining file, at the time
+    /// of evaluation.
+    pub offset: usize,
+    /// The string containing this definition.
+    pub src: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct VariableName(pub String);
 
@@ -81,7 +91,7 @@ pub enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Definition(pub String, pub Position, pub Definition_);
+pub struct Definition(pub SourceString, pub Position, pub Definition_);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DefinitionsOrExpression {

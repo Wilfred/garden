@@ -336,7 +336,7 @@ impl Default for Env {
                 evalled_values: vec![(
                     Position {
                         // TODO: do these values make sense?
-                        offset: 0,
+                        start_offset: 0,
                         end_offset: 0,
                         path: PathBuf::from("__toplevel__"),
                     },
@@ -1848,7 +1848,7 @@ mod tests {
     fn test_eval_bool_literal() {
         let exprs = vec![Expression(
             Position {
-                offset: 0,
+                start_offset: 0,
                 end_offset: 4,
                 path: PathBuf::from("__test.gdn"),
             },
@@ -1875,14 +1875,14 @@ mod tests {
 
         let exprs = vec![Expression(
             Position {
-                offset: 0,
+                start_offset: 0,
                 end_offset: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
                 Variable(
                     Position {
-                        offset: 0,
+                        start_offset: 0,
                         end_offset: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
@@ -1890,7 +1890,7 @@ mod tests {
                 ),
                 Box::new(Expression(
                     Position {
-                        offset: 0,
+                        start_offset: 0,
                         end_offset: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
@@ -1902,13 +1902,13 @@ mod tests {
 
         let exprs = vec![Expression(
             Position {
-                offset: 0,
+                start_offset: 0,
                 end_offset: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Variable(Variable(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 0,
                     path: PathBuf::from("__test.gdn"),
                 },

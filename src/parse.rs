@@ -11,7 +11,7 @@ use crate::eval::ErrorKind;
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
-    pub offset: usize,
+    pub start_offset: usize,
     pub end_offset: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
@@ -19,7 +19,7 @@ pub struct Position {
 
 pub fn simple_format_pos(position: &Position, src: &str) -> String {
     let line_positions = LinePositions::from(src);
-    let line_num = line_positions.from_offset(position.offset);
+    let line_num = line_positions.from_offset(position.start_offset);
 
     let mut res = String::new();
     res.push_str(&format!(
@@ -38,9 +38,10 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
     let mut res = Vec::new();
 
     let path_str = position.path.display().to_string();
-    let r = Report::build(ReportKind::Error, &path_str, position.offset)
+    let r = Report::build(ReportKind::Error, &path_str, position.start_offset)
         .with_label(
-            Label::new((&path_str, position.offset..position.end_offset)).with_message(message),
+            Label::new((&path_str, position.start_offset..position.end_offset))
+                .with_message(message),
         )
         .finish();
 
@@ -402,7 +403,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
             position: token.position.clone(),
             message: format!(
                 "Expected an expression, got: {} (offset {})",
-                token.text, token.position.offset
+                token.text, token.position.start_offset
             ),
             additional: vec![],
         });
@@ -613,7 +614,7 @@ fn parse_definition(
     // TODO: return a more meaningful position (e.g. EOF)
     Err(ParseError::Invalid {
         position: Position {
-            offset: 0,
+            start_offset: 0,
             end_offset: 0,
             path: path.into(),
         },
@@ -795,7 +796,7 @@ fn parse_def_or_expr(
         if tokens_copy.is_empty() {
             let pos = &expr.0;
             let toplevel_expr =
-                ToplevelExpression(src[pos.offset..pos.end_offset].to_owned(), expr);
+                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
             return Ok(DefinitionsOrExpression::Expr(toplevel_expr));
         }
     }
@@ -805,7 +806,7 @@ fn parse_def_or_expr(
         if tokens_copy.is_empty() {
             let pos = &expr.0;
             let toplevel_expr =
-                ToplevelExpression(src[pos.offset..pos.end_offset].to_owned(), expr);
+                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
             return Ok(DefinitionsOrExpression::Expr(toplevel_expr));
         }
     }
@@ -897,7 +898,7 @@ fn lex_between<'a>(
             if s.starts_with(token_str) {
                 res.push(Token {
                     position: Position {
-                        offset,
+                        start_offset: offset,
                         end_offset: offset + token_str.len(),
                         path: path.to_path_buf(),
                     },
@@ -916,7 +917,7 @@ fn lex_between<'a>(
         if let Some(integer_match) = INTEGER_RE.find(s) {
             res.push(Token {
                 position: Position {
-                    offset,
+                    start_offset: offset,
                     end_offset: offset + integer_match.end(),
                     path: path.to_path_buf(),
                 },
@@ -935,7 +936,7 @@ fn lex_between<'a>(
             if s.starts_with(token_char) {
                 res.push(Token {
                     position: Position {
-                        offset,
+                        start_offset: offset,
                         end_offset: offset + 1,
                         path: path.to_path_buf(),
                     },
@@ -951,7 +952,7 @@ fn lex_between<'a>(
         if let Some(string_match) = STRING_RE.find(s) {
             res.push(Token {
                 position: Position {
-                    offset,
+                    start_offset: offset,
                     end_offset: offset + string_match.end(),
                     path: path.to_path_buf(),
                 },
@@ -964,7 +965,7 @@ fn lex_between<'a>(
         } else if let Some(variable_match) = VARIABLE_RE.find(s) {
             res.push(Token {
                 position: Position {
-                    offset,
+                    start_offset: offset,
                     end_offset: offset + variable_match.end(),
                     path: path.to_path_buf(),
                 },
@@ -982,7 +983,7 @@ fn lex_between<'a>(
     if offset != end_offset {
         return Err(ParseError::Invalid {
             position: Position {
-                offset,
+                start_offset: offset,
                 end_offset: s.len(),
                 path: path.to_path_buf(),
             },
@@ -1021,7 +1022,7 @@ mod tests {
             lex(&PathBuf::from("__test.gdn"), "1").unwrap(),
             vec![Token {
                 position: Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 1,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1037,7 +1038,7 @@ mod tests {
             lex(&PathBuf::from("__test.gdn"), " a").unwrap(),
             vec![Token {
                 position: Position {
-                    offset: 1,
+                    start_offset: 1,
                     end_offset: 2,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1079,7 +1080,7 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 4,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1096,7 +1097,7 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 4,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1113,7 +1114,7 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 12,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1128,7 +1129,7 @@ mod tests {
             lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap(),
             vec![Token {
                 position: Position {
-                    offset: 5,
+                    start_offset: 5,
                     end_offset: 6,
                     path: PathBuf::from("__test.gdn")
                 },
@@ -1156,13 +1157,13 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 7,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Variable(Variable(
                     Position {
-                        offset: 0,
+                        start_offset: 0,
                         end_offset: 7,
                         path: PathBuf::from("__test.gdn")
                     },
@@ -1180,14 +1181,14 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 3,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
                     Variable(
                         Position {
-                            offset: 4,
+                            start_offset: 4,
                             end_offset: 5,
                             path: PathBuf::from("__test.gdn")
                         },
@@ -1195,7 +1196,7 @@ mod tests {
                     ),
                     Box::new(Expression(
                         Position {
-                            offset: 8,
+                            start_offset: 8,
                             end_offset: 9,
                             path: PathBuf::from("__test.gdn")
                         },
@@ -1215,14 +1216,14 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 2,
                     path: path.clone()
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
-                            offset: 4,
+                            start_offset: 4,
                             end_offset: 8,
                             path: path.clone()
                         },
@@ -1230,12 +1231,12 @@ mod tests {
                     )),
                     Block {
                         open_brace: Position {
-                            offset: 10,
+                            start_offset: 10,
                             end_offset: 11,
                             path: path.clone()
                         },
                         close_brace: Position {
-                            offset: 11,
+                            start_offset: 11,
                             end_offset: 12,
                             path: path.clone()
                         },
@@ -1243,12 +1244,12 @@ mod tests {
                     },
                     Some(Block {
                         open_brace: Position {
-                            offset: 18,
+                            start_offset: 18,
                             end_offset: 19,
                             path: path.clone()
                         },
                         close_brace: Position {
-                            offset: 19,
+                            start_offset: 19,
                             end_offset: 20,
                             path: path.clone()
                         },
@@ -1268,20 +1269,20 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 2,
                     path: path.clone()
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
-                            offset: 4,
+                            start_offset: 4,
                             end_offset: 5,
                             path: path.clone()
                         },
                         Expression_::Variable(Variable(
                             Position {
-                                offset: 4,
+                                start_offset: 4,
                                 end_offset: 5,
                                 path: path.clone()
                             },
@@ -1290,12 +1291,12 @@ mod tests {
                     )),
                     Block {
                         open_brace: Position {
-                            offset: 7,
+                            start_offset: 7,
                             end_offset: 8,
                             path: path.clone()
                         },
                         close_brace: Position {
-                            offset: 8,
+                            start_offset: 8,
                             end_offset: 9,
                             path: path.clone()
                         },
@@ -1303,31 +1304,31 @@ mod tests {
                     },
                     Some(Block {
                         open_brace: Position {
-                            offset: 15,
+                            start_offset: 15,
                             end_offset: 17,
                             path: path.clone()
                         },
                         close_brace: Position {
-                            offset: 15,
+                            start_offset: 15,
                             end_offset: 17,
                             path: path.clone()
                         },
                         exprs: vec![Expression(
                             Position {
-                                offset: 15,
+                                start_offset: 15,
                                 end_offset: 17,
                                 path: path.clone()
                             },
                             Expression_::If(
                                 Box::new(Expression(
                                     Position {
-                                        offset: 19,
+                                        start_offset: 19,
                                         end_offset: 20,
                                         path: path.clone()
                                     },
                                     Expression_::Variable(Variable(
                                         Position {
-                                            offset: 19,
+                                            start_offset: 19,
                                             end_offset: 20,
                                             path: path.clone()
                                         },
@@ -1336,12 +1337,12 @@ mod tests {
                                 )),
                                 Block {
                                     open_brace: Position {
-                                        offset: 22,
+                                        start_offset: 22,
                                         end_offset: 23,
                                         path: path.clone()
                                     },
                                     close_brace: Position {
-                                        offset: 23,
+                                        start_offset: 23,
                                         end_offset: 24,
                                         path: path.clone()
                                     },
@@ -1365,14 +1366,14 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 2,
                     path: path.clone()
                 },
                 Expression_::If(
                     Box::new(Expression(
                         Position {
-                            offset: 4,
+                            start_offset: 4,
                             end_offset: 8,
                             path: path.clone()
                         },
@@ -1380,12 +1381,12 @@ mod tests {
                     )),
                     Block {
                         open_brace: Position {
-                            offset: 10,
+                            start_offset: 10,
                             end_offset: 11,
                             path: path.clone()
                         },
                         close_brace: Position {
-                            offset: 11,
+                            start_offset: 11,
                             end_offset: 12,
                             path: path.clone()
                         },
@@ -1405,13 +1406,13 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 6,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Return(Box::new(Expression(
                     Position {
-                        offset: 7,
+                        start_offset: 7,
                         end_offset: 11,
                         path: PathBuf::from("__test.gdn")
                     },
@@ -1429,27 +1430,27 @@ mod tests {
             ast,
             vec![Expression(
                 Position {
-                    offset: 0,
+                    start_offset: 0,
                     end_offset: 3,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Call(
                     Box::new(Expression(
                         Position {
-                            offset: 0,
+                            start_offset: 0,
                             end_offset: 3,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::Call(
                             Box::new(Expression(
                                 Position {
-                                    offset: 0,
+                                    start_offset: 0,
                                     end_offset: 3,
                                     path: PathBuf::from("__test.gdn")
                                 },
                                 Expression_::Variable(Variable(
                                     Position {
-                                        offset: 0,
+                                        start_offset: 0,
                                         end_offset: 3,
                                         path: PathBuf::from("__test.gdn")
                                     },
@@ -1479,7 +1480,7 @@ mod tests {
             vec![Definition(
                 src.to_owned(),
                 Position {
-                    offset: 18,
+                    start_offset: 18,
                     end_offset: 21,
                     path: path.clone()
                 },
@@ -1487,7 +1488,7 @@ mod tests {
                     doc_comment: Some("Hello\nWorld".into()),
                     name: Variable(
                         Position {
-                            offset: 22,
+                            start_offset: 22,
                             end_offset: 25,
                             path: path.clone(),
                         },
@@ -1496,12 +1497,12 @@ mod tests {
                     params: vec![],
                     body: Block {
                         open_brace: Position {
-                            offset: 28,
+                            start_offset: 28,
                             end_offset: 29,
                             path: path.clone()
                         },
                         close_brace: Position {
-                            offset: 29,
+                            start_offset: 29,
                             end_offset: 30,
                             path: path.clone()
                         },
@@ -1535,14 +1536,14 @@ mod tests {
                 "let".into(),
                 Expression(
                     Position {
-                        offset: 0,
+                        start_offset: 0,
                         end_offset: 3,
                         path: PathBuf::from("__test.gdn")
                     },
                     Expression_::Let(
                         Variable(
                             Position {
-                                offset: 4,
+                                start_offset: 4,
                                 end_offset: 5,
                                 path: PathBuf::from("__test.gdn")
                             },
@@ -1550,7 +1551,7 @@ mod tests {
                         ),
                         Box::new(Expression(
                             Position {
-                                offset: 8,
+                                start_offset: 8,
                                 end_offset: 9,
                                 path: PathBuf::from("__test.gdn")
                             },

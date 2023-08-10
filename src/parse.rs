@@ -712,7 +712,7 @@ fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 }
 
 fn parse_def_or_expr(
-    path: &PathBuf,
+    path: &Path,
     src: &str,
     tokens: &mut &[Token<'_>],
 ) -> Result<DefinitionsOrExpression, ParseError> {
@@ -922,7 +922,7 @@ fn lex_between<'a>(
     Ok(res)
 }
 
-fn lex<'a>(path: &PathBuf, s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
+fn lex<'a>(path: &Path, s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
     lex_between(path, s, 0, s.len())
 }
 

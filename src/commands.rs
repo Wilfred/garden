@@ -154,12 +154,14 @@ pub enum CommandError {
 
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
-        Value::Fun(ast::FunInfo {
-            doc_comment,
+        Value::Fun(
             name,
-            params,
-            ..
-        }) => {
+            ast::FunInfo {
+                doc_comment,
+                params,
+                ..
+            },
+        ) => {
             let mut res = String::new();
             match doc_comment {
                 Some(doc_comment) => {

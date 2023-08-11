@@ -24,7 +24,7 @@ pub enum Value {
     /// A boolean value.
     Boolean(bool),
     /// A reference to a user-defined function.
-    Fun(FunInfo),
+    Fun(Variable, FunInfo),
     /// A closure value.
     Closure(Vec<BlockBindings>, Vec<Variable>, Block),
     /// A reference to a built-in function.
@@ -189,7 +189,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(FunInfo { name, .. }) => write!(f, "(function: {})", name.1 .0),
+            Value::Fun(name, _) => write!(f, "(function: {})", name.1 .0),
             Value::Closure(..) => write!(f, "(closure)"),
             Value::BuiltinFunction(kind) => write!(f, "(function: {})", kind),
             Value::Void => write!(f, "void"),
@@ -449,7 +449,10 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     for definition in definitions {
         match &definition.2 {
             Definition_::Fun(fun_info) => {
-                env.set_with_file_scope(&fun_info.name.1, Value::Fun(fun_info.clone()));
+                env.set_with_file_scope(
+                    &fun_info.name.1,
+                    Value::Fun(fun_info.name.clone(), fun_info.clone()),
+                );
             }
         }
     }
@@ -1362,11 +1365,7 @@ fn eval_call(
                 enclosing_fun: None, // TODO
             }));
         }
-        Value::Fun(
-            fi @ FunInfo {
-                name, params, body, ..
-            },
-        ) => {
+        Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
             check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];

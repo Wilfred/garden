@@ -65,7 +65,7 @@ pub enum ParseError {
 pub struct Token<'a> {
     position: Position,
     text: &'a str,
-    preceding_comments: Vec<&'a str>,
+    preceding_comments: Vec<(Position, &'a str)>,
 }
 
 fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
@@ -616,10 +616,10 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Block, ParseError> {
     })
 }
 
-fn join_comments(comments: &[&str]) -> String {
+fn join_comments(comments: &[(Position, &str)]) -> String {
     let mut comment_texts = comments
         .iter()
-        .map(|comment| comment.strip_prefix(' ').unwrap_or(comment))
+        .map(|(_, comment)| comment.strip_prefix(' ').unwrap_or(comment))
         .collect::<Vec<_>>();
 
     if let Some(comment_text) = comment_texts.last_mut() {
@@ -641,10 +641,10 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     let params = parse_function_params(tokens)?;
     let body = parse_block(tokens)?;
 
-    let start_offset = fun_token.position.start_offset;
-    // if let Some(comment) = fun_token.preceding_comments.last() {
-    //     start_offset = comment;
-    // }
+    let mut start_offset = fun_token.position.start_offset;
+    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
     let end_offset = body.close_brace.end_offset;
 
     let src_string = SourceString {
@@ -815,7 +815,14 @@ fn lex_between<'a>(
         // Skip over comments.
         if s.starts_with("//") {
             if let Some(i) = s.find('\n') {
-                preceding_comments.push(&s["//".len()..i + 1]);
+                preceding_comments.push((
+                    Position {
+                        start_offset: offset,
+                        end_offset: offset + i,
+                        path: path.to_path_buf(),
+                    },
+                    &s["//".len()..i + 1],
+                ));
                 offset += i + 1;
                 continue;
             } else {
@@ -1074,7 +1081,14 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
-                preceding_comments: vec![" 2\n"],
+                preceding_comments: vec![(
+                    Position {
+                        start_offset: 0,
+                        end_offset: 4,
+                        path: PathBuf::from("__test.gdn")
+                    },
+                    " 2\n"
+                )],
             }]
         );
     }
@@ -1419,8 +1433,8 @@ mod tests {
             ast,
             vec![Definition(
                 SourceString {
-                    offset: 18,
-                    src: "fun foo() {}".to_owned()
+                    offset: 0,
+                    src: "// Hello\n// World\nfun foo() {}".to_owned()
                 },
                 Position {
                     start_offset: 18,

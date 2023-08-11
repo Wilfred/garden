@@ -660,12 +660,15 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     Ok(Definition(
         src_string,
         fun_token.position,
-        Definition_::Fun(FunInfo {
-            doc_comment,
-            name,
-            params,
-            body,
-        }),
+        Definition_::Fun(
+            name.clone(),
+            FunInfo {
+                doc_comment,
+                name,
+                params,
+                body,
+            },
+        ),
     ))
 }
 
@@ -1446,9 +1449,8 @@ mod tests {
                     end_offset: 21,
                     path: path.clone()
                 },
-                Definition_::Fun(FunInfo {
-                    doc_comment: Some("Hello\nWorld".into()),
-                    name: Variable(
+                Definition_::Fun(
+                    Variable(
                         Position {
                             start_offset: 22,
                             end_offset: 25,
@@ -1456,21 +1458,32 @@ mod tests {
                         },
                         VariableName("foo".into())
                     ),
-                    params: vec![],
-                    body: Block {
-                        open_brace: Position {
-                            start_offset: 28,
-                            end_offset: 29,
-                            path: path.clone()
+                    FunInfo {
+                        doc_comment: Some("Hello\nWorld".into()),
+                        name: Variable(
+                            Position {
+                                start_offset: 22,
+                                end_offset: 25,
+                                path: path.clone(),
+                            },
+                            VariableName("foo".into())
+                        ),
+                        params: vec![],
+                        body: Block {
+                            open_brace: Position {
+                                start_offset: 28,
+                                end_offset: 29,
+                                path: path.clone()
+                            },
+                            close_brace: Position {
+                                start_offset: 29,
+                                end_offset: 30,
+                                path: path.clone()
+                            },
+                            exprs: vec![]
                         },
-                        close_brace: Position {
-                            start_offset: 29,
-                            end_offset: 30,
-                            path: path.clone()
-                        },
-                        exprs: vec![]
-                    },
-                })
+                    }
+                )
             )]
         );
     }

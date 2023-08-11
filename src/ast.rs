@@ -87,7 +87,7 @@ pub struct FunInfo {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
-    Fun(FunInfo),
+    Fun(Variable, FunInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

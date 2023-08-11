@@ -287,6 +287,7 @@ impl Default for Bindings {
 
 #[derive(Debug)]
 pub struct StackFrame {
+    pub enclosing_fun: Option<FunInfo>,
     // TODO: arguably this should be the call position, and the name
     // isn't relevant. The containing name of the call site is more
     // interesting.
@@ -342,6 +343,7 @@ impl Default for Env {
                     },
                     Value::Void,
                 )],
+                enclosing_fun: None,
             }],
         }
     }
@@ -1357,11 +1359,14 @@ fn eval_call(
                 // perhaps the position of the curly brace function
                 // body.
                 evalled_values: vec![(receiver_value.0, Value::Void)],
+                enclosing_fun: None, // TODO
             }));
         }
-        Value::Fun(FunInfo {
-            name, params, body, ..
-        }) => {
+        Value::Fun(
+            fi @ FunInfo {
+                name, params, body, ..
+            },
+        ) => {
             check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
@@ -1375,6 +1380,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
+                enclosing_fun: Some(fi.clone()),
                 call_site: Some(Variable(receiver_value.0.clone(), name.1.clone())),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,

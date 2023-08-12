@@ -154,17 +154,20 @@ fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pa
     ))
 }
 
-fn parse_parenthesis_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_parenthesis_expression(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Expression, ParseError> {
     require_token(tokens, "(")?;
-    let expr = parse_inline_expression(tokens)?;
+    let expr = parse_inline_expression(src, tokens)?;
     require_token(tokens, ")")?;
 
     Ok(expr)
 }
 
-fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_list_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let open_brace = require_token(tokens, "[")?;
-    let items = parse_comma_separated_exprs(tokens, "]")?;
+    let items = parse_comma_separated_exprs(src, tokens, "]")?;
     require_token(tokens, "]")?;
 
     Ok(Expression(
@@ -173,15 +176,23 @@ fn parse_list_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseE
     ))
 }
 
-fn parse_lambda_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_lambda_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let fun_keyword = require_token(tokens, "fun")?;
 
     let params = parse_function_params(tokens)?;
-    let body = parse_block(tokens)?;
+    let body = parse_block(src, tokens)?;
+
+    let start_offset = fun_keyword.position.start_offset;
+    let end_offset = body.close_brace.end_offset;
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
 
     Ok(Expression(
         fun_keyword.position,
         Expression_::FunLiteral(FunInfo {
+            src_string,
             params,
             body,
             doc_comment: None,
@@ -190,20 +201,20 @@ fn parse_lambda_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
     ))
 }
 
-fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_if_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let if_token = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_inline_expression(tokens)?;
+    let condition = parse_inline_expression(src, tokens)?;
     require_token(tokens, ")")?;
 
-    let then_body = parse_block(tokens)?;
+    let then_body = parse_block(src, tokens)?;
 
     let else_body: Option<Block> = if next_token_is(tokens, "else") {
         pop_token(tokens);
 
         if next_token_is(tokens, "if") {
-            let if_expr = parse_if_expression(tokens)?;
+            let if_expr = parse_if_expression(src, tokens)?;
             Some(Block {
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
@@ -213,7 +224,7 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseErr
                 exprs: vec![if_expr],
             })
         } else {
-            Some(parse_block(tokens)?)
+            Some(parse_block(src, tokens)?)
         }
     } else {
         None
@@ -225,14 +236,14 @@ fn parse_if_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseErr
     ))
 }
 
-fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_while_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let while_token = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
-    let condition = parse_inline_expression(tokens)?;
+    let condition = parse_inline_expression(src, tokens)?;
     require_token(tokens, ")")?;
 
-    let body = parse_block(tokens)?;
+    let body = parse_block(src, tokens)?;
 
     Ok(Expression(
         while_token.position,
@@ -240,11 +251,11 @@ fn parse_while_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Parse
     ))
 }
 
-fn parse_return_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_return_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
     // TODO: allow `return;`
-    let expr = parse_inline_expression(tokens)?;
+    let expr = parse_inline_expression(src, tokens)?;
     let _ = require_token(tokens, ";")?;
     Ok(Expression(
         return_token.position,
@@ -293,23 +304,23 @@ fn unescape_string(s: &str) -> String {
     res
 }
 
-fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_simple_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "{" {
-            let exprs = parse_block(tokens)?;
+            let exprs = parse_block(src, tokens)?;
             return Ok(Expression(token.position, Expression_::Block(exprs)));
         }
 
         if token.text == "(" {
-            return parse_parenthesis_expression(tokens);
+            return parse_parenthesis_expression(src, tokens);
         }
 
         if token.text == "[" {
-            return parse_list_expression(tokens);
+            return parse_list_expression(src, tokens);
         }
 
         if token.text == "fun" {
-            return parse_lambda_expression(tokens);
+            return parse_lambda_expression(src, tokens);
         }
 
         if token.text == "true" {
@@ -351,6 +362,7 @@ fn parse_simple_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 }
 
 fn parse_comma_separated_exprs(
+    src: &str,
     tokens: &mut &[Token<'_>],
     terminator: &str,
 ) -> Result<Vec<Expression>, ParseError> {
@@ -360,7 +372,7 @@ fn parse_comma_separated_exprs(
             break;
         }
 
-        let arg = parse_inline_expression(tokens)?;
+        let arg = parse_inline_expression(src, tokens)?;
         items.push(arg);
 
         if let Some(token) = peek_token(tokens) {
@@ -389,9 +401,12 @@ fn parse_comma_separated_exprs(
     Ok(items)
 }
 
-fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, ParseError> {
+fn parse_call_arguments(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Vec<Expression>, ParseError> {
     require_token(tokens, "(")?;
-    let args = parse_comma_separated_exprs(tokens, ")")?;
+    let args = parse_comma_separated_exprs(src, tokens, ")")?;
     require_token(tokens, ")")?;
     Ok(args)
 }
@@ -401,12 +416,15 @@ fn parse_call_arguments(tokens: &mut &[Token<'_>]) -> Result<Vec<Expression>, Pa
 /// We handle trailing syntax separately from
 /// `parse_simple_expression`, to avoid infinit recursion. This is
 /// essentially left-recursion from a grammar perspective.
-fn parse_simple_expression_or_call(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    let mut expr = parse_simple_expression(tokens)?;
+fn parse_simple_expression_or_call(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Expression, ParseError> {
+    let mut expr = parse_simple_expression(src, tokens)?;
 
     // here
     while next_token_is(tokens, "(") {
-        let arguments = parse_call_arguments(tokens)?;
+        let arguments = parse_call_arguments(src, tokens)?;
         expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
     }
 
@@ -440,8 +458,8 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// if (a) { b } else { c }
 /// while (z) { foo(); }
 /// ```
-fn parse_inline_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    parse_general_expression(tokens, true)
+fn parse_inline_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+    parse_general_expression(src, tokens, true)
 }
 
 /// Parse a block member expression. This is an expression that can
@@ -455,12 +473,16 @@ fn parse_inline_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 /// if (a) { b; } else { c; }
 /// while (z) { foo(); }
 /// ```
-fn parse_block_member_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    parse_general_expression(tokens, false)
+fn parse_block_member_expression(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Expression, ParseError> {
+    parse_general_expression(src, tokens, false)
 }
 
 /// Parse an inline or block member expression.
 fn parse_general_expression(
+    src: &str,
     tokens: &mut &[Token<'_>],
     is_inline: bool,
 ) -> Result<Expression, ParseError> {
@@ -469,19 +491,19 @@ fn parse_general_expression(
         // complex assignments like `foo.bar = 1;`.
         if let Some((_, token)) = peek_two_tokens(tokens) {
             if token.text == "=" {
-                return parse_assign_expression(tokens);
+                return parse_assign_expression(src, tokens);
             }
         }
 
         if let Some(token) = peek_token(tokens) {
             if token.text == "let" {
-                return parse_let_expression(tokens);
+                return parse_let_expression(src, tokens);
             }
             if token.text == "return" {
-                return parse_return_expression(tokens);
+                return parse_return_expression(src, tokens);
             }
             if token.text == "while" {
-                return parse_while_expression(tokens);
+                return parse_while_expression(src, tokens);
             }
         }
     }
@@ -490,11 +512,11 @@ fn parse_general_expression(
     // expression.
     if let Some(token) = peek_token(tokens) {
         if token.text == "if" {
-            return parse_if_expression(tokens);
+            return parse_if_expression(src, tokens);
         }
     }
 
-    let expr = parse_simple_expression_or_binop(tokens)?;
+    let expr = parse_simple_expression_or_binop(src, tokens)?;
     if !is_inline {
         let _ = require_token(tokens, ";")?;
     }
@@ -513,14 +535,17 @@ fn parse_general_expression(
 /// parser function that allows exactly one binary operation. This
 /// also has the nice side effect of not requiring precedence logic in
 /// the parser.
-fn parse_simple_expression_or_binop(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
-    let mut expr = parse_simple_expression_or_call(tokens)?;
+fn parse_simple_expression_or_binop(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Expression, ParseError> {
+    let mut expr = parse_simple_expression_or_call(src, tokens)?;
 
     if let Some(token) = peek_token(tokens) {
         if let Some(op) = token_as_binary_op(token) {
             pop_token(tokens);
 
-            let rhs_expr = parse_simple_expression_or_call(tokens)?;
+            let rhs_expr = parse_simple_expression_or_call(src, tokens)?;
             expr = Expression(
                 expr.0.clone(),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
@@ -599,7 +624,7 @@ fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Variable>, Par
     Ok(params)
 }
 
-fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Block, ParseError> {
+fn parse_block(src: &str, tokens: &mut &[Token<'_>]) -> Result<Block, ParseError> {
     let open_brace = require_token(tokens, "{")?;
 
     let mut exprs = vec![];
@@ -614,7 +639,7 @@ fn parse_block(tokens: &mut &[Token<'_>]) -> Result<Block, ParseError> {
             ));
         }
 
-        let expr = parse_block_member_expression(tokens)?;
+        let expr = parse_block_member_expression(src, tokens)?;
         exprs.push(expr);
     }
 
@@ -649,7 +674,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     let name = parse_variable_name(tokens)?;
 
     let params = parse_function_params(tokens)?;
-    let body = parse_block(tokens)?;
+    let body = parse_block(src, tokens)?;
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
@@ -663,11 +688,12 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     };
 
     Ok(Definition(
-        src_string,
+        src_string.clone(),
         fun_token.position,
         Definition_::Fun(
             name.clone(),
             FunInfo {
+                src_string,
                 doc_comment,
                 name: Some(name),
                 params,
@@ -710,12 +736,12 @@ fn parse_variable_name(tokens: &mut &[Token<'_>]) -> Result<Variable, ParseError
     ))
 }
 
-fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_let_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let let_token = require_token(tokens, "let")?;
     let variable = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_inline_expression(tokens)?;
+    let expr = parse_inline_expression(src, tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
@@ -724,11 +750,11 @@ fn parse_let_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseEr
     ))
 }
 
-fn parse_assign_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_assign_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let variable = parse_variable_name(tokens)?;
 
     require_token(tokens, "=")?;
-    let expr = parse_inline_expression(tokens)?;
+    let expr = parse_inline_expression(src, tokens)?;
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
@@ -745,7 +771,7 @@ fn parse_def_or_expr(
     // Parsing advances the tokens pointer, so create a copy for
     // trying an expression parse.
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_block_member_expression(&mut tokens_copy) {
+    if let Ok(expr) = parse_block_member_expression(src, &mut tokens_copy) {
         if tokens_copy.is_empty() {
             let pos = &expr.0;
             let toplevel_expr =
@@ -755,7 +781,7 @@ fn parse_def_or_expr(
     }
 
     let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_inline_expression(&mut tokens_copy) {
+    if let Ok(expr) = parse_inline_expression(src, &mut tokens_copy) {
         if tokens_copy.is_empty() {
             let pos = &expr.0;
             let toplevel_expr =
@@ -795,7 +821,7 @@ pub fn parse_def_or_expr_from_span(
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
-    parse_inline_expression(&mut token_ptr)
+    parse_inline_expression(s, &mut token_ptr)
 }
 
 lazy_static! {
@@ -966,7 +992,7 @@ pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
 
     let mut res = vec![];
     while !token_ptr.is_empty() {
-        res.push(parse_block_member_expression(&mut token_ptr)?);
+        res.push(parse_block_member_expression(s, &mut token_ptr)?);
     }
 
     Ok(res)
@@ -1464,6 +1490,10 @@ mod tests {
                         VariableName("foo".into())
                     ),
                     FunInfo {
+                        src_string: SourceString {
+                            offset: 0,
+                            src: "// Hello\n// World\nfun foo() {}".to_owned()
+                        },
                         doc_comment: Some("Hello\nWorld".into()),
                         name: Some(Variable(
                             Position {

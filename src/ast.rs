@@ -79,6 +79,7 @@ pub struct ToplevelExpression(pub String, pub Expression);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunInfo {
+    pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name: Option<Variable>,
     pub params: Vec<Variable>,

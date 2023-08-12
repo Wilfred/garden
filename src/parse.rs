@@ -181,7 +181,12 @@ fn parse_lambda_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pars
 
     Ok(Expression(
         fun_keyword.position,
-        Expression_::Lambda(params, body),
+        Expression_::Lambda(FunInfo {
+            params,
+            body,
+            doc_comment: None,
+            name: None,
+        }),
     ))
 }
 

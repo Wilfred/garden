@@ -26,7 +26,7 @@ pub enum Value {
     /// A reference to a user-defined function.
     Fun(Variable, FunInfo),
     /// A closure value.
-    Closure(Vec<BlockBindings>, Vec<Variable>, Block),
+    Closure(Vec<BlockBindings>, FunInfo),
     /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind),
     /// A string value.
@@ -1315,10 +1315,10 @@ fn eval_call(
         .expect("Popped an empty value stack for call receiver");
 
     match &receiver_value.1 {
-        Value::Closure(bindings, params, body) => {
+        Value::Closure(bindings, fun_info) => {
             let mut bindings = bindings.clone();
 
-            if params.len() != arg_values.len() {
+            if fun_info.params.len() != arg_values.len() {
                 let mut saved_values = vec![receiver_value.clone()];
                 for value in arg_values.iter().rev() {
                     saved_values.push(value.clone());
@@ -1327,8 +1327,8 @@ fn eval_call(
                 return Err(ErrorInfo {
                     message: format!(
                         "Closure expects {} argument{}, but got {}",
-                        params.len(),
-                        if params.len() == 1 { "" } else { "s" },
+                        fun_info.params.len(),
+                        if fun_info.params.len() == 1 { "" } else { "s" },
                         arg_values.len()
                     ),
                     restore_values: saved_values,
@@ -1337,12 +1337,12 @@ fn eval_call(
             }
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
-            for expr in body.exprs.iter().rev() {
+            for expr in fun_info.body.exprs.iter().rev() {
                 fun_subexprs.push((false, expr.clone()));
             }
 
             let mut fun_bindings = HashMap::new();
-            for (param, value) in params.iter().zip(arg_values.iter()) {
+            for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
                 fun_bindings.insert(param.1.clone(), value.1.clone());
             }
 
@@ -1709,10 +1709,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *lhs.clone()));
                         }
                     }
-                    Expression_::Lambda(params, body) => {
+                    Expression_::Lambda(fun_info) => {
                         stack_frame.evalled_values.push((
                             expr_position,
-                            Value::Closure(stack_frame.bindings.0.clone(), params, body),
+                            Value::Closure(stack_frame.bindings.0.clone(), fun_info),
                         ));
                     }
                     Expression_::Call(receiver, ref args) => {

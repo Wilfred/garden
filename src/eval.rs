@@ -1709,7 +1709,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *lhs.clone()));
                         }
                     }
-                    Expression_::Lambda(fun_info) => {
+                    Expression_::FunLiteral(fun_info) => {
                         stack_frame.evalled_values.push((
                             expr_position,
                             Value::Closure(stack_frame.bindings.0.clone(), fun_info),

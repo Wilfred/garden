@@ -1359,7 +1359,7 @@ fn eval_call(
                 // perhaps the position of the curly brace function
                 // body.
                 evalled_values: vec![(receiver_value.0, Value::Void)],
-                enclosing_fun: None, // TODO
+                enclosing_fun: Some(fun_info.clone()),
             }));
         }
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {

@@ -80,7 +80,7 @@ pub struct ToplevelExpression(pub String, pub Expression);
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunInfo {
     pub doc_comment: Option<String>,
-    pub name: Variable,
+    pub name: Option<Variable>,
     pub params: Vec<Variable>,
     pub body: Block,
 }

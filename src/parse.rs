@@ -664,7 +664,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
             name.clone(),
             FunInfo {
                 doc_comment,
-                name,
+                name: Some(name),
                 params,
                 body,
             },
@@ -1460,14 +1460,14 @@ mod tests {
                     ),
                     FunInfo {
                         doc_comment: Some("Hello\nWorld".into()),
-                        name: Variable(
+                        name: Some(Variable(
                             Position {
                                 start_offset: 22,
                                 end_offset: 25,
                                 path: path.clone(),
                             },
                             VariableName("foo".into())
-                        ),
+                        )),
                         params: vec![],
                         body: Block {
                             open_brace: Position {

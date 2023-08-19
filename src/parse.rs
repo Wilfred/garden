@@ -18,8 +18,9 @@ use crate::ast::SourceString;
 use crate::ast::ToplevelExpression;
 use crate::ast::Variable;
 use crate::ast::VariableName;
+use crate::eval::StackFrame;
 
-pub fn simple_format_pos(position: &Position, src: &str) -> String {
+fn simple_format_pos(position: &Position, src: &str) -> String {
     let line_positions = LinePositions::from(src);
     let line_num = line_positions.from_offset(position.start_offset);
 
@@ -32,6 +33,33 @@ pub fn simple_format_pos(position: &Position, src: &str) -> String {
 
     let s_lines: Vec<_> = src.lines().collect();
     res.push_str(s_lines[line_num.as_usize()]);
+
+    res
+}
+
+pub fn format_error_with_stack(
+    message: &str,
+    position: &Position,
+    stack: &[StackFrame],
+    src: &str,
+) -> String {
+    let mut res = String::new();
+
+    res.push_str(&format!("Error: {}\n\n", message));
+
+    // TODO: if the error was in the `__main_fun__` pseudofile, this
+    // shows the wrong position. We should use relevant SourceString
+    // instead.
+    res.push_str(&simple_format_pos(position, src));
+
+    for stack_frame in stack.iter().rev() {
+        if let Some(var) = &stack_frame.call_site {
+            // TODO: this assumes that all
+            // positions are in the same file.
+            res.push('\n');
+            res.push_str(&simple_format_pos(&var.0, &src));
+        }
+    }
 
     res
 }

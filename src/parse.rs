@@ -51,6 +51,10 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
     String::from_utf8_lossy(&res).to_string()
 }
 
+pub fn format_parse_error(message: &str, position: &Position, src: &str) -> String {
+    format_error(message, position, src)
+}
+
 pub fn source_substring<'a>(source_string: &'a SourceString, pos: &Position) -> &'a str {
     let src_offset = source_string.offset;
     &source_string.src[pos.start_offset - src_offset..pos.end_offset - src_offset]

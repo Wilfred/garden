@@ -20,7 +20,7 @@ use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
 use crate::eval::escape_string_literal;
-use crate::parse::{format_error, simple_format_pos};
+use crate::parse::{format_error, format_parse_error, simple_format_pos};
 
 #[derive(Debug, Parser)]
 #[command(author, version, name="Garden", about = "A programming language for growing programs", long_about = None)]
@@ -139,7 +139,7 @@ fn run_file(
             }) => {
                 eprintln!(
                     "{}",
-                    &format_error(&format!("Parse error: {}", e), &position, &src)
+                    &format_parse_error(&format!("Parse error: {}", e), &position, &src)
                 );
             }
             Err(parse::ParseError::Incomplete(e)) => {

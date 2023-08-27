@@ -20,44 +20,65 @@ use crate::ast::Variable;
 use crate::ast::VariableName;
 use crate::eval::StackFrame;
 
-fn simple_format_pos(position: &Position, src: &str) -> String {
-    let line_positions = LinePositions::from(src);
-    let line_num = line_positions.from_offset(position.start_offset);
-
+fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> String {
     let mut res = String::new();
-    res.push_str(&format!(
-        "--> {}:{}\n",
-        position.path.display(),
-        line_num.display()
-    ));
 
-    let s_lines: Vec<_> = src.lines().collect();
-    res.push_str(s_lines[line_num.as_usize()]);
+    let relevant_line = match src_string {
+        Some(src_string) => {
+            let src = &src_string.src;
+            let line_positions = LinePositions::from(src.as_str());
 
+            // TODO: this is the line number relative to the start of
+            // the SourceString, not the start of the file.
+            let offset = std::cmp::max(
+                position.start_offset as isize - src_string.offset as isize,
+                0,
+            ) as usize;
+            let line_num = if offset >= src.len() {
+                // TODO: this occurs when we are using the wrong
+                // SourceString, such as the main function wrapper. We
+                // should find the relevant SourceString instead.
+                0.into()
+            } else {
+                line_positions.from_offset(offset)
+            };
+            res.push_str(&format!(
+                "--> {}:{}\n",
+                position.path.display(),
+                line_num.display()
+            ));
+
+            let s_lines: Vec<_> = src.lines().collect();
+            s_lines[line_num.as_usize()].to_owned()
+        }
+        None => {
+            let line_num = "unknown line";
+            res.push_str(&format!("--> {}:{}\n", position.path.display(), line_num));
+
+            "??? no source found (FunInfo is None) ???".to_owned()
+        }
+    };
+
+    res.push_str(&relevant_line);
     res
 }
 
-pub fn format_error_with_stack(
-    message: &str,
-    position: &Position,
-    stack: &[StackFrame],
-    src: &str,
-) -> String {
+pub fn format_error_with_stack(message: &str, position: &Position, stack: &[StackFrame]) -> String {
     let mut res = String::new();
 
     res.push_str(&format!("Error: {}\n\n", message));
 
-    // TODO: if the error was in the `__main_fun__` pseudofile, this
-    // shows the wrong position. We should use relevant SourceString
-    // instead.
-    res.push_str(&simple_format_pos(position, src));
+    let top_stack = stack.last().unwrap();
+    let src_string = top_stack
+        .enclosing_fun
+        .as_ref()
+        .map(|fi| fi.src_string.clone());
+    res.push_str(&format_pos_in_fun(position, src_string.as_ref()));
 
     for stack_frame in stack.iter().rev() {
-        if let Some((var, _)) = &stack_frame.call_site {
-            // TODO: this assumes that all
-            // positions are in the same file.
+        if let Some((var, src_string)) = &stack_frame.call_site {
             res.push('\n');
-            res.push_str(&simple_format_pos(&var.0, &src));
+            res.push_str(&format_pos_in_fun(&var.0, src_string.as_ref()));
         }
     }
 
@@ -81,11 +102,6 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
 
 pub fn format_parse_error(message: &str, position: &Position, src: &str) -> String {
     format_error(message, position, src)
-}
-
-pub fn source_substring<'a>(source_string: &'a SourceString, pos: &Position) -> &'a str {
-    let src_offset = source_string.offset;
-    &source_string.src[pos.start_offset - src_offset..pos.end_offset - src_offset]
 }
 
 #[derive(Debug)]

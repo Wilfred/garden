@@ -109,10 +109,7 @@ fn run_file(
                 match eval_def_or_exprs(&call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, msg)) => {
-                        eprintln!(
-                            "{}",
-                            &format_error_with_stack(&msg, &position, &env.stack, &src)
-                        );
+                        eprintln!("{}", &format_error_with_stack(&msg, &position, &env.stack));
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");

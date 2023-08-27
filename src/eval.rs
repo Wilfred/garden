@@ -11,7 +11,7 @@ use strsim::normalized_levenshtein;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, Variable};
+use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, SourceString, Variable};
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
 };
@@ -291,7 +291,7 @@ pub struct StackFrame {
     // TODO: arguably this should be the call position, and the name
     // isn't relevant. The containing name of the call site is more
     // interesting.
-    pub call_site: Option<Variable>,
+    pub call_site: Option<(Variable, Option<SourceString>)>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -1349,9 +1349,12 @@ fn eval_call(
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
 
             return Ok(Some(StackFrame {
-                call_site: Some(Variable(
-                    position.clone(),
-                    VariableName("(closure)".to_string()),
+                call_site: Some((
+                    Variable(position.clone(), VariableName("(closure)".to_string())),
+                    stack_frame
+                        .enclosing_fun
+                        .as_ref()
+                        .map(|fi| fi.src_string.clone()),
                 )),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
@@ -1377,7 +1380,13 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
-                call_site: Some(Variable(receiver_value.0.clone(), name.1.clone())),
+                call_site: Some((
+                    Variable(receiver_value.0.clone(), name.1.clone()),
+                    stack_frame
+                        .enclosing_fun
+                        .as_ref()
+                        .map(|fi| fi.src_string.clone()),
+                )),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],

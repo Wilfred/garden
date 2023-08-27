@@ -53,7 +53,7 @@ pub fn format_error_with_stack(
     res.push_str(&simple_format_pos(position, src));
 
     for stack_frame in stack.iter().rev() {
-        if let Some(var) = &stack_frame.call_site {
+        if let Some((var, _)) = &stack_frame.call_site {
             // TODO: this assumes that all
             // positions are in the same file.
             res.push('\n');

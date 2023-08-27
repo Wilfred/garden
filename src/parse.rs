@@ -627,6 +627,7 @@ fn parse_definition(
         position: Position {
             start_offset: 0,
             end_offset: 0,
+            line_number: 0,
             path: path.into(),
         },
         message: "Expected a definition, got EOF".to_string(),
@@ -886,6 +887,7 @@ fn lex_between<'a>(
 ) -> Result<Vec<Token<'a>>, ParseError> {
     assert!(end_offset <= s.len());
 
+    let lp = LinePositions::from(s);
     let mut res: Vec<Token<'a>> = vec![];
 
     let mut preceding_comments = vec![];
@@ -906,6 +908,7 @@ fn lex_between<'a>(
                     Position {
                         start_offset: offset,
                         end_offset: offset + i,
+                        line_number: lp.from_offset(offset).as_usize(),
                         path: path.to_path_buf(),
                     },
                     &s["//".len()..i + 1],
@@ -934,6 +937,7 @@ fn lex_between<'a>(
                     position: Position {
                         start_offset: offset,
                         end_offset: offset + token_str.len(),
+                        line_number: lp.from_offset(offset).as_usize(),
                         path: path.to_path_buf(),
                     },
                     text: &s[0..token_str.len()],
@@ -953,6 +957,7 @@ fn lex_between<'a>(
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + integer_match.end(),
+                    line_number: lp.from_offset(offset).as_usize(),
                     path: path.to_path_buf(),
                 },
                 text: integer_match.as_str(),
@@ -972,6 +977,7 @@ fn lex_between<'a>(
                     position: Position {
                         start_offset: offset,
                         end_offset: offset + 1,
+                        line_number: lp.from_offset(offset).as_usize(),
                         path: path.to_path_buf(),
                     },
                     text: &s[0..1],
@@ -988,6 +994,7 @@ fn lex_between<'a>(
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + string_match.end(),
+                    line_number: lp.from_offset(offset).as_usize(),
                     path: path.to_path_buf(),
                 },
                 text: string_match.as_str(),
@@ -1001,6 +1008,7 @@ fn lex_between<'a>(
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + variable_match.end(),
+                    line_number: lp.from_offset(offset).as_usize(),
                     path: path.to_path_buf(),
                 },
                 text: variable_match.as_str(),
@@ -1019,6 +1027,7 @@ fn lex_between<'a>(
             position: Position {
                 start_offset: offset,
                 end_offset: s.len(),
+                line_number: lp.from_offset(offset).as_usize(),
                 path: path.to_path_buf(),
             },
             message: format!("Unrecognized syntax: '{}'", &s[offset..]),
@@ -1058,6 +1067,7 @@ mod tests {
                 position: Position {
                     start_offset: 0,
                     end_offset: 1,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
@@ -1074,6 +1084,7 @@ mod tests {
                 position: Position {
                     start_offset: 1,
                     end_offset: 2,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "a",
@@ -1116,6 +1127,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 4,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::BoolLiteral(true)
@@ -1133,6 +1145,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 4,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::IntLiteral(-123)
@@ -1150,6 +1163,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 12,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::StringLiteral("a\nb\\c\"d".into())
@@ -1165,6 +1179,7 @@ mod tests {
                 position: Position {
                     start_offset: 5,
                     end_offset: 6,
+                    line_number: 1,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
@@ -1172,6 +1187,7 @@ mod tests {
                     Position {
                         start_offset: 0,
                         end_offset: 4,
+                        line_number: 0,
                         path: PathBuf::from("__test.gdn")
                     },
                     " 2\n"
@@ -1200,12 +1216,14 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 7,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Variable(Variable(
                     Position {
                         start_offset: 0,
                         end_offset: 7,
+                        line_number: 0,
                         path: PathBuf::from("__test.gdn")
                     },
                     VariableName("abc_def".to_string())
@@ -1224,6 +1242,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 3,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
@@ -1231,6 +1250,7 @@ mod tests {
                         Position {
                             start_offset: 4,
                             end_offset: 5,
+                            line_number: 0,
                             path: PathBuf::from("__test.gdn")
                         },
                         VariableName("x".into())
@@ -1239,6 +1259,7 @@ mod tests {
                         Position {
                             start_offset: 8,
                             end_offset: 9,
+                            line_number: 0,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::IntLiteral(1)
@@ -1259,6 +1280,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 2,
+                    line_number: 0,
                     path: path.clone()
                 },
                 Expression_::If(
@@ -1266,6 +1288,7 @@ mod tests {
                         Position {
                             start_offset: 4,
                             end_offset: 8,
+                            line_number: 0,
                             path: path.clone()
                         },
                         Expression_::BoolLiteral(true)
@@ -1274,11 +1297,13 @@ mod tests {
                         open_brace: Position {
                             start_offset: 10,
                             end_offset: 11,
+                            line_number: 0,
                             path: path.clone()
                         },
                         close_brace: Position {
                             start_offset: 11,
                             end_offset: 12,
+                            line_number: 0,
                             path: path.clone()
                         },
                         exprs: vec![]
@@ -1287,11 +1312,13 @@ mod tests {
                         open_brace: Position {
                             start_offset: 18,
                             end_offset: 19,
+                            line_number: 0,
                             path: path.clone()
                         },
                         close_brace: Position {
                             start_offset: 19,
                             end_offset: 20,
+                            line_number: 0,
                             path: path.clone()
                         },
                         exprs: vec![]
@@ -1312,6 +1339,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 2,
+                    line_number: 0,
                     path: path.clone()
                 },
                 Expression_::If(
@@ -1319,12 +1347,14 @@ mod tests {
                         Position {
                             start_offset: 4,
                             end_offset: 5,
+                            line_number: 0,
                             path: path.clone()
                         },
                         Expression_::Variable(Variable(
                             Position {
                                 start_offset: 4,
                                 end_offset: 5,
+                                line_number: 0,
                                 path: path.clone()
                             },
                             VariableName("x".into())
@@ -1334,11 +1364,13 @@ mod tests {
                         open_brace: Position {
                             start_offset: 7,
                             end_offset: 8,
+                            line_number: 0,
                             path: path.clone()
                         },
                         close_brace: Position {
                             start_offset: 8,
                             end_offset: 9,
+                            line_number: 0,
                             path: path.clone()
                         },
                         exprs: vec![]
@@ -1347,17 +1379,20 @@ mod tests {
                         open_brace: Position {
                             start_offset: 15,
                             end_offset: 17,
+                            line_number: 0,
                             path: path.clone()
                         },
                         close_brace: Position {
                             start_offset: 15,
                             end_offset: 17,
+                            line_number: 0,
                             path: path.clone()
                         },
                         exprs: vec![Expression(
                             Position {
                                 start_offset: 15,
                                 end_offset: 17,
+                                line_number: 0,
                                 path: path.clone()
                             },
                             Expression_::If(
@@ -1365,12 +1400,14 @@ mod tests {
                                     Position {
                                         start_offset: 19,
                                         end_offset: 20,
+                                        line_number: 0,
                                         path: path.clone()
                                     },
                                     Expression_::Variable(Variable(
                                         Position {
                                             start_offset: 19,
                                             end_offset: 20,
+                                            line_number: 0,
                                             path: path.clone()
                                         },
                                         VariableName("y".into())
@@ -1380,11 +1417,13 @@ mod tests {
                                     open_brace: Position {
                                         start_offset: 22,
                                         end_offset: 23,
+                                        line_number: 0,
                                         path: path.clone()
                                     },
                                     close_brace: Position {
                                         start_offset: 23,
                                         end_offset: 24,
+                                        line_number: 0,
                                         path: path.clone()
                                     },
                                     exprs: vec![]
@@ -1409,6 +1448,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 2,
+                    line_number: 0,
                     path: path.clone()
                 },
                 Expression_::If(
@@ -1416,6 +1456,7 @@ mod tests {
                         Position {
                             start_offset: 4,
                             end_offset: 8,
+                            line_number: 0,
                             path: path.clone()
                         },
                         Expression_::BoolLiteral(true)
@@ -1424,11 +1465,13 @@ mod tests {
                         open_brace: Position {
                             start_offset: 10,
                             end_offset: 11,
+                            line_number: 0,
                             path: path.clone()
                         },
                         close_brace: Position {
                             start_offset: 11,
                             end_offset: 12,
+                            line_number: 0,
                             path: path.clone()
                         },
                         exprs: vec![]
@@ -1449,12 +1492,14 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 6,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Return(Box::new(Expression(
                     Position {
                         start_offset: 7,
                         end_offset: 11,
+                        line_number: 0,
                         path: PathBuf::from("__test.gdn")
                     },
                     Expression_::BoolLiteral(true)
@@ -1473,6 +1518,7 @@ mod tests {
                 Position {
                     start_offset: 0,
                     end_offset: 3,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Call(
@@ -1480,6 +1526,7 @@ mod tests {
                         Position {
                             start_offset: 0,
                             end_offset: 3,
+                            line_number: 0,
                             path: PathBuf::from("__test.gdn")
                         },
                         Expression_::Call(
@@ -1487,12 +1534,14 @@ mod tests {
                                 Position {
                                     start_offset: 0,
                                     end_offset: 3,
+                                    line_number: 0,
                                     path: PathBuf::from("__test.gdn")
                                 },
                                 Expression_::Variable(Variable(
                                     Position {
                                         start_offset: 0,
                                         end_offset: 3,
+                                        line_number: 0,
                                         path: PathBuf::from("__test.gdn")
                                     },
                                     VariableName("foo".into())
@@ -1526,6 +1575,7 @@ mod tests {
                 Position {
                     start_offset: 18,
                     end_offset: 21,
+                    line_number: 2,
                     path: path.clone()
                 },
                 Definition_::Fun(
@@ -1533,6 +1583,7 @@ mod tests {
                         Position {
                             start_offset: 22,
                             end_offset: 25,
+                            line_number: 2,
                             path: path.clone(),
                         },
                         VariableName("foo".into())
@@ -1547,6 +1598,7 @@ mod tests {
                             Position {
                                 start_offset: 22,
                                 end_offset: 25,
+                                line_number: 2,
                                 path: path.clone(),
                             },
                             VariableName("foo".into())
@@ -1556,11 +1608,13 @@ mod tests {
                             open_brace: Position {
                                 start_offset: 28,
                                 end_offset: 29,
+                                line_number: 2,
                                 path: path.clone()
                             },
                             close_brace: Position {
                                 start_offset: 29,
                                 end_offset: 30,
+                                line_number: 2,
                                 path: path.clone()
                             },
                             exprs: vec![]
@@ -1596,6 +1650,7 @@ mod tests {
                     Position {
                         start_offset: 0,
                         end_offset: 3,
+                        line_number: 0,
                         path: PathBuf::from("__test.gdn")
                     },
                     Expression_::Let(
@@ -1603,6 +1658,7 @@ mod tests {
                             Position {
                                 start_offset: 4,
                                 end_offset: 5,
+                                line_number: 0,
                                 path: PathBuf::from("__test.gdn")
                             },
                             VariableName("x".into())
@@ -1611,6 +1667,7 @@ mod tests {
                             Position {
                                 start_offset: 8,
                                 end_offset: 9,
+                                line_number: 0,
                                 path: PathBuf::from("__test.gdn")
                             },
                             Expression_::IntLiteral(1)

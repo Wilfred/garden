@@ -11,6 +11,8 @@ use crate::eval::ErrorKind;
 pub struct Position {
     pub start_offset: usize,
     pub end_offset: usize,
+    // TODO: Use LineNumber instead, finding a way to serialize it.
+    pub line_number: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
 }

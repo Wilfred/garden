@@ -339,6 +339,7 @@ impl Default for Env {
                         // TODO: do these values make sense?
                         start_offset: 0,
                         end_offset: 0,
+                        line_number: 0,
                         path: PathBuf::from("__toplevel__"),
                     },
                     Value::Void,
@@ -1862,6 +1863,7 @@ mod tests {
             Position {
                 start_offset: 0,
                 end_offset: 4,
+                line_number: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::BoolLiteral(true),
@@ -1889,6 +1891,7 @@ mod tests {
             Position {
                 start_offset: 0,
                 end_offset: 0,
+                line_number: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
@@ -1896,6 +1899,7 @@ mod tests {
                     Position {
                         start_offset: 0,
                         end_offset: 0,
+                        line_number: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
                     VariableName("foo".into()),
@@ -1904,6 +1908,7 @@ mod tests {
                     Position {
                         start_offset: 0,
                         end_offset: 0,
+                        line_number: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
                     Expression_::BoolLiteral(true),
@@ -1916,12 +1921,14 @@ mod tests {
             Position {
                 start_offset: 0,
                 end_offset: 0,
+                line_number: 0,
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Variable(Variable(
                 Position {
                     start_offset: 0,
                     end_offset: 0,
+                    line_number: 0,
                     path: PathBuf::from("__test.gdn"),
                 },
                 VariableName("foo".into()),

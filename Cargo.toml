@@ -13,7 +13,7 @@ ariadne = "0.3.0"
 clap = { version = "4.1.11", features = ["derive"] }
 ctrlc = "3.2.5"
 lazy_static = "1.4.0"
-line-numbers = "0.2.1"
+line-numbers = "0.2.2"
 ordered-float = "3.7.0"
 owo-colors = { version = "3.5.0", features = ["supports-colors"] }
 regex = "1.7.1"

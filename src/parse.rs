@@ -23,6 +23,12 @@ use crate::eval::StackFrame;
 fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> String {
     let mut res = String::new();
 
+    res.push_str(&format!(
+        "--> {}:{}\n",
+        position.path.display(),
+        position.line_number + 1,
+    ));
+
     let relevant_line = match src_string {
         Some(src_string) => {
             let src = &src_string.src;
@@ -42,21 +48,11 @@ fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> 
             } else {
                 line_positions.from_offset(offset)
             };
-            res.push_str(&format!(
-                "--> {}:{}\n",
-                position.path.display(),
-                line_num.display()
-            ));
 
             let s_lines: Vec<_> = src.lines().collect();
             s_lines[line_num.as_usize()].to_owned()
         }
-        None => {
-            let line_num = "unknown line";
-            res.push_str(&format!("--> {}:{}\n", position.path.display(), line_num));
-
-            "??? no source found (FunInfo is None) ???".to_owned()
-        }
+        None => "??? no source found (FunInfo is None) ???".to_owned(),
     };
 
     res.push_str(&relevant_line);

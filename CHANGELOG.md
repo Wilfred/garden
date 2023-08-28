@@ -1,5 +1,7 @@
 # 0.5 (unreleased)
 
+**Goal: Define a real program that solves a problem for me.**
+
 ### Stdlib
 
 Added `dbg`, `list_get`, `list_length`, `path_exists`, `string_concat`

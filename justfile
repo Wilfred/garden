@@ -1,5 +1,5 @@
 default:
-  @just --list
+    @just --list
 
 watch:
     cargo watch -x build

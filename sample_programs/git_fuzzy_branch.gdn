@@ -63,6 +63,28 @@ fun string_contains(haystack, needle) {
   false;
 }
 
+fun list_empty(items) {
+  list_length(items) == 0;
+}
+
+fun string_join(separator, items) {
+  if (list_empty(items)) {
+    return "";
+  }
+  if (list_length(items) == 1) {
+    return list_get(items, 0);
+  }
+
+  let res = list_get(items, 0);
+  let i = 1;
+  while (i < list_length(items)) {
+    res = string_concat(res, separator);
+    res = string_concat(res, list_get(items, i));
+    i = i + 1;
+  }
+  res;
+}
+
 fun in_git_repo() {
   let git_dir_path = string_concat(working_directory(), "/.git");
   path_exists(git_dir_path);

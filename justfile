@@ -13,4 +13,4 @@ release:
     git tag $VERSION
     git push --tags
 
-    cargo set-version --bump patch
+    cargo set-version --bump minor

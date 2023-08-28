@@ -101,7 +101,18 @@ fun main(args) {
   if (in_git_repo()) {
     let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
     let branches = list_filter(all_branches, fun(name) { string_contains(name, needle); });
-    dbg(branches);
+
+    if (list_empty(branches)) {
+      print(string_concat("No branches found maching: ", needle));
+    } else if (list_length(branches) == 1) {
+      let branch_name = list_get(branches, 0);
+      print(string_concat("Checking out: ", branch_name));
+      shell("git", ["checkout", branch_name]);
+    } else {
+      let formatted_branches = string_join(", ", branches);
+      let msg = string_join("", ["Found ", int_to_string(list_length(branches)), " branches: ", formatted_branches]);
+      print(msg);
+    }
   } else {
     print("Not in a git repository.");
   }

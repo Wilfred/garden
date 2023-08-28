@@ -1,4 +1,6 @@
-# 0.5 (unreleased)
+# 0.6 (unreleased)
+
+# 0.5 (released 27th August 2023)
 
 **Goal: Define a real program that solves a problem for me.**
 

@@ -1,6 +1,6 @@
 <img src="img/gardening.png" width="150" align="right">
 
-# Garden [![codecov](https://codecov.io/gh/Wilfred/garden/branch/main/graph/badge.svg?token=bUlbdUf4O3)](https://codecov.io/gh/Wilfred/garden)
+# Garden [![codecov](https://codecov.io/gh/Wilfred/garden/branch/main/graph/badge.svg?token=bUlbdUf4O3)](https://codecov.io/gh/Wilfred/garden) <a href="https://crates.io/crates/garden-lang"><img src="https://img.shields.io/crates/v/garden-lang.svg" alt="crates.io"></a>
 
 Garden is an experimental programming language exploring PL design on
 running programs.

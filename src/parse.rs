@@ -458,7 +458,7 @@ fn parse_call_arguments(
 /// Parse an expression, and handle trailing parentheses if present.
 ///
 /// We handle trailing syntax separately from
-/// `parse_simple_expression`, to avoid infinit recursion. This is
+/// `parse_simple_expression`, to avoid infinite recursion. This is
 /// essentially left-recursion from a grammar perspective.
 fn parse_simple_expression_or_call(
     src: &str,

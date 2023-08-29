@@ -220,7 +220,7 @@ pub fn run_command<T: Write>(
         }
         Command::Doc(name) => {
             if let Some(name) = name {
-                if let Some(value) = env.file_scope.get(&ast::VariableName(name.to_string())) {
+                if let Some(value) = env.file_scope.get(&ast::SymbolName(name.to_string())) {
                     match describe_fun(value) {
                         Some(description) => write!(buf, "{}", description),
                         None => write!(buf, "`{}` is not a function.", name),
@@ -282,7 +282,7 @@ pub fn run_command<T: Write>(
             .unwrap();
         }
         Command::Functions => {
-            let mut names_and_vals: Vec<(ast::VariableName, Value)> = env
+            let mut names_and_vals: Vec<(ast::SymbolName, Value)> = env
                 .file_scope
                 .iter()
                 .map(|(k, v)| (k.clone(), v.clone()))

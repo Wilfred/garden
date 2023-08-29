@@ -11,9 +11,9 @@ use strsim::normalized_levenshtein;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, SourceString, Variable};
+use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, SourceString, Symbol};
 use crate::ast::{
-    Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, VariableName,
+    Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
 };
 use crate::json_session::{Response, ResponseKind};
 
@@ -24,7 +24,7 @@ pub enum Value {
     /// A boolean value.
     Boolean(bool),
     /// A reference to a user-defined function.
-    Fun(Variable, FunInfo),
+    Fun(Symbol, FunInfo),
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo),
     /// A reference to a built-in function.
@@ -216,7 +216,7 @@ impl Display for Value {
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
 #[derive(Debug, Clone, PartialEq)]
-pub struct BlockBindings(Rc<RefCell<HashMap<VariableName, Value>>>);
+pub struct BlockBindings(Rc<RefCell<HashMap<SymbolName, Value>>>);
 
 impl Default for BlockBindings {
     fn default() -> Self {
@@ -228,11 +228,11 @@ impl Default for BlockBindings {
 pub struct Bindings(Vec<BlockBindings>);
 
 impl Bindings {
-    fn new_with(outer_scope: HashMap<VariableName, Value>) -> Self {
+    fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
         Self(vec![BlockBindings(Rc::new(RefCell::new(outer_scope)))])
     }
 
-    fn get(&self, name: &VariableName) -> Option<Value> {
+    fn get(&self, name: &SymbolName) -> Option<Value> {
         // TODO: this allows shadowing. Is that desirable -- does it
         // make REPL workflows less convenient when it's harder to inspect?
         //
@@ -245,11 +245,11 @@ impl Bindings {
         None
     }
 
-    fn has(&self, name: &VariableName) -> bool {
+    fn has(&self, name: &SymbolName) -> bool {
         self.get(name).is_some()
     }
 
-    fn add_new(&mut self, name: &VariableName, value: Value) {
+    fn add_new(&mut self, name: &SymbolName, value: Value) {
         let block_bindings = self
             .0
             .last_mut()
@@ -257,7 +257,7 @@ impl Bindings {
         block_bindings.0.borrow_mut().insert(name.clone(), value);
     }
 
-    fn set_existing(&mut self, name: &VariableName, value: Value) {
+    fn set_existing(&mut self, name: &SymbolName, value: Value) {
         for block_bindings in self.0.iter_mut().rev() {
             if block_bindings.0.borrow().contains_key(name) {
                 block_bindings.0.borrow_mut().insert(name.clone(), value);
@@ -267,7 +267,7 @@ impl Bindings {
         unreachable!()
     }
 
-    pub fn all(&self) -> Vec<(VariableName, Value)> {
+    pub fn all(&self) -> Vec<(SymbolName, Value)> {
         let mut res = vec![];
         for block_bindings in self.0.iter().rev() {
             for (k, v) in block_bindings.0.borrow().iter() {
@@ -291,7 +291,7 @@ pub struct StackFrame {
     // TODO: arguably this should be the call position, and the name
     // isn't relevant. The containing name of the call site is more
     // interesting.
-    pub call_site: Option<(Variable, Option<SourceString>)>,
+    pub call_site: Option<(Symbol, Option<SourceString>)>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -311,7 +311,7 @@ impl StackFrame {
 #[derive(Debug)]
 pub struct Env {
     pub trace_exprs: bool,
-    pub file_scope: HashMap<VariableName, Value>,
+    pub file_scope: HashMap<SymbolName, Value>,
     pub stack: Vec<StackFrame>,
 }
 
@@ -322,7 +322,7 @@ impl Default for Env {
         // Insert all the built-in functions.
         for fun_kind in BuiltinFunctionKind::iter() {
             file_scope.insert(
-                VariableName(format!("{}", fun_kind)),
+                SymbolName(format!("{}", fun_kind)),
                 Value::BuiltinFunction(fun_kind),
             );
         }
@@ -357,22 +357,22 @@ impl Env {
         self.stack[0].bindings.0.truncate(1);
     }
 
-    pub fn set_with_file_scope(&mut self, name: &VariableName, value: Value) {
+    pub fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }
 }
 
-fn most_similar(available: &[&VariableName], name: &VariableName) -> Option<VariableName> {
+fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
     let mut res: Vec<_> = available.iter().collect();
     res.sort_by_key(|n| OrderedFloat(normalized_levenshtein(&n.0, &name.0)));
     res.last().map(|n| (**n).clone())
 }
 
 fn most_similar_var(
-    name: &VariableName,
+    name: &SymbolName,
     stack_frame: &StackFrame,
     env: &Env,
-) -> Option<VariableName> {
+) -> Option<SymbolName> {
     let all_bindings = stack_frame.bindings.all();
 
     let mut names: Vec<_> = all_bindings.iter().map(|(n, _)| n).collect();
@@ -382,7 +382,7 @@ fn most_similar_var(
     most_similar(&names, name)
 }
 
-fn get_var(name: &VariableName, stack_frame: &StackFrame, env: &Env) -> Option<Value> {
+fn get_var(name: &SymbolName, stack_frame: &StackFrame, env: &Env) -> Option<Value> {
     if let Some(value) = stack_frame.bindings.get(name) {
         return Some(value.clone());
     }
@@ -593,7 +593,7 @@ fn eval_while(
     Ok(())
 }
 
-fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
+fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
     let var_name = &variable.1;
     if !stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
@@ -618,7 +618,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), 
     Ok(())
 }
 
-fn eval_let(stack_frame: &mut StackFrame, variable: &Variable) -> Result<(), ErrorInfo> {
+fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
     let var_name = &variable.1;
     if stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
@@ -1351,7 +1351,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 call_site: Some((
-                    Variable(position.clone(), VariableName("(closure)".to_string())),
+                    Symbol(position.clone(), SymbolName("(closure)".to_string())),
                     stack_frame
                         .enclosing_fun
                         .as_ref()
@@ -1382,7 +1382,7 @@ fn eval_call(
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
                 call_site: Some((
-                    Variable(receiver_value.0.clone(), name.1.clone()),
+                    Symbol(receiver_value.0.clone(), name.1.clone()),
                     stack_frame
                         .enclosing_fun
                         .as_ref()
@@ -1898,14 +1898,14 @@ mod tests {
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
-                Variable(
+                Symbol(
                     Position {
                         start_offset: 0,
                         end_offset: 0,
                         line_number: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
-                    VariableName("foo".into()),
+                    SymbolName("foo".into()),
                 ),
                 Box::new(Expression(
                     Position {
@@ -1927,14 +1927,14 @@ mod tests {
                 line_number: 0,
                 path: PathBuf::from("__test.gdn"),
             },
-            Expression_::Variable(Variable(
+            Expression_::Variable(Symbol(
                 Position {
                     start_offset: 0,
                     end_offset: 0,
                     line_number: 0,
                     path: PathBuf::from("__test.gdn"),
                 },
-                VariableName("foo".into()),
+                SymbolName("foo".into()),
             )),
         )];
         eval_exprs(&exprs, &mut env).unwrap();

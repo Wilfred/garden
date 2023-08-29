@@ -28,10 +28,10 @@ pub struct SourceString {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct VariableName(pub String);
+pub struct SymbolName(pub String);
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Variable(pub Position, pub VariableName);
+pub struct Symbol(pub Position, pub SymbolName);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperatorKind {
@@ -51,17 +51,17 @@ pub enum BinaryOperatorKind {
 pub enum Expression_ {
     If(Box<Expression>, Block, Option<Block>),
     While(Box<Expression>, Block),
-    Assign(Variable, Box<Expression>),
-    Let(Variable, Box<Expression>),
+    Assign(Symbol, Box<Expression>),
+    Let(Symbol, Box<Expression>),
     Return(Box<Expression>),
     IntLiteral(i64),
     StringLiteral(String),
     BoolLiteral(bool),
     ListLiteral(Vec<Expression>),
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
-    Variable(Variable),
+    Variable(Symbol),
     Call(Box<Expression>, Vec<Expression>),
-    MethodCall(Box<Expression>, Variable, Vec<Expression>),
+    MethodCall(Box<Expression>, Symbol, Vec<Expression>),
     FunLiteral(FunInfo),
     Stop(Option<ErrorKind>),
     Block(Block),
@@ -84,14 +84,14 @@ pub struct ToplevelExpression(pub String, pub Expression);
 pub struct FunInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
-    pub name: Option<Variable>,
-    pub params: Vec<Variable>,
+    pub name: Option<Symbol>,
+    pub params: Vec<Symbol>,
     pub body: Block,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
-    Fun(Variable, FunInfo),
+    Fun(Symbol, FunInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

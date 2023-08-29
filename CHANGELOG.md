@@ -1,5 +1,7 @@
 # 0.6 (unreleased)
 
+**Goal: Support method calls.**
+
 # 0.5 (released 27th August 2023)
 
 **Goal: Define a real program that solves a problem for me.**

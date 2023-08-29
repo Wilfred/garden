@@ -460,7 +460,7 @@ fn parse_call_arguments(
 /// We handle trailing syntax separately from
 /// `parse_simple_expression`, to avoid infinite recursion. This is
 /// essentially left-recursion from a grammar perspective.
-fn parse_simple_expression_or_call(
+fn parse_simple_expression_with_trailing(
     src: &str,
     tokens: &mut &[Token<'_>],
 ) -> Result<Expression, ParseError> {
@@ -583,13 +583,13 @@ fn parse_simple_expression_or_binop(
     src: &str,
     tokens: &mut &[Token<'_>],
 ) -> Result<Expression, ParseError> {
-    let mut expr = parse_simple_expression_or_call(src, tokens)?;
+    let mut expr = parse_simple_expression_with_trailing(src, tokens)?;
 
     if let Some(token) = peek_token(tokens) {
         if let Some(op) = token_as_binary_op(token) {
             pop_token(tokens);
 
-            let rhs_expr = parse_simple_expression_or_call(src, tokens)?;
+            let rhs_expr = parse_simple_expression_with_trailing(src, tokens)?;
             expr = Expression(
                 expr.0.clone(),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),

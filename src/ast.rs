@@ -61,6 +61,7 @@ pub enum Expression_ {
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(Variable),
     Call(Box<Expression>, Vec<Expression>),
+    MethodCall(Box<Expression>, Variable, Vec<Expression>),
     FunLiteral(FunInfo),
     Stop(Option<ErrorKind>),
     Block(Block),

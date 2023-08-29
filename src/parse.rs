@@ -455,7 +455,8 @@ fn parse_call_arguments(
     Ok(args)
 }
 
-/// Parse an expression, and handle trailing parentheses if present.
+/// Parse an expression, and handle trailing syntax (function calls,
+/// method calls) if present.
 ///
 /// We handle trailing syntax separately from
 /// `parse_simple_expression`, to avoid infinite recursion. This is
@@ -466,10 +467,23 @@ fn parse_simple_expression_with_trailing(
 ) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression(src, tokens)?;
 
-    // here
-    while next_token_is(tokens, "(") {
-        let arguments = parse_call_arguments(src, tokens)?;
-        expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
+    loop {
+        match peek_token(tokens) {
+            Some(token) if token.text == "(" => {
+                let arguments = parse_call_arguments(src, tokens)?;
+                expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
+            }
+            Some(token) if token.text == "." => {
+                pop_token(tokens);
+                let variable = parse_variable_name(tokens)?;
+                let arguments = parse_call_arguments(src, tokens)?;
+                expr = Expression(
+                    expr.0.clone(),
+                    Expression_::MethodCall(Box::new(expr), variable, arguments),
+                );
+            }
+            _ => break,
+        }
     }
 
     Ok(expr)
@@ -966,7 +980,7 @@ fn lex_between<'a>(
         }
 
         for token_char in [
-            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']',
+            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']', '.',
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {

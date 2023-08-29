@@ -1768,6 +1768,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *receiver.clone()));
                         }
                     }
+                    Expression_::MethodCall(_, _, _) => {
+                        todo!()
+                    }
                     Expression_::Block(block) => {
                         if done_children {
                             stack_frame.exit_block();

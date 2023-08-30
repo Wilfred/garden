@@ -6,6 +6,11 @@
 
 Added `:type` to show the type of an expression.
 
+### Syntax
+
+Symbols may now include uppercase ASCII letters, so `Foo` is a legal
+function name.
+
 # 0.5 (released 27th August 2023)
 
 **Goal: Define a real program that solves a problem for me.**

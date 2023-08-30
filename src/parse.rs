@@ -959,7 +959,7 @@ pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression,
 lazy_static! {
     static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
     static ref STRING_RE: Regex = Regex::new(r##"^"(\\"|[^"])*""##).unwrap();
-    static ref VARIABLE_RE: Regex = Regex::new(r"^[a-z_][a-z0-9_]*").unwrap();
+    static ref VARIABLE_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
 fn lex_between<'a>(
@@ -1337,6 +1337,43 @@ mod tests {
                             path: PathBuf::from("__test.gdn")
                         },
                         SymbolName("x".into())
+                    ),
+                    Box::new(Expression(
+                        Position {
+                            start_offset: 8,
+                            end_offset: 9,
+                            line_number: 0,
+                            path: PathBuf::from("__test.gdn")
+                        },
+                        Expression_::IntLiteral(1)
+                    ))
+                )
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_let_uppercase() {
+        let ast = parse_exprs_from_str("let A = 1;").unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Expression(
+                Position {
+                    start_offset: 0,
+                    end_offset: 3,
+                    line_number: 0,
+                    path: PathBuf::from("__test.gdn")
+                },
+                Expression_::Let(
+                    Symbol(
+                        Position {
+                            start_offset: 4,
+                            end_offset: 5,
+                            line_number: 0,
+                            path: PathBuf::from("__test.gdn")
+                        },
+                        SymbolName("A".into())
                     ),
                     Box::new(Expression(
                         Position {

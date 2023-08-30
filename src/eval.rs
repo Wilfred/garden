@@ -369,11 +369,7 @@ fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolNa
     res.last().map(|n| (**n).clone())
 }
 
-fn most_similar_var(
-    name: &SymbolName,
-    stack_frame: &StackFrame,
-    env: &Env,
-) -> Option<SymbolName> {
+fn most_similar_var(name: &SymbolName, stack_frame: &StackFrame, env: &Env) -> Option<SymbolName> {
     let all_bindings = stack_frame.bindings.all();
 
     let mut names: Vec<_> = all_bindings.iter().map(|(n, _)| n).collect();

@@ -93,6 +93,13 @@ pub struct FunInfo {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct MethodInfo {
+    pub type_: TypeName,
+    pub name: Symbol,
+    pub fun_info: FunInfo,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     Fun(Symbol, FunInfo),
 }

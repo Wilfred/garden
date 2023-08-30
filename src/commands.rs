@@ -4,7 +4,7 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast;
+use crate::ast::{self, TypeName};
 use crate::eval::eval_exprs;
 use crate::{
     colors::green,
@@ -389,7 +389,7 @@ pub fn run_command<T: Write>(
             if let Some(expr) = expr {
                 match eval_exprs(&[expr.clone()], env, session) {
                     Ok(value) => {
-                        write!(buf, "{}", type_representation(&value)).unwrap();
+                        write!(buf, "{}", type_representation(&value).0).unwrap();
                     }
                     Err(e) => {
                         // TODO: Print a proper stack trace.
@@ -404,18 +404,20 @@ pub fn run_command<T: Write>(
     Ok(())
 }
 
-fn type_representation(value: &Value) -> String {
-    match value {
-        Value::Integer(_) => "Int",
-        Value::Boolean(_) => "Bool",
-        Value::Fun(_, _) => "Fun",
-        Value::Closure(_, _) => "Fun",
-        Value::BuiltinFunction(_) => "Fun",
-        Value::String(_) => "String",
-        Value::List(_) => "List",
-        Value::Void => "Void",
-    }
-    .to_owned()
+fn type_representation(value: &Value) -> TypeName {
+    TypeName(
+        match value {
+            Value::Integer(_) => "Int",
+            Value::Boolean(_) => "Bool",
+            Value::Fun(_, _) => "Fun",
+            Value::Closure(_, _) => "Fun",
+            Value::BuiltinFunction(_) => "Fun",
+            Value::String(_) => "String",
+            Value::List(_) => "List",
+            Value::Void => "Void",
+        }
+        .to_owned(),
+    )
 }
 
 fn command_help(command: Command) -> &'static str {

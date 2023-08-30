@@ -28,6 +28,9 @@ pub struct SourceString {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct TypeName(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName(pub String);
 
 #[derive(Clone, Debug, PartialEq)]

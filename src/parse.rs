@@ -225,7 +225,7 @@ fn parse_list_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Express
 fn parse_lambda_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let fun_keyword = require_token(tokens, "fun")?;
 
-    let params = parse_function_params(tokens)?;
+    let params = parse_parameters(tokens)?;
     let body = parse_block(src, tokens)?;
 
     let start_offset = fun_keyword.position.start_offset;
@@ -647,7 +647,7 @@ fn parse_definition(
     })
 }
 
-fn parse_function_params(tokens: &mut &[Token<'_>]) -> Result<Vec<Symbol>, ParseError> {
+fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<Symbol>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -755,7 +755,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
 
     let name = parse_symbol(tokens)?;
 
-    let params = parse_function_params(tokens)?;
+    let params = parse_parameters(tokens)?;
     let body = parse_block(src, tokens)?;
 
     let mut start_offset = fun_token.position.start_offset;
@@ -798,7 +798,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
 
     let name = parse_symbol(tokens)?;
 
-    let params = parse_function_params(tokens)?;
+    let params = parse_parameters(tokens)?;
     let body = parse_block(src, tokens)?;
 
     let mut start_offset = fun_token.position.start_offset;

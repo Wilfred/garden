@@ -461,6 +461,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                 env.set_with_file_scope(&name.1, Value::Fun(name.clone(), fun_info.clone()));
             }
             Definition_::MethodDefinition(meth_info) => {
+                // TODO: check receiver type is defined.
                 env.add_method(meth_info);
             }
         }

@@ -725,6 +725,13 @@ fn join_comments(comments: &[(Position, &str)]) -> String {
     comment_texts.join("")
 }
 
+fn parse_doc_comment(token: &Token) -> Option<String> {
+    if !token.preceding_comments.is_empty() {
+        return Some(join_comments(&token.preceding_comments));
+    }
+    None
+}
+
 fn parse_function_or_method(
     src: &str,
     tokens: &mut &[Token<'_>],
@@ -745,10 +752,7 @@ fn parse_function_or_method(
 
 fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
-    let mut doc_comment = None;
-    if !fun_token.preceding_comments.is_empty() {
-        doc_comment = Some(join_comments(&fun_token.preceding_comments));
-    }
+    let doc_comment = parse_doc_comment(&fun_token);
 
     require_token(tokens, "(")?;
     require_token(tokens, ")")?;
@@ -791,10 +795,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
 
 fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
-    let mut doc_comment = None;
-    if !fun_token.preceding_comments.is_empty() {
-        doc_comment = Some(join_comments(&fun_token.preceding_comments));
-    }
+    let doc_comment = parse_doc_comment(&fun_token);
 
     let name = parse_symbol(tokens)?;
 

@@ -27,6 +27,7 @@ pub struct SourceString {
     pub src: String,
 }
 
+// TODO: store positions of type hints too.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TypeName(pub String);
 
@@ -35,6 +36,9 @@ pub struct SymbolName(pub String);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Symbol(pub Position, pub SymbolName);
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SymbolWithType(pub Symbol, pub Option<TypeName>);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperatorKind {
@@ -88,7 +92,7 @@ pub struct FunInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name: Option<Symbol>,
-    pub params: Vec<Symbol>,
+    pub params: Vec<SymbolWithType>,
     pub body: Block,
 }
 

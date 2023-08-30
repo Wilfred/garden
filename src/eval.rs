@@ -1355,7 +1355,8 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-                fun_bindings.insert(param.1.clone(), value.1.clone());
+                let param_name = &param.0 .1;
+                fun_bindings.insert(param_name.clone(), value.1.clone());
             }
 
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
@@ -1387,7 +1388,8 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in params.iter().zip(arg_values.iter()) {
-                fun_bindings.insert(param.1.clone(), value.1.clone());
+                let param_name = &param.0 .1;
+                fun_bindings.insert(param_name.clone(), value.1.clone());
             }
 
             return Ok(Some(StackFrame {

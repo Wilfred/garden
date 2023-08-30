@@ -4,7 +4,7 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{self, TypeName};
+use crate::ast::{self, SymbolWithType, TypeName};
 use crate::eval::eval_exprs;
 use crate::{
     colors::green,
@@ -189,7 +189,7 @@ fn describe_fun(value: &Value) -> Option<String> {
                 name.1 .0,
                 params
                     .iter()
-                    .map(|p| p.1 .0.clone())
+                    .map(|SymbolWithType(p, _type)| p.1 .0.clone())
                     .collect::<Vec<_>>()
                     .join(", ")
             ));

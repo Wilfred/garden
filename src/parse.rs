@@ -18,6 +18,7 @@ use crate::ast::Position;
 use crate::ast::SourceString;
 use crate::ast::Symbol;
 use crate::ast::SymbolName;
+use crate::ast::SymbolWithType;
 use crate::ast::ToplevelExpression;
 use crate::ast::TypeName;
 use crate::eval::StackFrame;
@@ -647,7 +648,12 @@ fn parse_definition(
     })
 }
 
-fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<Symbol>, ParseError> {
+fn parse_parameter(tokens: &mut &[Token<'_>]) -> Result<SymbolWithType, ParseError> {
+    let param = parse_symbol(tokens)?;
+    Ok(SymbolWithType(param, None))
+}
+
+fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -656,7 +662,7 @@ fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<Symbol>, ParseError
             break;
         }
 
-        let param = parse_symbol(tokens)?;
+        let param = parse_parameter(tokens)?;
         params.push(param);
 
         if let Some(token) = peek_token(tokens) {

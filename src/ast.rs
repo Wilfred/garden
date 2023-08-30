@@ -101,7 +101,7 @@ pub struct MethodInfo {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
-    Fun(Symbol, FunInfo),
+    FunDefinition(Symbol, FunInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

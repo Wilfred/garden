@@ -452,7 +452,7 @@ pub fn eval_def_or_exprs(
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     for definition in definitions {
         match &definition.2 {
-            Definition_::Fun(name, fun_info) => {
+            Definition_::FunDefinition(name, fun_info) => {
                 env.set_with_file_scope(&name.1, Value::Fun(name.clone(), fun_info.clone()));
             }
         }

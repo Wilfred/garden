@@ -749,7 +749,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     Ok(Definition(
         src_string.clone(),
         fun_token.position,
-        Definition_::Fun(
+        Definition_::FunDefinition(
             name.clone(),
             FunInfo {
                 src_string,
@@ -1588,7 +1588,7 @@ mod tests {
                     line_number: 2,
                     path: path.clone()
                 },
-                Definition_::Fun(
+                Definition_::FunDefinition(
                     Symbol(
                         Position {
                             start_offset: 22,

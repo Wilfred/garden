@@ -367,6 +367,11 @@ impl Env {
     pub fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }
+
+    pub fn add_method(&mut self, method_info: &MethodInfo) {
+        let type_methods = self.methods.entry(method_info.type_.clone()).or_default();
+        type_methods.insert(method_info.name.1.clone(), method_info.clone());
+    }
 }
 
 fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
@@ -454,6 +459,9 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
         match &definition.2 {
             Definition_::FunDefinition(name, fun_info) => {
                 env.set_with_file_scope(&name.1, Value::Fun(name.clone(), fun_info.clone()));
+            }
+            Definition_::MethodDefinition(meth_info) => {
+                env.add_method(meth_info);
             }
         }
     }

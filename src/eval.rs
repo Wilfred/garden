@@ -11,7 +11,7 @@ use strsim::normalized_levenshtein;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, SourceString, Symbol};
+use crate::ast::{BinaryOperatorKind, Block, FunInfo, Position, SourceString, Symbol, TypeName};
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
 };
@@ -313,6 +313,7 @@ pub struct Env {
     // TODO: trace_exprs would be clearer in Session.
     pub trace_exprs: bool,
     pub file_scope: HashMap<SymbolName, Value>,
+    pub methods: HashMap<TypeName, HashMap<SymbolName, Value>>,
     pub stack: Vec<StackFrame>,
 }
 
@@ -328,9 +329,12 @@ impl Default for Env {
             );
         }
 
+        let methods: HashMap<TypeName, HashMap<SymbolName, Value>> = HashMap::new();
+
         Self {
             trace_exprs: false,
             file_scope,
+            methods,
             stack: vec![StackFrame {
                 call_site: None,
                 bindings: Bindings::default(),

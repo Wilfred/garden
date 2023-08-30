@@ -379,7 +379,7 @@ fn parse_simple_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
             return Ok(Expression(token.position, Expression_::BoolLiteral(false)));
         }
 
-        if VARIABLE_RE.is_match(token.text) {
+        if SYMBOL_RE.is_match(token.text) {
             return parse_variable_expression(tokens);
         }
 
@@ -841,7 +841,7 @@ const RESERVED_WORDS: &[&str] = &[
 
 fn parse_symbol(tokens: &mut &[Token<'_>]) -> Result<Symbol, ParseError> {
     let variable_token = require_a_token(tokens, "variable name")?;
-    if !VARIABLE_RE.is_match(variable_token.text) {
+    if !SYMBOL_RE.is_match(variable_token.text) {
         return Err(ParseError::Invalid {
             position: variable_token.position,
             message: format!("Invalid variable name: '{}'", variable_token.text),
@@ -959,7 +959,7 @@ pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression,
 lazy_static! {
     static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
     static ref STRING_RE: Regex = Regex::new(r##"^"(\\"|[^"])*""##).unwrap();
-    static ref VARIABLE_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
+    static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
 fn lex_between<'a>(
@@ -1086,7 +1086,7 @@ fn lex_between<'a>(
             preceding_comments = vec![];
 
             offset += string_match.end();
-        } else if let Some(variable_match) = VARIABLE_RE.find(s) {
+        } else if let Some(variable_match) = SYMBOL_RE.find(s) {
             res.push(Token {
                 position: Position {
                     start_offset: offset,

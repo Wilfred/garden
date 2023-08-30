@@ -2,6 +2,10 @@
 
 **Goal: Support method calls.**
 
+### Commands
+
+Added `:type` to show the type of an expression.
+
 # 0.5 (released 27th August 2023)
 
 **Goal: Define a real program that solves a problem for me.**

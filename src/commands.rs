@@ -5,6 +5,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::ast;
+use crate::eval::eval_exprs;
 use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
@@ -27,6 +28,7 @@ pub enum Command {
     Search(Option<String>),
     Source,
     Trace,
+    Type(Option<ast::Expression>),
     Stack,
     Quit,
 }
@@ -73,6 +75,7 @@ impl Display for Command {
             Command::Source => ":source",
             Command::Stack => ":stack",
             Command::Trace => ":trace",
+            Command::Type(_) => ":type",
             Command::Quit => ":quit",
         };
         write!(f, "{}", name)
@@ -114,6 +117,16 @@ impl Command {
                     ) {
                         Ok(expr) => Ok(Command::Replace(Some(expr))),
                         Err(_) => Ok(Command::Replace(None)),
+                    };
+                }
+
+                if let Some(src) = split_first_word(s, ":type") {
+                    return match parse_inline_expr_from_str(
+                        &PathBuf::from("__interactive_inline__"),
+                        src,
+                    ) {
+                        Ok(expr) => Ok(Command::Type(Some(expr))),
+                        Err(_) => Ok(Command::Type(None)),
                     };
                 }
 
@@ -194,7 +207,7 @@ pub fn run_command<T: Write>(
     buf: &mut T,
     cmd: &Command,
     env: &mut Env,
-    session: &Session,
+    session: &mut Session,
 ) -> Result<(), CommandError> {
     match cmd {
         Command::Help(text) => {
@@ -372,8 +385,37 @@ pub fn run_command<T: Write>(
         Command::Quit => {
             std::process::exit(0);
         }
+        Command::Type(expr) => {
+            if let Some(expr) = expr {
+                match eval_exprs(&[expr.clone()], env, session) {
+                    Ok(value) => {
+                        write!(buf, "{}", type_representation(&value)).unwrap();
+                    }
+                    Err(e) => {
+                        // TODO: Print a proper stack trace.
+                        write!(buf, "Evaluation failed: {:?}", e).unwrap();
+                    }
+                }
+            } else {
+                write!(buf, ":type requires a code snippet, e.g. `:type 1 + 2`").unwrap();
+            }
+        }
     }
     Ok(())
+}
+
+fn type_representation(value: &Value) -> String {
+    match value {
+        Value::Integer(_) => "Int",
+        Value::Boolean(_) => "Bool",
+        Value::Fun(_, _) => "Fun",
+        Value::Closure(_, _) => "Fun",
+        Value::BuiltinFunction(_) => "Fun",
+        Value::String(_) => "String",
+        Value::List(_) => "List",
+        Value::Void => "Void",
+    }
+    .to_owned()
 }
 
 fn command_help(command: Command) -> &'static str {
@@ -392,6 +434,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Skip => "The :skip command discards the current expression, and execution continues from the next expression.\n\nExample:\n\n:skip",
         Command::Source => "The :source command displays the history of all code evaluated in the current session.\n\nExample:\n\n:source",
         Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",
+        Command::Type(_) => "The :type command shows the type of a given expression.\n\nExample:\n\n:type 1 + 2",
         Command::Stack => "The :stack command prints the current call stack.\n\nExample:\n\n:stack",
         Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
     }

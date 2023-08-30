@@ -13,11 +13,13 @@ use crate::ast::DefinitionsOrExpression;
 use crate::ast::Expression;
 use crate::ast::Expression_;
 use crate::ast::FunInfo;
+use crate::ast::MethodInfo;
 use crate::ast::Position;
 use crate::ast::SourceString;
-use crate::ast::ToplevelExpression;
 use crate::ast::Symbol;
 use crate::ast::SymbolName;
+use crate::ast::ToplevelExpression;
+use crate::ast::TypeName;
 use crate::eval::StackFrame;
 
 fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> String {
@@ -621,7 +623,7 @@ fn parse_definition(
 ) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
-            return parse_function(src, tokens);
+            return parse_function_or_method(src, tokens);
         }
 
         // TODO: Include the token in the error message.
@@ -721,6 +723,70 @@ fn join_comments(comments: &[(Position, &str)]) -> String {
     }
 
     comment_texts.join("")
+}
+
+fn parse_function_or_method(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Definition, ParseError> {
+    match peek_two_tokens(tokens) {
+        Some((_, second_token)) => {
+            if second_token.text == "(" {
+                parse_method(src, tokens)
+            } else {
+                parse_function(src, tokens)
+            }
+        }
+        None => Err(ParseError::Incomplete(
+            "Unfinished function or method definition.".to_owned(),
+        )),
+    }
+}
+
+fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+    let fun_token = require_token(tokens, "fun")?;
+    let mut doc_comment = None;
+    if !fun_token.preceding_comments.is_empty() {
+        doc_comment = Some(join_comments(&fun_token.preceding_comments));
+    }
+
+    require_token(tokens, "(")?;
+    require_token(tokens, ")")?;
+
+    let name = parse_symbol(tokens)?;
+
+    let params = parse_function_params(tokens)?;
+    let body = parse_block(src, tokens)?;
+
+    let mut start_offset = fun_token.position.start_offset;
+    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = body.close_brace.end_offset;
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    let fun_info = FunInfo {
+        src_string: src_string.clone(),
+        doc_comment,
+        name: Some(name.clone()),
+        params,
+        body,
+    };
+    let meth_info = MethodInfo {
+        type_: TypeName("List".to_owned()),
+        name,
+        fun_info,
+    };
+
+    Ok(Definition(
+        src_string.clone(),
+        fun_token.position,
+        Definition_::MethodDefinition(meth_info),
+    ))
 }
 
 fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {

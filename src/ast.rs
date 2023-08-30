@@ -101,7 +101,13 @@ pub struct MethodInfo {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
+    /// ```garden
+    /// fun foo() {}
+    /// ```
     FunDefinition(Symbol, FunInfo),
+    /// ```garden
+    /// fun (self: List) foo() {}
+    /// ```
     MethodDefinition(MethodInfo),
 }
 

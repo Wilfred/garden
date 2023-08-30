@@ -310,6 +310,7 @@ impl StackFrame {
 
 #[derive(Debug)]
 pub struct Env {
+    // TODO: trace_exprs would be clearer in Session.
     pub trace_exprs: bool,
     pub file_scope: HashMap<SymbolName, Value>,
     pub stack: Vec<StackFrame>,

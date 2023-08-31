@@ -369,7 +369,7 @@ impl Env {
     }
 
     pub fn add_method(&mut self, method_info: &MethodInfo) {
-        let type_methods = self.methods.entry(method_info.type_.clone()).or_default();
+        let type_methods = self.methods.entry(method_info.receiver_type.clone()).or_default();
         type_methods.insert(method_info.name.1.clone(), method_info.clone());
     }
 }

@@ -648,9 +648,27 @@ fn parse_definition(
     })
 }
 
+fn parse_type_name(tokens: &mut &[Token<'_>]) -> Result<TypeName, ParseError> {
+    let name = parse_symbol(tokens)?;
+    Ok(TypeName(name.1 .0))
+}
+
 fn parse_parameter(tokens: &mut &[Token<'_>]) -> Result<SymbolWithType, ParseError> {
     let param = parse_symbol(tokens)?;
-    Ok(SymbolWithType(param, None))
+
+    let param_type = match peek_token(tokens) {
+        Some(token) => {
+            if token.text == ":" {
+                pop_token(tokens);
+                Some(parse_type_name(tokens)?)
+            } else {
+                None
+            }
+        }
+        None => None,
+    };
+
+    Ok(SymbolWithType(param, param_type))
 }
 
 fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, ParseError> {
@@ -761,6 +779,16 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
     let doc_comment = parse_doc_comment(&fun_token);
 
     require_token(tokens, "(")?;
+    let receiver_param = parse_parameter(tokens)?;
+    let receiver_name = receiver_param.0 .1;
+    let receiver_type = match receiver_param.1 {
+        Some(type_name) => type_name,
+        None => {
+            return Err(ParseError::Incomplete(
+                "A type name for this method is expected.".to_owned(),
+            ));
+        }
+    };
     require_token(tokens, ")")?;
 
     let name = parse_symbol(tokens)?;
@@ -787,7 +815,8 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
         body,
     };
     let meth_info = MethodInfo {
-        type_: TypeName("List".to_owned()),
+        receiver_type,
+        receiver_name,
         name,
         fun_info,
     };
@@ -1053,7 +1082,7 @@ fn lex_between<'a>(
         }
 
         for token_char in [
-            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']', '.',
+            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']', '.', ':',
         ] {
             if s.starts_with(token_char) {
                 res.push(Token {
@@ -1743,6 +1772,20 @@ mod tests {
                 )
             )]
         );
+    }
+
+    #[test]
+    fn test_parse_method() {
+        let path = PathBuf::from("__test.gdn");
+        let src = "fun (self: List) foo() {}";
+
+        let defs = match parse_def_or_expr_from_str(&path, src).unwrap() {
+            DefinitionsOrExpression::Defs(defs) => defs,
+            DefinitionsOrExpression::Expr(_) => unreachable!(),
+        };
+
+        assert_eq!(defs.len(), 1);
+        assert!(matches!(defs[0].2, Definition_::MethodDefinition(_)));
     }
 
     #[test]

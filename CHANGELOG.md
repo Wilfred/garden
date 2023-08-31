@@ -8,6 +8,8 @@ Added `:type` to show the type of an expression.
 
 ### Syntax
 
+Added parsing and evaluation support for methods.
+
 Symbols may now include uppercase ASCII letters, so `Foo` is a legal
 function name.
 

@@ -1458,7 +1458,6 @@ fn eval_method_call(
     position: &Position,
     meth_name: &Symbol,
     args: &[Expression],
-    session: &Session,
 ) -> Result<StackFrame, ErrorInfo> {
     let mut arg_values = vec![];
     for _ in 0..args.len() {
@@ -1480,20 +1479,75 @@ fn eval_method_call(
             if let Some(method) = receiver_methods.get(&meth_name.1) {
                 method
             } else {
-                return Err(todo!());
+                let mut saved_values = vec![receiver_value.clone()];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+
+                return Err(ErrorInfo {
+                    message: format!(
+                        "No method named {} on {}.",
+                        receiver_type_name.0, meth_name.1 .0
+                    ),
+                    restore_values: saved_values,
+                    error_position: position.clone(),
+                });
             }
-        },
+        }
         None => {
-            return Err(todo!());
-        },
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            return Err(ErrorInfo {
+                message: format!("No methods defined on {}.", meth_name.1 .0),
+                restore_values: saved_values,
+                error_position: position.clone(),
+            });
+        }
     };
 
+    let fun_info = &receiver_method.fun_info;
+
+    let mut method_subexprs: Vec<(bool, Expression)> = vec![];
+    for expr in fun_info.body.exprs.iter().rev() {
+        method_subexprs.push((false, expr.clone()));
+    }
+
+    // TODO: use a fully qualified method name here?
+    check_arity(
+        &meth_name.1 .0,
+        &receiver_value,
+        fun_info.params.len(),
+        &arg_values,
+    )?;
+
+    // TODO: check for duplicate parameter names.
+    // TODO: parameter names must not clash with the receiver name.
+    let mut fun_bindings = HashMap::new();
+    for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
+        let param_name = &param.0 .1;
+        fun_bindings.insert(param_name.clone(), value.1.clone());
+    }
+    fun_bindings.insert(receiver_method.receiver_name.clone(), receiver_value.1);
+
     Ok(StackFrame {
-        enclosing_fun: todo!(),
-        call_site: todo!(),
-        bindings: todo!(),
-        exprs_to_eval: todo!(),
-        evalled_values: todo!(),
+        enclosing_fun: Some(receiver_method.fun_info.clone()),
+        call_site: Some((
+            // TODO: use a fully qualified method name here?
+            Symbol(receiver_value.0.clone(), meth_name.1.clone()),
+            stack_frame
+                .enclosing_fun
+                .as_ref()
+                .map(|fi| fi.src_string.clone()),
+        )),
+        bindings: Bindings::new_with(fun_bindings),
+        exprs_to_eval: method_subexprs,
+        // TODO: find a better position for the void value,
+        // perhaps the position of the curly brace function
+        // body.
+        evalled_values: vec![(receiver_value.0, Value::Void)],
     })
 }
 
@@ -1854,7 +1908,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 &expr_position,
                                 &meth_name,
                                 &args,
-                                session,
                             ) {
                                 Ok(new_stack_frame) => {
                                     env.stack.push(stack_frame);

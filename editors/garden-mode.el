@@ -314,6 +314,8 @@ the user entering a value in the *garden* buffer."
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?/ ". 12" table)
     (modify-syntax-entry ?\n ">" table)
+    ;; TODO: # is only a comment at the beginning of a file.
+    (modify-syntax-entry ?\# "<" table)
     table))
 
 (defvar garden-mode-map

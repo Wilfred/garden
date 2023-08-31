@@ -4,8 +4,8 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{self, SymbolWithType, TypeName};
-use crate::eval::eval_exprs;
+use crate::ast::{self, SymbolWithType};
+use crate::eval::{eval_exprs, type_representation};
 use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
@@ -402,22 +402,6 @@ pub fn run_command<T: Write>(
         }
     }
     Ok(())
-}
-
-fn type_representation(value: &Value) -> TypeName {
-    TypeName(
-        match value {
-            Value::Integer(_) => "Int",
-            Value::Boolean(_) => "Bool",
-            Value::Fun(_, _) => "Fun",
-            Value::Closure(_, _) => "Fun",
-            Value::BuiltinFunction(_) => "Fun",
-            Value::String(_) => "String",
-            Value::List(_) => "List",
-            Value::Void => "Void",
-        }
-        .to_owned(),
-    )
 }
 
 fn command_help(command: Command) -> &'static str {

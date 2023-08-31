@@ -39,6 +39,22 @@ pub enum Value {
     Void,
 }
 
+pub fn type_representation(value: &Value) -> TypeName {
+    TypeName(
+        match value {
+            Value::Integer(_) => "Int",
+            Value::Boolean(_) => "Bool",
+            Value::Fun(_, _) => "Fun",
+            Value::Closure(_, _) => "Fun",
+            Value::BuiltinFunction(_) => "Fun",
+            Value::String(_) => "String",
+            Value::List(_) => "List",
+            Value::Void => "Void",
+        }
+        .to_owned(),
+    )
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
 pub enum BuiltinFunctionKind {
     Print,

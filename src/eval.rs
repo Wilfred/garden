@@ -1452,6 +1452,51 @@ fn eval_call(
     Ok(None)
 }
 
+fn eval_method_call(
+    env: &mut Env,
+    stack_frame: &mut StackFrame,
+    position: &Position,
+    meth_name: &Symbol,
+    args: &[Expression],
+    session: &Session,
+) -> Result<StackFrame, ErrorInfo> {
+    let mut arg_values = vec![];
+    for _ in 0..args.len() {
+        arg_values.push(
+            stack_frame
+                .evalled_values
+                .pop()
+                .expect("Popped an empty value for stack for method call arguments."),
+        );
+    }
+    let receiver_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for method call receiver.");
+
+    let receiver_type_name = type_representation(&receiver_value.1);
+    let receiver_method = match env.methods.get(&receiver_type_name) {
+        Some(receiver_methods) => {
+            if let Some(method) = receiver_methods.get(&meth_name.1) {
+                method
+            } else {
+                return Err(todo!());
+            }
+        },
+        None => {
+            return Err(todo!());
+        },
+    };
+
+    Ok(StackFrame {
+        enclosing_fun: todo!(),
+        call_site: todo!(),
+        bindings: todo!(),
+        exprs_to_eval: todo!(),
+        evalled_values: todo!(),
+    })
+}
+
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
@@ -1801,8 +1846,37 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.exprs_to_eval.push((false, *receiver.clone()));
                         }
                     }
-                    Expression_::MethodCall(_, _, _) => {
-                        todo!()
+                    Expression_::MethodCall(receiver_expr, meth_name, args) => {
+                        if done_children {
+                            match eval_method_call(
+                                env,
+                                &mut stack_frame,
+                                &expr_position,
+                                &meth_name,
+                                &args,
+                                session,
+                            ) {
+                                Ok(new_stack_frame) => {
+                                    env.stack.push(stack_frame);
+                                    env.stack.push(new_stack_frame);
+                                    continue;
+                                }
+                                Err(_) => todo!(),
+                            }
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(expr_position, expr_copy)));
+
+                            for arg in args {
+                                stack_frame.exprs_to_eval.push((false, arg.clone()));
+                            }
+                            // Push the receiver after arguments, so
+                            // we evaluate it before arguments.
+                            stack_frame
+                                .exprs_to_eval
+                                .push((false, *receiver_expr.clone()));
+                        }
                     }
                     Expression_::Block(block) => {
                         if done_children {

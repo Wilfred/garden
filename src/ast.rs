@@ -94,6 +94,7 @@ pub struct ToplevelExpression(pub String, pub Expression);
 pub struct FunInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
+    /// The name of the function. This is `None` for closures.
     pub name: Option<Symbol>,
     pub params: Vec<SymbolWithType>,
     pub body: Block,

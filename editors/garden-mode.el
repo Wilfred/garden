@@ -301,7 +301,7 @@ the user entering a value in the *garden* buffer."
        'symbols)
      . font-lock-keyword-face)
     (,(regexp-opt
-       '("print" "int_to_string")
+       '("dbg" "int_to_string" "path_exists" "print" "shell" "working_directory")
        'symbols)
      . font-lock-builtin-face)
     (,(rx

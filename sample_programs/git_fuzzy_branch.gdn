@@ -25,12 +25,12 @@ fun lines(s) {
   parts;
 }
 
-fun list_filter(items, f) {
+fun (self: List) filter(f) {
   let result = [];
 
   let i = 0;
-  while (i < list_length(items)) {
-    let item = list_get(items, i);
+  while (i < list_length(self)) {
+    let item = list_get(self, i);
 
     if (f(item)) {
       result = list_append(result, item);
@@ -42,8 +42,8 @@ fun list_filter(items, f) {
   result;
 }
 
-fun string_contains(haystack, needle) {
-  if (string_length(needle) > string_length(haystack)) {
+fun (self: String) contains(needle) {
+  if (string_length(needle) > string_length(self)) {
     return false;
   }
 
@@ -51,8 +51,8 @@ fun string_contains(haystack, needle) {
   // dbg(string_length(haystack) - string_length(needle));
 
   let i = 0;
-  while (i < (string_length(haystack) - string_length(needle))) {
-    let section = string_substring(haystack, i, i + string_length(needle));
+  while (i < (string_length(self) - string_length(needle))) {
+    let section = string_substring(self, i, i + string_length(needle));
     if (section == needle) {
       return true;
     }
@@ -63,12 +63,12 @@ fun string_contains(haystack, needle) {
   false;
 }
 
-fun list_empty(items) {
-  list_length(items) == 0;
+fun (self: List) is_empty() {
+  list_length(self) == 0;
 }
 
-fun string_join(separator, items) {
-  if (list_empty(items)) {
+fun (self: String) join(items) {
+  if (items.is_empty()) {
     return "";
   }
   if (list_length(items) == 1) {
@@ -78,7 +78,7 @@ fun string_join(separator, items) {
   let res = list_get(items, 0);
   let i = 1;
   while (i < list_length(items)) {
-    res = string_concat(res, separator);
+    res = string_concat(res, self);
     res = string_concat(res, list_get(items, i));
     i = i + 1;
   }
@@ -100,17 +100,17 @@ fun main(args) {
 
   if (in_git_repo()) {
     let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
-    let branches = list_filter(all_branches, fun(name) { string_contains(name, needle); });
+    let branches = all_branches.filter(fun(name) { name.contains(needle); });
 
-    if (list_empty(branches)) {
+    if (branches.is_empty()) {
       print(string_concat("No branches found maching: ", needle));
     } else if (list_length(branches) == 1) {
       let branch_name = list_get(branches, 0);
       print(string_concat("Checking out: ", branch_name));
       print(shell("git", ["checkout", branch_name]));
     } else {
-      let formatted_branches = string_join(", ", branches);
-      let msg = string_join("", ["Found ", int_to_string(list_length(branches)), " branches: ", formatted_branches]);
+      let formatted_branches = ", ".join(branches);
+      let msg = "".join(["Found ", int_to_string(list_length(branches)), " branches: ", formatted_branches]);
       print(msg);
     }
   } else {

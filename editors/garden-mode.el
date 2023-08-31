@@ -303,7 +303,12 @@ the user entering a value in the *garden* buffer."
     (,(regexp-opt
        '("print" "int_to_string")
        'symbols)
-     . font-lock-builtin-face)))
+     . font-lock-builtin-face)
+    (,(rx
+       (seq
+        (any upper)
+        (* (or (syntax word) (syntax symbol)))))
+     . font-lock-type-face)))
 
 (defvar garden-mode-syntax-table
   (let ((table (make-syntax-table)))

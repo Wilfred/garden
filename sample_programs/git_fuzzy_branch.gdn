@@ -107,7 +107,7 @@ fun main(args) {
     } else if (list_length(branches) == 1) {
       let branch_name = list_get(branches, 0);
       print(string_concat("Checking out: ", branch_name));
-      shell("git", ["checkout", branch_name]);
+      print(shell("git", ["checkout", branch_name]));
     } else {
       let formatted_branches = string_join(", ", branches);
       let msg = string_join("", ["Found ", int_to_string(list_length(branches)), " branches: ", formatted_branches]);

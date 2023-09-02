@@ -51,7 +51,7 @@ fun (self: String) contains(needle) {
   // dbg(string_length(haystack) - string_length(needle));
 
   let i = 0;
-  while (i < (string_length(self) - string_length(needle))) {
+  while (i <= (string_length(self) - string_length(needle))) {
     let section = string_substring(self, i, i + string_length(needle));
     if (section == needle) {
       return true;
@@ -99,6 +99,7 @@ fun main(args) {
   let needle = list_get(args, 0);
 
   if (in_git_repo()) {
+    // TODO: One branch matches exactly?
     let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
     let branches = all_branches.filter(fun(name) { name.contains(needle); });
 

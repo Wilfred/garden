@@ -8,6 +8,7 @@ mod commands;
 mod eval;
 mod interactive_session;
 mod json_session;
+mod lex;
 mod parse;
 mod prompt;
 

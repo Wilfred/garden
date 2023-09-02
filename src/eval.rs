@@ -832,6 +832,16 @@ fn eval_integer_binop(
                     .evalled_values
                     .push((position.clone(), Value::Boolean(lhs_num > rhs_num)));
             }
+            BinaryOperatorKind::LessThanOrEqual => {
+                stack_frame
+                    .evalled_values
+                    .push((position.clone(), Value::Boolean(lhs_num <= rhs_num)));
+            }
+            BinaryOperatorKind::GreaterThanOrEqual => {
+                stack_frame
+                    .evalled_values
+                    .push((position.clone(), Value::Boolean(lhs_num >= rhs_num)));
+            }
             _ => {
                 unreachable!()
             }
@@ -1765,7 +1775,9 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         | BinaryOperatorKind::Multiply
                         | BinaryOperatorKind::Divide
                         | BinaryOperatorKind::LessThan
-                        | BinaryOperatorKind::GreaterThan),
+                        | BinaryOperatorKind::LessThanOrEqual
+                        | BinaryOperatorKind::GreaterThan
+                        | BinaryOperatorKind::GreaterThanOrEqual),
                         rhs,
                     ) => {
                         if done_children {
@@ -2116,6 +2128,24 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(3));
+    }
+
+    #[test]
+    fn test_eval_less_than() {
+        let exprs = parse_exprs_from_str("1 < 2;").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(true));
+    }
+
+    #[test]
+    fn test_eval_less_than_or_equal() {
+        let exprs = parse_exprs_from_str("3 <= 2;").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(false));
     }
 
     #[test]

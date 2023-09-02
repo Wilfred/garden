@@ -71,7 +71,7 @@ pub fn lex_between<'a>(
             break;
         }
 
-        for token_str in ["==", "!=", "&&", "||"] {
+        for token_str in ["==", "!=", ">=", "<=", "&&", "||"] {
             if s.starts_with(token_str) {
                 res.push(Token {
                     position: Position {

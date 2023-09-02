@@ -21,10 +21,10 @@ use crate::ast::ToplevelExpression;
 use crate::ast::TypeName;
 use crate::eval::StackFrame;
 use crate::lex::lex;
+use crate::lex::lex_between;
+use crate::lex::Token;
 use crate::lex::INTEGER_RE;
 use crate::lex::SYMBOL_RE;
-use crate::lex::Token;
-use crate::lex::lex_between;
 
 fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> String {
     let mut res = String::new();
@@ -499,7 +499,9 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
         "&&" => Some(BinaryOperatorKind::And),
         "||" => Some(BinaryOperatorKind::Or),
         "<" => Some(BinaryOperatorKind::LessThan),
+        "<=" => Some(BinaryOperatorKind::LessThanOrEqual),
         ">" => Some(BinaryOperatorKind::GreaterThan),
+        ">=" => Some(BinaryOperatorKind::GreaterThanOrEqual),
         _ => None,
     }
 }

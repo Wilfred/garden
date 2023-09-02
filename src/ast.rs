@@ -49,7 +49,9 @@ pub enum BinaryOperatorKind {
     Equal,
     NotEqual,
     LessThan,
+    LessThanOrEqual,
     GreaterThan,
+    GreaterThanOrEqual,
     And,
     Or,
 }

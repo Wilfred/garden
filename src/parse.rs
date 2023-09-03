@@ -651,21 +651,20 @@ fn parse_type_name(tokens: &mut &[Token<'_>]) -> Result<TypeName, ParseError> {
     Ok(TypeName(name.1 .0))
 }
 
+fn parse_type_annotation(tokens: &mut &[Token<'_>]) -> Result<Option<TypeName>, ParseError> {
+    if let Some(token) = peek_token(tokens) {
+        if token.text == ":" {
+            pop_token(tokens);
+            return Ok(Some(parse_type_name(tokens)?));
+        }
+    }
+
+    Ok(None)
+}
+
 fn parse_parameter(tokens: &mut &[Token<'_>]) -> Result<SymbolWithType, ParseError> {
     let param = parse_symbol(tokens)?;
-
-    let param_type = match peek_token(tokens) {
-        Some(token) => {
-            if token.text == ":" {
-                pop_token(tokens);
-                Some(parse_type_name(tokens)?)
-            } else {
-                None
-            }
-        }
-        None => None,
-    };
-
+    let param_type = parse_type_annotation(tokens)?;
     Ok(SymbolWithType(param, param_type))
 }
 

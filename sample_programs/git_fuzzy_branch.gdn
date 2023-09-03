@@ -67,6 +67,19 @@ fun (self: List) is_empty() {
   list_length(self) == 0;
 }
 
+fun (self: List) contains(item) {
+  let i = 0;
+  while (i < list_length(self)) {
+    if (list_get(self, i) == item) {
+      return true;
+    }
+
+    i = i + 1;
+  }
+
+  false;
+}
+
 fun (self: String) join(items) {
   if (items.is_empty()) {
     return "";
@@ -106,8 +119,14 @@ fun main(args) {
   if (in_git_repo()) {
     // TODO: One branch matches exactly?
     let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
-    let branches = all_branches.filter(fun(name) { name.contains(needle); });
 
+    if (all_branches.contains(needle)) {
+      // If there's a branch with this name exactly, use it.
+      check_out(needle);
+      return 0; // TODO: void value.
+    }
+
+    let branches = all_branches.filter(fun(name) { name.contains(needle); });
     if (branches.is_empty()) {
       print(string_concat("No branches found maching: ", needle));
     } else if (list_length(branches) == 1) {

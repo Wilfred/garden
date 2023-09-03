@@ -90,6 +90,11 @@ fun in_git_repo() {
   path_exists(git_dir_path);
 }
 
+fun check_out(branch_name) {
+  print(string_concat("Checking out: ", branch_name));
+  print(shell("git", ["checkout", branch_name]));
+}
+
 fun main(args) {
   if (list_length(args) != 1) {
     print("Usage: git_fuzzy_branch <name substring>");
@@ -107,8 +112,7 @@ fun main(args) {
       print(string_concat("No branches found maching: ", needle));
     } else if (list_length(branches) == 1) {
       let branch_name = list_get(branches, 0);
-      print(string_concat("Checking out: ", branch_name));
-      print(shell("git", ["checkout", branch_name]));
+      check_out(branch_name);
     } else {
       let formatted_branches = ", ".join(branches);
       let msg = "".join(["Found ", int_to_string(list_length(branches)), " branches: ", formatted_branches]);

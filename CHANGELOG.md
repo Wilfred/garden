@@ -6,6 +6,8 @@
 
 Added `:type` to show the type of an expression.
 
+Added `:methods` to show all the defined methods available.
+
 ### Syntax
 
 Added `<=` and `>=` comparison operators.

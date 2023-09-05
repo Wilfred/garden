@@ -21,6 +21,7 @@ pub enum Command {
     Locals,
     FrameValues,
     FrameStatements,
+    Methods,
     Parse(Option<String>),
     Replace(Option<ast::Expression>),
     Resume,
@@ -67,6 +68,7 @@ impl Display for Command {
             Command::Functions => ":funs",
             Command::Help(_) => ":help",
             Command::Locals => ":locals",
+            Command::Methods => ":methods",
             Command::Parse(_) => ":parse",
             Command::Replace(_) => ":replace",
             Command::Resume => ":resume",
@@ -90,6 +92,7 @@ impl Command {
             ":fvalues" => Ok(Command::FrameValues),
             ":funs" => Ok(Command::Functions),
             ":locals" => Ok(Command::Locals),
+            ":methods" => Ok(Command::Methods),
             ":resume" => Ok(Command::Resume),
             ":skip" => Ok(Command::Skip),
             ":source" => Ok(Command::Source),
@@ -228,6 +231,26 @@ pub fn run_command<T: Write>(
                     )
                     .unwrap();
                     print_available_commands(buf);
+                }
+            }
+        }
+        Command::Methods => {
+            let mut type_names: Vec<_> = env.methods.keys().collect();
+            type_names.sort_by_key(|typename| &typename.0);
+
+            let mut is_first = true;
+            for type_name in type_names {
+                let mut method_names: Vec<_> =
+                    env.methods.get(type_name).unwrap().values().collect();
+                method_names.sort_by_key(|meth| &meth.name.1 .0);
+
+                for method_name in method_names {
+                    if !is_first {
+                        write!(buf, "\n").unwrap();
+                    }
+                    write!(buf, "{}::{}", type_name.0, &method_name.name.1 .0).unwrap();
+
+                    is_first = false;
                 }
             }
         }
@@ -410,9 +433,10 @@ fn command_help(command: Command) -> &'static str {
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
-        Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
+        Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
+        Command::Methods => "The :methods command displays all the methods currently defined.\n\nExample:\n\n:methods",
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
         Command::Replace(_) => "The :replace command discards the top value in the value stack and replaces it with the expression provided.\n\nExample:\n\n:replace 123",
         Command::Resume => "The :resume command restarts evaluation if it's previously stopped.\n\nExample:\n\n:resume",

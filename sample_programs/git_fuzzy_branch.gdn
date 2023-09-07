@@ -1,6 +1,6 @@
 #!/usr/bin/env -S garden run
 
-fun lines(s) {
+fun lines(s: String): List {
   let parts = [];
 
   let line_start = 0;
@@ -25,7 +25,7 @@ fun lines(s) {
   parts;
 }
 
-fun (self: List) filter(f) {
+fun (self: List) filter(f): List {
   let result = [];
 
   let i = 0;
@@ -42,7 +42,7 @@ fun (self: List) filter(f) {
   result;
 }
 
-fun (self: String) contains(needle) {
+fun (self: String) contains(needle: String): Bool {
   if (string_length(needle) > string_length(self)) {
     return false;
   }
@@ -63,11 +63,11 @@ fun (self: String) contains(needle) {
   false;
 }
 
-fun (self: List) is_empty() {
+fun (self: List) is_empty(): Bool {
   list_length(self) == 0;
 }
 
-fun (self: List) contains(item) {
+fun (self: List) contains(item): Bool {
   let i = 0;
   while (i < list_length(self)) {
     if (list_get(self, i) == item) {
@@ -80,7 +80,7 @@ fun (self: List) contains(item) {
   false;
 }
 
-fun (self: String) join(items) {
+fun (self: String) join(items: List): String {
   if (items.is_empty()) {
     return "";
   }
@@ -98,17 +98,17 @@ fun (self: String) join(items) {
   res;
 }
 
-fun in_git_repo() {
+fun in_git_repo(): Bool {
   let git_dir_path = string_concat(working_directory(), "/.git");
   path_exists(git_dir_path);
 }
 
-fun check_out(branch_name) {
+fun check_out(branch_name: String): Void {
   print(string_concat("Checking out: ", branch_name));
   print(shell("git", ["checkout", branch_name]));
 }
 
-fun main(args) {
+fun main(args: List): Void {
   if (list_length(args) != 1) {
     print("Usage: git_fuzzy_branch <name substring>");
     // TODO: support void values.

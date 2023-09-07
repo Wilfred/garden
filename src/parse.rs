@@ -223,6 +223,8 @@ fn parse_lambda_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
     let fun_keyword = require_token(tokens, "fun")?;
 
     let params = parse_parameters(tokens)?;
+    let return_type = parse_type_annotation(tokens)?;
+
     let body = parse_block(src, tokens)?;
 
     let start_offset = fun_keyword.position.start_offset;
@@ -240,6 +242,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
             body,
             doc_comment: None,
             name: None,
+            return_type,
         }),
     ))
 }
@@ -791,6 +794,8 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
+    let return_type = parse_type_annotation(tokens)?;
+
     let body = parse_block(src, tokens)?;
 
     let mut start_offset = fun_token.position.start_offset;
@@ -810,6 +815,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
         name: Some(name.clone()),
         params,
         body,
+        return_type,
     };
     let meth_info = MethodInfo {
         receiver_type,
@@ -832,6 +838,8 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
+    let return_type = parse_type_annotation(tokens)?;
+
     let body = parse_block(src, tokens)?;
 
     let mut start_offset = fun_token.position.start_offset;
@@ -856,6 +864,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
                 name: Some(name),
                 params,
                 body,
+                return_type,
             },
         ),
     ))
@@ -1503,6 +1512,7 @@ mod tests {
                             },
                             exprs: vec![]
                         },
+                        return_type: None,
                     }
                 )
             )]

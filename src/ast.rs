@@ -99,6 +99,7 @@ pub struct FunInfo {
     /// The name of the function. This is `None` for closures.
     pub name: Option<Symbol>,
     pub params: Vec<SymbolWithType>,
+    pub return_type: Option<TypeName>,
     pub body: Block,
 }
 

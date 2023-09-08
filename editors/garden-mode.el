@@ -368,6 +368,8 @@ the user entering a value in the *garden* buffer."
   :syntax-table garden-mode-syntax-table
   (setq comint-input-sender #'garden--send-run))
 
+;; TODO: enable smartparens
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))
 

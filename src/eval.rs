@@ -475,12 +475,17 @@ pub fn eval_def_or_exprs(
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
     for definition in definitions {
+        // TODO: check that types in definitions are defined, and emit
+        // warnings otherwise.
+        //
+        // ```
+        // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
+        // ```
         match &definition.2 {
             Definition_::FunDefinition(name, fun_info) => {
                 env.set_with_file_scope(&name.1, Value::Fun(name.clone(), fun_info.clone()));
             }
             Definition_::MethodDefinition(meth_info) => {
-                // TODO: check receiver type is defined.
                 env.add_method(meth_info);
             }
         }

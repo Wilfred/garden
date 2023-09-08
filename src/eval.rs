@@ -528,6 +528,11 @@ fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
     }
 }
 
+/// Restore `stack_frame` by putting back evaluated values and
+/// expressions to evaluate, with a Stop expression on top.
+///
+/// This enables evaluation to halt in a state where the user can
+/// choose to try again if they wish.
 fn restore_stack_frame(
     env: &mut Env,
     mut stack_frame: StackFrame,
@@ -548,9 +553,13 @@ fn restore_stack_frame(
     env.stack.push(stack_frame);
 }
 
+/// Information about an error during evaluation.
 struct ErrorInfo {
     error_position: Position,
     message: String,
+    /// Values that were popped from the stack frame to evaluate the
+    /// current subexpression. We will need to restore these in order
+    /// to halt in a state where the user can retry.
     restore_values: Vec<(Position, Value)>,
 }
 

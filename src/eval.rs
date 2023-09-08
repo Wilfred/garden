@@ -1427,6 +1427,8 @@ fn eval_call(
             }));
         }
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
+            // Calling a user-defined function.
+
             check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];

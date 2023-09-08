@@ -332,6 +332,7 @@ pub struct Env {
     pub trace_exprs: bool,
     pub file_scope: HashMap<SymbolName, Value>,
     pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
+    pub types: Vec<TypeName>,
     pub stack: Vec<StackFrame>,
 }
 
@@ -349,10 +350,22 @@ impl Default for Env {
 
         let methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>> = HashMap::new();
 
+        // Insert all the built-in types.
+        let types = vec![
+            // TODO: String literals are duplicated with type_representation.
+            TypeName("Int".into()),
+            TypeName("Bool".into()),
+            TypeName("Fun".into()),
+            TypeName("String".into()),
+            TypeName("List".into()),
+            TypeName("Void".into()),
+        ];
+
         Self {
             trace_exprs: false,
             file_scope,
             methods,
+            types,
             stack: vec![StackFrame {
                 call_site: None,
                 bindings: Bindings::default(),

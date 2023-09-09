@@ -105,6 +105,7 @@ fun in_git_repo(): Bool {
 
 fun check_out(branch_name: String): Void {
   print(string_concat("Checking out: ", branch_name));
+  // TODO: unwanted extra trailing newline
   print(shell("git", ["checkout", branch_name]));
 }
 

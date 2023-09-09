@@ -10,6 +10,9 @@ Added `:methods` to show all the defined methods available.
 
 ### Syntax
 
+Functions and methods can now specify a return type, and that type
+will be enforced at runtime.
+
 Added `<=` and `>=` comparison operators.
 
 Added parsing and evaluation support for methods.

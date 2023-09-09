@@ -914,6 +914,20 @@ fn check_arity(
     Ok(())
 }
 
+fn check_type(value: &Value, expected: &TypeName) -> Result<(), ErrorMessage> {
+    let actual_type = type_representation(value);
+
+    if actual_type != *expected {
+        // TODO: Print the value as well as its type.
+        return Err(ErrorMessage(format!(
+            "Expected a {}, but got a {}",
+            expected.0, actual_type.0
+        )));
+    }
+
+    Ok(())
+}
+
 fn eval_builtin_call(
     kind: BuiltinFunctionKind,
     receiver_value: (Position, Value),
@@ -2008,14 +2022,40 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     env.stack.push(stack_frame);
                     break;
                 } else {
-                    // The final evaluation result of the function
-                    // call should be used in the previous stack
-                    // frame.
-                    let result = stack_frame
+                    // Check that the value matches the return type.
+                    let ret_val_and_pos = stack_frame
                         .evalled_values
                         .pop()
                         .expect("Should have a value");
-                    env.stack.last_mut().unwrap().evalled_values.push(result);
+                    let (return_value_pos, return_value) = ret_val_and_pos.clone();
+
+                    if let Some(ref fun) = stack_frame.enclosing_fun {
+                        if let Some(return_type) = &fun.return_type {
+                            if let Err(msg) = check_type(&return_value, &return_type) {
+                                stack_frame.evalled_values.push(ret_val_and_pos.clone());
+
+                                stack_frame.exprs_to_eval.push((
+                                    false,
+                                    Expression(
+                                        return_value_pos.clone(),
+                                        Expression_::Stop(Some(ErrorKind::BadValue)),
+                                    ),
+                                ));
+                                env.stack.push(stack_frame);
+
+                                return Err(EvalError::ResumableError(return_value_pos, msg));
+                            }
+                        }
+                    }
+
+                    // The final evaluation result of the function
+                    // call should be used in the previous stack
+                    // frame.
+                    env.stack
+                        .last_mut()
+                        .unwrap()
+                        .evalled_values
+                        .push(ret_val_and_pos);
                 }
             } else {
                 // Keep going on this stack frame.
@@ -2475,6 +2515,57 @@ mod tests {
         let exprs = parse_exprs_from_str("f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
+    }
+
+    #[test]
+    fn test_eval_correct_return_type() {
+        let mut env = Env::default();
+
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f(): Int { 1; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_ok());
+    }
+
+    #[test]
+    fn test_eval_wrong_return_type() {
+        let mut env = Env::default();
+
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f(): String { 1; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
+    fn test_eval_wrong_return_type_early_return() {
+        let mut env = Env::default();
+
+        let defs =
+            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "fun f(): String { return 1; }")
+                .unwrap()
+            {
+                DefinitionsOrExpression::Defs(defs) => defs,
+                DefinitionsOrExpression::Expr(_) => unreachable!(),
+            };
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

@@ -394,7 +394,7 @@ pub fn run_command<T: Write>(
                     Ok(ast) => write!(buf, "{:#?}", ast).unwrap(),
                     Err(ParseError::Incomplete(e))
                     | Err(ParseError::Invalid { message: e, .. }) => {
-                        write!(buf, "{}: {}", "Error".bright_red(), e).unwrap();
+                        write!(buf, "{}: {}", "Error".bright_red(), e.0).unwrap();
                     }
                 };
             } else {

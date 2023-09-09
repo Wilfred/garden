@@ -20,7 +20,7 @@ use clap::{Parser, Subcommand};
 use eval::{eval_def_or_exprs, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
-use crate::eval::escape_string_literal;
+use crate::eval::{escape_string_literal, ErrorMessage};
 use crate::parse::{format_error, format_error_with_stack, format_parse_error};
 
 #[derive(Debug, Parser)]
@@ -110,10 +110,7 @@ fn run_file(
                 match eval_def_or_exprs(&call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, msg)) => {
-                        eprintln!(
-                            "{}",
-                            &format_error_with_stack(&msg, &position, &env.stack)
-                        );
+                        eprintln!("{}", &format_error_with_stack(&msg, &position, &env.stack));
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
@@ -130,11 +127,15 @@ fn run_file(
             }) => {
                 eprintln!(
                     "{}",
-                    &format_parse_error(&format!("Parse error: {}", e), &position, &src)
+                    &format_parse_error(
+                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &position,
+                        &src
+                    )
                 );
             }
             Err(parse::ParseError::Incomplete(e)) => {
-                eprintln!("Parse error (incomplete input): {}", e);
+                eprintln!("Parse error (incomplete input): {}", e.0);
             }
         },
         Err(e) => {

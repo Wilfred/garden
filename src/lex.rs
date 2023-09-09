@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
 
-use crate::{ast::Position, parse::ParseError};
+use crate::{ast::Position, eval::ErrorMessage, parse::ParseError};
 
 lazy_static! {
     pub static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
@@ -170,7 +170,7 @@ pub fn lex_between<'a>(
                 line_number: lp.from_offset(offset).as_usize(),
                 path: path.to_path_buf(),
             },
-            message: format!("Unrecognized syntax: '{}'", &s[offset..]),
+            message: ErrorMessage(format!("Unrecognized syntax: '{}'", &s[offset..])),
             additional: vec![],
         });
     }

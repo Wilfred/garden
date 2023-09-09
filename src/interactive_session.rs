@@ -63,10 +63,10 @@ fn read_expr(
                         return Ok((src, items));
                     }
                     Err(ParseError::Incomplete(e)) => {
-                        println!("Parsing failed (incomplete): {}", e);
+                        println!("Parsing failed (incomplete): {}", e.0);
                     }
                     Err(ParseError::Invalid { message: e, .. }) => {
-                        println!("Parsing failed: {}", e);
+                        println!("Parsing failed: {}", e.0);
                     }
                 }
             }

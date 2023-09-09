@@ -127,7 +127,7 @@ fn handle_eval_request(
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
                         position: Some(position),
-                        message,
+                        message: message.0,
                         stack,
                     }),
                 }
@@ -136,7 +136,7 @@ fn handle_eval_request(
                 kind: ResponseKind::Evaluate,
                 value: Err(ResponseError {
                     position: None,
-                    message,
+                    message: message.0,
                     stack: None,
                 }),
             },

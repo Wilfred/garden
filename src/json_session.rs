@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ast;
 use crate::eval::{eval_env, ToplevelEvalResult};
-use crate::parse::{format_error, parse_def_or_expr_from_span, ParseError, format_parse_error};
+use crate::parse::{format_error, format_parse_error, parse_def_or_expr_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
     eval::{eval_def_or_exprs, Env, EvalError, Session},
@@ -99,7 +99,7 @@ fn handle_eval_request(
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
                         position: Some(position),
-                        message: format!("Error: {}", e),
+                        message: format!("Error: {}", e.0),
                         stack,
                     }),
                 }
@@ -177,7 +177,7 @@ fn handle_request(
                                     kind: ResponseKind::Evaluate,
                                     value: Err(ResponseError {
                                         position: Some(position),
-                                        message: format!("Error: {}", e),
+                                        message: format!("Error: {}", e.0),
                                         stack: None,
                                     }),
                                 },

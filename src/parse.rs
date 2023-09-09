@@ -19,6 +19,7 @@ use crate::ast::SymbolName;
 use crate::ast::SymbolWithType;
 use crate::ast::ToplevelExpression;
 use crate::ast::TypeName;
+use crate::eval::ErrorMessage;
 use crate::eval::StackFrame;
 use crate::lex::lex;
 use crate::lex::lex_between;
@@ -65,10 +66,14 @@ fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> 
     res
 }
 
-pub fn format_error_with_stack(message: &str, position: &Position, stack: &[StackFrame]) -> String {
+pub fn format_error_with_stack(
+    message: &ErrorMessage,
+    position: &Position,
+    stack: &[StackFrame],
+) -> String {
     let mut res = String::new();
 
-    res.push_str(&format!("Error: {}\n\n", message));
+    res.push_str(&format!("Error: {}\n\n", message.0));
 
     let top_stack = stack.last().unwrap();
     let src_string = top_stack
@@ -87,14 +92,14 @@ pub fn format_error_with_stack(message: &str, position: &Position, stack: &[Stac
     res
 }
 
-pub fn format_error(message: &str, position: &Position, src: &str) -> String {
+pub fn format_error(message: &ErrorMessage, position: &Position, src: &str) -> String {
     let mut res = Vec::new();
 
     let path_str = position.path.display().to_string();
     let r = Report::build(ReportKind::Error, &path_str, position.start_offset)
         .with_label(
             Label::new((&path_str, position.start_offset..position.end_offset))
-                .with_message(message),
+                .with_message(&message.0),
         )
         .finish();
 
@@ -103,7 +108,7 @@ pub fn format_error(message: &str, position: &Position, src: &str) -> String {
 }
 
 pub fn format_parse_error(message: &str, position: &Position, src: &str) -> String {
-    format_error(message, position, src)
+    format_error(&ErrorMessage(message.to_owned()), position, src)
 }
 
 #[derive(Debug)]

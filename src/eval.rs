@@ -454,7 +454,7 @@ pub enum ErrorKind {
 #[derive(Debug)]
 pub enum EvalError {
     Interrupted,
-    ResumableError(Position, String),
+    ResumableError(Position, ErrorMessage),
     Stop(Option<ErrorKind>),
 }
 
@@ -553,10 +553,13 @@ fn restore_stack_frame(
     env.stack.push(stack_frame);
 }
 
+#[derive(Debug)]
+pub struct ErrorMessage(pub String);
+
 /// Information about an error during evaluation.
 struct ErrorInfo {
     error_position: Position,
-    message: String,
+    message: ErrorMessage,
     /// Values that were popped from the stack frame to evaluate the
     /// current subexpression. We will need to restore these in order
     /// to halt in a state where the user can retry.
@@ -600,7 +603,10 @@ fn eval_if(
         }
         v => {
             return Err(ErrorInfo {
-                message: format!("Expected a boolean when evaluating `if`, but got: {}", v),
+                message: ErrorMessage(format!(
+                    "Expected a boolean when evaluating `if`, but got: {}",
+                    v
+                )),
                 restore_values: vec![condition_value],
                 error_position: bool_position.clone(),
             });
@@ -641,7 +647,10 @@ fn eval_while(
         }
         v => {
             return Err(ErrorInfo {
-                message: format!("Expected a boolean when evaluating `while`, but got: {}", v),
+                message: ErrorMessage(format!(
+                    "Expected a boolean when evaluating `while`, but got: {}",
+                    v
+                )),
                 restore_values: vec![condition_value],
                 error_position: condition_pos.clone(),
             });
@@ -655,10 +664,10 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
     let var_name = &variable.1;
     if !stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
-            message: format!(
+            message: ErrorMessage(format!(
                 "{} is not currently bound. Try `let {} = something`.",
                 var_name.0, var_name.0
-            ),
+            )),
             restore_values: vec![],
             error_position: variable.0.clone(),
         });
@@ -680,10 +689,10 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
     let var_name = &variable.1;
     if stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
-            message: format!(
+            message: ErrorMessage(format!(
                 "{} is already bound. Try `{} = something` instead.",
                 var_name.0, var_name.0
-            ),
+            )),
             restore_values: vec![],
             error_position: variable.0.clone(),
         });
@@ -717,7 +726,7 @@ fn eval_boolean_binop(
             Value::Boolean(b) => b,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected a bool, but got: {}", lhs_value.1),
+                    message: ErrorMessage(format!("Expected a bool, but got: {}", lhs_value.1)),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_value.0,
                 });
@@ -727,7 +736,7 @@ fn eval_boolean_binop(
             Value::Boolean(b) => b,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected a bool, but got: {}", rhs_value.1),
+                    message: ErrorMessage(format!("Expected a bool, but got: {}", rhs_value.1)),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_value.0,
                 });
@@ -800,7 +809,7 @@ fn eval_integer_binop(
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected an integer, but got: {}", lhs_value.1),
+                    message: ErrorMessage(format!("Expected an integer, but got: {}", lhs_value.1)),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_value.0,
                 });
@@ -810,7 +819,7 @@ fn eval_integer_binop(
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: format!("Expected an integer, but got: {}", rhs_value.1),
+                    message: ErrorMessage(format!("Expected an integer, but got: {}", rhs_value.1)),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_value.0,
                 });
@@ -839,7 +848,7 @@ fn eval_integer_binop(
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
                     return Err(ErrorInfo {
-                        message: format!("Tried to divide {} by zero.", rhs_value.1),
+                        message: ErrorMessage(format!("Tried to divide {} by zero.", rhs_value.1)),
                         restore_values: vec![lhs_value, rhs_value.clone()],
                         error_position: rhs_value.0,
                     });
@@ -890,13 +899,13 @@ fn check_arity(
         }
 
         return Err(ErrorInfo {
-            message: format!(
+            message: ErrorMessage(format!(
                 "Function {} requires {} argument{}, but got: {}",
                 fun_name,
                 expected,
                 if expected == 1 { "" } else { "s" },
                 arg_values.len()
-            ),
+            )),
             restore_values: saved_values,
             error_position: receiver_value.0.clone(),
         });
@@ -938,7 +947,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -982,7 +991,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -998,7 +1007,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1027,7 +1036,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1068,7 +1077,7 @@ fn eval_builtin_call(
                             saved_values.push(receiver_value.clone());
 
                             return Err(ErrorInfo {
-                                message: format!("Expected a list, but got: {}", v),
+                                message: ErrorMessage(format!("Expected a list, but got: {}", v)),
                                 restore_values: saved_values,
                                 error_position: arg_values[0].0.clone(),
                             });
@@ -1083,7 +1092,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1109,7 +1118,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a list, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1128,7 +1137,7 @@ fn eval_builtin_call(
                         }
                         saved_values.push(receiver_value.clone());
 
-                        let message = if items.is_empty() {
+                        let message = ErrorMessage(if items.is_empty() {
                             format!("Tried to index into an empty list with index {}", *i)
                         } else {
                             format!(
@@ -1136,7 +1145,7 @@ fn eval_builtin_call(
                                 items.len() - 1,
                                 i
                             )
-                        };
+                        });
 
                         return Err(ErrorInfo {
                             message,
@@ -1159,7 +1168,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a list, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1172,7 +1181,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected an integer, but got: {}", v),
+                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1196,7 +1205,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a list, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1220,7 +1229,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected an integer, but got: {}", v),
+                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1241,7 +1250,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1266,7 +1275,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected a string, but got: {}", v),
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1282,7 +1291,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected an integer, but got: {}", v),
+                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1298,7 +1307,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format!("Expected an integer, but got: {}", v),
+                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
                         restore_values: saved_values,
                         error_position: arg_values[2].0.clone(),
                     });
@@ -1313,7 +1322,7 @@ fn eval_builtin_call(
                 saved_values.push(receiver_value.clone());
 
                 return Err(ErrorInfo {
-                        message: format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg),
+                        message: ErrorMessage(format!("The second argument to string_substring must be greater than 0, but got: {}", from_arg)),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1327,7 +1336,7 @@ fn eval_builtin_call(
                 saved_values.push(receiver_value.clone());
 
                 return Err(ErrorInfo {
-                        message: format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg),
+                        message: ErrorMessage(format!("The second argument to string_substring cannot be greater than the third, but got: {} and {}", from_arg, to_arg)),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1394,12 +1403,12 @@ fn eval_call(
                 }
 
                 return Err(ErrorInfo {
-                    message: format!(
+                    message: ErrorMessage(format!(
                         "Closure expects {} argument{}, but got {}",
                         fun_info.params.len(),
                         if fun_info.params.len() == 1 { "" } else { "s" },
                         arg_values.len()
-                    ),
+                    )),
                     restore_values: saved_values,
                     error_position: receiver_value.0,
                 });
@@ -1482,7 +1491,7 @@ fn eval_call(
 
             return Err(ErrorInfo {
                 error_position: receiver_value.0,
-                message: format!("Expected a function, but got: {}", v),
+                message: ErrorMessage(format!("Expected a function, but got: {}", v)),
                 restore_values: saved_values,
             });
         }
@@ -1524,10 +1533,10 @@ fn eval_method_call(
                 }
 
                 return Err(ErrorInfo {
-                    message: format!(
+                    message: ErrorMessage(format!(
                         "No method named {} on {}.",
                         receiver_type_name.0, meth_name.1 .0
-                    ),
+                    )),
                     restore_values: saved_values,
                     error_position: position.clone(),
                 });
@@ -1540,7 +1549,7 @@ fn eval_method_call(
             }
 
             return Err(ErrorInfo {
-                message: format!("No methods defined on {}.", meth_name.1 .0),
+                message: ErrorMessage(format!("No methods defined on {}.", meth_name.1 .0)),
                 restore_values: saved_values,
                 error_position: position.clone(),
             });
@@ -1793,7 +1802,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
 
                             return Err(EvalError::ResumableError(
                                 name.0.clone(),
-                                format!("Undefined variable: {}.{}", name.1 .0, suggestion),
+                                ErrorMessage(format!(
+                                    "Undefined variable: {}.{}",
+                                    name.1 .0, suggestion
+                                )),
                             ));
                         }
                     }

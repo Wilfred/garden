@@ -1012,6 +1012,16 @@ pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
 }
 
 #[cfg(test)]
+pub fn parse_defs_from_str(s: &str) -> Result<Vec<Definition>, ParseError> {
+    let defs = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), s)? {
+        DefinitionsOrExpression::Defs(defs) => defs,
+        DefinitionsOrExpression::Expr(_) => unreachable!(),
+    };
+
+    Ok(defs)
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -1459,11 +1469,9 @@ mod tests {
     #[test]
     fn test_parse_function_with_doc_comment() {
         let path = PathBuf::from("__test.gdn");
+
         let src = "// Hello\n// World\nfun foo() {}";
-        let ast = match parse_def_or_expr_from_str(&path, src).unwrap() {
-            DefinitionsOrExpression::Defs(defs) => defs,
-            DefinitionsOrExpression::Expr(_) => unreachable!(),
-        };
+        let ast = parse_defs_from_str(src).unwrap();
 
         assert_eq!(
             ast,
@@ -1528,13 +1536,8 @@ mod tests {
 
     #[test]
     fn test_parse_method() {
-        let path = PathBuf::from("__test.gdn");
         let src = "fun (self: List) foo() {}";
-
-        let defs = match parse_def_or_expr_from_str(&path, src).unwrap() {
-            DefinitionsOrExpression::Defs(defs) => defs,
-            DefinitionsOrExpression::Expr(_) => unreachable!(),
-        };
+        let defs = parse_defs_from_str(src).unwrap();
 
         assert_eq!(defs.len(), 1);
         assert!(matches!(defs[0].2, Definition_::MethodDefinition(_)));

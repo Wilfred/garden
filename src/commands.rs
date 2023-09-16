@@ -32,6 +32,7 @@ pub enum Command {
     Type(Option<ast::Expression>),
     Stack,
     Quit,
+    // TODO: Version,
 }
 
 /// Returns Some if `s` starts with `word` and is followed by a word

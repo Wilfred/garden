@@ -5,13 +5,13 @@ fun main(args) {
   let i = 1;
   while (i < 21) {
     if (mod(i, 15) == 0) {
-      print("FizzBuzz");
+      println("FizzBuzz");
     } else if (mod(i, 5) == 0) {
-      print("Buzz");
+      println("Buzz");
     } else if (mod(i, 3) == 0) {
-      print("Fizz");
+      println("Fizz");
     } else {
-      print(int_to_string(i));
+      println(int_to_string(i));
     }
     i = i + 1;
   }

@@ -104,14 +104,13 @@ fun in_git_repo(): Bool {
 }
 
 fun check_out(branch_name: String): Void {
-  print(string_concat("Checking out: ", branch_name));
-  // TODO: unwanted extra trailing newline
+  println(string_concat("Checking out: ", branch_name));
   print(shell("git", ["checkout", branch_name]));
 }
 
 fun main(args: List): Void {
   if (list_length(args) != 1) {
-    print("Usage: git_fuzzy_branch <name substring>");
+    println("Usage: git_fuzzy_branch <name substring>");
     // TODO: support void values.
     return false;
   }
@@ -129,7 +128,7 @@ fun main(args: List): Void {
 
     let branches = all_branches.filter(fun(name) { name.contains(needle); });
     if (branches.is_empty()) {
-      print(string_concat("No branches found maching: ", needle));
+      println(string_concat("No branches found maching: ", needle));
     } else if (list_length(branches) == 1) {
       let branch_name = list_get(branches, 0);
       check_out(branch_name);
@@ -139,6 +138,6 @@ fun main(args: List): Void {
       print(msg);
     }
   } else {
-    print("Not in a git repository.");
+    println("Not in a git repository.");
   }
 }

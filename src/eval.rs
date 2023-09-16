@@ -57,7 +57,6 @@ pub fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
 pub enum BuiltinFunctionKind {
-    Print,
     DebugPrint,
     IntToString,
     Shell,
@@ -65,6 +64,8 @@ pub enum BuiltinFunctionKind {
     ListGet,
     ListLength,
     PathExists,
+    Print,
+    Println,
     StringConcat,
     StringLength,
     StringSubstring,
@@ -75,13 +76,14 @@ impl Display for BuiltinFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
             BuiltinFunctionKind::DebugPrint => "dbg",
-            BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::IntToString => "int_to_string",
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::ListAppend => "list_append",
             BuiltinFunctionKind::ListGet => "list_get",
             BuiltinFunctionKind::ListLength => "list_length",
             BuiltinFunctionKind::PathExists => "path_exists",
+            BuiltinFunctionKind::Print => "print",
+            BuiltinFunctionKind::Println => "println",
             BuiltinFunctionKind::StringConcat => "string_concat",
             BuiltinFunctionKind::StringLength => "string_length",
             BuiltinFunctionKind::StringSubstring => "string_substring",
@@ -93,13 +95,6 @@ impl Display for BuiltinFunctionKind {
 
 pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
     match kind {
-        BuiltinFunctionKind::Print => {
-            "Write a string to stdout.
-
-```
-print(\"hello world\");
-```"
-        }
         BuiltinFunctionKind::DebugPrint => {
             "Write an arbitrary value to stdout, along with debugging metadata.
 
@@ -149,6 +144,20 @@ Note that a path may exist without the current user having permission to read it
 
 ```
 path_exists(\"/\"); // true
+```"
+        }
+        BuiltinFunctionKind::Print => {
+            "Write a string to stdout.
+
+```
+print(\"hello world\n\");
+```"
+        }
+        BuiltinFunctionKind::Println => {
+            "Write a string to stdout, with a newline appended.
+
+```
+print(\"hello world\");
 ```"
         }
         BuiltinFunctionKind::StringConcat =>{
@@ -939,6 +948,40 @@ fn eval_builtin_call(
     match kind {
         BuiltinFunctionKind::Print => {
             check_arity("print", &receiver_value, 1, arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::String(s) => {
+                    if session.has_attached_stdout {
+                        print!("{}", s);
+                    } else {
+                        let response = Response {
+                            kind: ResponseKind::Printed,
+                            value: Ok(format!("{}", s)),
+                        };
+                        let serialized = serde_json::to_string(&response).unwrap();
+                        println!("{}", serialized);
+                    }
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::Void));
+        }
+        BuiltinFunctionKind::Println => {
+            check_arity("println", &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {

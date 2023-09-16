@@ -2,12 +2,6 @@
 
 **Goal: Support method calls.**
 
-### Commands
-
-Added `:type` to show the type of an expression.
-
-Added `:methods` to show all the defined methods available.
-
 ### Syntax
 
 Functions and methods can now specify a return type, and that type
@@ -19,6 +13,16 @@ Added parsing and evaluation support for methods.
 
 Symbols may now include uppercase ASCII letters, so `Foo` is a legal
 function name.
+
+### Commands
+
+Added `:type` to show the type of an expression.
+
+Added `:methods` to show all the defined methods available.
+
+### Stdlib
+
+Added `println` and changed `print` to not include a trailing newline.
 
 # 0.5 (released 27th August 2023)
 

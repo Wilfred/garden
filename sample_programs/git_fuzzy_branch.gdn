@@ -104,7 +104,6 @@ fun in_git_repo(): Bool {
 }
 
 fun check_out(branch_name: String): Void {
-  println(string_concat("Checking out: ", branch_name));
   print(shell("git", ["checkout", branch_name]));
 }
 

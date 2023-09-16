@@ -176,6 +176,7 @@ fn describe_fun(value: &Value) -> Option<String> {
             ast::FunInfo {
                 doc_comment,
                 params,
+                return_type,
                 ..
             },
         ) => {
@@ -188,15 +189,29 @@ fn describe_fun(value: &Value) -> Option<String> {
             }
             res.push_str("\n\n");
 
-            res.push_str(&format!(
-                "fn {}({}) {{ ... }}",
-                name.1 .0,
-                params
-                    .iter()
-                    .map(|SymbolWithType(p, _type)| p.1 .0.clone())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
+            // show type hints
+            res.push_str(&format!("fn {}", name.1 .0));
+            res.push_str("(");
+            for (i, param) in params.iter().enumerate() {
+                if i != 0 {
+                    res.push_str(", ");
+                }
+
+                let name = &param.0;
+                res.push_str(&name.1 .0);
+
+                if let Some(param_ty) = &param.1 {
+                    res.push_str(&format!(": {}", param_ty.0));
+                }
+            }
+            res.push_str(")");
+
+            if let Some(return_type) = return_type {
+                res.push_str(&format!(": {}", return_type.0));
+            }
+
+            res.push_str(" { ... }");
+
             Some(res)
         }
         Value::BuiltinFunction(kind) => {

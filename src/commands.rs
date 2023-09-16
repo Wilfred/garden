@@ -4,7 +4,7 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{self, SymbolWithType};
+use crate::ast;
 use crate::eval::{eval_exprs, type_representation};
 use crate::{
     colors::green,

@@ -12,7 +12,8 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::ast::{
-    BinaryOperatorKind, Block, FunInfo, MethodInfo, Position, SourceString, Symbol, TypeName,
+    BinaryOperatorKind, Block, FunInfo, MethodInfo, Position, SourceString, Symbol, SymbolWithType,
+    TypeName,
 };
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
@@ -1506,6 +1507,8 @@ fn eval_call(
 
             check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
 
+            check_param_types(&receiver_value, params, &arg_values)?;
+
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
             for expr in body.exprs.iter().rev() {
                 fun_subexprs.push((false, expr.clone()));
@@ -1555,6 +1558,26 @@ fn eval_call(
     }
 
     Ok(None)
+}
+
+fn check_param_types(
+    receiver_value: &(Position, Value),
+    params: &[SymbolWithType],
+    arg_values: &[(Position, Value)],
+) -> Result<(), ErrorInfo> {
+    for (param, arg_value) in params.iter().zip(arg_values) {
+        if let Some(param_ty) = &param.1 {
+            if let Err(msg) = check_type(&arg_value.1, param_ty) {
+                return Err(ErrorInfo {
+                    error_position: receiver_value.0.clone(),
+                    message: ErrorMessage(format!("Incorrect type for argument: {}", msg.0)),
+                    restore_values: arg_values.to_vec(),
+                });
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn eval_method_call(
@@ -2523,6 +2546,17 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_ok());
+    }
+
+    #[test]
+    fn test_eval_wrong_argument_type() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun f(x: Int) { }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f(true);").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

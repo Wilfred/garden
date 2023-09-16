@@ -4,8 +4,8 @@
 
 ### Syntax
 
-Functions and methods can now specify a return type, and that type
-will be enforced at runtime.
+Functions and methods can now specify the return type and parameter
+types. That type will be enforced at runtime.
 
 Added `<=` and `>=` comparison operators.
 

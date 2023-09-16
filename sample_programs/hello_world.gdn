@@ -1,6 +1,6 @@
 #!/usr/bin/env -S garden run
 
-fun main(args) {
+fun main(args: List): Void {
   println("Hello, World!");
   0;
 }

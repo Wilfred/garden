@@ -1,7 +1,9 @@
-// What is the remainder when dividing `x` by `y`?
-fun mod(x, y) { x - ((x / y) * y); }
+/// What is the remainder when dividing `x` by `y`?
+fun mod(x: Int, y: Int): Int {
+  x - ((x / y) * y);
+}
 
-fun main(args) {
+fun main(args: List): Void {
   let i = 1;
   while (i < 21) {
     if (mod(i, 15) == 0) {

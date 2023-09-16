@@ -1,4 +1,4 @@
-/// What is the remainder when dividing `x` by `y`?
+// What is the remainder when dividing `x` by `y`?
 fun mod(x: Int, y: Int): Int {
   x - ((x / y) * y);
 }

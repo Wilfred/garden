@@ -1,5 +1,7 @@
 # 0.7 (unreleased)
 
+**Goal: Support enums.**
+
 # 0.6 (released 16th September 2023)
 
 **Goal: Support method calls.**

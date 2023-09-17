@@ -12,8 +12,8 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::ast::{
-    BinaryOperatorKind, Block, FunInfo, MethodInfo, Position, SourceString, Symbol, SymbolWithType,
-    TypeName,
+    BinaryOperatorKind, Block, FunInfo, MethodInfo, MethodKind, Position, SourceString, Symbol,
+    SymbolWithType, TypeName,
 };
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
@@ -1636,7 +1636,10 @@ fn eval_method_call(
         }
     };
 
-    let fun_info = &receiver_method.fun_info;
+    let fun_info = match &receiver_method.kind {
+        MethodKind::BuiltinMethod => todo!(),
+        MethodKind::UserDefinedMethod(fun_info) => fun_info.clone(),
+    };
 
     let mut method_subexprs: Vec<(bool, Expression)> = vec![];
     for expr in fun_info.body.exprs.iter().rev() {
@@ -1661,7 +1664,7 @@ fn eval_method_call(
     fun_bindings.insert(receiver_method.receiver_name.clone(), receiver_value.1);
 
     Ok(StackFrame {
-        enclosing_fun: Some(receiver_method.fun_info.clone()),
+        enclosing_fun: Some(fun_info.clone()),
         call_site: Some((
             // TODO: use a fully qualified method name here?
             Symbol(receiver_value.0.clone(), meth_name.1.clone()),

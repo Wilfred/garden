@@ -104,11 +104,17 @@ pub struct FunInfo {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum MethodKind {
+    BuiltinMethod,
+    UserDefinedMethod(FunInfo),
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct MethodInfo {
     pub receiver_type: TypeName,
     pub receiver_name: SymbolName,
     pub name: Symbol,
-    pub fun_info: FunInfo,
+    pub kind: MethodKind,
 }
 
 #[derive(Debug, Clone, PartialEq)]

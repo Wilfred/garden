@@ -12,6 +12,7 @@ use crate::ast::Expression;
 use crate::ast::Expression_;
 use crate::ast::FunInfo;
 use crate::ast::MethodInfo;
+use crate::ast::MethodKind;
 use crate::ast::Position;
 use crate::ast::SourceString;
 use crate::ast::Symbol;
@@ -828,7 +829,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
         receiver_type,
         receiver_name,
         name,
-        fun_info,
+        kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
     Ok(Definition(

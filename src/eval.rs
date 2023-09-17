@@ -2533,6 +2533,17 @@ mod tests {
     }
 
     #[test]
+    fn test_eval_call_bad_arity() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun f(x) { }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
     fn test_eval_return_closure_and_call() {
         let mut env = Env::default();
 
@@ -2542,6 +2553,18 @@ mod tests {
         let exprs = parse_exprs_from_str("let y = f(); y();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
+    }
+
+    #[test]
+    fn test_eval_method_call() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun (self: String) f() { true; }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("\"\".f();").unwrap();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Boolean(true));
     }
 
     #[test]

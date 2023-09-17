@@ -4,7 +4,7 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast;
+use crate::ast::{self, SymbolName, TypeName};
 use crate::eval::{eval_exprs, type_representation};
 use crate::{
     colors::green,
@@ -272,7 +272,24 @@ pub fn run_command<T: Write>(
         }
         Command::Doc(name) => {
             if let Some(name) = name {
-                if let Some(value) = env.file_scope.get(&ast::SymbolName(name.to_string())) {
+                if let Some((type_name, method_name)) = name.split_once("::") {
+                    if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
+                        if let Some(_method_info) =
+                            type_methods.get(&SymbolName(method_name.to_owned()))
+                        {
+                            write!(buf, "TODO: docs for `{}` on `{}`.", method_name, type_name)
+                                .unwrap();
+                        } else {
+                            write!(buf, "No method named `{}` on `{}`.", method_name, type_name)
+                                .unwrap();
+                        }
+                    } else {
+                        // TODO: distinguish between no type with this name, and the type having no methods.
+                        write!(buf, "No type named `{}`.", type_name).unwrap();
+                    }
+
+                    //
+                } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
                     match describe_fun(value) {
                         Some(description) => write!(buf, "{}", description),
                         None => write!(buf, "`{}` is not a function.", name),

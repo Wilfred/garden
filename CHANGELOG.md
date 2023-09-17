@@ -2,6 +2,10 @@
 
 **Goal: Support enums.**
 
+### Evaluation
+
+Fixed a crash on calling method calls with the wrong arity.
+
 # 0.6 (released 16th September 2023)
 
 **Goal: Support method calls.**

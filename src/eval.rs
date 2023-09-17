@@ -2096,7 +2096,24 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     continue;
                                 }
                                 Ok(None) => {}
-                                Err(_) => todo!(),
+                                Err(ErrorInfo {
+                                    message,
+                                    restore_values,
+                                    error_position,
+                                }) => {
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Expression(expr_position, expr_copy)),
+                                        &restore_values,
+                                        // TODO: let ErrorInfo specify
+                                        // kind, as not all errors on
+                                        // calling methods are this
+                                        // kind.
+                                        Some(ErrorKind::MalformedExpression),
+                                    );
+                                    return Err(EvalError::ResumableError(error_position, message));
+                                }
                             }
                         } else {
                             stack_frame
@@ -2565,6 +2582,17 @@ mod tests {
         let exprs = parse_exprs_from_str("\"\".f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Boolean(true));
+    }
+
+    #[test]
+    fn test_eval_method_call_bad_airty() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun (self: String) f() { true; }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("\"\".f(123);").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

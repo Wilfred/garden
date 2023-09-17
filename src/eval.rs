@@ -1523,7 +1523,7 @@ fn eval_method_call(
             }
 
             return Err(ErrorInfo {
-                message: ErrorMessage(format!("No methods defined on {}.", meth_name.1 .0)),
+                message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name.0)),
                 restore_values: saved_values,
                 error_position: position.clone(),
             });

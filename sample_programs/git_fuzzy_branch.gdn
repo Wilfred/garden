@@ -6,10 +6,10 @@ fun lines(s: String): List {
   let line_start = 0;
   let i = 0;
   while (i < s.len()) {
-    let char = string_substring(s, i, i + 1);
+    let char = s.substring(i, i + 1);
 
     if (char == "\n") {
-      parts = list_append(parts, string_substring(s, line_start, i));
+      parts = list_append(parts, s.substring(line_start, i));
       line_start = i + 1;
     }
 
@@ -18,7 +18,7 @@ fun lines(s: String): List {
 
   // Append last line if it wasn't terminated with a newline.
   if (line_start != s.len()) {
-    parts = list_append(parts, string_substring(s, line_start, s.len()));
+    parts = list_append(parts, s.substring(line_start, s.len()));
   }
 
   parts;
@@ -51,7 +51,7 @@ fun (self: String) contains(needle: String): Bool {
 
   let i = 0;
   while (i <= (self.len() - needle.len())) {
-    let section = string_substring(self, i, i + needle.len());
+    let section = self.substring(i, i + needle.len());
     if (section == needle) {
       return true;
     }

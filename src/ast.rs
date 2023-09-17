@@ -117,6 +117,7 @@ pub struct FunInfo {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
     StringLen,
+    StringSubstring,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -151,6 +152,14 @@ impl MethodInfo {
 
 ```
 \"abc\".len(); // 3
+```"
+                    .to_owned(),
+                ),
+                BuiltinMethodKind::StringSubstring => Some(
+                    "Return the substring of the string between the indexes specified.
+
+```
+\"abcdef\".substring(1, 3); // \"bc\"
 ```"
                     .to_owned(),
                 ),

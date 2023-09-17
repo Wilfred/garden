@@ -1580,13 +1580,17 @@ fn check_param_types(
     Ok(())
 }
 
+/// Evaluate a method call.
+///
+/// If we're calling a userland method, return the new stackframe to
+/// evaluate next.
 fn eval_method_call(
     env: &mut Env,
     stack_frame: &mut StackFrame,
     position: &Position,
     meth_name: &Symbol,
     args: &[Expression],
-) -> Result<StackFrame, ErrorInfo> {
+) -> Result<Option<StackFrame>, ErrorInfo> {
     let mut arg_values = vec![];
     for _ in 0..args.len() {
         arg_values.push(
@@ -1663,7 +1667,7 @@ fn eval_method_call(
     }
     fun_bindings.insert(receiver_method.receiver_name.clone(), receiver_value.1);
 
-    Ok(StackFrame {
+    Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
         call_site: Some((
             // TODO: use a fully qualified method name here?
@@ -2045,11 +2049,12 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 &meth_name,
                                 &args,
                             ) {
-                                Ok(new_stack_frame) => {
+                                Ok(Some(new_stack_frame)) => {
                                     env.stack.push(stack_frame);
                                     env.stack.push(new_stack_frame);
                                     continue;
                                 }
+                                Ok(None) => {}
                                 Err(_) => todo!(),
                             }
                         } else {

@@ -68,7 +68,6 @@ pub enum BuiltinFunctionKind {
     Print,
     Println,
     StringConcat,
-    StringLength,
     StringSubstring,
     WorkingDirectory,
 }
@@ -86,7 +85,6 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
             BuiltinFunctionKind::StringConcat => "string_concat",
-            BuiltinFunctionKind::StringLength => "string_length",
             BuiltinFunctionKind::StringSubstring => "string_substring",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
         };
@@ -168,13 +166,13 @@ print(\"hello world\");
 string_concat(\"foo\", \"bar\"); // \"foobar\"
 ```"
         }
-        BuiltinFunctionKind::StringLength =>{
-            "Return the number of characters (codepoints) in the string.
+//         BuiltinFunctionKind::StringLength =>{
+//             "Return the number of characters (codepoints) in the string.
 
-```
-string_length(\"abc\"); // 3
-```"
-        }
+// ```
+// string_length(\"abc\"); // 3
+// ```"
+//         }
         BuiltinFunctionKind::StringSubstring => {
             "Return the substring of the string between the indexes specified.
 
@@ -1090,30 +1088,6 @@ fn eval_builtin_call(
             stack_frame
                 .evalled_values
                 .push((position.clone(), Value::String(arg1)));
-        }
-        BuiltinFunctionKind::StringLength => {
-            check_arity("string_length", &receiver_value, 1, arg_values)?;
-
-            match &arg_values[0].1 {
-                Value::String(s) => {
-                    stack_frame
-                        .evalled_values
-                        .push((position.clone(), Value::Integer(s.chars().count() as i64)));
-                }
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
-                    });
-                }
-            }
         }
         BuiltinFunctionKind::Shell => {
             check_arity("shell", &receiver_value, 2, arg_values)?;
@@ -2497,7 +2471,7 @@ mod tests {
 
     #[test]
     fn test_eval_string_length() {
-        let exprs = parse_exprs_from_str("string_length(\"abc\");").unwrap();
+        let exprs = parse_exprs_from_str("\"abc\".length();").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();

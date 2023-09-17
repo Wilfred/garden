@@ -2,6 +2,10 @@
 
 **Goal: Support enums.**
 
+### Stdlib
+
+Implemented `String::len` and removed the `string_length` function.
+
 ### Evaluation
 
 Fixed a crash on calling method calls with the wrong arity.

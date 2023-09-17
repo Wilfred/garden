@@ -5,7 +5,7 @@ fun lines(s: String): List {
 
   let line_start = 0;
   let i = 0;
-  while (i < string_length(s)) {
+  while (i < s.len()) {
     let char = string_substring(s, i, i + 1);
 
     if (char == "\n") {
@@ -17,9 +17,8 @@ fun lines(s: String): List {
   }
 
   // Append last line if it wasn't terminated with a newline.
-  if (line_start != string_length(s)) {
-    parts = list_append(parts,
-      string_substring(s, line_start, string_length(s)));
+  if (line_start != s.len()) {
+    parts = list_append(parts, string_substring(s, line_start, s.len()));
   }
 
   parts;
@@ -43,7 +42,7 @@ fun (self: List) filter(f): List {
 }
 
 fun (self: String) contains(needle: String): Bool {
-  if (string_length(needle) > string_length(self)) {
+  if (needle.len() > self.len()) {
     return false;
   }
 
@@ -51,8 +50,8 @@ fun (self: String) contains(needle: String): Bool {
   // dbg(string_length(haystack) - string_length(needle));
 
   let i = 0;
-  while (i <= (string_length(self) - string_length(needle))) {
-    let section = string_substring(self, i, i + string_length(needle));
+  while (i <= (self.len() - needle.len())) {
+    let section = string_substring(self, i, i + needle.len());
     if (section == needle) {
       return true;
     }

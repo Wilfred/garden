@@ -567,6 +567,7 @@ fn restore_stack_frame(
 pub struct ErrorMessage(pub String);
 
 /// Information about an error during evaluation.
+#[derive(Debug)]
 struct ErrorInfo {
     error_position: Position,
     message: ErrorMessage,

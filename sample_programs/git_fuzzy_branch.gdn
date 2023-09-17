@@ -90,15 +90,15 @@ fun (self: String) join(items: List): String {
   let res = list_get(items, 0);
   let i = 1;
   while (i < list_length(items)) {
-    res = string_concat(res, self);
-    res = string_concat(res, list_get(items, i));
+    res = res.concat(self);
+    res = res.concat(list_get(items, i));
     i = i + 1;
   }
   res;
 }
 
 fun in_git_repo(): Bool {
-  let git_dir_path = string_concat(working_directory(), "/.git");
+  let git_dir_path = working_directory().concat("/.git");
   path_exists(git_dir_path);
 }
 
@@ -126,7 +126,7 @@ fun main(args: List): Void {
 
     let branches = all_branches.filter(fun(name) { name.contains(needle); });
     if (branches.is_empty()) {
-      println(string_concat("No branches found maching: ", needle));
+      println("No branches found maching: ".concat(needle));
     } else if (list_length(branches) == 1) {
       let branch_name = list_get(branches, 0);
       check_out(branch_name);

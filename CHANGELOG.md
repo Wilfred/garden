@@ -4,8 +4,8 @@
 
 ### Stdlib
 
-Implemented `String::len` and `String::substring` methods, removing
-the corresponding `string_length` and `string_substring functions.
+Implemented `String::concat`, `String::len` and `String::substring` methods, removing
+the corresponding `string_concat`, `string_length` and `string_substring functions.
 
 ### Evaluation
 

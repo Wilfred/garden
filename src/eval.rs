@@ -67,7 +67,6 @@ pub enum BuiltinFunctionKind {
     PathExists,
     Print,
     Println,
-    StringConcat,
     WorkingDirectory,
 }
 
@@ -83,7 +82,6 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::PathExists => "path_exists",
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
-            BuiltinFunctionKind::StringConcat => "string_concat",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
         };
         write!(f, "{}", name)
@@ -155,13 +153,6 @@ print(\"hello world\n\");
 
 ```
 print(\"hello world\");
-```"
-        }
-        BuiltinFunctionKind::StringConcat =>{
-            "Return a new string with the two string arguments concatenated.
-
-```
-string_concat(\"foo\", \"bar\"); // \"foobar\"
 ```"
         }
         BuiltinFunctionKind::WorkingDirectory => {
@@ -359,6 +350,15 @@ impl Default for Env {
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name: Symbol(Position::todo(), SymbolName("substring".to_owned())),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring),
+            },
+        );
+        string_methods.insert(
+            SymbolName("concat".to_owned()),
+            MethodInfo {
+                receiver_type: TypeName("String".into()),
+                receiver_name: SymbolName("__irrelevant".to_owned()),
+                name: Symbol(Position::todo(), SymbolName("concat".to_owned())),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringConcat),
             },
         );
 
@@ -1041,47 +1041,6 @@ fn eval_builtin_call(
                 .evalled_values
                 .push((position.clone(), Value::Void));
         }
-        BuiltinFunctionKind::StringConcat => {
-            check_arity("string_concat", &receiver_value, 2, arg_values)?;
-
-            let mut arg1 = match &arg_values[0].1 {
-                Value::String(s) => s.clone(),
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
-                    });
-                }
-            };
-            let arg2 = match &arg_values[1].1 {
-                Value::String(s) => s,
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[1].0.clone(),
-                    });
-                }
-            };
-
-            arg1.push_str(arg2);
-            stack_frame
-                .evalled_values
-                .push((position.clone(), Value::String(arg1)));
-        }
         BuiltinFunctionKind::Shell => {
             check_arity("shell", &receiver_value, 2, arg_values)?;
 
@@ -1525,7 +1484,7 @@ fn eval_method_call(
             return Err(ErrorInfo {
                 message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name.0)),
                 restore_values: saved_values,
-                error_position: position.clone(),
+                error_position: meth_name.0.clone(),
             });
         }
     };
@@ -1587,6 +1546,47 @@ fn eval_builtin_method_call(
     position: &Position,
 ) -> Result<(), ErrorInfo> {
     match kind {
+        BuiltinMethodKind::StringConcat => {
+            check_arity("String::concat", &receiver_value, 1, &arg_values)?;
+
+            let mut arg1 = match &receiver_value.1 {
+                Value::String(s) => s.clone(),
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            };
+            let arg2 = match &arg_values[0].1 {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+                }
+            };
+
+            arg1.push_str(arg2);
+            stack_frame
+                .evalled_values
+                .push((position.clone(), Value::String(arg1)));
+        }
         BuiltinMethodKind::StringLen => {
             check_arity("String::len", &receiver_value, 0, &arg_values)?;
 
@@ -2478,6 +2478,15 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::String("bc".into()));
+    }
+
+    #[test]
+    fn test_eval_string_concat() {
+        let exprs = parse_exprs_from_str("\"abc\".concat(\"def\");").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::String("abcdef".into()));
     }
 
     #[test]

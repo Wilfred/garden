@@ -116,6 +116,7 @@ pub struct FunInfo {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
+    StringConcat,
     StringLen,
     StringSubstring,
 }
@@ -147,6 +148,14 @@ impl MethodInfo {
     pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
             MethodKind::BuiltinMethod(kind) => match kind {
+                BuiltinMethodKind::StringConcat => Some(
+                    "Return a new string with the two string arguments concatenated.
+
+```
+\"foo\".concat(\"bar\"); // \"foobar\"
+```"
+                    .to_owned(),
+                ),
                 BuiltinMethodKind::StringLen => Some(
                     "Return the number of characters (codepoints) in the string.
 

@@ -358,7 +358,20 @@ impl Default for Env {
             );
         }
 
-        let methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>> = HashMap::new();
+        let mut methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>> = HashMap::new();
+
+        let mut string_methods = HashMap::new();
+        string_methods.insert(
+            SymbolName("len".to_owned()),
+            MethodInfo {
+                receiver_type: TypeName("String".into()),
+                receiver_name: SymbolName("__irrelevant".to_owned()),
+                name: Symbol(Position::todo(), SymbolName("len".to_owned())),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen),
+            },
+        );
+
+        methods.insert(TypeName("String".into()), string_methods);
 
         // Insert all the built-in types.
         let types = vec![
@@ -1699,9 +1712,9 @@ fn eval_builtin_method_call(
 ) -> Result<(), ErrorInfo> {
     match kind {
         BuiltinMethodKind::StringLen => {
-            check_arity("String::len", &receiver_value, 1, &arg_values)?;
+            check_arity("String::len", &receiver_value, 0, &arg_values)?;
 
-            match &arg_values[0].1 {
+            match &receiver_value.1 {
                 Value::String(s) => {
                     stack_frame
                         .evalled_values

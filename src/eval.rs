@@ -1508,11 +1508,11 @@ fn eval_method_call(
 
                 return Err(ErrorInfo {
                     message: ErrorMessage(format!(
-                        "No method named {} on {}.",
-                        receiver_type_name.0, meth_name.1 .0
+                        "No method named `{}` on `{}`.",
+                        meth_name.1 .0, receiver_type_name.0
                     )),
                     restore_values: saved_values,
-                    error_position: position.clone(),
+                    error_position: meth_name.0.clone(),
                 });
             }
         }

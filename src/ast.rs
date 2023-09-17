@@ -127,9 +127,18 @@ pub enum MethodKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MethodInfo {
+    /// The type that has this method.
     pub receiver_type: TypeName,
+    /// The name of the receiver in the method definition. This is
+    /// typically `self`.
+    ///
+    /// TODO: this only exists for user-defined methods, so it's
+    /// clunky to have it for all methods.
     pub receiver_name: SymbolName,
+    /// The name of the method itself, e.g. `len` in
+    /// `some_string.len()`.
     pub name: Symbol,
+    /// User-defined or built-in.
     pub kind: MethodKind,
 }
 

@@ -17,6 +17,17 @@ pub struct Position {
     pub path: PathBuf,
 }
 
+impl Position {
+    pub fn todo() -> Self {
+        Self {
+            start_offset: 0,
+            end_offset: 0,
+            line_number: 0,
+            path: PathBuf::from("/position/todo"),
+        }
+    }
+}
+
 /// An owned string of the source text associated with a definition.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SourceString {

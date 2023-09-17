@@ -166,13 +166,6 @@ print(\"hello world\");
 string_concat(\"foo\", \"bar\"); // \"foobar\"
 ```"
         }
-//         BuiltinFunctionKind::StringLength =>{
-//             "Return the number of characters (codepoints) in the string.
-
-// ```
-// string_length(\"abc\"); // 3
-// ```"
-//         }
         BuiltinFunctionKind::StringSubstring => {
             "Return the substring of the string between the indexes specified.
 

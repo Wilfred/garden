@@ -142,6 +142,24 @@ pub struct MethodInfo {
     pub kind: MethodKind,
 }
 
+impl MethodInfo {
+    pub fn doc_comment(&self) -> Option<String> {
+        match &self.kind {
+            MethodKind::BuiltinMethod(kind) => match kind {
+                BuiltinMethodKind::StringLen => Some(
+                    "Return the number of characters (codepoints) in the string.
+
+```
+\"abc\".len(); // 3
+```"
+                    .to_owned(),
+                ),
+            },
+            MethodKind::UserDefinedMethod(fun_info) => fun_info.doc_comment.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     /// ```garden

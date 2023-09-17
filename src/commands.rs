@@ -274,11 +274,20 @@ pub fn run_command<T: Write>(
             if let Some(name) = name {
                 if let Some((type_name, method_name)) = name.split_once("::") {
                     if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
-                        if let Some(_method_info) =
+                        if let Some(method_info) =
                             type_methods.get(&SymbolName(method_name.to_owned()))
                         {
-                            write!(buf, "TODO: docs for `{}` on `{}`.", method_name, type_name)
+                            if let Some(doc_comment) = method_info.doc_comment() {
+                                write!(buf, "{}", doc_comment).unwrap();
+                            } else {
+                                // TODO: show a signature too, similar to :doc on functions.
+                                write!(
+                                    buf,
+                                    "Method `{}` does not have a doc comment.",
+                                    method_name,
+                                )
                                 .unwrap();
+                            }
                         } else {
                             write!(buf, "No method named `{}` on `{}`.", method_name, type_name)
                                 .unwrap();

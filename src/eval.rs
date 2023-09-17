@@ -12,8 +12,8 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::ast::{
-    BinaryOperatorKind, Block, FunInfo, MethodInfo, MethodKind, Position, SourceString, Symbol,
-    SymbolWithType, TypeName,
+    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Position,
+    SourceString, Symbol, SymbolWithType, TypeName,
 };
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
@@ -1641,7 +1641,10 @@ fn eval_method_call(
     };
 
     let fun_info = match &receiver_method.kind {
-        MethodKind::BuiltinMethod => todo!(),
+        MethodKind::BuiltinMethod(kind) => {
+            eval_builtin_method_call(*kind, receiver_value, arg_values, stack_frame, position)?;
+            return Ok(None);
+        }
         MethodKind::UserDefinedMethod(fun_info) => fun_info.clone(),
     };
 
@@ -1683,7 +1686,44 @@ fn eval_method_call(
         // perhaps the position of the curly brace function
         // body.
         evalled_values: vec![(receiver_value.0, Value::Void)],
-    })
+    }))
+}
+
+fn eval_builtin_method_call(
+    kind: BuiltinMethodKind,
+    receiver_value: (Position, Value),
+    arg_values: Vec<(Position, Value)>,
+    stack_frame: &mut StackFrame,
+    position: &Position,
+) -> Result<(), ErrorInfo> {
+    match kind {
+        BuiltinMethodKind::StringLen => {
+            check_arity("String::len", &receiver_value, 1, &arg_values)?;
+
+            match &arg_values[0].1 {
+                Value::String(s) => {
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::Integer(s.chars().count() as i64)));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {

@@ -103,9 +103,14 @@ pub struct FunInfo {
     pub body: Block,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BuiltinMethodKind {
+    StringLen,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum MethodKind {
-    BuiltinMethod,
+    BuiltinMethod(BuiltinMethodKind),
     UserDefinedMethod(FunInfo),
 }
 

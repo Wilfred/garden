@@ -6,6 +6,7 @@ use strum_macros::EnumIter;
 
 use crate::ast::{self, SymbolName, TypeName};
 use crate::eval::{eval_exprs, type_representation};
+use crate::version::VERSION;
 use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
@@ -32,7 +33,7 @@ pub enum Command {
     Type(Option<ast::Expression>),
     Stack,
     Quit,
-    // TODO: Version,
+    Version,
 }
 
 /// Returns Some if `s` starts with `word` and is followed by a word
@@ -80,6 +81,7 @@ impl Display for Command {
             Command::Trace => ":trace",
             Command::Type(_) => ":type",
             Command::Quit => ":quit",
+            Command::Version => ":version",
         };
         write!(f, "{}", name)
     }
@@ -100,7 +102,10 @@ impl Command {
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
             ":quit" => Ok(Command::Quit),
+            ":version" => Ok(Command::Version),
             _ => {
+                // Commands that take an argument.
+
                 if let Some(src) = split_first_word(s, ":doc") {
                     return Ok(Command::Doc(Some(src.to_owned())));
                 }
@@ -465,6 +470,9 @@ pub fn run_command<T: Write>(
                 write!(buf, ":type requires a code snippet, e.g. `:type 1 + 2`").unwrap();
             }
         }
+        Command::Version => {
+            write!(buf, "Garden {}", VERSION.as_str()).unwrap();
+        }
     }
     Ok(())
 }
@@ -489,6 +497,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Type(_) => "The :type command shows the type of a given expression.\n\nExample:\n\n:type 1 + 2",
         Command::Stack => "The :stack command prints the current call stack.\n\nExample:\n\n:stack",
         Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
+        Command::Version => "The :version command shows the current version and commit of this Garden session.\n\nExample:\n\n:version",
     }
 }
 

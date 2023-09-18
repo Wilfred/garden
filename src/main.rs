@@ -11,6 +11,7 @@ mod json_session;
 mod lex;
 mod parse;
 mod prompt;
+mod version;
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};

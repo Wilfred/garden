@@ -116,6 +116,7 @@ pub struct FunInfo {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
+    ListLen,
     StringConcat,
     StringLen,
     StringSubstring,
@@ -148,6 +149,14 @@ impl MethodInfo {
     pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
             MethodKind::BuiltinMethod(kind) => match kind {
+                BuiltinMethodKind::ListLen => Some(
+                    "Return the length of the list.
+
+```
+[10, 11, 12].len(); // 3
+```"
+                    .to_owned(),
+                ),
                 BuiltinMethodKind::StringConcat => Some(
                     "Return a new string with the two string arguments concatenated.
 

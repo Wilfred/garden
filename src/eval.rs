@@ -63,7 +63,6 @@ pub enum BuiltinFunctionKind {
     Shell,
     ListAppend,
     ListGet,
-    ListLength,
     PathExists,
     Print,
     Println,
@@ -78,7 +77,6 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::ListAppend => "list_append",
             BuiltinFunctionKind::ListGet => "list_get",
-            BuiltinFunctionKind::ListLength => "list_length",
             BuiltinFunctionKind::PathExists => "path_exists",
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
@@ -124,13 +122,6 @@ Errors if the index is less than 0 or greater than length - 1.
 
 ```
 list_get([4, 5, 6], 1); // 5
-```"
-        }
-        BuiltinFunctionKind::ListLength =>{
-            "Return the length of the list.
-
-```
-list_length([10, 11, 12]); // 3
 ```"
         }
         BuiltinFunctionKind::PathExists =>{
@@ -363,6 +354,19 @@ impl Default for Env {
         );
 
         methods.insert(TypeName("String".into()), string_methods);
+
+        let mut list_methods = HashMap::new();
+        list_methods.insert(
+            SymbolName("len".to_owned()),
+            MethodInfo {
+                receiver_type: TypeName("List".into()),
+                receiver_name: SymbolName("__irrelevant".to_owned()),
+                name: Symbol(Position::todo(), SymbolName("len".to_owned())),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen),
+            },
+        );
+
+        methods.insert(TypeName("List".into()), list_methods);
 
         // Insert all the built-in types.
         let types = vec![
@@ -1186,30 +1190,6 @@ fn eval_builtin_call(
                 }
             }
         }
-        BuiltinFunctionKind::ListLength => {
-            check_arity("list_length", &receiver_value, 1, arg_values)?;
-
-            match &arg_values[0].1 {
-                Value::List(items) => {
-                    stack_frame
-                        .evalled_values
-                        .push((position.clone(), Value::Integer(items.len() as i64)));
-                }
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
-                    });
-                }
-            }
-        }
         BuiltinFunctionKind::IntToString => {
             check_arity("int_to_string", &receiver_value, 1, arg_values)?;
 
@@ -1546,6 +1526,30 @@ fn eval_builtin_method_call(
     position: &Position,
 ) -> Result<(), ErrorInfo> {
     match kind {
+        BuiltinMethodKind::ListLen => {
+            check_arity("List::len", &receiver_value, 0, &arg_values)?;
+
+            match &receiver_value.1 {
+                Value::List(items) => {
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::Integer(items.len() as i64)));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
         BuiltinMethodKind::StringConcat => {
             check_arity("String::concat", &receiver_value, 1, &arg_values)?;
 
@@ -2455,7 +2459,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_length() {
-        let exprs = parse_exprs_from_str("list_length([0, 1]);").unwrap();
+        let exprs = parse_exprs_from_str("[0, 1].len();").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();

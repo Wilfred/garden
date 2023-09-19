@@ -114,6 +114,15 @@ pub struct FunInfo {
     pub body: Block,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct TestInfo {
+    pub src_string: SourceString,
+    pub doc_comment: Option<String>,
+    /// The name of the test. This is optional in test definitions.
+    pub name: Option<Symbol>,
+    pub body: Block,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
     ListLen,
@@ -197,6 +206,7 @@ pub enum Definition_ {
     /// fun (self: List) foo() {}
     /// ```
     MethodDefinition(MethodInfo),
+    TestDefinition(TestInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

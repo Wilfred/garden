@@ -519,6 +519,10 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
             Definition_::MethodDefinition(meth_info) => {
                 env.add_method(meth_info);
             }
+            Definition_::TestDefinition(_test_info) => {
+                // Just evaluate immediately.
+                todo!()
+            }
         }
     }
 }

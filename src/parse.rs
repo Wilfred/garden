@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use ariadne::{Label, Report, ReportKind, Source};
 use line_numbers::LinePositions;
@@ -18,6 +18,7 @@ use crate::ast::SourceString;
 use crate::ast::Symbol;
 use crate::ast::SymbolName;
 use crate::ast::SymbolWithType;
+use crate::ast::TestInfo;
 use crate::ast::ToplevelExpression;
 use crate::ast::TypeName;
 use crate::eval::ErrorMessage;
@@ -626,14 +627,13 @@ fn parse_simple_expression_or_binop(
     Ok(expr)
 }
 
-fn parse_definition(
-    path: &Path,
-    src: &str,
-    tokens: &mut &[Token<'_>],
-) -> Result<Definition, ParseError> {
+fn parse_definition(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
             return parse_function_or_method(src, tokens);
+        }
+        if token.text == "test" {
+            return parse_test(src, tokens);
         }
 
         // TODO: Include the token in the error message.
@@ -644,17 +644,50 @@ fn parse_definition(
         });
     }
 
-    // TODO: return a more meaningful position (e.g. EOF)
-    Err(ParseError::Invalid {
-        position: Position {
-            start_offset: 0,
-            end_offset: 0,
-            line_number: 0,
-            path: path.into(),
-        },
-        message: ErrorMessage("Expected a definition, got EOF".to_string()),
-        additional: vec![],
-    })
+    Err(ParseError::Incomplete(ErrorMessage(
+        "Unfinished definition".to_owned(),
+    )))
+}
+
+fn parse_test(src: &str, tokens: &mut &[Token]) -> Result<Definition, ParseError> {
+    let test_token = require_token(tokens, "test")?;
+    let doc_comment = parse_doc_comment(&test_token);
+
+    let name = if let Some(token) = peek_token(tokens) {
+        if token.text == "{" {
+            None
+        } else {
+            Some(parse_symbol(tokens)?)
+        }
+    } else {
+        return Err(ParseError::Incomplete(ErrorMessage(
+            "Unfinished test definition".to_owned(),
+        )));
+    };
+
+    let body = parse_block(src, tokens)?;
+
+    let mut start_offset = test_token.position.start_offset;
+    if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = body.close_brace.end_offset;
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    Ok(Definition(
+        src_string.clone(),
+        test_token.position,
+        Definition_::TestDefinition(TestInfo {
+            src_string,
+            doc_comment,
+            name,
+            body,
+        }),
+    ))
 }
 
 fn parse_type_name(tokens: &mut &[Token<'_>]) -> Result<TypeName, ParseError> {
@@ -879,7 +912,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "true", "false", "if", "else", "while", "return",
+    "let", "fun", "true", "false", "if", "else", "while", "return", "test",
 ];
 
 fn parse_symbol(tokens: &mut &[Token<'_>]) -> Result<Symbol, ParseError> {
@@ -939,7 +972,6 @@ fn parse_assign_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
 }
 
 fn parse_def_or_expr(
-    path: &Path,
     src: &str,
     tokens: &mut &[Token<'_>],
 ) -> Result<DefinitionsOrExpression, ParseError> {
@@ -967,7 +999,7 @@ fn parse_def_or_expr(
 
     let mut defs = vec![];
     while !tokens.is_empty() {
-        defs.push(parse_definition(path, src, tokens)?);
+        defs.push(parse_definition(src, tokens)?);
     }
 
     Ok(DefinitionsOrExpression::Defs(defs))
@@ -979,7 +1011,7 @@ pub fn parse_def_or_expr_from_str(
 ) -> Result<DefinitionsOrExpression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
-    parse_def_or_expr(path, s, &mut token_ptr)
+    parse_def_or_expr(s, &mut token_ptr)
 }
 
 pub fn parse_def_or_expr_from_span(
@@ -990,7 +1022,7 @@ pub fn parse_def_or_expr_from_span(
 ) -> Result<DefinitionsOrExpression, ParseError> {
     let tokens = lex_between(path, s, offset, end_offset)?;
     let mut token_ptr = &tokens[..];
-    parse_def_or_expr(path, s, &mut token_ptr)
+    parse_def_or_expr(s, &mut token_ptr)
 }
 
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {

@@ -489,7 +489,7 @@ pub fn eval_def_or_exprs(
 ) -> Result<ToplevelEvalResult, EvalError> {
     match items {
         DefinitionsOrExpression::Defs(defs) => {
-            eval_defs(defs, env);
+            eval_defs(defs, env, session)?;
             Ok(ToplevelEvalResult::Definition(format!(
                 "Loaded {} definition{}.",
                 defs.len(),
@@ -504,7 +504,11 @@ pub fn eval_def_or_exprs(
     }
 }
 
-pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
+pub fn eval_defs(
+    definitions: &[Definition],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<(), EvalError> {
     for definition in definitions {
         // TODO: check that types in definitions are defined, and emit
         // warnings otherwise.
@@ -519,12 +523,14 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
             Definition_::MethodDefinition(meth_info) => {
                 env.add_method(meth_info);
             }
-            Definition_::TestDefinition(_test_info) => {
-                // Just evaluate immediately.
-                todo!()
+            Definition_::TestDefinition(test_info) => {
+                let _value = eval_exprs(&test_info.body.exprs, env, session)?;
+                // TODO: Maybe return the last value?
             }
         }
     }
+
+    Ok(())
 }
 
 // If value is a list of strings, return the strings as a vec. Return
@@ -2233,6 +2239,17 @@ mod tests {
         super::eval_exprs(exprs, env, &mut session)
     }
 
+    fn eval_defs(definitions: &[Definition], env: &mut Env) -> Result<(), EvalError> {
+        let interrupted = Arc::new(AtomicBool::new(false));
+        let mut session = Session {
+            history: String::new(),
+            interrupted: &interrupted,
+            has_attached_stdout: false,
+        };
+
+        super::eval_defs(definitions, env, &mut session)
+    }
+
     #[test]
     fn test_eval_bool_literal() {
         let exprs = vec![Expression(
@@ -2502,7 +2519,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f() { true; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2514,7 +2531,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(x) { x; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f(123);").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2526,7 +2543,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(x, y) { y; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f(1, 2);").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2539,7 +2556,7 @@ mod tests {
 
         let defs =
             parse_defs_from_str("fun f() { let x = 1; let f = fun() { x; }; f(); }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2551,7 +2568,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(x) { }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -2562,7 +2579,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f() { let x = 1; fun() { x; }; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("let y = f(); y();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2574,7 +2591,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun (self: String) f() { true; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("\"\".f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2586,7 +2603,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun (self: String) f() { true; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("\"\".f(123);").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -2615,7 +2632,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun id(x) { x; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("let i = 0; id(i); i;").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2627,7 +2644,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f() { return 1; 2; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2639,7 +2656,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(): Int { 1; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_ok());
@@ -2650,7 +2667,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(x: Int) { }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f(true);").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -2661,7 +2678,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(): String { 1; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -2672,7 +2689,7 @@ mod tests {
         let mut env = Env::default();
 
         let defs = parse_defs_from_str("fun f(): String { return 1; }").unwrap();
-        eval_defs(&defs, &mut env);
+        eval_defs(&defs, &mut env).unwrap();
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());

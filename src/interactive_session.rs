@@ -99,7 +99,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 last_src = src;
                 match items.clone() {
                     ast::DefinitionsOrExpression::Defs(defs) => {
-                        eval_defs(&defs, &mut env);
+                        match eval_defs(&defs, &mut env, &mut session) {
+                            Ok(()) => {}
+                            Err(_) => todo!(),
+                        }
                         continue;
                     }
                     ast::DefinitionsOrExpression::Expr(expr) => {

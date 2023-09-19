@@ -1,6 +1,6 @@
 # 0.7 (unreleased)
 
-**Goal: Support enums.**
+**Goal: Support interactive unit tests.**
 
 ### Stdlib
 

@@ -13,7 +13,7 @@ use strum_macros::EnumIter;
 
 use crate::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Position,
-    SourceString, Symbol, SymbolWithType, TypeName,
+    SourceString, Symbol, SymbolWithType, TestInfo, TypeName,
 };
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
@@ -502,6 +502,21 @@ pub fn eval_def_or_exprs(
             Ok(ToplevelEvalResult::Value(value))
         }
     }
+}
+
+pub fn eval_tests(
+    tests: &[TestInfo],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<Option<Value>, EvalError> {
+    let mut last_value: Option<Value> = None;
+
+    for test in tests {
+        let value = eval_exprs(&test.body.exprs, env, session)?;
+        last_value = Some(value);
+    }
+
+    Ok(last_value)
 }
 
 pub fn eval_defs(

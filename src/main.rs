@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use eval::{eval_def_or_exprs, Env, EvalError, Session};
+use eval::{eval_def_or_exprs, eval_tests, Env, EvalError, Session};
 use parse::parse_def_or_expr_from_str;
 
 use crate::eval::{escape_string_literal, ErrorMessage};
@@ -47,6 +47,8 @@ enum Commands {
         path: PathBuf,
         arguments: Vec<String>,
     },
+    /// Run all the tests in the Garden program at the path specified.
+    Test { path: PathBuf },
 }
 
 fn main() {
@@ -70,6 +72,63 @@ fn main() {
         },
         Commands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
+        }
+        Commands::Test { path } => match std::fs::read(&path) {
+            Ok(src_bytes) => run_tests_in_file(src_bytes, &path, &interrupted),
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+    }
+}
+
+// TODO: Much of this logic is duplicated with run_file.
+fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
+    match String::from_utf8(src_bytes) {
+        Ok(src) => match parse_def_or_expr_from_str(path, &src) {
+            Ok(exprs) => {
+                let mut env = Env::default();
+                let mut session = Session {
+                    history: src.clone(),
+                    interrupted,
+                    has_attached_stdout: true,
+                };
+
+                match eval_tests(&exprs, &mut env, &mut session) {
+                    Ok(_) => {}
+                    Err(EvalError::ResumableError(position, e)) => {
+                        eprintln!("{}", &format_error(&e, &position, &src));
+                    }
+                    Err(EvalError::Interrupted) => {
+                        eprintln!("Interrupted");
+                    }
+                    Err(EvalError::Stop(_)) => {
+                        eprintln!("Error (stopped)");
+                    }
+                }
+
+                println!("Pass");
+            }
+            Err(parse::ParseError::Invalid {
+                position,
+                message: e,
+                additional: _,
+            }) => {
+                eprintln!(
+                    "{}",
+                    &format_parse_error(
+                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &position,
+                        &src
+                    )
+                );
+            }
+            Err(parse::ParseError::Incomplete(e)) => {
+                eprintln!("Parse error (incomplete input): {}", e.0);
+            }
+        },
+        Err(e) => {
+            eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
     }
 }

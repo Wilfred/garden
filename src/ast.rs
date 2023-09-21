@@ -217,3 +217,9 @@ pub enum DefinitionsOrExpression {
     Defs(Vec<Definition>),
     Expr(ToplevelExpression),
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ToplevelCode {
+    Def(Definition),
+    Expr(ToplevelExpression),
+}

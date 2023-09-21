@@ -19,6 +19,7 @@ use crate::ast::Symbol;
 use crate::ast::SymbolName;
 use crate::ast::SymbolWithType;
 use crate::ast::TestInfo;
+use crate::ast::ToplevelCode;
 use crate::ast::ToplevelExpression;
 use crate::ast::TypeName;
 use crate::eval::ErrorMessage;
@@ -1029,6 +1030,17 @@ pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression,
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
     parse_inline_expression(s, &mut token_ptr)
+}
+
+pub fn parse_single_toplevel(path: &PathBuf, s: &str) -> Result<ToplevelCode, ParseError> {
+    let tokens = lex(path, s)?;
+    let mut token_ptr = &tokens[..];
+
+    // TODO: parsing all the definitions then discarding is silly.
+    match parse_def_or_expr(s, &mut token_ptr)? {
+        DefinitionsOrExpression::Defs(defs) => Ok(ToplevelCode::Def(defs[0].clone())),
+        DefinitionsOrExpression::Expr(e) => Ok(ToplevelCode::Expr(e)),
+    }
 }
 
 #[cfg(test)]

@@ -219,7 +219,7 @@ pub enum DefinitionsOrExpression {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ToplevelCode {
+pub enum ToplevelItem {
     Def(Definition),
     Expr(ToplevelExpression),
 }

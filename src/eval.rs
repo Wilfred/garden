@@ -482,10 +482,7 @@ pub enum ToplevelEvalResult {
     Definition(String),
 }
 
-pub fn eval_toplevel_defs(
-    items: &[ToplevelItem],
-    env: &mut Env,
-) -> Result<ToplevelEvalResult, EvalError> {
+pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalResult {
     let mut defs = vec![];
     for item in items {
         match item {
@@ -497,11 +494,11 @@ pub fn eval_toplevel_defs(
     }
 
     eval_defs(&defs, env);
-    Ok(ToplevelEvalResult::Definition(format!(
+    ToplevelEvalResult::Definition(format!(
         "Loaded {} definition{}.",
         defs.len(),
         if defs.len() == 1 { "" } else { "s" }
-    )))
+    ))
 }
 
 pub fn eval_def_or_exprs(

@@ -100,11 +100,9 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Ok((src, items)) => {
                 last_src = src;
 
-                eval_toplevel_defs(&items, &mut env)
-                    .expect("Cannot error when evaluation definitions");
+                eval_toplevel_defs(&items, &mut env);
 
                 let mut exprs = vec![];
-
                 for item in items {
                     match item {
                         ToplevelItem::Expr(expr) => exprs.push(expr),

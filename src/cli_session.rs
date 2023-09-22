@@ -229,6 +229,11 @@ fn print_repl_header() {
     println!("Type {} if you're new here.", ":help".bold().green());
 }
 
+/// Read toplevel items from stdin.
+///
+/// If the user writes an incomplete item (e.g. the line ends with
+/// `{`), then keep reading until we have a full definition or an
+/// error.
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,

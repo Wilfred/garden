@@ -6,7 +6,7 @@ mod ast;
 mod colors;
 mod commands;
 mod eval;
-mod interactive_session;
+mod cli_session;
 mod json_session;
 mod lex;
 mod parse;
@@ -62,7 +62,7 @@ fn main() {
 
     let args = Cli::parse();
     match args.command {
-        Commands::Repl => interactive_session::repl(&interrupted),
+        Commands::Repl => cli_session::repl(&interrupted),
         Commands::Json => json_session::json_session(&interrupted),
         Commands::Run { path, arguments } => match std::fs::read(&path) {
             Ok(src_bytes) => run_file(src_bytes, &path, &arguments, &interrupted),

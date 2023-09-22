@@ -526,31 +526,6 @@ pub fn eval_def_or_exprs(
     }
 }
 
-pub fn eval_tests(
-    items: &DefinitionsOrExpression,
-    env: &mut Env,
-    session: &mut Session,
-) -> Result<Option<Value>, EvalError> {
-    let mut last_value: Option<Value> = None;
-
-    match items {
-        DefinitionsOrExpression::Defs(defs) => {
-            for defn in defs {
-                match &defn.2 {
-                    Definition_::TestDefinition(test) => {
-                        let value = eval_exprs(&test.body.exprs, env, session)?;
-                        last_value = Some(value);
-                    }
-                    _ => {}
-                }
-            }
-        }
-        DefinitionsOrExpression::Expr(_) => {}
-    }
-
-    Ok(last_value)
-}
-
 pub fn eval_toplevel_tests(
     items: &[ToplevelItem],
     env: &mut Env,

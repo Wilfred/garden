@@ -18,10 +18,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use eval::{eval_def_or_exprs, eval_tests, Env, EvalError, Session};
-use parse::parse_def_or_expr_from_str;
+use eval::{eval_def_or_exprs, Env, EvalError, Session};
+use parse::{parse_def_or_expr_from_str, parse_toplevels};
 
-use crate::eval::{escape_string_literal, ErrorMessage};
+use crate::eval::{escape_string_literal, eval_toplevel_tests, ErrorMessage};
 use crate::parse::{format_error, format_error_with_stack, format_parse_error};
 
 #[derive(Debug, Parser)]
@@ -85,8 +85,8 @@ fn main() {
 // TODO: Much of this logic is duplicated with run_file.
 fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
-        Ok(src) => match parse_def_or_expr_from_str(path, &src) {
-            Ok(exprs) => {
+        Ok(src) => match parse_toplevels(path, &src) {
+            Ok(items) => {
                 let mut env = Env::default();
                 let mut session = Session {
                     history: src.clone(),
@@ -94,7 +94,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                     has_attached_stdout: true,
                 };
 
-                match eval_tests(&exprs, &mut env, &mut session) {
+                match eval_toplevel_tests(&items, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("{}", &format_error(&e, &position, &src));

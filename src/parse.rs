@@ -19,8 +19,8 @@ use crate::ast::Symbol;
 use crate::ast::SymbolName;
 use crate::ast::SymbolWithType;
 use crate::ast::TestInfo;
-use crate::ast::ToplevelItem;
 use crate::ast::ToplevelExpression;
+use crate::ast::ToplevelItem;
 use crate::ast::TypeName;
 use crate::eval::ErrorMessage;
 use crate::eval::StackFrame;
@@ -1033,14 +1033,29 @@ pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression,
 }
 
 pub fn parse_single_toplevel(path: &PathBuf, s: &str) -> Result<ToplevelItem, ParseError> {
+    let items = parse_toplevels(path, s)?;
+    Ok(items[0].clone())
+}
+
+pub fn parse_toplevels(path: &PathBuf, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
 
-    // TODO: parsing all the definitions then discarding is silly.
+    let mut res = vec![];
+
     match parse_def_or_expr(s, &mut token_ptr)? {
-        DefinitionsOrExpression::Defs(defs) => Ok(ToplevelItem::Def(defs[0].clone())),
-        DefinitionsOrExpression::Expr(e) => Ok(ToplevelItem::Expr(e)),
-    }
+        DefinitionsOrExpression::Defs(defs) => {
+            for def in defs {
+                res.push(ToplevelItem::Def(def.clone()));
+            }
+        }
+        DefinitionsOrExpression::Expr(e) => {
+            // TODO: parse all the toplevel expressions, not just the first.
+            res.push(ToplevelItem::Expr(e));
+        }
+    };
+
+    Ok(res)
 }
 
 #[cfg(test)]

@@ -13,7 +13,7 @@ use strum_macros::EnumIter;
 
 use crate::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Position,
-    SourceString, Symbol, SymbolWithType, TypeName,
+    SourceString, Symbol, SymbolWithType, ToplevelItem, TypeName,
 };
 use crate::ast::{
     Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
@@ -480,6 +480,29 @@ pub enum EvalError {
 pub enum ToplevelEvalResult {
     Value(Value),
     Definition(String),
+}
+
+pub fn eval_toplevel_defs(
+    items: &[ToplevelItem],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<ToplevelEvalResult, EvalError> {
+    let mut defs = vec![];
+    for item in items {
+        match item {
+            ToplevelItem::Def(def) => {
+                defs.push(def.clone());
+            }
+            ToplevelItem::Expr(_) => {}
+        }
+    }
+
+    eval_defs(&defs, env);
+    Ok(ToplevelEvalResult::Definition(format!(
+        "Loaded {} definition{}.",
+        defs.len(),
+        if defs.len() == 1 { "" } else { "s" }
+    )))
 }
 
 pub fn eval_def_or_exprs(

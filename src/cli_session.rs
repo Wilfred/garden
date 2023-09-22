@@ -4,13 +4,13 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::ast;
+use crate::ast::{self, ToplevelItem};
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError,
 };
-use crate::eval::{self, eval_defs, eval_env, Session};
+use crate::eval::{self, eval_env, eval_toplevel_defs, Session};
 use crate::eval::{ErrorKind, EvalError};
-use crate::parse::{format_error, parse_def_or_expr_from_str, ParseError};
+use crate::parse::{format_error, parse_toplevels, ParseError};
 use crate::{eval::Env, prompt::prompt_symbol};
 
 use owo_colors::OwoColorize;
@@ -21,12 +21,14 @@ enum ReadError {
     ReadlineError,
 }
 
+/// Read toplevel items from stdin. If the user gives us a command,
+/// execute it and prompt again.
 fn read_expr(
     env: &mut Env,
     session: &mut Session,
     rl: &mut Editor<()>,
     is_stopped: bool,
-) -> Result<(String, ast::DefinitionsOrExpression), ReadError> {
+) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
             Ok(input) => {
@@ -97,18 +99,33 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
         match read_expr(&mut env, &mut session, &mut rl, is_stopped) {
             Ok((src, items)) => {
                 last_src = src;
-                match items.clone() {
-                    ast::DefinitionsOrExpression::Defs(defs) => {
-                        eval_defs(&defs, &mut env);
-                        continue;
+
+                eval_toplevel_defs(&items, &mut env)
+                    .expect("Cannot error when evaluation definitions");
+
+                let mut exprs = vec![];
+
+                for item in items {
+                    match item {
+                        ToplevelItem::Expr(expr) => exprs.push(expr),
+                        _ => {}
                     }
-                    ast::DefinitionsOrExpression::Expr(expr) => {
-                        let stack_frame = env
-                            .stack
-                            .last_mut()
-                            .expect("Should always have the toplevel stack frame");
-                        stack_frame.exprs_to_eval.push((false, expr.1));
-                    }
+                }
+
+                if exprs.is_empty() {
+                    continue;
+                }
+
+                let stack_frame = env
+                    .stack
+                    .last_mut()
+                    .expect("Should always have the toplevel stack frame");
+
+                // Push expressions in reverse order, so the top of
+                // exprs_to_eval is the first expression from the
+                // user.
+                for expr in exprs.iter().rev() {
+                    stack_frame.exprs_to_eval.push((false, expr.1.clone()));
                 }
             }
             Err(ReadError::CommandError(CommandError::Abort)) => {
@@ -237,18 +254,16 @@ fn print_repl_header() {
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
-) -> Result<(String, ast::DefinitionsOrExpression), ParseError> {
+) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_string();
 
     loop {
-        match parse_def_or_expr_from_str(&PathBuf::from("__interactive_session__"), &src) {
-            Ok(items) => match items {
-                ast::DefinitionsOrExpression::Defs(ref defs)
-                    if defs.is_empty() && !src.trim().is_empty() =>
-                {
+        match parse_toplevels(&PathBuf::from("__interactive_session__"), &src) {
+            Ok(items) => {
+                if items.is_empty() && !src.trim().is_empty() {
                     // If we didn't parse anything, but the text isn't
                     // just whitespace, it's probably a comment that
-                    // will become a doc comment
+                    // will become a doc comment.
                     match rl.readline(&prompt_symbol(false)) {
                         Ok(input) => {
                             src.push('\n');
@@ -256,11 +271,10 @@ fn read_multiline_syntax(
                         }
                         Err(_) => return Ok((src, items)),
                     }
-                }
-                _ => {
+                } else {
                     return Ok((src, items));
                 }
-            },
+            }
             Err(e @ ParseError::Incomplete(_)) => match rl.readline(&prompt_symbol(false)) {
                 Ok(input) => {
                     src.push('\n');

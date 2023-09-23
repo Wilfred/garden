@@ -10,7 +10,7 @@ use crate::commands::{
 };
 use crate::eval::{self, eval_env, eval_toplevel_defs, Session};
 use crate::eval::{ErrorKind, EvalError};
-use crate::parse::{format_error, parse_toplevels, ParseError};
+use crate::parse::{format_error, parse_toplevel_items, ParseError};
 use crate::{eval::Env, prompt::prompt_symbol};
 
 use owo_colors::OwoColorize;
@@ -256,7 +256,7 @@ fn read_multiline_syntax(
     let mut src = first_line.to_string();
 
     loop {
-        match parse_toplevels(&PathBuf::from("__interactive_session__"), &src) {
+        match parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src) {
             Ok(items) => {
                 if items.is_empty() && !src.trim().is_empty() {
                     // If we didn't parse anything, but the text isn't

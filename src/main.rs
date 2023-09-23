@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 use eval::{eval_def_or_exprs, Env, EvalError, Session};
-use parse::{parse_def_or_expr_from_str, parse_toplevels};
+use parse::{parse_def_or_expr_from_str, parse_toplevel_items};
 
 use crate::eval::{escape_string_literal, eval_toplevel_tests, ErrorMessage};
 use crate::parse::{format_error, format_error_with_stack, format_parse_error};
@@ -85,7 +85,7 @@ fn main() {
 // TODO: Much of this logic is duplicated with run_file.
 fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
-        Ok(src) => match parse_toplevels(path, &src) {
+        Ok(src) => match parse_toplevel_items(path, &src) {
             Ok(items) => {
                 let mut env = Env::default();
                 let mut session = Session {

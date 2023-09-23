@@ -1032,12 +1032,12 @@ pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression,
     parse_inline_expression(s, &mut token_ptr)
 }
 
-pub fn parse_single_toplevel(path: &PathBuf, s: &str) -> Result<ToplevelItem, ParseError> {
-    let items = parse_toplevels(path, s)?;
+pub fn parse_toplevel_item(path: &PathBuf, s: &str) -> Result<ToplevelItem, ParseError> {
+    let items = parse_toplevel_items(path, s)?;
     Ok(items[0].clone())
 }
 
-pub fn parse_toplevels(path: &PathBuf, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
+pub fn parse_toplevel_items(path: &PathBuf, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
 

@@ -8,11 +8,11 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::ast;
-use crate::eval::{eval_env, ToplevelEvalResult};
-use crate::parse::{format_error, format_parse_error, parse_def_or_expr_from_span, ParseError};
+use crate::eval::{eval_env, eval_toplevel_items, ToplevelEvalResult};
+use crate::parse::{format_error, format_parse_error, parse_toplevel_items_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
-    eval::{eval_def_or_exprs, Env, EvalError, Session},
+    eval::{Env, EvalError, Session},
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -74,14 +74,14 @@ fn handle_eval_request(
 ) -> Response {
     complete_src.push_str(&req.input);
 
-    match parse_def_or_expr_from_span(
+    match parse_toplevel_items_from_span(
         &req.path
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         &req.input,
         req.offset.unwrap_or(0),
         req.end_offset.unwrap_or(req.input.len()),
     ) {
-        Ok(exprs) => match eval_def_or_exprs(&exprs, env, session) {
+        Ok(items) => match eval_toplevel_items(&items, env, session) {
             Ok(result) => {
                 let value_summary = match result {
                     ToplevelEvalResult::Value(value) => format!("{}", value),

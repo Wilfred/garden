@@ -501,6 +501,37 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
     ))
 }
 
+pub fn eval_toplevel_items(
+    items: &[ToplevelItem],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<ToplevelEvalResult, EvalError> {
+    let mut defs = vec![];
+    let mut exprs = vec![];
+    for item in items {
+        match item {
+            ToplevelItem::Def(def) => {
+                defs.push(def.clone());
+            }
+            ToplevelItem::Expr(expr) => {
+                exprs.push(expr.1.clone());
+            }
+        }
+    }
+
+    eval_defs(&defs, env);
+    if exprs.is_empty() {
+        return Ok(ToplevelEvalResult::Definition(format!(
+            "Loaded {} definition{}.",
+            defs.len(),
+            if defs.len() == 1 { "" } else { "s" }
+        )));
+    }
+
+    let value = eval_exprs(&exprs, env, session)?;
+    Ok(ToplevelEvalResult::Value(value))
+}
+
 pub fn eval_def_or_exprs(
     items: &DefinitionsOrExpression,
     env: &mut Env,

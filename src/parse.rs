@@ -1015,17 +1015,6 @@ pub fn parse_def_or_expr_from_str(
     parse_def_or_expr(s, &mut token_ptr)
 }
 
-pub fn parse_def_or_expr_from_span(
-    path: &PathBuf,
-    s: &str,
-    offset: usize,
-    end_offset: usize,
-) -> Result<DefinitionsOrExpression, ParseError> {
-    let tokens = lex_between(path, s, offset, end_offset)?;
-    let mut token_ptr = &tokens[..];
-    parse_def_or_expr(s, &mut token_ptr)
-}
-
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
@@ -1058,6 +1047,31 @@ pub fn parse_toplevel_items(path: &PathBuf, s: &str) -> Result<Vec<ToplevelItem>
     Ok(res)
 }
 
+pub fn parse_toplevel_items_from_span(
+    path: &PathBuf,
+    s: &str,
+    offset: usize,
+    end_offset: usize,
+) -> Result<Vec<ToplevelItem>, ParseError> {
+    let tokens = lex_between(path, s, offset, end_offset)?;
+    let mut token_ptr = &tokens[..];
+
+    let mut res = vec![];
+
+    match parse_def_or_expr(s, &mut token_ptr)? {
+        DefinitionsOrExpression::Defs(defs) => {
+            for def in defs {
+                res.push(ToplevelItem::Def(def.clone()));
+            }
+        }
+        DefinitionsOrExpression::Expr(e) => {
+            // TODO: parse all the toplevel expressions, not just the first.
+            res.push(ToplevelItem::Expr(e));
+        }
+    };
+
+    Ok(res)
+}
 #[cfg(test)]
 pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
     let tokens = lex(&PathBuf::from("__test.gdn"), s)?;

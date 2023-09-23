@@ -6,11 +6,12 @@ use strum_macros::EnumIter;
 
 use crate::ast::{self, SymbolName, TypeName};
 use crate::eval::{eval_exprs, type_representation};
+use crate::parse::parse_toplevel_item;
 use crate::version::VERSION;
 use crate::{
     colors::green,
     eval::{builtin_fun_doc, Env, Session, Value},
-    parse::{parse_def_or_expr_from_str, parse_inline_expr_from_str, ParseError},
+    parse::{parse_inline_expr_from_str, ParseError},
 };
 
 #[derive(Debug, EnumIter)]
@@ -437,7 +438,7 @@ pub fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                match parse_def_or_expr_from_str(&PathBuf::from("__interactive__"), src) {
+                match parse_toplevel_item(&PathBuf::from("__interactive__"), src) {
                     Ok(ast) => write!(buf, "{:#?}", ast).unwrap(),
                     Err(ParseError::Incomplete(e))
                     | Err(ParseError::Invalid { message: e, .. }) => {

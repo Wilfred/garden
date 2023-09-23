@@ -2,5 +2,4 @@
 
 fun main(args: List): Void {
   println("Hello, World!");
-  0;
 }

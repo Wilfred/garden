@@ -15,9 +15,7 @@ use crate::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Position,
     SourceString, Symbol, SymbolWithType, ToplevelItem, TypeName,
 };
-use crate::ast::{
-    Definition, Definition_, DefinitionsOrExpression, Expression, Expression_, SymbolName,
-};
+use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::json_session::{Response, ResponseKind};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -530,28 +528,6 @@ pub fn eval_toplevel_items(
 
     let value = eval_exprs(&exprs, env, session)?;
     Ok(ToplevelEvalResult::Value(value))
-}
-
-pub fn eval_def_or_exprs(
-    items: &DefinitionsOrExpression,
-    env: &mut Env,
-    session: &mut Session,
-) -> Result<ToplevelEvalResult, EvalError> {
-    match items {
-        DefinitionsOrExpression::Defs(defs) => {
-            eval_defs(defs, env);
-            Ok(ToplevelEvalResult::Definition(format!(
-                "Loaded {} definition{}.",
-                defs.len(),
-                if defs.len() == 1 { "" } else { "s" }
-            )))
-        }
-        DefinitionsOrExpression::Expr(e) => {
-            let exprs = vec![e.1.clone()];
-            let value = eval_exprs(&exprs, env, session)?;
-            Ok(ToplevelEvalResult::Value(value))
-        }
-    }
 }
 
 pub fn eval_toplevel_tests(

@@ -1087,10 +1087,17 @@ pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
 
 #[cfg(test)]
 pub fn parse_defs_from_str(s: &str) -> Result<Vec<Definition>, ParseError> {
-    let defs = match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), s)? {
-        DefinitionsOrExpression::Defs(defs) => defs,
-        DefinitionsOrExpression::Expr(_) => unreachable!(),
-    };
+    let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), s)?;
+
+    let mut defs = vec![];
+    for item in items {
+        match item {
+            ToplevelItem::Def(def) => {
+                defs.push(def.clone());
+            }
+            ToplevelItem::Expr(_) => unreachable!(),
+        }
+    }
 
     Ok(defs)
 }

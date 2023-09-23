@@ -1006,15 +1006,6 @@ fn parse_def_or_expr(
     Ok(DefinitionsOrExpression::Defs(defs))
 }
 
-pub fn parse_def_or_expr_from_str(
-    path: &PathBuf,
-    s: &str,
-) -> Result<DefinitionsOrExpression, ParseError> {
-    let tokens = lex(path, s)?;
-    let mut token_ptr = &tokens[..];
-    parse_def_or_expr(s, &mut token_ptr)
-}
-
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
@@ -1627,18 +1618,17 @@ mod tests {
     #[test]
     fn test_incomplete_expression() {
         assert!(matches!(
-            parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "1; 2"),
+            parse_toplevel_items(&PathBuf::from("__test.gdn"), "1; 2"),
             Err(_)
         ));
     }
 
     #[test]
     fn test_parse_block_expression() {
-        let ast =
-            match parse_def_or_expr_from_str(&PathBuf::from("__test.gdn"), "let x = 1;").unwrap() {
-                DefinitionsOrExpression::Defs(_) => unreachable!(),
-                DefinitionsOrExpression::Expr(e) => e,
-            };
+        let ast = match parse_toplevel_item(&PathBuf::from("__test.gdn"), "let x = 1;").unwrap() {
+            ToplevelItem::Def(_) => unreachable!(),
+            ToplevelItem::Expr(e) => e,
+        };
 
         assert_eq!(
             ast,

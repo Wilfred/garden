@@ -1006,6 +1006,58 @@ fn parse_def_or_expr(
     Ok(DefinitionsOrExpression::Defs(defs))
 }
 
+fn parse_toplevel_items_from_tokens(
+    src: &str,
+    tokens: &mut &[Token<'_>],
+) -> Result<Vec<ToplevelItem>, ParseError> {
+    let mut items: Vec<ToplevelItem> = vec![];
+
+    // Parsing advances the tokens pointer, so create a copy for
+    // trying an expression parse.
+    let mut tokens_copy = tokens.clone();
+
+    // TODO: support interleaving block expressions, inline
+    // expressions, and definitions.
+    if let Ok(expr) = parse_block_member_expression(src, &mut tokens_copy) {
+        let pos = &expr.0.clone();
+        let toplevel_expr =
+            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
+        items.push(ToplevelItem::Expr(toplevel_expr));
+
+        while !tokens_copy.is_empty() {
+            let expr = parse_block_member_expression(src, &mut tokens_copy)?;
+            let toplevel_expr =
+                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
+            items.push(ToplevelItem::Expr(toplevel_expr));
+        }
+
+        return Ok(items);
+    }
+
+    let mut tokens_copy = tokens.clone();
+    if let Ok(expr) = parse_inline_expression(src, &mut tokens_copy) {
+        let pos = &expr.0.clone();
+        let toplevel_expr =
+            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
+        items.push(ToplevelItem::Expr(toplevel_expr));
+
+        while !tokens_copy.is_empty() {
+            let expr = parse_inline_expression(src, &mut tokens_copy)?;
+            let toplevel_expr =
+                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
+            items.push(ToplevelItem::Expr(toplevel_expr));
+        }
+
+        return Ok(items);
+    }
+
+    while !tokens.is_empty() {
+        let def = parse_definition(src, tokens)?;
+        items.push(ToplevelItem::Def(def));
+    }
+    return Ok(items);
+}
+
 pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];

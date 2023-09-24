@@ -6,6 +6,7 @@ mod ast;
 mod cli_session;
 mod colors;
 mod commands;
+mod diagnostics;
 mod eval;
 mod json_session;
 mod lex;
@@ -21,8 +22,8 @@ use clap::{Parser, Subcommand};
 use eval::{eval_toplevel_defs, eval_toplevel_items, Env, EvalError, Session};
 use parse::{parse_toplevel_item, parse_toplevel_items};
 
+use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::eval::{escape_string_literal, eval_toplevel_tests, ErrorMessage};
-use crate::parse::{format_error_with_stack, format_parse_error};
 
 #[derive(Debug, Parser)]
 #[command(author, version, name="Garden", about = "A programming language for growing programs", long_about = None)]

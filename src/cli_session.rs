@@ -8,9 +8,10 @@ use crate::ast::{self, ToplevelItem};
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError,
 };
+use crate::diagnostics::format_error;
 use crate::eval::{self, eval_env, eval_toplevel_defs, Session};
 use crate::eval::{ErrorKind, EvalError};
-use crate::parse::{format_error, parse_toplevel_items, ParseError};
+use crate::parse::{parse_toplevel_items, ParseError};
 use crate::{eval::Env, prompt::prompt_symbol};
 
 use owo_colors::OwoColorize;

@@ -7,7 +7,6 @@ use crate::ast::BinaryOperatorKind;
 use crate::ast::Block;
 use crate::ast::Definition;
 use crate::ast::Definition_;
-use crate::ast::DefinitionsOrExpression;
 use crate::ast::Expression;
 use crate::ast::Expression_;
 use crate::ast::FunInfo;
@@ -972,40 +971,6 @@ fn parse_assign_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
     ))
 }
 
-fn parse_def_or_expr(
-    src: &str,
-    tokens: &mut &[Token<'_>],
-) -> Result<DefinitionsOrExpression, ParseError> {
-    // Parsing advances the tokens pointer, so create a copy for
-    // trying an expression parse.
-    let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_block_member_expression(src, &mut tokens_copy) {
-        if tokens_copy.is_empty() {
-            let pos = &expr.0;
-            let toplevel_expr =
-                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-            return Ok(DefinitionsOrExpression::Expr(toplevel_expr));
-        }
-    }
-
-    let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_inline_expression(src, &mut tokens_copy) {
-        if tokens_copy.is_empty() {
-            let pos = &expr.0;
-            let toplevel_expr =
-                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-            return Ok(DefinitionsOrExpression::Expr(toplevel_expr));
-        }
-    }
-
-    let mut defs = vec![];
-    while !tokens.is_empty() {
-        defs.push(parse_definition(src, tokens)?);
-    }
-
-    Ok(DefinitionsOrExpression::Defs(defs))
-}
-
 fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut &[Token<'_>],
@@ -1072,22 +1037,7 @@ pub fn parse_toplevel_item(path: &PathBuf, s: &str) -> Result<ToplevelItem, Pars
 pub fn parse_toplevel_items(path: &PathBuf, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
-
-    let mut res = vec![];
-
-    match parse_def_or_expr(s, &mut token_ptr)? {
-        DefinitionsOrExpression::Defs(defs) => {
-            for def in defs {
-                res.push(ToplevelItem::Def(def.clone()));
-            }
-        }
-        DefinitionsOrExpression::Expr(e) => {
-            // TODO: parse all the toplevel expressions, not just the first.
-            res.push(ToplevelItem::Expr(e));
-        }
-    };
-
-    Ok(res)
+    parse_toplevel_items_from_tokens(s, &mut token_ptr)
 }
 
 pub fn parse_toplevel_items_from_span(
@@ -1098,23 +1048,9 @@ pub fn parse_toplevel_items_from_span(
 ) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex_between(path, s, offset, end_offset)?;
     let mut token_ptr = &tokens[..];
-
-    let mut res = vec![];
-
-    match parse_def_or_expr(s, &mut token_ptr)? {
-        DefinitionsOrExpression::Defs(defs) => {
-            for def in defs {
-                res.push(ToplevelItem::Def(def.clone()));
-            }
-        }
-        DefinitionsOrExpression::Expr(e) => {
-            // TODO: parse all the toplevel expressions, not just the first.
-            res.push(ToplevelItem::Expr(e));
-        }
-    };
-
-    Ok(res)
+    parse_toplevel_items_from_tokens(s, &mut token_ptr)
 }
+
 #[cfg(test)]
 pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
     let tokens = lex(&PathBuf::from("__test.gdn"), s)?;

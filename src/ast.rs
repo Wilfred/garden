@@ -213,12 +213,6 @@ pub enum Definition_ {
 pub struct Definition(pub SourceString, pub Position, pub Definition_);
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum DefinitionsOrExpression {
-    Defs(Vec<Definition>),
-    Expr(ToplevelExpression),
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub enum ToplevelItem {
     Def(Definition),
     Expr(ToplevelExpression),

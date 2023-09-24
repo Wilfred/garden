@@ -24,6 +24,13 @@ fun lines(s: String): List {
   parts;
 }
 
+test lines {
+  should_equal(lines(""), []);
+  should_equal(lines("a"), ["a"]);
+  should_equal(lines("a\nb"), ["a", "b"]);
+  should_equal(lines("a\nb\n"), ["a", "b"]);
+}
+
 fun (self: List) filter(f): List {
   let result = [];
 
@@ -137,5 +144,11 @@ fun main(args: List): Void {
     }
   } else {
     println("Not in a git repository.");
+  }
+}
+
+fun should_equal(x, y): Void {
+  if (x != y) {
+    error("Expected values to be equal");
   }
 }

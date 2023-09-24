@@ -23,9 +23,9 @@ pub fn format_error_with_stack(
     res.push_str(&format_pos_in_fun(position, src_string.as_ref()));
 
     for stack_frame in stack.iter().rev() {
-        if let Some((var, src_string)) = &stack_frame.call_site {
+        if let Some(var) = &stack_frame.call_site {
             res.push('\n');
-            res.push_str(&format_pos_in_fun(&var.0, src_string.as_ref()));
+            res.push_str(&format_pos_in_fun(&var.0, stack_frame.call_source.as_ref()));
         }
     }
 

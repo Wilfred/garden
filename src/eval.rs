@@ -290,7 +290,8 @@ pub struct StackFrame {
     // TODO: arguably this should be the call position, and the name
     // isn't relevant. The containing name of the call site is more
     // interesting.
-    pub call_site: Option<(Symbol, Option<SourceString>)>,
+    pub call_site: Option<Symbol>,
+    pub call_source: Option<SourceString>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -393,6 +394,7 @@ impl Default for Env {
             types,
             stack: vec![StackFrame {
                 call_site: None,
+                call_source: None,
                 bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
@@ -1406,13 +1408,14 @@ fn eval_call(
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
 
             return Ok(Some(StackFrame {
-                call_site: Some((
-                    Symbol(position.clone(), SymbolName("(closure)".to_string())),
-                    stack_frame
-                        .enclosing_fun
-                        .as_ref()
-                        .map(|fi| fi.src_string.clone()),
+                call_site: Some(Symbol(
+                    position.clone(),
+                    SymbolName("(closure)".to_string()),
                 )),
+                call_source: stack_frame
+                    .enclosing_fun
+                    .as_ref()
+                    .map(|fi| fi.src_string.clone()),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
                 // TODO: find a better position for the void value,
@@ -1442,13 +1445,11 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
-                call_site: Some((
-                    Symbol(receiver_value.0.clone(), name.1.clone()),
-                    stack_frame
-                        .enclosing_fun
-                        .as_ref()
-                        .map(|fi| fi.src_string.clone()),
-                )),
+                call_site: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
+                call_source: stack_frame
+                    .enclosing_fun
+                    .as_ref()
+                    .map(|fi| fi.src_string.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],
@@ -1592,14 +1593,14 @@ fn eval_method_call(
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
-        call_site: Some((
+        call_site: Some(
             // TODO: use a fully qualified method name here?
             Symbol(receiver_value.0.clone(), meth_name.1.clone()),
-            stack_frame
-                .enclosing_fun
-                .as_ref()
-                .map(|fi| fi.src_string.clone()),
-        )),
+        ),
+        call_source: stack_frame
+            .enclosing_fun
+            .as_ref()
+            .map(|fi| fi.src_string.clone()),
         bindings: Bindings::new_with(fun_bindings),
         exprs_to_eval: method_subexprs,
         // TODO: find a better position for the void value,

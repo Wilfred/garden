@@ -94,8 +94,13 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                     has_attached_stdout: true,
                 };
 
+                eval_toplevel_defs(&items, &mut env);
+
                 match eval_toplevel_tests(&items, &mut env, &mut session) {
-                    Ok(_) => {}
+                    Ok(_) => {
+                        // TODO: print test count.
+                        println!("Tests passed.");
+                    }
                     Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("{}", &format_error(&e, &position, &src));
                     }
@@ -107,7 +112,6 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                     }
                 }
 
-                println!("Pass");
             }
             Err(parse::ParseError::Invalid {
                 position,

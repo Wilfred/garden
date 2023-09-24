@@ -57,6 +57,7 @@ pub fn type_representation(value: &Value) -> TypeName {
 #[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
 pub enum BuiltinFunctionKind {
     DebugPrint,
+    Error,
     IntToString,
     Shell,
     ListAppend,
@@ -71,6 +72,7 @@ impl Display for BuiltinFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
             BuiltinFunctionKind::DebugPrint => "dbg",
+            BuiltinFunctionKind::Error => "error",
             BuiltinFunctionKind::IntToString => "int_to_string",
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::ListAppend => "list_append",
@@ -91,6 +93,13 @@ pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
 
 ```
 dbg([1, 2]);
+```"
+        }
+        BuiltinFunctionKind::Error => {
+            "Stop the program immediately, and report the error message given.
+
+```
+error(\"Computer is melting!\");
 ```"
         }
         BuiltinFunctionKind::IntToString => {
@@ -1006,6 +1015,32 @@ fn eval_builtin_call(
     session: &Session,
 ) -> Result<(), ErrorInfo> {
     match kind {
+        BuiltinFunctionKind::Error => {
+            check_arity("error", &receiver_value, 1, arg_values)?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            match &arg_values[0].1 {
+                Value::String(msg) => {
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(msg.clone()),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+                v => {
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            }
+        }
         BuiltinFunctionKind::Print => {
             check_arity("print", &receiver_value, 1, arg_values)?;
 

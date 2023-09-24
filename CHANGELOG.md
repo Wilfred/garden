@@ -8,6 +8,8 @@ Implemented `List::len`, `String::concat`, `String::len` and
 `String::substring` methods, removing the corresponding `list_len`,
 `string_concat`, `string_length` and `string_substring functions.
 
+Added `error()` function.
+
 ### Evaluation
 
 Fixed a crash on calling method calls with the wrong arity.

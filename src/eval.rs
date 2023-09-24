@@ -527,7 +527,10 @@ pub fn eval_toplevel_items(
     }
 
     eval_defs(&defs, env);
-    if exprs.is_empty() {
+
+    let test_value = eval_toplevel_tests(items, env, session)?;
+
+    if exprs.is_empty() && test_value.is_none() {
         return Ok(ToplevelEvalResult::Definition(format!(
             "Loaded {} definition{}.",
             defs.len(),

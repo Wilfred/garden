@@ -22,7 +22,7 @@ use eval::{eval_toplevel_defs, eval_toplevel_items, Env, EvalError, Session};
 use parse::{parse_toplevel_item, parse_toplevel_items};
 
 use crate::eval::{escape_string_literal, eval_toplevel_tests, ErrorMessage};
-use crate::parse::{format_error, format_error_with_stack, format_parse_error};
+use crate::parse::{format_error_with_stack, format_parse_error};
 
 #[derive(Debug, Parser)]
 #[command(author, version, name="Garden", about = "A programming language for growing programs", long_about = None)]
@@ -102,7 +102,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                         println!("Tests passed.");
                     }
                     Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("{}", &format_error(&e, &position, &src));
+                        eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack));
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
@@ -111,7 +111,6 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                         eprintln!("Error (stopped)");
                     }
                 }
-
             }
             Err(parse::ParseError::Invalid {
                 position,

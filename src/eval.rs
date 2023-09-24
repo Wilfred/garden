@@ -553,6 +553,9 @@ pub fn eval_toplevel_tests(
         match item {
             ToplevelItem::Def(def) => match &def.2 {
                 Definition_::TestDefinition(test) => {
+                    // TODO: this is wrong, it's evaluating the tests
+                    // in the toplevel scope, rather than in a
+                    // separate scope.
                     let value = eval_exprs(&test.body.exprs, env, session)?;
                     last_value = Some(value);
                 }

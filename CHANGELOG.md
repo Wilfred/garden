@@ -1,3 +1,6 @@
+# 0.8 (unreleased)
+**Goal: Offer actions when errors occur.**
+
 # 0.7 (unreleased)
 
 **Goal: Support interactive unit tests.**

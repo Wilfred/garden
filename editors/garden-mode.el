@@ -295,26 +295,6 @@ the user entering a value in the *garden* buffer."
 
   (garden-start-session))
 
-(defun garden--search-forward-function-name (limit)
-  (search-forward-regexp
-   (rx
-    ;; Keyword
-    symbol-start
-    "fun"
-    symbol-end
-    (+ space)
-    ;; Method receiver, if present
-    (? "("
-       (* (not (any ")")))
-       ")"
-       (* space))
-    ;; Function/method name.
-    (group
-     symbol-start
-     (+ (or (syntax word) (syntax symbol)))
-     symbol-end))
-   limit))
-
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
        '("let" "fun" "true" "false" "if" "else" "while" "return" "test")
@@ -333,6 +313,24 @@ the user entering a value in the *garden* buffer."
      . font-lock-type-face)
 
     (,(rx
+       ;; Keyword
+       symbol-start
+       "fun"
+       symbol-end
+       (+ space)
+       ;; Method receiver, if present
+       (? "("
+          (* (not (any ")")))
+          ")"
+          (* space))
+       ;; Function/method name.
+       (group
+        symbol-start
+        (+ (or (syntax word) (syntax symbol)))
+        symbol-end))
+     (1 font-lock-function-name-face))
+
+    (,(rx
        symbol-start
        "test"
        symbol-end
@@ -342,10 +340,7 @@ the user entering a value in the *garden* buffer."
         symbol-start
         (+ (or (syntax word) (syntax symbol)))
         symbol-end))
-     (1 font-lock-function-name-face))
-
-    (garden--search-forward-function-name
-     1 font-lock-function-name-face)))
+     (1 font-lock-function-name-face))))
 
 (defvar garden-mode-syntax-table
   (let ((table (make-syntax-table)))

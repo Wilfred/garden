@@ -12,6 +12,7 @@ keywords = ["compilers", "development-tools"]
 ariadne = "0.3.0"
 clap = { version = "4.1.11", features = ["derive"] }
 ctrlc = "3.2.5"
+itertools = "0.11.0"
 lazy_static = "1.4.0"
 line-numbers = "0.2.2"
 ordered-float = "3.7.0"

@@ -332,6 +332,18 @@ the user entering a value in the *garden* buffer."
         (* (or (syntax word) (syntax symbol)))))
      . font-lock-type-face)
 
+    (,(rx
+       symbol-start
+       "test"
+       symbol-end
+       (+ space)
+       ;; Function/method name.
+       (group
+        symbol-start
+        (+ (or (syntax word) (syntax symbol)))
+        symbol-end))
+     (1 font-lock-function-name-face))
+
     (garden--search-forward-function-name
      1 font-lock-function-name-face)))
 

@@ -534,9 +534,9 @@ pub fn eval_toplevel_items(
 
     eval_defs(&defs, env);
 
-    let test_value = eval_toplevel_tests(items, env, session)?;
+    eval_toplevel_tests(items, env, session)?;
 
-    if exprs.is_empty() && test_value.is_none() {
+    if exprs.is_empty() {
         return Ok(ToplevelEvalResult::Definition(format!(
             "Loaded {} definition{}.",
             defs.len(),
@@ -552,9 +552,7 @@ pub fn eval_toplevel_tests(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
-) -> Result<Option<Value>, EvalError> {
-    let mut last_value: Option<Value> = None;
-
+) -> Result<(), EvalError> {
     for item in items {
         match item {
             ToplevelItem::Def(def) => match &def.2 {
@@ -562,8 +560,7 @@ pub fn eval_toplevel_tests(
                     // TODO: this is wrong, it's evaluating the tests
                     // in the toplevel scope, rather than in a
                     // separate scope.
-                    let value = eval_exprs(&test.body.exprs, env, session)?;
-                    last_value = Some(value);
+                    eval_exprs(&test.body.exprs, env, session)?;
                 }
                 _ => {}
             },
@@ -571,7 +568,7 @@ pub fn eval_toplevel_tests(
         }
     }
 
-    Ok(last_value)
+    Ok(())
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {

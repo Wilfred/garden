@@ -286,6 +286,7 @@ impl Default for Bindings {
 
 #[derive(Debug)]
 pub struct StackFrame {
+    pub src: SourceString,
     pub enclosing_fun: Option<FunInfo>,
     /// The symbol from the call site. For example, if we entered this
     /// call frame by a call `foo()`, `caller_sym` will be the `foo`
@@ -412,6 +413,10 @@ impl Default for Env {
                     Value::Void,
                 )],
                 enclosing_fun: None,
+                src: SourceString {
+                    offset: 0,
+                    src: "// __toplevel__".to_owned(),
+                },
             }],
         }
     }
@@ -557,6 +562,15 @@ pub fn eval_toplevel_tests(
         match item {
             ToplevelItem::Def(def) => match &def.2 {
                 Definition_::TestDefinition(test) => {
+                    // let s = StackFrame {
+                    //     enclosing_fun: todo!(),
+                    //     call_site: todo!(),
+                    //     call_source: todo!(),
+                    //     bindings: todo!(),
+                    //     exprs_to_eval: todo!(),
+                    //     evalled_values: todo!(),
+                    // };
+
                     // TODO: this is wrong, it's evaluating the tests
                     // in the toplevel scope, rather than in a
                     // separate scope.
@@ -1424,6 +1438,7 @@ fn eval_call(
                 // body.
                 evalled_values: vec![(receiver_value.0, Value::Void)],
                 enclosing_fun: Some(fun_info.clone()),
+                src: fun_info.src_string.clone(),
             }));
         }
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
@@ -1446,6 +1461,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
+                src: fi.src_string.clone(),
                 caller_sym: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
                 caller_source: stack_frame
                     .enclosing_fun
@@ -1594,6 +1610,7 @@ fn eval_method_call(
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
+        src: fun_info.src_string.clone(),
         caller_sym: Some(
             // TODO: use a fully qualified method name here?
             Symbol(receiver_value.0.clone(), meth_name.1.clone()),

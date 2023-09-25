@@ -287,11 +287,15 @@ impl Default for Bindings {
 #[derive(Debug)]
 pub struct StackFrame {
     pub enclosing_fun: Option<FunInfo>,
-    // TODO: arguably this should be the call position, and the name
-    // isn't relevant. The containing name of the call site is more
-    // interesting.
-    pub call_site: Option<Symbol>,
-    pub call_source: Option<SourceString>,
+    /// The symbol from the call site. For example, if we entered this
+    /// call frame by a call `foo()`, `caller_sym` will be the `foo`
+    /// symbol.
+    ///
+    /// If we are calling a closure or other indirect value, the
+    /// symbol will just be "(closure)" with the relevant position.
+    pub caller_sym: Option<Symbol>,
+    /// The source code of the caller.
+    pub caller_source: Option<SourceString>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -393,8 +397,8 @@ impl Default for Env {
             methods,
             types,
             stack: vec![StackFrame {
-                call_site: None,
-                call_source: None,
+                caller_sym: None,
+                caller_source: None,
                 bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
@@ -1408,11 +1412,11 @@ fn eval_call(
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
 
             return Ok(Some(StackFrame {
-                call_site: Some(Symbol(
+                caller_sym: Some(Symbol(
                     position.clone(),
                     SymbolName("(closure)".to_string()),
                 )),
-                call_source: stack_frame
+                caller_source: stack_frame
                     .enclosing_fun
                     .as_ref()
                     .map(|fi| fi.src_string.clone()),
@@ -1445,8 +1449,8 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
-                call_site: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
-                call_source: stack_frame
+                caller_sym: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
+                caller_source: stack_frame
                     .enclosing_fun
                     .as_ref()
                     .map(|fi| fi.src_string.clone()),
@@ -1593,11 +1597,11 @@ fn eval_method_call(
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
-        call_site: Some(
+        caller_sym: Some(
             // TODO: use a fully qualified method name here?
             Symbol(receiver_value.0.clone(), meth_name.1.clone()),
         ),
-        call_source: stack_frame
+        caller_source: stack_frame
             .enclosing_fun
             .as_ref()
             .map(|fi| fi.src_string.clone()),

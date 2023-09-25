@@ -295,8 +295,6 @@ pub struct StackFrame {
     /// If we are calling a closure or other indirect value, the
     /// symbol will just be "(closure)" with the relevant position.
     pub caller_sym: Option<Symbol>,
-    /// The source code of the caller.
-    pub caller_source: Option<SourceString>,
     pub bindings: Bindings,
     pub exprs_to_eval: Vec<(bool, Expression)>,
     pub evalled_values: Vec<(Position, Value)>,
@@ -399,7 +397,6 @@ impl Default for Env {
             types,
             stack: vec![StackFrame {
                 caller_sym: None,
-                caller_source: None,
                 bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
@@ -1427,10 +1424,6 @@ fn eval_call(
                     position.clone(),
                     SymbolName("(closure)".to_string()),
                 )),
-                caller_source: stack_frame
-                    .enclosing_fun
-                    .as_ref()
-                    .map(|fi| fi.src_string.clone()),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
                 // TODO: find a better position for the void value,
@@ -1463,10 +1456,6 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_sym: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
-                caller_source: stack_frame
-                    .enclosing_fun
-                    .as_ref()
-                    .map(|fi| fi.src_string.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],
@@ -1615,10 +1604,6 @@ fn eval_method_call(
             // TODO: use a fully qualified method name here?
             Symbol(receiver_value.0.clone(), meth_name.1.clone()),
         ),
-        caller_source: stack_frame
-            .enclosing_fun
-            .as_ref()
-            .map(|fi| fi.src_string.clone()),
         bindings: Bindings::new_with(fun_bindings),
         exprs_to_eval: method_subexprs,
         // TODO: find a better position for the void value,

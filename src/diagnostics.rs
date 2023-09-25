@@ -1,4 +1,5 @@
 use ariadne::{Label, Report, ReportKind, Source};
+use itertools::Itertools;
 use line_numbers::LinePositions;
 
 use crate::{
@@ -15,6 +16,8 @@ pub fn format_error_with_stack(
 
     res.push_str(&format!("Error: {}\n\n", message.0));
 
+    // For the topmost (most recently called) stack frame, the
+    // relevant position is where the error occurred.
     let top_stack = stack.last().unwrap();
     let src_string = top_stack
         .enclosing_fun
@@ -22,10 +25,11 @@ pub fn format_error_with_stack(
         .map(|fi| fi.src_string.clone());
     res.push_str(&format_pos_in_fun(position, src_string.as_ref()));
 
-    for stack_frame in stack.iter().rev() {
-        if let Some(var) = &stack_frame.caller_sym {
+    // For the rest of the stack, we want the positions of calls.
+    for (callee_stack_frame, caller_stack_frame) in stack.iter().rev().tuple_windows() {
+        if let Some(var) = &callee_stack_frame.caller_sym {
             res.push('\n');
-            res.push_str(&format_pos_in_fun(&var.0, stack_frame.caller_source.as_ref()));
+            res.push_str(&format_pos_in_fun(&var.0, Some(&caller_stack_frame.src)));
         }
     }
 

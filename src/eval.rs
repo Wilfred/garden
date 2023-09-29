@@ -557,19 +557,28 @@ pub fn eval_toplevel_tests(
         match item {
             ToplevelItem::Def(def) => match &def.2 {
                 Definition_::TestDefinition(test) => {
-                    // let s = StackFrame {
-                    //     enclosing_fun: todo!(),
-                    //     call_site: todo!(),
-                    //     call_source: todo!(),
-                    //     bindings: todo!(),
-                    //     exprs_to_eval: todo!(),
-                    //     evalled_values: todo!(),
-                    // };
+                    let enclosing_name = match &test.name {
+                        Some(name) => name.1.clone(),
+                        None => SymbolName("__unnamed_test".to_owned()),
+                    };
 
-                    // TODO: this is wrong, it's evaluating the tests
-                    // in the toplevel scope, rather than in a
-                    // separate scope.
-                    eval_exprs(&test.body.exprs, env, session)?;
+                    let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
+                    for expr in test.body.exprs.iter().rev() {
+                        exprs_to_eval.push((false, expr.clone()));
+                    }
+
+                    let stack_frame = StackFrame {
+                        src: test.src_string.clone(),
+                        enclosing_name,
+                        enclosing_fun: None,
+                        caller_pos: None,
+                        bindings: Bindings::default(),
+                        exprs_to_eval,
+                        evalled_values: vec![],
+                    };
+
+                    env.stack.push(stack_frame);
+                    eval_env(env, session)?;
                 }
                 _ => {}
             },

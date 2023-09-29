@@ -3,7 +3,7 @@ use itertools::Itertools;
 use line_numbers::LinePositions;
 
 use crate::{
-    ast::{Position, SourceString},
+    ast::{Position, SourceString, SymbolName},
     eval::{ErrorMessage, StackFrame},
 };
 
@@ -23,13 +23,21 @@ pub fn format_error_with_stack(
         .enclosing_fun
         .as_ref()
         .map(|fi| fi.src_string.clone());
-    res.push_str(&format_pos_in_fun(position, src_string.as_ref()));
+    res.push_str(&format_pos_in_fun(
+        position,
+        src_string.as_ref(),
+        &top_stack.enclosing_name,
+    ));
 
     // For the rest of the stack, we want the positions of calls.
     for (callee_stack_frame, caller_stack_frame) in stack.iter().rev().tuple_windows() {
         if let Some(pos) = &callee_stack_frame.caller_pos {
             res.push('\n');
-            res.push_str(&format_pos_in_fun(&pos, Some(&caller_stack_frame.src)));
+            res.push_str(&format_pos_in_fun(
+                &pos,
+                Some(&caller_stack_frame.src),
+                &caller_stack_frame.enclosing_name,
+            ));
         }
     }
 
@@ -55,13 +63,18 @@ pub fn format_parse_error(message: &ErrorMessage, position: &Position, src: &str
     format_error(message, position, src)
 }
 
-fn format_pos_in_fun(position: &Position, src_string: Option<&SourceString>) -> String {
+fn format_pos_in_fun(
+    position: &Position,
+    src_string: Option<&SourceString>,
+    name: &SymbolName,
+) -> String {
     let mut res = String::new();
 
     res.push_str(&format!(
-        "--> {}:{}\n",
+        "--> {}:{}\t{}\n",
         position.path.display(),
         position.line_number + 1,
+        name.0,
     ));
 
     let relevant_line = match src_string {

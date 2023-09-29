@@ -287,6 +287,8 @@ impl Default for Bindings {
 #[derive(Debug)]
 pub struct StackFrame {
     pub src: SourceString,
+    // The name of the function, method or test that we're evaluating.
+    pub enclosing_name: SymbolName,
     pub enclosing_fun: Option<FunInfo>,
     /// The symbol from the call site. For example, if we entered this
     /// call frame by a call `foo()`, `caller_sym` will be the `foo`
@@ -410,6 +412,7 @@ impl Default for Env {
                     Value::Void,
                 )],
                 enclosing_fun: None,
+                enclosing_name: SymbolName("__toplevel__".to_owned()),
                 src: SourceString {
                     offset: 0,
                     src: "// __toplevel__".to_owned(),
@@ -1431,6 +1434,7 @@ fn eval_call(
                 // body.
                 evalled_values: vec![(receiver_value.0, Value::Void)],
                 enclosing_fun: Some(fun_info.clone()),
+                enclosing_name: SymbolName("(closure)".to_string()),
                 src: fun_info.src_string.clone(),
             }));
         }
@@ -1456,6 +1460,7 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_sym: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
+                enclosing_name: name.1.clone(),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(name.0.clone(), Value::Void)],
@@ -1599,11 +1604,9 @@ fn eval_method_call(
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
+        enclosing_name: SymbolName(format!("{}::{}", receiver_type_name.0, meth_name.1 .0)),
         src: fun_info.src_string.clone(),
-        caller_sym: Some(
-            // TODO: use a fully qualified method name here?
-            Symbol(receiver_value.0.clone(), meth_name.1.clone()),
-        ),
+        caller_sym: Some(Symbol(receiver_value.0.clone(), meth_name.1.clone())),
         bindings: Bindings::new_with(fun_bindings),
         exprs_to_eval: method_subexprs,
         // TODO: find a better position for the void value,

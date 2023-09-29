@@ -290,6 +290,8 @@ pub struct StackFrame {
     // The name of the function, method or test that we're evaluating.
     pub enclosing_name: SymbolName,
     pub enclosing_fun: Option<FunInfo>,
+    /// The position of the call site.
+    pub caller_pos: Option<Position>,
     /// The symbol from the call site. For example, if we entered this
     /// call frame by a call `foo()`, `caller_sym` will be the `foo`
     /// symbol.
@@ -399,6 +401,7 @@ impl Default for Env {
             types,
             stack: vec![StackFrame {
                 caller_sym: None,
+                caller_pos: None,
                 bindings: Bindings::default(),
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
@@ -1427,6 +1430,7 @@ fn eval_call(
                     position.clone(),
                     SymbolName("(closure)".to_string()),
                 )),
+                caller_pos: Some(position.clone()),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
                 // TODO: find a better position for the void value,
@@ -1460,6 +1464,7 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_sym: Some(Symbol(receiver_value.0.clone(), name.1.clone())),
+                caller_pos: Some(receiver_value.0.clone()),
                 enclosing_name: name.1.clone(),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
@@ -1607,6 +1612,7 @@ fn eval_method_call(
         enclosing_name: SymbolName(format!("{}::{}", receiver_type_name.0, meth_name.1 .0)),
         src: fun_info.src_string.clone(),
         caller_sym: Some(Symbol(receiver_value.0.clone(), meth_name.1.clone())),
+        caller_pos: Some(receiver_value.0.clone()),
         bindings: Bindings::new_with(fun_bindings),
         exprs_to_eval: method_subexprs,
         // TODO: find a better position for the void value,

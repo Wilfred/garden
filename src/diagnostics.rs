@@ -27,9 +27,9 @@ pub fn format_error_with_stack(
 
     // For the rest of the stack, we want the positions of calls.
     for (callee_stack_frame, caller_stack_frame) in stack.iter().rev().tuple_windows() {
-        if let Some(var) = &callee_stack_frame.caller_sym {
+        if let Some(pos) = &callee_stack_frame.caller_pos {
             res.push('\n');
-            res.push_str(&format_pos_in_fun(&var.0, Some(&caller_stack_frame.src)));
+            res.push_str(&format_pos_in_fun(&pos, Some(&caller_stack_frame.src)));
         }
     }
 

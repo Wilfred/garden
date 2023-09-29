@@ -504,11 +504,7 @@ fn command_help(command: Command) -> &'static str {
 
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.iter().rev().enumerate() {
-        let name = match &stack_frame.caller_sym {
-            Some(v) => v.1 .0.clone(),
-            None => "toplevel".to_owned(),
-        };
-
+        let name = &stack_frame.enclosing_name.0;
         write!(buf, "{}In {}", if i == 0 { "" } else { "\n" }, name).unwrap();
     }
 }

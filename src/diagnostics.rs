@@ -1,6 +1,7 @@
 use ariadne::{Label, Report, ReportKind, Source};
 use itertools::Itertools;
 use line_numbers::LinePositions;
+use owo_colors::OwoColorize;
 
 use crate::{
     ast::{Position, SourceString, SymbolName},
@@ -70,12 +71,16 @@ fn format_pos_in_fun(
 ) -> String {
     let mut res = String::new();
 
-    res.push_str(&format!(
-        "--> {}:{}\t{}\n",
-        position.path.display(),
-        position.line_number + 1,
-        name.0,
-    ));
+    res.push_str(
+        &format!(
+            "--> {}:{}\t{}\n",
+            position.path.display(),
+            position.line_number + 1,
+            name.0.bold(),
+        )
+        .dimmed()
+        .to_string(),
+    );
 
     let relevant_line = match src_string {
         Some(src_string) => {

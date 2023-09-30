@@ -113,8 +113,13 @@ fn handle_eval_request(
                     stack: None,
                 }),
             },
-            Err(EvalError::Stop(_)) => {
-                todo!();
+            Err(EvalError::Stop(_)) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(ResponseError {
+                    position: None,
+                    message: "Stopped".to_string(),
+                    stack: None,
+                }),
             }
         },
         Err(e) => match e {

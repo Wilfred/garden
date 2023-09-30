@@ -130,10 +130,10 @@ fn parse_parenthesis_expression(
 fn parse_list_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let open_brace = require_token(tokens, "[")?;
     let items = parse_comma_separated_exprs(src, tokens, "]")?;
-    require_token(tokens, "]")?;
+    let close_brace = require_token(tokens, "]")?;
 
     Ok(Expression(
-        open_brace.position,
+        Position::merge(open_brace.position, close_brace.position),
         Expression_::ListLiteral(items),
     ))
 }

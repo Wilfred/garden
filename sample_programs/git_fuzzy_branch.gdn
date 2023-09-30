@@ -36,7 +36,7 @@ fun (self: List) filter(f): List {
 
   let i = 0;
   while (i < self.len()) {
-    let item = list_get(self, i);
+    let item = self.get(i);
 
     if (f(item)) {
       result = list_append(result, item);
@@ -46,6 +46,17 @@ fun (self: List) filter(f): List {
     i = i + 1;
   }
   result;
+}
+
+test filter {
+  // TODO: never insert a binding called _ into the environment.
+  should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
+
+  // TODO: improve error receiver position and argument position here.
+  // should_equal([1, 2].filter(fun(_) { true; }, [1, 2]));
+
+  // TODO: evaluating this in a JSON session is Stopping due to the
+  // test stack frame returning.
 }
 
 fun (self: String) contains(needle: String): Bool {
@@ -76,7 +87,7 @@ fun (self: List) is_empty(): Bool {
 fun (self: List) contains(item): Bool {
   let i = 0;
   while (i < self.len()) {
-    if (list_get(self, i) == item) {
+    if (self.get(i) == item) {
       return true;
     }
 
@@ -86,22 +97,33 @@ fun (self: List) contains(item): Bool {
   false;
 }
 
+test contains {
+  should_equal([10, 11].contains(10), true);
+}
+
 fun (self: String) join(items: List): String {
   if (items.is_empty()) {
     return "";
   }
   if (items.len() == 1) {
-    return list_get(items, 0);
+    return items.get(0);
   }
 
-  let res = list_get(items, 0);
+  let res = items.get(0);
   let i = 1;
   while (i < items.len()) {
     res = res.concat(self);
-    res = res.concat(list_get(items, i));
+    res = res.concat(items.get(i));
     i = i + 1;
   }
   res;
+}
+
+test join {
+  should_equal(" ".join(["x"]), "x");
+
+  // TODO: should .join() exist on String or on List?
+  should_equal(" ".join(["x", "y"]), "x y");
 }
 
 fun in_git_repo(): Bool {
@@ -119,7 +141,7 @@ fun main(args: List): Void {
     // TODO: support void values.
     return false;
   }
-  let needle = list_get(args, 0);
+  let needle = args.get(0);
 
   if (in_git_repo()) {
     // TODO: One branch matches exactly?
@@ -135,7 +157,7 @@ fun main(args: List): Void {
     if (branches.is_empty()) {
       println("No branches found maching: ".concat(needle));
     } else if (branches.len() == 1) {
-      let branch_name = list_get(branches, 0);
+      let branch_name = branches.get(0);
       check_out(branch_name);
     } else {
       let formatted_branches = ", ".join(branches);

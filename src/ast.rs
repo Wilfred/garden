@@ -136,6 +136,7 @@ pub struct TestInfo {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
+    ListGet,
     ListLen,
     StringConcat,
     StringLen,
@@ -169,6 +170,15 @@ impl MethodInfo {
     pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
             MethodKind::BuiltinMethod(kind) => match kind {
+                BuiltinMethodKind::ListGet => Some(
+                    "Get the item in the list at the index specified.
+Errors if the index is less than 0 or greater than length - 1.
+
+```
+[4, 5, 6].get(1); // 5
+```"
+                    .to_owned(),
+                ),
                 BuiltinMethodKind::ListLen => Some(
                     "Return the length of the list.
 

@@ -61,7 +61,6 @@ pub enum BuiltinFunctionKind {
     IntToString,
     Shell,
     ListAppend,
-    ListGet,
     PathExists,
     Print,
     Println,
@@ -76,7 +75,6 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::IntToString => "int_to_string",
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::ListAppend => "list_append",
-            BuiltinFunctionKind::ListGet => "list_get",
             BuiltinFunctionKind::PathExists => "path_exists",
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
@@ -121,14 +119,6 @@ shell(\"ls\", [\"-l\", \"/\"]);
 
 ```
 list_append([10], 11); // [10, 11]
-```"
-        }
-        BuiltinFunctionKind::ListGet =>{
-            "Get the item in the list at the index specified.
-Errors if the index is less than 0 or greater than length - 1.
-
-```
-list_get([4, 5, 6], 1); // 5
 ```"
         }
         BuiltinFunctionKind::PathExists =>{
@@ -371,6 +361,15 @@ impl Default for Env {
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name: Symbol(Position::todo(), SymbolName("len".to_owned())),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen),
+            },
+        );
+        list_methods.insert(
+            SymbolName("get".to_owned()),
+            MethodInfo {
+                receiver_type: TypeName("List".into()),
+                receiver_name: SymbolName("__irrelevant".to_owned()),
+                name: Symbol(Position::todo(), SymbolName("get".to_owned())),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet),
             },
         );
 
@@ -1239,69 +1238,6 @@ fn eval_builtin_call(
                 }
             }
         }
-        BuiltinFunctionKind::ListGet => {
-            check_arity("list_get", &receiver_value, 2, arg_values)?;
-
-            match (&arg_values[0].1, &arg_values[1].1) {
-                (Value::List(items), Value::Integer(i)) => {
-                    let index: usize = if *i >= items.len() as i64 || *i < 0 {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        let message = ErrorMessage(if items.is_empty() {
-                            format!("Tried to index into an empty list with index {}", *i)
-                        } else {
-                            format!(
-                                "The list index must be between 0 and {} (inclusive), but got: {}",
-                                items.len() - 1,
-                                i
-                            )
-                        });
-
-                        return Err(ErrorInfo {
-                            message,
-                            restore_values: saved_values,
-                            error_position: arg_values[1].0.clone(),
-                        });
-                    } else {
-                        *i as usize
-                    };
-
-                    stack_frame
-                        .evalled_values
-                        .push((position.clone(), items[index].clone()));
-                }
-                (v, Value::Integer(_)) => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
-                    });
-                }
-                (_, v) => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[1].0.clone(),
-                    });
-                }
-            }
-        }
         BuiltinFunctionKind::IntToString => {
             check_arity("int_to_string", &receiver_value, 1, arg_values)?;
 
@@ -1625,6 +1561,69 @@ fn eval_builtin_method_call(
     position: &Position,
 ) -> Result<(), ErrorInfo> {
     match kind {
+        BuiltinMethodKind::ListGet => {
+            check_arity("List::get", &receiver_value, 1, &arg_values)?;
+
+            match (&receiver_value.1, &arg_values[0].1) {
+                (Value::List(items), Value::Integer(i)) => {
+                    let index: usize = if *i >= items.len() as i64 || *i < 0 {
+                        let mut saved_values = vec![];
+                        for value in arg_values.iter().rev() {
+                            saved_values.push(value.clone());
+                        }
+                        saved_values.push(receiver_value.clone());
+
+                        let message = ErrorMessage(if items.is_empty() {
+                            format!("Tried to index into an empty list with index {}", *i)
+                        } else {
+                            format!(
+                                "The list index must be between 0 and {} (inclusive), but got: {}",
+                                items.len() - 1,
+                                i
+                            )
+                        });
+
+                        return Err(ErrorInfo {
+                            message,
+                            restore_values: saved_values,
+                            error_position: arg_values[0].0.clone(),
+                        });
+                    } else {
+                        *i as usize
+                    };
+
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), items[index].clone()));
+                }
+                (v, Value::Integer(_)) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+                (_, v) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[1].0.clone(),
+                    });
+                }
+            }
+        }
         BuiltinMethodKind::ListLen => {
             check_arity("List::len", &receiver_value, 0, &arg_values)?;
 
@@ -2533,7 +2532,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_get() {
-        let exprs = parse_exprs_from_str("list_get([10, 11], 1);").unwrap();
+        let exprs = parse_exprs_from_str("[10, 11].get(1);").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2542,7 +2541,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_get_out_of_bounds() {
-        let exprs = parse_exprs_from_str("list_get([10, 11], 2);").unwrap();
+        let exprs = parse_exprs_from_str("[10, 11].get(2);").unwrap();
 
         let mut env = Env::default();
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -2550,7 +2549,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_get_empty() {
-        let exprs = parse_exprs_from_str("list_get([], 0);").unwrap();
+        let exprs = parse_exprs_from_str("[].get(0);").unwrap();
 
         let mut env = Env::default();
         assert!(eval_exprs(&exprs, &mut env).is_err());

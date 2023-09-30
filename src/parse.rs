@@ -903,6 +903,7 @@ fn parse_toplevel_items_from_tokens(
 
         while !tokens_copy.is_empty() {
             let expr = parse_block_member_expression(src, &mut tokens_copy)?;
+            let pos = &expr.0.clone();
             let toplevel_expr =
                 ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
             items.push(ToplevelItem::Expr(toplevel_expr));
@@ -920,6 +921,7 @@ fn parse_toplevel_items_from_tokens(
 
         while !tokens_copy.is_empty() {
             let expr = parse_inline_expression(src, &mut tokens_copy)?;
+            let pos = &expr.0.clone();
             let toplevel_expr =
                 ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
             items.push(ToplevelItem::Expr(toplevel_expr));

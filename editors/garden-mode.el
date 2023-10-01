@@ -74,7 +74,7 @@
 (defvar garden-log-json t
   "If non-nil, write raw JSON responses from Garden to the buffer *garden-json*.")
 
-(defun garden--log-json-to-buf (s)
+(defun garden--log-json-to-buf (s &optional is-output-p)
   (let* ((buf-name "*garden-json*")
          (buf (get-buffer buf-name)))
     (unless buf
@@ -84,7 +84,7 @@
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (goto-char (point-max))
-        (insert s)))))
+        (insert (if is-output-p "Sent:\n" "Received:\n") s)))))
 
 (defun garden-indent-line ()
   "Indent the line at point."
@@ -237,6 +237,10 @@ the user entering a value in the *garden* buffer."
       (user-error "No Garden process available")))
   (garden--buffer))
 
+(defun garden--process-send-string (proc s)
+  (garden--log-json-to-buf s t)
+  (process-send-string proc s))
+
 (defun garden--send-run (proc string &optional path offset end-offset)
   (let ((args `((method . "run") (input . ,string))))
     (when path
@@ -245,8 +249,7 @@ the user entering a value in the *garden* buffer."
       (setq args `(,@args (offset . ,offset))))
     (when end-offset
       (setq args `(,@args (end_offset . ,end-offset))))
-    (process-send-string proc (json-serialize args))
-    (process-send-string proc "\n")))
+    (garden--process-send-string proc (concat (json-serialize args) "\n"))))
 
 (defun garden-send-input (string &optional path offset end-offset)
   (let ((buf (garden--active-buffer)))

@@ -164,56 +164,59 @@ the user entering a value in the *garden* buffer."
   (when garden-log-json
     (garden--log-json-to-buf output))
   (dolist (line (s-split "\n" (s-trim output)))
-    (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
-           (response-value (plist-get response :value))
-           (response-kind (plist-get response :kind))
-           (response-ok-value (plist-get response-value :Ok))
-           (response-err-value (plist-get response-value :Err))
-           (buf (current-buffer))
-           error-buf)
-      (with-current-buffer (process-buffer proc)
-        (let ((s
-               (cond
-                (response-err-value
-                 (let* ((position (plist-get response-err-value :position))
-                        (position-offset (plist-get position :offset))
-                        (end-offset (plist-get position :end_offset))
-                        (err-msg (plist-get response-err-value :message)))
-                   ;; TODO: find the buffer with the path which matches this position.
-                   (when (and position-offset end-offset)
-                     (with-current-buffer buf
-                       ;; Convert to one-indexed Emacs point positions.
-                       (garden--flash-error-region (1+ position-offset) (1+ end-offset))))
-                   (message "%s" err-msg)
-                   (setq error-buf (garden--report-error response-err-value))
-                   (garden--fontify-error (concat err-msg "\n"))))
-                ((string= response-kind "ready")
-                 (garden--propertize-read-only (concat response-ok-value "\n")))
-                ((string= response-kind "printed")
-                 (message "%s" response-ok-value)
-                 (garden--propertize-read-only response-ok-value))
-                ((string= response-kind "runCommand")
-                 (garden--fontify-command-output
-                  (concat response-ok-value "\n")))
-                ((and (string= response-kind "evaluate")
-                      response-ok-value)
-                 (unless (string= response-ok-value "void")
-                   (message "%s" response-ok-value))
-                 (garden--fontify-value (concat response-ok-value "\n")))
-                (t
-                 output))))
-          (goto-char (point-max))
-          (if (garden--prompt-empty-p)
-              (let ((inhibit-read-only t))
-                (forward-line -1)
-                (beginning-of-line)
-                (insert "\n" s)
-                (goto-char (point-max)))
-            (insert s (garden--fontify-prompt "\n>") " "))
-          (set-marker (process-mark proc) (point))
+    ;; Ignore things that don't look like JSON until we have separate
+    ;; stderr handling.
+    (when (s-starts-with-p "{" line)
+      (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
+             (response-value (plist-get response :value))
+             (response-kind (plist-get response :kind))
+             (response-ok-value (plist-get response-value :Ok))
+             (response-err-value (plist-get response-value :Err))
+             (buf (current-buffer))
+             error-buf)
+        (with-current-buffer (process-buffer proc)
+          (let ((s
+                 (cond
+                  (response-err-value
+                   (let* ((position (plist-get response-err-value :position))
+                          (position-offset (plist-get position :offset))
+                          (end-offset (plist-get position :end_offset))
+                          (err-msg (plist-get response-err-value :message)))
+                     ;; TODO: find the buffer with the path which matches this position.
+                     (when (and position-offset end-offset)
+                       (with-current-buffer buf
+                         ;; Convert to one-indexed Emacs point positions.
+                         (garden--flash-error-region (1+ position-offset) (1+ end-offset))))
+                     (message "%s" err-msg)
+                     (setq error-buf (garden--report-error response-err-value))
+                     (garden--fontify-error (concat err-msg "\n"))))
+                  ((string= response-kind "ready")
+                   (garden--propertize-read-only (concat response-ok-value "\n")))
+                  ((string= response-kind "printed")
+                   (message "%s" response-ok-value)
+                   (garden--propertize-read-only response-ok-value))
+                  ((string= response-kind "runCommand")
+                   (garden--fontify-command-output
+                    (concat response-ok-value "\n")))
+                  ((and (string= response-kind "evaluate")
+                        response-ok-value)
+                   (unless (string= response-ok-value "void")
+                     (message "%s" response-ok-value))
+                   (garden--fontify-value (concat response-ok-value "\n")))
+                  (t
+                   output))))
+            (goto-char (point-max))
+            (if (garden--prompt-empty-p)
+                (let ((inhibit-read-only t))
+                  (forward-line -1)
+                  (beginning-of-line)
+                  (insert "\n" s)
+                  (goto-char (point-max)))
+              (insert s (garden--fontify-prompt "\n>") " "))
+            (set-marker (process-mark proc) (point))
 
-          (when error-buf
-            (pop-to-buffer error-buf)))))))
+            (when error-buf
+              (pop-to-buffer error-buf))))))))
 
 (defun garden--buffer ()
   (let* ((buf-name "*garden*")
@@ -240,7 +243,7 @@ the user entering a value in the *garden* buffer."
 (defun garden--encode (args)
   (let* ((json-str (json-serialize args))
          (header (format "Content-Length: %d\n" (length json-str))))
-    (concat header json-str "\n")))
+    (concat header json-str)))
 
 (defun garden--process-send-string (proc s)
   (garden--log-json-to-buf s t)

@@ -9,6 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@1.70.0
-      - run: cargo build
+
+      - name: Build binary for assert_cmd
+        run: cargo build
+
       - run: cargo test
 

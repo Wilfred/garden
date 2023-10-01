@@ -28,3 +28,6 @@ strum_macros = "0.24.1"
 [[bin]]
 name = "garden"
 path = "src/main.rs"
+
+[dev-dependencies]
+assert_cmd = "2.0.12"

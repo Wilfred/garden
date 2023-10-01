@@ -237,6 +237,11 @@ the user entering a value in the *garden* buffer."
       (user-error "No Garden process available")))
   (garden--buffer))
 
+(defun garden--encode (args)
+  (let* ((json-str (json-serialize args))
+         (header (format "Content-Length: %d\n" (length json-str))))
+    (concat header json-str "\n")))
+
 (defun garden--process-send-string (proc s)
   (garden--log-json-to-buf s t)
   (process-send-string proc s))
@@ -249,7 +254,7 @@ the user entering a value in the *garden* buffer."
       (setq args `(,@args (offset . ,offset))))
     (when end-offset
       (setq args `(,@args (end_offset . ,end-offset))))
-    (garden--process-send-string proc (concat (json-serialize args) "\n"))))
+    (garden--process-send-string proc (garden--encode args))))
 
 (defun garden-send-input (string &optional path offset end-offset)
   (let ((buf (garden--active-buffer)))

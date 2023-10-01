@@ -255,6 +255,10 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             .read_line(&mut line)
             .expect("Could not read line");
 
+        if line.starts_with("Content-Length") {
+            continue;
+        }
+
         let response = match serde_json::from_str::<Request>(&line) {
             Ok(req) => handle_request(req, &mut env, &mut session, &mut complete_src),
             Err(_) => Response {

@@ -262,9 +262,9 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                 value: Err(ResponseError {
                     position: None,
                     message: format!(
-                        "Could not parse request: {}. A valid request looks like: {}",
-                        line,
+                        "Invalid request. A valid request looks like: {}. The request received was:\n\n{}",
                         sample_request_as_json(),
+                        line,
                     ),
                     stack: None,
                 }),

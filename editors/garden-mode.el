@@ -281,9 +281,13 @@ the user entering a value in the *garden* buffer."
   (let ((buf (garden--buffer)))
     (kill-buffer buf)))
 
+(defun garden--start-process (name buffer program &rest program-args)
+  ;; TODO: redirect stderr elsewhere
+  (make-process :name name :buffer buffer :command (cons program program-args)))
+
 (defun garden--start ()
   (let* ((buf (garden--buffer))
-         (proc (start-process "garden" buf garden-executable "json")))
+         (proc (garden--start-process "garden" buf garden-executable "json")))
     (set-process-filter proc #'garden-process-filter)))
 
 (defun garden-start-session ()

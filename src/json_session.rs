@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::{
     io::BufRead,
@@ -255,26 +255,56 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
             .read_line(&mut line)
             .expect("Could not read line");
 
-        if line.starts_with("Content-Length") {
+        if line.trim() == "" {
+            // TODO: Once Emacs flushes properly, we won't see blank lines.
             continue;
         }
 
-        let response = match serde_json::from_str::<Request>(&line) {
-            Ok(req) => handle_request(req, &mut env, &mut session, &mut complete_src),
-            Err(_) => Response {
+        if let Some(length_str) = line.trim().strip_prefix("Content-Length: ") {
+            let length: usize = length_str.parse().expect("TODO: handle malformed length");
+
+            let mut buf = vec![0; length];
+            stdin
+                .lock()
+                .read_exact(&mut buf)
+                .expect("Could not read payload");
+
+            let buf_str = String::from_utf8(buf).unwrap();
+
+            dbg!(&buf_str);
+
+            let response = match serde_json::from_str::<Request>(&buf_str) {
+                Ok(req) => handle_request(req, &mut env, &mut session, &mut complete_src),
+                Err(_) => Response {
+                    kind: ResponseKind::MalformedRequest,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: format!(
+                            "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
+                            sample_request_as_json(),
+                            line,
+                        ),
+                        stack: None,
+                    }),
+                },
+            };
+            let serialized = serde_json::to_string(&response).unwrap();
+            println!("{}", serialized);
+        } else {
+            let err_response = Response {
                 kind: ResponseKind::MalformedRequest,
                 value: Err(ResponseError {
                     position: None,
                     message: format!(
-                        "Invalid request. A valid request looks like: {}. The request received was:\n\n{}",
+                        "Invalid request (header missing). A valid request looks like: {}. The request received was:\n\n{}",
                         sample_request_as_json(),
                         line,
                     ),
                     stack: None,
                 }),
-            },
-        };
-        let serialized = serde_json::to_string(&response).unwrap();
-        println!("{}", serialized);
+            };
+            let serialized = serde_json::to_string(&err_response).unwrap();
+            println!("{}", serialized);
+        }
     }
 }

@@ -243,7 +243,9 @@ the user entering a value in the *garden* buffer."
 (defun garden--encode (args)
   (let* ((json-str (json-serialize args))
          (header (format "Content-Length: %d\n" (length json-str))))
-    (concat header json-str)))
+    ;; TODO: flush the output rather than kludging it with \n.
+    ;; https://lists.gnu.org/archive/html/help-gnu-emacs/2011-11/msg00047.html
+    (concat header json-str "\n")))
 
 (defun garden--process-send-string (proc s)
   (garden--log-json-to-buf s t)

@@ -120,7 +120,7 @@ fn handle_eval_request(
                     message: "Stopped".to_string(),
                     stack: None,
                 }),
-            }
+            },
         },
         Err(e) => match e {
             ParseError::Invalid {

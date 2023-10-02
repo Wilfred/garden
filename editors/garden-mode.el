@@ -84,7 +84,10 @@
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (goto-char (point-max))
-        (insert (if is-output-p "\nSent:\n" "\nReceived:\n") s "\n")))))
+        (insert
+         (if is-output-p "\nSent from Emacs:\n" "\nReceived from Garden session:\n")
+         s
+         "\n")))))
 
 (defun garden-indent-line ()
   "Indent the line at point."

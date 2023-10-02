@@ -282,7 +282,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                         message: format!(
                             "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
                             sample_request_as_json(),
-                            line,
+                            buf_str,
                         ),
                         stack: None,
                     }),

@@ -244,7 +244,6 @@ the user entering a value in the *garden* buffer."
   (garden--buffer))
 
 (defun garden--encode (args)
-  ;; TODO: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=6149#48
   (let* ((json-encoding-pretty-print t)
          (json-str (json-encode args))
          (header (format "Content-Length: %d\n" (string-bytes json-str))))
@@ -292,8 +291,15 @@ the user entering a value in the *garden* buffer."
     (kill-buffer buf)))
 
 (defun garden--start-process (name buffer program &rest program-args)
-  ;; TODO: redirect stderr elsewhere
-  (make-process :name name :buffer buffer :command (cons program program-args)))
+  ;; Set `process-connection-type' to work around
+  ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=6149#48
+  ;;
+  ;; Otherwise, Emacs will truncate long lines sent to the Garden
+  ;; process, which means we cannot send Garden files larger than 4096
+  ;; bytes.
+  (let ((process-connection-type nil))
+    ;; TODO: redirect stderr elsewhere
+    (make-process :name name :buffer buffer :command (cons program program-args))))
 
 (defun garden--start ()
   (let* ((buf (garden--buffer))

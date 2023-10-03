@@ -244,7 +244,9 @@ the user entering a value in the *garden* buffer."
   (garden--buffer))
 
 (defun garden--encode (args)
-  (let* ((json-str (json-serialize args))
+  ;; TODO: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=6149#48
+  (let* ((json-encoding-pretty-print t)
+         (json-str (json-encode args))
          (header (format "Content-Length: %d\n" (string-bytes json-str))))
     ;; TODO: flush the output rather than kludging it with \n.
     ;; https://lists.gnu.org/archive/html/help-gnu-emacs/2011-11/msg00047.html

@@ -26,7 +26,7 @@ use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::eval::{escape_string_literal, eval_toplevel_tests, ErrorMessage};
 
 #[derive(Debug, Parser)]
-#[command(author, version, name="Garden", about = "A programming language for growing programs", long_about = None)]
+#[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

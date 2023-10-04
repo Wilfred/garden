@@ -60,7 +60,6 @@ pub enum BuiltinFunctionKind {
     Error,
     IntToString,
     Shell,
-    ListAppend,
     PathExists,
     Print,
     Println,
@@ -74,7 +73,6 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Error => "error",
             BuiltinFunctionKind::IntToString => "int_to_string",
             BuiltinFunctionKind::Shell => "shell",
-            BuiltinFunctionKind::ListAppend => "list_append",
             BuiltinFunctionKind::PathExists => "path_exists",
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
@@ -112,13 +110,6 @@ int_to_string(123); // \"123\"
 
 ```
 shell(\"ls\", [\"-l\", \"/\"]);
-```"
-        }
-        BuiltinFunctionKind::ListAppend =>{
-            "Return a new list with the value added to the end.
-
-```
-list_append([10], 11); // [10, 11]
 ```"
         }
         BuiltinFunctionKind::PathExists =>{
@@ -354,6 +345,15 @@ impl Default for Env {
         methods.insert(TypeName("String".into()), string_methods);
 
         let mut list_methods = HashMap::new();
+        list_methods.insert(
+            SymbolName("append".to_owned()),
+            MethodInfo {
+                receiver_type: TypeName("List".into()),
+                receiver_name: SymbolName("__irrelevant".to_owned()),
+                name: Symbol(Position::todo(), SymbolName("append".to_owned())),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend),
+            },
+        );
         list_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
@@ -1212,32 +1212,6 @@ fn eval_builtin_call(
                 }
             }
         }
-        BuiltinFunctionKind::ListAppend => {
-            check_arity("list_append", &receiver_value, 2, arg_values)?;
-
-            match &arg_values[0].1 {
-                Value::List(items) => {
-                    let mut new_items = items.clone();
-                    new_items.push(arg_values[1].1.clone());
-                    stack_frame
-                        .evalled_values
-                        .push((position.clone(), Value::List(new_items)));
-                }
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
-                    });
-                }
-            }
-        }
         BuiltinFunctionKind::IntToString => {
             check_arity("int_to_string", &receiver_value, 1, arg_values)?;
 
@@ -1561,6 +1535,32 @@ fn eval_builtin_method_call(
     position: &Position,
 ) -> Result<(), ErrorInfo> {
     match kind {
+        BuiltinMethodKind::ListAppend =>{
+            check_arity("List::append", &receiver_value, 1, &arg_values)?;
+
+            match &receiver_value.1 {
+                Value::List(items) => {
+                    let mut new_items = items.clone();
+                    new_items.push(arg_values[0].1.clone());
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), Value::List(new_items)));
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: receiver_value.0.clone(),
+                    });
+                }
+            }
+        }
         BuiltinMethodKind::ListGet => {
             check_arity("List::get", &receiver_value, 1, &arg_values)?;
 
@@ -2516,7 +2516,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_append() {
-        let exprs = parse_exprs_from_str("list_append([1, 2], 3);").unwrap();
+        let exprs = parse_exprs_from_str("[1, 2].append(3);").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();

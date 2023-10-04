@@ -136,6 +136,7 @@ pub struct TestInfo {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
+    ListAppend,
     ListGet,
     ListLen,
     StringConcat,
@@ -170,6 +171,14 @@ impl MethodInfo {
     pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
             MethodKind::BuiltinMethod(kind) => match kind {
+                BuiltinMethodKind::ListAppend => Some(
+                    "Return a new list with the value added to the end.
+
+```
+[10].append(11); // [10, 11]
+```"
+                    .to_owned(),
+                ),
                 BuiltinMethodKind::ListGet => Some(
                     "Get the item in the list at the index specified.
 Errors if the index is less than 0 or greater than length - 1.

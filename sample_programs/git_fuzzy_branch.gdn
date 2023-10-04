@@ -9,7 +9,7 @@ fun lines(s: String): List {
     let char = s.substring(i, i + 1);
 
     if (char == "\n") {
-      parts = list_append(parts, s.substring(line_start, i));
+      parts = parts.append(s.substring(line_start, i));
       line_start = i + 1;
     }
 
@@ -18,7 +18,7 @@ fun lines(s: String): List {
 
   // Append last line if it wasn't terminated with a newline.
   if (line_start != s.len()) {
-    parts = list_append(parts, s.substring(line_start, s.len()));
+    parts = parts.append(s.substring(line_start, s.len()));
   }
 
   parts;
@@ -39,7 +39,7 @@ fun (self: List) filter(f): List {
     let item = self.get(i);
 
     if (f(item)) {
-      result = list_append(result, item);
+      result = result.append(item);
     }
 
     // todo: handle parse errors better if this semicolon is missing.

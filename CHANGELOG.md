@@ -7,10 +7,10 @@
 
 ### Stdlib
 
-Implemented `List::get`, `List::len`, `String::concat`, `String::len`
-and `String::substring` methods, removing the corresponding
-`list_get`, `list_len`, `string_concat`, `string_length` and
-`string_substring functions.
+Implemented `List::append`, `List::get`, `List::len`,
+`String::concat`, `String::len` and `String::substring` methods,
+removing the corresponding `list_append`, `list_get`, `list_len`,
+`string_concat`, `string_length` and `string_substring functions.
 
 Added `error()` function.
 

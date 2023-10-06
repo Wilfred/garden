@@ -1535,7 +1535,7 @@ fn eval_builtin_method_call(
     position: &Position,
 ) -> Result<(), ErrorInfo> {
     match kind {
-        BuiltinMethodKind::ListAppend =>{
+        BuiltinMethodKind::ListAppend => {
             check_arity("List::append", &receiver_value, 1, &arg_values)?;
 
             match &receiver_value.1 {

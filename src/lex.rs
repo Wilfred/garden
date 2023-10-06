@@ -8,7 +8,7 @@ use crate::{ast::Position, eval::ErrorMessage, parse::ParseError};
 
 lazy_static! {
     pub static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
-    pub static ref STRING_RE: Regex = Regex::new(r##"^"(\\"|[^"])*""##).unwrap();
+    pub static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*""#).unwrap();
     pub static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 

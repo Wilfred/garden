@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::ast::BinaryOperatorKind;
 use crate::ast::Block;
@@ -934,28 +934,28 @@ fn parse_toplevel_items_from_tokens(
         let def = parse_definition(src, tokens)?;
         items.push(ToplevelItem::Def(def));
     }
-    return Ok(items);
+    Ok(items)
 }
 
-pub fn parse_inline_expr_from_str(path: &PathBuf, s: &str) -> Result<Expression, ParseError> {
+pub fn parse_inline_expr_from_str(path: &Path, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
     parse_inline_expression(s, &mut token_ptr)
 }
 
-pub fn parse_toplevel_item(path: &PathBuf, s: &str) -> Result<ToplevelItem, ParseError> {
+pub fn parse_toplevel_item(path: &Path, s: &str) -> Result<ToplevelItem, ParseError> {
     let items = parse_toplevel_items(path, s)?;
     Ok(items[0].clone())
 }
 
-pub fn parse_toplevel_items(path: &PathBuf, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
+pub fn parse_toplevel_items(path: &Path, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex(path, s)?;
     let mut token_ptr = &tokens[..];
     parse_toplevel_items_from_tokens(s, &mut token_ptr)
 }
 
 pub fn parse_toplevel_items_from_span(
-    path: &PathBuf,
+    path: &Path,
     s: &str,
     offset: usize,
     end_offset: usize,
@@ -967,6 +967,8 @@ pub fn parse_toplevel_items_from_span(
 
 #[cfg(test)]
 pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
+    use std::path::PathBuf;
+
     let tokens = lex(&PathBuf::from("__test.gdn"), s)?;
     let mut token_ptr = &tokens[..];
 
@@ -980,6 +982,8 @@ pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
 
 #[cfg(test)]
 pub fn parse_defs_from_str(s: &str) -> Result<Vec<Definition>, ParseError> {
+    use std::path::PathBuf;
+
     let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), s)?;
 
     let mut defs = vec![];
@@ -997,6 +1001,8 @@ pub fn parse_defs_from_str(s: &str) -> Result<Vec<Definition>, ParseError> {
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
 
     #[test]
@@ -1519,10 +1525,7 @@ mod tests {
 
     #[test]
     fn test_incomplete_expression() {
-        assert!(matches!(
-            parse_toplevel_items(&PathBuf::from("__test.gdn"), "1; 2"),
-            Err(_)
-        ));
+        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "1; 2").is_err());
     }
 
     #[test]

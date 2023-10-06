@@ -2082,7 +2082,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
 
                     if let Some(ref fun) = stack_frame.enclosing_fun {
                         if let Some(return_type) = &fun.return_type {
-                            if let Err(msg) = check_type(&return_value, &return_type) {
+                            if let Err(msg) = check_type(&return_value, return_type) {
                                 stack_frame.evalled_values.push(ret_val_and_pos.clone());
 
                                 stack_frame.exprs_to_eval.push((

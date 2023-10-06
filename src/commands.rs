@@ -203,7 +203,7 @@ fn describe_fun(value: &Value) -> Option<String> {
 
             // show type hints
             res.push_str(&format!("fn {}", name.1 .0));
-            res.push_str("(");
+            res.push('(');
             for (i, param) in params.iter().enumerate() {
                 if i != 0 {
                     res.push_str(", ");
@@ -216,7 +216,7 @@ fn describe_fun(value: &Value) -> Option<String> {
                     res.push_str(&format!(": {}", param_ty.0));
                 }
             }
-            res.push_str(")");
+            res.push(')');
 
             if let Some(return_type) = return_type {
                 res.push_str(&format!(": {}", return_type.0));
@@ -274,7 +274,7 @@ pub fn run_command<T: Write>(
 
                 for method_name in method_names {
                     if !is_first {
-                        write!(buf, "\n").unwrap();
+                        writeln!(buf).unwrap();
                     }
                     write!(buf, "{}::{}", type_name.0, &method_name.name.1 .0).unwrap();
 

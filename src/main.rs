@@ -15,7 +15,7 @@ mod prompt;
 mod values;
 mod version;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -86,7 +86,7 @@ fn main() {
 }
 
 // TODO: Much of this logic is duplicated with run_file.
-fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<AtomicBool>) {
+fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
         Ok(src) => match parse_toplevel_items(path, &src) {
             Ok(items) => {
@@ -141,12 +141,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
     }
 }
 
-fn run_file(
-    src_bytes: Vec<u8>,
-    path: &PathBuf,
-    arguments: &[String],
-    interrupted: &Arc<AtomicBool>,
-) {
+fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
         Ok(src) => match parse_toplevel_items(path, &src) {
             Ok(items) => {

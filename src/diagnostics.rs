@@ -35,7 +35,7 @@ pub fn format_error_with_stack(
         if let Some(pos) = &callee_stack_frame.caller_pos {
             res.push('\n');
             res.push_str(&format_pos_in_fun(
-                &pos,
+                pos,
                 Some(&caller_stack_frame.src),
                 &caller_stack_frame.enclosing_name,
             ));

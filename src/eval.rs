@@ -1224,10 +1224,9 @@ fn eval_builtin_call(
         BuiltinFunctionKind::StringRepr => {
             check_arity("string_repr", &receiver_value, 1, arg_values)?;
 
-            // TODO: write a proper pretty-printer.
             stack_frame.evalled_values.push((
                 position.clone(),
-                Value::String(format!("{:?}", arg_values[0].1)),
+                Value::String(format!("{}", arg_values[0].1)),
             ));
         }
         BuiltinFunctionKind::IntToString => {

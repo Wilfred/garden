@@ -21,6 +21,7 @@ pub enum Command {
     Help(Option<String>),
     Functions,
     Locals,
+    ForgetLocal(Option<String>),
     FrameValues,
     FrameStatements,
     Methods,
@@ -66,6 +67,7 @@ impl Display for Command {
         let name = match self {
             Command::Abort => ":abort",
             Command::Doc(_) => ":doc",
+            Command::ForgetLocal(_) => ":forget_local",
             Command::FrameStatements => ":fstmts",
             Command::FrameValues => ":fvalues",
             Command::Functions => ":funs",
@@ -109,6 +111,9 @@ impl Command {
 
                 if let Some(src) = split_first_word(s, ":doc") {
                     return Ok(Command::Doc(Some(src.to_owned())));
+                }
+                if let Some(src) = split_first_word(s, ":forget_local") {
+                    return Ok(Command::ForgetLocal(Some(src.to_owned())));
                 }
                 if let Some(src) = split_first_word(s, ":help") {
                     return Ok(Command::Help(Some(src.to_owned())));
@@ -384,6 +389,30 @@ pub fn run_command<T: Write>(
                 .unwrap();
             }
         }
+        Command::ForgetLocal(name) => {
+            if let Some(name) = name {
+                let stack_frame = env
+                    .stack
+                    .last_mut()
+                    .expect("Should always have at least one frame");
+                if stack_frame.bindings.has(&SymbolName(name.clone())) {
+                    stack_frame.bindings.remove(&SymbolName(name.clone()));
+                } else {
+                    write!(
+                        buf,
+                        "No local variable named `{}` is defined in this stack frame.",
+                        name
+                    )
+                    .unwrap();
+                }
+            } else {
+                write!(
+                    buf,
+                    ":forget_local requires a name, e.g. `:forget_local variable_name_here`"
+                )
+                .unwrap();
+            }
+        }
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.last() {
                 for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
@@ -483,9 +512,11 @@ fn command_help(command: Command) -> &'static str {
         Command::Abort => "The :abort command stops evaluation of the current expression, brining you back to the toplevel.\n\nExample usage:\n\n:abort",
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
-        Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
+        // TODO: add a more comprehensive example of :forget_local usage.
+        Command::ForgetLocal(_) => "The :forget_local command undefines the local variable in the current stack frame.\n\nExample:\n\n:forget_local foo",
         Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
+        Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::Methods => "The :methods command displays all the methods currently defined.\n\nExample:\n\n:methods",
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",

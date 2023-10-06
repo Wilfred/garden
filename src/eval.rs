@@ -225,8 +225,18 @@ impl Bindings {
         None
     }
 
-    fn has(&self, name: &SymbolName) -> bool {
+    pub fn has(&self, name: &SymbolName) -> bool {
         self.get(name).is_some()
+    }
+
+    /// Remove `name` from bindings. If this variable is shadowed,
+    /// remove the innermost binding.
+    pub fn remove(&mut self, name: &SymbolName) {
+        for block_bindings in self.0.iter_mut().rev() {
+            if block_bindings.0.borrow().get(name).is_some() {
+                block_bindings.0.borrow_mut().remove(name);
+            }
+        }
     }
 
     fn add_new(&mut self, name: &SymbolName, value: Value) {

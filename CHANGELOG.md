@@ -15,6 +15,10 @@ removing the corresponding `list_append`, `list_get`, `list_len`,
 Added `error()` and `string_repr()` functions. Removed `int_to_string()`
 in favour of `string_repr()`.
 
+### Commands
+
+Added `forget_local`.
+
 ### Evaluation
 
 Fixed a crash on calling method calls with the wrong arity.

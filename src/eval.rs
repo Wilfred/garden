@@ -372,14 +372,14 @@ pub fn eval_toplevel_items(
 
     eval_defs(&defs, env);
 
-    eval_toplevel_tests(items, env, session)?;
+    let test_summary = eval_toplevel_tests(items, env, session)?;
 
     if exprs.is_empty() {
         return Ok(ToplevelEvalSummary {
             values: vec![],
             definitions: defs.len(),
-            tests_passed: 0,
-            tests_failed: 0,
+            tests_passed: test_summary.tests_passed,
+            tests_failed: test_summary.tests_failed,
         });
     }
 
@@ -387,8 +387,8 @@ pub fn eval_toplevel_items(
     Ok(ToplevelEvalSummary {
         values: vec![value],
         definitions: defs.len(),
-        tests_passed: 0,
-        tests_failed: 0,
+        tests_passed: test_summary.tests_passed,
+        tests_failed: test_summary.tests_failed,
     })
 }
 

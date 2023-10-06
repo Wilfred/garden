@@ -100,9 +100,10 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                 eval_toplevel_defs(&items, &mut env);
 
                 match eval_toplevel_tests(&items, &mut env, &mut session) {
-                    Ok(_) => {
-                        // TODO: print test count.
-                        println!("Tests passed.");
+                    Ok(summary) => {
+                        // TODO: should we allow tests to keep going
+                        // after the first failure?
+                        println!("All {} test(s) passed.", summary.tests_passed);
                     }
                     Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack));

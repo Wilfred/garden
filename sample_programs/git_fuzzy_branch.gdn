@@ -168,8 +168,8 @@ fun main(args: List): Void {
   }
 }
 
-fun should_equal(x, y): Void {
-  if (x != y) {
-    error("Expected values to be equal");
+fun should_equal(actual, expected): Void {
+  if (actual != expected) {
+    error("Expected ".concat(string_repr(expected)).concat(" but got ").concat(string_repr(actual)));
   }
 }

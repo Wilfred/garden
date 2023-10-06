@@ -12,7 +12,8 @@ Implemented `List::append`, `List::get`, `List::len`,
 removing the corresponding `list_append`, `list_get`, `list_len`,
 `string_concat`, `string_length` and `string_substring functions.
 
-Added `error()` and `string_repr()` functions.
+Added `error()` and `string_repr()` functions. Removed `int_to_string()`
+in favour of `string_repr()`.
 
 ### Evaluation
 

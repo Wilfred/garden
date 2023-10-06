@@ -58,7 +58,6 @@ pub fn type_representation(value: &Value) -> TypeName {
 pub enum BuiltinFunctionKind {
     DebugPrint,
     Error,
-    IntToString,
     Shell,
     StringRepr,
     PathExists,
@@ -72,7 +71,6 @@ impl Display for BuiltinFunctionKind {
         let name = match self {
             BuiltinFunctionKind::DebugPrint => "dbg",
             BuiltinFunctionKind::Error => "error",
-            BuiltinFunctionKind::IntToString => "int_to_string",
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::StringRepr => "string_repr",
             BuiltinFunctionKind::PathExists => "path_exists",
@@ -98,13 +96,6 @@ dbg([1, 2]);
 
 ```
 error(\"Computer is melting!\");
-```"
-        }
-        BuiltinFunctionKind::IntToString => {
-            "Convert an integer to its decimal representation as a string.
-
-```
-int_to_string(123); // \"123\"
 ```"
         }
         BuiltinFunctionKind::Shell =>{
@@ -1228,30 +1219,6 @@ fn eval_builtin_call(
                 position.clone(),
                 Value::String(format!("{}", arg_values[0].1)),
             ));
-        }
-        BuiltinFunctionKind::IntToString => {
-            check_arity("int_to_string", &receiver_value, 1, arg_values)?;
-
-            match &arg_values[0].1 {
-                Value::Integer(i) => {
-                    stack_frame
-                        .evalled_values
-                        .push((position.clone(), Value::String(format!("{}", i))));
-                }
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
-                        restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
-                    });
-                }
-            }
         }
         BuiltinFunctionKind::PathExists => {
             check_arity("path_exists", &receiver_value, 1, arg_values)?;

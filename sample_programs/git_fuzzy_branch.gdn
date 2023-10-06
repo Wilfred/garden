@@ -160,7 +160,7 @@ fun main(args: List): Void {
       check_out(branch_name);
     } else {
       let formatted_branches = ", ".join(branches);
-      let msg = "".join(["Found ", int_to_string(branches.len()), " branches: ", formatted_branches]);
+      let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches]);
       print(msg);
     }
   } else {

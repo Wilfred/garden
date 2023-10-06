@@ -13,7 +13,7 @@ fun main(args: List): Void {
     } else if (mod(i, 3) == 0) {
       println("Fizz");
     } else {
-      println(int_to_string(i));
+      println(string_repr(i));
     }
     i = i + 1;
   }

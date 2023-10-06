@@ -170,6 +170,7 @@ fun main(args: List): Void {
 
 fun should_equal(actual, expected): Void {
   if (actual != expected) {
+    // TODO: Use .join() here.
     error("Expected ".concat(string_repr(expected)).concat(" but got ").concat(string_repr(actual)));
   }
 }

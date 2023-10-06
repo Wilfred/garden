@@ -499,7 +499,7 @@ pub enum EvalError {
 }
 
 #[derive(Debug)]
-pub struct ToplevelEvalResult {
+pub struct ToplevelEvalSummary {
     pub values: Vec<Value>,
     // TODO: Prefer Vec<SymbolName>
     pub definitions: usize,
@@ -507,7 +507,7 @@ pub struct ToplevelEvalResult {
     pub tests_failed: usize,
 }
 
-pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalResult {
+pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
     for item in items {
         match item {
@@ -519,7 +519,7 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
     }
 
     eval_defs(&defs, env);
-    ToplevelEvalResult {
+    ToplevelEvalSummary {
         values: vec![],
         definitions: defs.len(),
         tests_passed: 0,
@@ -531,7 +531,7 @@ pub fn eval_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
-) -> Result<ToplevelEvalResult, EvalError> {
+) -> Result<ToplevelEvalSummary, EvalError> {
     let mut defs = vec![];
     let mut exprs = vec![];
     for item in items {
@@ -550,7 +550,7 @@ pub fn eval_toplevel_items(
     eval_toplevel_tests(items, env, session)?;
 
     if exprs.is_empty() {
-        return Ok(ToplevelEvalResult {
+        return Ok(ToplevelEvalSummary {
             values: vec![],
             definitions: defs.len(),
             tests_passed: 0,
@@ -559,7 +559,7 @@ pub fn eval_toplevel_items(
     }
 
     let value = eval_exprs(&exprs, env, session)?;
-    Ok(ToplevelEvalResult {
+    Ok(ToplevelEvalSummary {
         values: vec![value],
         definitions: defs.len(),
         tests_passed: 0,
@@ -571,7 +571,7 @@ pub fn eval_toplevel_tests(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
-) -> Result<ToplevelEvalResult, EvalError> {
+) -> Result<ToplevelEvalSummary, EvalError> {
     let mut tests_passed = 0;
 
     for item in items {
@@ -608,7 +608,7 @@ pub fn eval_toplevel_tests(
         }
     }
 
-    Ok(ToplevelEvalResult {
+    Ok(ToplevelEvalSummary {
         values: vec![],
         definitions: 0,
         tests_passed,

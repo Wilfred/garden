@@ -12,7 +12,7 @@ Implemented `List::append`, `List::get`, `List::len`,
 removing the corresponding `list_append`, `list_get`, `list_len`,
 `string_concat`, `string_length` and `string_substring functions.
 
-Added `error()` function.
+Added `error()` and `string_repr()` functions.
 
 ### Evaluation
 

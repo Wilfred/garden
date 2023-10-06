@@ -60,6 +60,7 @@ pub enum BuiltinFunctionKind {
     Error,
     IntToString,
     Shell,
+    StringRepr,
     PathExists,
     Print,
     Println,
@@ -73,6 +74,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Error => "error",
             BuiltinFunctionKind::IntToString => "int_to_string",
             BuiltinFunctionKind::Shell => "shell",
+            BuiltinFunctionKind::StringRepr => "string_repr",
             BuiltinFunctionKind::PathExists => "path_exists",
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
@@ -110,6 +112,13 @@ int_to_string(123); // \"123\"
 
 ```
 shell(\"ls\", [\"-l\", \"/\"]);
+```"
+        }
+        BuiltinFunctionKind::StringRepr => {
+            "Pretty print a value.
+
+```
+string_repr(123); // \"123\"
 ```"
         }
         BuiltinFunctionKind::PathExists =>{
@@ -1211,6 +1220,15 @@ fn eval_builtin_call(
                     });
                 }
             }
+        }
+        BuiltinFunctionKind::StringRepr => {
+            check_arity("string_repr", &receiver_value, 1, arg_values)?;
+
+            // TODO: write a proper pretty-printer.
+            stack_frame.evalled_values.push((
+                position.clone(),
+                Value::String(format!("{:?}", arg_values[0].1)),
+            ));
         }
         BuiltinFunctionKind::IntToString => {
             check_arity("int_to_string", &receiver_value, 1, arg_values)?;

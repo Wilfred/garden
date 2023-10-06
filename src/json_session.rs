@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ast;
 use crate::diagnostics::{format_error, format_parse_error};
-use crate::eval::{eval_env, eval_toplevel_items, ToplevelEvalResult};
+use crate::eval::{eval_env, eval_toplevel_items};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandError, CommandParseError},
@@ -84,10 +84,22 @@ fn handle_eval_request(
     ) {
         Ok(items) => match eval_toplevel_items(&items, env, session) {
             Ok(result) => {
-                let value_summary = match result {
-                    ToplevelEvalResult::Value(value) => format!("{}", value),
-                    ToplevelEvalResult::Definition(summary) => summary,
+                let definition_summary = if result.definitions == 1 {
+                    format!("Loaded 1 definition")
+                } else {
+                    format!("Loaded {} definitions", result.definitions)
                 };
+
+                let value_summary = if let Some(last_value) = result.values.last() {
+                    if result.definitions == 0 {
+                        format!("{}", last_value)
+                    } else {
+                        format!("{}, and evaluated {}", definition_summary, last_value)
+                    }
+                } else {
+                    format!("{}.", definition_summary)
+                };
+
                 Response {
                     kind: ResponseKind::Evaluate,
                     value: Ok(value_summary),

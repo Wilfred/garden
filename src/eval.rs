@@ -499,9 +499,10 @@ pub enum EvalError {
 }
 
 #[derive(Debug)]
-pub enum ToplevelEvalResult {
-    Value(Value),
-    Definition(String),
+pub struct ToplevelEvalResult {
+    pub values: Vec<Value>,
+    // TODO: Prefer Vec<SymbolName>
+    pub definitions: usize,
 }
 
 pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalResult {
@@ -516,11 +517,10 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
     }
 
     eval_defs(&defs, env);
-    ToplevelEvalResult::Definition(format!(
-        "Loaded {} definition{}.",
-        defs.len(),
-        if defs.len() == 1 { "" } else { "s" }
-    ))
+    ToplevelEvalResult {
+        values: vec![],
+        definitions: defs.len(),
+    }
 }
 
 pub fn eval_toplevel_items(
@@ -546,15 +546,17 @@ pub fn eval_toplevel_items(
     eval_toplevel_tests(items, env, session)?;
 
     if exprs.is_empty() {
-        return Ok(ToplevelEvalResult::Definition(format!(
-            "Loaded {} definition{}.",
-            defs.len(),
-            if defs.len() == 1 { "" } else { "s" }
-        )));
+        return Ok(ToplevelEvalResult {
+            values: vec![],
+            definitions: defs.len(),
+        });
     }
 
     let value = eval_exprs(&exprs, env, session)?;
-    Ok(ToplevelEvalResult::Value(value))
+    Ok(ToplevelEvalResult {
+        values: vec![value],
+        definitions: defs.len(),
+    })
 }
 
 pub fn eval_toplevel_tests(

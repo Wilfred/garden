@@ -503,6 +503,8 @@ pub struct ToplevelEvalResult {
     pub values: Vec<Value>,
     // TODO: Prefer Vec<SymbolName>
     pub definitions: usize,
+    pub tests_passed: usize,
+    pub tests_failed: usize,
 }
 
 pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalResult {
@@ -520,6 +522,8 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
     ToplevelEvalResult {
         values: vec![],
         definitions: defs.len(),
+        tests_passed: 0,
+        tests_failed: 0,
     }
 }
 
@@ -549,6 +553,8 @@ pub fn eval_toplevel_items(
         return Ok(ToplevelEvalResult {
             values: vec![],
             definitions: defs.len(),
+            tests_passed: 0,
+            tests_failed: 0,
         });
     }
 
@@ -556,6 +562,8 @@ pub fn eval_toplevel_items(
     Ok(ToplevelEvalResult {
         values: vec![value],
         definitions: defs.len(),
+        tests_passed: 0,
+        tests_failed: 0,
     })
 }
 

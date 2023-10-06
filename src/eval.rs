@@ -571,7 +571,9 @@ pub fn eval_toplevel_tests(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
-) -> Result<(), EvalError> {
+) -> Result<ToplevelEvalResult, EvalError> {
+    let mut tests_passed = 0;
+
     for item in items {
         match item {
             ToplevelItem::Def(def) => match &def.2 {
@@ -598,6 +600,7 @@ pub fn eval_toplevel_tests(
 
                     env.stack.push(stack_frame);
                     eval_env(env, session)?;
+                    tests_passed += 1;
                 }
                 _ => {}
             },
@@ -605,7 +608,12 @@ pub fn eval_toplevel_tests(
         }
     }
 
-    Ok(())
+    Ok(ToplevelEvalResult {
+        values: vec![],
+        definitions: 0,
+        tests_passed,
+        tests_failed: 0,
+    })
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {

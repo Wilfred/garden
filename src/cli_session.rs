@@ -9,9 +9,10 @@ use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError,
 };
 use crate::diagnostics::format_error;
-use crate::eval::{self, eval_env, eval_toplevel_defs, Session};
+use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{parse_toplevel_items, ParseError};
+use crate::values::Value;
 use crate::{eval::Env, prompt::prompt_symbol};
 
 use owo_colors::OwoColorize;
@@ -195,7 +196,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
         match eval_env(&mut env, &mut session) {
             Ok(result) => {
                 match result {
-                    eval::Value::Void => {}
+                    Value::Void => {}
                     v => {
                         println!("{}", v)
                     }
@@ -216,7 +217,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 let stack_frame = env.stack.last_mut().unwrap();
                 let result = stack_frame.evalled_values.pop().unwrap();
                 match result.1 {
-                    eval::Value::Void => {
+                    Value::Void => {
                         println!("void")
                     }
                     v => {

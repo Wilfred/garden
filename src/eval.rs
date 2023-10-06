@@ -1,15 +1,14 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::{collections::HashMap, fmt::Display};
 
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
 
 use crate::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Position,
@@ -17,181 +16,7 @@ use crate::ast::{
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::json_session::{Response, ResponseKind};
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    /// An integer value.
-    Integer(i64),
-    /// A boolean value.
-    Boolean(bool),
-    /// A reference to a user-defined function.
-    Fun(Symbol, FunInfo),
-    /// A closure value.
-    Closure(Vec<BlockBindings>, FunInfo),
-    /// A reference to a built-in function.
-    BuiltinFunction(BuiltinFunctionKind),
-    /// A string value.
-    String(String),
-    /// A list value.
-    List(Vec<Value>),
-    /// The void/unit value.
-    Void,
-}
-
-pub fn type_representation(value: &Value) -> TypeName {
-    TypeName(
-        match value {
-            Value::Integer(_) => "Int",
-            Value::Boolean(_) => "Bool",
-            Value::Fun(_, _) => "Fun",
-            Value::Closure(_, _) => "Fun",
-            Value::BuiltinFunction(_) => "Fun",
-            Value::String(_) => "String",
-            Value::List(_) => "List",
-            Value::Void => "Void",
-        }
-        .to_owned(),
-    )
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
-pub enum BuiltinFunctionKind {
-    DebugPrint,
-    Error,
-    Shell,
-    StringRepr,
-    PathExists,
-    Print,
-    Println,
-    WorkingDirectory,
-}
-
-impl Display for BuiltinFunctionKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = match self {
-            BuiltinFunctionKind::DebugPrint => "dbg",
-            BuiltinFunctionKind::Error => "error",
-            BuiltinFunctionKind::Shell => "shell",
-            BuiltinFunctionKind::StringRepr => "string_repr",
-            BuiltinFunctionKind::PathExists => "path_exists",
-            BuiltinFunctionKind::Print => "print",
-            BuiltinFunctionKind::Println => "println",
-            BuiltinFunctionKind::WorkingDirectory => "working_directory",
-        };
-        write!(f, "{}", name)
-    }
-}
-
-pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
-    match kind {
-        BuiltinFunctionKind::DebugPrint => {
-            "Write an arbitrary value to stdout, along with debugging metadata.
-
-```
-dbg([1, 2]);
-```"
-        }
-        BuiltinFunctionKind::Error => {
-            "Stop the program immediately, and report the error message given.
-
-```
-error(\"Computer is melting!\");
-```"
-        }
-        BuiltinFunctionKind::Shell =>{
-            "Execute the given string as a shell command, and return stdout concatenated with stderr.
-
-```
-shell(\"ls\", [\"-l\", \"/\"]);
-```"
-        }
-        BuiltinFunctionKind::StringRepr => {
-            "Pretty print a value.
-
-```
-string_repr(123); // \"123\"
-```"
-        }
-        BuiltinFunctionKind::PathExists =>{
-            "Return true if this path exists.
-Note that a path may exist without the current user having permission to read it.
-
-```
-path_exists(\"/\"); // true
-```"
-        }
-        BuiltinFunctionKind::Print => {
-            "Write a string to stdout.
-
-```
-print(\"hello world\n\");
-```"
-        }
-        BuiltinFunctionKind::Println => {
-            "Write a string to stdout, with a newline appended.
-
-```
-print(\"hello world\");
-```"
-        }
-        BuiltinFunctionKind::WorkingDirectory => {
-            "Return the path of the current working directory.
-
-```
-working_directory(); // \"/home/yourname/awesome_garden_project\"
-```"
-        }
-    }
-}
-
-/// Convert "foo" to "\"foo\"", a representation that we can print as
-/// a valid Garden string literal.
-pub fn escape_string_literal(s: &str) -> String {
-    let mut res = String::new();
-    res.push('"');
-
-    // Escape inner double quotes and backslashes.
-    for c in s.chars() {
-        match c {
-            '"' => res.push_str("\\\""),
-            '\n' => res.push_str("\\n"),
-            '\\' => res.push_str("\\\\"),
-            _ => res.push(c),
-        }
-    }
-
-    res.push('"');
-    res
-}
-
-impl Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Value::Integer(i) => write!(f, "{}", i),
-            Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(name, _) => write!(f, "(function: {})", name.1 .0),
-            Value::Closure(..) => write!(f, "(closure)"),
-            Value::BuiltinFunction(kind) => write!(f, "(function: {})", kind),
-            Value::Void => write!(f, "void"),
-            Value::String(s) => {
-                write!(f, "{}", escape_string_literal(s))
-            }
-            Value::List(items) => {
-                write!(f, "[")?;
-
-                for (i, item) in items.iter().enumerate() {
-                    if i != 0 {
-                        write!(f, ", ")?;
-                    }
-
-                    write!(f, "{}", item)?;
-                }
-
-                write!(f, "]")
-            }
-        }
-    }
-}
+use crate::values::{type_representation, BuiltinFunctionKind, Value};
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
@@ -2782,11 +2607,5 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
-    }
-
-    #[test]
-    fn test_display_value_for_string_with_doublequote() {
-        let value = Value::String("foo \\ \" \n bar".into());
-        assert_eq!(format!("{}", value), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

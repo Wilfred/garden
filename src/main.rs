@@ -12,6 +12,7 @@ mod json_session;
 mod lex;
 mod parse;
 mod prompt;
+mod values;
 mod version;
 
 use std::path::PathBuf;
@@ -23,7 +24,8 @@ use eval::{eval_toplevel_defs, eval_toplevel_items, Env, EvalError, Session};
 use parse::{parse_toplevel_item, parse_toplevel_items};
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
-use crate::eval::{escape_string_literal, eval_toplevel_tests, ErrorMessage};
+use crate::eval::{eval_toplevel_tests, ErrorMessage};
+use crate::values::escape_string_literal;
 
 #[derive(Debug, Parser)]
 #[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]

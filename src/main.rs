@@ -103,6 +103,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &PathBuf, interrupted: &Arc<Atomi
                     Ok(summary) => {
                         // TODO: should we allow tests to keep going
                         // after the first failure?
+                        // TODO: print incremental progress as tests run.
                         println!("All {} test(s) passed.", summary.tests_passed);
                     }
                     Err(EvalError::ResumableError(position, e)) => {

@@ -97,6 +97,10 @@ pub enum Expression_ {
     /// ```
     MethodCall(Box<Expression>, Symbol, Vec<Expression>),
     FunLiteral(FunInfo),
+    /// A sentinel expression that means we should stop evaluation.
+    ///
+    /// This might occur because the we encountered an error, or
+    /// because the user hit Ctrl-C.
     Stop(Option<ErrorKind>),
     Block(Block),
 }

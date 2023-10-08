@@ -92,6 +92,7 @@ impl Display for Command {
 }
 
 impl Command {
+    // TODO: from_string(":search") should produce an error.
     pub fn from_string(s: &str) -> Result<Self, CommandParseError> {
         match s.to_lowercase().trim() {
             ":abort" => Ok(Command::Abort),

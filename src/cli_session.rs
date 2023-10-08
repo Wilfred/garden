@@ -4,13 +4,13 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::ast::{self, ToplevelItem};
+use crate::ast::ToplevelItem;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError,
 };
 use crate::diagnostics::format_error;
+use crate::eval::EvalError;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
-use crate::eval::{ErrorKind, EvalError};
 use crate::parse::{parse_toplevel_items, ParseError};
 use crate::values::Value;
 use crate::{eval::Env, prompt::prompt_symbol};
@@ -136,56 +136,23 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             }
             Err(ReadError::CommandError(CommandError::Resume)) => {
                 is_stopped = false;
-
-                let stack_frame = env.stack.last_mut().unwrap();
-                if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
-                    assert!(matches!(expr.1, ast::Expression_::Stop(_)));
-                } else {
-                    continue;
-                }
+                continue;
             }
             Err(ReadError::CommandError(CommandError::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
-                let err_kind = if let Some((_, ast::Expression(_, ast::Expression_::Stop(e)))) =
-                    stack_frame.exprs_to_eval.last()
-                {
-                    *e
-                } else {
-                    println!(":replace failed: expected to be at an evaluation stopping point");
-                    continue;
-                };
+                stack_frame.evalled_values.pop();
+                stack_frame.exprs_to_eval.push((false, expr));
 
-                match err_kind {
-                    Some(err_kind) => {
-                        stack_frame.exprs_to_eval.pop();
-                        match err_kind {
-                            ErrorKind::BadValue => {
-                                stack_frame.evalled_values.pop();
-                            }
-                            ErrorKind::MalformedExpression => {
-                                stack_frame.exprs_to_eval.pop();
-                            }
-                        }
-                        stack_frame.exprs_to_eval.push((false, expr));
-                    }
-                    None => {
-                        println!(":replace failed: can't replace without an error.");
-                        continue;
-                    }
-                }
+                // TODO: Prevent :replace when we've not just halted.
             }
             Err(ReadError::CommandError(CommandError::Skip)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
-                // Skip the Stop statement.
-                stack_frame.exprs_to_eval.pop();
 
                 stack_frame
                     .exprs_to_eval
                     .pop()
                     .expect("Tried to skip an expression, but none in this frame.");
-
-                is_stopped = false;
             }
 
             Err(ReadError::ReadlineError) => {
@@ -212,18 +179,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(EvalError::Interrupted) => {
                 println!("Interrupted. You can take a look around, or use :resume to continue.");
                 is_stopped = true;
-            }
-            Err(EvalError::Stop(_)) => {
-                let stack_frame = env.stack.last_mut().unwrap();
-                let result = stack_frame.evalled_values.pop().unwrap();
-                match result.1 {
-                    Value::Void => {
-                        println!("void")
-                    }
-                    v => {
-                        println!("{}", v)
-                    }
-                }
             }
         }
     }

@@ -112,9 +112,6 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
                     }
-                    Err(EvalError::Stop(_)) => {
-                        eprintln!("Error (stopped)");
-                    }
                 }
             }
             Err(parse::ParseError::Invalid {
@@ -164,9 +161,6 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
-                    }
-                    Err(EvalError::Stop(_)) => {
-                        eprintln!("Error (stopped)");
                     }
                 }
             }

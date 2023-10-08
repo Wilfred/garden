@@ -125,14 +125,6 @@ fn handle_eval_request(
                     stack: None,
                 }),
             },
-            Err(EvalError::Stop(_)) => Response {
-                kind: ResponseKind::Evaluate,
-                value: Err(ResponseError {
-                    position: None,
-                    message: "Stopped".to_string(),
-                    stack: None,
-                }),
-            },
         },
         Err(e) => match e {
             ParseError::Invalid {
@@ -181,43 +173,28 @@ fn handle_request(
                         kind: ResponseKind::RunCommand,
                         value: Ok("Aborted".to_string()),
                     },
-                    Err(CommandError::Resume) => {
-                        let stack_frame = env.stack.last_mut().unwrap();
-                        if let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
-                            assert!(matches!(expr.1, ast::Expression_::Stop(_)));
-
-                            match eval_env(env, session) {
-                                Ok(result) => Response {
-                                    kind: ResponseKind::Evaluate,
-                                    value: Ok(format!("{}", result)),
-                                },
-                                Err(EvalError::ResumableError(position, e)) => Response {
-                                    kind: ResponseKind::Evaluate,
-                                    value: Err(ResponseError {
-                                        position: Some(position),
-                                        message: format!("Error: {}", e.0),
-                                        stack: None,
-                                    }),
-                                },
-                                Err(EvalError::Interrupted) => Response {
-                                    kind: ResponseKind::Evaluate,
-                                    value: Err(ResponseError {
-                                        position: None,
-                                        message: "Interrupted".to_string(),
-                                        stack: None,
-                                    }),
-                                },
-                                Err(EvalError::Stop(_)) => {
-                                    todo!();
-                                }
-                            }
-                        } else {
-                            Response {
-                                kind: ResponseKind::Evaluate,
-                                value: Ok("(nothing to resume)".into()),
-                            }
-                        }
-                    }
+                    Err(CommandError::Resume) => match eval_env(env, session) {
+                        Ok(result) => Response {
+                            kind: ResponseKind::Evaluate,
+                            value: Ok(format!("{}", result)),
+                        },
+                        Err(EvalError::ResumableError(position, e)) => Response {
+                            kind: ResponseKind::Evaluate,
+                            value: Err(ResponseError {
+                                position: Some(position),
+                                message: format!("Error: {}", e.0),
+                                stack: None,
+                            }),
+                        },
+                        Err(EvalError::Interrupted) => Response {
+                            kind: ResponseKind::Evaluate,
+                            value: Err(ResponseError {
+                                position: None,
+                                message: "Interrupted".to_string(),
+                                stack: None,
+                            }),
+                        },
+                    },
                     Err(CommandError::Replace(_)) => todo!(),
                     Err(CommandError::Skip) => todo!(),
                 }

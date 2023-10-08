@@ -4,8 +4,6 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::eval::ErrorKind;
-
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
@@ -97,11 +95,6 @@ pub enum Expression_ {
     /// ```
     MethodCall(Box<Expression>, Symbol, Vec<Expression>),
     FunLiteral(FunInfo),
-    /// A sentinel expression that means we should stop evaluation.
-    ///
-    /// This might occur because the we encountered an error, or
-    /// because the user hit Ctrl-C.
-    Stop(Option<ErrorKind>),
     Block(Block),
 }
 

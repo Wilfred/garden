@@ -306,21 +306,10 @@ pub struct Session<'a> {
     pub has_attached_stdout: bool,
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum ErrorKind {
-    /// An inappropriate value for the current expression, such as a
-    /// type error or divide by zero.
-    BadValue,
-    /// A malformed expression, such as an arity error or assigning to
-    /// an undefined variable.
-    MalformedExpression,
-}
-
 #[derive(Debug)]
 pub enum EvalError {
     Interrupted,
     ResumableError(Position, ErrorMessage),
-    Stop(Option<ErrorKind>),
 }
 
 #[derive(Debug)]
@@ -485,7 +474,7 @@ fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
 }
 
 /// Restore `stack_frame` by putting back evaluated values and
-/// expressions to evaluate, with a Stop expression on top.
+/// expressions to evaluate.
 ///
 /// This enables evaluation to halt in a state where the user can
 /// choose to try again if they wish.
@@ -494,17 +483,12 @@ fn restore_stack_frame(
     mut stack_frame: StackFrame,
     expr_to_eval: (bool, Expression),
     evalled_values: &[(Position, Value)],
-    error_kind: Option<ErrorKind>,
 ) {
     for value in evalled_values {
         stack_frame.evalled_values.push(value.clone());
     }
 
-    let position = expr_to_eval.1 .0.clone();
     stack_frame.exprs_to_eval.push(expr_to_eval);
-    stack_frame
-        .exprs_to_eval
-        .push((false, Expression(position, Expression_::Stop(error_kind))));
 
     env.stack.push(stack_frame);
 }
@@ -1659,7 +1643,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         stack_frame,
                         (done_children, Expression(expr_position, expr_)),
                         &[],
-                        None,
                     );
                     return Err(EvalError::Interrupted);
                 }
@@ -1688,7 +1671,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::BadValue),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1716,7 +1698,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::BadValue),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1751,7 +1732,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::MalformedExpression),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1775,7 +1755,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::MalformedExpression),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1785,13 +1764,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .push((true, Expression(expr_position, expr_copy)));
                             stack_frame.exprs_to_eval.push((false, *expr.clone()));
                         }
-                    }
-                    Expression_::Stop(e) => {
-                        stack_frame
-                            .exprs_to_eval
-                            .push((false, Expression(expr_position, Expression_::Stop(e))));
-                        env.stack.push(stack_frame);
-                        return Err(EvalError::Stop(e));
                     }
                     Expression_::IntLiteral(i) => {
                         stack_frame
@@ -1844,7 +1816,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 stack_frame,
                                 (done_children, Expression(expr_position, expr_copy)),
                                 &[],
-                                Some(ErrorKind::MalformedExpression),
                             );
 
                             return Err(EvalError::ResumableError(
@@ -1880,7 +1851,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::BadValue),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1909,7 +1879,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::BadValue),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1938,7 +1907,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                     stack_frame,
                                     (done_children, Expression(expr_position, expr_copy)),
                                     &restore_values,
-                                    Some(ErrorKind::BadValue),
                                 );
                                 return Err(EvalError::ResumableError(position, message));
                             }
@@ -1976,11 +1944,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Expression(expr_position, expr_copy)),
                                         &restore_values,
-                                        // TODO: let ErrorInfo specify
-                                        // kind, as not all errors on
-                                        // calling functions are this
-                                        // kind.
-                                        Some(ErrorKind::MalformedExpression),
                                     );
                                     return Err(EvalError::ResumableError(position, message));
                                 }
@@ -2025,11 +1988,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                         stack_frame,
                                         (done_children, Expression(expr_position, expr_copy)),
                                         &restore_values,
-                                        // TODO: let ErrorInfo specify
-                                        // kind, as not all errors on
-                                        // calling methods are this
-                                        // kind.
-                                        Some(ErrorKind::MalformedExpression),
                                     );
                                     return Err(EvalError::ResumableError(error_position, message));
                                 }
@@ -2084,14 +2042,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(return_type) = &fun.return_type {
                             if let Err(msg) = check_type(&return_value, return_type) {
                                 stack_frame.evalled_values.push(ret_val_and_pos.clone());
-
-                                stack_frame.exprs_to_eval.push((
-                                    false,
-                                    Expression(
-                                        return_value_pos.clone(),
-                                        Expression_::Stop(Some(ErrorKind::BadValue)),
-                                    ),
-                                ));
                                 env.stack.push(stack_frame);
 
                                 return Err(EvalError::ResumableError(return_value_pos, msg));

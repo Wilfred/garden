@@ -1239,7 +1239,7 @@ fn check_param_types(
                 }
 
                 return Err(ErrorInfo {
-                    error_position: receiver_value.0.clone(),
+                    error_position: arg_value.0.clone(),
                     message: ErrorMessage(format!("Incorrect type for argument: {}", msg.0)),
                     restore_values: saved_values,
                 });

@@ -49,15 +49,20 @@ pub fn format_error(message: &ErrorMessage, position: &Position, src: &str) -> S
     let mut res = Vec::new();
 
     let path_str = position.path.display().to_string();
+    // TODO: roll our own error formatting.
     let r = Report::build(ReportKind::Error, &path_str, position.start_offset)
-        .with_label(
-            Label::new((&path_str, position.start_offset..position.end_offset))
-                .with_message(&message.0),
-        )
+        .with_label(Label::new((
+            &path_str,
+            position.start_offset..position.end_offset,
+        )))
         .finish();
 
     r.write((&path_str, Source::from(src)), &mut res).unwrap();
-    String::from_utf8_lossy(&res).to_string()
+    format!(
+        "Error: {}\n{}",
+        message.0,
+        String::from_utf8_lossy(&res).to_string()
+    )
 }
 
 pub fn format_parse_error(message: &ErrorMessage, position: &Position, src: &str) -> String {

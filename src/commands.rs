@@ -418,7 +418,7 @@ pub fn run_command<T: Write>(
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.last() {
                 for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
-                    writeln!(buf, "{:?}", expr.1).unwrap();
+                    writeln!(buf, "{:#?}", expr.1).unwrap();
                 }
             }
         }

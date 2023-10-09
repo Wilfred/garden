@@ -1232,10 +1232,16 @@ fn check_param_types(
     for (param, arg_value) in params.iter().zip(arg_values) {
         if let Some(param_ty) = &param.1 {
             if let Err(msg) = check_type(&arg_value.1, param_ty) {
+                let mut saved_values = vec![];
+                saved_values.push(receiver_value.clone());
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+
                 return Err(ErrorInfo {
                     error_position: receiver_value.0.clone(),
                     message: ErrorMessage(format!("Incorrect type for argument: {}", msg.0)),
-                    restore_values: arg_values.to_vec(),
+                    restore_values: saved_values,
                 });
             }
         }

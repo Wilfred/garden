@@ -135,8 +135,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 continue;
             }
             Err(ReadError::CommandError(CommandError::Resume)) => {
-                is_stopped = false;
-                continue;
+                // Continue to eval_env below.
             }
             Err(ReadError::CommandError(CommandError::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();

@@ -32,6 +32,7 @@ pub enum Command {
     Skip,
     Search(Option<String>),
     Source,
+    Test(Option<String>),
     Trace,
     Type(Option<ast::Expression>),
     Stack,
@@ -82,6 +83,7 @@ impl Display for Command {
             Command::Skip => ":skip",
             Command::Source => ":source",
             Command::Stack => ":stack",
+            Command::Test(_) => ":test",
             Command::Trace => ":trace",
             Command::Type(_) => ":type",
             Command::Quit => ":quit",
@@ -135,6 +137,10 @@ impl Command {
                         Ok(expr) => Ok(Command::Replace(Some(expr))),
                         Err(_) => Ok(Command::Replace(None)),
                     };
+                }
+
+                if let Some(src) = split_first_word(s, ":test") {
+                    return Ok(Command::Test(Some(src.to_owned())));
                 }
 
                 if let Some(src) = split_first_word(s, ":type") {
@@ -454,6 +460,9 @@ pub fn run_command<T: Write>(
         Command::Stack => {
             print_stack(buf, env);
         }
+        Command::Test(_) => {
+            todo!();
+        }
         Command::Trace => {
             env.trace_exprs = !env.trace_exprs;
             write!(
@@ -527,6 +536,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Search(_) => "The :search command shows all the definitions whose name contains the search term.\n\nExample:\n\n:search string",
         Command::Skip => "The :skip command discards the current expression, and execution continues from the next expression.\n\nExample:\n\n:skip",
         Command::Source => "The :source command displays the history of all code evaluated in the current session.\n\nExample:\n\n:source",
+        Command::Test(_) => "The :test command runs the test with the name specified.\n\nExample:\n\n:test some_test_name",
         Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",
         Command::Type(_) => "The :type command shows the type of a given expression.\n\nExample:\n\n:type 1 + 2",
         Command::Stack => "The :stack command prints the current call stack.\n\nExample:\n\n:stack",

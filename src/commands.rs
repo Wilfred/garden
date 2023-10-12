@@ -40,21 +40,15 @@ pub enum Command {
     Version,
 }
 
-/// Returns Some if `s` starts with `word` and is followed by a word
-/// boundary.
-fn split_first_word<'a>(s: &'a str, word: &str) -> Option<&'a str> {
-    if let Some(suffix) = s.strip_prefix(word) {
-        if suffix.is_empty() {
-            return Some("");
-        }
-
-        if let Some(rest) = suffix.strip_prefix(' ') {
-            Some(rest)
-        } else {
-            None
-        }
+/// Split out the command name and the arguments (if any).
+fn parse_command(s: &str) -> (&str, Option<String>) {
+    let s = s.trim();
+    if let Some((name, args)) = s.split_once(" ") {
+        // Deliberately return an owned String because it simplifies
+        // the callers.
+        (name, Some(args.to_owned()))
     } else {
-        None
+        (s, None)
     }
 }
 
@@ -96,63 +90,48 @@ impl Display for Command {
 impl Command {
     // TODO: from_string(":search") should produce an error.
     pub fn from_string(s: &str) -> Result<Self, CommandParseError> {
-        match s.to_lowercase().trim() {
+        let (command_name, args) = parse_command(s);
+
+        match command_name.to_lowercase().as_str() {
             ":abort" => Ok(Command::Abort),
+            ":doc" => Ok(Command::Doc(args)),
+            ":forget_local" => Ok(Command::ForgetLocal(args)),
             ":fstmts" => Ok(Command::FrameStatements),
             ":fvalues" => Ok(Command::FrameValues),
             ":funs" => Ok(Command::Functions),
+            ":help" => Ok(Command::Help(args)),
             ":locals" => Ok(Command::Locals),
             ":methods" => Ok(Command::Methods),
+            ":parse" => Ok(Command::Parse(args)),
+            ":replace" => {
+                // TODO: find a better name for this.
+                match parse_inline_expr_from_str(
+                    &PathBuf::from("__interactive_inline__"),
+                    &args.unwrap_or_default(),
+                ) {
+                    Ok(expr) => Ok(Command::Replace(Some(expr))),
+                    Err(_) => Ok(Command::Replace(None)),
+                }
+            }
             ":resume" => Ok(Command::Resume),
+            ":search" => Ok(Command::Search(args)),
             ":skip" => Ok(Command::Skip),
             ":source" => Ok(Command::Source),
+            ":test" => Ok(Command::Test(args)),
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
+            ":type" => {
+                match parse_inline_expr_from_str(
+                    &PathBuf::from("__interactive_inline__"),
+                    &args.unwrap_or_default(),
+                ) {
+                    Ok(expr) => Ok(Command::Type(Some(expr))),
+                    Err(_) => Ok(Command::Type(None)),
+                }
+            }
             ":quit" => Ok(Command::Quit),
             ":version" => Ok(Command::Version),
             _ => {
-                // Commands that take an argument.
-
-                if let Some(src) = split_first_word(s, ":doc") {
-                    return Ok(Command::Doc(Some(src.to_owned())));
-                }
-                if let Some(src) = split_first_word(s, ":forget_local") {
-                    return Ok(Command::ForgetLocal(Some(src.to_owned())));
-                }
-                if let Some(src) = split_first_word(s, ":help") {
-                    return Ok(Command::Help(Some(src.to_owned())));
-                }
-                if let Some(src) = split_first_word(s, ":parse") {
-                    return Ok(Command::Parse(Some(src.to_owned())));
-                }
-                if let Some(src) = split_first_word(s, ":search") {
-                    return Ok(Command::Search(Some(src.to_owned())));
-                }
-                if let Some(src) = split_first_word(s, ":replace") {
-                    // TODO: find a better name for this.
-                    return match parse_inline_expr_from_str(
-                        &PathBuf::from("__interactive_inline__"),
-                        src,
-                    ) {
-                        Ok(expr) => Ok(Command::Replace(Some(expr))),
-                        Err(_) => Ok(Command::Replace(None)),
-                    };
-                }
-
-                if let Some(src) = split_first_word(s, ":test") {
-                    return Ok(Command::Test(Some(src.to_owned())));
-                }
-
-                if let Some(src) = split_first_word(s, ":type") {
-                    return match parse_inline_expr_from_str(
-                        &PathBuf::from("__interactive_inline__"),
-                        src,
-                    ) {
-                        Ok(expr) => Ok(Command::Type(Some(expr))),
-                        Err(_) => Ok(Command::Type(None)),
-                    };
-                }
-
                 if s.starts_with(':') {
                     Err(CommandParseError::NoSuchCommand)
                 } else {
@@ -560,5 +539,23 @@ mod tests {
     fn test_help_takes_argument() {
         let cmd = Command::from_string(":help print").unwrap();
         assert!(matches!(cmd, Command::Help(_)));
+    }
+
+    #[test]
+    fn test_parse_command() {
+        assert_eq!(parse_command(":foo"), (":foo", None));
+    }
+
+    #[test]
+    fn test_parse_command_with_args() {
+        assert_eq!(
+            parse_command(":foo bar baz"),
+            (":foo", Some("bar baz".to_owned()))
+        );
+    }
+
+    #[test]
+    fn test_parse_command_trim() {
+        assert_eq!(parse_command(" :foo "), (":foo", None));
     }
 }

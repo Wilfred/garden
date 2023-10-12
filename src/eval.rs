@@ -892,7 +892,7 @@ fn eval_builtin_call(
                     return Err(ErrorInfo {
                         message: ErrorMessage(msg.clone()),
                         restore_values: saved_values,
-                        error_position: arg_values[0].0.clone(),
+                        error_position: position.clone(),
                     });
                 }
                 v => {

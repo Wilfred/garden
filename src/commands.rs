@@ -159,8 +159,9 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
     }
 }
 
+/// Actions that require an evaluation loop, and can't be run during command handling.
 #[derive(Debug)]
-pub enum CommandError {
+pub enum EvalAction {
     Replace(ast::Expression),
     Resume,
     Abort,
@@ -225,7 +226,7 @@ pub fn run_command<T: Write>(
     cmd: &Command,
     env: &mut Env,
     session: &mut Session,
-) -> Result<(), CommandError> {
+) -> Result<(), EvalAction> {
     match cmd {
         Command::Help(text) => {
             let text = text.clone().unwrap_or_default();
@@ -311,7 +312,7 @@ pub fn run_command<T: Write>(
         }
         Command::Replace(stmt) => {
             if let Some(stmt) = stmt {
-                return Err(CommandError::Replace(stmt.clone()));
+                return Err(EvalAction::Replace(stmt.clone()));
             } else {
                 write!(
                     buf,
@@ -322,10 +323,10 @@ pub fn run_command<T: Write>(
             }
         }
         Command::Resume => {
-            return Err(CommandError::Resume);
+            return Err(EvalAction::Resume);
         }
         Command::Skip => {
-            return Err(CommandError::Skip);
+            return Err(EvalAction::Skip);
         }
         Command::Search(text) => {
             let text = text.clone().unwrap_or_default();
@@ -470,7 +471,7 @@ pub fn run_command<T: Write>(
         }
         Command::Abort => {
             env.pop_to_toplevel();
-            return Err(CommandError::Abort);
+            return Err(EvalAction::Abort);
         }
         Command::Quit => {
             std::process::exit(0);

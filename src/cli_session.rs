@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use crate::ast::ToplevelItem;
 use crate::commands::{
-    print_available_commands, run_command, Command, CommandError, CommandParseError,
+    print_available_commands, run_command, Command, EvalAction, CommandParseError,
 };
 use crate::diagnostics::format_error;
 use crate::eval::EvalError;
@@ -19,7 +19,7 @@ use owo_colors::OwoColorize;
 use rustyline::Editor;
 
 enum ReadError {
-    CommandError(CommandError),
+    CommandError(EvalAction),
     ReadlineError,
 }
 
@@ -128,16 +128,16 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     stack_frame.exprs_to_eval.push((false, expr.1.clone()));
                 }
             }
-            Err(ReadError::CommandError(CommandError::Abort)) => {
+            Err(ReadError::CommandError(EvalAction::Abort)) => {
                 // TODO: doesn't this need to pop the stack to the toplevel?
                 // It seems to be working already.
                 is_stopped = false;
                 continue;
             }
-            Err(ReadError::CommandError(CommandError::Resume)) => {
+            Err(ReadError::CommandError(EvalAction::Resume)) => {
                 // Continue to eval_env below.
             }
-            Err(ReadError::CommandError(CommandError::Replace(expr))) => {
+            Err(ReadError::CommandError(EvalAction::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
                 stack_frame.evalled_values.pop();
@@ -145,7 +145,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 // TODO: Prevent :replace when we've not just halted.
             }
-            Err(ReadError::CommandError(CommandError::Skip)) => {
+            Err(ReadError::CommandError(EvalAction::Skip)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
                 stack_frame

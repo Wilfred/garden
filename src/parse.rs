@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::Path;
 
 use crate::ast::BinaryOperatorKind;
@@ -659,6 +660,24 @@ fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, Pa
     }
 
     require_token(tokens, ")")?;
+
+    // Emit error if there are duplicate parameters.
+    // TODO: allow parsing to return an AST even if errors are present.
+    let mut seen = HashSet::new();
+    for param in &params {
+        let param_name = &param.0 .1 .0;
+        if seen.contains(param_name) {
+            return Err(ParseError::Invalid {
+                position: param.0 .0.clone(),
+                message: ErrorMessage(format!("Duplicate parameter: `{}`", param_name)),
+                // TODO: report the position of the previous parameter too.
+                additional: vec![],
+            });
+        } else {
+            seen.insert(param_name.clone());
+        }
+    }
+
     Ok(params)
 }
 
@@ -1570,5 +1589,10 @@ mod tests {
                 )
             )
         );
+    }
+
+    #[test]
+    fn test_repeated_param() {
+        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(x, x) {}").is_err());
     }
 }

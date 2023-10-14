@@ -23,6 +23,10 @@ Added `forget_local`.
 
 Fixed a crash on calling method calls with the wrong arity.
 
+### Parsing
+
+Repeating a parameter is now a parse error.
+
 # 0.6 (released 16th September 2023)
 
 **Goal: Support method calls.**

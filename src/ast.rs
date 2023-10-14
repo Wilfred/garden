@@ -55,7 +55,10 @@ pub struct TypeName(pub String);
 pub struct SymbolName(pub String);
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Symbol(pub Position, pub SymbolName);
+pub struct Symbol {
+    pub pos: Position,
+    pub name: SymbolName,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SymbolWithType {

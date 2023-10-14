@@ -136,7 +136,7 @@ impl Display for Value {
         match self {
             Value::Integer(i) => write!(f, "{}", i),
             Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(name, _) => write!(f, "(function: {})", name.1 .0),
+            Value::Fun(name, _) => write!(f, "(function: {})", name.name.0),
             Value::Closure(..) => write!(f, "(closure)"),
             Value::BuiltinFunction(kind) => write!(f, "(function: {})", kind),
             Value::Void => write!(f, "void"),

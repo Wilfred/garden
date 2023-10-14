@@ -183,12 +183,12 @@ fn describe_fun(value: &Value) -> Option<String> {
                 Some(doc_comment) => {
                     res.push_str(doc_comment);
                 }
-                None => res.push_str(&format!("`{}` has no documentation comment.", name.1 .0)),
+                None => res.push_str(&format!("`{}` has no documentation comment.", name.name.0)),
             }
             res.push_str("\n\n");
 
             // show type hints
-            res.push_str(&format!("fn {}", name.1 .0));
+            res.push_str(&format!("fn {}", name.name.0));
             res.push('(');
             for (i, param) in params.iter().enumerate() {
                 if i != 0 {
@@ -196,7 +196,7 @@ fn describe_fun(value: &Value) -> Option<String> {
                 }
 
                 let name = &param.symbol;
-                res.push_str(&name.1 .0);
+                res.push_str(&name.name.0);
 
                 if let Some(param_ty) = &param.type_ {
                     res.push_str(&format!(": {}", param_ty.0));
@@ -256,13 +256,13 @@ pub fn run_command<T: Write>(
             for type_name in type_names {
                 let mut method_names: Vec<_> =
                     env.methods.get(type_name).unwrap().values().collect();
-                method_names.sort_by_key(|meth| &meth.name.1 .0);
+                method_names.sort_by_key(|meth| &meth.name.name.0);
 
                 for method_name in method_names {
                     if !is_first {
                         writeln!(buf).unwrap();
                     }
-                    write!(buf, "{}::{}", type_name.0, &method_name.name.1 .0).unwrap();
+                    write!(buf, "{}::{}", type_name.0, &method_name.name.name.0).unwrap();
 
                     is_first = false;
                 }

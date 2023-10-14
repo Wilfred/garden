@@ -112,7 +112,7 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
 fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
     Ok(Expression(
-        variable.0.clone(),
+        variable.pos.clone(),
         Expression_::Variable(variable),
     ))
 }
@@ -605,7 +605,7 @@ fn parse_test(src: &str, tokens: &mut &[Token]) -> Result<Definition, ParseError
 
 fn parse_type_name(tokens: &mut &[Token<'_>]) -> Result<TypeName, ParseError> {
     let name = parse_symbol(tokens)?;
-    Ok(TypeName(name.1 .0))
+    Ok(TypeName(name.name.0))
 }
 
 fn parse_type_annotation(tokens: &mut &[Token<'_>]) -> Result<Option<TypeName>, ParseError> {
@@ -668,10 +668,10 @@ fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, Pa
     // TODO: allow parsing to return an AST even if errors are present.
     let mut seen = HashSet::new();
     for param in &params {
-        let param_name = &param.symbol.1 .0;
+        let param_name = &param.symbol.name.0;
         if seen.contains(param_name) {
             return Err(ParseError::Invalid {
-                position: param.symbol.0.clone(),
+                position: param.symbol.pos.clone(),
                 message: ErrorMessage(format!("Duplicate parameter: `{}`", param_name)),
                 // TODO: report the position of the previous parameter too.
                 additional: vec![],
@@ -755,7 +755,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
 
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens)?;
-    let receiver_name = receiver_param.symbol.1;
+    let receiver_name = receiver_param.symbol.name;
     let receiver_type = match receiver_param.type_ {
         Some(type_name) => type_name,
         None => {
@@ -872,10 +872,10 @@ fn parse_symbol(tokens: &mut &[Token<'_>]) -> Result<Symbol, ParseError> {
         }
     }
 
-    Ok(Symbol(
-        variable_token.position,
-        SymbolName(variable_token.text.to_string()),
-    ))
+    Ok(Symbol {
+        pos: variable_token.position,
+        name: SymbolName(variable_token.text.to_string()),
+    })
 }
 
 fn parse_let_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
@@ -900,7 +900,7 @@ fn parse_assign_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
-        variable.0.clone(),
+        variable.pos.clone(),
         Expression_::Assign(variable, Box::new(expr)),
     ))
 }
@@ -1094,15 +1094,15 @@ mod tests {
                     line_number: 0,
                     path: PathBuf::from("__test.gdn")
                 },
-                Expression_::Variable(Symbol(
-                    Position {
+                Expression_::Variable(Symbol {
+                    pos: Position {
                         start_offset: 0,
                         end_offset: 7,
                         line_number: 0,
                         path: PathBuf::from("__test.gdn")
                     },
-                    SymbolName("abc_def".to_string())
-                ))
+                    name: SymbolName("abc_def".to_string())
+                })
             )]
         );
     }
@@ -1121,15 +1121,15 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
-                    Symbol(
-                        Position {
+                    Symbol {
+                        pos: Position {
                             start_offset: 4,
                             end_offset: 5,
                             line_number: 0,
                             path: PathBuf::from("__test.gdn")
                         },
-                        SymbolName("x".into())
-                    ),
+                        name: SymbolName("x".into())
+                    },
                     Box::new(Expression(
                         Position {
                             start_offset: 8,
@@ -1158,15 +1158,15 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Let(
-                    Symbol(
-                        Position {
+                    Symbol {
+                        pos: Position {
                             start_offset: 4,
                             end_offset: 5,
                             line_number: 0,
                             path: PathBuf::from("__test.gdn")
                         },
-                        SymbolName("A".into())
-                    ),
+                        name: SymbolName("A".into())
+                    },
                     Box::new(Expression(
                         Position {
                             start_offset: 8,
@@ -1262,15 +1262,15 @@ mod tests {
                             line_number: 0,
                             path: path.clone()
                         },
-                        Expression_::Variable(Symbol(
-                            Position {
+                        Expression_::Variable(Symbol {
+                            pos: Position {
                                 start_offset: 4,
                                 end_offset: 5,
                                 line_number: 0,
                                 path: path.clone()
                             },
-                            SymbolName("x".into())
-                        ))
+                            name: SymbolName("x".into())
+                        })
                     )),
                     Block {
                         open_brace: Position {
@@ -1315,15 +1315,15 @@ mod tests {
                                         line_number: 0,
                                         path: path.clone()
                                     },
-                                    Expression_::Variable(Symbol(
-                                        Position {
+                                    Expression_::Variable(Symbol {
+                                        pos: Position {
                                             start_offset: 19,
                                             end_offset: 20,
                                             line_number: 0,
                                             path: path.clone()
                                         },
-                                        SymbolName("y".into())
-                                    ))
+                                        name: SymbolName("y".into())
+                                    })
                                 )),
                                 Block {
                                     open_brace: Position {
@@ -1449,15 +1449,15 @@ mod tests {
                                     line_number: 0,
                                     path: PathBuf::from("__test.gdn")
                                 },
-                                Expression_::Variable(Symbol(
-                                    Position {
+                                Expression_::Variable(Symbol {
+                                    pos: Position {
                                         start_offset: 0,
                                         end_offset: 3,
                                         line_number: 0,
                                         path: PathBuf::from("__test.gdn")
                                     },
-                                    SymbolName("foo".into())
-                                ))
+                                    name: SymbolName("foo".into())
+                                })
                             )),
                             vec![]
                         )
@@ -1489,30 +1489,30 @@ mod tests {
                     path: path.clone()
                 },
                 Definition_::FunDefinition(
-                    Symbol(
-                        Position {
+                    Symbol {
+                        pos: Position {
                             start_offset: 22,
                             end_offset: 25,
                             line_number: 2,
                             path: path.clone(),
                         },
-                        SymbolName("foo".into())
-                    ),
+                        name: SymbolName("foo".into())
+                    },
                     FunInfo {
                         src_string: SourceString {
                             offset: 0,
                             src: "// Hello\n// World\nfun foo() {}".to_owned()
                         },
                         doc_comment: Some("Hello\nWorld".into()),
-                        name: Some(Symbol(
-                            Position {
+                        name: Some(Symbol {
+                            pos: Position {
                                 start_offset: 22,
                                 end_offset: 25,
                                 line_number: 2,
                                 path: path.clone(),
                             },
-                            SymbolName("foo".into())
-                        )),
+                            name: SymbolName("foo".into())
+                        }),
                         params: vec![],
                         body: Block {
                             open_brace: Position {
@@ -1570,15 +1570,15 @@ mod tests {
                         path: PathBuf::from("__test.gdn")
                     },
                     Expression_::Let(
-                        Symbol(
-                            Position {
+                        Symbol {
+                            pos: Position {
                                 start_offset: 4,
                                 end_offset: 5,
                                 line_number: 0,
                                 path: PathBuf::from("__test.gdn")
                             },
-                            SymbolName("x".into())
-                        ),
+                            name: SymbolName("x".into())
+                        },
                         Box::new(Expression(
                             Position {
                                 start_offset: 8,

@@ -154,7 +154,10 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("String".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol(Position::todo(), SymbolName("len".to_owned())),
+                name: Symbol {
+                    pos: Position::todo(),
+                    name: SymbolName("len".to_owned()),
+                },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen),
             },
         );
@@ -163,7 +166,10 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("String".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol(Position::todo(), SymbolName("substring".to_owned())),
+                name: Symbol {
+                    pos: Position::todo(),
+                    name: SymbolName("substring".to_owned()),
+                },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring),
             },
         );
@@ -172,7 +178,10 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("String".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol(Position::todo(), SymbolName("concat".to_owned())),
+                name: Symbol {
+                    pos: Position::todo(),
+                    name: SymbolName("concat".to_owned()),
+                },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringConcat),
             },
         );
@@ -185,7 +194,10 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("List".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol(Position::todo(), SymbolName("append".to_owned())),
+                name: Symbol {
+                    pos: Position::todo(),
+                    name: SymbolName("append".to_owned()),
+                },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend),
             },
         );
@@ -194,7 +206,10 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("List".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol(Position::todo(), SymbolName("len".to_owned())),
+                name: Symbol {
+                    pos: Position::todo(),
+                    name: SymbolName("len".to_owned()),
+                },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen),
             },
         );
@@ -203,7 +218,10 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("List".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol(Position::todo(), SymbolName("get".to_owned())),
+                name: Symbol {
+                    pos: Position::todo(),
+                    name: SymbolName("get".to_owned()),
+                },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet),
             },
         );
@@ -267,7 +285,7 @@ impl Env {
             .methods
             .entry(method_info.receiver_type.clone())
             .or_default();
-        type_methods.insert(method_info.name.1.clone(), method_info.clone());
+        type_methods.insert(method_info.name.name.clone(), method_info.clone());
     }
 }
 
@@ -393,7 +411,7 @@ pub fn eval_toplevel_tests(
             ToplevelItem::Def(def) => match &def.2 {
                 Definition_::TestDefinition(test) => {
                     let enclosing_name = match &test.name {
-                        Some(name) => name.1.clone(),
+                        Some(name) => name.name.clone(),
                         None => SymbolName("__unnamed_test".to_owned()),
                     };
 
@@ -440,7 +458,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
         // ```
         match &definition.2 {
             Definition_::FunDefinition(name, fun_info) => {
-                env.set_with_file_scope(&name.1, Value::Fun(name.clone(), fun_info.clone()));
+                env.set_with_file_scope(&name.name, Value::Fun(name.clone(), fun_info.clone()));
             }
             Definition_::MethodDefinition(meth_info) => {
                 env.add_method(meth_info);
@@ -602,7 +620,7 @@ fn eval_while(
 }
 
 fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
-    let var_name = &variable.1;
+    let var_name = &variable.name;
     if !stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
             message: ErrorMessage(format!(
@@ -610,7 +628,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
                 var_name.0, var_name.0
             )),
             restore_values: vec![],
-            error_position: variable.0.clone(),
+            error_position: variable.pos.clone(),
         });
     }
 
@@ -627,7 +645,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
 }
 
 fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
-    let var_name = &variable.1;
+    let var_name = &variable.name;
     if stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
             message: ErrorMessage(format!(
@@ -635,7 +653,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
                 var_name.0, var_name.0
             )),
             restore_values: vec![],
-            error_position: variable.0.clone(),
+            error_position: variable.pos.clone(),
         });
     }
 
@@ -1151,7 +1169,7 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-                let param_name = &param.symbol.1;
+                let param_name = &param.symbol.name;
                 fun_bindings.insert(param_name.clone(), value.1.clone());
             }
 
@@ -1173,7 +1191,7 @@ fn eval_call(
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
             // Calling a user-defined function.
 
-            check_arity(&name.1 .0, &receiver_value, params.len(), &arg_values)?;
+            check_arity(&name.name.0, &receiver_value, params.len(), &arg_values)?;
 
             check_param_types(&receiver_value, params, &arg_values)?;
 
@@ -1184,7 +1202,7 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in params.iter().zip(arg_values.iter()) {
-                let param_name = &param.symbol.1;
+                let param_name = &param.symbol.name;
                 fun_bindings.insert(param_name.clone(), value.1.clone());
             }
 
@@ -1192,10 +1210,10 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(receiver_value.0.clone()),
-                enclosing_name: name.1.clone(),
+                enclosing_name: name.name.clone(),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![(name.0.clone(), Value::Void)],
+                evalled_values: vec![(name.pos.clone(), Value::Void)],
             }));
         }
         Value::BuiltinFunction(kind) => eval_builtin_call(
@@ -1278,7 +1296,7 @@ fn eval_method_call(
     let receiver_type_name = type_representation(&receiver_value.1);
     let receiver_method = match env.methods.get(&receiver_type_name) {
         Some(receiver_methods) => {
-            if let Some(method) = receiver_methods.get(&meth_name.1) {
+            if let Some(method) = receiver_methods.get(&meth_name.name) {
                 method
             } else {
                 let mut saved_values = vec![receiver_value.clone()];
@@ -1289,10 +1307,10 @@ fn eval_method_call(
                 return Err(ErrorInfo {
                     message: ErrorMessage(format!(
                         "No method named `{}` on `{}`.",
-                        meth_name.1 .0, receiver_type_name.0
+                        meth_name.name.0, receiver_type_name.0
                     )),
                     restore_values: saved_values,
-                    error_position: meth_name.0.clone(),
+                    error_position: meth_name.pos.clone(),
                 });
             }
         }
@@ -1305,7 +1323,7 @@ fn eval_method_call(
             return Err(ErrorInfo {
                 message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name.0)),
                 restore_values: saved_values,
-                error_position: meth_name.0.clone(),
+                error_position: meth_name.pos.clone(),
             });
         }
     };
@@ -1325,7 +1343,7 @@ fn eval_method_call(
 
     // TODO: use a fully qualified method name here?
     check_arity(
-        &meth_name.1 .0,
+        &meth_name.name.0,
         &receiver_value,
         fun_info.params.len(),
         &arg_values,
@@ -1335,14 +1353,14 @@ fn eval_method_call(
     // TODO: parameter names must not clash with the receiver name.
     let mut fun_bindings = HashMap::new();
     for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-        let param_name = &param.symbol.1;
+        let param_name = &param.symbol.name;
         fun_bindings.insert(param_name.clone(), value.1.clone());
     }
     fun_bindings.insert(receiver_method.receiver_name.clone(), receiver_value.1);
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
-        enclosing_name: SymbolName(format!("{}::{}", receiver_type_name.0, meth_name.1 .0)),
+        enclosing_name: SymbolName(format!("{}::{}", receiver_type_name.0, meth_name.name.0)),
         src: fun_info.src_string.clone(),
         caller_pos: Some(receiver_value.0.clone()),
         bindings: Bindings::new_with(fun_bindings),
@@ -1809,10 +1827,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         }
                     }
                     Expression_::Variable(name) => {
-                        if let Some(value) = get_var(&name.1, &stack_frame, env) {
+                        if let Some(value) = get_var(&name.name, &stack_frame, env) {
                             stack_frame.evalled_values.push((expr_position, value));
                         } else {
-                            let suggestion = match most_similar_var(&name.1, &stack_frame, env) {
+                            let suggestion = match most_similar_var(&name.name, &stack_frame, env) {
                                 Some(closest_name) => format!(" Did you mean {}?", closest_name.0),
                                 None => "".to_owned(),
                             };
@@ -1825,10 +1843,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             );
 
                             return Err(EvalError::ResumableError(
-                                name.0.clone(),
+                                name.pos.clone(),
                                 ErrorMessage(format!(
                                     "Undefined variable: {}.{}",
-                                    name.1 .0, suggestion
+                                    name.name.0, suggestion
                                 )),
                             ));
                         }
@@ -2158,15 +2176,15 @@ mod tests {
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
-                Symbol(
-                    Position {
+                Symbol {
+                    pos: Position {
                         start_offset: 0,
                         end_offset: 0,
                         line_number: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
-                    SymbolName("foo".into()),
-                ),
+                    name: SymbolName("foo".into()),
+                },
                 Box::new(Expression(
                     Position {
                         start_offset: 0,
@@ -2187,15 +2205,15 @@ mod tests {
                 line_number: 0,
                 path: PathBuf::from("__test.gdn"),
             },
-            Expression_::Variable(Symbol(
-                Position {
+            Expression_::Variable(Symbol {
+                pos: Position {
                     start_offset: 0,
                     end_offset: 0,
                     line_number: 0,
                     path: PathBuf::from("__test.gdn"),
                 },
-                SymbolName("foo".into()),
-            )),
+                name: SymbolName("foo".into()),
+            }),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
     }

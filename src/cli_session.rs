@@ -153,7 +153,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     .pop()
                     .expect("Tried to skip an expression, but none in this frame.");
             }
-
+            Err(ReadError::NeedsEval(EvalAction::RunTest(_))) => {
+                // Push test then continue to eval_env().
+                todo!()
+            }
             Err(ReadError::ReadlineError) => {
                 break;
             }

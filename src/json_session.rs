@@ -195,6 +195,7 @@ fn handle_request(
                             }),
                         },
                     },
+                    Err(EvalAction::RunTest(_)) => todo!(),
                     Err(EvalAction::Replace(_)) => todo!(),
                     Err(EvalAction::Skip) => todo!(),
                 }

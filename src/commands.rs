@@ -163,6 +163,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 #[derive(Debug)]
 pub enum EvalAction {
     Replace(ast::Expression),
+    RunTest(String),
     Resume,
     Abort,
     Skip,
@@ -440,9 +441,18 @@ pub fn run_command<T: Write>(
         Command::Stack => {
             print_stack(buf, env);
         }
-        Command::Test(_) => {
-            todo!();
-        }
+        Command::Test(name) => match name {
+            Some(name) => {
+                let name_sym = SymbolName(name.clone());
+                match env.tests.get(&name_sym) {
+                    Some(_) => {
+                        return Err(EvalAction::RunTest(name.clone()));
+                    }
+                    None => write!(buf, "No test found named `{}`.", name).unwrap(),
+                }
+            }
+            None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.").unwrap(),
+        },
         Command::Trace => {
             env.trace_exprs = !env.trace_exprs;
             write!(

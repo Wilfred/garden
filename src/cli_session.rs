@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use crate::ast::ToplevelItem;
 use crate::commands::{
-    print_available_commands, run_command, Command, EvalAction, CommandParseError,
+    print_available_commands, run_command, Command, CommandParseError, EvalAction,
 };
 use crate::diagnostics::format_error;
 use crate::eval::EvalError;

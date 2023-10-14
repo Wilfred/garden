@@ -12,7 +12,7 @@ use crate::diagnostics::{format_error, format_parse_error};
 use crate::eval::{eval_env, eval_toplevel_items};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
 use crate::{
-    commands::{print_available_commands, run_command, Command, EvalAction, CommandParseError},
+    commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{Env, EvalError, Session},
 };
 

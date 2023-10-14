@@ -1151,7 +1151,7 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-                let param_name = &param.0 .1;
+                let param_name = &param.symbol.1;
                 fun_bindings.insert(param_name.clone(), value.1.clone());
             }
 
@@ -1184,7 +1184,7 @@ fn eval_call(
 
             let mut fun_bindings = HashMap::new();
             for (param, value) in params.iter().zip(arg_values.iter()) {
-                let param_name = &param.0 .1;
+                let param_name = &param.symbol.1;
                 fun_bindings.insert(param_name.clone(), value.1.clone());
             }
 
@@ -1230,7 +1230,7 @@ fn check_param_types(
     arg_values: &[(Position, Value)],
 ) -> Result<(), ErrorInfo> {
     for (param, arg_value) in params.iter().zip(arg_values) {
-        if let Some(param_ty) = &param.1 {
+        if let Some(param_ty) = &param.type_ {
             if let Err(msg) = check_type(&arg_value.1, param_ty) {
                 let mut saved_values = vec![];
                 saved_values.push(receiver_value.clone());
@@ -1335,7 +1335,7 @@ fn eval_method_call(
     // TODO: parameter names must not clash with the receiver name.
     let mut fun_bindings = HashMap::new();
     for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-        let param_name = &param.0 .1;
+        let param_name = &param.symbol.1;
         fun_bindings.insert(param_name.clone(), value.1.clone());
     }
     fun_bindings.insert(receiver_method.receiver_name.clone(), receiver_value.1);

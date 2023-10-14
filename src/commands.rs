@@ -195,10 +195,10 @@ fn describe_fun(value: &Value) -> Option<String> {
                     res.push_str(", ");
                 }
 
-                let name = &param.0;
+                let name = &param.symbol;
                 res.push_str(&name.1 .0);
 
-                if let Some(param_ty) = &param.1 {
+                if let Some(param_ty) = &param.type_ {
                     res.push_str(&format!(": {}", param_ty.0));
                 }
             }

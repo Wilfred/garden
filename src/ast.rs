@@ -58,7 +58,10 @@ pub struct SymbolName(pub String);
 pub struct Symbol(pub Position, pub SymbolName);
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SymbolWithType(pub Symbol, pub Option<TypeName>);
+pub struct SymbolWithType {
+    pub symbol: Symbol,
+    pub type_: Option<TypeName>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BinaryOperatorKind {

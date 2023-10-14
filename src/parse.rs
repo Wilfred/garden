@@ -622,7 +622,10 @@ fn parse_type_annotation(tokens: &mut &[Token<'_>]) -> Result<Option<TypeName>, 
 fn parse_parameter(tokens: &mut &[Token<'_>]) -> Result<SymbolWithType, ParseError> {
     let param = parse_symbol(tokens)?;
     let param_type = parse_type_annotation(tokens)?;
-    Ok(SymbolWithType(param, param_type))
+    Ok(SymbolWithType {
+        symbol: param,
+        type_: param_type,
+    })
 }
 
 fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, ParseError> {
@@ -665,10 +668,10 @@ fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, Pa
     // TODO: allow parsing to return an AST even if errors are present.
     let mut seen = HashSet::new();
     for param in &params {
-        let param_name = &param.0 .1 .0;
+        let param_name = &param.symbol.1 .0;
         if seen.contains(param_name) {
             return Err(ParseError::Invalid {
-                position: param.0 .0.clone(),
+                position: param.symbol.0.clone(),
                 message: ErrorMessage(format!("Duplicate parameter: `{}`", param_name)),
                 // TODO: report the position of the previous parameter too.
                 additional: vec![],
@@ -752,8 +755,8 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
 
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens)?;
-    let receiver_name = receiver_param.0 .1;
-    let receiver_type = match receiver_param.1 {
+    let receiver_name = receiver_param.symbol.1;
+    let receiver_type = match receiver_param.type_ {
         Some(type_name) => type_name,
         None => {
             return Err(ParseError::Incomplete(ErrorMessage(

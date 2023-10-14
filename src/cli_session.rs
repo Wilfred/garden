@@ -19,7 +19,7 @@ use owo_colors::OwoColorize;
 use rustyline::Editor;
 
 enum ReadError {
-    CommandError(EvalAction),
+    NeedsEval(EvalAction),
     ReadlineError,
 }
 
@@ -45,7 +45,7 @@ fn read_expr(
                             continue;
                         }
                         Err(e) => {
-                            return Err(ReadError::CommandError(e));
+                            return Err(ReadError::NeedsEval(e));
                         }
                     },
                     Err(CommandParseError::NoSuchCommand) => {
@@ -128,16 +128,16 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     stack_frame.exprs_to_eval.push((false, expr.1.clone()));
                 }
             }
-            Err(ReadError::CommandError(EvalAction::Abort)) => {
+            Err(ReadError::NeedsEval(EvalAction::Abort)) => {
                 // TODO: doesn't this need to pop the stack to the toplevel?
                 // It seems to be working already.
                 is_stopped = false;
                 continue;
             }
-            Err(ReadError::CommandError(EvalAction::Resume)) => {
+            Err(ReadError::NeedsEval(EvalAction::Resume)) => {
                 // Continue to eval_env below.
             }
-            Err(ReadError::CommandError(EvalAction::Replace(expr))) => {
+            Err(ReadError::NeedsEval(EvalAction::Replace(expr))) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
                 stack_frame.evalled_values.pop();
@@ -145,7 +145,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 // TODO: Prevent :replace when we've not just halted.
             }
-            Err(ReadError::CommandError(EvalAction::Skip)) => {
+            Err(ReadError::NeedsEval(EvalAction::Skip)) => {
                 let stack_frame = env.stack.last_mut().unwrap();
 
                 stack_frame

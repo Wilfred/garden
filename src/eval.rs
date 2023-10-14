@@ -12,7 +12,7 @@ use strum::IntoEnumIterator;
 
 use crate::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Position,
-    SourceString, Symbol, SymbolWithType, ToplevelItem, TypeName,
+    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::json_session::{Response, ResponseKind};
@@ -130,6 +130,7 @@ pub struct Env {
     pub trace_exprs: bool,
     pub file_scope: HashMap<SymbolName, Value>,
     pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
+    pub tests: HashMap<SymbolName, TestInfo>,
     pub types: Vec<TypeName>,
     pub stack: Vec<StackFrame>,
 }
@@ -243,6 +244,7 @@ impl Default for Env {
             trace_exprs: false,
             file_scope,
             methods,
+            tests: HashMap::new(),
             types,
             stack: vec![StackFrame {
                 caller_pos: None,
@@ -406,38 +408,45 @@ pub fn eval_toplevel_tests(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut tests_passed = 0;
 
+    let mut test_defs = vec![];
     for item in items {
-        match item {
-            ToplevelItem::Def(def) => match &def.2 {
-                Definition_::TestDefinition(test) => {
-                    let enclosing_name = match &test.name {
-                        Some(name) => name.name.clone(),
-                        None => SymbolName("__unnamed_test".to_owned()),
-                    };
-
-                    let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
-                    for expr in test.body.exprs.iter().rev() {
-                        exprs_to_eval.push((false, expr.clone()));
-                    }
-
-                    let stack_frame = StackFrame {
-                        src: test.src_string.clone(),
-                        enclosing_name,
-                        enclosing_fun: None,
-                        caller_pos: None,
-                        bindings: Bindings::default(),
-                        exprs_to_eval,
-                        evalled_values: vec![],
-                    };
-
-                    env.stack.push(stack_frame);
-                    eval_env(env, session)?;
-                    tests_passed += 1;
-                }
-                _ => {}
-            },
-            ToplevelItem::Expr(_) => {}
+        if let ToplevelItem::Def(Definition(_, _, Definition_::TestDefinition(test))) = item {
+            test_defs.push(test);
         }
+    }
+
+    // Update all the test definitions in the environment before
+    // evaluating anything.
+    for test in &test_defs {
+        if let Some(test_sym) = &test.name {
+            env.tests.insert(test_sym.name.clone(), (*test).clone());
+        }
+    }
+
+    for test in test_defs {
+        let enclosing_name = match &test.name {
+            Some(name) => name.name.clone(),
+            None => SymbolName("__unnamed_test".to_owned()),
+        };
+
+        let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
+        for expr in test.body.exprs.iter().rev() {
+            exprs_to_eval.push((false, expr.clone()));
+        }
+
+        let stack_frame = StackFrame {
+            src: test.src_string.clone(),
+            enclosing_name,
+            enclosing_fun: None,
+            caller_pos: None,
+            bindings: Bindings::default(),
+            exprs_to_eval,
+            evalled_values: vec![],
+        };
+
+        env.stack.push(stack_frame);
+        eval_env(env, session)?;
+        tests_passed += 1;
     }
 
     Ok(ToplevelEvalSummary {

@@ -410,7 +410,7 @@ pub fn eval_toplevel_tests(
 
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem::Def(Definition(_, _, Definition_::TestDefinition(test))) = item {
+        if let ToplevelItem::Def(Definition(_, _, Definition_::Test(test))) = item {
             test_defs.push(test);
         }
     }
@@ -466,13 +466,13 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
         // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
         // ```
         match &definition.2 {
-            Definition_::FunDefinition(name, fun_info) => {
+            Definition_::Fun(name, fun_info) => {
                 env.set_with_file_scope(&name.name, Value::Fun(name.clone(), fun_info.clone()));
             }
-            Definition_::MethodDefinition(meth_info) => {
+            Definition_::Method(meth_info) => {
                 env.add_method(meth_info);
             }
-            Definition_::TestDefinition(_) => {}
+            Definition_::Test(_) => {}
         }
     }
 }

@@ -594,7 +594,7 @@ fn parse_test(src: &str, tokens: &mut &[Token]) -> Result<Definition, ParseError
     Ok(Definition(
         src_string.clone(),
         test_token.position,
-        Definition_::TestDefinition(TestInfo {
+        Definition_::Test(TestInfo {
             src_string,
             doc_comment,
             name,
@@ -802,7 +802,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
     Ok(Definition(
         src_string.clone(),
         fun_token.position,
-        Definition_::MethodDefinition(meth_info),
+        Definition_::Method(meth_info),
     ))
 }
 
@@ -831,7 +831,7 @@ fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pa
     Ok(Definition(
         src_string.clone(),
         fun_token.position,
-        Definition_::FunDefinition(
+        Definition_::Fun(
             name.clone(),
             FunInfo {
                 src_string,
@@ -1488,7 +1488,7 @@ mod tests {
                     line_number: 2,
                     path: path.clone()
                 },
-                Definition_::FunDefinition(
+                Definition_::Fun(
                     Symbol {
                         pos: Position {
                             start_offset: 22,
@@ -1542,7 +1542,7 @@ mod tests {
         let defs = parse_defs_from_str(src).unwrap();
 
         assert_eq!(defs.len(), 1);
-        assert!(matches!(defs[0].2, Definition_::MethodDefinition(_)));
+        assert!(matches!(defs[0].2, Definition_::Method(_)));
     }
 
     #[test]

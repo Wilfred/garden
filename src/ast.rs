@@ -234,12 +234,12 @@ pub enum Definition_ {
     /// ```garden
     /// fun foo() {}
     /// ```
-    FunDefinition(Symbol, FunInfo),
+    Fun(Symbol, FunInfo),
     /// ```garden
     /// fun (self: List) foo() {}
     /// ```
-    MethodDefinition(MethodInfo),
-    TestDefinition(TestInfo),
+    Method(MethodInfo),
+    Test(TestInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

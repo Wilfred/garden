@@ -2,6 +2,8 @@
 // TODO: File an issue.
 #![allow(suspicious_double_ref_op)]
 
+#![warn(clippy::todo)]
+
 mod ast;
 mod cli_session;
 mod colors;

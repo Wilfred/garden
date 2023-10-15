@@ -85,7 +85,7 @@ fn handle_eval_request(
         Ok(items) => match eval_toplevel_items(&items, env, session) {
             Ok(result) => {
                 let definition_summary = if result.definitions == 1 {
-                    format!("Loaded 1 definition")
+                    "Loaded 1 definition".to_owned()
                 } else {
                     format!("Loaded {} definitions", result.definitions)
                 };

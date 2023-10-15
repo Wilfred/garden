@@ -941,7 +941,7 @@ fn eval_builtin_call(
                     } else {
                         let response = Response {
                             kind: ResponseKind::Printed,
-                            value: Ok(format!("{}", s)),
+                            value: Ok(s.clone()),
                         };
                         let serialized = serde_json::to_string(&response).unwrap();
                         println!("{}", serialized);

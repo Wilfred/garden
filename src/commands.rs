@@ -43,7 +43,7 @@ pub enum Command {
 /// Split out the command name and the arguments (if any).
 fn parse_command(s: &str) -> (&str, Option<String>) {
     let s = s.trim();
-    if let Some((name, args)) = s.split_once(" ") {
+    if let Some((name, args)) = s.split_once(' ') {
         // Deliberately return an owned String because it simplifies
         // the callers.
         (name, Some(args.to_owned()))

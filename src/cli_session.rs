@@ -106,9 +106,8 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
                 let mut exprs = vec![];
                 for item in items {
-                    match item {
-                        ToplevelItem::Expr(expr) => exprs.push(expr),
-                        _ => {}
+                    if let ToplevelItem::Expr(expr) = item {
+                        exprs.push(expr);
                     }
                 }
 

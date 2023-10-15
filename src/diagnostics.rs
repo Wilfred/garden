@@ -61,7 +61,7 @@ pub fn format_error(message: &ErrorMessage, position: &Position, src: &str) -> S
     format!(
         "Error: {}\n{}",
         message.0,
-        String::from_utf8_lossy(&res).to_string()
+        String::from_utf8_lossy(&res)
     )
 }
 

@@ -163,7 +163,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 #[derive(Debug)]
 pub enum EvalAction {
     Replace(ast::Expression),
-    RunTest(String),
+    RunTest(SymbolName),
     Resume,
     Abort,
     Skip,
@@ -446,7 +446,7 @@ pub fn run_command<T: Write>(
                 let name_sym = SymbolName(name.clone());
                 match env.tests.get(&name_sym) {
                     Some(_) => {
-                        return Err(EvalAction::RunTest(name.clone()));
+                        return Err(EvalAction::RunTest(name_sym));
                     }
                     None => write!(buf, "No test found named `{}`.", name).unwrap(),
                 }

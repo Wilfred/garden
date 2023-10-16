@@ -155,7 +155,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(ReadError::NeedsEval(EvalAction::RunTest(_name))) => {
                 // Push test then continue to eval_env().
                 let test = todo!();
-                push_test_stackframe(test, &mut env, &mut session);
+                push_test_stackframe(test, &mut env);
             }
             Err(ReadError::ReadlineError) => {
                 break;

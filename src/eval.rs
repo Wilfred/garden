@@ -424,7 +424,7 @@ pub fn eval_toplevel_tests(
     }
 
     for test in test_defs {
-        push_test_stackframe(test, env, session);
+        push_test_stackframe(test, env);
         eval_env(env, session)?;
 
         tests_passed += 1;
@@ -438,7 +438,7 @@ pub fn eval_toplevel_tests(
     })
 }
 
-pub fn push_test_stackframe(test: &TestInfo, env: &mut Env, session: &mut Session<'_>) {
+pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let enclosing_name = match &test.name {
         Some(name) => name.name.clone(),
         None => SymbolName("__unnamed_test".to_owned()),

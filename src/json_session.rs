@@ -173,31 +173,19 @@ fn handle_request(
                         kind: ResponseKind::RunCommand,
                         value: Ok("Aborted".to_string()),
                     },
-                    Err(EvalAction::Resume) => match eval_env(env, session) {
-                        Ok(result) => Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Ok(format!("{}", result)),
-                        },
-                        Err(EvalError::ResumableError(position, e)) => Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Err(ResponseError {
-                                position: Some(position),
-                                message: format!("Error: {}", e.0),
-                                stack: None,
-                            }),
-                        },
-                        Err(EvalError::Interrupted) => Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Err(ResponseError {
-                                position: None,
-                                message: "Interrupted".to_string(),
-                                stack: None,
-                            }),
-                        },
-                    },
+                    Err(EvalAction::Resume) => eval_to_response(env, session),
                     Err(EvalAction::RunTest(_)) => todo!(),
                     Err(EvalAction::Replace(_)) => todo!(),
-                    Err(EvalAction::Skip) => todo!(),
+                    Err(EvalAction::Skip) => {
+                        let stack_frame = env.stack.last_mut().unwrap();
+
+                        stack_frame
+                            .exprs_to_eval
+                            .pop()
+                            .expect("Tried to skip an expression, but none in this frame.");
+
+                        eval_to_response(env, session)
+                    }
                 }
             }
             Err(CommandParseError::NoSuchCommand) => {
@@ -217,6 +205,31 @@ fn handle_request(
             Err(CommandParseError::NotCommandSyntax) => {
                 handle_eval_request(req, env, session, complete_src)
             }
+        },
+    }
+}
+
+fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
+    match eval_env(env, session) {
+        Ok(result) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Ok(format!("{}", result)),
+        },
+        Err(EvalError::ResumableError(position, e)) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(ResponseError {
+                position: Some(position),
+                message: format!("Error: {}", e.0),
+                stack: None,
+            }),
+        },
+        Err(EvalError::Interrupted) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(ResponseError {
+                position: None,
+                message: "Interrupted".to_string(),
+                stack: None,
+            }),
         },
     }
 }

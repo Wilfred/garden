@@ -9,8 +9,8 @@ use crate::commands::{
     print_available_commands, run_command, Command, CommandParseError, EvalAction,
 };
 use crate::diagnostics::format_error;
-use crate::eval::EvalError;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
+use crate::eval::{push_test_stackframe, EvalError};
 use crate::parse::{parse_toplevel_items, ParseError};
 use crate::values::Value;
 use crate::{eval::Env, prompt::prompt_symbol};
@@ -152,9 +152,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     .pop()
                     .expect("Tried to skip an expression, but none in this frame.");
             }
-            Err(ReadError::NeedsEval(EvalAction::RunTest(_))) => {
+            Err(ReadError::NeedsEval(EvalAction::RunTest(_name))) => {
                 // Push test then continue to eval_env().
-                todo!()
+                let test = todo!();
+                push_test_stackframe(test, &mut env, &mut session);
             }
             Err(ReadError::ReadlineError) => {
                 break;

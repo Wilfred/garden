@@ -424,7 +424,9 @@ pub fn eval_toplevel_tests(
     }
 
     for test in test_defs {
-        eval_test(test, env, session)?;
+        push_test_stackframe(test, env, session);
+        eval_env(env, session)?;
+
         tests_passed += 1;
     }
 
@@ -436,7 +438,7 @@ pub fn eval_toplevel_tests(
     })
 }
 
-fn eval_test(test: &TestInfo, env: &mut Env, session: &mut Session<'_>) -> Result<(), EvalError> {
+pub fn push_test_stackframe(test: &TestInfo, env: &mut Env, session: &mut Session<'_>) {
     let enclosing_name = match &test.name {
         Some(name) => name.name.clone(),
         None => SymbolName("__unnamed_test".to_owned()),
@@ -455,8 +457,6 @@ fn eval_test(test: &TestInfo, env: &mut Env, session: &mut Session<'_>) -> Resul
         evalled_values: vec![],
     };
     env.stack.push(stack_frame);
-    eval_env(env, session)?;
-    Ok(())
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {

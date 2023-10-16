@@ -424,28 +424,7 @@ pub fn eval_toplevel_tests(
     }
 
     for test in test_defs {
-        let enclosing_name = match &test.name {
-            Some(name) => name.name.clone(),
-            None => SymbolName("__unnamed_test".to_owned()),
-        };
-
-        let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
-        for expr in test.body.exprs.iter().rev() {
-            exprs_to_eval.push((false, expr.clone()));
-        }
-
-        let stack_frame = StackFrame {
-            src: test.src_string.clone(),
-            enclosing_name,
-            enclosing_fun: None,
-            caller_pos: None,
-            bindings: Bindings::default(),
-            exprs_to_eval,
-            evalled_values: vec![],
-        };
-
-        env.stack.push(stack_frame);
-        eval_env(env, session)?;
+        eval_test(test, env, session)?;
         tests_passed += 1;
     }
 
@@ -455,6 +434,29 @@ pub fn eval_toplevel_tests(
         tests_passed,
         tests_failed: 0,
     })
+}
+
+fn eval_test(test: &TestInfo, env: &mut Env, session: &mut Session<'_>) -> Result<(), EvalError> {
+    let enclosing_name = match &test.name {
+        Some(name) => name.name.clone(),
+        None => SymbolName("__unnamed_test".to_owned()),
+    };
+    let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
+    for expr in test.body.exprs.iter().rev() {
+        exprs_to_eval.push((false, expr.clone()));
+    }
+    let stack_frame = StackFrame {
+        src: test.src_string.clone(),
+        enclosing_name,
+        enclosing_fun: None,
+        caller_pos: None,
+        bindings: Bindings::default(),
+        exprs_to_eval,
+        evalled_values: vec![],
+    };
+    env.stack.push(stack_frame);
+    eval_env(env, session)?;
+    Ok(())
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) {

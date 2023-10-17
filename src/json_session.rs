@@ -175,7 +175,8 @@ fn handle_request(
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
                     Err(EvalAction::RunTest(name)) => {
-                        let test = match env.tests.get(&name) {
+                        let test_opt = env.tests.get(&name).cloned();
+                        match test_opt {
                             Some(test) => {
                                 push_test_stackframe(&test, env);
                                 eval_to_response(env, session)
@@ -190,7 +191,7 @@ fn handle_request(
                                     }),
                                 }
                             }
-                        };
+                        }
                     }
                     Err(EvalAction::Replace(_)) => todo!(),
                     Err(EvalAction::Skip) => {

@@ -474,7 +474,11 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
             Definition_::Method(meth_info) => {
                 env.add_method(meth_info);
             }
-            Definition_::Test(_) => {}
+            Definition_::Test(test) => {
+                if let Some(test_sym) = &test.name {
+                    env.tests.insert(test_sym.name.clone(), test.clone());
+                }
+            }
         }
     }
 }

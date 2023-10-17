@@ -48,6 +48,17 @@
     (when (region-active-p)
       (deactivate-mark))))
 
+(defun garden-send-buffer ()
+  (interactive)
+  (garden-send-input
+   (save-restriction
+     (widen)
+     (buffer-substring-no-properties (point-min) (point-max)))
+   (buffer-file-name)
+   ;; Emacs point is one-indexed, convert to zero-indexed.
+   (1- (point-min))
+   (1- (point-max))))
+
 (defun garden--backward-expr ()
   "Move point back to the start of the expression before point."
   (when (looking-back (rx "}") 1)

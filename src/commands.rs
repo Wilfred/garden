@@ -443,13 +443,7 @@ pub fn run_command<T: Write>(
         }
         Command::Test(name) => match name {
             Some(name) => {
-                let name_sym = SymbolName(name.clone());
-                match env.tests.get(&name_sym) {
-                    Some(_) => {
-                        return Err(EvalAction::RunTest(name_sym));
-                    }
-                    None => write!(buf, "No test found named `{}`.", name).unwrap(),
-                }
+                return Err(EvalAction::RunTest(SymbolName(name.clone())));
             }
             None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.").unwrap(),
         },

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ast;
 use crate::diagnostics::{format_error, format_parse_error};
-use crate::eval::{eval_env, eval_toplevel_items};
+use crate::eval::{eval_env, eval_toplevel_items, push_test_stackframe};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
@@ -174,7 +174,24 @@ fn handle_request(
                         value: Ok("Aborted".to_string()),
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
-                    Err(EvalAction::RunTest(_)) => todo!(),
+                    Err(EvalAction::RunTest(name)) => {
+                        let test = match env.tests.get(&name) {
+                            Some(test) => {
+                                push_test_stackframe(&test, env);
+                                eval_to_response(env, session)
+                            }
+                            None => {
+                                Response {
+                                    kind: ResponseKind::MalformedRequest,
+                                    value: Err(ResponseError {
+                                        position: None,
+                                        message: format!("No such test: {}", name.0),
+                                        stack: None,
+                                    }),
+                                }
+                            }
+                        };
+                    }
                     Err(EvalAction::Replace(_)) => todo!(),
                     Err(EvalAction::Skip) => {
                         let stack_frame = env.stack.last_mut().unwrap();

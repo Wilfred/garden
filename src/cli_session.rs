@@ -157,7 +157,6 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 let test = match env.tests.get(&name) {
                     Some(test) => test.clone(),
                     None => {
-                        dbg!(&env.tests);
                         println!("No such test: {}", name.0);
                         continue;
                     }

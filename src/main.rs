@@ -3,6 +3,7 @@
 #![allow(suspicious_double_ref_op)]
 
 #![warn(clippy::todo)]
+#![warn(clippy::dbg_macro)]
 
 mod ast;
 mod cli_session;

@@ -274,8 +274,6 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            dbg!(&buf_str);
-
             let response = match serde_json::from_str::<Request>(&buf_str) {
                 Ok(req) => handle_request(req, &mut env, &mut session, &mut complete_src),
                 Err(_) => Response {

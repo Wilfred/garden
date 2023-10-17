@@ -152,10 +152,18 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                     .pop()
                     .expect("Tried to skip an expression, but none in this frame.");
             }
-            Err(ReadError::NeedsEval(EvalAction::RunTest(_name))) => {
+            Err(ReadError::NeedsEval(EvalAction::RunTest(name))) => {
                 // Push test then continue to eval_env().
-                let test = todo!();
-                push_test_stackframe(test, &mut env);
+                let test = match env.tests.get(&name) {
+                    Some(test) => test.clone(),
+                    None => {
+                        dbg!(&env.tests);
+                        println!("No such test: {}", name.0);
+                        continue;
+                    }
+                };
+
+                push_test_stackframe(&test, &mut env);
             }
             Err(ReadError::ReadlineError) => {
                 break;

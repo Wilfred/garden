@@ -47,7 +47,7 @@ impl<'a> TokenStream<'a> {
         self.tokens.get(self.idx).is_none()
     }
 
-    fn pop_token(&mut self) -> Option<Token<'a>> {
+    fn pop(&mut self) -> Option<Token<'a>> {
         match self.tokens.get(self.idx) {
             Some(token) => {
                 self.idx += 1;
@@ -57,11 +57,11 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    fn peek_token(&self) -> Option<Token<'a>> {
+    fn peek(&self) -> Option<Token<'a>> {
         self.tokens.get(self.idx).cloned()
     }
 
-    fn peek_two_tokens(&self) -> Option<(Token<'a>, Token<'a>)> {
+    fn peek_two(&self) -> Option<(Token<'a>, Token<'a>)> {
         match (self.tokens.get(self.idx), self.tokens.get(self.idx + 1)) {
             (Some(token1), Some(token2)) => Some((token1.clone(), token2.clone())),
             _ => None,
@@ -69,30 +69,18 @@ impl<'a> TokenStream<'a> {
     }
 }
 
-fn pop_token<'a>(tokens: &mut TokenStream<'a>) -> Option<Token<'a>> {
-    tokens.pop_token()
-}
-
-fn peek_token<'a>(tokens: &mut TokenStream<'a>) -> Option<Token<'a>> {
-    tokens.peek_token()
-}
-
 fn next_token_is(tokens: &TokenStream, token: &str) -> bool {
     tokens
-        .peek_token()
+        .peek()
         .map(|t| t.text == token)
         .unwrap_or(false)
-}
-
-fn peek_two_tokens<'a>(tokens: &TokenStream<'a>) -> Option<(Token<'a>, Token<'a>)> {
-    tokens.peek_two_tokens()
 }
 
 fn require_a_token<'a>(
     tokens: &mut TokenStream<'a>,
     token_description: &str,
 ) -> Result<Token<'a>, ParseError> {
-    match pop_token(tokens) {
+    match tokens.pop() {
         Some(token) => Ok(token),
         None => Err(ParseError::Incomplete(ErrorMessage(format!(
             "Expected {}, got EOF",
@@ -105,7 +93,7 @@ fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     expected: &str,
 ) -> Result<Token<'a>, ParseError> {
-    match pop_token(tokens) {
+    match tokens.pop() {
         Some(token) => {
             if token.text == expected {
                 Ok(token)
@@ -206,7 +194,7 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
     let then_body = parse_block(src, tokens)?;
 
     let else_body: Option<Block> = if next_token_is(tokens, "else") {
-        pop_token(tokens);
+        tokens.pop();
 
         if next_token_is(tokens, "if") {
             let if_expr = parse_if_expression(src, tokens)?;
@@ -300,7 +288,7 @@ fn unescape_string(s: &str) -> String {
 }
 
 fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    if let Some(token) = peek_token(tokens) {
+    if let Some(token) = tokens.peek() {
         if token.text == "{" {
             let exprs = parse_block(src, tokens)?;
             return Ok(Expression(token.position, Expression_::Block(exprs)));
@@ -319,11 +307,11 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         }
 
         if token.text == "true" {
-            pop_token(tokens);
+            tokens.pop();
             return Ok(Expression(token.position, Expression_::BoolLiteral(true)));
         }
         if token.text == "false" {
-            pop_token(tokens);
+            tokens.pop();
             return Ok(Expression(token.position, Expression_::BoolLiteral(false)));
         }
 
@@ -332,7 +320,7 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         }
 
         if token.text.starts_with('\"') {
-            pop_token(tokens);
+            tokens.pop();
             return Ok(Expression(
                 token.position,
                 Expression_::StringLiteral(unescape_string(token.text)),
@@ -372,9 +360,9 @@ fn parse_comma_separated_exprs(
         let arg = parse_inline_expression(src, tokens)?;
         items.push(arg);
 
-        if let Some(token) = peek_token(tokens) {
+        if let Some(token) = tokens.peek() {
             if token.text == "," {
-                pop_token(tokens);
+                tokens.pop();
             } else if token.text == terminator {
                 break;
             } else {
@@ -421,13 +409,13 @@ fn parse_simple_expression_with_trailing(
     let mut expr = parse_simple_expression(src, tokens)?;
 
     loop {
-        match peek_token(tokens) {
+        match tokens.peek() {
             Some(token) if token.text == "(" => {
                 let arguments = parse_call_arguments(src, tokens)?;
                 expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
             }
             Some(token) if token.text == "." => {
-                pop_token(tokens);
+                tokens.pop();
                 let variable = parse_symbol(tokens)?;
                 let arguments = parse_call_arguments(src, tokens)?;
                 expr = Expression(
@@ -502,13 +490,13 @@ fn parse_general_expression(
     if !is_inline {
         // TODO: Matching on tokens will prevent us from doing more
         // complex assignments like `foo.bar = 1;`.
-        if let Some((_, token)) = peek_two_tokens(tokens) {
+        if let Some((_, token)) = tokens.peek_two() {
             if token.text == "=" {
                 return parse_assign_expression(src, tokens);
             }
         }
 
-        if let Some(token) = peek_token(tokens) {
+        if let Some(token) = tokens.peek() {
             if token.text == "let" {
                 return parse_let_expression(src, tokens);
             }
@@ -523,7 +511,7 @@ fn parse_general_expression(
 
     // `if` can occur as both an inline expression and a standalone
     // expression.
-    if let Some(token) = peek_token(tokens) {
+    if let Some(token) = tokens.peek() {
         if token.text == "if" {
             return parse_if_expression(src, tokens);
         }
@@ -554,9 +542,9 @@ fn parse_simple_expression_or_binop(
 ) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_with_trailing(src, tokens)?;
 
-    if let Some(token) = peek_token(tokens) {
+    if let Some(token) = tokens.peek() {
         if let Some(op) = token_as_binary_op(token) {
-            pop_token(tokens);
+            tokens.pop();
 
             let rhs_expr = parse_simple_expression_with_trailing(src, tokens)?;
             expr = Expression(
@@ -570,7 +558,7 @@ fn parse_simple_expression_or_binop(
 }
 
 fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    if let Some(token) = peek_token(tokens) {
+    if let Some(token) = tokens.peek() {
         if token.text == "fun" {
             return parse_function_or_method(src, tokens);
         }
@@ -595,7 +583,7 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
     let test_token = require_token(tokens, "test")?;
     let doc_comment = parse_doc_comment(&test_token);
 
-    let name = if let Some(token) = peek_token(tokens) {
+    let name = if let Some(token) = tokens.peek() {
         if token.text == "{" {
             None
         } else {
@@ -638,9 +626,9 @@ fn parse_type_name(tokens: &mut TokenStream) -> Result<TypeName, ParseError> {
 }
 
 fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeName>, ParseError> {
-    if let Some(token) = peek_token(tokens) {
+    if let Some(token) = tokens.peek() {
         if token.text == ":" {
-            pop_token(tokens);
+            tokens.pop();
             return Ok(Some(parse_type_name(tokens)?));
         }
     }
@@ -669,9 +657,9 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
         let param = parse_parameter(tokens)?;
         params.push(param);
 
-        if let Some(token) = peek_token(tokens) {
+        if let Some(token) = tokens.peek() {
             if token.text == "," {
-                pop_token(tokens);
+                tokens.pop();
             } else if token.text == ")" {
                 break;
             } else {
@@ -718,7 +706,7 @@ fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError>
 
     let mut exprs = vec![];
     loop {
-        if let Some(token) = peek_token(tokens) {
+        if let Some(token) = tokens.peek() {
             if token.text == "}" {
                 break;
             }
@@ -761,7 +749,7 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
 }
 
 fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    match peek_two_tokens(tokens) {
+    match tokens.peek_two() {
         Some((_, second_token)) => {
             if second_token.text == "(" {
                 parse_method(src, tokens)

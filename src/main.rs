@@ -1,7 +1,6 @@
 // Looks like a false positive from rust 1.71.
 // TODO: File an issue.
 #![allow(suspicious_double_ref_op)]
-
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
 

@@ -181,16 +181,14 @@ fn handle_request(
                                 push_test_stackframe(&test, env);
                                 eval_to_response(env, session)
                             }
-                            None => {
-                                Response {
-                                    kind: ResponseKind::MalformedRequest,
-                                    value: Err(ResponseError {
-                                        position: None,
-                                        message: format!("No such test: {}", name.0),
-                                        stack: None,
-                                    }),
-                                }
-                            }
+                            None => Response {
+                                kind: ResponseKind::MalformedRequest,
+                                value: Err(ResponseError {
+                                    position: None,
+                                    message: format!("No such test: {}", name.0),
+                                    stack: None,
+                                }),
+                            },
                         }
                     }
                     Err(EvalAction::Replace(_)) => todo!(),

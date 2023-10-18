@@ -58,11 +58,7 @@ pub fn format_error(message: &ErrorMessage, position: &Position, src: &str) -> S
         .finish();
 
     r.write((&path_str, Source::from(src)), &mut res).unwrap();
-    format!(
-        "Error: {}\n{}",
-        message.0,
-        String::from_utf8_lossy(&res)
-    )
+    format!("Error: {}\n{}", message.0, String::from_utf8_lossy(&res))
 }
 
 pub fn format_parse_error(message: &ErrorMessage, position: &Position, src: &str) -> String {

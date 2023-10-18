@@ -36,34 +36,60 @@ pub enum ParseError {
     Incomplete(ErrorMessage),
 }
 
-fn pop_token<'a>(tokens: &mut &[Token<'a>]) -> Option<Token<'a>> {
-    if tokens.is_empty() {
-        return None;
+#[derive(Debug, Clone)]
+struct TokenStream<'a> {
+    tokens: Vec<Token<'a>>,
+    idx: usize,
+}
+
+impl<'a> TokenStream<'a> {
+    fn is_empty(&self) -> bool {
+        self.tokens.get(self.idx).is_none()
     }
 
-    let token = tokens[0].clone();
-    *tokens = &tokens[1..];
-    Some(token)
-}
-
-fn peek_token<'a>(tokens: &[Token<'a>]) -> Option<Token<'a>> {
-    tokens.first().cloned()
-}
-
-fn next_token_is(tokens: &[Token<'_>], token: &str) -> bool {
-    tokens.first().map(|t| t.text == token).unwrap_or(false)
-}
-
-fn peek_two_tokens<'a>(tokens: &[Token<'a>]) -> Option<(Token<'a>, Token<'a>)> {
-    if tokens.len() > 1 {
-        Some((tokens[0].clone(), tokens[1].clone()))
-    } else {
-        None
+    fn pop_token(&mut self) -> Option<Token<'a>> {
+        match self.tokens.get(self.idx) {
+            Some(token) => {
+                self.idx += 1;
+                Some(token.clone())
+            }
+            None => None,
+        }
     }
+
+    fn peek_token(&self) -> Option<Token<'a>> {
+        self.tokens.get(self.idx).cloned()
+    }
+
+    fn peek_two_tokens(&self) -> Option<(Token<'a>, Token<'a>)> {
+        match (self.tokens.get(self.idx), self.tokens.get(self.idx + 1)) {
+            (Some(token1), Some(token2)) => Some((token1.clone(), token2.clone())),
+            _ => None,
+        }
+    }
+}
+
+fn pop_token<'a>(tokens: &mut TokenStream<'a>) -> Option<Token<'a>> {
+    tokens.pop_token()
+}
+
+fn peek_token<'a>(tokens: &mut TokenStream<'a>) -> Option<Token<'a>> {
+    tokens.peek_token()
+}
+
+fn next_token_is(tokens: &TokenStream, token: &str) -> bool {
+    tokens
+        .peek_token()
+        .map(|t| t.text == token)
+        .unwrap_or(false)
+}
+
+fn peek_two_tokens<'a>(tokens: &TokenStream<'a>) -> Option<(Token<'a>, Token<'a>)> {
+    tokens.peek_two_tokens()
 }
 
 fn require_a_token<'a>(
-    tokens: &mut &[Token<'a>],
+    tokens: &mut TokenStream<'a>,
     token_description: &str,
 ) -> Result<Token<'a>, ParseError> {
     match pop_token(tokens) {
@@ -75,7 +101,10 @@ fn require_a_token<'a>(
     }
 }
 
-fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<'a>, ParseError> {
+fn require_token<'a>(
+    tokens: &mut TokenStream<'a>,
+    expected: &str,
+) -> Result<Token<'a>, ParseError> {
     match pop_token(tokens) {
         Some(token) => {
             if token.text == expected {
@@ -95,7 +124,7 @@ fn require_token<'a>(tokens: &mut &[Token<'a>], expected: &str) -> Result<Token<
     }
 }
 
-fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_integer(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let token = require_a_token(tokens, "integer literal")?;
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
@@ -109,7 +138,7 @@ fn parse_integer(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
     }
 }
 
-fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_variable_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
     Ok(Expression(
         variable.pos.clone(),
@@ -119,7 +148,7 @@ fn parse_variable_expression(tokens: &mut &[Token<'_>]) -> Result<Expression, Pa
 
 fn parse_parenthesis_expression(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
 ) -> Result<Expression, ParseError> {
     require_token(tokens, "(")?;
     let expr = parse_inline_expression(src, tokens)?;
@@ -128,7 +157,7 @@ fn parse_parenthesis_expression(
     Ok(expr)
 }
 
-fn parse_list_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_list_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let open_brace = require_token(tokens, "[")?;
     let items = parse_comma_separated_exprs(src, tokens, "]")?;
     let close_brace = require_token(tokens, "]")?;
@@ -139,7 +168,7 @@ fn parse_list_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Express
     ))
 }
 
-fn parse_lambda_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let fun_keyword = require_token(tokens, "fun")?;
 
     let params = parse_parameters(tokens)?;
@@ -167,7 +196,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
     ))
 }
 
-fn parse_if_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let if_token = require_token(tokens, "if")?;
 
     require_token(tokens, "(")?;
@@ -202,7 +231,7 @@ fn parse_if_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expressio
     ))
 }
 
-fn parse_while_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let while_token = require_token(tokens, "while")?;
 
     require_token(tokens, "(")?;
@@ -217,7 +246,7 @@ fn parse_while_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expres
     ))
 }
 
-fn parse_return_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
     // TODO: allow `return;`
@@ -270,7 +299,7 @@ fn unescape_string(s: &str) -> String {
     res
 }
 
-fn parse_simple_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "{" {
             let exprs = parse_block(src, tokens)?;
@@ -331,7 +360,7 @@ fn parse_simple_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
 
 fn parse_comma_separated_exprs(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
     terminator: &str,
 ) -> Result<Vec<Expression>, ParseError> {
     let mut items = vec![];
@@ -371,7 +400,7 @@ fn parse_comma_separated_exprs(
 
 fn parse_call_arguments(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
 ) -> Result<Vec<Expression>, ParseError> {
     require_token(tokens, "(")?;
     let args = parse_comma_separated_exprs(src, tokens, ")")?;
@@ -387,7 +416,7 @@ fn parse_call_arguments(
 /// essentially left-recursion from a grammar perspective.
 fn parse_simple_expression_with_trailing(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
 ) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression(src, tokens)?;
 
@@ -442,7 +471,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// if (a) { b } else { c }
 /// while (z) { foo(); }
 /// ```
-fn parse_inline_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_inline_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     parse_general_expression(src, tokens, true)
 }
 
@@ -459,7 +488,7 @@ fn parse_inline_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
 /// ```
 fn parse_block_member_expression(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
 ) -> Result<Expression, ParseError> {
     parse_general_expression(src, tokens, false)
 }
@@ -467,7 +496,7 @@ fn parse_block_member_expression(
 /// Parse an inline or block member expression.
 fn parse_general_expression(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
     is_inline: bool,
 ) -> Result<Expression, ParseError> {
     if !is_inline {
@@ -521,7 +550,7 @@ fn parse_general_expression(
 /// the parser.
 fn parse_simple_expression_or_binop(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
 ) -> Result<Expression, ParseError> {
     let mut expr = parse_simple_expression_with_trailing(src, tokens)?;
 
@@ -540,7 +569,7 @@ fn parse_simple_expression_or_binop(
     Ok(expr)
 }
 
-fn parse_definition(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == "fun" {
             return parse_function_or_method(src, tokens);
@@ -562,7 +591,7 @@ fn parse_definition(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, 
     )))
 }
 
-fn parse_test(src: &str, tokens: &mut &[Token]) -> Result<Definition, ParseError> {
+fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     let test_token = require_token(tokens, "test")?;
     let doc_comment = parse_doc_comment(&test_token);
 
@@ -603,12 +632,12 @@ fn parse_test(src: &str, tokens: &mut &[Token]) -> Result<Definition, ParseError
     ))
 }
 
-fn parse_type_name(tokens: &mut &[Token<'_>]) -> Result<TypeName, ParseError> {
+fn parse_type_name(tokens: &mut TokenStream) -> Result<TypeName, ParseError> {
     let name = parse_symbol(tokens)?;
     Ok(TypeName(name.name.0))
 }
 
-fn parse_type_annotation(tokens: &mut &[Token<'_>]) -> Result<Option<TypeName>, ParseError> {
+fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeName>, ParseError> {
     if let Some(token) = peek_token(tokens) {
         if token.text == ":" {
             pop_token(tokens);
@@ -619,7 +648,7 @@ fn parse_type_annotation(tokens: &mut &[Token<'_>]) -> Result<Option<TypeName>, 
     Ok(None)
 }
 
-fn parse_parameter(tokens: &mut &[Token<'_>]) -> Result<SymbolWithType, ParseError> {
+fn parse_parameter(tokens: &mut TokenStream) -> Result<SymbolWithType, ParseError> {
     let param = parse_symbol(tokens)?;
     let param_type = parse_type_annotation(tokens)?;
     Ok(SymbolWithType {
@@ -628,7 +657,7 @@ fn parse_parameter(tokens: &mut &[Token<'_>]) -> Result<SymbolWithType, ParseErr
     })
 }
 
-fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, ParseError> {
+fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -684,7 +713,7 @@ fn parse_parameters(tokens: &mut &[Token<'_>]) -> Result<Vec<SymbolWithType>, Pa
     Ok(params)
 }
 
-fn parse_block(src: &str, tokens: &mut &[Token<'_>]) -> Result<Block, ParseError> {
+fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError> {
     let open_brace = require_token(tokens, "{")?;
 
     let mut exprs = vec![];
@@ -731,10 +760,7 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
     None
 }
 
-fn parse_function_or_method(
-    src: &str,
-    tokens: &mut &[Token<'_>],
-) -> Result<Definition, ParseError> {
+fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     match peek_two_tokens(tokens) {
         Some((_, second_token)) => {
             if second_token.text == "(" {
@@ -749,7 +775,7 @@ fn parse_function_or_method(
     }
 }
 
-fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
     let doc_comment = parse_doc_comment(&fun_token);
 
@@ -806,7 +832,7 @@ fn parse_method(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, Pars
     ))
 }
 
-fn parse_function(src: &str, tokens: &mut &[Token<'_>]) -> Result<Definition, ParseError> {
+fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
     let doc_comment = parse_doc_comment(&fun_token);
 
@@ -849,7 +875,7 @@ const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "true", "false", "if", "else", "while", "return", "test",
 ];
 
-fn parse_symbol(tokens: &mut &[Token<'_>]) -> Result<Symbol, ParseError> {
+fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
     let variable_token = require_a_token(tokens, "variable name")?;
     if !SYMBOL_RE.is_match(variable_token.text) {
         return Err(ParseError::Invalid {
@@ -878,7 +904,7 @@ fn parse_symbol(tokens: &mut &[Token<'_>]) -> Result<Symbol, ParseError> {
     })
 }
 
-fn parse_let_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let let_token = require_token(tokens, "let")?;
     let variable = parse_symbol(tokens)?;
 
@@ -892,7 +918,7 @@ fn parse_let_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expressi
     ))
 }
 
-fn parse_assign_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expression, ParseError> {
+fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
 
     require_token(tokens, "=")?;
@@ -907,7 +933,7 @@ fn parse_assign_expression(src: &str, tokens: &mut &[Token<'_>]) -> Result<Expre
 
 fn parse_toplevel_items_from_tokens(
     src: &str,
-    tokens: &mut &[Token<'_>],
+    tokens: &mut TokenStream,
 ) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut items: Vec<ToplevelItem> = vec![];
 
@@ -961,8 +987,8 @@ fn parse_toplevel_items_from_tokens(
 
 pub fn parse_inline_expr_from_str(path: &Path, s: &str) -> Result<Expression, ParseError> {
     let tokens = lex(path, s)?;
-    let mut token_ptr = &tokens[..];
-    parse_inline_expression(s, &mut token_ptr)
+    let mut token_stream = TokenStream { tokens, idx: 0 };
+    parse_inline_expression(s, &mut token_stream)
 }
 
 pub fn parse_toplevel_item(path: &Path, s: &str) -> Result<ToplevelItem, ParseError> {
@@ -972,8 +998,8 @@ pub fn parse_toplevel_item(path: &Path, s: &str) -> Result<ToplevelItem, ParseEr
 
 pub fn parse_toplevel_items(path: &Path, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex(path, s)?;
-    let mut token_ptr = &tokens[..];
-    parse_toplevel_items_from_tokens(s, &mut token_ptr)
+    let mut token_stream = TokenStream { tokens, idx: 0 };
+    parse_toplevel_items_from_tokens(s, &mut token_stream)
 }
 
 pub fn parse_toplevel_items_from_span(
@@ -983,8 +1009,8 @@ pub fn parse_toplevel_items_from_span(
     end_offset: usize,
 ) -> Result<Vec<ToplevelItem>, ParseError> {
     let tokens = lex_between(path, s, offset, end_offset)?;
-    let mut token_ptr = &tokens[..];
-    parse_toplevel_items_from_tokens(s, &mut token_ptr)
+    let mut token_stream = TokenStream { tokens, idx: 0 };
+    parse_toplevel_items_from_tokens(s, &mut token_stream)
 }
 
 #[cfg(test)]
@@ -992,11 +1018,11 @@ pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
     use std::path::PathBuf;
 
     let tokens = lex(&PathBuf::from("__test.gdn"), s)?;
-    let mut token_ptr = &tokens[..];
+    let mut token_stream = TokenStream { tokens, idx: 0 };
 
     let mut res = vec![];
-    while !token_ptr.is_empty() {
-        res.push(parse_block_member_expression(s, &mut token_ptr)?);
+    while !token_stream.is_empty() {
+        res.push(parse_block_member_expression(s, &mut token_stream)?);
     }
 
     Ok(res)

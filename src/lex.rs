@@ -19,16 +19,49 @@ pub struct Token<'a> {
     pub preceding_comments: Vec<(Position, &'a str)>,
 }
 
+#[derive(Debug, Clone)]
+pub struct TokenStream<'a> {
+    tokens: Vec<Token<'a>>,
+    idx: usize,
+}
+
+impl<'a> TokenStream<'a> {
+    pub fn is_empty(&self) -> bool {
+        self.tokens.get(self.idx).is_none()
+    }
+
+    pub fn pop(&mut self) -> Option<Token<'a>> {
+        match self.tokens.get(self.idx) {
+            Some(token) => {
+                self.idx += 1;
+                Some(token.clone())
+            }
+            None => None,
+        }
+    }
+
+    pub fn peek(&self) -> Option<Token<'a>> {
+        self.tokens.get(self.idx).cloned()
+    }
+
+    pub fn peek_two(&self) -> Option<(Token<'a>, Token<'a>)> {
+        match (self.tokens.get(self.idx), self.tokens.get(self.idx + 1)) {
+            (Some(token1), Some(token2)) => Some((token1.clone(), token2.clone())),
+            _ => None,
+        }
+    }
+}
+
 pub fn lex_between<'a>(
     path: &Path,
     s: &'a str,
     offset: usize,
     end_offset: usize,
-) -> Result<Vec<Token<'a>>, ParseError> {
+) -> Result<TokenStream<'a>, ParseError> {
     assert!(end_offset <= s.len());
 
     let lp = LinePositions::from(s);
-    let mut res: Vec<Token<'a>> = vec![];
+    let mut tokens: Vec<Token<'a>> = vec![];
 
     let mut preceding_comments = vec![];
     let mut offset = offset;
@@ -73,7 +106,7 @@ pub fn lex_between<'a>(
 
         for token_str in ["==", "!=", ">=", "<=", "&&", "||"] {
             if s.starts_with(token_str) {
-                res.push(Token {
+                tokens.push(Token {
                     position: Position {
                         start_offset: offset,
                         end_offset: offset + token_str.len(),
@@ -93,7 +126,7 @@ pub fn lex_between<'a>(
         // Match integers before binary operators, so -1 is treated as
         // a single integer literal, not the tokens - followed by 1.
         if let Some(integer_match) = INTEGER_RE.find(s) {
-            res.push(Token {
+            tokens.push(Token {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + integer_match.end(),
@@ -113,7 +146,7 @@ pub fn lex_between<'a>(
             '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']', '.', ':',
         ] {
             if s.starts_with(token_char) {
-                res.push(Token {
+                tokens.push(Token {
                     position: Position {
                         start_offset: offset,
                         end_offset: offset + 1,
@@ -130,7 +163,7 @@ pub fn lex_between<'a>(
             }
         }
         if let Some(string_match) = STRING_RE.find(s) {
-            res.push(Token {
+            tokens.push(Token {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + string_match.end(),
@@ -144,7 +177,7 @@ pub fn lex_between<'a>(
 
             offset += string_match.end();
         } else if let Some(variable_match) = SYMBOL_RE.find(s) {
-            res.push(Token {
+            tokens.push(Token {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + variable_match.end(),
@@ -175,10 +208,10 @@ pub fn lex_between<'a>(
         });
     }
 
-    Ok(res)
+    Ok(TokenStream { tokens, idx: 0 })
 }
 
-pub fn lex<'a>(path: &Path, s: &'a str) -> Result<Vec<Token<'a>>, ParseError> {
+pub fn lex<'a>(path: &Path, s: &'a str) -> Result<TokenStream<'a>, ParseError> {
     lex_between(path, s, 0, s.len())
 }
 
@@ -190,9 +223,10 @@ mod tests {
 
     #[test]
     fn test_lex_no_offset() {
+        let tokens = lex(&PathBuf::from("__test.gdn"), "1").unwrap();
         assert_eq!(
-            lex(&PathBuf::from("__test.gdn"), "1").unwrap(),
-            vec![Token {
+            tokens.peek(),
+            Some(Token {
                 position: Position {
                     start_offset: 0,
                     end_offset: 1,
@@ -201,15 +235,16 @@ mod tests {
                 },
                 text: "1",
                 preceding_comments: vec![],
-            }]
+            })
         );
     }
 
     #[test]
     fn test_lex_with_offset() {
+        let tokens = lex(&PathBuf::from("__test.gdn"), " a").unwrap();
         assert_eq!(
-            lex(&PathBuf::from("__test.gdn"), " a").unwrap(),
-            vec![Token {
+            tokens.peek(),
+            Some(Token {
                 position: Position {
                     start_offset: 1,
                     end_offset: 2,
@@ -218,7 +253,7 @@ mod tests {
                 },
                 text: "a",
                 preceding_comments: vec![],
-            }]
+            })
         );
     }
 
@@ -227,6 +262,7 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "1 + 2")
                 .unwrap()
+                .tokens
                 .iter()
                 .map(|token| token.text)
                 .collect::<Vec<_>>(),
@@ -239,6 +275,7 @@ mod tests {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "1+2")
                 .unwrap()
+                .tokens
                 .iter()
                 .map(|token| token.text)
                 .collect::<Vec<_>>(),
@@ -248,9 +285,10 @@ mod tests {
 
     #[test]
     fn test_lex_comment() {
+        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap();
         assert_eq!(
-            lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap(),
-            vec![Token {
+            tokens.peek(),
+            Some(Token {
                 position: Position {
                     start_offset: 5,
                     end_offset: 6,
@@ -267,17 +305,17 @@ mod tests {
                     },
                     " 2\n"
                 )],
-            }]
+            })
         );
     }
 
     #[test]
     fn test_lex_comment_leading_newline() {
-        assert_eq!(lex(&PathBuf::from("__test.gdn"), "\n// 2").unwrap(), vec![]);
+        assert!(lex(&PathBuf::from("__test.gdn"), "\n// 2").unwrap().is_empty());
     }
 
     #[test]
     fn test_lex_standalone_comment() {
-        assert_eq!(lex(&PathBuf::from("__test.gdn"), "// foo").unwrap(), vec![]);
+        assert!(lex(&PathBuf::from("__test.gdn"), "// foo").unwrap().is_empty());
     }
 }

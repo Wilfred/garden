@@ -23,6 +23,7 @@ use crate::eval::ErrorMessage;
 use crate::lex::lex;
 use crate::lex::lex_between;
 use crate::lex::Token;
+use crate::lex::TokenStream;
 use crate::lex::INTEGER_RE;
 use crate::lex::SYMBOL_RE;
 
@@ -36,44 +37,8 @@ pub enum ParseError {
     Incomplete(ErrorMessage),
 }
 
-#[derive(Debug, Clone)]
-struct TokenStream<'a> {
-    tokens: Vec<Token<'a>>,
-    idx: usize,
-}
-
-impl<'a> TokenStream<'a> {
-    fn is_empty(&self) -> bool {
-        self.tokens.get(self.idx).is_none()
-    }
-
-    fn pop(&mut self) -> Option<Token<'a>> {
-        match self.tokens.get(self.idx) {
-            Some(token) => {
-                self.idx += 1;
-                Some(token.clone())
-            }
-            None => None,
-        }
-    }
-
-    fn peek(&self) -> Option<Token<'a>> {
-        self.tokens.get(self.idx).cloned()
-    }
-
-    fn peek_two(&self) -> Option<(Token<'a>, Token<'a>)> {
-        match (self.tokens.get(self.idx), self.tokens.get(self.idx + 1)) {
-            (Some(token1), Some(token2)) => Some((token1.clone(), token2.clone())),
-            _ => None,
-        }
-    }
-}
-
 fn next_token_is(tokens: &TokenStream, token: &str) -> bool {
-    tokens
-        .peek()
-        .map(|t| t.text == token)
-        .unwrap_or(false)
+    tokens.peek().map(|t| t.text == token).unwrap_or(false)
 }
 
 fn require_a_token<'a>(
@@ -974,9 +939,8 @@ fn parse_toplevel_items_from_tokens(
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, s: &str) -> Result<Expression, ParseError> {
-    let tokens = lex(path, s)?;
-    let mut token_stream = TokenStream { tokens, idx: 0 };
-    parse_inline_expression(s, &mut token_stream)
+    let mut tokens = lex(path, s)?;
+    parse_inline_expression(s, &mut tokens)
 }
 
 pub fn parse_toplevel_item(path: &Path, s: &str) -> Result<ToplevelItem, ParseError> {
@@ -985,9 +949,8 @@ pub fn parse_toplevel_item(path: &Path, s: &str) -> Result<ToplevelItem, ParseEr
 }
 
 pub fn parse_toplevel_items(path: &Path, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
-    let tokens = lex(path, s)?;
-    let mut token_stream = TokenStream { tokens, idx: 0 };
-    parse_toplevel_items_from_tokens(s, &mut token_stream)
+    let mut tokens = lex(path, s)?;
+    parse_toplevel_items_from_tokens(s, &mut tokens)
 }
 
 pub fn parse_toplevel_items_from_span(
@@ -996,21 +959,19 @@ pub fn parse_toplevel_items_from_span(
     offset: usize,
     end_offset: usize,
 ) -> Result<Vec<ToplevelItem>, ParseError> {
-    let tokens = lex_between(path, s, offset, end_offset)?;
-    let mut token_stream = TokenStream { tokens, idx: 0 };
-    parse_toplevel_items_from_tokens(s, &mut token_stream)
+    let mut tokens = lex_between(path, s, offset, end_offset)?;
+    parse_toplevel_items_from_tokens(s, &mut tokens)
 }
 
 #[cfg(test)]
 pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
     use std::path::PathBuf;
 
-    let tokens = lex(&PathBuf::from("__test.gdn"), s)?;
-    let mut token_stream = TokenStream { tokens, idx: 0 };
+    let mut tokens = lex(&PathBuf::from("__test.gdn"), s)?;
 
     let mut res = vec![];
-    while !token_stream.is_empty() {
-        res.push(parse_block_member_expression(s, &mut token_stream)?);
+    while !tokens.is_empty() {
+        res.push(parse_block_member_expression(s, &mut tokens)?);
     }
 
     Ok(res)

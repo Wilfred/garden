@@ -311,11 +311,15 @@ mod tests {
 
     #[test]
     fn test_lex_comment_leading_newline() {
-        assert!(lex(&PathBuf::from("__test.gdn"), "\n// 2").unwrap().is_empty());
+        assert!(lex(&PathBuf::from("__test.gdn"), "\n// 2")
+            .unwrap()
+            .is_empty());
     }
 
     #[test]
     fn test_lex_standalone_comment() {
-        assert!(lex(&PathBuf::from("__test.gdn"), "// foo").unwrap().is_empty());
+        assert!(lex(&PathBuf::from("__test.gdn"), "// foo")
+            .unwrap()
+            .is_empty());
     }
 }

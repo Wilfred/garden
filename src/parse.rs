@@ -58,13 +58,20 @@ fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     expected: &str,
 ) -> Result<Token<'a>, ParseError> {
+    let prev_token = tokens.prev();
+
     match tokens.pop() {
         Some(token) => {
             if token.text == expected {
                 Ok(token)
             } else {
+                let position = match prev_token {
+                    Some(prev_token) => prev_token.position,
+                    None => token.position,
+                };
+
                 Err(ParseError::Invalid {
-                    position: token.position,
+                    position,
                     message: ErrorMessage(format!("Expected `{}`, got `{}`", expected, token.text)),
                     additional: vec![],
                 })

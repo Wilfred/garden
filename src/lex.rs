@@ -50,6 +50,14 @@ impl<'a> TokenStream<'a> {
             _ => None,
         }
     }
+
+    pub fn prev(&self) -> Option<Token<'a>> {
+        if self.idx == 0 {
+            return None;
+        }
+
+        self.tokens.get(self.idx - 1).cloned()
+    }
 }
 
 pub fn lex_between<'a>(

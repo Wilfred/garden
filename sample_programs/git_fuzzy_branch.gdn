@@ -42,7 +42,6 @@ fun (self: List) filter(f): List {
       result = result.append(item);
     }
 
-    // todo: handle parse errors better if this semicolon is missing.
     i = i + 1;
   }
   result;

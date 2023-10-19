@@ -1185,7 +1185,9 @@ fn eval_call(
             let mut fun_bindings = HashMap::new();
             for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
                 let param_name = &param.symbol.name;
-                fun_bindings.insert(param_name.clone(), value.1.clone());
+                if !param_name.is_underscore() {
+                    fun_bindings.insert(param_name.clone(), value.1.clone());
+                }
             }
 
             bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
@@ -1218,7 +1220,9 @@ fn eval_call(
             let mut fun_bindings = HashMap::new();
             for (param, value) in params.iter().zip(arg_values.iter()) {
                 let param_name = &param.symbol.name;
-                fun_bindings.insert(param_name.clone(), value.1.clone());
+                if !param_name.is_underscore() {
+                    fun_bindings.insert(param_name.clone(), value.1.clone());
+                }
             }
 
             return Ok(Some(StackFrame {
@@ -2595,6 +2599,17 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
+    fn test_eval_underscore_param_not_bound() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun f(_) { _; }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f(1);").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 }

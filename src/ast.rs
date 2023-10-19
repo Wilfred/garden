@@ -54,6 +54,12 @@ pub struct TypeName(pub String);
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName(pub String);
 
+impl SymbolName {
+    pub fn is_underscore(&self) -> bool {
+        self.0 == "_"
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Symbol {
     pub pos: Position,

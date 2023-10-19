@@ -658,6 +658,10 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
     let mut seen = HashSet::new();
     for param in &params {
         let param_name = &param.symbol.name.0;
+        if param.symbol.name.is_underscore() {
+            continue;
+        }
+
         if seen.contains(param_name) {
             return Err(ParseError::Invalid {
                 position: param.symbol.pos.clone(),
@@ -1579,5 +1583,10 @@ mod tests {
     #[test]
     fn test_repeated_param() {
         assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(x, x) {}").is_err());
+    }
+
+    #[test]
+    fn test_repeated_param_underscore() {
+        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(_, _) {}").is_ok());
     }
 }

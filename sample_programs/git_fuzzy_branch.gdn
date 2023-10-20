@@ -48,7 +48,6 @@ fun (self: List) filter(f): List {
 }
 
 test filter {
-  // TODO: never insert a binding called _ into the environment.
   should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
 
   // TODO: improve error receiver position and argument position here.

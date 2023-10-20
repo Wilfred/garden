@@ -659,6 +659,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
     Ok(())
 }
 
+/// Bind `variable` in the current local environment.
 fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
     let var_name = &variable.name;
     if stack_frame.bindings.has(var_name) {
@@ -670,6 +671,10 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
             restore_values: vec![],
             error_position: variable.pos.clone(),
         });
+    }
+
+    if var_name.is_underscore() {
+        return Ok(());
     }
 
     let expr_value = stack_frame
@@ -2611,5 +2616,27 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(1);").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
+    fn test_eval_local_underscore_not_bound() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun f() { let _ = 1; _; }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_err());
+    }
+
+    #[test]
+    fn test_eval_local_underscore_repeated() {
+        let mut env = Env::default();
+
+        let defs = parse_defs_from_str("fun f() { let _ = 1; let _ = 2; }").unwrap();
+        eval_defs(&defs, &mut env);
+
+        let exprs = parse_exprs_from_str("f();").unwrap();
+        assert!(eval_exprs(&exprs, &mut env).is_ok());
     }
 }

@@ -5,6 +5,19 @@
 
 **Goal: Support interactive unit tests.**
 
+### Syntax
+
+A local variable or parameter named `_` is now always ignored. The
+following is now legal:
+
+```
+fun f(_, _) {}
+fun g() {
+    let _ = 1;
+    let _ = 2;
+}
+```
+
 ### Stdlib
 
 Implemented `List::append`, `List::get`, `List::len`,

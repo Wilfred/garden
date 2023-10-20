@@ -30,7 +30,7 @@ in favour of `string_repr()`.
 
 ### Commands
 
-Added `forget_local`.
+Added `:forget_local` and `:test`.
 
 ### Evaluation
 

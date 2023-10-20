@@ -78,7 +78,7 @@
     (overlay-put overlay 'face 'highlight)
     (run-with-timer 3.0 nil 'delete-overlay overlay)))
 
-(defcustom garden-indent-offset 2
+(defcustom garden-indent-offset 4
   "Indentation amount (in spaces) for Garden files."
   :safe #'integerp)
 

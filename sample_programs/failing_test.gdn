@@ -1,18 +1,18 @@
 
 fun add_one(i: Int): Int {
-  i + 1;
+    i + 1;
 }
 
 fun should_equal(x, y): Void {
-  if (x != y) {
-    error("Expected values to be equal");
-  }
+    if (x != y) {
+        error("Expected values to be equal");
+    }
 }
 
 test passing_example {
-  should_equal(add_one(1), 2);
+    should_equal(add_one(1), 2);
 }
 
 test failing_example {
-  should_equal(add_one(1), 99);
+    should_equal(add_one(1), 99);
 }

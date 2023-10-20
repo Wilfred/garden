@@ -1,173 +1,173 @@
 #!/usr/bin/env -S garden run
 
 fun lines(s: String): List {
-  let parts = [];
+    let parts = [];
 
-  let line_start = 0;
-  let i = 0;
-  while (i < s.len()) {
-    let char = s.substring(i, i + 1);
+    let line_start = 0;
+    let i = 0;
+    while (i < s.len()) {
+        let char = s.substring(i, i + 1);
 
-    if (char == "\n") {
-      parts = parts.append(s.substring(line_start, i));
-      line_start = i + 1;
+        if (char == "\n") {
+            parts = parts.append(s.substring(line_start, i));
+            line_start = i + 1;
+        }
+
+        i = i + 1;
     }
 
-    i = i + 1;
-  }
+    // Append last line if it wasn't terminated with a newline.
+    if (line_start != s.len()) {
+        parts = parts.append(s.substring(line_start, s.len()));
+    }
 
-  // Append last line if it wasn't terminated with a newline.
-  if (line_start != s.len()) {
-    parts = parts.append(s.substring(line_start, s.len()));
-  }
-
-  parts;
+    parts;
 }
 
 test lines {
-  should_equal(lines(""), []);
-  should_equal(lines("a"), ["a"]);
-  should_equal(lines("a\nb"), ["a", "b"]);
-  should_equal(lines("a\nb\n"), ["a", "b"]);
+    should_equal(lines(""), []);
+    should_equal(lines("a"), ["a"]);
+    should_equal(lines("a\nb"), ["a", "b"]);
+    should_equal(lines("a\nb\n"), ["a", "b"]);
 }
 
 fun (self: List) filter(f): List {
-  let result = [];
+    let result = [];
 
-  let i = 0;
-  while (i < self.len()) {
-    let item = self.get(i);
+    let i = 0;
+    while (i < self.len()) {
+        let item = self.get(i);
 
-    if (f(item)) {
-      result = result.append(item);
+        if (f(item)) {
+            result = result.append(item);
+        }
+
+        i = i + 1;
     }
-
-    i = i + 1;
-  }
-  result;
+    result;
 }
 
 test filter {
-  should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
+    should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
 
-  // TODO: improve error receiver position and argument position here.
-  // should_equal([1, 2].filter(fun(_) { true; }, [1, 2]));
+    // TODO: improve error receiver position and argument position here.
+    // should_equal([1, 2].filter(fun(_) { true; }, [1, 2]));
 
-  // TODO: evaluating this in a JSON session is Stopping due to the
-  // test stack frame returning.
+    // TODO: evaluating this in a JSON session is Stopping due to the
+    // test stack frame returning.
 }
 
 fun (self: String) contains(needle: String): Bool {
-  if (needle.len() > self.len()) {
-    return false;
-  }
-
-  // TODO: better parse error if this last parenthesis is missing.
-  // dbg(string_length(haystack) - string_length(needle));
-
-  let i = 0;
-  while (i <= (self.len() - needle.len())) {
-    let section = self.substring(i, i + needle.len());
-    if (section == needle) {
-      return true;
+    if (needle.len() > self.len()) {
+        return false;
     }
 
-    i = i + 1;
-  }
+    // TODO: better parse error if this last parenthesis is missing.
+    // dbg(string_length(haystack) - string_length(needle));
 
-  false;
+    let i = 0;
+    while (i <= (self.len() - needle.len())) {
+        let section = self.substring(i, i + needle.len());
+        if (section == needle) {
+            return true;
+        }
+
+        i = i + 1;
+    }
+
+    false;
 }
 
 fun (self: List) is_empty(): Bool {
-  self.len() == 0;
+    self.len() == 0;
 }
 
 fun (self: List) contains(item): Bool {
-  let i = 0;
-  while (i < self.len()) {
-    if (self.get(i) == item) {
-      return true;
+    let i = 0;
+    while (i < self.len()) {
+        if (self.get(i) == item) {
+            return true;
+        }
+
+        i = i + 1;
     }
 
-    i = i + 1;
-  }
-
-  false;
+    false;
 }
 
 test contains {
-  should_equal([10, 11].contains(10), true);
+    should_equal([10, 11].contains(10), true);
 }
 
 fun (self: String) join(items: List): String {
-  if (items.is_empty()) {
-    return "";
-  }
-  if (items.len() == 1) {
-    return items.get(0);
-  }
+    if (items.is_empty()) {
+        return "";
+    }
+    if (items.len() == 1) {
+        return items.get(0);
+    }
 
-  let res = items.get(0);
-  let i = 1;
-  while (i < items.len()) {
-    res = res.concat(self);
-    res = res.concat(items.get(i));
-    i = i + 1;
-  }
-  res;
+    let res = items.get(0);
+    let i = 1;
+    while (i < items.len()) {
+        res = res.concat(self);
+        res = res.concat(items.get(i));
+        i = i + 1;
+    }
+    res;
 }
 
 test join {
-  should_equal(" ".join(["x"]), "x");
+    should_equal(" ".join(["x"]), "x");
 
-  // TODO: should .join() exist on String or on List?
-  should_equal(" ".join(["x", "y"]), "x y");
+    // TODO: should .join() exist on String or on List?
+    should_equal(" ".join(["x", "y"]), "x y");
 }
 
 fun in_git_repo(): Bool {
-  let git_dir_path = working_directory().concat("/.git");
-  path_exists(git_dir_path);
+    let git_dir_path = working_directory().concat("/.git");
+    path_exists(git_dir_path);
 }
 
 fun check_out(branch_name: String): Void {
-  print(shell("git", ["checkout", branch_name]));
+    print(shell("git", ["checkout", branch_name]));
 }
 
 fun main(args: List): Void {
-  if (args.len() != 1) {
-    println("Usage: git_fuzzy_branch <name substring>");
-    // TODO: support void values.
-    return false;
-  }
-  let needle = args.get(0);
-
-  if (in_git_repo()) {
-    let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
-
-    if (all_branches.contains(needle)) {
-      // If there's a branch with this name exactly, use it.
-      check_out(needle);
-      return 0; // TODO: void value.
+    if (args.len() != 1) {
+        println("Usage: git_fuzzy_branch <name substring>");
+        // TODO: support void values.
+        return false;
     }
+    let needle = args.get(0);
 
-    let branches = all_branches.filter(fun(name) { name.contains(needle); });
-    if (branches.is_empty()) {
-      println("No branches found maching: ".concat(needle));
-    } else if (branches.len() == 1) {
-      let branch_name = branches.get(0);
-      check_out(branch_name);
+    if (in_git_repo()) {
+        let all_branches = lines(shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]));
+
+        if (all_branches.contains(needle)) {
+            // If there's a branch with this name exactly, use it.
+            check_out(needle);
+            return 0; // TODO: void value.
+        }
+
+        let branches = all_branches.filter(fun(name) { name.contains(needle); });
+        if (branches.is_empty()) {
+            println("No branches found maching: ".concat(needle));
+        } else if (branches.len() == 1) {
+            let branch_name = branches.get(0);
+            check_out(branch_name);
+        } else {
+            let formatted_branches = ", ".join(branches);
+            let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches]);
+            print(msg);
+        }
     } else {
-      let formatted_branches = ", ".join(branches);
-      let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches]);
-      print(msg);
+        println("Not in a git repository.");
     }
-  } else {
-    println("Not in a git repository.");
-  }
 }
 
 fun should_equal(actual, expected): Void {
-  if (actual != expected) {
-    error(" ".join(["Expected", string_repr(expected), "but got", string_repr(actual)]));
-  }
+    if (actual != expected) {
+        error(" ".join(["Expected", string_repr(expected), "but got", string_repr(actual)]));
+    }
 }

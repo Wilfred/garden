@@ -218,9 +218,9 @@ fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     ))
 }
 
-fn unescape_string(s: &str) -> String {
+fn unescape_string(src: &str) -> String {
     // Trim doublequotes.
-    let s = &s[1..s.len() - 1];
+    let s = &src[1..src.len() - 1];
 
     let mut res = String::with_capacity(s.len());
 
@@ -949,50 +949,50 @@ fn parse_toplevel_items_from_tokens(
     Ok(items)
 }
 
-pub fn parse_inline_expr_from_str(path: &Path, s: &str) -> Result<Expression, ParseError> {
-    let mut tokens = lex(path, s)?;
-    parse_inline_expression(s, &mut tokens)
+pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
+    let mut tokens = lex(path, src)?;
+    parse_inline_expression(src, &mut tokens)
 }
 
-pub fn parse_toplevel_item(path: &Path, s: &str) -> Result<ToplevelItem, ParseError> {
-    let items = parse_toplevel_items(path, s)?;
+pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
+    let items = parse_toplevel_items(path, src)?;
     Ok(items[0].clone())
 }
 
-pub fn parse_toplevel_items(path: &Path, s: &str) -> Result<Vec<ToplevelItem>, ParseError> {
-    let mut tokens = lex(path, s)?;
-    parse_toplevel_items_from_tokens(s, &mut tokens)
+pub fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
+    let mut tokens = lex(path, src)?;
+    parse_toplevel_items_from_tokens(src, &mut tokens)
 }
 
 pub fn parse_toplevel_items_from_span(
     path: &Path,
-    s: &str,
+    src: &str,
     offset: usize,
     end_offset: usize,
 ) -> Result<Vec<ToplevelItem>, ParseError> {
-    let mut tokens = lex_between(path, s, offset, end_offset)?;
-    parse_toplevel_items_from_tokens(s, &mut tokens)
+    let mut tokens = lex_between(path, src, offset, end_offset)?;
+    parse_toplevel_items_from_tokens(src, &mut tokens)
 }
 
 #[cfg(test)]
-pub fn parse_exprs_from_str(s: &str) -> Result<Vec<Expression>, ParseError> {
+pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
     use std::path::PathBuf;
 
-    let mut tokens = lex(&PathBuf::from("__test.gdn"), s)?;
+    let mut tokens = lex(&PathBuf::from("__test.gdn"), src)?;
 
     let mut res = vec![];
     while !tokens.is_empty() {
-        res.push(parse_block_member_expression(s, &mut tokens)?);
+        res.push(parse_block_member_expression(src, &mut tokens)?);
     }
 
     Ok(res)
 }
 
 #[cfg(test)]
-pub fn parse_defs_from_str(s: &str) -> Result<Vec<Definition>, ParseError> {
+pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
     use std::path::PathBuf;
 
-    let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), s)?;
+    let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), src)?;
 
     let mut defs = vec![];
     for item in items {

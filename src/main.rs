@@ -5,6 +5,7 @@
 #![warn(clippy::dbg_macro)]
 
 mod ast;
+mod check;
 mod cli_session;
 mod colors;
 mod commands;
@@ -84,31 +85,7 @@ fn main() {
         Commands::Check { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                match parse_toplevel_items(&path, &src) {
-                    Ok(_) => {
-                        println!("No issues found")
-                    }
-                    Err(e) => {
-                        match e {
-                            parse::ParseError::Invalid {
-                                position,
-                                message: e,
-                                additional: _,
-                            } => eprintln!(
-                                "{}",
-                                &format_parse_error(
-                                    &ErrorMessage(format!("Parse error: {}", e.0)),
-                                    &position,
-                                    &src
-                                )
-                            ),
-                            parse::ParseError::Incomplete(e) => {
-                                eprintln!("Parse error (incomplete input): {}", e.0)
-                            }
-                        };
-                        std::process::exit(1);
-                    }
-                }
+                check::check(&path, &src);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

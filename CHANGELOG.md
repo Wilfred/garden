@@ -1,7 +1,10 @@
-# 0.8 (unreleased)
+# 0.9 (unreleased)
 **Goal: Offer actions when errors occur.**
 
-# 0.7 (unreleased)
+# 0.8 (unreleased)
+**Goal: Red and yellow squiggles.**
+
+# 0.7 (released 21st October 2023)
 
 **Goal: Support interactive unit tests.**
 

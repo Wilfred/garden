@@ -191,7 +191,14 @@ fn handle_request(
                             },
                         }
                     }
-                    Err(EvalAction::Replace(_)) => todo!(),
+                    Err(EvalAction::Replace(expr)) => {
+                        let stack_frame = env.stack.last_mut().unwrap();
+
+                        stack_frame.evalled_values.pop();
+                        stack_frame.exprs_to_eval.push((false, expr));
+
+                        eval_to_response(env, session)
+                    }
                     Err(EvalAction::Skip) => {
                         let stack_frame = env.stack.last_mut().unwrap();
 

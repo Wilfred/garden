@@ -54,6 +54,9 @@ enum Commands {
     },
     /// Run all the tests in the Garden program at the path specified.
     Test { path: PathBuf },
+    /// Check the Garden program at the path specified for syntax
+    /// issues.
+    Check { path: PathBuf },
 }
 
 fn main() {
@@ -78,6 +81,39 @@ fn main() {
         Commands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
         }
+        Commands::Check { path } => match std::fs::read(&path) {
+            Ok(src_bytes) => {
+                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                match parse_toplevel_items(&path, &src) {
+                    Ok(_) => {
+                        println!("No issues found")
+                    }
+                    Err(e) => {
+                        match e {
+                            parse::ParseError::Invalid {
+                                position,
+                                message: e,
+                                additional: _,
+                            } => eprintln!(
+                                "{}",
+                                &format_parse_error(
+                                    &ErrorMessage(format!("Parse error: {}", e.0)),
+                                    &position,
+                                    &src
+                                )
+                            ),
+                            parse::ParseError::Incomplete(e) => {
+                                eprintln!("Parse error (incomplete input): {}", e.0)
+                            }
+                        };
+                        std::process::exit(1);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
         Commands::Test { path } => match std::fs::read(&path) {
             Ok(src_bytes) => run_tests_in_file(src_bytes, &path, &interrupted),
             Err(e) => {

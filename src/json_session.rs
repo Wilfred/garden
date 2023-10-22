@@ -142,7 +142,7 @@ fn handle_eval_request(
                     }),
                 }
             }
-            ParseError::Incomplete(message) => Response {
+            ParseError::Incomplete { message } => Response {
                 kind: ResponseKind::Evaluate,
                 value: Err(ResponseError {
                     position: None,

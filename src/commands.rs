@@ -464,7 +464,7 @@ pub fn run_command<T: Write>(
             if let Some(src) = src {
                 match parse_toplevel_item(&PathBuf::from("__interactive__"), src) {
                     Ok(ast) => write!(buf, "{:#?}", ast).unwrap(),
-                    Err(ParseError::Incomplete(e))
+                    Err(ParseError::Incomplete { message: e })
                     | Err(ParseError::Invalid { message: e, .. }) => {
                         write!(buf, "{}: {}", "Error".bright_red(), e.0).unwrap();
                     }

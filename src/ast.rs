@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
+    /// The start of this position, relative to the start of the file.
     pub start_offset: usize,
+    /// The end of this position, relative to the start of the file.
     pub end_offset: usize,
     // TODO: Use LineNumber instead, finding a way to serialize it.
     pub line_number: usize,

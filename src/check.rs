@@ -7,6 +7,8 @@ use crate::parse::{self, parse_toplevel_items};
 struct CheckDiagnostic {
     line_number: usize,
     message: String,
+    start_offset: usize,
+    end_offset: usize,
 }
 
 pub fn check(path: &Path, src: &str) {
@@ -20,13 +22,19 @@ pub fn check(path: &Path, src: &str) {
                 vec![CheckDiagnostic {
                     line_number: position.line_number + 1,
                     message: message.0,
+                    start_offset: position.start_offset,
+                    end_offset: position.end_offset,
                 }]
             }
-            parse::ParseError::Incomplete { message, .. } => {
+            parse::ParseError::Incomplete {
+                message, position, ..
+            } => {
                 // TODO: last line would be better?
                 vec![CheckDiagnostic {
                     line_number: 1,
                     message: message.0,
+                    start_offset: position.start_offset,
+                    end_offset: position.end_offset,
                 }]
             }
         },

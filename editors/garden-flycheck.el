@@ -36,15 +36,15 @@
   (let (errors)
     (dolist (line (s-lines (s-trim json-output)))
       (let* ((error-info (json-parse-string line :object-type 'plist :null-object nil))
-             (line-number (plist-get error-info :line_number))
-             (message (plist-get error-info :message)))
+             (message (plist-get error-info :message))
+             (start-offset (plist-get error-info :start_offset))
+             (end-offset (plist-get error-info :end_offset)))
         (push
-         (flycheck-error-new-at
-          line-number
-          1
+         (flycheck-error-new-at-pos
+          (1+ start-offset)
           'error
           message
-          :end-column 3)
+          :end-pos (1+ end-offset))
          errors)))
     errors))
 

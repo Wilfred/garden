@@ -143,7 +143,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     )
                 );
             }
-            Err(parse::ParseError::Incomplete { message: e }) => {
+            Err(parse::ParseError::Incomplete { message: e, .. }) => {
                 eprintln!("Parse error (incomplete input): {}", e.0);
             }
         },
@@ -193,7 +193,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     )
                 );
             }
-            Err(parse::ParseError::Incomplete { message: e }) => {
+            Err(parse::ParseError::Incomplete { message: e, .. }) => {
                 eprintln!("Parse error (incomplete input): {}", e.0);
             }
         },

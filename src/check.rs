@@ -22,7 +22,7 @@ pub fn check(path: &Path, src: &str) {
                     message: message.0,
                 }]
             }
-            parse::ParseError::Incomplete { message } => {
+            parse::ParseError::Incomplete { message, .. } => {
                 // TODO: last line would be better?
                 vec![CheckDiagnostic {
                     line_number: 1,

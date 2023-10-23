@@ -36,6 +36,7 @@ pub enum ParseError {
     },
     Incomplete {
         message: ErrorMessage,
+        position: Position,
     },
 }
 
@@ -51,6 +52,7 @@ fn require_a_token<'a>(
         Some(token) => Ok(token),
         None => Err(ParseError::Incomplete {
             message: ErrorMessage(format!("Expected {}, got EOF", token_description)),
+            position: Position::todo(),
         }),
     }
 }
@@ -80,6 +82,7 @@ fn require_token<'a>(
         }
         None => Err(ParseError::Incomplete {
             message: ErrorMessage(format!("Expected `{}`, got EOF", expected)),
+            position: Position::todo(),
         }),
     }
 }
@@ -315,6 +318,7 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 
     Err(ParseError::Incomplete {
         message: ErrorMessage("Expected an expression".to_owned()),
+        position: Position::todo(),
     })
 }
 
@@ -349,6 +353,7 @@ fn parse_comma_separated_exprs(
             }
         } else {
             return Err(ParseError::Incomplete {
+                position: Position::todo(),
                 message: ErrorMessage(format!(
                     "Invalid syntax: Expected `,` or `{}` here, but got EOF",
                     terminator
@@ -549,6 +554,7 @@ fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, P
     }
 
     Err(ParseError::Incomplete {
+        position: Position::todo(),
         message: ErrorMessage("Unfinished definition".to_owned()),
     })
 }
@@ -565,6 +571,7 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
         }
     } else {
         return Err(ParseError::Incomplete {
+            position: Position::todo(),
             message: ErrorMessage("Unfinished test definition".to_owned()),
         });
     };
@@ -648,6 +655,7 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
             }
         } else {
             return Err(ParseError::Incomplete {
+                position: Position::todo(),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
                 ),
@@ -692,6 +700,7 @@ fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError>
             }
         } else {
             return Err(ParseError::Incomplete {
+                position: Position::todo(),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `}}` here, but got EOF".to_string(),
                 ),
@@ -740,6 +749,7 @@ fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Defin
             }
         }
         None => Err(ParseError::Incomplete {
+            position: Position::todo(),
             message: ErrorMessage("Unfinished function or method definition.".to_owned()),
         }),
     }
@@ -756,6 +766,7 @@ fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, Parse
         Some(type_name) => type_name,
         None => {
             return Err(ParseError::Incomplete {
+                position: Position::todo(),
                 message: ErrorMessage("A type name for this method is expected.".to_owned()),
             });
         }

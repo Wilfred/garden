@@ -66,7 +66,7 @@ fn read_expr(
 
                         return Ok((src, items));
                     }
-                    Err(ParseError::Incomplete { message: e }) => {
+                    Err(ParseError::Incomplete { message: e, .. }) => {
                         println!("Parsing failed (incomplete): {}", e.0);
                     }
                     Err(ParseError::Invalid { message: e, .. }) => {
@@ -239,7 +239,7 @@ fn read_multiline_syntax(
                     return Ok((src, items));
                 }
             }
-            Err(e @ ParseError::Incomplete { message: _ }) => match rl.readline(&prompt_symbol(false)) {
+            Err(e @ ParseError::Incomplete { .. }) => match rl.readline(&prompt_symbol(false)) {
                 Ok(input) => {
                     src.push('\n');
                     src.push_str(&input);

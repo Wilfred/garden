@@ -10,7 +10,6 @@ fun list_filter(items, f) {
       result = list_append(result, item);
     }
 
-    // todo: handle parse errors better if this semicolon is missing.
     i = i + 1
   }
   result;

@@ -33,9 +33,12 @@ pub fn check(path: &Path, src: &str) {
     };
 
     for error in &errors {
-        println!("{}", serde_json::to_string(error).expect("TODO: can this ever fail?"));
+        println!(
+            "{}",
+            serde_json::to_string(error).expect("TODO: can this ever fail?")
+        );
     }
-    
+
     if !errors.is_empty() {
         std::process::exit(1);
     }

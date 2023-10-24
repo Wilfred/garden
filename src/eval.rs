@@ -1,3 +1,6 @@
+// Used in some TODO that eventually should handle Err properly.
+#![allow(clippy::manual_flatten)]
+
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -1120,6 +1123,51 @@ fn eval_builtin_call(
             stack_frame
                 .evalled_values
                 .push((position.clone(), Value::Boolean(path.exists())));
+        }
+        BuiltinFunctionKind::ListDirectory => {
+            check_arity("list_directory", &receiver_value, 1, arg_values)?;
+
+            // TODO: define a separate path type in Garden.
+            let path_s = match &arg_values[0].1 {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            };
+
+            let path = PathBuf::from(path_s);
+
+            let value = match path.read_dir() {
+                Ok(dir_iter) => {
+                    let mut items = vec![];
+                    for entry in dir_iter {
+                        // TODO: don't silently discard errors.
+                        if let Ok(entry) = entry {
+                            items.push(Value::String(entry.path().display().to_string()));
+                        }
+                    }
+
+                    Value::List(items)
+                }
+                Err(_) => {
+                    // TODO: list_directory() should return a Result
+                    // rather than silently returning an empty list on
+                    // failure.
+                    Value::List(vec![])
+                }
+            };
+
+            stack_frame.evalled_values.push((position.clone(), value));
         }
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity("working_directory", &receiver_value, 0, arg_values)?;

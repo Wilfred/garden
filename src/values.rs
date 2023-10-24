@@ -45,6 +45,7 @@ pub fn type_representation(value: &Value) -> TypeName {
 pub enum BuiltinFunctionKind {
     DebugPrint,
     Error,
+    ListDirectory,
     Shell,
     StringRepr,
     PathExists,
@@ -58,6 +59,7 @@ impl Display for BuiltinFunctionKind {
         let name = match self {
             BuiltinFunctionKind::DebugPrint => "dbg",
             BuiltinFunctionKind::Error => "error",
+            BuiltinFunctionKind::ListDirectory => "list_directory",
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::StringRepr => "string_repr",
             BuiltinFunctionKind::PathExists => "path_exists",
@@ -83,6 +85,13 @@ dbg([1, 2]);
 
 ```
 error(\"Computer is melting!\");
+```"
+        }
+        BuiltinFunctionKind::ListDirectory => {
+            "List the contents of the specified directory.
+
+```
+list_directory(\"/\");
 ```"
         }
         BuiltinFunctionKind::Shell =>{

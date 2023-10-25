@@ -8,6 +8,10 @@
 
 Added `list_directory` function.
 
+### Editor
+
+Emacs sessions now handle large outputs without crashing.
+
 # 0.7 (released 21st October 2023)
 
 **Goal: Support interactive unit tests.**

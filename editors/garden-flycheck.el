@@ -54,5 +54,11 @@
   :error-parser garden-flycheck--parse
   :modes (garden-mode))
 
+;;;###autoload
+(add-hook 'garden-mode-hook #'flycheck-mode)
+
+;;;###autoload
+(add-to-list 'flycheck-checkers 'garden)
+
 (provide 'garden-flycheck)
 ;;; garden-flycheck.el ends here

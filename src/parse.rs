@@ -949,22 +949,25 @@ fn parse_toplevel_items_from_tokens(
 ) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut items: Vec<ToplevelItem> = vec![];
 
-    // TODO: support interleaving block expressions, inline
-    // expressions, and definitions.
-    if let Ok(item) = parse_toplevel_expr(src, tokens) {
-        items.push(item);
-
-        while !tokens.is_empty() {
-            items.push(parse_toplevel_expr(src, tokens)?);
-        }
-        return Ok(items);
-    }
-
     while !tokens.is_empty() {
-        let def = parse_definition(src, tokens)?;
-        items.push(ToplevelItem::Def(def));
+        let item = parse_toplevel_item_from_tokens(src, tokens)?;
+        items.push(item);
     }
     Ok(items)
+}
+
+fn parse_toplevel_item_from_tokens(
+    src: &str,
+    tokens: &mut TokenStream,
+) -> Result<ToplevelItem, ParseError> {
+    if let Some(token) = tokens.peek() {
+        if token.text == "fun" || token.text == "test" {
+            let def = parse_definition(src, tokens)?;
+            return Ok(ToplevelItem::Def(def));
+        }
+    }
+
+    parse_toplevel_expr(src, tokens)
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
@@ -1547,6 +1550,14 @@ mod tests {
 
         assert_eq!(defs.len(), 1);
         assert!(matches!(defs[0].2, Definition_::Method(_)));
+    }
+
+    #[test]
+    fn test_parse_fun_def_and_block() {
+        let src = "fun foo() {} {}";
+        let defs = parse_toplevel_items(&PathBuf::new(), src).unwrap();
+
+        assert_eq!(defs.len(), 2);
     }
 
     #[test]

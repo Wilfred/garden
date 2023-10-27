@@ -22,7 +22,7 @@ pub struct Token<'a> {
 #[derive(Debug, Clone)]
 pub struct TokenStream<'a> {
     tokens: Vec<Token<'a>>,
-    idx: usize,
+    pub idx: usize,
 }
 
 impl<'a> TokenStream<'a> {

@@ -912,50 +912,51 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     ))
 }
 
+fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelItem, ParseError> {
+    let initial_token_idx = tokens.idx;
+
+    if let Ok(expr) = parse_block_member_expression(src, tokens) {
+        let pos = &expr.0.clone();
+        let toplevel_expr =
+            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
+        return Ok(ToplevelItem::Expr(toplevel_expr));
+    }
+
+    tokens.idx = initial_token_idx;
+    if let Ok(expr) = parse_inline_expression(src, tokens) {
+        let pos = &expr.0.clone();
+        let toplevel_expr =
+            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
+        return Ok(ToplevelItem::Expr(toplevel_expr));
+    }
+
+    tokens.idx = initial_token_idx;
+    let position = match tokens.peek() {
+        Some(token) => token.position,
+        None => Position::todo(),
+    };
+
+    Err(ParseError::Invalid {
+        position,
+        message: ErrorMessage("Expected an expression".to_owned()),
+        additional: vec![],
+    })
+}
+
 fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
 ) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut items: Vec<ToplevelItem> = vec![];
 
-    // Parsing advances the tokens pointer, so create a copy for
-    // trying an expression parse.
-    let mut tokens_copy = tokens.clone();
-
     // TODO: support interleaving block expressions, inline
     // expressions, and definitions.
-    if let Ok(expr) = parse_block_member_expression(src, &mut tokens_copy) {
-        let pos = &expr.0.clone();
-        let toplevel_expr =
-            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-        items.push(ToplevelItem::Expr(toplevel_expr));
+    if let Ok(item) = parse_toplevel_expr(src, tokens) {
+        items.push(item);
 
-        while !tokens_copy.is_empty() {
-            let expr = parse_block_member_expression(src, &mut tokens_copy)?;
-            let pos = &expr.0.clone();
-            let toplevel_expr =
-                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-            items.push(ToplevelItem::Expr(toplevel_expr));
+        while !tokens.is_empty() {
+            items.push(parse_toplevel_expr(src, tokens)?);
         }
-
-        return Ok(items);
-    }
-
-    let mut tokens_copy = tokens.clone();
-    if let Ok(expr) = parse_inline_expression(src, &mut tokens_copy) {
-        let pos = &expr.0.clone();
-        let toplevel_expr =
-            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-        items.push(ToplevelItem::Expr(toplevel_expr));
-
-        while !tokens_copy.is_empty() {
-            let expr = parse_inline_expression(src, &mut tokens_copy)?;
-            let pos = &expr.0.clone();
-            let toplevel_expr =
-                ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-            items.push(ToplevelItem::Expr(toplevel_expr));
-        }
-
         return Ok(items);
     }
 
@@ -1550,7 +1551,7 @@ mod tests {
 
     #[test]
     fn test_incomplete_expression() {
-        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "1; 2").is_err());
+        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "1 + ").is_err());
     }
 
     #[test]

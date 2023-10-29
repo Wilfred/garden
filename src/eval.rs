@@ -891,7 +891,7 @@ fn check_arity(
 
         return Err(ErrorInfo {
             message: ErrorMessage(format!(
-                "Function {} requires {} argument{}, but got: {}",
+                "Function {} requires {} argument{}, but got {}",
                 fun_name,
                 expected,
                 if expected == 1 { "" } else { "s" },

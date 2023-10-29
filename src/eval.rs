@@ -880,6 +880,15 @@ fn check_arity(
             saved_values.push(value.clone());
         }
 
+        let error_position = if arg_values.len() > expected {
+            arg_values[expected].0.clone()
+        } else {
+            // TODO: for methods it would be better to highlight the
+            // position of the method name at the call site, not the
+            // receiver.
+            receiver_value.0.clone()
+        };
+
         return Err(ErrorInfo {
             message: ErrorMessage(format!(
                 "Function {} requires {} argument{}, but got: {}",
@@ -889,7 +898,7 @@ fn check_arity(
                 arg_values.len()
             )),
             restore_values: saved_values,
-            error_position: receiver_value.0.clone(),
+            error_position,
         });
     }
 

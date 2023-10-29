@@ -50,9 +50,6 @@ fun (self: List) filter(f): List {
 test filter {
     should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
 
-    // TODO: improve error receiver position and argument position here.
-    // should_equal([1, 2].filter(fun(_) { true; }, [1, 2]));
-
     // TODO: evaluating this in a JSON session is Stopping due to the
     // test stack frame returning.
 }

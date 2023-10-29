@@ -24,6 +24,7 @@ pub fn format_error_with_stack(
         position,
         &top_stack.src,
         &top_stack.enclosing_name,
+        true,
     ));
 
     // For the rest of the stack, we want the positions of calls.
@@ -34,6 +35,7 @@ pub fn format_error_with_stack(
                 pos,
                 &caller_stack_frame.src,
                 &caller_stack_frame.enclosing_name,
+                false,
             ));
         }
     }
@@ -61,7 +63,12 @@ pub fn format_parse_error(message: &ErrorMessage, position: &Position, src: &str
     format_error(message, position, src)
 }
 
-fn format_pos_in_fun(position: &Position, src_string: &SourceString, name: &SymbolName) -> String {
+fn format_pos_in_fun(
+    position: &Position,
+    src_string: &SourceString,
+    name: &SymbolName,
+    underline: bool,
+) -> String {
     let mut res = String::new();
 
     res.push_str(
@@ -75,27 +82,40 @@ fn format_pos_in_fun(position: &Position, src_string: &SourceString, name: &Symb
         .to_string(),
     );
 
-    let src = &src_string.src;
-    let line_positions = LinePositions::from(src.as_str());
-
     // TODO: this is the line number relative to the start of
     // the SourceString, not the start of the file.
     let offset = std::cmp::max(
         position.start_offset as isize - src_string.offset as isize,
         0,
     ) as usize;
-    let line_num = if offset >= src.len() {
+    let end_offset =
+        std::cmp::max(position.end_offset as isize - src_string.offset as isize, 0) as usize;
+
+    let src = &src_string.src;
+    let s_lines: Vec<_> = src.lines().collect();
+    if offset >= src.len() {
         // TODO: this occurs when we are using the wrong
         // SourceString, such as the main function wrapper. We
         // should find the relevant SourceString instead.
-        0.into()
+        let relevant_line = s_lines[0].to_owned();
+        res.push_str(&relevant_line);
     } else {
-        line_positions.from_offset(offset)
-    };
+        let line_positions = LinePositions::from(src.as_str());
+        for span in line_positions.from_offsets(offset, end_offset) {
+            let relevant_line = s_lines[span.line.as_usize()].to_owned();
+            res.push_str(&relevant_line);
 
-    let s_lines: Vec<_> = src.lines().collect();
-    let relevant_line = s_lines[line_num.as_usize()].to_owned();
-    res.push_str(&relevant_line);
+            if underline {
+                res.push('\n');
+                res.push_str(&" ".repeat(span.start_col as usize));
+                res.push_str(
+                    &"^".repeat((span.end_col - span.start_col) as usize)
+                        .red()
+                        .to_string(),
+                );
+            }
+        }
+    }
 
     res
 }

@@ -14,7 +14,7 @@ pub fn format_error_with_stack(
 ) -> String {
     let mut res = String::new();
 
-    res.push_str(&format!("Error: {}\n\n", message.0));
+    res.push_str(&format!("{}: {}\n\n", "Error".bold().red(), message.0));
 
     // For the topmost (most recently called) stack frame, the
     // relevant position is where the error occurred.

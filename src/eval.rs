@@ -588,10 +588,7 @@ fn eval_if(
         }
         v => {
             return Err(ErrorInfo {
-                message: ErrorMessage(format!(
-                    "Expected a boolean when evaluating `if`, but got: {}",
-                    v
-                )),
+                message: format_type_error(&TypeName("Bool".into()), v),
                 restore_values: vec![condition_value],
                 error_position: bool_position.clone(),
             });
@@ -632,10 +629,7 @@ fn eval_while(
         }
         v => {
             return Err(ErrorInfo {
-                message: ErrorMessage(format!(
-                    "Expected a boolean when evaluating `while`, but got: {}",
-                    v
-                )),
+                message: format_type_error(&TypeName("Bool".into()), v),
                 restore_values: vec![condition_value],
                 error_position: condition_pos.clone(),
             });
@@ -697,6 +691,15 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
     Ok(())
 }
 
+fn format_type_error(expected: &TypeName, value: &Value) -> ErrorMessage {
+    ErrorMessage(format!(
+        "Expected {}, but got {}: {}",
+        expected.0,
+        type_representation(value).0,
+        value
+    ))
+}
+
 fn eval_boolean_binop(
     stack_frame: &mut StackFrame,
     position: &Position,
@@ -716,7 +719,7 @@ fn eval_boolean_binop(
             Value::Boolean(b) => b,
             _ => {
                 return Err(ErrorInfo {
-                    message: ErrorMessage(format!("Expected a bool, but got: {}", lhs_value.1)),
+                    message: format_type_error(&TypeName("Bool".into()), &lhs_value.1),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_value.0,
                 });
@@ -726,7 +729,7 @@ fn eval_boolean_binop(
             Value::Boolean(b) => b,
             _ => {
                 return Err(ErrorInfo {
-                    message: ErrorMessage(format!("Expected a bool, but got: {}", rhs_value.1)),
+                    message: format_type_error(&TypeName("Bool".into()), &rhs_value.1),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_value.0,
                 });
@@ -799,7 +802,7 @@ fn eval_integer_binop(
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: ErrorMessage(format!("Expected an integer, but got: {}", lhs_value.1)),
+                    message: format_type_error(&TypeName("Int".into()), &lhs_value.1),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_value.0,
                 });
@@ -809,7 +812,7 @@ fn eval_integer_binop(
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: ErrorMessage(format!("Expected an integer, but got: {}", rhs_value.1)),
+                    message: format_type_error(&TypeName("Int".into()), &rhs_value.1),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_value.0,
                 });
@@ -913,15 +916,13 @@ fn check_arity(
     Ok(())
 }
 
+/// Check that `value` has `expected` type.
+// TODO: define check_type_is_string() -> Result<String, ErrorMessage> etc.
 fn check_type(value: &Value, expected: &TypeName) -> Result<(), ErrorMessage> {
     let actual_type = type_representation(value);
 
     if actual_type != *expected {
-        // TODO: Print the value as well as its type.
-        return Err(ErrorMessage(format!(
-            "Expected a {}, but got a {}",
-            expected.0, actual_type.0
-        )));
+        return Err(format_type_error(expected, value));
     }
 
     Ok(())
@@ -955,7 +956,7 @@ fn eval_builtin_call(
                 }
                 v => {
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -986,7 +987,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1020,7 +1021,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1085,7 +1086,7 @@ fn eval_builtin_call(
                             saved_values.push(receiver_value.clone());
 
                             return Err(ErrorInfo {
-                                message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                                message: format_type_error(&TypeName("List".into()), &v),
                                 restore_values: saved_values,
                                 error_position: arg_values[0].0.clone(),
                             });
@@ -1100,7 +1101,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1129,7 +1130,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1155,7 +1156,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1322,7 +1323,7 @@ fn eval_call(
 
             return Err(ErrorInfo {
                 error_position: receiver_value.0,
-                message: ErrorMessage(format!("Expected a function, but got: {}", v)),
+                message: format_type_error(&TypeName("Function".into()), v),
                 restore_values: saved_values,
             });
         }
@@ -1488,7 +1489,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                        message: format_type_error(&TypeName("List".into()), v),
                         restore_values: saved_values,
                         error_position: receiver_value.0.clone(),
                     });
@@ -1538,7 +1539,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                        message: format_type_error(&TypeName("List".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1551,7 +1552,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
+                        message: format_type_error(&TypeName("Int".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1575,7 +1576,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a list, but got: {}", v)),
+                        message: format_type_error(&TypeName("List".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1595,7 +1596,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1611,7 +1612,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1640,7 +1641,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1660,7 +1661,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected a string, but got: {}", v)),
+                        message: format_type_error(&TypeName("String".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[0].0.clone(),
                     });
@@ -1676,7 +1677,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
+                        message: format_type_error(&TypeName("Int".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[1].0.clone(),
                     });
@@ -1692,7 +1693,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Expected an integer, but got: {}", v)),
+                        message: format_type_error(&TypeName("Int".into()), v),
                         restore_values: saved_values,
                         error_position: arg_values[2].0.clone(),
                     });

@@ -1,0 +1,129 @@
+// String methods.
+
+fun lines(s: String): List {
+    let parts = [];
+
+    let line_start = 0;
+    let i = 0;
+    while (i < s.len()) {
+        let char = s.substring(i, i + 1);
+
+        if (char == "\n") {
+            parts = parts.append(s.substring(line_start, i));
+            line_start = i + 1;
+        }
+
+        i = i + 1;
+    }
+
+    // Append last line if it wasn't terminated with a newline.
+    if (line_start != s.len()) {
+        parts = parts.append(s.substring(line_start, s.len()));
+    }
+
+    parts;
+}
+
+test lines {
+    should_equal(lines(""), []);
+    should_equal(lines("a"), ["a"]);
+    should_equal(lines("a\nb"), ["a", "b"]);
+    should_equal(lines("a\nb\n"), ["a", "b"]);
+}
+
+fun (self: String) join(items: List): String {
+    if (items.is_empty()) {
+        return "";
+    }
+    if (items.len() == 1) {
+        return items.get(0);
+    }
+
+    let res = items.get(0);
+    let i = 1;
+    while (i < items.len()) {
+        res = res.concat(self);
+        res = res.concat(items.get(i));
+        i = i + 1;
+    }
+    res;
+}
+
+test join {
+    should_equal(" ".join(["x"]), "x");
+
+    // TODO: should .join() exist on String or on List?
+    should_equal(" ".join(["x", "y"]), "x y");
+}
+
+fun (self: String) contains(needle: String): Bool {
+    if (needle.len() > self.len()) {
+        return false;
+    }
+
+    // TODO: better parse error if this last parenthesis is missing.
+    // dbg(string_length(haystack) - string_length(needle));
+
+    let i = 0;
+    while (i <= (self.len() - needle.len())) {
+        let section = self.substring(i, i + needle.len());
+        if (section == needle) {
+            return true;
+        }
+
+        i = i + 1;
+    }
+
+    false;
+}
+
+// List methods.
+
+fun (self: List) filter(f): List {
+    let result = [];
+
+    let i = 0;
+    while (i < self.len()) {
+        let item = self.get(i);
+
+        if (f(item)) {
+            result = result.append(item);
+        }
+
+        i = i + 1;
+    }
+    result;
+}
+
+test filter {
+    should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
+}
+
+fun (self: List) is_empty(): Bool {
+    self.len() == 0;
+}
+
+fun (self: List) contains(item): Bool {
+    let i = 0;
+    while (i < self.len()) {
+        if (self.get(i) == item) {
+            return true;
+        }
+
+        i = i + 1;
+    }
+
+    false;
+}
+
+test contains {
+    should_equal([10, 11].contains(10), true);
+}
+
+// Testing heleprs.
+
+fun should_equal(actual, expected): Void {
+    if (actual != expected) {
+        error(" ".join(["Expected", string_repr(expected), "but got", string_repr(actual)]));
+    }
+}

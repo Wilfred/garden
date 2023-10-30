@@ -19,6 +19,7 @@ use crate::ast::{
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::json_session::{Response, ResponseKind};
+use crate::parse::parse_toplevel_items;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 
 // TODO: Is it correct to define equality here? Closures should only
@@ -243,7 +244,7 @@ impl Default for Env {
             TypeName("Void".into()),
         ];
 
-        Self {
+        let mut env = Self {
             trace_exprs: false,
             file_scope,
             methods,
@@ -270,7 +271,14 @@ impl Default for Env {
                     src: "// __toplevel__".to_owned(),
                 },
             }],
-        }
+        };
+
+        let prelude_src = include_str!("prelude.gdn");
+        let prelude_items = parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src)
+            .expect("Prelude should be syntactically legal");
+        eval_toplevel_defs(&prelude_items, &mut env);
+
+        env
     }
 }
 

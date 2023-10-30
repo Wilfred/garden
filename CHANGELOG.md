@@ -6,7 +6,10 @@
 
 ### Stdlib
 
-Added `list_directory` function.
+Added functions: `list_directory` and `should_equal`.
+
+Added methods: `String::join`, `String::contains`, `String::lines`, `List::filter`,
+and `List::is_empty()`.
 
 ### Editor
 

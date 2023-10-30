@@ -917,7 +917,6 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
-// TODO: define check_type_is_string() -> Result<String, ErrorMessage> etc.
 fn check_type(value: &Value, expected: &TypeName) -> Result<(), ErrorMessage> {
     let actual_type = type_representation(value);
 

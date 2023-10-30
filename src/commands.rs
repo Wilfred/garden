@@ -360,22 +360,11 @@ pub fn run_command<T: Write>(
             .unwrap();
         }
         Command::Functions => {
-            let mut names_and_vals: Vec<(ast::SymbolName, Value)> = env
-                .file_scope
-                .iter()
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect();
-            names_and_vals.sort_by(|(n1, _), (n2, _)| n1.0.cmp(&n2.0));
+            let mut names: Vec<_> = env.file_scope.keys().map(|s| &s.0).collect();
+            names.sort();
 
-            for (i, (var_name, value)) in names_and_vals.iter().enumerate() {
-                write!(
-                    buf,
-                    "{}{:<20} {}",
-                    if i == 0 { "" } else { "\n" },
-                    var_name.0.bright_green(),
-                    value
-                )
-                .unwrap();
+            for (i, var_name) in names.iter().enumerate() {
+                write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name).unwrap();
             }
         }
         Command::ForgetLocal(name) => {

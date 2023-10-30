@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::ast::ToplevelItem;
+use crate::ast::{SourceString, ToplevelItem};
 use crate::commands::{
     print_available_commands, run_command, Command, CommandParseError, EvalAction,
 };
@@ -182,7 +182,17 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(EvalError::ResumableError(position, msg)) => {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
-                println!("{}", &format_error(&msg, &position, &last_src));
+                println!(
+                    "{}",
+                    &format_error(
+                        &msg,
+                        &position,
+                        &SourceString {
+                            src: last_src.clone(),
+                            offset: 0,
+                        },
+                    )
+                );
                 is_stopped = true;
             }
             Err(EvalError::Interrupted) => {

@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::ast;
+use crate::ast::{self, SourceString};
 use crate::diagnostics::{format_error, format_parse_error};
 use crate::eval::{eval_env, eval_toplevel_items, push_test_stackframe};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
@@ -107,7 +107,15 @@ fn handle_eval_request(
             }
             Err(EvalError::ResumableError(position, e)) => {
                 // TODO: print the whole stack.
-                let stack = Some(format_error(&e, &position, &req.input));
+                // TODO: use the original SourceString rather than reconstructing.
+                let stack = Some(format_error(
+                    &e,
+                    &position,
+                    &SourceString {
+                        src: req.input,
+                        offset: 0,
+                    },
+                ));
                 Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
@@ -132,7 +140,14 @@ fn handle_eval_request(
                 message,
                 additional: _,
             } => {
-                let stack = Some(format_parse_error(&message, &position, &req.input));
+                let stack = Some(format_parse_error(
+                    &message,
+                    &position,
+                    &SourceString {
+                        src: req.input,
+                        offset: 0,
+                    },
+                ));
                 Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {

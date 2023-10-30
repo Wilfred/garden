@@ -43,7 +43,12 @@ pub fn format_error_with_stack(
     res
 }
 
-pub fn format_error(message: &ErrorMessage, position: &Position, src: &str) -> String {
+pub fn format_error(
+    message: &ErrorMessage,
+    position: &Position,
+    src_string: &SourceString,
+) -> String {
+    let src = &src_string.src;
     let mut res = Vec::new();
 
     let path_str = position.path.display().to_string();
@@ -59,8 +64,12 @@ pub fn format_error(message: &ErrorMessage, position: &Position, src: &str) -> S
     format!("Error: {}\n{}", message.0, String::from_utf8_lossy(&res))
 }
 
-pub fn format_parse_error(message: &ErrorMessage, position: &Position, src: &str) -> String {
-    format_error(message, position, src)
+pub fn format_parse_error(
+    message: &ErrorMessage,
+    position: &Position,
+    src_string: &SourceString,
+) -> String {
+    format_error(message, position, src_string)
 }
 
 fn format_pos_in_fun(

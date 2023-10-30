@@ -26,6 +26,7 @@ use clap::{Parser, Subcommand};
 use eval::{eval_toplevel_defs, eval_toplevel_items, Env, EvalError, Session};
 use parse::{parse_toplevel_item, parse_toplevel_items};
 
+use crate::ast::SourceString;
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::eval::{eval_toplevel_tests, ErrorMessage};
 use crate::values::escape_string_literal;
@@ -139,7 +140,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     &format_parse_error(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
-                        &src
+                        &SourceString { src, offset: 0 }
                     )
                 );
             }
@@ -189,7 +190,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     &format_parse_error(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
-                        &src
+                        &SourceString { src, offset: 0 }
                     )
                 );
             }

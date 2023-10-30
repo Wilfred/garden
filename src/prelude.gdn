@@ -97,6 +97,9 @@ fun (self: List) filter(f): List {
 
 test filter {
     should_equal([1, 2].filter(fun(_) { true; }), [1, 2]);
+
+    // TODO: better error printing here.
+    [1, 2].filter(fun() { true; });
 }
 
 fun (self: List) is_empty(): Bool {

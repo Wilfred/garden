@@ -4,11 +4,11 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::ast::{SourceString, ToplevelItem};
+use crate::ast::ToplevelItem;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandParseError, EvalAction,
 };
-use crate::diagnostics::format_error;
+use crate::diagnostics::format_error_with_stack;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::parse::{parse_toplevel_items, ParseError};
@@ -182,17 +182,8 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Err(EvalError::ResumableError(position, msg)) => {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
-                println!(
-                    "{}",
-                    &format_error(
-                        &msg,
-                        &position,
-                        &SourceString {
-                            src: last_src.clone(),
-                            offset: 0,
-                        },
-                    )
-                );
+                let _ = last_src; // should use this.
+                println!("{}", &format_error_with_stack(&msg, &position, &env.stack));
                 is_stopped = true;
             }
             Err(EvalError::Interrupted) => {

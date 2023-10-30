@@ -1,4 +1,3 @@
-use ariadne::{Label, Report, ReportKind, Source};
 use itertools::Itertools;
 use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
@@ -48,20 +47,14 @@ pub fn format_error(
     position: &Position,
     src_string: &SourceString,
 ) -> String {
-    let src = &src_string.src;
-    let mut res = Vec::new();
-
-    let path_str = position.path.display().to_string();
-    // TODO: roll our own error formatting.
-    let r = Report::build(ReportKind::Error, &path_str, position.start_offset)
-        .with_label(Label::new((
-            &path_str,
-            position.start_offset..position.end_offset,
-        )))
-        .finish();
-
-    r.write((&path_str, Source::from(src)), &mut res).unwrap();
-    format!("Error: {}\n{}", message.0, String::from_utf8_lossy(&res))
+    let mut res = format!("Error: {}\n\n", message.0);
+    res.push_str(&format_pos_in_fun(
+        position,
+        src_string,
+        &SymbolName("todo_name".into()),
+        true,
+    ));
+    res
 }
 
 pub fn format_parse_error(

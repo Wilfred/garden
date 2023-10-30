@@ -10,7 +10,6 @@ keywords = ["compilers", "development-tools"]
 rust-version = "1.70.0"
 
 [dependencies]
-ariadne = "0.3.0"
 clap = { version = "4.1.11", features = ["derive"] }
 ctrlc = "3.2.5"
 itertools = "0.11.0"

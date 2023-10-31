@@ -1,7 +1,10 @@
-# 0.9 (unreleased)
-**Goal: Offer actions when errors occur.**
+# 0.10 (unreleased)
+**Goal: Offer actions when runtime errors occur.**
 
-# 0.8 (unreleased)
+# 0.9 (unreleased)
+**Goal: User-defined enum types.**
+
+# 0.8 (released 30th October 2023)
 **Goal: Red and yellow squiggles.**
 
 ### Stdlib

@@ -27,16 +27,16 @@ pub enum Command {
     FrameStatements,
     Methods,
     Parse(Option<String>),
+    Quit,
     Replace(Option<ast::Expression>),
     Resume,
     Skip,
+    Stack,
     Search(Option<String>),
     Source,
     Test(Option<String>),
     Trace,
     Type(Option<ast::Expression>),
-    Stack,
-    Quit,
     Version,
 }
 

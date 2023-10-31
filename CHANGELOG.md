@@ -4,6 +4,10 @@
 # 0.9 (unreleased)
 **Goal: User-defined enum types.**
 
+### Commands
+
+Added `:uptime`.
+
 # 0.8 (released 30th October 2023)
 **Goal: Red and yellow squiggles.**
 

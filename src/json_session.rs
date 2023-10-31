@@ -1,5 +1,6 @@
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::time::Instant;
 use std::{
     io::BufRead,
     sync::{atomic::AtomicBool, Arc},
@@ -286,6 +287,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
         history: String::new(),
         interrupted,
         has_attached_stdout: false,
+        start_time: Instant::now(),
     };
 
     loop {

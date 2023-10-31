@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Instant;
 
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
@@ -335,6 +336,7 @@ pub struct Session<'a> {
     pub history: String,
     pub interrupted: &'a Arc<AtomicBool>,
     pub has_attached_stdout: bool,
+    pub start_time: Instant,
 }
 
 #[derive(Debug)]
@@ -2222,6 +2224,7 @@ mod tests {
             history: String::new(),
             interrupted: &interrupted,
             has_attached_stdout: false,
+            start_time: Instant::now(),
         };
 
         super::eval_exprs(exprs, env, &mut session)

@@ -12,6 +12,7 @@ rust-version = "1.70.0"
 [dependencies]
 clap = { version = "4.1.11", features = ["derive"] }
 ctrlc = "3.2.5"
+humantime = "2.1.0"
 itertools = "0.11.0"
 lazy_static = "1.4.0"
 line-numbers = "0.2.2"

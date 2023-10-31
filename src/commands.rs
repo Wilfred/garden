@@ -1,5 +1,7 @@
+use std::time::Duration;
 use std::{fmt::Display, io::Write, path::PathBuf};
 
+use humantime::format_duration;
 use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -37,6 +39,7 @@ pub enum Command {
     Test(Option<String>),
     Trace,
     Type(Option<ast::Expression>),
+    Uptime,
     Version,
 }
 
@@ -71,6 +74,7 @@ impl Display for Command {
             Command::Locals => ":locals",
             Command::Methods => ":methods",
             Command::Parse(_) => ":parse",
+            Command::Quit => ":quit",
             Command::Replace(_) => ":replace",
             Command::Resume => ":resume",
             Command::Search(_) => ":search",
@@ -80,7 +84,7 @@ impl Display for Command {
             Command::Test(_) => ":test",
             Command::Trace => ":trace",
             Command::Type(_) => ":type",
-            Command::Quit => ":quit",
+            Command::Uptime => ":uptime",
             Command::Version => ":version",
         };
         write!(f, "{}", name)
@@ -103,6 +107,7 @@ impl Command {
             ":locals" => Ok(Command::Locals),
             ":methods" => Ok(Command::Methods),
             ":parse" => Ok(Command::Parse(args)),
+            ":quit" => Ok(Command::Quit),
             ":replace" => {
                 // TODO: find a better name for this.
                 match parse_inline_expr_from_str(
@@ -129,7 +134,7 @@ impl Command {
                     Err(_) => Ok(Command::Type(None)),
                 }
             }
-            ":quit" => Ok(Command::Quit),
+            ":uptime" => Ok(Command::Uptime),
             ":version" => Ok(Command::Version),
             _ => {
                 if s.starts_with(':') {
@@ -359,6 +364,11 @@ pub fn run_command<T: Write>(
             )
             .unwrap();
         }
+        Command::Uptime => {
+            // Round to the nearest second.
+            let uptime = Duration::from_secs(session.start_time.elapsed().as_secs());
+            write!(buf, "{}", format_duration(uptime)).unwrap();
+        }
         Command::Functions => {
             let mut names: Vec<_> = env.file_scope.keys().map(|s| &s.0).collect();
             names.sort();
@@ -504,6 +514,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::Methods => "The :methods command displays all the methods currently defined.\n\nExample:\n\n:methods",
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
+        Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
         Command::Replace(_) => "The :replace command discards the top value in the value stack and replaces it with the expression provided.\n\nExample:\n\n:replace 123",
         Command::Resume => "The :resume command restarts evaluation if it's previously stopped.\n\nExample:\n\n:resume",
         Command::Search(_) => "The :search command shows all the definitions whose name contains the search term.\n\nExample:\n\n:search string",
@@ -513,7 +524,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",
         Command::Type(_) => "The :type command shows the type of a given expression.\n\nExample:\n\n:type 1 + 2",
         Command::Stack => "The :stack command prints the current call stack.\n\nExample:\n\n:stack",
-        Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
+        Command::Uptime => "The :uptime command displays how long this Garden session has been running.\n\nExample:\n\n:uptime",
         Command::Version => "The :version command shows the current version and commit of this Garden session.\n\nExample:\n\n:version",
     }
 }

@@ -21,6 +21,7 @@ mod version;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Instant;
 
 use clap::{Parser, Subcommand};
 use eval::{eval_toplevel_defs, eval_toplevel_items, Env, EvalError, Session};
@@ -111,6 +112,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     history: src.clone(),
                     interrupted,
                     has_attached_stdout: true,
+                    start_time: Instant::now(),
                 };
 
                 eval_toplevel_defs(&items, &mut env);
@@ -163,6 +165,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     history: src.clone(),
                     interrupted,
                     has_attached_stdout: true,
+                    start_time: Instant::now(),
                 };
 
                 eval_toplevel_defs(&items, &mut env);

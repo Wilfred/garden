@@ -3,6 +3,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::time::Instant;
 
 use crate::ast::ToplevelItem;
 use crate::commands::{
@@ -89,6 +90,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
         history: String::new(),
         interrupted,
         has_attached_stdout: true,
+        start_time: Instant::now(),
     };
 
     let mut rl = new_editor();

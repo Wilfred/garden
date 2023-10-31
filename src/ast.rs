@@ -248,6 +248,7 @@ pub enum Definition_ {
     /// ```
     Method(MethodInfo),
     Test(TestInfo),
+    Enum(SymbolName),
 }
 
 #[derive(Debug, Clone, PartialEq)]

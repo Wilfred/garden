@@ -853,7 +853,7 @@ fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, Par
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "true", "false", "if", "else", "while", "return", "test",
+    "let", "fun", "enum", "true", "false", "if", "else", "while", "return", "test",
 ];
 
 fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {

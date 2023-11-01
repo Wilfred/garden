@@ -145,6 +145,13 @@ pub struct TestInfo {
     pub body: Block,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnumInfo {
+    pub src_string: SourceString,
+    pub doc_comment: Option<String>,
+    pub name: Symbol,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
     ListAppend,
@@ -248,7 +255,7 @@ pub enum Definition_ {
     /// ```
     Method(MethodInfo),
     Test(TestInfo),
-    Enum(SymbolName),
+    Enum(EnumInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -2,7 +2,7 @@
 #![allow(clippy::manual_flatten)]
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -136,7 +136,7 @@ pub struct Env {
     pub file_scope: HashMap<SymbolName, Value>,
     pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub tests: HashMap<SymbolName, TestInfo>,
-    pub types: Vec<TypeName>,
+    pub types: HashSet<TypeName>,
     pub stack: Vec<StackFrame>,
 }
 
@@ -235,7 +235,7 @@ impl Default for Env {
         methods.insert(TypeName("List".into()), list_methods);
 
         // Insert all the built-in types.
-        let types = vec![
+        let types: HashSet<_> = vec![
             // TODO: String literals are duplicated with type_representation.
             TypeName("Int".into()),
             TypeName("Bool".into()),
@@ -243,7 +243,9 @@ impl Default for Env {
             TypeName("String".into()),
             TypeName("List".into()),
             TypeName("Void".into()),
-        ];
+        ]
+        .into_iter()
+        .collect();
 
         let mut env = Self {
             trace_exprs: false,
@@ -493,7 +495,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                 }
             }
             Definition_::Enum(enum_info) => {
-                env.types.push(enum_info.name.clone());
+                env.types.insert(enum_info.name.clone());
             }
         }
     }

@@ -563,12 +563,53 @@ fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, P
     })
 }
 
+fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<Symbol>, ParseError> {
+    let mut variants = vec![];
+    loop {
+        if next_token_is(tokens, "}") {
+            break;
+        }
+
+        let name = parse_symbol(tokens)?;
+        variants.push(name);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == "}" {
+                break;
+            } else {
+                return Err(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+            }
+        } else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
+                ),
+            });
+        }
+    }
+
+    Ok(variants)
+}
+
 fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
     let enum_token = require_token(tokens, "enum")?;
     // let doc_comment = parse_doc_comment(&enum_token);
     let name = parse_symbol(tokens)?;
 
     let _open_brace = require_token(tokens, "{")?;
+
+    let variants = parse_enum_body(tokens)?;
+
     let close_brace = require_token(tokens, "}")?;
 
     let mut start_offset = enum_token.position.start_offset;
@@ -589,6 +630,7 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
             src_string,
             doc_comment: None,
             name,
+            variants,
         }),
     ))
 }

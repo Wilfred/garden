@@ -150,6 +150,7 @@ pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name: Symbol,
+    pub variants: Vec<Symbol>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

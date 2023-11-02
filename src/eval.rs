@@ -492,7 +492,9 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                     env.tests.insert(test_sym.name.clone(), test.clone());
                 }
             }
-            Definition_::Enum(_) => todo!(),
+            Definition_::Enum(enum_info) => {
+                env.types.push(enum_info.name.clone());
+            }
         }
     }
 }

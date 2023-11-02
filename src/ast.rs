@@ -149,7 +149,7 @@ pub struct TestInfo {
 pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
-    pub name: Symbol,
+    pub name: TypeName,
     pub variants: Vec<Symbol>,
 }
 

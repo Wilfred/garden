@@ -39,6 +39,7 @@ pub enum Command {
     Test(Option<String>),
     Trace,
     Type(Option<ast::Expression>),
+    Types,
     Uptime,
     Version,
 }
@@ -84,6 +85,7 @@ impl Display for Command {
             Command::Test(_) => ":test",
             Command::Trace => ":trace",
             Command::Type(_) => ":type",
+            Command::Types => ":types",
             Command::Uptime => ":uptime",
             Command::Version => ":version",
         };
@@ -134,6 +136,7 @@ impl Command {
                     Err(_) => Ok(Command::Type(None)),
                 }
             }
+            ":types" => Ok(Command::Types),
             ":uptime" => Ok(Command::Uptime),
             ":version" => Ok(Command::Version),
             _ => {
@@ -494,6 +497,14 @@ pub fn run_command<T: Write>(
                 write!(buf, ":type requires a code snippet, e.g. `:type 1 + 2`").unwrap();
             }
         }
+        Command::Types => {
+            let mut names: Vec<_> = env.types.iter().map(|s| &s.0).collect();
+            names.sort();
+
+            for (i, var_name) in names.iter().enumerate() {
+                write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name).unwrap();
+            }
+        }
         Command::Version => {
             write!(buf, "Garden {}", VERSION.as_str()).unwrap();
         }
@@ -523,6 +534,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Test(_) => "The :test command runs the test with the name specified.\n\nExample:\n\n:test some_test_name",
         Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",
         Command::Type(_) => "The :type command shows the type of a given expression.\n\nExample:\n\n:type 1 + 2",
+        Command::Types => "The :types command shows all the types currently defined.\n\nExample:\n\n:types",
         Command::Stack => "The :stack command prints the current call stack.\n\nExample:\n\n:stack",
         Command::Uptime => "The :uptime command displays how long this Garden session has been running.\n\nExample:\n\n:uptime",
         Command::Version => "The :version command shows the current version and commit of this Garden session.\n\nExample:\n\n:version",

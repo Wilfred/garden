@@ -6,7 +6,7 @@
 
 ### Commands
 
-Added `:uptime`.
+Added `:types` and `:uptime`.
 
 # 0.8 (released 30th October 2023)
 **Goal: Red and yellow squiggles.**

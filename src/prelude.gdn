@@ -8,16 +8,16 @@ enum Unit {
 
 // String methods.
 
-fun lines(s: String): List {
+fun (self: String) lines(): List {
     let parts = [];
 
     let line_start = 0;
     let i = 0;
-    while (i < s.len()) {
-        let char = s.substring(i, i + 1);
+    while (i < self.len()) {
+        let char = self.substring(i, i + 1);
 
         if (char == "\n") {
-            parts = parts.append(s.substring(line_start, i));
+            parts = parts.append(self.substring(line_start, i));
             line_start = i + 1;
         }
 
@@ -25,18 +25,18 @@ fun lines(s: String): List {
     }
 
     // Append last line if it wasn't terminated with a newline.
-    if (line_start != s.len()) {
-        parts = parts.append(s.substring(line_start, s.len()));
+    if (line_start != self.len()) {
+        parts = parts.append(self.substring(line_start, self.len()));
     }
 
     parts;
 }
 
 test lines {
-    should_equal(lines(""), []);
-    should_equal(lines("a"), ["a"]);
-    should_equal(lines("a\nb"), ["a", "b"]);
-    should_equal(lines("a\nb\n"), ["a", "b"]);
+    should_equal("".lines(), []);
+    should_equal("a".lines(), ["a"]);
+    should_equal("a\nb".lines(), ["a", "b"]);
+    should_equal("a\nb\n".lines(), ["a", "b"]);
 }
 
 fun (self: String) join(items: List): String {

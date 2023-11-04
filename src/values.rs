@@ -22,10 +22,15 @@ pub enum Value {
     String(String),
     /// A list value.
     List(Vec<Value>),
-    /// The void/unit value.
-    Void,
     // A value in a user-defined enum.
     Enum(TypeName, usize),
+}
+
+/// A helper for creating a unit value.
+pub fn unit_value() -> Value {
+    // We can assume that Unit is always defined because it's in the
+    // prelude.
+    Value::Enum(TypeName("Unit".to_owned()), 0)
 }
 
 pub fn type_representation(value: &Value) -> TypeName {
@@ -38,7 +43,6 @@ pub fn type_representation(value: &Value) -> TypeName {
             Value::BuiltinFunction(_) => "Fun",
             Value::String(_) => "String",
             Value::List(_) => "List",
-            Value::Void => "Void",
             Value::Enum(name, _) => &name.0,
         }
         .to_owned(),
@@ -153,7 +157,6 @@ impl Value {
             Value::Fun(name, _) => format!("(function: {})", name.name.0),
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind) => format!("(function: {})", kind),
-            Value::Void => "void".to_string(),
             Value::String(s) => escape_string_literal(s),
             Value::List(items) => {
                 let mut s = String::new();
@@ -182,6 +185,13 @@ impl Value {
                 },
                 None => format!("{}__OLD_DEFINITION::{}", name.0, variant_idx),
             },
+        }
+    }
+
+    pub fn display_unless_unit(&self, env: &Env) -> Option<String> {
+        match self {
+            Value::Enum(name, variant_idx) if name.0 == "Unit" && *variant_idx == 0 => None,
+            _ => Some(self.display(env)),
         }
     }
 }

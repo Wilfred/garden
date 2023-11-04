@@ -15,7 +15,6 @@ use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::parse::{parse_toplevel_items, ParseError};
 use crate::prompt::prompt_symbol;
-use crate::values::Value;
 
 use owo_colors::OwoColorize;
 use rustyline::Editor;
@@ -175,12 +174,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
 
         match eval_env(&mut env, &mut session) {
             Ok(result) => {
-                match result {
-                    Value::Void => {}
-                    v => {
-                        println!("{}", v.display(&env))
-                    }
+                if let Some(display_str) = result.display_unless_unit(&env) {
+                    println!("{}", display_str);
                 }
+
                 is_stopped = false;
             }
             Err(EvalError::ResumableError(position, msg)) => {

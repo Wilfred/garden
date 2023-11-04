@@ -9,7 +9,7 @@ use crate::{
     },
     eval::{eval_toplevel_defs, Bindings, StackFrame},
     parse::parse_toplevel_items,
-    values::{BuiltinFunctionKind, BuiltinType, Type, Value},
+    values::{BuiltinFunctionKind, BuiltinType, Type, Value, unit_value},
 };
 
 #[derive(Debug)]
@@ -146,7 +146,7 @@ impl Default for Env {
                         line_number: 0,
                         path: PathBuf::from("__toplevel__"),
                     },
-                    Value::Void,
+                    unit_value(),
                 )],
                 enclosing_fun: None,
                 enclosing_name: SymbolName("__toplevel__".to_owned()),

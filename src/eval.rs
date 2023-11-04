@@ -20,7 +20,7 @@ use crate::ast::{
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::values::{type_representation, BuiltinFunctionKind, Type, Value};
+use crate::values::{type_representation, unit_value, BuiltinFunctionKind, Type, Value};
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
@@ -426,7 +426,7 @@ fn eval_if(
                     None => {
                         stack_frame
                             .evalled_values
-                            .push((position.clone(), Value::Void));
+                            .push((position.clone(), unit_value()));
                     }
                 }
             }
@@ -470,7 +470,7 @@ fn eval_while(
                 // condition when there's no else.
                 stack_frame
                     .evalled_values
-                    .push((condition_pos.clone(), Value::Void));
+                    .push((condition_pos.clone(), unit_value()));
             }
         }
         v => {
@@ -846,7 +846,7 @@ fn eval_builtin_call(
             }
             stack_frame
                 .evalled_values
-                .push((position.clone(), Value::Void));
+                .push((position.clone(), unit_value()));
         }
         BuiltinFunctionKind::Println => {
             check_arity("println", &receiver_value, 1, arg_values)?;
@@ -880,7 +880,7 @@ fn eval_builtin_call(
             }
             stack_frame
                 .evalled_values
-                .push((position.clone(), Value::Void));
+                .push((position.clone(), unit_value()));
         }
         BuiltinFunctionKind::DebugPrint => {
             check_arity("dbg", &receiver_value, 1, arg_values)?;
@@ -901,7 +901,7 @@ fn eval_builtin_call(
 
             stack_frame
                 .evalled_values
-                .push((position.clone(), Value::Void));
+                .push((position.clone(), unit_value()));
         }
         BuiltinFunctionKind::Shell => {
             check_arity("shell", &receiver_value, 2, arg_values)?;
@@ -1119,10 +1119,10 @@ fn eval_call(
                 caller_pos: Some(position.clone()),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
-                // TODO: find a better position for the void value,
+                // TODO: find a better position for the unit value,
                 // perhaps the position of the curly brace function
                 // body.
-                evalled_values: vec![(receiver_value.0, Value::Void)],
+                evalled_values: vec![(receiver_value.0, unit_value())],
                 enclosing_fun: Some(fun_info.clone()),
                 enclosing_name: SymbolName("(closure)".to_string()),
                 src: fun_info.src_string.clone(),
@@ -1155,7 +1155,7 @@ fn eval_call(
                 enclosing_name: name.name.clone(),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![(name.pos.clone(), Value::Void)],
+                evalled_values: vec![(name.pos.clone(), unit_value())],
             }));
         }
         Value::BuiltinFunction(kind) => eval_builtin_call(
@@ -1319,7 +1319,7 @@ fn eval_method_call(
         // TODO: find a better position for the void value,
         // perhaps the position of the curly brace function
         // body.
-        evalled_values: vec![(receiver_value.0, Value::Void)],
+        evalled_values: vec![(receiver_value.0, unit_value())],
     }))
 }
 
@@ -2278,7 +2278,7 @@ mod tests {
     fn test_eval_empty() {
         let mut env = Env::default();
         let value = eval_exprs(&[], &mut env).unwrap();
-        assert_eq!(value, Value::Void);
+        assert_eq!(value, unit_value());
     }
 
     #[test]
@@ -2459,7 +2459,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Void);
+        assert_eq!(value, unit_value());
     }
 
     #[test]

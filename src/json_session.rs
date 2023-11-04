@@ -206,7 +206,7 @@ fn handle_request(
                                 kind: ResponseKind::MalformedRequest,
                                 value: Err(ResponseError {
                                     position: None,
-                                    message: format!("No such test: {}", name.0),
+                                    message: format!("No such test: {}", name),
                                     stack: None,
                                 }),
                             },

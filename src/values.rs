@@ -154,7 +154,7 @@ impl Value {
         match self {
             Value::Integer(i) => format!("{}", i),
             Value::Boolean(b) => format!("{}", b),
-            Value::Fun(name, _) => format!("(function: {})", name.name.0),
+            Value::Fun(name, _) => format!("(function: {})", name.name),
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),
@@ -179,11 +179,11 @@ impl Value {
                 Some(type_) => match type_ {
                     Type::Builtin(_) => unreachable!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
-                        Some(variant_sym) => format!("{}::{}", name.0, variant_sym.name.0),
-                        None => format!("{}::__OLD_VARIANT_{}", name.0, variant_idx),
+                        Some(variant_sym) => format!("{}::{}", name, variant_sym.name),
+                        None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),
                     },
                 },
-                None => format!("{}__OLD_DEFINITION::{}", name.0, variant_idx),
+                None => format!("{}__OLD_DEFINITION::{}", name, variant_idx),
             },
         }
     }

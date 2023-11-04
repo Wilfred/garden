@@ -202,10 +202,10 @@ fn describe_type(type_: &Type) -> String {
                 description.push_str("\n\n");
             }
 
-            let enum_name = &enum_info.name.0;
+            let enum_name = &enum_info.name;
             description.push_str(&format!("enum {enum_name} {{\n",));
             for variant_sym in &enum_info.variants {
-                description.push_str(&format!("   {},\n", variant_sym.name.0));
+                description.push_str(&format!("   {},\n", variant_sym.name));
             }
             description.push('}');
 
@@ -230,12 +230,12 @@ fn describe_fun(value: &Value) -> Option<String> {
                 Some(doc_comment) => {
                     res.push_str(doc_comment);
                 }
-                None => res.push_str(&format!("`{}` has no documentation comment.", name.name.0)),
+                None => res.push_str(&format!("`{}` has no documentation comment.", name.name)),
             }
             res.push_str("\n\n");
 
             // show type hints
-            res.push_str(&format!("fn {}", name.name.0));
+            res.push_str(&format!("fn {}", name.name));
             res.push('(');
             for (i, param) in params.iter().enumerate() {
                 if i != 0 {
@@ -243,16 +243,16 @@ fn describe_fun(value: &Value) -> Option<String> {
                 }
 
                 let name = &param.symbol;
-                res.push_str(&name.name.0);
+                res.push_str(&format!("{}", &name.name));
 
                 if let Some(param_ty) = &param.type_ {
-                    res.push_str(&format!(": {}", param_ty.0));
+                    res.push_str(&format!(": {}", param_ty));
                 }
             }
             res.push(')');
 
             if let Some(return_type) = return_type {
-                res.push_str(&format!(": {}", return_type.0));
+                res.push_str(&format!(": {}", return_type));
             }
 
             res.push_str(" { ... }");
@@ -297,7 +297,7 @@ pub fn run_command<T: Write>(
         }
         Command::Methods => {
             let mut type_names: Vec<_> = env.methods.keys().collect();
-            type_names.sort_by_key(|typename| &typename.0);
+            type_names.sort_by_key(|typename| format!("{typename}"));
 
             let mut is_first = true;
             for type_name in type_names {
@@ -309,7 +309,7 @@ pub fn run_command<T: Write>(
                     if !is_first {
                         writeln!(buf).unwrap();
                     }
-                    write!(buf, "{}::{}", type_name.0, &method_name.name.name.0).unwrap();
+                    write!(buf, "{}::{}", type_name, &method_name.name.name).unwrap();
 
                     is_first = false;
                 }
@@ -397,7 +397,7 @@ pub fn run_command<T: Write>(
             }
 
             for name in &matching_defs {
-                writeln!(buf, "function: {}", name.0).unwrap();
+                writeln!(buf, "function: {}", name).unwrap();
             }
             write!(buf, "{} definitions found.", matching_defs.len()).unwrap();
 
@@ -605,7 +605,7 @@ fn command_help(command: Command) -> &'static str {
 
 pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.iter().rev().enumerate() {
-        let name = &stack_frame.enclosing_name.0;
+        let name = &stack_frame.enclosing_name;
         write!(buf, "{}In {}", if i == 0 { "" } else { "\n" }, name).unwrap();
     }
 }

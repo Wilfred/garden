@@ -491,7 +491,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
         return Err(ErrorInfo {
             message: ErrorMessage(format!(
                 "{} is not currently bound. Try `let {} = something`.",
-                var_name.0, var_name.0
+                var_name, var_name
             )),
             restore_values: vec![],
             error_position: variable.pos.clone(),
@@ -517,7 +517,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
         return Err(ErrorInfo {
             message: ErrorMessage(format!(
                 "{} is already bound. Try `{} = something` instead.",
-                var_name.0, var_name.0
+                var_name, var_name
             )),
             restore_values: vec![],
             error_position: variable.pos.clone(),
@@ -1131,6 +1131,7 @@ fn eval_call(
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
             // Calling a user-defined function.
 
+            // TODO: use SymbolName here.
             check_arity(&name.name.0, &receiver_value, params.len(), &arg_values)?;
 
             check_param_types(env, &receiver_value, params, &arg_values)?;
@@ -1251,7 +1252,7 @@ fn eval_method_call(
                 return Err(ErrorInfo {
                     message: ErrorMessage(format!(
                         "No method named `{}` on `{}`.",
-                        meth_name.name.0, receiver_type_name.0
+                        meth_name.name, receiver_type_name
                     )),
                     restore_values: saved_values,
                     error_position: meth_name.pos.clone(),
@@ -1265,7 +1266,7 @@ fn eval_method_call(
             }
 
             return Err(ErrorInfo {
-                message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name.0)),
+                message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name)),
                 restore_values: saved_values,
                 error_position: meth_name.pos.clone(),
             });
@@ -1311,7 +1312,7 @@ fn eval_method_call(
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
-        enclosing_name: SymbolName(format!("{}::{}", receiver_type_name.0, meth_name.name.0)),
+        enclosing_name: SymbolName(format!("{}::{}", receiver_type_name, meth_name.name)),
         src: fun_info.src_string.clone(),
         caller_pos: Some(receiver_value.0.clone()),
         bindings: Bindings::new_with(fun_bindings),
@@ -1785,7 +1786,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             stack_frame.evalled_values.push((expr_position, value));
                         } else {
                             let suggestion = match most_similar_var(&name.name, &stack_frame, env) {
-                                Some(closest_name) => format!(" Did you mean {}?", closest_name.0),
+                                Some(closest_name) => format!(" Did you mean {}?", closest_name),
                                 None => "".to_owned(),
                             };
 
@@ -1800,7 +1801,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 name.pos.clone(),
                                 ErrorMessage(format!(
                                     "Undefined variable: {}.{}",
-                                    name.name.0, suggestion
+                                    name.name, suggestion
                                 )),
                             ));
                         }

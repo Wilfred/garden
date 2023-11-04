@@ -160,7 +160,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 let test = match env.tests.get(&name) {
                     Some(test) => test.clone(),
                     None => {
-                        println!("No such test: {}", name.0);
+                        println!("No such test: {}", name);
                         continue;
                     }
                 };

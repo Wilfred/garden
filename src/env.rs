@@ -18,6 +18,7 @@ pub struct Env {
     pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub tests: HashMap<SymbolName, TestInfo>,
     pub types: HashMap<TypeName, Type>,
+    // TODO: should this be stored separately?
     pub stack: Vec<StackFrame>,
 }
 

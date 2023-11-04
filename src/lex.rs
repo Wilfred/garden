@@ -102,7 +102,15 @@ pub fn lex_between<'a>(
             }
         }
 
-        // Skip over whitespace.
+        // If we see a blank line, discard any comments. We're only
+        // interested in comments immediately before definitions.
+        if s.starts_with('\n'){
+            offset += 1;
+            preceding_comments = vec![];
+            continue;
+        }
+
+        // Skip over other whitespace.
         if let Some(first_char) = s.chars().next() {
             if first_char.is_whitespace() {
                 offset += 1;
@@ -313,6 +321,24 @@ mod tests {
                     },
                     " 2\n"
                 )],
+            })
+        );
+    }
+
+    #[test]
+    fn test_lex_comment_not_touching() {
+        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n\n1").unwrap();
+        assert_eq!(
+            tokens.peek(),
+            Some(Token {
+                position: Position {
+                    start_offset: 6,
+                    end_offset: 7,
+                    line_number: 2,
+                    path: PathBuf::from("__test.gdn")
+                },
+                text: "1",
+                preceding_comments: vec![],
             })
         );
     }

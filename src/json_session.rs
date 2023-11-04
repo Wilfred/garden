@@ -94,9 +94,13 @@ fn handle_eval_request(
 
                 let value_summary = if let Some(last_value) = result.values.last() {
                     if result.definitions == 0 {
-                        format!("{}", last_value)
+                        last_value.display(env)
                     } else {
-                        format!("{}, and evaluated {}", definition_summary, last_value)
+                        format!(
+                            "{}, and evaluated {}",
+                            definition_summary,
+                            last_value.display(env)
+                        )
                     }
                 } else {
                     format!("{}.", definition_summary)
@@ -253,7 +257,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
     match eval_env(env, session) {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,
-            value: Ok(format!("{}", result)),
+            value: Ok(result.display(env)),
         },
         Err(EvalError::ResumableError(position, e)) => Response {
             kind: ResponseKind::Evaluate,

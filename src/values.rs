@@ -3,6 +3,7 @@ use std::fmt::Display;
 use strum_macros::EnumIter;
 
 use crate::ast::{EnumInfo, FunInfo, Symbol, TypeName};
+use crate::env::Env;
 use crate::eval::BlockBindings;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -143,34 +144,37 @@ working_directory(); // \"/home/yourname/awesome_garden_project\"
     }
 }
 
-impl Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Value {
+    /// Pretty-print `self` in a human friendly way.
+    pub fn display(&self, env: &Env) -> String {
         match self {
-            Value::Integer(i) => write!(f, "{}", i),
-            Value::Boolean(b) => write!(f, "{}", b),
-            Value::Fun(name, _) => write!(f, "(function: {})", name.name.0),
-            Value::Closure(..) => write!(f, "(closure)"),
-            Value::BuiltinFunction(kind) => write!(f, "(function: {})", kind),
-            Value::Void => write!(f, "void"),
-            Value::String(s) => {
-                write!(f, "{}", escape_string_literal(s))
-            }
+            Value::Integer(i) => format!("{}", i),
+            Value::Boolean(b) => format!("{}", b),
+            Value::Fun(name, _) => format!("(function: {})", name.name.0),
+            Value::Closure(..) => "(closure)".to_string(),
+            Value::BuiltinFunction(kind) => format!("(function: {})", kind),
+            Value::Void => "void".to_string(),
+            Value::String(s) => escape_string_literal(s),
             Value::List(items) => {
-                write!(f, "[")?;
+                let mut s = String::new();
+
+                s.push('[');
 
                 for (i, item) in items.iter().enumerate() {
                     if i != 0 {
-                        write!(f, ", ")?;
+                        s.push_str(", ");
                     }
 
-                    write!(f, "{}", item)?;
+                    s.push_str(&item.display(env));
                 }
 
-                write!(f, "]")
+                s.push(']');
+
+                s
             }
             Value::Enum(name, variant_idx) => {
-                write!(f, "{}::{}", name.0, variant_idx)
-            },
+                format!("{}::{}", name.0, variant_idx)
+            }
         }
     }
 }
@@ -218,7 +222,8 @@ mod tests {
 
     #[test]
     fn test_display_value_for_string_with_doublequote() {
+        let env = Env::default();
         let value = Value::String("foo \\ \" \n bar".into());
-        assert_eq!(format!("{}", value), "\"foo \\\\ \\\" \\n bar\"");
+        assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

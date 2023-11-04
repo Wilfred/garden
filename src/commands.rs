@@ -420,7 +420,7 @@ pub fn run_command<T: Write>(
                             writeln!(buf, "void")
                         }
                         v => {
-                            writeln!(buf, "{}", v)
+                            writeln!(buf, "{}", v.display(env))
                         }
                     }
                     .unwrap();
@@ -435,7 +435,7 @@ pub fn run_command<T: Write>(
                         "{}{}\t{}",
                         if i == 0 { "" } else { "\n" },
                         var_name.0.bright_green(),
-                        value
+                        value.display(env)
                     )
                     .unwrap();
                 }

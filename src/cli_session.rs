@@ -178,7 +178,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
                 match result {
                     Value::Void => {}
                     v => {
-                        println!("{}", v)
+                        println!("{}", v.display(&env))
                     }
                 }
                 is_stopped = false;

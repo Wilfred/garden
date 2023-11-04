@@ -536,11 +536,12 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
 }
 
 fn format_type_error(expected: &TypeName, value: &Value) -> ErrorMessage {
+    let env = todo!();
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.0,
         type_representation(value).0,
-        value
+        value.display(env)
     ))
 }
 
@@ -684,8 +685,9 @@ fn eval_integer_binop(
             }
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
+                    let env = todo!();
                     return Err(ErrorInfo {
-                        message: ErrorMessage(format!("Tried to divide {} by zero.", rhs_value.1)),
+                        message: ErrorMessage(format!("Tried to divide {} by zero.", rhs_value.1.display(env))),
                         restore_values: vec![lhs_value, rhs_value.clone()],
                         error_position: rhs_value.0,
                     });
@@ -954,9 +956,10 @@ fn eval_builtin_call(
         BuiltinFunctionKind::StringRepr => {
             check_arity("string_repr", &receiver_value, 1, arg_values)?;
 
+            let env = todo!();
             stack_frame.evalled_values.push((
                 position.clone(),
-                Value::String(format!("{}", arg_values[0].1)),
+                Value::String(arg_values[0].1.display(env)),
             ));
         }
         BuiltinFunctionKind::PathExists => {

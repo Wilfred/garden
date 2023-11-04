@@ -131,7 +131,7 @@ test contains {
 
 // Testing heleprs.
 
-fun should_equal(actual, expected): Void {
+fun should_equal(actual, expected): Unit {
     if (actual != expected) {
         error(" ".join(["Expected", string_repr(expected), "but got", string_repr(actual)]));
     }

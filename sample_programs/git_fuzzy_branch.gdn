@@ -5,15 +5,15 @@ fun in_git_repo(): Bool {
     path_exists(git_dir_path);
 }
 
-fun check_out(branch_name: String): Void {
+fun check_out(branch_name: String): Unit {
     print(shell("git", ["checkout", branch_name]));
 }
 
-fun main(args: List): Void {
+fun main(args: List): Unit {
     if (args.len() != 1) {
         println("Usage: git_fuzzy_branch <name substring>");
-        // TODO: support void values.
-        return false;
+        // TODO: support `return;` syntax.
+        return Unit;
     }
     let needle = args.get(0);
 
@@ -23,7 +23,7 @@ fun main(args: List): Void {
         if (all_branches.contains(needle)) {
             // If there's a branch with this name exactly, use it.
             check_out(needle);
-            return 0; // TODO: void value.
+            return Unit;
         }
 
         let branches = all_branches.filter(fun(name) { name.contains(needle); });

@@ -125,7 +125,6 @@ impl Default for Env {
             TypeName("String".into()),
             Type::Builtin(BuiltinType::String),
         );
-        types.insert(TypeName("Void".into()), Type::Builtin(BuiltinType::Void));
         types.insert(TypeName("List".into()), Type::Builtin(BuiltinType::List));
         types.insert(TypeName("Fun".into()), Type::Builtin(BuiltinType::Fun));
 

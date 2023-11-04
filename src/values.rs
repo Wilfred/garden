@@ -221,7 +221,6 @@ pub enum BuiltinType {
     Int,
     Bool,
     String,
-    Void,
     // TODO: these require a type parameter.
     Fun,
     List,

@@ -172,9 +172,16 @@ impl Value {
 
                 s
             }
-            Value::Enum(name, variant_idx) => {
-                format!("{}::{}", name.0, variant_idx)
-            }
+            Value::Enum(name, variant_idx) => match env.types.get(name) {
+                Some(type_) => match type_ {
+                    Type::Builtin(_) => unreachable!(),
+                    Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
+                        Some(variant_sym) => format!("{}::{}", name.0, variant_sym.name.0),
+                        None => format!("{}::__OLD_VARIANT_{}", name.0, variant_idx),
+                    },
+                },
+                None => format!("{}__OLD_DEFINITION::{}", name.0, variant_idx),
+            },
         }
     }
 }

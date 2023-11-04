@@ -1,3 +1,9 @@
+// Basic types.
+
+enum Unit {
+    Unit
+}
+
 // String methods.
 
 fun lines(s: String): List {

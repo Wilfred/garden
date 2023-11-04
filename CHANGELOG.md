@@ -6,7 +6,7 @@
 
 ### Commands
 
-Added `:types` and `:uptime`.
+Added `:forget`, `:types` and `:uptime`.
 
 ### Stdlib
 

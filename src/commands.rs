@@ -26,6 +26,7 @@ pub enum Command {
     Functions,
     Locals,
     ForgetLocal(Option<String>),
+    Forget(Option<String>),
     FrameValues,
     FrameStatements,
     Methods,
@@ -69,6 +70,7 @@ impl Display for Command {
             Command::Abort => ":abort",
             Command::Doc(_) => ":doc",
             Command::ForgetLocal(_) => ":forget_local",
+            Command::Forget(_) => ":forget",
             Command::FrameStatements => ":fstmts",
             Command::FrameValues => ":fvalues",
             Command::Functions => ":funs",
@@ -102,6 +104,7 @@ impl Command {
         match command_name.to_lowercase().as_str() {
             ":abort" => Ok(Command::Abort),
             ":doc" => Ok(Command::Doc(args)),
+            ":forget" => Ok(Command::Forget(args)),
             ":forget_local" => Ok(Command::ForgetLocal(args)),
             ":fstmts" => Ok(Command::FrameStatements),
             ":fvalues" => Ok(Command::FrameValues),
@@ -405,6 +408,22 @@ pub fn run_command<T: Write>(
                 .unwrap();
             }
         }
+        Command::Forget(name) => {
+            if let Some(name) = name {
+                let sym = SymbolName(name.to_owned());
+
+                match env.file_scope.get(&sym) {
+                    Some(_) => {
+                        env.file_scope.remove(&sym);
+                    }
+                    None => {
+                        write!(buf, "No function or enum value named `{}` is defined.", name).unwrap();
+                    }
+                }
+            } else {
+                write!(buf, ":forget requires a name, e.g. `:forget function_name`").unwrap();
+            }
+        }
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.last() {
                 for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
@@ -512,6 +531,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
         // TODO: add a more comprehensive example of :forget_local usage.
         Command::ForgetLocal(_) => "The :forget_local command undefines the local variable in the current stack frame.\n\nExample:\n\n:forget_local foo",
+        Command::Forget(_) => "The :forget command undefines a function or enum value.\n\nExample:\n\n:forget function_name",
         Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",

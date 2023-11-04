@@ -731,7 +731,7 @@ fn eval_integer_binop(
 }
 
 fn check_arity(
-    fun_name: &str,
+    fun_name: &SymbolName,
     receiver_value: &(Position, Value),
     expected: usize,
     arg_values: &[(Position, Value)],
@@ -789,7 +789,12 @@ fn eval_builtin_call(
 ) -> Result<(), ErrorInfo> {
     match kind {
         BuiltinFunctionKind::Error => {
-            check_arity("error", &receiver_value, 1, arg_values)?;
+            check_arity(
+                &SymbolName("error".to_owned()),
+                &receiver_value,
+                1,
+                arg_values,
+            )?;
 
             let mut saved_values = vec![];
             for value in arg_values.iter().rev() {
@@ -815,7 +820,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::Print => {
-            check_arity("print", &receiver_value, 1, arg_values)?;
+            check_arity(&SymbolName("print".to_owned()), &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {
@@ -849,7 +854,7 @@ fn eval_builtin_call(
                 .push((position.clone(), unit_value()));
         }
         BuiltinFunctionKind::Println => {
-            check_arity("println", &receiver_value, 1, arg_values)?;
+            check_arity(&SymbolName("println".to_owned()), &receiver_value, 1, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {
@@ -883,7 +888,7 @@ fn eval_builtin_call(
                 .push((position.clone(), unit_value()));
         }
         BuiltinFunctionKind::DebugPrint => {
-            check_arity("dbg", &receiver_value, 1, arg_values)?;
+            check_arity(&SymbolName("dbg".to_owned()), &receiver_value, 1, arg_values)?;
 
             // TODO: define a proper pretty-printer for values
             // rather than using Rust's Debug.
@@ -904,7 +909,7 @@ fn eval_builtin_call(
                 .push((position.clone(), unit_value()));
         }
         BuiltinFunctionKind::Shell => {
-            check_arity("shell", &receiver_value, 2, arg_values)?;
+            check_arity(&SymbolName("shell".to_owned()), &receiver_value, 2, arg_values)?;
 
             match &arg_values[0].1 {
                 Value::String(s) => {
@@ -960,7 +965,7 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::StringRepr => {
-            check_arity("string_repr", &receiver_value, 1, arg_values)?;
+            check_arity(&SymbolName("string_repr".to_owned()), &receiver_value, 1, arg_values)?;
 
             stack_frame.evalled_values.push((
                 position.clone(),
@@ -968,7 +973,7 @@ fn eval_builtin_call(
             ));
         }
         BuiltinFunctionKind::PathExists => {
-            check_arity("path_exists", &receiver_value, 1, arg_values)?;
+            check_arity(&SymbolName("path_exists".to_owned()), &receiver_value, 1, arg_values)?;
 
             // TODO: define a separate path type in Garden.
             let path_s = match &arg_values[0].1 {
@@ -994,7 +999,7 @@ fn eval_builtin_call(
                 .push((position.clone(), Value::Boolean(path.exists())));
         }
         BuiltinFunctionKind::ListDirectory => {
-            check_arity("list_directory", &receiver_value, 1, arg_values)?;
+            check_arity(&SymbolName("list_directory".to_owned()), &receiver_value, 1, arg_values)?;
 
             // TODO: define a separate path type in Garden.
             let path_s = match &arg_values[0].1 {
@@ -1039,7 +1044,7 @@ fn eval_builtin_call(
             stack_frame.evalled_values.push((position.clone(), value));
         }
         BuiltinFunctionKind::WorkingDirectory => {
-            check_arity("working_directory", &receiver_value, 0, arg_values)?;
+            check_arity(&SymbolName("working_directory".to_owned()), &receiver_value, 0, arg_values)?;
 
             // TODO: when we have a userland result type, use that.
             let path = std::env::current_dir().unwrap_or_default();
@@ -1131,8 +1136,7 @@ fn eval_call(
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
             // Calling a user-defined function.
 
-            // TODO: use SymbolName here.
-            check_arity(&name.name.0, &receiver_value, params.len(), &arg_values)?;
+            check_arity(&name.name, &receiver_value, params.len(), &arg_values)?;
 
             check_param_types(env, &receiver_value, params, &arg_values)?;
 
@@ -1295,7 +1299,7 @@ fn eval_method_call(
 
     // TODO: use a fully qualified method name here?
     check_arity(
-        &meth_name.name.0,
+        &meth_name.name,
         &receiver_value,
         fun_info.params.len(),
         &arg_values,
@@ -1334,7 +1338,7 @@ fn eval_builtin_method_call(
 ) -> Result<(), ErrorInfo> {
     match kind {
         BuiltinMethodKind::ListAppend => {
-            check_arity("List::append", &receiver_value, 1, &arg_values)?;
+            check_arity(&SymbolName("List::append".to_owned()), &receiver_value, 1, &arg_values)?;
 
             match &receiver_value.1 {
                 Value::List(items) => {
@@ -1360,7 +1364,7 @@ fn eval_builtin_method_call(
             }
         }
         BuiltinMethodKind::ListGet => {
-            check_arity("List::get", &receiver_value, 1, &arg_values)?;
+            check_arity(&SymbolName("List::get".to_owned()), &receiver_value, 1, &arg_values)?;
 
             match (&receiver_value.1, &arg_values[0].1) {
                 (Value::List(items), Value::Integer(i)) => {
@@ -1423,7 +1427,7 @@ fn eval_builtin_method_call(
             }
         }
         BuiltinMethodKind::ListLen => {
-            check_arity("List::len", &receiver_value, 0, &arg_values)?;
+            check_arity(&SymbolName("List::len".to_owned()), &receiver_value, 0, &arg_values)?;
 
             match &receiver_value.1 {
                 Value::List(items) => {
@@ -1447,7 +1451,7 @@ fn eval_builtin_method_call(
             }
         }
         BuiltinMethodKind::StringConcat => {
-            check_arity("String::concat", &receiver_value, 1, &arg_values)?;
+            check_arity(&SymbolName("String::concat".to_owned()), &receiver_value, 1, &arg_values)?;
 
             let mut arg1 = match &receiver_value.1 {
                 Value::String(s) => s.clone(),
@@ -1488,7 +1492,7 @@ fn eval_builtin_method_call(
                 .push((position.clone(), Value::String(arg1)));
         }
         BuiltinMethodKind::StringLen => {
-            check_arity("String::len", &receiver_value, 0, &arg_values)?;
+            check_arity(&SymbolName("String::len".to_owned()), &receiver_value, 0, &arg_values)?;
 
             match &receiver_value.1 {
                 Value::String(s) => {
@@ -1512,7 +1516,7 @@ fn eval_builtin_method_call(
             }
         }
         BuiltinMethodKind::StringSubstring => {
-            check_arity("String::substring", &receiver_value, 2, &arg_values)?;
+            check_arity(&SymbolName("String::substring".to_owned()), &receiver_value, 2, &arg_values)?;
 
             let s_arg = match &receiver_value.1 {
                 Value::String(s) => s,

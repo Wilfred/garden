@@ -1,7 +1,7 @@
 // Basic types.
 
-/// The unit type. Use this when your function doesn't have any useful
-/// value to return, such as side-effecting functions.
+// The unit type. Use this when your function doesn't have any useful
+// value to return, such as side-effecting functions.
 enum Unit {
     Unit
 }

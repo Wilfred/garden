@@ -603,7 +603,7 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<Symbol>, ParseErr
 
 fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
     let enum_token = require_token(tokens, "enum")?;
-    // let doc_comment = parse_doc_comment(&enum_token);
+    let doc_comment = parse_doc_comment(&enum_token);
     let name = parse_type_name(tokens)?;
 
     let _open_brace = require_token(tokens, "{")?;
@@ -628,7 +628,7 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
         enum_token.position,
         Definition_::Enum(EnumInfo {
             src_string,
-            doc_comment: None,
+            doc_comment,
             name,
             variants,
         }),

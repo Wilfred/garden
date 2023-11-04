@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    path::PathBuf,
-};
+use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
 
@@ -12,7 +9,7 @@ use crate::{
     },
     eval::{eval_toplevel_defs, Bindings, StackFrame},
     parse::parse_toplevel_items,
-    values::{BuiltinFunctionKind, Value},
+    values::{BuiltinFunctionKind, BuiltinType, Type, Value},
 };
 
 #[derive(Debug)]
@@ -20,7 +17,7 @@ pub struct Env {
     pub file_scope: HashMap<SymbolName, Value>,
     pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub tests: HashMap<SymbolName, TestInfo>,
-    pub types: HashSet<TypeName>,
+    pub types: HashMap<TypeName, Type>,
     pub stack: Vec<StackFrame>,
 }
 
@@ -119,17 +116,17 @@ impl Default for Env {
         methods.insert(TypeName("List".into()), list_methods);
 
         // Insert all the built-in types.
-        let types: HashSet<_> = vec![
-            // TODO: String literals are duplicated with type_representation.
-            TypeName("Int".into()),
-            TypeName("Bool".into()),
-            TypeName("Fun".into()),
+        let mut types = HashMap::new();
+        // TODO: String literals are duplicated with type_representation.
+        types.insert(TypeName("Int".into()), Type::Builtin(BuiltinType::Int));
+        types.insert(TypeName("Bool".into()), Type::Builtin(BuiltinType::Bool));
+        types.insert(
             TypeName("String".into()),
-            TypeName("List".into()),
-            TypeName("Void".into()),
-        ]
-        .into_iter()
-        .collect();
+            Type::Builtin(BuiltinType::String),
+        );
+        types.insert(TypeName("Void".into()), Type::Builtin(BuiltinType::Void));
+        types.insert(TypeName("List".into()), Type::Builtin(BuiltinType::List));
+        types.insert(TypeName("Fun".into()), Type::Builtin(BuiltinType::Fun));
 
         let mut env = Self {
             file_scope,

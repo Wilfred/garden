@@ -20,7 +20,7 @@ use crate::ast::{
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::values::{type_representation, BuiltinFunctionKind, Value};
+use crate::values::{type_representation, BuiltinFunctionKind, Type, Value};
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
@@ -319,7 +319,8 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                 }
             }
             Definition_::Enum(enum_info) => {
-                env.types.insert(enum_info.name.clone());
+                env.types
+                    .insert(enum_info.name.clone(), Type::Enum(enum_info.clone()));
             }
         }
     }

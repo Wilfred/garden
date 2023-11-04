@@ -499,7 +499,7 @@ pub fn run_command<T: Write>(
             }
         }
         Command::Types => {
-            let mut names: Vec<_> = env.types.iter().map(|s| &s.0).collect();
+            let mut names: Vec<_> = env.types.keys().map(|s| &s.0).collect();
             names.sort();
 
             for (i, var_name) in names.iter().enumerate() {

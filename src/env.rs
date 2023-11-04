@@ -17,8 +17,6 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Env {
-    // TODO: trace_exprs would be clearer in Session.
-    pub trace_exprs: bool,
     pub file_scope: HashMap<SymbolName, Value>,
     pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub tests: HashMap<SymbolName, TestInfo>,
@@ -134,7 +132,6 @@ impl Default for Env {
         .collect();
 
         let mut env = Self {
-            trace_exprs: false,
             file_scope,
             methods,
             tests: HashMap::new(),

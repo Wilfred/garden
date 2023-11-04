@@ -92,6 +92,7 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
         interrupted,
         has_attached_stdout: true,
         start_time: Instant::now(),
+        trace_exprs: false,
     };
 
     let mut rl = new_editor();

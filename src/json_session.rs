@@ -289,6 +289,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
         interrupted,
         has_attached_stdout: false,
         start_time: Instant::now(),
+        trace_exprs: false,
     };
 
     loop {

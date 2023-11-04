@@ -451,11 +451,11 @@ pub fn run_command<T: Write>(
             None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.").unwrap(),
         },
         Command::Trace => {
-            env.trace_exprs = !env.trace_exprs;
+            session.trace_exprs = !session.trace_exprs;
             write!(
                 buf,
                 "Expression tracing {}.",
-                if env.trace_exprs {
+                if session.trace_exprs {
                     "enabled"
                 } else {
                     "disabled"

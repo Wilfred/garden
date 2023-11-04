@@ -162,6 +162,7 @@ pub struct Session<'a> {
     pub interrupted: &'a Arc<AtomicBool>,
     pub has_attached_stdout: bool,
     pub start_time: Instant,
+    pub trace_exprs: bool,
 }
 
 #[derive(Debug)]
@@ -1592,7 +1593,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
 
                 let expr_copy = expr_.clone();
 
-                if env.trace_exprs {
+                if session.trace_exprs {
                     println!("{:?} {}", expr_, done_children);
                 }
                 match expr_ {
@@ -2053,6 +2054,7 @@ mod tests {
             interrupted: &interrupted,
             has_attached_stdout: false,
             start_time: Instant::now(),
+            trace_exprs: false,
         };
 
         super::eval_exprs(exprs, env, &mut session)

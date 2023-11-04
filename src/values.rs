@@ -23,6 +23,8 @@ pub enum Value {
     List(Vec<Value>),
     /// The void/unit value.
     Void,
+    // A value in a user-defined enum.
+    Enum(TypeName, usize),
 }
 
 pub fn type_representation(value: &Value) -> TypeName {
@@ -36,6 +38,7 @@ pub fn type_representation(value: &Value) -> TypeName {
             Value::String(_) => "String",
             Value::List(_) => "List",
             Value::Void => "Void",
+            Value::Enum(name, _) => &name.0,
         }
         .to_owned(),
     )
@@ -165,6 +168,9 @@ impl Display for Value {
 
                 write!(f, "]")
             }
+            Value::Enum(name, variant_idx) => {
+                write!(f, "{}::{}", name.0, variant_idx)
+            },
         }
     }
 }

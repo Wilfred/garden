@@ -319,8 +319,20 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                 }
             }
             Definition_::Enum(enum_info) => {
+                // Add the enum definition to the type environment.
                 env.types
                     .insert(enum_info.name.clone(), Type::Enum(enum_info.clone()));
+
+                // Add the values in the enum to the value environment.
+                for (idx, variant_sym) in enum_info.variants.iter().enumerate() {
+                    // TODO: warn if we're clobbering a name from a
+                    // different enum (i.e. not just redefining the
+                    // current enum).
+                    env.set_with_file_scope(
+                        &variant_sym.name,
+                        Value::Enum(enum_info.name.clone(), idx),
+                    );
+                }
             }
         }
     }

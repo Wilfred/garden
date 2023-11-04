@@ -7,13 +7,14 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::ast::{self, SymbolName, TypeName};
+use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::parse::parse_toplevel_item;
 use crate::values::{builtin_fun_doc, type_representation, Value};
 use crate::version::VERSION;
 use crate::{
     colors::green,
-    eval::{Env, Session},
+    eval::Session,
     parse::{parse_inline_expr_from_str, ParseError},
 };
 

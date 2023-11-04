@@ -10,6 +10,7 @@ mod cli_session;
 mod colors;
 mod commands;
 mod diagnostics;
+mod env;
 mod eval;
 mod json_session;
 mod lex;
@@ -24,7 +25,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use eval::{eval_toplevel_defs, eval_toplevel_items, Env, EvalError, Session};
+use env::Env;
+use eval::{eval_toplevel_defs, eval_toplevel_items, EvalError, Session};
 use parse::{parse_toplevel_item, parse_toplevel_items};
 
 use crate::ast::SourceString;

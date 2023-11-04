@@ -10,11 +10,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::ast::{self, SourceString};
 use crate::diagnostics::{format_error, format_parse_error};
+use crate::env::Env;
 use crate::eval::{eval_env, eval_toplevel_items, push_test_stackframe};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
-    eval::{Env, EvalError, Session},
+    eval::{EvalError, Session},
 };
 
 #[derive(Debug, Deserialize, Serialize)]

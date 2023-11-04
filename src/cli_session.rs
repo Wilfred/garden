@@ -10,11 +10,12 @@ use crate::commands::{
     print_available_commands, run_command, Command, CommandParseError, EvalAction,
 };
 use crate::diagnostics::format_error_with_stack;
+use crate::env::Env;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::parse::{parse_toplevel_items, ParseError};
+use crate::prompt::prompt_symbol;
 use crate::values::Value;
-use crate::{eval::Env, prompt::prompt_symbol};
 
 use owo_colors::OwoColorize;
 use rustyline::Editor;

@@ -6,7 +6,8 @@
 
 ### Commands
 
-Added `:forget`, `:types` and `:uptime`.
+Added `:forget`, `:types` and `:uptime`. `:doc` now supports types as
+well as functions.
 
 ### Stdlib
 

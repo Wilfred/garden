@@ -10,7 +10,7 @@ use crate::ast::{self, SymbolName, TypeName};
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::parse::parse_toplevel_item;
-use crate::values::{builtin_fun_doc, type_representation, Value};
+use crate::values::{builtin_fun_doc, type_representation, BuiltinType, Type, Value};
 use crate::version::VERSION;
 use crate::{
     colors::green,
@@ -181,6 +181,39 @@ pub enum EvalAction {
     Skip,
 }
 
+fn describe_type(type_: &Type) -> String {
+    match type_ {
+        Type::Builtin(builtin_type) => {
+            let name = match builtin_type {
+                BuiltinType::Int => "Int",
+                BuiltinType::Bool => "Bool",
+                BuiltinType::String => "String",
+                BuiltinType::Fun => "Fun",
+                BuiltinType::List => "List",
+            };
+            // TODO: Offer more comprehensive docs on built-in types.
+            format!("{name} is a built-in type.")
+        }
+        Type::Enum(enum_info) => {
+            let mut description = String::new();
+
+            if let Some(doc_comment) = &enum_info.doc_comment {
+                description.push_str(doc_comment);
+                description.push_str("\n\n");
+            }
+
+            let enum_name = &enum_info.name.0;
+            // TODO: actually say what the variants are.
+            description.push_str(&format!(
+                "{enum_name} is an enum with {} variant(s).",
+                enum_info.variants.len()
+            ));
+
+            description
+        }
+    }
+}
+
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
         Value::Fun(
@@ -310,14 +343,25 @@ pub fn run_command<T: Write>(
                     }
 
                     //
-                } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
-                    match describe_fun(value) {
-                        Some(description) => write!(buf, "{}", description),
-                        None => write!(buf, "`{}` is not a function.", name),
-                    }
-                    .unwrap();
                 } else {
-                    write!(buf, "No function defined named `{}`.", name).unwrap();
+                    let mut found_something = false;
+
+                    if let Some(type_) = env.types.get(&TypeName(name.to_owned())) {
+                        found_something = true;
+                        write!(buf, "{}", describe_type(type_)).unwrap();
+                    } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
+                        // TODO: Ideally we'd print both values and type if both are defined.
+                        found_something = true;
+                        match describe_fun(value) {
+                            Some(description) => write!(buf, "{}", description),
+                            None => write!(buf, "`{}` is not a function.", name),
+                        }
+                        .unwrap();
+                    }
+
+                    if !found_something {
+                        write!(buf, "No function defined named `{}`.", name).unwrap();
+                    }
                 }
             } else {
                 write!(buf, ":doc requires a name, e.g. `:doc print`").unwrap();
@@ -417,7 +461,12 @@ pub fn run_command<T: Write>(
                         env.file_scope.remove(&sym);
                     }
                     None => {
-                        write!(buf, "No function or enum value named `{}` is defined.", name).unwrap();
+                        write!(
+                            buf,
+                            "No function or enum value named `{}` is defined.",
+                            name
+                        )
+                        .unwrap();
                     }
                 }
             } else {

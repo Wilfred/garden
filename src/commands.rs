@@ -203,11 +203,11 @@ fn describe_type(type_: &Type) -> String {
             }
 
             let enum_name = &enum_info.name.0;
-            // TODO: actually say what the variants are.
-            description.push_str(&format!(
-                "{enum_name} is an enum with {} variant(s).",
-                enum_info.variants.len()
-            ));
+            description.push_str(&format!("enum {enum_name} {{\n",));
+            for variant_sym in &enum_info.variants {
+                description.push_str(&format!("   {},\n", variant_sym.name.0));
+            }
+            description.push('}');
 
             description
         }

@@ -282,15 +282,6 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
             return parse_lambda_expression(src, tokens);
         }
 
-        if token.text == "true" {
-            tokens.pop();
-            return Ok(Expression(token.position, Expression_::BoolLiteral(true)));
-        }
-        if token.text == "false" {
-            tokens.pop();
-            return Ok(Expression(token.position, Expression_::BoolLiteral(false)));
-        }
-
         if SYMBOL_RE.is_match(token.text) {
             return parse_variable_expression(tokens);
         }
@@ -929,7 +920,7 @@ fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, Par
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "enum", "true", "false", "if", "else", "while", "return", "test",
+    "let", "fun", "enum", "if", "else", "while", "return", "test",
 ];
 
 fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
@@ -1097,24 +1088,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_bool_literal() {
-        let ast = parse_exprs_from_str("true;").unwrap();
-
-        assert_eq!(
-            ast,
-            vec![Expression(
-                Position {
-                    start_offset: 0,
-                    end_offset: 4,
-                    line_number: 0,
-                    path: PathBuf::from("__test.gdn")
-                },
-                Expression_::BoolLiteral(true)
-            )]
-        );
-    }
-
-    #[test]
     fn test_parse_int_literal() {
         let ast = parse_exprs_from_str("-123;").unwrap();
 
@@ -1253,7 +1226,7 @@ mod tests {
     #[test]
     fn test_parse_if_else() {
         let path = PathBuf::from("__test.gdn");
-        let ast = parse_exprs_from_str("if (true) {} else {}").unwrap();
+        let ast = parse_exprs_from_str("if (True) {} else {}").unwrap();
 
         assert_eq!(
             ast,
@@ -1272,7 +1245,15 @@ mod tests {
                             line_number: 0,
                             path: path.clone()
                         },
-                        Expression_::BoolLiteral(true)
+                        Expression_::Variable(Symbol {
+                            pos: Position {
+                                start_offset: 4,
+                                end_offset: 8,
+                                line_number: 0,
+                                path: path.clone()
+                            },
+                            name: SymbolName("True".into())
+                        })
                     )),
                     Block {
                         open_brace: Position {
@@ -1421,7 +1402,7 @@ mod tests {
     #[test]
     fn test_parse_if() {
         let path = PathBuf::from("__test.gdn");
-        let ast = parse_exprs_from_str("if (true) {}").unwrap();
+        let ast = parse_exprs_from_str("if (True) {}").unwrap();
 
         assert_eq!(
             ast,
@@ -1440,7 +1421,15 @@ mod tests {
                             line_number: 0,
                             path: path.clone()
                         },
-                        Expression_::BoolLiteral(true)
+                        Expression_::Variable(Symbol {
+                            pos: Position {
+                                start_offset: 4,
+                                end_offset: 8,
+                                line_number: 0,
+                                path: path.clone()
+                            },
+                            name: SymbolName("True".into())
+                        })
                     )),
                     Block {
                         open_brace: Position {
@@ -1465,7 +1454,7 @@ mod tests {
 
     #[test]
     fn test_parse_return() {
-        let ast = parse_exprs_from_str("return true;").unwrap();
+        let ast = parse_exprs_from_str("return x;").unwrap();
 
         assert_eq!(
             ast,
@@ -1479,11 +1468,19 @@ mod tests {
                 Expression_::Return(Box::new(Expression(
                     Position {
                         start_offset: 7,
-                        end_offset: 11,
+                        end_offset: 8,
                         line_number: 0,
                         path: PathBuf::from("__test.gdn")
                     },
-                    Expression_::BoolLiteral(true)
+                    Expression_::Variable(Symbol {
+                        pos: Position {
+                            start_offset: 7,
+                            end_offset: 8,
+                            line_number: 0,
+                            path: PathBuf::from("__test.gdn")
+                        },
+                        name: SymbolName("x".into())
+                    })
                 )))
             )]
         );

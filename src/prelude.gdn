@@ -1,5 +1,10 @@
 // Basic types.
 
+enum Bool {
+    False,
+    True,
+}
+
 // The unit type. Use this when your function doesn't have any useful
 // value to return, such as side-effecting functions.
 enum Unit {

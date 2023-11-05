@@ -20,7 +20,7 @@ use crate::ast::{
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::values::{type_representation, unit_value, BuiltinFunctionKind, Type, Value};
+use crate::values::{type_representation, unit_value, BuiltinFunctionKind, Type, Value, bool_value};
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
@@ -408,39 +408,47 @@ fn eval_if(
         .pop()
         .expect("Popped an empty value stack for if condition");
 
-    match &condition_value.1 {
-        Value::Boolean(b) => {
-            if *b {
-                stack_frame.exprs_to_eval.push((
-                    false,
-                    Expression(position.clone(), Expression_::Block(then_body.clone())),
-                ));
-            } else {
-                match else_body {
-                    Some(else_body) => {
-                        stack_frame.exprs_to_eval.push((
-                            false,
-                            Expression(position.clone(), Expression_::Block(else_body.clone())),
-                        ));
-                    }
-                    None => {
-                        stack_frame
-                            .evalled_values
-                            .push((position.clone(), unit_value()));
-                    }
+    if let Some(b) = to_rust_bool(&condition_value.1) {
+        if b {
+            stack_frame.exprs_to_eval.push((
+                false,
+                Expression(position.clone(), Expression_::Block(then_body.clone())),
+            ));
+        } else {
+            match else_body {
+                Some(else_body) => {
+                    stack_frame.exprs_to_eval.push((
+                        false,
+                        Expression(position.clone(), Expression_::Block(else_body.clone())),
+                    ));
+                }
+                None => {
+                    stack_frame
+                        .evalled_values
+                        .push((position.clone(), unit_value()));
                 }
             }
         }
-        v => {
-            return Err(ErrorInfo {
-                message: format_type_error(&TypeName("Bool".into()), v, env),
-                restore_values: vec![condition_value],
-                error_position: bool_position.clone(),
-            });
-        }
+    } else {
+        return Err(ErrorInfo {
+            message: format_type_error(&TypeName("Bool".into()), &condition_value.1, env),
+            restore_values: vec![condition_value],
+            error_position: bool_position.clone(),
+        });
     }
 
     Ok(())
+}
+
+/// If `value` is a Bool value, convert it to a Rust bool.
+fn to_rust_bool(value: &Value) -> Option<bool> {
+    match value {
+        Value::Enum(name, variant_idx) if name.0 == "Bool" => {
+            // TODO: this assumes users never redefine Bool.
+            Some(*variant_idx == 1)
+        }
+        _ => None,
+    }
 }
 
 fn eval_while(
@@ -455,31 +463,28 @@ fn eval_while(
         .pop()
         .expect("Popped an empty value stack for if condition");
 
-    match &condition_value.1 {
-        Value::Boolean(b) => {
-            if *b {
-                // Start loop evaluation again.
-                stack_frame.exprs_to_eval.push((false, expr.clone()));
+    if let Some(b) = to_rust_bool(&condition_value.1) {
+        if b {
+            // Start loop evaluation again.
+            stack_frame.exprs_to_eval.push((false, expr.clone()));
 
-                // Evaluate the body.
-                stack_frame
-                    .exprs_to_eval
-                    .push((false, Expression(expr.0, Expression_::Block(body.clone()))))
-            } else {
-                // TODO: It's weird using the position of the
-                // condition when there's no else.
-                stack_frame
-                    .evalled_values
-                    .push((condition_pos.clone(), unit_value()));
-            }
+            // Evaluate the body.
+            stack_frame
+                .exprs_to_eval
+                .push((false, Expression(expr.0, Expression_::Block(body.clone()))))
+        } else {
+            // TODO: It's weird using the position of the
+            // condition when there's no else.
+            stack_frame
+                .evalled_values
+                .push((condition_pos.clone(), unit_value()));
         }
-        v => {
-            return Err(ErrorInfo {
-                message: format_type_error(&TypeName("Bool".into()), v, env),
-                restore_values: vec![condition_value],
-                error_position: condition_pos.clone(),
-            });
-        }
+    } else {
+        return Err(ErrorInfo {
+            message: format_type_error(&TypeName("Bool".into()), &condition_value.1, env),
+            restore_values: vec![condition_value],
+            error_position: condition_pos.clone(),
+        });
     }
 
     Ok(())
@@ -562,9 +567,9 @@ fn eval_boolean_binop(
             .pop()
             .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_bool = match lhs_value.1 {
-            Value::Boolean(b) => b,
-            _ => {
+        let lhs_bool = match to_rust_bool(&lhs_value.1) {
+            Some(b) => b,
+            None => {
                 return Err(ErrorInfo {
                     message: format_type_error(&TypeName("Bool".into()), &lhs_value.1, env),
                     restore_values: vec![lhs_value.clone(), rhs_value],
@@ -572,9 +577,10 @@ fn eval_boolean_binop(
                 });
             }
         };
-        let rhs_bool = match rhs_value.1 {
-            Value::Boolean(b) => b,
-            _ => {
+
+        let rhs_bool = match to_rust_bool(&rhs_value.1) {
+            Some(b) => b,
+            None => {
                 return Err(ErrorInfo {
                     message: format_type_error(&TypeName("Bool".into()), &rhs_value.1, env),
                     restore_values: vec![lhs_value, rhs_value.clone()],
@@ -587,12 +593,12 @@ fn eval_boolean_binop(
             BinaryOperatorKind::And => {
                 stack_frame
                     .evalled_values
-                    .push((position.clone(), Value::Boolean(lhs_bool && rhs_bool)));
+                    .push((position.clone(), bool_value(lhs_bool && rhs_bool)));
             }
             BinaryOperatorKind::Or => {
                 stack_frame
                     .evalled_values
-                    .push((position.clone(), Value::Boolean(lhs_bool || rhs_bool)));
+                    .push((position.clone(), bool_value(lhs_bool || rhs_bool)));
             }
             _ => unreachable!(),
         }
@@ -618,12 +624,12 @@ fn eval_equality_binop(
         BinaryOperatorKind::Equal => {
             stack_frame
                 .evalled_values
-                .push((position.clone(), Value::Boolean(lhs_value.1 == rhs_value.1)));
+                .push((position.clone(), bool_value(lhs_value.1 == rhs_value.1)));
         }
         BinaryOperatorKind::NotEqual => {
             stack_frame
                 .evalled_values
-                .push((position.clone(), Value::Boolean(lhs_value.1 != rhs_value.1)));
+                .push((position.clone(), bool_value(lhs_value.1 != rhs_value.1)));
         }
         _ => unreachable!(),
     }
@@ -705,22 +711,22 @@ fn eval_integer_binop(
             BinaryOperatorKind::LessThan => {
                 stack_frame
                     .evalled_values
-                    .push((position.clone(), Value::Boolean(lhs_num < rhs_num)));
+                    .push((position.clone(), bool_value(lhs_num < rhs_num)));
             }
             BinaryOperatorKind::GreaterThan => {
                 stack_frame
                     .evalled_values
-                    .push((position.clone(), Value::Boolean(lhs_num > rhs_num)));
+                    .push((position.clone(), bool_value(lhs_num > rhs_num)));
             }
             BinaryOperatorKind::LessThanOrEqual => {
                 stack_frame
                     .evalled_values
-                    .push((position.clone(), Value::Boolean(lhs_num <= rhs_num)));
+                    .push((position.clone(), bool_value(lhs_num <= rhs_num)));
             }
             BinaryOperatorKind::GreaterThanOrEqual => {
                 stack_frame
                     .evalled_values
-                    .push((position.clone(), Value::Boolean(lhs_num >= rhs_num)));
+                    .push((position.clone(), bool_value(lhs_num >= rhs_num)));
             }
             _ => {
                 unreachable!()
@@ -1026,7 +1032,7 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
             stack_frame
                 .evalled_values
-                .push((position.clone(), Value::Boolean(path.exists())));
+                .push((position.clone(), bool_value(path.exists())));
         }
         BuiltinFunctionKind::ListDirectory => {
             check_arity(
@@ -1823,11 +1829,6 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             .evalled_values
                             .push((expr_position, Value::Integer(i)));
                     }
-                    Expression_::BoolLiteral(b) => {
-                        stack_frame
-                            .evalled_values
-                            .push((expr_position, Value::Boolean(b)));
-                    }
                     Expression_::StringLiteral(s) => {
                         stack_frame
                             .evalled_values
@@ -2170,29 +2171,12 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_bool_literal() {
-        let exprs = vec![Expression(
-            Position {
-                start_offset: 0,
-                end_offset: 4,
-                line_number: 0,
-                path: PathBuf::from("__test.gdn"),
-            },
-            Expression_::BoolLiteral(true),
-        )];
-
-        let mut env = Env::default();
-        let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(true));
-    }
-
-    #[test]
     fn test_eval_equality() {
         let exprs = parse_exprs_from_str("\"a\" == \"b\";").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(false));
+        assert_eq!(value, bool_value(false));
     }
 
     #[test]
@@ -2223,7 +2207,7 @@ mod tests {
                         line_number: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
-                    Expression_::BoolLiteral(true),
+                    Expression_::IntLiteral(123),
                 )),
             ),
         )];
@@ -2251,11 +2235,11 @@ mod tests {
 
     #[test]
     fn test_eval_multiple_exprs() {
-        let exprs = parse_exprs_from_str("true; false;").unwrap();
+        let exprs = parse_exprs_from_str("True; False;").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(false));
+        assert_eq!(value, bool_value(false));
     }
 
     #[test]
@@ -2273,7 +2257,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(true));
+        assert_eq!(value, bool_value(true));
     }
 
     #[test]
@@ -2282,7 +2266,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(false));
+        assert_eq!(value, bool_value(false));
     }
 
     #[test]
@@ -2316,16 +2300,16 @@ mod tests {
 
     #[test]
     fn test_eval_let() {
-        let exprs = parse_exprs_from_str("let foo = true; foo;").unwrap();
+        let exprs = parse_exprs_from_str("let foo = True; foo;").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(true));
+        assert_eq!(value, bool_value(true));
     }
 
     #[test]
     fn test_eval_let_twice() {
-        let exprs = parse_exprs_from_str("let foo = true; let foo = false;").unwrap();
+        let exprs = parse_exprs_from_str("let foo = True; let foo = False;").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env);
@@ -2334,7 +2318,7 @@ mod tests {
 
     #[test]
     fn test_eval_if() {
-        let exprs = parse_exprs_from_str("let foo = if (true) { 1; } else { 2; }; foo;").unwrap();
+        let exprs = parse_exprs_from_str("let foo = if (True) { 1; } else { 2; }; foo;").unwrap();
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -2343,7 +2327,7 @@ mod tests {
 
     #[test]
     fn test_eval_if_block_scope() {
-        let exprs = parse_exprs_from_str("if (true) { let x = 1; } x;").unwrap();
+        let exprs = parse_exprs_from_str("if (True) { let x = 1; } x;").unwrap();
 
         let mut env = Env::default();
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -2437,12 +2421,12 @@ mod tests {
     fn test_eval_call() {
         let mut env = Env::default();
 
-        let defs = parse_defs_from_str("fun f() { true; }").unwrap();
+        let defs = parse_defs_from_str("fun f() { True; }").unwrap();
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(true));
+        assert_eq!(value, bool_value(true));
     }
 
     #[test]
@@ -2509,19 +2493,19 @@ mod tests {
     fn test_eval_method_call() {
         let mut env = Env::default();
 
-        let defs = parse_defs_from_str("fun (self: String) f() { true; }").unwrap();
+        let defs = parse_defs_from_str("fun (self: String) f() { True; }").unwrap();
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Boolean(true));
+        assert_eq!(value, bool_value(true));
     }
 
     #[test]
     fn test_eval_method_call_bad_airty() {
         let mut env = Env::default();
 
-        let defs = parse_defs_from_str("fun (self: String) f() { true; }").unwrap();
+        let defs = parse_defs_from_str("fun (self: String) f() { True; }").unwrap();
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f(123);").unwrap();
@@ -2588,7 +2572,7 @@ mod tests {
         let defs = parse_defs_from_str("fun f(x: Int) { }").unwrap();
         eval_defs(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f(true);").unwrap();
+        let exprs = parse_exprs_from_str("f(True);").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 

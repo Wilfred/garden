@@ -15,6 +15,11 @@ well as functions.
 
 The function `lines()` has been replaced with `String::lines`.
 
+### Booleans
+
+`Bool` is now an enum defined in the prelude. `true` and `false` are
+no longer reserved words, and boolean values are now `True` and `False`.
+
 # 0.8 (released 30th October 2023)
 **Goal: Red and yellow squiggles.**
 

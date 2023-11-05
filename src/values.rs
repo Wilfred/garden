@@ -10,8 +10,6 @@ use crate::eval::BlockBindings;
 pub enum Value {
     /// An integer value.
     Integer(i64),
-    /// A boolean value.
-    Boolean(bool),
     /// A reference to a user-defined function.
     Fun(Symbol, FunInfo),
     /// A closure value.
@@ -33,11 +31,16 @@ pub fn unit_value() -> Value {
     Value::Enum(TypeName("Unit".to_owned()), 0)
 }
 
+pub fn bool_value(b: bool) -> Value {
+    // We can assume that Bool is always defined because it's in the
+    // prelude.
+    Value::Enum(TypeName("Bool".to_owned()), if b { 1 } else { 0 })
+}
+
 pub fn type_representation(value: &Value) -> TypeName {
     TypeName(
         match value {
             Value::Integer(_) => "Int",
-            Value::Boolean(_) => "Bool",
             Value::Fun(_, _) => "Fun",
             Value::Closure(_, _) => "Fun",
             Value::BuiltinFunction(_) => "Fun",
@@ -153,7 +156,6 @@ impl Value {
     pub fn display(&self, env: &Env) -> String {
         match self {
             Value::Integer(i) => format!("{}", i),
-            Value::Boolean(b) => format!("{}", b),
             Value::Fun(name, _) => format!("(function: {})", name.name),
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind) => format!("(function: {})", kind),
@@ -219,7 +221,6 @@ pub fn escape_string_literal(s: &str) -> String {
 #[derive(Debug)]
 pub enum BuiltinType {
     Int,
-    Bool,
     String,
     // TODO: these require a type parameter.
     Fun,

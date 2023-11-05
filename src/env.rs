@@ -120,7 +120,6 @@ impl Default for Env {
         let mut types = HashMap::new();
         // TODO: String literals are duplicated with type_representation.
         types.insert(TypeName("Int".into()), Type::Builtin(BuiltinType::Int));
-        types.insert(TypeName("Bool".into()), Type::Builtin(BuiltinType::Bool));
         types.insert(
             TypeName("String".into()),
             Type::Builtin(BuiltinType::String),

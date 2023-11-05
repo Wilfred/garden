@@ -186,7 +186,6 @@ fn describe_type(type_: &Type) -> String {
         Type::Builtin(builtin_type) => {
             let name = match builtin_type {
                 BuiltinType::Int => "Int",
-                BuiltinType::Bool => "Bool",
                 BuiltinType::String => "String",
                 BuiltinType::Fun => "Fun",
                 BuiltinType::List => "List",

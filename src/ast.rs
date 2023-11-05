@@ -111,7 +111,6 @@ pub enum Expression_ {
     Return(Box<Expression>),
     IntLiteral(i64),
     StringLiteral(String),
-    BoolLiteral(bool),
     ListLiteral(Vec<Expression>),
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     Variable(Symbol),

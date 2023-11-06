@@ -157,11 +157,22 @@ pub struct TestInfo {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct VariantInfo {
+    pub name: Symbol,
+}
+
+impl Display for VariantInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name.name.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name: TypeName,
-    pub variants: Vec<Symbol>,
+    pub variants: Vec<VariantInfo>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

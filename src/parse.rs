@@ -20,6 +20,7 @@ use crate::ast::TestInfo;
 use crate::ast::ToplevelExpression;
 use crate::ast::ToplevelItem;
 use crate::ast::TypeName;
+use crate::ast::VariantInfo;
 use crate::eval::ErrorMessage;
 use crate::lex::lex;
 use crate::lex::lex_between;
@@ -554,7 +555,7 @@ fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, P
     })
 }
 
-fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<Symbol>, ParseError> {
+fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, ParseError> {
     let mut variants = vec![];
     loop {
         if next_token_is(tokens, "}") {
@@ -562,7 +563,7 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<Symbol>, ParseErr
         }
 
         let name = parse_symbol(tokens)?;
-        variants.push(name);
+        variants.push(VariantInfo { name });
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {

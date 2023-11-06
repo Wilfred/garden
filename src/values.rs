@@ -181,7 +181,7 @@ impl Value {
                 Some(type_) => match type_ {
                     Type::Builtin(_) => unreachable!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
-                        Some(variant_sym) => format!("{}", variant_sym.name),
+                        Some(variant_sym) => format!("{}", variant_sym),
                         None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),
                     },
                 },

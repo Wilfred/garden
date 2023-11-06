@@ -9,7 +9,7 @@ use crate::{
     },
     eval::{eval_toplevel_defs, Bindings, StackFrame},
     parse::parse_toplevel_items,
-    values::{unit_value, BuiltinFunctionKind, BuiltinType, Type, Value},
+    values::{unit_value, BuiltinFunctionKind, Value}, types::{Type, BuiltinType},
 };
 
 #[derive(Debug)]

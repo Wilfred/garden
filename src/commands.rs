@@ -10,7 +10,8 @@ use crate::ast::{self, SymbolName, TypeName};
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::parse::parse_toplevel_item;
-use crate::values::{builtin_fun_doc, type_representation, BuiltinType, Type, Value};
+use crate::types::{Type, BuiltinType};
+use crate::values::{builtin_fun_doc, type_representation, Value};
 use crate::version::VERSION;
 use crate::{
     colors::green,

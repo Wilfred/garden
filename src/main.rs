@@ -18,6 +18,7 @@ mod parse;
 mod prompt;
 mod values;
 mod version;
+mod types;
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};

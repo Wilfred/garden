@@ -20,8 +20,9 @@ use crate::ast::{
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
+use crate::types::Type;
 use crate::values::{
-    bool_value, type_representation, unit_value, BuiltinFunctionKind, Type, Value,
+    bool_value, type_representation, unit_value, BuiltinFunctionKind, Value,
 };
 
 // TODO: Is it correct to define equality here? Closures should only

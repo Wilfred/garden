@@ -2,9 +2,10 @@ use std::fmt::Display;
 
 use strum_macros::EnumIter;
 
-use crate::ast::{EnumInfo, FunInfo, Symbol, TypeName};
+use crate::ast::{FunInfo, Symbol, TypeName};
 use crate::env::Env;
 use crate::eval::BlockBindings;
+use crate::types::Type;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -216,21 +217,6 @@ pub fn escape_string_literal(s: &str) -> String {
 
     res.push('"');
     res
-}
-
-#[derive(Debug)]
-pub enum BuiltinType {
-    Int,
-    String,
-    // TODO: these require a type parameter.
-    Fun,
-    List,
-}
-
-#[derive(Debug)]
-pub enum Type {
-    Builtin(BuiltinType),
-    Enum(EnumInfo),
 }
 
 #[cfg(test)]

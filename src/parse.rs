@@ -562,8 +562,8 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
             break;
         }
 
-        let name = parse_symbol(tokens)?;
-        variants.push(VariantInfo { name });
+        let variant = parse_variant(tokens)?;
+        variants.push(variant);
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
@@ -591,6 +591,23 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
     }
 
     Ok(variants)
+}
+
+fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError> {
+    let name = parse_symbol(tokens)?;
+
+    // Parse the payload argument to this variant, if present.
+    let mut has_payload = false;
+    if let Some(next_token) = tokens.peek() {
+        if next_token.text == "(" {
+            tokens.pop();
+            parse_symbol(tokens)?;
+            require_token(tokens, ")")?;
+            has_payload = true;
+        }
+    }
+    let variant = VariantInfo { name, has_payload };
+    Ok(variant)
 }
 
 fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {

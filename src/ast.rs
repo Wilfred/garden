@@ -159,6 +159,9 @@ pub struct TestInfo {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VariantInfo {
     pub name: Symbol,
+    /// Does this variant wrap a value? For example, the Some variant
+    /// in Option.
+    pub has_payload: bool,
 }
 
 impl Display for VariantInfo {

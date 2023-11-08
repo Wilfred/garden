@@ -22,20 +22,20 @@ pub enum Value {
     /// A list value.
     List(Vec<Value>),
     // A value in a user-defined enum.
-    Enum(TypeName, usize),
+    Enum(TypeName, usize, Option<Box<Value>>),
 }
 
 /// A helper for creating a unit value.
 pub fn unit_value() -> Value {
     // We can assume that Unit is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Unit".to_owned()), 0)
+    Value::Enum(TypeName("Unit".to_owned()), 0, None)
 }
 
 pub fn bool_value(b: bool) -> Value {
     // We can assume that Bool is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Bool".to_owned()), if b { 1 } else { 0 })
+    Value::Enum(TypeName("Bool".to_owned()), if b { 1 } else { 0 }, None)
 }
 
 pub fn type_representation(value: &Value) -> TypeName {
@@ -47,7 +47,7 @@ pub fn type_representation(value: &Value) -> TypeName {
             Value::BuiltinFunction(_) => "Fun",
             Value::String(_) => "String",
             Value::List(_) => "List",
-            Value::Enum(name, _) => &name.0,
+            Value::Enum(name, _, _) => &name.0,
         }
         .to_owned(),
     )
@@ -178,11 +178,17 @@ impl Value {
 
                 s
             }
-            Value::Enum(name, variant_idx) => match env.types.get(name) {
+            Value::Enum(name, variant_idx, _) => match env.types.get(name) {
                 Some(type_) => match type_ {
                     Type::Builtin(_) => unreachable!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
-                        Some(variant_sym) => format!("{}", variant_sym),
+                        Some(variant_sym) => {
+                            if variant_sym.has_payload {
+                                format!("{} (constructor)", variant_sym)
+                            } else {
+                                format!("{}", variant_sym)
+                            }
+                        }
                         None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),
                     },
                 },
@@ -193,7 +199,7 @@ impl Value {
 
     pub fn display_unless_unit(&self, env: &Env) -> Option<String> {
         match self {
-            Value::Enum(name, variant_idx) if name.0 == "Unit" && *variant_idx == 0 => None,
+            Value::Enum(name, variant_idx, _) if name.0 == "Unit" && *variant_idx == 0 => None,
             _ => Some(self.display(env)),
         }
     }

@@ -21,9 +21,7 @@ use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
-use crate::values::{
-    bool_value, type_representation, unit_value, BuiltinFunctionKind, Value,
-};
+use crate::values::{bool_value, type_representation, unit_value, BuiltinFunctionKind, Value};
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
@@ -333,7 +331,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                     // current enum).
                     env.set_with_file_scope(
                         &variant_sym.name.name,
-                        Value::Enum(enum_info.name.clone(), idx),
+                        Value::Enum(enum_info.name.clone(), idx, None),
                     );
                 }
             }
@@ -446,7 +444,7 @@ fn eval_if(
 /// If `value` is a Bool value, convert it to a Rust bool.
 fn to_rust_bool(value: &Value) -> Option<bool> {
     match value {
-        Value::Enum(name, variant_idx) if name.0 == "Bool" => {
+        Value::Enum(name, variant_idx, _) if name.0 == "Bool" => {
             // TODO: this assumes users never redefine Bool.
             Some(*variant_idx == 1)
         }

@@ -11,6 +11,11 @@ enum Unit {
     Unit
 }
 
+enum Option {
+    None,
+    Some(_),
+}
+
 // String methods.
 
 fun (self: String) lines(): List {

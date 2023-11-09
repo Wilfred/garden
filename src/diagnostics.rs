@@ -22,7 +22,7 @@ pub fn format_error_with_stack(
     res.push_str(&format_pos_in_fun(
         position,
         &top_stack.src,
-        &top_stack.enclosing_name,
+        Some(&top_stack.enclosing_name),
         true,
     ));
 
@@ -33,7 +33,7 @@ pub fn format_error_with_stack(
             res.push_str(&format_pos_in_fun(
                 pos,
                 &caller_stack_frame.src,
-                &caller_stack_frame.enclosing_name,
+                Some(&caller_stack_frame.enclosing_name),
                 false,
             ));
         }
@@ -48,12 +48,7 @@ pub fn format_error(
     src_string: &SourceString,
 ) -> String {
     let mut res = format!("Error: {}\n\n", message.0);
-    res.push_str(&format_pos_in_fun(
-        position,
-        src_string,
-        &SymbolName("todo_name".into()),
-        true,
-    ));
+    res.push_str(&format_pos_in_fun(position, src_string, None, true));
     res
 }
 
@@ -68,21 +63,25 @@ pub fn format_parse_error(
 fn format_pos_in_fun(
     position: &Position,
     src_string: &SourceString,
-    name: &SymbolName,
+    name: Option<&SymbolName>,
     underline: bool,
 ) -> String {
     let mut res = String::new();
 
     res.push_str(
         &format!(
-            "--> {}:{}\t{}\n",
+            "--> {}:{}",
             position.path.display(),
             position.line_number + 1,
-            name.0.bold(),
         )
         .dimmed()
         .to_string(),
     );
+
+    if let Some(name) = name {
+        res.push_str(&format!("\t{}", name.0.bold()).dimmed().to_string());
+    }
+    res.push('\n');
 
     // TODO: this is the line number relative to the start of
     // the SourceString, not the start of the file.

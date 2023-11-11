@@ -134,7 +134,7 @@ fun (self: List) contains(item): Bool {
         i = i + 1;
     }
 
-    false;
+    False;
 }
 
 test contains {

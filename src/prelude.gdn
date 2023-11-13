@@ -1,8 +1,8 @@
 // Basic types.
 
 enum Bool {
-    False,
     True,
+    False,
 }
 
 // The unit type. Use this when your function doesn't have any useful

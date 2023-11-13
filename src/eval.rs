@@ -446,7 +446,7 @@ fn to_rust_bool(value: &Value) -> Option<bool> {
     match value {
         Value::Enum(name, variant_idx, _) if name.0 == "Bool" => {
             // TODO: this assumes users never redefine Bool.
-            Some(*variant_idx == 1)
+            Some(*variant_idx == 0)
         }
         _ => None,
     }

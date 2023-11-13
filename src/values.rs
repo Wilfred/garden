@@ -35,7 +35,7 @@ pub fn unit_value() -> Value {
 pub fn bool_value(b: bool) -> Value {
     // We can assume that Bool is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Bool".to_owned()), if b { 1 } else { 0 }, None)
+    Value::Enum(TypeName("Bool".to_owned()), if b { 0 } else { 1 }, None)
 }
 
 pub fn type_representation(value: &Value) -> TypeName {

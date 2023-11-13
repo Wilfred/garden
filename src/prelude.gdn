@@ -1,5 +1,7 @@
 // Basic types.
 
+// The boolean type. This type represents when something is true or
+// false, such as predicates.
 enum Bool {
     True,
     False,
@@ -11,6 +13,8 @@ enum Unit {
     Unit
 }
 
+// The option type. Use this when you might have a value, but might
+// not.
 enum Option {
     Some(_),
     None,
@@ -18,6 +22,7 @@ enum Option {
 
 // String methods.
 
+// Split this string into a list of lines.
 fun (self: String) lines(): List {
     let parts = [];
 
@@ -49,6 +54,7 @@ test lines {
     should_equal("a\nb\n".lines(), ["a", "b"]);
 }
 
+// Join `items` (a list of strings) with this string as a separator.
 fun (self: String) join(items: List): String {
     if (items.is_empty()) {
         return "";
@@ -74,18 +80,19 @@ test join {
     should_equal(" ".join(["x", "y"]), "x y");
 }
 
-fun (self: String) contains(needle: String): Bool {
-    if (needle.len() > self.len()) {
+// Does this string contain `substring`?
+fun (self: String) contains(substring: String): Bool {
+    if (substring.len() > self.len()) {
         return False;
     }
 
     // TODO: better parse error if this last parenthesis is missing.
-    // dbg(string_length(haystack) - string_length(needle));
+    // dbg(string_length(haystack) - string_length(substring));
 
     let i = 0;
-    while (i <= (self.len() - needle.len())) {
-        let section = self.substring(i, i + needle.len());
-        if (section == needle) {
+    while (i <= (self.len() - substring.len())) {
+        let section = self.substring(i, i + substring.len());
+        if (section == substring) {
             return True;
         }
 
@@ -97,6 +104,8 @@ fun (self: String) contains(needle: String): Bool {
 
 // List methods.
 
+// Return a copy of this list with the items where `f(item)` returns
+// True.
 fun (self: List) filter(f): List {
     let result = [];
 
@@ -120,10 +129,12 @@ test filter {
     // [1, 2].filter(fun() { True; });
 }
 
+// Is this list empty?
 fun (self: List) is_empty(): Bool {
     self.len() == 0;
 }
 
+// Does this list contain `item`?
 fun (self: List) contains(item): Bool {
     let i = 0;
     while (i < self.len()) {
@@ -143,6 +154,7 @@ test contains {
 
 // Testing heleprs.
 
+// Assert that `actual`and `expected` are equal values.
 fun should_equal(actual, expected): Unit {
     if (actual != expected) {
         error(" ".join(["Expected", string_repr(expected), "but got", string_repr(actual)]));

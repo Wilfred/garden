@@ -1113,23 +1113,10 @@ fn eval_call(
     env: &Env,
     stack_frame: &mut StackFrame,
     position: &Position,
-    args: &[Expression],
+    arg_values: &[(Position, Value)],
+    receiver_value: (Position, Value),
     session: &Session,
 ) -> Result<Option<StackFrame>, ErrorInfo> {
-    let mut arg_values = vec![];
-    for _ in 0..args.len() {
-        arg_values.push(
-            stack_frame
-                .evalled_values
-                .pop()
-                .expect("Popped an empty value for stack for call arguments"),
-        );
-    }
-    let receiver_value = stack_frame
-        .evalled_values
-        .pop()
-        .expect("Popped an empty value stack for call receiver");
-
     match &receiver_value.1 {
         Value::Closure(bindings, fun_info) => {
             let mut bindings = bindings.clone();
@@ -1183,9 +1170,9 @@ fn eval_call(
         Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
             // Calling a user-defined function.
 
-            check_arity(&name.name, &receiver_value, params.len(), &arg_values)?;
+            check_arity(&name.name, &receiver_value, params.len(), arg_values)?;
 
-            check_param_types(env, &receiver_value, params, &arg_values)?;
+            check_param_types(env, &receiver_value, params, arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
             for expr in body.exprs.iter().rev() {
@@ -1214,7 +1201,7 @@ fn eval_call(
             env,
             *kind,
             receiver_value,
-            &arg_values,
+            arg_values,
             stack_frame,
             position,
             session,
@@ -1982,7 +1969,27 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                     }
                     Expression_::Call(receiver, ref args) => {
                         if done_children {
-                            match eval_call(env, &mut stack_frame, &expr_position, args, session) {
+                            let mut arg_values = vec![];
+                            for _ in 0..args.len() {
+                                arg_values.push(
+                                    stack_frame.evalled_values.pop().expect(
+                                        "Popped an empty value for stack for call arguments",
+                                    ),
+                                );
+                            }
+                            let receiver_value = stack_frame
+                                .evalled_values
+                                .pop()
+                                .expect("Popped an empty value stack for call receiver");
+
+                            match eval_call(
+                                env,
+                                &mut stack_frame,
+                                &expr_position,
+                                &arg_values,
+                                receiver_value,
+                                session,
+                            ) {
                                 Ok(Some(new_stack_frame)) => {
                                     env.stack.push(stack_frame);
                                     env.stack.push(new_stack_frame);

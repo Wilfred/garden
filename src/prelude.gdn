@@ -12,8 +12,8 @@ enum Unit {
 }
 
 enum Option {
-    None,
     Some(_),
+    None,
 }
 
 // String methods.

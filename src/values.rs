@@ -178,22 +178,39 @@ impl Value {
 
                 s
             }
-            Value::Enum(name, variant_idx, _) => match env.types.get(name) {
-                Some(type_) => match type_ {
-                    Type::Builtin(_) => unreachable!(),
+            Value::Enum(name, variant_idx, payload) => {
+                let type_ = match env.types.get(name) {
+                    Some(type_) => type_,
+                    None => {
+                        return format!("{}__OLD_DEFINITION::{}", name, variant_idx);
+                    }
+                };
+
+                let mut variant_takes_payload = false;
+                let variant_name = match type_ {
+                    Type::Builtin(_) => {
+                        unreachable!("Enum type names should never map to built-in types")
+                    }
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
-                            if variant_sym.has_payload {
-                                format!("{} (constructor)", variant_sym)
-                            } else {
-                                format!("{}", variant_sym)
-                            }
+                            variant_takes_payload = variant_sym.has_payload;
+                            format!("{}", variant_sym)
                         }
                         None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),
                     },
-                },
-                None => format!("{}__OLD_DEFINITION::{}", name, variant_idx),
-            },
+                };
+
+                match payload {
+                    Some(value) => format!("{variant_name}({})", value.display(env)),
+                    None => {
+                        if variant_takes_payload {
+                            format!("{variant_name} (constructor)")
+                        } else {
+                            variant_name
+                        }
+                    }
+                }
+            }
         }
     }
 

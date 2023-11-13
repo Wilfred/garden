@@ -1,7 +1,8 @@
 # 0.10 (unreleased)
 **Goal: Offer actions when runtime errors occur.**
+**Goal: Warn on loading functions with free variables..**
 
-# 0.9 (unreleased)
+# 0.9 (released 13th November 2023)
 **Goal: User-defined enum types.**
 
 ### Commands

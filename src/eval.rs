@@ -1224,6 +1224,100 @@ fn eval_call(
     Ok(None)
 }
 
+fn eval_enum_constructor(
+    env: &Env,
+    position: &Position,
+    arg_values: &[(Position, Value)],
+    receiver_value: (Position, Value),
+) -> Result<Value, ErrorInfo> {
+    match receiver_value.1 {
+        Value::Enum(ref name, variant_idx, None) => {
+            let (_, wrapped_value) = if arg_values.len() == 1 {
+                &arg_values[0]
+            } else {
+                return Err(ErrorInfo {
+                    error_position: position.clone(),
+                    message: ErrorMessage(format!(
+                        "Enum variant constructors should take 1 argument, got {}",
+                        arg_values.len()
+                    )),
+                    restore_values: vec![],
+                });
+            };
+
+            match env.types.get(name) {
+                Some(type_) => match type_ {
+                    Type::Builtin(_) => unreachable!(),
+                    Type::Enum(enum_info) => match enum_info.variants.get(variant_idx) {
+                        Some(variant_sym) => {
+                            if variant_sym.has_payload {
+                                Ok(Value::Enum(
+                                    name.clone(),
+                                    variant_idx,
+                                    Some(Box::new(wrapped_value.clone())),
+                                ))
+                            } else {
+                                let mut saved_values = vec![];
+                                for value in arg_values.iter().rev() {
+                                    saved_values.push(value.clone());
+                                }
+                                saved_values.push(receiver_value.clone());
+
+                                Err(ErrorInfo {
+                                    error_position: position.clone(),
+                                    message: ErrorMessage(format!(
+                                        "{}::{} does not take an argument",
+                                        name, variant_sym.name.name
+                                    )),
+                                    restore_values: saved_values,
+                                })
+                            }
+                        }
+                        None => {
+                            // Assume that the previous definition
+                            // accepted a payload.
+                            //
+                            // TODO: store a copy of the old
+                            // definition so this behaves the same as
+                            // the current definition.
+                            Ok(Value::Enum(
+                                name.clone(),
+                                variant_idx,
+                                Some(Box::new(wrapped_value.clone())),
+                            ))
+                        }
+                    },
+                },
+                None => {
+                    // Type no longer exists.
+                    //
+                    // TODO: store a copy of the old definition so
+                    // this behaves the same as the current
+                    // definition.
+                    Err(ErrorInfo {
+                        error_position: position.clone(),
+                        message: ErrorMessage(format!("{name} no longer has this variant")),
+                        restore_values: vec![],
+                    })
+                }
+            }
+        }
+        _ => {
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            Err(ErrorInfo {
+                error_position: receiver_value.0,
+                message: format_type_error(&TypeName("Function".into()), &receiver_value.1, env),
+                restore_values: saved_values,
+            })
+        }
+    }
+}
+
 fn check_param_types(
     env: &Env,
     receiver_value: &(Position, Value),
@@ -1982,32 +2076,61 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                                 .pop()
                                 .expect("Popped an empty value stack for call receiver");
 
-                            match eval_call(
-                                env,
-                                &mut stack_frame,
-                                &expr_position,
-                                &arg_values,
-                                receiver_value,
-                                session,
-                            ) {
-                                Ok(Some(new_stack_frame)) => {
-                                    env.stack.push(stack_frame);
-                                    env.stack.push(new_stack_frame);
-                                    continue;
+                            if matches!(receiver_value.1, Value::Enum(_, _, _)) {
+                                match eval_enum_constructor(
+                                    env,
+                                    &expr_position,
+                                    &arg_values,
+                                    receiver_value,
+                                ) {
+                                    Ok(value) => {
+                                        stack_frame.evalled_values.push((expr_position, value));
+                                    }
+                                    Err(ErrorInfo {
+                                        message,
+                                        restore_values,
+                                        error_position,
+                                    }) => {
+                                        restore_stack_frame(
+                                            env,
+                                            stack_frame,
+                                            (done_children, Expression(expr_position, expr_copy)),
+                                            &restore_values,
+                                        );
+                                        return Err(EvalError::ResumableError(
+                                            error_position,
+                                            message,
+                                        ));
+                                    }
                                 }
-                                Ok(None) => {}
-                                Err(ErrorInfo {
-                                    message,
-                                    restore_values,
-                                    error_position: position,
-                                }) => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(expr_position, expr_copy)),
-                                        &restore_values,
-                                    );
-                                    return Err(EvalError::ResumableError(position, message));
+                            } else {
+                                match eval_call(
+                                    env,
+                                    &mut stack_frame,
+                                    &expr_position,
+                                    &arg_values,
+                                    receiver_value,
+                                    session,
+                                ) {
+                                    Ok(Some(new_stack_frame)) => {
+                                        env.stack.push(stack_frame);
+                                        env.stack.push(new_stack_frame);
+                                        continue;
+                                    }
+                                    Ok(None) => {}
+                                    Err(ErrorInfo {
+                                        message,
+                                        restore_values,
+                                        error_position: position,
+                                    }) => {
+                                        restore_stack_frame(
+                                            env,
+                                            stack_frame,
+                                            (done_children, Expression(expr_position, expr_copy)),
+                                            &restore_values,
+                                        );
+                                        return Err(EvalError::ResumableError(position, message));
+                                    }
                                 }
                             }
                         } else {

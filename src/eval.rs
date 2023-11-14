@@ -192,13 +192,7 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
         }
     }
 
-    eval_defs(&defs, env);
-    ToplevelEvalSummary {
-        values: vec![],
-        definitions: defs.len(),
-        tests_passed: 0,
-        tests_failed: 0,
-    }
+    eval_defs(&defs, env)
 }
 
 pub fn eval_toplevel_items(
@@ -219,26 +213,20 @@ pub fn eval_toplevel_items(
         }
     }
 
-    eval_defs(&defs, env);
+    let mut summary = eval_defs(&defs, env);
 
     let test_summary = eval_toplevel_tests(items, env, session)?;
+    summary.tests_passed = test_summary.tests_passed;
+    summary.tests_failed = test_summary.tests_failed;
 
     if exprs.is_empty() {
-        return Ok(ToplevelEvalSummary {
-            values: vec![],
-            definitions: defs.len(),
-            tests_passed: test_summary.tests_passed,
-            tests_failed: test_summary.tests_failed,
-        });
+        return Ok(summary);
     }
 
     let value = eval_exprs(&exprs, env, session)?;
-    Ok(ToplevelEvalSummary {
-        values: vec![value],
-        definitions: defs.len(),
-        tests_passed: test_summary.tests_passed,
-        tests_failed: test_summary.tests_failed,
-    })
+    summary.values = vec![value];
+
+    Ok(summary)
 }
 
 pub fn eval_toplevel_tests(
@@ -299,7 +287,7 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     env.stack.push(stack_frame);
 }
 
-pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
+pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
     for definition in definitions {
         // TODO: check that types in definitions are defined, and emit
         // warnings otherwise.
@@ -336,6 +324,13 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) {
                 }
             }
         }
+    }
+
+    ToplevelEvalSummary {
+        values: vec![],
+        definitions: definitions.len(),
+        tests_passed: 0,
+        tests_failed: 0,
     }
 }
 

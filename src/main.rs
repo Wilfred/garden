@@ -26,14 +26,14 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use env::Env;
-use eval::{eval_toplevel_defs, eval_toplevel_items, EvalError, Session};
-use parse::{parse_toplevel_item, parse_toplevel_items};
 
 use crate::ast::SourceString;
 use crate::diagnostics::ErrorMessage;
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
+use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
+use crate::eval::{eval_toplevel_defs, eval_toplevel_items, EvalError, Session};
+use crate::parse::{parse_toplevel_item, parse_toplevel_items};
 use crate::values::escape_string_literal;
 
 #[derive(Debug, Parser)]

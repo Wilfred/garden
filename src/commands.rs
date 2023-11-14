@@ -10,7 +10,7 @@ use crate::ast::{self, SymbolName, TypeName};
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::parse::parse_toplevel_item;
-use crate::types::{Type, BuiltinType};
+use crate::types::{BuiltinType, Type};
 use crate::values::{builtin_fun_doc, type_representation, Value};
 use crate::version::VERSION;
 use crate::{
@@ -217,7 +217,7 @@ fn describe_type(type_: &Type) -> String {
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
         Value::Fun(
-            name,
+            name_sym,
             ast::FunInfo {
                 doc_comment,
                 params,
@@ -230,20 +230,22 @@ fn describe_fun(value: &Value) -> Option<String> {
                 Some(doc_comment) => {
                     res.push_str(doc_comment);
                 }
-                None => res.push_str(&format!("`{}` has no documentation comment.", name.name)),
+                None => res.push_str(&format!(
+                    "`{}` has no documentation comment.",
+                    name_sym.name
+                )),
             }
             res.push_str("\n\n");
 
             // show type hints
-            res.push_str(&format!("fn {}", name.name));
+            res.push_str(&format!("fn {}", name_sym.name));
             res.push('(');
             for (i, param) in params.iter().enumerate() {
                 if i != 0 {
                     res.push_str(", ");
                 }
 
-                let name = &param.symbol;
-                res.push_str(&format!("{}", &name.name));
+                res.push_str(&format!("{}", &param.symbol.name));
 
                 if let Some(param_ty) = &param.type_ {
                     res.push_str(&format!(": {}", param_ty));
@@ -303,13 +305,13 @@ pub fn run_command<T: Write>(
             for type_name in type_names {
                 let mut method_names: Vec<_> =
                     env.methods.get(type_name).unwrap().values().collect();
-                method_names.sort_by_key(|meth| &meth.name.name.0);
+                method_names.sort_by_key(|meth| &meth.name_sym.name.0);
 
                 for method_name in method_names {
                     if !is_first {
                         writeln!(buf).unwrap();
                     }
-                    write!(buf, "{}::{}", type_name, &method_name.name.name).unwrap();
+                    write!(buf, "{}::{}", type_name, &method_name.name_sym.name).unwrap();
 
                     is_first = false;
                 }

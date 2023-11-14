@@ -606,7 +606,7 @@ fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError
             has_payload = true;
         }
     }
-    let variant = VariantInfo { name, has_payload };
+    let variant = VariantInfo { name_sym: name, has_payload };
     Ok(variant)
 }
 
@@ -887,7 +887,7 @@ fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, Parse
     let meth_info = MethodInfo {
         receiver_type,
         receiver_name,
-        name,
+        name_sym: name,
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 

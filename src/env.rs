@@ -42,7 +42,7 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("String".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol {
+                name_sym: Symbol {
                     pos: Position::todo(),
                     name: SymbolName("len".to_owned()),
                 },
@@ -54,7 +54,7 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("String".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol {
+                name_sym: Symbol {
                     pos: Position::todo(),
                     name: SymbolName("substring".to_owned()),
                 },
@@ -66,7 +66,7 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("String".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol {
+                name_sym: Symbol {
                     pos: Position::todo(),
                     name: SymbolName("concat".to_owned()),
                 },
@@ -82,7 +82,7 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("List".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol {
+                name_sym: Symbol {
                     pos: Position::todo(),
                     name: SymbolName("append".to_owned()),
                 },
@@ -94,7 +94,7 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("List".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol {
+                name_sym: Symbol {
                     pos: Position::todo(),
                     name: SymbolName("len".to_owned()),
                 },
@@ -106,7 +106,7 @@ impl Default for Env {
             MethodInfo {
                 receiver_type: TypeName("List".into()),
                 receiver_name: SymbolName("__irrelevant".to_owned()),
-                name: Symbol {
+                name_sym: Symbol {
                     pos: Position::todo(),
                     name: SymbolName("get".to_owned()),
                 },
@@ -180,6 +180,6 @@ impl Env {
             .methods
             .entry(method_info.receiver_type.clone())
             .or_default();
-        type_methods.insert(method_info.name.name.clone(), method_info.clone());
+        type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
     }
 }

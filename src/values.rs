@@ -157,7 +157,7 @@ impl Value {
     pub fn display(&self, env: &Env) -> String {
         match self {
             Value::Integer(i) => format!("{}", i),
-            Value::Fun(name, _) => format!("(function: {})", name.name),
+            Value::Fun(name_sym, _) => format!("(function: {})", name_sym.name),
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),

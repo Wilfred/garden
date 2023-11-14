@@ -270,7 +270,7 @@ pub fn eval_toplevel_tests(
 
 pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let enclosing_name = match &test.name {
-        Some(name) => name.name.clone(),
+        Some(name_sym) => name_sym.name.clone(),
         None => SymbolName("__unnamed_test".to_owned()),
     };
     let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
@@ -299,13 +299,13 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
         // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
         // ```
         match &definition.2 {
-            Definition_::Fun(name, fun_info) => {
-                env.set_with_file_scope(&name.name, Value::Fun(name.clone(), fun_info.clone()));
-                new_syms.push(name.name.clone());
+            Definition_::Fun(name_sym, fun_info) => {
+                env.set_with_file_scope(&name_sym.name, Value::Fun(name_sym.clone(), fun_info.clone()));
+                new_syms.push(name_sym.name.clone());
             }
             Definition_::Method(meth_info) => {
                 env.add_method(meth_info);
-                new_syms.push(meth_info.name.name.clone());
+                new_syms.push(meth_info.name_sym.name.clone());
             }
             Definition_::Test(test) => {
                 if let Some(test_sym) = &test.name {
@@ -324,7 +324,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
                     // different enum (i.e. not just redefining the
                     // current enum).
                     env.set_with_file_scope(
-                        &variant_sym.name.name,
+                        &variant_sym.name_sym.name,
                         Value::Enum(enum_info.name.clone(), idx, None),
                     );
                 }
@@ -1172,10 +1172,10 @@ fn eval_call(
                 src: fun_info.src_string.clone(),
             }));
         }
-        Value::Fun(name, fi @ FunInfo { params, body, .. }) => {
+        Value::Fun(name_sym, fi @ FunInfo { params, body, .. }) => {
             // Calling a user-defined function.
 
-            check_arity(&name.name, &receiver_value, params.len(), arg_values)?;
+            check_arity(&name_sym.name, &receiver_value, params.len(), arg_values)?;
 
             check_param_types(env, &receiver_value, params, arg_values)?;
 
@@ -1196,10 +1196,10 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(receiver_value.0.clone()),
-                enclosing_name: name.name.clone(),
+                enclosing_name: name_sym.name.clone(),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![(name.pos.clone(), unit_value())],
+                evalled_values: vec![(name_sym.pos.clone(), unit_value())],
             }));
         }
         Value::BuiltinFunction(kind) => eval_builtin_call(
@@ -1272,7 +1272,7 @@ fn eval_enum_constructor(
                                     error_position: position.clone(),
                                     message: ErrorMessage(format!(
                                         "{}::{} does not take an argument",
-                                        name, variant_sym.name.name
+                                        name, variant_sym.name_sym.name
                                     )),
                                     restore_values: saved_values,
                                 })
@@ -1943,11 +1943,11 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             }
                         }
                     }
-                    Expression_::Variable(name) => {
-                        if let Some(value) = get_var(&name.name, &stack_frame, env) {
+                    Expression_::Variable(name_sym) => {
+                        if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
                             stack_frame.evalled_values.push((expr_position, value));
                         } else {
-                            let suggestion = match most_similar_var(&name.name, &stack_frame, env) {
+                            let suggestion = match most_similar_var(&name_sym.name, &stack_frame, env) {
                                 Some(closest_name) => format!(" Did you mean {}?", closest_name),
                                 None => "".to_owned(),
                             };
@@ -1960,10 +1960,10 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                             );
 
                             return Err(EvalError::ResumableError(
-                                name.pos.clone(),
+                                name_sym.pos.clone(),
                                 ErrorMessage(format!(
                                     "Undefined variable: {}.{}",
-                                    name.name, suggestion
+                                    name_sym.name, suggestion
                                 )),
                             ));
                         }

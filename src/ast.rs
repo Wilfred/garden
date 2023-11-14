@@ -158,7 +158,7 @@ pub struct TestInfo {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VariantInfo {
-    pub name: Symbol,
+    pub name_sym: Symbol,
     /// Does this variant wrap a value? For example, the Some variant
     /// in Option.
     pub has_payload: bool,
@@ -166,7 +166,7 @@ pub struct VariantInfo {
 
 impl Display for VariantInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name.name.0)
+        write!(f, "{}", self.name_sym.name.0)
     }
 }
 
@@ -206,7 +206,7 @@ pub struct MethodInfo {
     pub receiver_name: SymbolName,
     /// The name of the method itself, e.g. `len` in
     /// `some_string.len()`.
-    pub name: Symbol,
+    pub name_sym: Symbol,
     /// User-defined or built-in.
     pub kind: MethodKind,
 }

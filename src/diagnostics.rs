@@ -8,6 +8,11 @@ use crate::{
 };
 
 #[derive(Debug)]
+pub struct Warning {
+    message: String,
+}
+
+#[derive(Debug)]
 pub struct ErrorMessage(pub String);
 
 pub fn format_error_with_stack(

@@ -18,7 +18,7 @@ use crate::ast::{
     Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
-use crate::diagnostics::ErrorMessage;
+use crate::diagnostics::{ErrorMessage, Warning};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
@@ -177,6 +177,7 @@ pub enum EvalError {
 pub struct ToplevelEvalSummary {
     pub values: Vec<Value>,
     pub new_syms: Vec<SymbolName>,
+    pub warnings: Vec<Warning>,
     // TODO: Report the names of tests that passed/failed.
     pub tests_passed: usize,
     pub tests_failed: usize,
@@ -262,6 +263,7 @@ pub fn eval_toplevel_tests(
     Ok(ToplevelEvalSummary {
         values: vec![],
         new_syms: vec![],
+        warnings: vec![],
         tests_passed,
         tests_failed: 0,
     })
@@ -299,7 +301,10 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
         // ```
         match &definition.2 {
             Definition_::Fun(name_sym, fun_info) => {
-                env.set_with_file_scope(&name_sym.name, Value::Fun(name_sym.clone(), fun_info.clone()));
+                env.set_with_file_scope(
+                    &name_sym.name,
+                    Value::Fun(name_sym.clone(), fun_info.clone()),
+                );
                 new_syms.push(name_sym.name.clone());
             }
             Definition_::Method(meth_info) => {
@@ -337,6 +342,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
     ToplevelEvalSummary {
         values: vec![],
         new_syms,
+        warnings: vec![],
         tests_passed: 0,
         tests_failed: 0,
     }
@@ -1942,10 +1948,13 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
                         if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
                             stack_frame.evalled_values.push((expr_position, value));
                         } else {
-                            let suggestion = match most_similar_var(&name_sym.name, &stack_frame, env) {
-                                Some(closest_name) => format!(" Did you mean {}?", closest_name),
-                                None => "".to_owned(),
-                            };
+                            let suggestion =
+                                match most_similar_var(&name_sym.name, &stack_frame, env) {
+                                    Some(closest_name) => {
+                                        format!(" Did you mean {}?", closest_name)
+                                    }
+                                    None => "".to_owned(),
+                                };
 
                             restore_stack_frame(
                                 env,

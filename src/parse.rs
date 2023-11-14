@@ -21,7 +21,7 @@ use crate::ast::ToplevelExpression;
 use crate::ast::ToplevelItem;
 use crate::ast::TypeName;
 use crate::ast::VariantInfo;
-use crate::eval::ErrorMessage;
+use crate::diagnostics::ErrorMessage;
 use crate::lex::lex;
 use crate::lex::lex_between;
 use crate::lex::Token;

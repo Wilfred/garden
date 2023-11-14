@@ -4,8 +4,11 @@ use owo_colors::OwoColorize;
 
 use crate::{
     ast::{Position, SourceString, SymbolName},
-    eval::{ErrorMessage, StackFrame},
+    eval::StackFrame,
 };
+
+#[derive(Debug)]
+pub struct ErrorMessage(pub String);
 
 pub fn format_error_with_stack(
     message: &ErrorMessage,

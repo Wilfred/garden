@@ -16,9 +16,9 @@ mod json_session;
 mod lex;
 mod parse;
 mod prompt;
+mod types;
 mod values;
 mod version;
-mod types;
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -31,8 +31,9 @@ use eval::{eval_toplevel_defs, eval_toplevel_items, EvalError, Session};
 use parse::{parse_toplevel_item, parse_toplevel_items};
 
 use crate::ast::SourceString;
+use crate::diagnostics::ErrorMessage;
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
-use crate::eval::{eval_toplevel_tests, ErrorMessage};
+use crate::eval::eval_toplevel_tests;
 use crate::values::escape_string_literal;
 
 #[derive(Debug, Parser)]

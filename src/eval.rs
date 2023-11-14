@@ -18,6 +18,7 @@ use crate::ast::{
     Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
+use crate::diagnostics::ErrorMessage;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
@@ -383,9 +384,6 @@ fn restore_stack_frame(
 
     env.stack.push(stack_frame);
 }
-
-#[derive(Debug)]
-pub struct ErrorMessage(pub String);
 
 /// Information about an error during evaluation.
 #[derive(Debug)]

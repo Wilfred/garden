@@ -175,7 +175,7 @@ pub enum EvalError {
 #[derive(Debug)]
 pub struct ToplevelEvalSummary {
     pub values: Vec<Value>,
-    pub new_syms: Vec<Symbol>,
+    pub new_syms: Vec<SymbolName>,
     // TODO: Prefer Vec<SymbolName>
     pub definitions: usize,
     pub tests_passed: usize,
@@ -290,7 +290,7 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
-    let mut new_syms = vec![];
+    let mut new_syms: Vec<SymbolName> = vec![];
     for definition in definitions {
         // TODO: check that types in definitions are defined, and emit
         // warnings otherwise.
@@ -300,17 +300,17 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
         // ```
         match &definition.2 {
             Definition_::Fun(name, fun_info) => {
-                new_syms.push(name.clone());
                 env.set_with_file_scope(&name.name, Value::Fun(name.clone(), fun_info.clone()));
+                new_syms.push(name.name.clone());
             }
             Definition_::Method(meth_info) => {
-                new_syms.push(meth_info.name.clone());
                 env.add_method(meth_info);
+                new_syms.push(meth_info.name.name.clone());
             }
             Definition_::Test(test) => {
                 if let Some(test_sym) = &test.name {
-                    new_syms.push(test_sym.clone());
                     env.tests.insert(test_sym.name.clone(), test.clone());
+                    new_syms.push(test_sym.name.clone());
                 }
             }
             Definition_::Enum(enum_info) => {
@@ -328,6 +328,9 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
                         Value::Enum(enum_info.name.clone(), idx, None),
                     );
                 }
+
+                let name_as_sym = SymbolName(enum_info.name.0.clone());
+                new_syms.push(name_as_sym);
             }
         }
     }

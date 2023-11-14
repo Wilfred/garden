@@ -175,6 +175,7 @@ pub enum EvalError {
 #[derive(Debug)]
 pub struct ToplevelEvalSummary {
     pub values: Vec<Value>,
+    pub fun_syms: Vec<Symbol>,
     // TODO: Prefer Vec<SymbolName>
     pub definitions: usize,
     pub tests_passed: usize,
@@ -260,6 +261,7 @@ pub fn eval_toplevel_tests(
 
     Ok(ToplevelEvalSummary {
         values: vec![],
+        fun_syms: vec![],
         definitions: 0,
         tests_passed,
         tests_failed: 0,
@@ -288,6 +290,7 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
+    let mut fun_syms = vec![];
     for definition in definitions {
         // TODO: check that types in definitions are defined, and emit
         // warnings otherwise.
@@ -297,6 +300,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
         // ```
         match &definition.2 {
             Definition_::Fun(name, fun_info) => {
+                fun_syms.push(name.clone());
                 env.set_with_file_scope(&name.name, Value::Fun(name.clone(), fun_info.clone()));
             }
             Definition_::Method(meth_info) => {
@@ -328,6 +332,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
 
     ToplevelEvalSummary {
         values: vec![],
+        fun_syms,
         definitions: definitions.len(),
         tests_passed: 0,
         tests_failed: 0,

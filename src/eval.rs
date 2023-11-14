@@ -175,7 +175,7 @@ pub enum EvalError {
 #[derive(Debug)]
 pub struct ToplevelEvalSummary {
     pub values: Vec<Value>,
-    pub fun_syms: Vec<Symbol>,
+    pub new_syms: Vec<Symbol>,
     // TODO: Prefer Vec<SymbolName>
     pub definitions: usize,
     pub tests_passed: usize,
@@ -261,7 +261,7 @@ pub fn eval_toplevel_tests(
 
     Ok(ToplevelEvalSummary {
         values: vec![],
-        fun_syms: vec![],
+        new_syms: vec![],
         definitions: 0,
         tests_passed,
         tests_failed: 0,
@@ -290,7 +290,7 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
-    let mut fun_syms = vec![];
+    let mut new_syms = vec![];
     for definition in definitions {
         // TODO: check that types in definitions are defined, and emit
         // warnings otherwise.
@@ -300,14 +300,16 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
         // ```
         match &definition.2 {
             Definition_::Fun(name, fun_info) => {
-                fun_syms.push(name.clone());
+                new_syms.push(name.clone());
                 env.set_with_file_scope(&name.name, Value::Fun(name.clone(), fun_info.clone()));
             }
             Definition_::Method(meth_info) => {
+                new_syms.push(meth_info.name.clone());
                 env.add_method(meth_info);
             }
             Definition_::Test(test) => {
                 if let Some(test_sym) = &test.name {
+                    new_syms.push(test_sym.clone());
                     env.tests.insert(test_sym.name.clone(), test.clone());
                 }
             }
@@ -332,7 +334,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
 
     ToplevelEvalSummary {
         values: vec![],
-        fun_syms,
+        new_syms,
         definitions: definitions.len(),
         tests_passed: 0,
         tests_failed: 0,

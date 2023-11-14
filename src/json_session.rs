@@ -86,14 +86,14 @@ fn handle_eval_request(
     ) {
         Ok(items) => match eval_toplevel_items(&items, env, session) {
             Ok(result) => {
-                let definition_summary = if result.definitions == 1 {
-                    "Loaded 1 definition".to_owned()
+                let definition_summary = if result.new_syms.len() == 1 {
+                    format!("Loaded {}", result.new_syms[0].0)
                 } else {
-                    format!("Loaded {} definitions", result.definitions)
+                    format!("Loaded {} definitions", result.new_syms.len())
                 };
 
                 let value_summary = if let Some(last_value) = result.values.last() {
-                    if result.definitions == 0 {
+                    if result.new_syms.is_empty() {
                         last_value.display(env)
                     } else {
                         format!(

@@ -176,8 +176,7 @@ pub enum EvalError {
 pub struct ToplevelEvalSummary {
     pub values: Vec<Value>,
     pub new_syms: Vec<SymbolName>,
-    // TODO: Prefer Vec<SymbolName>
-    pub definitions: usize,
+    // TODO: Report the names of tests that passed/failed.
     pub tests_passed: usize,
     pub tests_failed: usize,
 }
@@ -262,7 +261,6 @@ pub fn eval_toplevel_tests(
     Ok(ToplevelEvalSummary {
         values: vec![],
         new_syms: vec![],
-        definitions: 0,
         tests_passed,
         tests_failed: 0,
     })
@@ -338,7 +336,6 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
     ToplevelEvalSummary {
         values: vec![],
         new_syms,
-        definitions: definitions.len(),
         tests_passed: 0,
         tests_failed: 0,
     }

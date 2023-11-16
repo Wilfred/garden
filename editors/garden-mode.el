@@ -191,6 +191,7 @@ the user entering a value in the *garden* buffer."
           (when (s-starts-with-p "{" line)
             (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
                    (response-value (plist-get response :value))
+                   (response-warnings (plist-get response :warnings))
                    (response-kind (plist-get response :kind))
                    (response-ok-value (plist-get response-value :Ok))
                    (response-err-value (plist-get response-value :Err))
@@ -238,7 +239,13 @@ the user entering a value in the *garden* buffer."
                   (set-marker (process-mark proc) (point))
 
                   (when error-buf
-                    (pop-to-buffer error-buf))))))))
+                    (pop-to-buffer error-buf))))
+              (unless (null response-warnings)
+                (seq-doseq (warning response-warnings)
+                  (display-warning
+                   'garden
+                   (plist-get warning :message)
+                   :warning)))))))
     ;; No newline so far, we haven't seen the whole JSON line yet.
     (setq garden--output output)))
 

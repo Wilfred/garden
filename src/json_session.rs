@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::ast::{self, SourceString};
 use crate::diagnostics::{format_error, format_parse_error, Warning};
 use crate::env::Env;
-use crate::eval::{eval_env, eval_toplevel_items, push_test_stackframe};
+use crate::eval::{eval_env, eval_all_toplevel_items, push_test_stackframe};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
@@ -85,7 +85,7 @@ fn handle_eval_request(
         req.offset.unwrap_or(0),
         req.end_offset.unwrap_or(req.input.len()),
     ) {
-        Ok(items) => match eval_toplevel_items(&items, env, session) {
+        Ok(items) => match eval_all_toplevel_items(&items, env, session) {
             Ok(eval_summary) => {
                 let definition_summary = if eval_summary.new_syms.len() == 1 {
                     format!("Loaded {}", eval_summary.new_syms[0].0)

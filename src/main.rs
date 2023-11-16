@@ -32,7 +32,7 @@ use crate::diagnostics::ErrorMessage;
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
-use crate::eval::{eval_toplevel_defs, eval_toplevel_items, EvalError, Session};
+use crate::eval::{eval_toplevel_defs, eval_all_toplevel_items, EvalError, Session};
 use crate::parse::{parse_toplevel_item, parse_toplevel_items};
 use crate::values::escape_string_literal;
 
@@ -179,7 +179,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                 let call_src = call_to_main_src(arguments);
                 let call_exprs =
                     vec![parse_toplevel_item(&PathBuf::from("__main_fun__"), &call_src).unwrap()];
-                match eval_toplevel_items(&call_exprs, &mut env, &mut session) {
+                match eval_all_toplevel_items(&call_exprs, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, msg)) => {
                         eprintln!("{}", &format_error_with_stack(&msg, &position, &env.stack));

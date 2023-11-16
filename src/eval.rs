@@ -183,6 +183,7 @@ pub struct ToplevelEvalSummary {
     pub tests_failed: usize,
 }
 
+/// Evaluate toplevel definitions, but ignore toplevel expressions and tests.
 pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
     for item in items {
@@ -197,7 +198,9 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
     eval_defs(&defs, env)
 }
 
-pub fn eval_toplevel_items(
+/// Evaluate all toplevel items: definitions, then tests, then
+/// expressions.
+pub fn eval_all_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
@@ -231,6 +234,7 @@ pub fn eval_toplevel_items(
     Ok(summary)
 }
 
+/// Evaluate toplevel tests.
 pub fn eval_toplevel_tests(
     items: &[ToplevelItem],
     env: &mut Env,

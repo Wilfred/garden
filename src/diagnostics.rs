@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Warning {
-    message: String,
+    pub message: String,
 }
 
 #[derive(Debug)]

@@ -290,8 +290,24 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     env.stack.push(stack_frame);
 }
 
+fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
+    let mut warnings = vec![];
+
+    if let Some(return_type) = &fun_info.return_type {
+        if !env.types.contains_key(&return_type) {
+            warnings.push(Warning {
+                message: format!("No such type: {return_type}"),
+            });
+        }
+    }
+
+    warnings
+}
+
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
+    let mut warnings: Vec<Warning> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
+
     for definition in definitions {
         // TODO: check that types in definitions are defined, and emit
         // warnings otherwise.
@@ -305,6 +321,8 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
                     &name_sym.name,
                     Value::Fun(name_sym.clone(), fun_info.clone()),
                 );
+                warnings.extend(check_types_exist(fun_info, env));
+
                 new_syms.push(name_sym.name.clone());
             }
             Definition_::Method(meth_info) => {

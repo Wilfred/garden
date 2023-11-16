@@ -1,13 +1,14 @@
 use itertools::Itertools;
 use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     ast::{Position, SourceString, SymbolName},
     eval::StackFrame,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Warning {
     pub message: String,
 }

@@ -294,7 +294,7 @@ fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
     if let Some(return_type) = &fun_info.return_type {
-        if !env.types.contains_key(&return_type) {
+        if !env.types.contains_key(return_type) {
             warnings.push(Warning {
                 message: format!("No such type: {return_type}"),
             });
@@ -866,6 +866,7 @@ fn eval_builtin_call(
                         let response = Response {
                             kind: ResponseKind::Printed,
                             value: Ok(s.clone()),
+                            warnings: vec![],
                         };
                         let serialized = serde_json::to_string(&response).unwrap();
                         println!("{}", serialized);
@@ -905,6 +906,7 @@ fn eval_builtin_call(
                         let response = Response {
                             kind: ResponseKind::Printed,
                             value: Ok(format!("{}\n", s)),
+                            warnings: vec![],
                         };
                         let serialized = serde_json::to_string(&response).unwrap();
                         println!("{}", serialized);
@@ -945,6 +947,7 @@ fn eval_builtin_call(
                 let response = Response {
                     kind: ResponseKind::Printed,
                     value: Ok(format!("{:?}\n", value)),
+                    warnings: vec![],
                 };
                 let serialized = serde_json::to_string(&response).unwrap();
                 println!("{}", serialized);

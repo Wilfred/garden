@@ -9,7 +9,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::ast::{self, SourceString};
-use crate::diagnostics::{format_error, format_parse_error};
+use crate::diagnostics::{format_error, format_parse_error, Warning};
 use crate::env::Env;
 use crate::eval::{eval_env, eval_toplevel_items, push_test_stackframe};
 use crate::parse::{parse_toplevel_items_from_span, ParseError};
@@ -56,6 +56,7 @@ pub struct ResponseError {
 pub struct Response {
     pub kind: ResponseKind,
     pub value: Result<String, ResponseError>,
+    pub warnings: Vec<Warning>,
 }
 
 pub fn sample_request_as_json() -> String {
@@ -85,15 +86,15 @@ fn handle_eval_request(
         req.end_offset.unwrap_or(req.input.len()),
     ) {
         Ok(items) => match eval_toplevel_items(&items, env, session) {
-            Ok(result) => {
-                let definition_summary = if result.new_syms.len() == 1 {
-                    format!("Loaded {}", result.new_syms[0].0)
+            Ok(eval_summary) => {
+                let definition_summary = if eval_summary.new_syms.len() == 1 {
+                    format!("Loaded {}", eval_summary.new_syms[0].0)
                 } else {
-                    format!("Loaded {} definitions", result.new_syms.len())
+                    format!("Loaded {} definitions", eval_summary.new_syms.len())
                 };
 
-                let value_summary = if let Some(last_value) = result.values.last() {
-                    if result.new_syms.is_empty() {
+                let value_summary = if let Some(last_value) = eval_summary.values.last() {
+                    if eval_summary.new_syms.is_empty() {
                         last_value.display(env)
                     } else {
                         format!(
@@ -109,6 +110,7 @@ fn handle_eval_request(
                 Response {
                     kind: ResponseKind::Evaluate,
                     value: Ok(value_summary),
+                    warnings: eval_summary.warnings,
                 }
             }
             Err(EvalError::ResumableError(position, e)) => {
@@ -129,6 +131,7 @@ fn handle_eval_request(
                         message: format!("Error: {}", e.0),
                         stack,
                     }),
+                    warnings: vec![],
                 }
             }
             Err(EvalError::Interrupted) => Response {
@@ -138,6 +141,7 @@ fn handle_eval_request(
                     message: "Interrupted".to_string(),
                     stack: None,
                 }),
+                warnings: vec![],
             },
         },
         Err(e) => match e {
@@ -161,6 +165,7 @@ fn handle_eval_request(
                         message: message.0,
                         stack,
                     }),
+                    warnings: vec![],
                 }
             }
             ParseError::Incomplete { message, .. } => Response {
@@ -170,6 +175,7 @@ fn handle_eval_request(
                     message: message.0,
                     stack: None,
                 }),
+                warnings: vec![],
             },
         },
     }
@@ -189,10 +195,12 @@ fn handle_request(
                     Ok(()) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
+                        warnings: vec![],
                     },
                     Err(EvalAction::Abort) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok("Aborted".to_string()),
+                        warnings: vec![],
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
                     Err(EvalAction::RunTest(name)) => {
@@ -209,6 +217,7 @@ fn handle_request(
                                     message: format!("No such test: {}", name),
                                     stack: None,
                                 }),
+                                warnings: vec![],
                             },
                         }
                     }
@@ -244,6 +253,7 @@ fn handle_request(
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),
                         stack: None,
                     }),
+                    warnings: vec![],
                 }
             }
             Err(CommandParseError::NotCommandSyntax) => {
@@ -258,6 +268,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,
             value: Ok(result.display(env)),
+            warnings: vec![],
         },
         Err(EvalError::ResumableError(position, e)) => Response {
             kind: ResponseKind::Evaluate,
@@ -266,6 +277,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
                 message: format!("Error: {}", e.0),
                 stack: None,
             }),
+            warnings: vec![],
         },
         Err(EvalError::Interrupted) => Response {
             kind: ResponseKind::Evaluate,
@@ -274,6 +286,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
                 message: "Interrupted".to_string(),
                 stack: None,
             }),
+            warnings: vec![],
         },
     }
 }
@@ -282,6 +295,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
     let response = Response {
         kind: ResponseKind::Ready,
         value: Ok("The Garden: Good programs take time to grow.".into()),
+        warnings: vec![],
     };
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
@@ -332,7 +346,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                             buf_str,
                         ),
                         stack: None,
-                    }),
+                    }),warnings: vec![],
                 },
             };
             let serialized = serde_json::to_string(&response).unwrap();
@@ -349,6 +363,7 @@ pub fn json_session(interrupted: &Arc<AtomicBool>) {
                     ),
                     stack: None,
                 }),
+                warnings: vec![],
             };
             let serialized = serde_json::to_string(&err_response).unwrap();
             println!("{}", serialized);

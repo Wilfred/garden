@@ -105,7 +105,10 @@ pub fn repl(interrupted: &Arc<AtomicBool>) {
             Ok((src, items)) => {
                 last_src = src;
 
-                eval_toplevel_defs(&items, &mut env);
+                let summary = eval_toplevel_defs(&items, &mut env);
+                for warning in summary.warnings {
+                    println!("Warning: {}", warning.message);
+                }
 
                 let mut exprs = vec![];
                 for item in items {

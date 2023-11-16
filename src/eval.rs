@@ -364,7 +364,7 @@ pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSumma
     ToplevelEvalSummary {
         values: vec![],
         new_syms,
-        warnings: vec![],
+        warnings,
         tests_passed: 0,
         tests_failed: 0,
     }

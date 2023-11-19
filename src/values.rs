@@ -8,7 +8,7 @@ use crate::eval::BlockBindings;
 use crate::types::Type;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Value {
+pub(crate) enum Value {
     /// An integer value.
     Integer(i64),
     /// A reference to a user-defined function.
@@ -26,19 +26,19 @@ pub enum Value {
 }
 
 /// A helper for creating a unit value.
-pub fn unit_value() -> Value {
+pub(crate) fn unit_value() -> Value {
     // We can assume that Unit is always defined because it's in the
     // prelude.
     Value::Enum(TypeName("Unit".to_owned()), 0, None)
 }
 
-pub fn bool_value(b: bool) -> Value {
+pub(crate) fn bool_value(b: bool) -> Value {
     // We can assume that Bool is always defined because it's in the
     // prelude.
     Value::Enum(TypeName("Bool".to_owned()), if b { 0 } else { 1 }, None)
 }
 
-pub fn type_representation(value: &Value) -> TypeName {
+pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName(
         match value {
             Value::Integer(_) => "Int",
@@ -54,7 +54,7 @@ pub fn type_representation(value: &Value) -> TypeName {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
-pub enum BuiltinFunctionKind {
+pub(crate) enum BuiltinFunctionKind {
     DebugPrint,
     Error,
     ListDirectory,
@@ -83,7 +83,7 @@ impl Display for BuiltinFunctionKind {
     }
 }
 
-pub fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
+pub(crate) fn builtin_fun_doc(kind: &BuiltinFunctionKind) -> &str {
     match kind {
         BuiltinFunctionKind::DebugPrint => {
             "Write an arbitrary value to stdout, along with debugging metadata.
@@ -154,7 +154,7 @@ working_directory(); // \"/home/yourname/awesome_garden_project\"
 
 impl Value {
     /// Pretty-print `self` in a human friendly way.
-    pub fn display(&self, env: &Env) -> String {
+    pub(crate) fn display(&self, env: &Env) -> String {
         match self {
             Value::Integer(i) => format!("{}", i),
             Value::Fun(name_sym, _) => format!("(function: {})", name_sym.name),
@@ -214,7 +214,7 @@ impl Value {
         }
     }
 
-    pub fn display_unless_unit(&self, env: &Env) -> Option<String> {
+    pub(crate) fn display_unless_unit(&self, env: &Env) -> Option<String> {
         match self {
             Value::Enum(name, variant_idx, _) if name.0 == "Unit" && *variant_idx == 0 => None,
             _ => Some(self.display(env)),
@@ -224,7 +224,7 @@ impl Value {
 
 /// Convert "foo" to "\"foo\"", a representation that we can print as
 /// a valid Garden string literal.
-pub fn escape_string_literal(s: &str) -> String {
+pub(crate) fn escape_string_literal(s: &str) -> String {
     let mut res = String::new();
     res.push('"');
 

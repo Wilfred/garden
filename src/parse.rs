@@ -30,7 +30,7 @@ use crate::lex::INTEGER_RE;
 use crate::lex::SYMBOL_RE;
 
 #[derive(Debug)]
-pub enum ParseError {
+pub(crate) enum ParseError {
     Invalid {
         position: Position,
         message: ErrorMessage,
@@ -1041,22 +1041,22 @@ fn parse_toplevel_item_from_tokens(
     parse_toplevel_expr(src, tokens)
 }
 
-pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
+pub(crate) fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
     let mut tokens = lex(path, src)?;
     parse_inline_expression(src, &mut tokens)
 }
 
-pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
+pub(crate) fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
     let items = parse_toplevel_items(path, src)?;
     Ok(items[0].clone())
 }
 
-pub fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
+pub(crate) fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut tokens = lex(path, src)?;
     parse_toplevel_items_from_tokens(src, &mut tokens)
 }
 
-pub fn parse_toplevel_items_from_span(
+pub(crate) fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
     offset: usize,
@@ -1067,7 +1067,7 @@ pub fn parse_toplevel_items_from_span(
 }
 
 #[cfg(test)]
-pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
+pub(crate) fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
     use std::path::PathBuf;
 
     let mut tokens = lex(&PathBuf::from("__test.gdn"), src)?;
@@ -1081,7 +1081,7 @@ pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
 }
 
 #[cfg(test)]
-pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
+pub(crate) fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
     use std::path::PathBuf;
 
     let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), src)?;

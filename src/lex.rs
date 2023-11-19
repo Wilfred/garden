@@ -8,30 +8,30 @@ use crate::{ast::Position, parse::ParseError};
 use crate::diagnostics::ErrorMessage;
 
 lazy_static! {
-    pub static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
-    pub static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*""#).unwrap();
-    pub static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
+    pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
+    pub(crate) static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*""#).unwrap();
+    pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Token<'a> {
-    pub position: Position,
-    pub text: &'a str,
-    pub preceding_comments: Vec<(Position, &'a str)>,
+pub(crate) struct Token<'a> {
+    pub(crate) position: Position,
+    pub(crate) text: &'a str,
+    pub(crate) preceding_comments: Vec<(Position, &'a str)>,
 }
 
 #[derive(Debug, Clone)]
-pub struct TokenStream<'a> {
+pub(crate) struct TokenStream<'a> {
     tokens: Vec<Token<'a>>,
-    pub idx: usize,
+    pub(crate) idx: usize,
 }
 
 impl<'a> TokenStream<'a> {
-    pub fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.tokens.get(self.idx).is_none()
     }
 
-    pub fn pop(&mut self) -> Option<Token<'a>> {
+    pub(crate) fn pop(&mut self) -> Option<Token<'a>> {
         match self.tokens.get(self.idx) {
             Some(token) => {
                 self.idx += 1;
@@ -41,18 +41,18 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    pub fn peek(&self) -> Option<Token<'a>> {
+    pub(crate) fn peek(&self) -> Option<Token<'a>> {
         self.tokens.get(self.idx).cloned()
     }
 
-    pub fn peek_two(&self) -> Option<(Token<'a>, Token<'a>)> {
+    pub(crate) fn peek_two(&self) -> Option<(Token<'a>, Token<'a>)> {
         match (self.tokens.get(self.idx), self.tokens.get(self.idx + 1)) {
             (Some(token1), Some(token2)) => Some((token1.clone(), token2.clone())),
             _ => None,
         }
     }
 
-    pub fn prev(&self) -> Option<Token<'a>> {
+    pub(crate) fn prev(&self) -> Option<Token<'a>> {
         if self.idx == 0 {
             return None;
         }
@@ -61,7 +61,7 @@ impl<'a> TokenStream<'a> {
     }
 }
 
-pub fn lex_between<'a>(
+pub(crate) fn lex_between<'a>(
     path: &Path,
     s: &'a str,
     offset: usize,
@@ -228,7 +228,7 @@ pub fn lex_between<'a>(
     Ok(TokenStream { tokens, idx: 0 })
 }
 
-pub fn lex<'a>(path: &Path, s: &'a str) -> Result<TokenStream<'a>, ParseError> {
+pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> Result<TokenStream<'a>, ParseError> {
     lex_between(path, s, 0, s.len())
 }
 

@@ -28,7 +28,7 @@ use crate::values::{bool_value, type_representation, unit_value, BuiltinFunction
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
 #[derive(Debug, Clone, PartialEq)]
-pub struct BlockBindings(Rc<RefCell<HashMap<SymbolName, Value>>>);
+pub(crate) struct BlockBindings(Rc<RefCell<HashMap<SymbolName, Value>>>);
 
 impl Default for BlockBindings {
     fn default() -> Self {
@@ -37,7 +37,7 @@ impl Default for BlockBindings {
 }
 
 #[derive(Debug)]
-pub struct Bindings(pub Vec<BlockBindings>);
+pub(crate) struct Bindings(pub(crate) Vec<BlockBindings>);
 
 impl Bindings {
     fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
@@ -57,13 +57,13 @@ impl Bindings {
         None
     }
 
-    pub fn has(&self, name: &SymbolName) -> bool {
+    pub(crate) fn has(&self, name: &SymbolName) -> bool {
         self.get(name).is_some()
     }
 
     /// Remove `name` from bindings. If this variable is shadowed,
     /// remove the innermost binding.
-    pub fn remove(&mut self, name: &SymbolName) {
+    pub(crate) fn remove(&mut self, name: &SymbolName) {
         for block_bindings in self.0.iter_mut().rev() {
             if block_bindings.0.borrow().get(name).is_some() {
                 block_bindings.0.borrow_mut().remove(name);
@@ -89,7 +89,7 @@ impl Bindings {
         unreachable!()
     }
 
-    pub fn all(&self) -> Vec<(SymbolName, Value)> {
+    pub(crate) fn all(&self) -> Vec<(SymbolName, Value)> {
         let mut res = vec![];
         for block_bindings in self.0.iter().rev() {
             for (k, v) in block_bindings.0.borrow().iter() {
@@ -108,16 +108,16 @@ impl Default for Bindings {
 }
 
 #[derive(Debug)]
-pub struct StackFrame {
-    pub src: SourceString,
+pub(crate) struct StackFrame {
+    pub(crate) src: SourceString,
     // The name of the function, method or test that we're evaluating.
-    pub enclosing_name: SymbolName,
-    pub enclosing_fun: Option<FunInfo>,
+    pub(crate) enclosing_name: SymbolName,
+    pub(crate) enclosing_fun: Option<FunInfo>,
     /// The position of the call site.
-    pub caller_pos: Option<Position>,
-    pub bindings: Bindings,
-    pub exprs_to_eval: Vec<(bool, Expression)>,
-    pub evalled_values: Vec<(Position, Value)>,
+    pub(crate) caller_pos: Option<Position>,
+    pub(crate) bindings: Bindings,
+    pub(crate) exprs_to_eval: Vec<(bool, Expression)>,
+    pub(crate) evalled_values: Vec<(Position, Value)>,
 }
 
 impl StackFrame {
@@ -160,32 +160,32 @@ fn get_var(name: &SymbolName, stack_frame: &StackFrame, env: &Env) -> Option<Val
 }
 
 #[derive(Debug)]
-pub struct Session<'a> {
-    pub history: String,
-    pub interrupted: &'a Arc<AtomicBool>,
-    pub has_attached_stdout: bool,
-    pub start_time: Instant,
-    pub trace_exprs: bool,
+pub(crate) struct Session<'a> {
+    pub(crate) history: String,
+    pub(crate) interrupted: &'a Arc<AtomicBool>,
+    pub(crate) has_attached_stdout: bool,
+    pub(crate) start_time: Instant,
+    pub(crate) trace_exprs: bool,
 }
 
 #[derive(Debug)]
-pub enum EvalError {
+pub(crate) enum EvalError {
     Interrupted,
     ResumableError(Position, ErrorMessage),
 }
 
 #[derive(Debug)]
-pub struct ToplevelEvalSummary {
-    pub values: Vec<Value>,
-    pub new_syms: Vec<SymbolName>,
-    pub warnings: Vec<Warning>,
+pub(crate) struct ToplevelEvalSummary {
+    pub(crate) values: Vec<Value>,
+    pub(crate) new_syms: Vec<SymbolName>,
+    pub(crate) warnings: Vec<Warning>,
     // TODO: Report the names of tests that passed/failed.
-    pub tests_passed: usize,
-    pub tests_failed: usize,
+    pub(crate) tests_passed: usize,
+    pub(crate) tests_failed: usize,
 }
 
 /// Evaluate toplevel definitions, but ignore toplevel expressions and tests.
-pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
+pub(crate) fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
     for item in items {
         match item {
@@ -201,7 +201,7 @@ pub fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEval
 
 /// Evaluate all toplevel items: definitions, then tests, then
 /// expressions.
-pub fn eval_all_toplevel_items(
+pub(crate) fn eval_all_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
@@ -236,7 +236,7 @@ pub fn eval_all_toplevel_items(
 }
 
 /// Evaluate toplevel tests.
-pub fn eval_toplevel_tests(
+pub(crate) fn eval_toplevel_tests(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
@@ -274,7 +274,7 @@ pub fn eval_toplevel_tests(
     })
 }
 
-pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
+pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let enclosing_name = match &test.name {
         Some(name_sym) => name_sym.name.clone(),
         None => SymbolName("__unnamed_test".to_owned()),
@@ -295,7 +295,7 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     env.stack.push(stack_frame);
 }
 
-pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
+pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
     let mut warnings: Vec<Warning> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
@@ -1787,7 +1787,7 @@ fn eval_builtin_method_call(
     Ok(())
 }
 
-pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
+pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     loop {
         if let Some(mut stack_frame) = env.stack.pop() {
             if let Some((done_children, Expression(expr_position, expr_))) =
@@ -2283,7 +2283,7 @@ pub fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError
         .1)
 }
 
-pub fn eval_exprs(
+pub(crate) fn eval_exprs(
     exprs: &[Expression],
     env: &mut Env,
     session: &mut Session,

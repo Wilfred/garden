@@ -20,7 +20,7 @@ use crate::{
 };
 
 #[derive(Debug, EnumIter)]
-pub enum Command {
+pub(crate) enum Command {
     Abort,
     Doc(Option<String>),
     Help(Option<String>),
@@ -60,7 +60,7 @@ fn parse_command(s: &str) -> (&str, Option<String>) {
 }
 
 #[derive(Debug)]
-pub enum CommandParseError {
+pub(crate) enum CommandParseError {
     NoSuchCommand,
     NotCommandSyntax,
 }
@@ -99,7 +99,7 @@ impl Display for Command {
 
 impl Command {
     // TODO: from_string(":search") should produce an error.
-    pub fn from_string(s: &str) -> Result<Self, CommandParseError> {
+    pub(crate) fn from_string(s: &str) -> Result<Self, CommandParseError> {
         let (command_name, args) = parse_command(s);
 
         match command_name.to_lowercase().as_str() {
@@ -155,7 +155,7 @@ impl Command {
     }
 }
 
-pub fn print_available_commands<T: Write>(buf: &mut T) {
+pub(crate) fn print_available_commands<T: Write>(buf: &mut T) {
     write!(buf, "The available commands are").unwrap();
 
     let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string()).collect();
@@ -174,7 +174,7 @@ pub fn print_available_commands<T: Write>(buf: &mut T) {
 
 /// Actions that require an evaluation loop, and can't be run during command handling.
 #[derive(Debug)]
-pub enum EvalAction {
+pub(crate) enum EvalAction {
     Replace(ast::Expression),
     RunTest(SymbolName),
     Resume,
@@ -269,7 +269,7 @@ fn describe_fun(value: &Value) -> Option<String> {
     }
 }
 
-pub fn run_command<T: Write>(
+pub(crate) fn run_command<T: Write>(
     buf: &mut T,
     cmd: &Command,
     env: &mut Env,
@@ -605,7 +605,7 @@ fn command_help(command: Command) -> &'static str {
     }
 }
 
-pub fn print_stack<T: Write>(buf: &mut T, env: &Env) {
+pub(crate) fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.iter().rev().enumerate() {
         let name = &stack_frame.enclosing_name;
         write!(buf, "{}In {}", if i == 0 { "" } else { "\n" }, name).unwrap();

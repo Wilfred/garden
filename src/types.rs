@@ -1,7 +1,7 @@
 use crate::ast::EnumInfo;
 
 #[derive(Debug)]
-pub enum BuiltinType {
+pub(crate) enum BuiltinType {
     Int,
     String,
     // TODO: these require a type parameter.
@@ -10,7 +10,7 @@ pub enum BuiltinType {
 }
 
 #[derive(Debug)]
-pub enum Type {
+pub(crate) enum Type {
     Builtin(BuiltinType),
     Enum(EnumInfo),
 }

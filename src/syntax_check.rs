@@ -11,7 +11,7 @@ struct CheckDiagnostic {
     end_offset: usize,
 }
 
-pub fn check(path: &Path, src: &str) {
+pub(crate) fn check(path: &Path, src: &str) {
     let errors = match parse_toplevel_items(path, src) {
         Ok(_) => vec![],
         Err(e) => match e {

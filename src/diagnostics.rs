@@ -11,14 +11,14 @@ use crate::{
 };
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Warning {
-    pub message: String,
+pub(crate) struct Warning {
+    pub(crate) message: String,
 }
 
 #[derive(Debug)]
-pub struct ErrorMessage(pub String);
+pub(crate) struct ErrorMessage(pub(crate) String);
 
-pub fn format_error_with_stack(
+pub(crate) fn format_error_with_stack(
     message: &ErrorMessage,
     position: &Position,
     stack: &[StackFrame],
@@ -53,7 +53,7 @@ pub fn format_error_with_stack(
     res
 }
 
-pub fn format_error(
+pub(crate) fn format_error(
     message: &ErrorMessage,
     position: &Position,
     src_string: &SourceString,
@@ -63,7 +63,7 @@ pub fn format_error(
     res
 }
 
-pub fn format_parse_error(
+pub(crate) fn format_parse_error(
     message: &ErrorMessage,
     position: &Position,
     src_string: &SourceString,

@@ -35,7 +35,7 @@ struct Request {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub enum ResponseKind {
+pub(crate) enum ResponseKind {
     Evaluate,
     RunCommand,
     Ready,
@@ -46,20 +46,20 @@ pub enum ResponseKind {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ResponseError {
+pub(crate) struct ResponseError {
     position: Option<ast::Position>,
     message: String,
     stack: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Response {
-    pub kind: ResponseKind,
-    pub value: Result<String, ResponseError>,
-    pub warnings: Vec<Warning>,
+pub(crate) struct Response {
+    pub(crate) kind: ResponseKind,
+    pub(crate) value: Result<String, ResponseError>,
+    pub(crate) warnings: Vec<Warning>,
 }
 
-pub fn sample_request_as_json() -> String {
+pub(crate) fn sample_request_as_json() -> String {
     serde_json::to_string(&Request {
         method: Method::Run,
         input: "1 + 2".into(),
@@ -291,7 +291,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
     }
 }
 
-pub fn json_session(interrupted: &Arc<AtomicBool>) {
+pub(crate) fn json_session(interrupted: &Arc<AtomicBool>) {
     let response = Response {
         kind: ResponseKind::Ready,
         value: Ok("The Garden: Good programs take time to grow.".into()),

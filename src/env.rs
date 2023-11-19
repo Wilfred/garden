@@ -13,13 +13,13 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct Env {
-    pub file_scope: HashMap<SymbolName, Value>,
-    pub methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
-    pub tests: HashMap<SymbolName, TestInfo>,
-    pub types: HashMap<TypeName, Type>,
+pub(crate) struct Env {
+    pub(crate) file_scope: HashMap<SymbolName, Value>,
+    pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
+    pub(crate) tests: HashMap<SymbolName, TestInfo>,
+    pub(crate) types: HashMap<TypeName, Type>,
     // TODO: should this be stored separately?
-    pub stack: Vec<StackFrame>,
+    pub(crate) stack: Vec<StackFrame>,
 }
 
 impl Default for Env {
@@ -165,17 +165,17 @@ impl Default for Env {
 }
 
 impl Env {
-    pub fn pop_to_toplevel(&mut self) {
+    pub(crate) fn pop_to_toplevel(&mut self) {
         self.stack.truncate(1);
         self.stack[0].evalled_values.truncate(1);
         self.stack[0].bindings.0.truncate(1);
     }
 
-    pub fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
+    pub(crate) fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }
 
-    pub fn add_method(&mut self, method_info: &MethodInfo) {
+    pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
         let type_methods = self
             .methods
             .entry(method_info.receiver_type.clone())

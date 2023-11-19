@@ -30,6 +30,7 @@ use crate::lex::INTEGER_RE;
 use crate::lex::SYMBOL_RE;
 
 #[derive(Debug)]
+#[allow(dead_code)] // additional isn't used yet.
 pub(crate) enum ParseError {
     Invalid {
         position: Position,

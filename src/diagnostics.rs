@@ -1,3 +1,5 @@
+//! Error and warning data types, along with logic to display them.
+
 use itertools::Itertools;
 use line_numbers::LinePositions;
 use owo_colors::OwoColorize;

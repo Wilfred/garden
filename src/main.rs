@@ -32,7 +32,7 @@ use crate::diagnostics::ErrorMessage;
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
-use crate::eval::{eval_toplevel_defs, eval_all_toplevel_items, EvalError, Session};
+use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Session};
 use crate::parse::{parse_toplevel_item, parse_toplevel_items};
 use crate::values::escape_string_literal;
 

@@ -1,6 +1,12 @@
 # 0.10 (unreleased)
 **Goal: Offer actions when runtime errors occur.**
-**Goal: Warn on loading functions with free variables..**
+
+**Goal: Warn on loading functions with free variables.**
+
+### Interactive Sessions
+
+Loading a function will now display a warning if it references type
+names that don't exist.
 
 # 0.9 (released 13th November 2023)
 **Goal: User-defined enum types.**

@@ -5,7 +5,6 @@
 #![warn(clippy::dbg_macro)]
 
 mod ast;
-mod check;
 mod cli_session;
 mod colors;
 mod commands;
@@ -16,6 +15,7 @@ mod json_session;
 mod lex;
 mod parse;
 mod prompt;
+mod syntax_check;
 mod types;
 mod values;
 mod version;
@@ -91,7 +91,7 @@ fn main() {
         Commands::Check { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                check::check(&path, &src);
+                syntax_check::check(&path, &src);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

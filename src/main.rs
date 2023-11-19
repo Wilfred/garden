@@ -5,6 +5,7 @@
 #![warn(clippy::dbg_macro)]
 
 mod ast;
+mod checks;
 mod cli_session;
 mod colors;
 mod commands;

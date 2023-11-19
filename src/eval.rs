@@ -18,6 +18,7 @@ use crate::ast::{
     Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
+use crate::checks::check_types_exist;
 use crate::diagnostics::{ErrorMessage, Warning};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
@@ -292,30 +293,6 @@ pub fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         evalled_values: vec![],
     };
     env.stack.push(stack_frame);
-}
-
-fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
-    let mut warnings = vec![];
-
-    for param in &fun_info.params {
-        if let Some(return_type) = &param.type_ {
-            if !env.types.contains_key(return_type) {
-                warnings.push(Warning {
-                    message: format!("No such type: {return_type}"),
-                });
-            }
-        }
-    }
-
-    if let Some(return_type) = &fun_info.return_type {
-        if !env.types.contains_key(return_type) {
-            warnings.push(Warning {
-                message: format!("No such type: {return_type}"),
-            });
-        }
-    }
-
-    warnings
 }
 
 pub fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {

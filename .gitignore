@@ -1,4 +1,8 @@
 target
+
 .history
 log.gdn
+
+# Emacs related
 .cask
+*.elc

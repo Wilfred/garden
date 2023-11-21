@@ -3,10 +3,16 @@
 
 **Goal: Warn on loading functions with free variables.**
 
+### Warnings
+
+A warning is generated when loading a function with non-existent type
+names.
+
+A warning is generated when loading a function with unbound symbols.
+
 ### Interactive Sessions
 
-Loading a function will now display a warning if it references type
-names that don't exist.
+Loading a function will now display any warnings generated.
 
 # 0.9 (released 13th November 2023)
 **Goal: User-defined enum types.**

@@ -18,7 +18,7 @@ use crate::ast::{
     Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
-use crate::checks::check_types_exist;
+use crate::checks::{check_free_variables, check_types_exist};
 use crate::diagnostics::{ErrorMessage, Warning};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
@@ -313,6 +313,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     Value::Fun(name_sym.clone(), fun_info.clone()),
                 );
                 warnings.extend(check_types_exist(fun_info, env));
+                warnings.extend(check_free_variables(fun_info, env));
 
                 new_syms.push(name_sym.name.clone());
             }

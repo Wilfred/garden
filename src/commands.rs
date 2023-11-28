@@ -530,43 +530,40 @@ pub(crate) fn run_command<T: Write>(
     Ok(())
 }
 
-fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {
+/// Get the name and doc comment of this item, if any is defined in
+/// `Env`. This may be a function name, method name, or type name.
+fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> {
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
-                if let Some(doc_comment) = method_info.doc_comment() {
-                    write!(buf, "{}", doc_comment)
-                } else {
-                    // TODO: show a signature too, similar to :doc on functions.
-                    write!(buf, "Method `{}` does not have a doc comment.", method_name)
-                }
+                Ok((format!("Method `{method_name}`"), method_info.doc_comment()))
             } else {
-                write!(buf, "No method named `{}` on `{}`.", method_name, type_name)
+                Err(format!("No method named `{method_name}` on `{type_name}`."))
             }
         } else {
             // TODO: distinguish between no type with this name, and the type having no methods.
-            write!(buf, "No type named `{}`.", type_name)
+            Err(format!("No type named `{type_name}`."))
+        }
+    } else if let Some(type_) = env.types.get(&TypeName(name.to_owned())) {
+        Ok((format!("Type `{name}`"), Some(describe_type(type_))))
+    } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
+        // TODO: Ideally we'd print both values and type if both are defined.
+        match describe_fun(value) {
+            Some(description) => Ok((format!("Function `{name}`"), Some(description))),
+            None => Err(format!("`{name}` is not a function.")),
         }
     } else {
-        let mut found_something = false;
+        Err(format!("No function defined named `{name}`."))
+    }
+}
 
-        if let Some(type_) = env.types.get(&TypeName(name.to_owned())) {
-            found_something = true;
-            write!(buf, "{}", describe_type(type_))?;
-        } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
-            // TODO: Ideally we'd print both values and type if both are defined.
-            found_something = true;
-            match describe_fun(value) {
-                Some(description) => write!(buf, "{}", description),
-                None => write!(buf, "`{}` is not a function.", name),
-            }?;
+fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {
+    match find_item(name, env) {
+        Ok((_, Some(doc_comment))) => write!(buf, "{}", doc_comment),
+        Ok((item_kind_desc, None)) => {
+            write!(buf, "{item_kind_desc} does not have a doc comment.")
         }
-
-        if found_something {
-            Ok(())
-        } else {
-            write!(buf, "No function defined named `{}`.", name)
-        }
+        Err(msg) => write!(buf, "{}", msg),
     }
 }
 

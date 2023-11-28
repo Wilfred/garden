@@ -4,7 +4,7 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: languages
-;; Package-Requires: ((emacs "24.3") (s "1.11.0") (flycheck "1"))
+;; Package-Requires: ((emacs "25") (s "1.11.0") (flycheck "1"))
 ;; Version: 0.3
 
 ;; This file is distributed under the terms of the MIT license.

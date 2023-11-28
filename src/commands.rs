@@ -530,7 +530,7 @@ pub(crate) fn run_command<T: Write>(
     Ok(())
 }
 
-fn document_item<T: Write>(name: &String, env: &mut Env, buf: &mut T) -> std::io::Result<()> {
+fn document_item<T: Write>(name: &str, env: &mut Env, buf: &mut T) -> std::io::Result<()> {
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {

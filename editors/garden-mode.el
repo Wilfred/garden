@@ -4,7 +4,7 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: languages
-;; Package-Requires: ((emacs "24.3") (s "1.11.0"))
+;; Package-Requires: ((emacs "24.3") (s "1.11.0") (flycheck "1"))
 ;; Version: 0.3
 
 ;; This file is distributed under the terms of the MIT license.
@@ -436,6 +436,38 @@ the user entering a value in the *garden* buffer."
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))
+
+(defun garden-flycheck--parse (json-output _checker buffer)
+  "Parse JSON output from garden check."
+  ;; (garden--log-json-to-buf json-output)
+  (let (errors)
+    (dolist (line (s-lines (s-trim json-output)))
+      (unless (s-blank-p line)
+        (let* ((error-info (json-parse-string line :object-type 'plist :null-object nil))
+               (message (plist-get error-info :message))
+               (start-offset (plist-get error-info :start_offset))
+               (end-offset (plist-get error-info :end_offset)))
+          (push
+           (flycheck-error-new-at-pos
+            (1+ start-offset)
+            'error
+            message
+            :end-pos (1+ end-offset))
+           errors))))
+    errors))
+
+(flycheck-define-checker garden
+  "A Garden syntax checker."
+  :command ("garden" "check"  source)
+  :error-parser garden-flycheck--parse
+  :modes (garden-mode))
+
+;;;###autoload
+(add-hook 'garden-mode-hook #'flycheck-mode)
+
+;;;###autoload
+(add-to-list 'flycheck-checkers 'garden)
+
 
 (provide 'garden-mode)
 ;;; garden-mode.el ends here

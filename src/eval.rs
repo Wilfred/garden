@@ -283,6 +283,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     for expr in test.body.exprs.iter().rev() {
         exprs_to_eval.push((false, expr.clone()));
     }
+
     let stack_frame = StackFrame {
         src: test.src_string.clone(),
         enclosing_name,
@@ -290,7 +291,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         caller_pos: None,
         bindings: Bindings::default(),
         exprs_to_eval,
-        evalled_values: vec![],
+        evalled_values: vec![(test.body.open_brace.clone(), unit_value())],
     };
     env.stack.push(stack_frame);
 }
@@ -2306,7 +2307,7 @@ mod tests {
     use std::path::PathBuf;
 
     use crate::ast::Position;
-    use crate::parse::{parse_defs_from_str, parse_exprs_from_str};
+    use crate::parse::{parse_defs_from_str, parse_exprs_from_str, parse_toplevel_items};
 
     use super::*;
 
@@ -2782,5 +2783,23 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         assert!(eval_exprs(&exprs, &mut env).is_ok());
+    }
+
+    #[test]
+    fn test_eval_empty_test() {
+        let interrupted = Arc::new(AtomicBool::new(false));
+        let mut session = Session {
+            history: String::new(),
+            interrupted: &interrupted,
+            has_attached_stdout: false,
+            start_time: Instant::now(),
+            trace_exprs: false,
+        };
+
+        let mut env = Env::default();
+
+        let defs = parse_toplevel_items(&PathBuf::new(), "test f {}").unwrap();
+        let eval_result = eval_all_toplevel_items(&defs, &mut env, &mut session);
+        assert!(eval_result.is_ok());
     }
 }

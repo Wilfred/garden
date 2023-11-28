@@ -14,6 +14,10 @@ A warning is generated when loading a function with unbound symbols.
 
 Loading a function will now display any warnings generated.
 
+### Tests
+
+Fixed a crash on evaluating an empty test.
+
 # 0.9 (released 13th November 2023)
 **Goal: User-defined enum types.**
 

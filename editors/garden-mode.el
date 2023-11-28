@@ -250,6 +250,7 @@ the user entering a value in the *garden* buffer."
     (setq garden--output output)))
 
 (defun garden--buffer ()
+  "Get the *garden* buffer, creating it if necessary."
   (let* ((buf-name "*garden*")
          (buf (get-buffer buf-name)))
     (unless buf
@@ -265,6 +266,7 @@ the user entering a value in the *garden* buffer."
       t)))
 
 (defun garden--active-buffer ()
+  "Get the *garden* buffer and ensure it has an active session."
   (unless (garden--session-active-p)
     (if (yes-or-no-p "No Garden process is running. Start it?")
         (garden--start)
@@ -406,10 +408,16 @@ the user entering a value in the *garden* buffer."
     (modify-syntax-entry ?\# "<" table)
     table))
 
+(defun garden-switch-to-session ()
+  "Switch to the current *garden* buffer."
+  (interactive)
+  (switch-to-buffer (garden--active-buffer)))
+
 (defvar garden-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
+    (define-key map (kbd "C-c C-z") #'garden-switch-to-session)
     map)
   "Keymap for `garden-mode'.")
 

@@ -18,6 +18,11 @@ Loading a function will now display any warnings generated.
 
 Fixed a crash on evaluating an empty test.
 
+### Emacs
+
+Added `garden-switch-to-session` (bound to `C-c C-z`) to switch to the
+`*garden*` buffer from a `garden-mode` buffer.
+
 # 0.9 (released 13th November 2023)
 **Goal: User-defined enum types.**
 

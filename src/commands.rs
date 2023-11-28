@@ -319,52 +319,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Doc(name) => {
             if let Some(name) = name {
-                if let Some((type_name, method_name)) = name.split_once("::") {
-                    if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
-                        if let Some(method_info) =
-                            type_methods.get(&SymbolName(method_name.to_owned()))
-                        {
-                            if let Some(doc_comment) = method_info.doc_comment() {
-                                write!(buf, "{}", doc_comment).unwrap();
-                            } else {
-                                // TODO: show a signature too, similar to :doc on functions.
-                                write!(
-                                    buf,
-                                    "Method `{}` does not have a doc comment.",
-                                    method_name,
-                                )
-                                .unwrap();
-                            }
-                        } else {
-                            write!(buf, "No method named `{}` on `{}`.", method_name, type_name)
-                                .unwrap();
-                        }
-                    } else {
-                        // TODO: distinguish between no type with this name, and the type having no methods.
-                        write!(buf, "No type named `{}`.", type_name).unwrap();
-                    }
-
-                    //
-                } else {
-                    let mut found_something = false;
-
-                    if let Some(type_) = env.types.get(&TypeName(name.to_owned())) {
-                        found_something = true;
-                        write!(buf, "{}", describe_type(type_)).unwrap();
-                    } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
-                        // TODO: Ideally we'd print both values and type if both are defined.
-                        found_something = true;
-                        match describe_fun(value) {
-                            Some(description) => write!(buf, "{}", description),
-                            None => write!(buf, "`{}` is not a function.", name),
-                        }
-                        .unwrap();
-                    }
-
-                    if !found_something {
-                        write!(buf, "No function defined named `{}`.", name).unwrap();
-                    }
-                }
+                document_item(name, env, buf).unwrap();
             } else {
                 write!(buf, ":doc requires a name, e.g. `:doc print`").unwrap();
             }
@@ -573,6 +528,46 @@ pub(crate) fn run_command<T: Write>(
         }
     }
     Ok(())
+}
+
+fn document_item<T: Write>(name: &String, env: &mut Env, buf: &mut T) -> std::io::Result<()> {
+    if let Some((type_name, method_name)) = name.split_once("::") {
+        if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
+            if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
+                if let Some(doc_comment) = method_info.doc_comment() {
+                    write!(buf, "{}", doc_comment)
+                } else {
+                    // TODO: show a signature too, similar to :doc on functions.
+                    write!(buf, "Method `{}` does not have a doc comment.", method_name)
+                }
+            } else {
+                write!(buf, "No method named `{}` on `{}`.", method_name, type_name)
+            }
+        } else {
+            // TODO: distinguish between no type with this name, and the type having no methods.
+            write!(buf, "No type named `{}`.", type_name)
+        }
+    } else {
+        let mut found_something = false;
+
+        if let Some(type_) = env.types.get(&TypeName(name.to_owned())) {
+            found_something = true;
+            write!(buf, "{}", describe_type(type_))?;
+        } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
+            // TODO: Ideally we'd print both values and type if both are defined.
+            found_something = true;
+            match describe_fun(value) {
+                Some(description) => write!(buf, "{}", description),
+                None => write!(buf, "`{}` is not a function.", name),
+            }?;
+        }
+
+        if found_something {
+            Ok(())
+        } else {
+            write!(buf, "No function defined named `{}`.", name)
+        }
+    }
 }
 
 fn command_help(command: Command) -> &'static str {

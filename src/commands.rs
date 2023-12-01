@@ -6,7 +6,7 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::ast::{self, SymbolName, TypeName};
+use crate::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::parse::parse_toplevel_item;
@@ -38,7 +38,7 @@ pub(crate) enum Command {
     Skip,
     Stack,
     Search(Option<String>),
-    Source,
+    Source(Option<String>),
     Test(Option<String>),
     Trace,
     Type(Option<ast::Expression>),
@@ -84,7 +84,7 @@ impl Display for Command {
             Command::Resume => ":resume",
             Command::Search(_) => ":search",
             Command::Skip => ":skip",
-            Command::Source => ":source",
+            Command::Source(_) => ":source",
             Command::Stack => ":stack",
             Command::Test(_) => ":test",
             Command::Trace => ":trace",
@@ -128,7 +128,7 @@ impl Command {
             ":resume" => Ok(Command::Resume),
             ":search" => Ok(Command::Search(args)),
             ":skip" => Ok(Command::Skip),
-            ":source" => Ok(Command::Source),
+            ":source" => Ok(Command::Source(args)),
             ":test" => Ok(Command::Test(args)),
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
@@ -360,18 +360,21 @@ pub(crate) fn run_command<T: Write>(
 
             return Ok(());
         }
-        Command::Source => {
+        Command::Source(name) => if let Some(name) = name {
+            match find_item_source(name, env) {
+                Ok(Some(src_string)) => write!(buf, "{}", src_string.src),
+                Ok(None) => {
+                    write!(buf, "Source not available for {name}.")
+                }
+                Err(msg) => write!(buf, "{}", msg),
+            }
+        } else {
             write!(
                 buf,
-                "{}",
-                if session.history.is_empty() {
-                    "(empty)"
-                } else {
-                    &session.history
-                }
+                ":source requires a name, e.g. `:source String::contains`"
             )
-            .unwrap();
         }
+        .unwrap(),
         Command::Uptime => {
             // Round to the nearest second.
             let uptime = Duration::from_secs(session.start_time.elapsed().as_secs());
@@ -530,6 +533,38 @@ pub(crate) fn run_command<T: Write>(
     Ok(())
 }
 
+fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, String> {
+    if let Some((type_name, method_name)) = name.split_once("::") {
+        if let Some(type_methods) = env.methods.get(&TypeName(type_name.to_owned())) {
+            if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
+                match &method_info.kind {
+                    MethodKind::BuiltinMethod(_) => Ok(None),
+                    MethodKind::UserDefinedMethod(fun_info) => {
+                        Ok(Some(fun_info.src_string.clone()))
+                    }
+                }
+            } else {
+                Err(format!("No method named `{method_name}` on `{type_name}`."))
+            }
+        } else {
+            // TODO: distinguish between no type with this name, and the type having no methods.
+            Err(format!("No type named `{type_name}`."))
+        }
+    } else if let Some(type_) = env.types.get(&TypeName(name.to_owned())) {
+        match type_ {
+            Type::Builtin(_) => Ok(None),
+            Type::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
+        }
+    } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
+        match value {
+            Value::Fun(_, fun_info) => Ok(Some(fun_info.src_string.clone())),
+            _ => Ok(None),
+        }
+    } else {
+        Err(format!("No function defined named `{name}`."))
+    }
+}
+
 /// Get the name and doc comment of this item, if any is defined in
 /// `Env`. This may be a function name, method name, or type name.
 fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> {
@@ -586,7 +621,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Resume => "The :resume command restarts evaluation if it's previously stopped.\n\nExample:\n\n:resume",
         Command::Search(_) => "The :search command shows all the definitions whose name contains the search term.\n\nExample:\n\n:search string",
         Command::Skip => "The :skip command discards the current expression, and execution continues from the next expression.\n\nExample:\n\n:skip",
-        Command::Source => "The :source command displays the history of all code evaluated in the current session.\n\nExample:\n\n:source",
+        Command::Source(_) => "The :source command displays the source code of a definition.\n\nExample:\n\n:source String::contains",
         Command::Test(_) => "The :test command runs the test with the name specified.\n\nExample:\n\n:test some_test_name",
         Command::Trace => "The :trace command toggles whether execution prints each expression before evaluation.\n\nExample:\n\n:trace",
         Command::Type(_) => "The :type command shows the type of a given expression.\n\nExample:\n\n:type 1 + 2",

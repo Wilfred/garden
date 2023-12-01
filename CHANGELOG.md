@@ -3,6 +3,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+### Commands
+
+`:source` now shows the source code of a single definition, rather
+than the session history.
+
 # 0.10 (released 30th November 2023)
 
 **Goal: Warn on loading functions with free variables.**

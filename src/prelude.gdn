@@ -157,6 +157,6 @@ test contains {
 // Assert that `actual`and `expected` are equal values.
 fun should_equal(actual, expected): Unit {
     if (actual != expected) {
-        error(" ".join(["Expected", string_repr(expected), "but got", string_repr(actual)]));
+        error("".join(["Expected ", string_repr(expected), " but got ", string_repr(actual), "."]));
     }
 }

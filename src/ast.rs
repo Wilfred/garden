@@ -104,22 +104,64 @@ pub(crate) enum BinaryOperatorKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Expression_ {
+    /// ```
+    /// if (x) { y; }
+    /// if (x) { y; } else { z; }
+    /// ```
     If(Box<Expression>, Block, Option<Block>),
+    /// ```
+    /// while (x) { y; z; }
+    /// ```
     While(Box<Expression>, Block),
+    /// ```
+    /// x = y;
+    /// ```
     Assign(Symbol, Box<Expression>),
+    /// ```
+    /// let x = y;
+    /// ```
     Let(Symbol, Box<Expression>),
+    /// ```
+    /// return x;
+    /// ```
     Return(Box<Expression>),
+    /// ```
+    /// 123;
+    /// ```
     IntLiteral(i64),
+    /// ```
+    /// "foo";
+    /// ```
     StringLiteral(String),
+    /// ```
+    /// [x, y];
+    /// ```
     ListLiteral(Vec<Expression>),
+    /// ```
+    /// x + y;
+    /// x < y;
+    /// x && y;
+    /// ```
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
+    /// ```
+    /// x;
+    /// ```
     Variable(Symbol),
+    /// ```
+    /// x();
+    /// ```
     Call(Box<Expression>, Vec<Expression>),
     /// ```
     /// foo.bar(x, y)
     /// ```
     MethodCall(Box<Expression>, Symbol, Vec<Expression>),
+    /// ```
+    /// fun(x, y) { x + y; }
+    /// ```
     FunLiteral(FunInfo),
+    /// ```
+    /// { x; y; }
+    /// ```
     Block(Block),
 }
 

@@ -161,7 +161,6 @@ fn get_var(name: &SymbolName, stack_frame: &StackFrame, env: &Env) -> Option<Val
 
 #[derive(Debug)]
 pub(crate) struct Session<'a> {
-    pub(crate) history: String,
     pub(crate) interrupted: &'a Arc<AtomicBool>,
     pub(crate) has_attached_stdout: bool,
     pub(crate) start_time: Instant,
@@ -2314,7 +2313,6 @@ mod tests {
     fn eval_exprs(exprs: &[Expression], env: &mut Env) -> Result<Value, EvalError> {
         let interrupted = Arc::new(AtomicBool::new(false));
         let mut session = Session {
-            history: String::new(),
             interrupted: &interrupted,
             has_attached_stdout: false,
             start_time: Instant::now(),
@@ -2789,7 +2787,6 @@ mod tests {
     fn test_eval_empty_test() {
         let interrupted = Arc::new(AtomicBool::new(false));
         let mut session = Session {
-            history: String::new(),
             interrupted: &interrupted,
             has_attached_stdout: false,
             start_time: Instant::now(),

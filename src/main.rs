@@ -114,7 +114,6 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
             Ok(items) => {
                 let mut env = Env::default();
                 let mut session = Session {
-                    history: src.clone(),
                     interrupted,
                     has_attached_stdout: true,
                     start_time: Instant::now(),
@@ -168,7 +167,6 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
             Ok(items) => {
                 let mut env = Env::default();
                 let mut session = Session {
-                    history: src.clone(),
                     interrupted,
                     has_attached_stdout: true,
                     start_time: Instant::now(),

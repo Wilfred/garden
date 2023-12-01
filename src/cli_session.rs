@@ -61,10 +61,7 @@ fn read_expr(
 
                 match read_multiline_syntax(&input, rl) {
                     Ok((src, items)) => {
-                        session.history.push_str(&src);
-                        session.history.push('\n');
                         log_src(&src).unwrap();
-
                         return Ok((src, items));
                     }
                     Err(ParseError::Incomplete { message: e, .. }) => {
@@ -87,7 +84,6 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
 
     let mut env = Env::default();
     let mut session = Session {
-        history: String::new(),
         interrupted,
         has_attached_stdout: true,
         start_time: Instant::now(),

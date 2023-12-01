@@ -303,7 +303,6 @@ pub(crate) fn json_session(interrupted: &Arc<AtomicBool>) {
     let mut env = Env::default();
     let mut complete_src = String::new();
     let mut session = Session {
-        history: String::new(),
         interrupted,
         has_attached_stdout: false,
         start_time: Instant::now(),

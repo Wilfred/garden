@@ -8,6 +8,11 @@
 `:source` now shows the source code of a single definition, rather
 than the session history.
 
+### Warnings
+
+Fixed an issue where use of function parameters would generate a
+warning about unbound symbols.
+
 # 0.10 (released 30th November 2023)
 
 **Goal: Warn on loading functions with free variables.**

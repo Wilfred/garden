@@ -149,9 +149,16 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
 }
 
 fn free_variable_fun(fun_info: &FunInfo, info: &mut VarInfo, env: &Env) {
+    info.push_scope();
+    for param in &fun_info.params {
+        info.add_binding(&param.symbol.name);
+    }
+
     // Function literals can close over values, so it's just another
     // nested scope, like any other block.
-    free_variable_block(&fun_info.body, info, env)
+    free_variable_block(&fun_info.body, info, env);
+
+    info.pop_scope();
 }
 
 fn free_variable_symbol(symbol: &Symbol, info: &mut VarInfo, env: &Env) {
@@ -161,5 +168,34 @@ fn free_variable_symbol(symbol: &Symbol, info: &mut VarInfo, env: &Env) {
             // Only record the first occurrence as free.
             info.free.insert(symbol.name.clone(), symbol.pos.clone());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parse::parse_defs_from_str;
+
+    use super::*;
+
+    fn parse_fun_from_str(src: &str) -> FunInfo {
+        let defs = parse_defs_from_str(src).unwrap();
+        match &defs[0].2 {
+            crate::ast::Definition_::Fun(_, fun_info) => fun_info.clone(),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_free_variable() {
+        let fun_info = parse_fun_from_str("fun f() { x; }");
+        let warnings = check_free_variables(&fun_info, &Env::default());
+        assert_eq!(warnings.len(), 1);
+    }
+
+    #[test]
+    fn test_free_variable_parameter() {
+        let fun_info = parse_fun_from_str("fun f(x) { x; }");
+        let warnings = check_free_variables(&fun_info, &Env::default());
+        assert_eq!(warnings.len(), 0);
     }
 }

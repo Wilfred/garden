@@ -441,6 +441,10 @@ the user entering a value in the *garden* buffer."
 
 (define-derived-mode garden-session-mode comint-mode "Garden Session"
   :syntax-table garden-mode-syntax-table
+
+  (setq truncate-lines nil)
+  (setq word-wrap t)
+
   (setq comint-input-sender #'garden--send-run))
 
 ;; TODO: enable smartparens

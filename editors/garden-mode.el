@@ -152,12 +152,15 @@ the user entering a value in the *garden* buffer."
                      (line-end-position))))
 
 (defun garden--error-buffer ()
+  "Get the *garden-error* buffer, creating it if necessary."
   (let* ((buf-name "*garden-error*")
          (buf (get-buffer buf-name)))
     (unless buf
       (setq buf (get-buffer-create buf-name))
       (with-current-buffer buf
         (special-mode)
+        (setq truncate-lines nil)
+        (setq word-wrap t)
         (setq buffer-read-only t)))
     buf))
 

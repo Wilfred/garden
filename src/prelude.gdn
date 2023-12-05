@@ -20,6 +20,13 @@ enum Option {
     None,
 }
 
+// `Result` represents a value that succeeded, with `Ok(...)`, or
+// failed, with `Err(...)`.
+enum Result {
+    Ok(_),
+    Err(_),
+}
+
 // String methods.
 
 // Split this string into a list of lines.

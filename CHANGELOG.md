@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+### Stdlib
+
+Added the `Result` type.
+
 ### Commands
 
 `:source` now shows the source code of a single definition, rather

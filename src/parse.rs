@@ -607,7 +607,10 @@ fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError
             has_payload = true;
         }
     }
-    let variant = VariantInfo { name_sym: name, has_payload };
+    let variant = VariantInfo {
+        name_sym: name,
+        has_payload,
+    };
     Ok(variant)
 }
 
@@ -1052,7 +1055,10 @@ pub(crate) fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem
     Ok(items[0].clone())
 }
 
-pub(crate) fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
+pub(crate) fn parse_toplevel_items(
+    path: &Path,
+    src: &str,
+) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut tokens = lex(path, src)?;
     parse_toplevel_items_from_tokens(src, &mut tokens)
 }

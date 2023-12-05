@@ -939,7 +939,7 @@ fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, Par
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "enum", "if", "else", "while", "return", "test",
+    "let", "fun", "enum", "if", "else", "while", "return", "test", "match",
 ];
 
 fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {

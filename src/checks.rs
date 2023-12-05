@@ -103,6 +103,12 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
     // TODO: Implement a visitor in the pattern of
     // https://www.reddit.com/r/rust/comments/11q7l8m/best_practices_for_ast_design_in_rust/
     match &expr.1 {
+        Expression_::Match(scrutinee, cases) => {
+            free_variable_expr(scrutinee, info, env);
+            for _case in cases {
+                todo!();
+            }
+        }
         Expression_::If(cond, then_block, else_block) => {
             free_variable_expr(cond, info, env);
             free_variable_block(then_block, info, env);

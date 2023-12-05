@@ -1811,6 +1811,16 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     println!("{:?} {}", expr_, done_children);
                 }
                 match expr_ {
+                    Expression_::Match(scrutinee, _cases) => {
+                        if done_children {
+                            todo!()
+                        } else {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((true, Expression(expr_position, expr_copy)));
+                            stack_frame.exprs_to_eval.push((false, *scrutinee.clone()));
+                        }
+                    }
                     Expression_::If(condition, ref then_body, ref else_body) => {
                         if done_children {
                             if let Err(ErrorInfo {

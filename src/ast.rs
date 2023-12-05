@@ -105,6 +105,10 @@ pub(crate) enum BinaryOperatorKind {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Expression_ {
     /// ```
+    /// match (x) { Some(y) => { z; }, _ => { zz; }}
+    /// ```
+    Match(Box<Expression>, Vec<(Symbol, Block)>),
+    /// ```
     /// if (x) { y; }
     /// if (x) { y; } else { z; }
     /// ```

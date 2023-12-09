@@ -105,8 +105,17 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
     match &expr.1 {
         Expression_::Match(scrutinee, cases) => {
             free_variable_expr(scrutinee, info, env);
-            for _case in cases {
-                todo!();
+            for (pattern, case_expr) in cases {
+                // TODO: add a check that there's an enum with this
+                // variant, and that we've covered all the variants.
+
+                info.push_scope();
+                if let Some(pattern_arg) = &pattern.argument {
+                    info.add_binding(&pattern_arg.name);
+                }
+
+                free_variable_expr(case_expr, info, env);
+                info.pop_scope();
             }
         }
         Expression_::If(cond, then_block, else_block) => {
@@ -199,8 +208,16 @@ mod tests {
     }
 
     #[test]
-    fn test_free_variable_parameter() {
+    fn test_bound_variable_parameter() {
         let fun_info = parse_fun_from_str("fun f(x) { x; }");
+        let warnings = check_free_variables(&fun_info, &Env::default());
+        assert_eq!(warnings.len(), 0);
+    }
+
+    #[test]
+    fn test_bound_variable_in_match_case() {
+        let fun_info =
+            parse_fun_from_str("fun f(x) { match (x) { Some(y) => { y + 1; } None => { 42; }} }");
         let warnings = check_free_variables(&fun_info, &Env::default());
         assert_eq!(warnings.len(), 0);
     }

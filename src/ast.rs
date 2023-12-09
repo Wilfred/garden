@@ -102,12 +102,19 @@ pub(crate) enum BinaryOperatorKind {
     Or,
 }
 
+/// The left hand side of a case in a `match` expression.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct Pattern {
+    pub(crate) name: Symbol,
+    pub(crate) argument: Option<Symbol>,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Expression_ {
     /// ```
-    /// match (x) { Some(y) => { z; }, _ => { zz; }}
+    /// match (x) { Some(y) => { z; } _ => { zz; }}
     /// ```
-    Match(Box<Expression>, Vec<(Symbol, Block)>),
+    Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
     /// ```
     /// if (x) { y; }
     /// if (x) { y; } else { z; }
@@ -331,7 +338,11 @@ pub(crate) enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Definition(pub(crate) SourceString, pub(crate) Position, pub(crate) Definition_);
+pub(crate) struct Definition(
+    pub(crate) SourceString,
+    pub(crate) Position,
+    pub(crate) Definition_,
+);
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum ToplevelItem {

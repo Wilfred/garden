@@ -11,6 +11,7 @@ use crate::ast::Expression_;
 use crate::ast::FunInfo;
 use crate::ast::MethodInfo;
 use crate::ast::MethodKind;
+use crate::ast::Pattern;
 use crate::ast::Position;
 use crate::ast::SourceString;
 use crate::ast::Symbol;
@@ -324,12 +325,49 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
     require_token(tokens, ")")?;
 
     require_token(tokens, "{")?;
+
+    let mut cases = vec![];
+    loop {
+        let Some(token) = tokens.peek() else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `}}` here, but got EOF".to_string(),
+                ),
+            });
+        };
+
+        if token.text == "}" {
+            break;
+        }
+
+        let pattern = parse_pattern(tokens)?;
+        require_token(tokens, "=>")?;
+        let case_expr = parse_inline_expression(src, tokens)?;
+        cases.push((pattern, Box::new(case_expr)));
+    }
+
     require_token(tokens, "}")?;
 
     Ok(Expression(
         match_keyword.position,
-        Expression_::Match(Box::new(scrutinee), vec![]),
+        Expression_::Match(Box::new(scrutinee), cases),
     ))
+}
+
+fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
+    let name = parse_symbol(tokens)?;
+
+    let argument = if next_token_is(tokens, "(") {
+        require_token(tokens, "(")?;
+        let arg = parse_symbol(tokens)?;
+        require_token(tokens, ")")?;
+        Some(arg)
+    } else {
+        None
+    };
+
+    Ok(Pattern { name, argument })
 }
 
 fn parse_comma_separated_exprs(

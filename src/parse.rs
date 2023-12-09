@@ -316,6 +316,22 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     })
 }
 
+fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
+    let match_keyword = require_token(tokens, "match")?;
+
+    require_token(tokens, "(")?;
+    let scrutinee = parse_inline_expression(src, tokens)?;
+    require_token(tokens, ")")?;
+
+    require_token(tokens, "{")?;
+    require_token(tokens, "}")?;
+
+    Ok(Expression(
+        match_keyword.position,
+        Expression_::Match(Box::new(scrutinee), vec![]),
+    ))
+}
+
 fn parse_comma_separated_exprs(
     src: &str,
     tokens: &mut TokenStream,
@@ -482,11 +498,16 @@ fn parse_general_expression(
         }
     }
 
-    // `if` can occur as both an inline expression and a standalone
-    // expression.
     if let Some(token) = tokens.peek() {
+        // `if` can occur as both an inline expression and a standalone
+        // expression.
         if token.text == "if" {
             return parse_if_expression(src, tokens);
+        }
+
+        // Likewise match.
+        if token.text == "match" {
+            return parse_match_expression(src, tokens);
         }
     }
 
@@ -1243,6 +1264,36 @@ mod tests {
                         },
                         Expression_::IntLiteral(1)
                     ))
+                )
+            )]
+        );
+    }
+
+    #[test]
+    fn test_parse_match() {
+        let path = PathBuf::from("__test.gdn");
+        let ast = parse_exprs_from_str("match (1) {}").unwrap();
+
+        assert_eq!(
+            ast,
+            vec![Expression(
+                Position {
+                    start_offset: 0,
+                    end_offset: 5,
+                    line_number: 0,
+                    path: path.clone(),
+                },
+                Expression_::Match(
+                    Box::new(Expression(
+                        Position {
+                            start_offset: 7,
+                            end_offset: 8,
+                            line_number: 0,
+                            path
+                        },
+                        Expression_::IntLiteral(1)
+                    )),
+                    vec![]
                 )
             )]
         );

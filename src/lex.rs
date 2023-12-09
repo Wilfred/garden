@@ -4,8 +4,8 @@ use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
 
-use crate::{ast::Position, parse::ParseError};
 use crate::diagnostics::ErrorMessage;
+use crate::{ast::Position, parse::ParseError};
 
 lazy_static! {
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
@@ -121,7 +121,7 @@ pub(crate) fn lex_between<'a>(
             break;
         }
 
-        for token_str in ["==", "!=", ">=", "<=", "&&", "||"] {
+        for token_str in ["==", "!=", ">=", "<=", "&&", "||", "=>"] {
             if s.starts_with(token_str) {
                 tokens.push(Token {
                     position: Position {

@@ -14,8 +14,8 @@ use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
 use crate::ast::{
-    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Position, SourceString,
-    Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
+    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
+    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::checks::{check_free_variables, check_types_exist};
@@ -1811,9 +1811,9 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     println!("{:?} {}", expr_, done_children);
                 }
                 match expr_ {
-                    Expression_::Match(scrutinee, _cases) => {
+                    Expression_::Match(scrutinee, cases) => {
                         if done_children {
-                            todo!()
+                            eval_match_cases(env, &mut stack_frame, &cases)?;
                         } else {
                             stack_frame
                                 .exprs_to_eval
@@ -2292,6 +2292,48 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
         .pop()
         .expect("Should have a value from the last expression")
         .1)
+}
+
+fn eval_match_cases(
+    env: &mut Env,
+    stack_frame: &mut StackFrame,
+    cases: &[(Pattern, Box<Expression>)],
+) -> Result<(), EvalError> {
+    let (scrutinee_pos, scrutinee_value) = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for match");
+
+    let Value::Enum(name, _variant_idx, _payload) = scrutinee_value else {
+        let msg = ErrorMessage(format!(
+            "Expected an enum value, but got {}: {}",
+            type_representation(&scrutinee_value).0,
+            scrutinee_value.display(env)
+        ));
+        return Err(EvalError::ResumableError(scrutinee_pos, msg));
+    };
+
+    let _type = match env.types.get(&name) {
+        Some(type_) => type_,
+        None => {
+            let msg = ErrorMessage(format!("Could not find an enum type named {name}",));
+            return Err(EvalError::ResumableError(scrutinee_pos, msg));
+        }
+    };
+
+    for (pattern, case_expr) in cases {
+        if pattern.name.name.is_underscore() {
+            stack_frame
+                .exprs_to_eval
+                .push((false, (**case_expr).clone()));
+            return Ok(());
+        } else {
+            todo!()
+        }
+    }
+
+    let msg = ErrorMessage("Non-exhaustive match expression".to_string());
+    Err(EvalError::ResumableError(scrutinee_pos, msg))
 }
 
 pub(crate) fn eval_exprs(

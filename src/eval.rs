@@ -2304,7 +2304,7 @@ fn eval_match_cases(
         .pop()
         .expect("Popped an empty value stack for match");
 
-    let Value::Enum(name, _variant_idx, _payload) = scrutinee_value else {
+    let Value::Enum(value_type_name, value_variant_idx, value_payload) = scrutinee_value else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
             type_representation(&scrutinee_value).0,
@@ -2313,10 +2313,12 @@ fn eval_match_cases(
         return Err(EvalError::ResumableError(scrutinee_pos, msg));
     };
 
-    let _type = match env.types.get(&name) {
+    let _type = match env.types.get(&value_type_name) {
         Some(type_) => type_,
         None => {
-            let msg = ErrorMessage(format!("Could not find an enum type named {name}",));
+            let msg = ErrorMessage(format!(
+                "Could not find an enum type named {value_type_name}",
+            ));
             return Err(EvalError::ResumableError(scrutinee_pos, msg));
         }
     };
@@ -2327,8 +2329,46 @@ fn eval_match_cases(
                 .exprs_to_eval
                 .push((false, (**case_expr).clone()));
             return Ok(());
-        } else {
-            todo!()
+        }
+
+        let Some(value) = get_var(&pattern.symbol.name, stack_frame, env) else {
+            let msg = ErrorMessage(format!(
+                "No such value defined for pattern `{}`",
+                pattern.symbol.name
+            ));
+            return Err(EvalError::ResumableError(pattern.symbol.pos.clone(), msg));
+        };
+
+        let Value::Enum(pattern_type_name, pattern_variant_idx, _) = value else {
+            // TODO: error messages should include examples of valid code.
+            let msg = ErrorMessage(format!(
+                "Patterns must be enum variants, got `{}`",
+                value.display(env)
+            ));
+            return Err(EvalError::ResumableError(pattern.symbol.pos.clone(), msg));
+        };
+
+        if value_type_name == pattern_type_name && value_variant_idx == pattern_variant_idx {
+            match (&value_payload, &pattern.argument) {
+                (Some(payload), Some(payload_sym)) => {
+                    if !payload_sym.name.is_underscore() {
+                        stack_frame
+                            .bindings
+                            .add_new(&payload_sym.name, *payload.clone());
+                    }
+                }
+                (None, None) => {}
+                _ => {
+                    // This variant has been redefined and previously
+                    // had/didn't have a payload. Ignore it.
+                    continue;
+                }
+            }
+
+            stack_frame
+                .exprs_to_eval
+                .push((false, (**case_expr).clone()));
+            return Ok(());
         }
     }
 

@@ -105,7 +105,7 @@ pub(crate) enum BinaryOperatorKind {
 /// The left hand side of a case in a `match` expression.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Pattern {
-    pub(crate) name: Symbol,
+    pub(crate) symbol: Symbol,
     pub(crate) argument: Option<Symbol>,
 }
 

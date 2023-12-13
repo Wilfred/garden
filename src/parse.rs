@@ -356,7 +356,7 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
 }
 
 fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
-    let name = parse_symbol(tokens)?;
+    let symbol = parse_symbol(tokens)?;
 
     let argument = if next_token_is(tokens, "(") {
         require_token(tokens, "(")?;
@@ -367,7 +367,7 @@ fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
         None
     };
 
-    Ok(Pattern { name, argument })
+    Ok(Pattern { symbol, argument })
 }
 
 fn parse_comma_separated_exprs(

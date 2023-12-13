@@ -2322,7 +2322,7 @@ fn eval_match_cases(
     };
 
     for (pattern, case_expr) in cases {
-        if pattern.name.name.is_underscore() {
+        if pattern.symbol.name.is_underscore() {
             stack_frame
                 .exprs_to_eval
                 .push((false, (**case_expr).clone()));

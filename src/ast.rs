@@ -4,6 +4,8 @@ use std::{fmt::Display, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::values::Value;
+
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub(crate) struct Position {
@@ -198,7 +200,7 @@ pub(crate) struct Block {
     /// ```
     ///
     /// We want `y` to be bound, but only in the block.
-    pub(crate) bindings: Vec<(Symbol, Expression)>,
+    pub(crate) bindings: Vec<(Symbol, Value)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

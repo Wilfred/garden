@@ -2233,6 +2233,14 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                 .push((true, Expression(expr_position, expr_copy)));
 
                             stack_frame.enter_block();
+                            for (sym, expr) in block.bindings {
+                                if sym.name.is_underscore() {
+                                    continue;
+                                }
+
+                                stack_frame.bindings.add_new(&sym.name, expr);
+                            }
+
                             for expr in block.exprs.iter().rev() {
                                 stack_frame.exprs_to_eval.push((false, expr.clone()));
                             }

@@ -189,6 +189,16 @@ pub(crate) struct Block {
     pub(crate) open_brace: Position,
     pub(crate) exprs: Vec<Expression>,
     pub(crate) close_brace: Position,
+    /// If we are entering a block with extra bindings that are only
+    /// defined for the duration of the block, pass them here.
+    ///
+    /// For example:
+    /// ```
+    /// match (x) { Some(y) => { y + 1; } _ => {}}
+    /// ```
+    ///
+    /// We want `y` to be bound, but only in the block.
+    pub(crate) bindings: Vec<(Symbol, Expression)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

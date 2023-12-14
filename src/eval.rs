@@ -1790,412 +1790,334 @@ fn eval_builtin_method_call(
 }
 
 pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
-    loop {
-        if let Some(mut stack_frame) = env.stack.pop() {
-            if let Some((done_children, Expression(expr_position, expr_))) =
-                stack_frame.exprs_to_eval.pop()
-            {
-                if session.interrupted.load(Ordering::SeqCst) {
-                    session.interrupted.store(false, Ordering::SeqCst);
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (done_children, Expression(expr_position, expr_)),
-                        &[],
-                    );
-                    return Err(EvalError::Interrupted);
-                }
+    while let Some(mut stack_frame) = env.stack.pop() {
+        if let Some((done_children, Expression(expr_position, expr_))) =
+            stack_frame.exprs_to_eval.pop()
+        {
+            if session.interrupted.load(Ordering::SeqCst) {
+                session.interrupted.store(false, Ordering::SeqCst);
+                restore_stack_frame(
+                    env,
+                    stack_frame,
+                    (done_children, Expression(expr_position, expr_)),
+                    &[],
+                );
+                return Err(EvalError::Interrupted);
+            }
 
-                let expr_copy = expr_.clone();
+            let expr_copy = expr_.clone();
 
-                if session.trace_exprs {
-                    println!("{:?} {}", expr_, done_children);
-                }
-                match expr_ {
-                    Expression_::Match(scrutinee, cases) => {
-                        if done_children {
-                            eval_match_cases(env, &mut stack_frame, &cases)?;
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *scrutinee.clone()));
-                        }
-                    }
-                    Expression_::If(condition, ref then_body, ref else_body) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_if(
-                                env,
-                                &mut stack_frame,
-                                &expr_position,
-                                &condition.0,
-                                then_body,
-                                else_body.as_ref(),
-                            ) {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
-                            }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *condition.clone()));
-                        }
-                    }
-                    Expression_::While(condition, ref body) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_while(
-                                env,
-                                &mut stack_frame,
-                                &condition.0,
-                                Expression(expr_position.clone(), expr_copy.clone()),
-                                body,
-                            ) {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
-                            }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *condition.clone()));
-                        }
-                    }
-                    Expression_::Return(expr) => {
-                        if done_children {
-                            // No more expressions to evaluate in this function.
-                            stack_frame.exprs_to_eval.clear();
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *expr.clone()));
-                        }
-                    }
-                    Expression_::Assign(variable, expr) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_assign(&mut stack_frame, &variable)
-                            {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
-                            }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *expr.clone()));
-                        }
-                    }
-                    Expression_::Let(variable, expr) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_let(&mut stack_frame, &variable)
-                            {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
-                            }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *expr.clone()));
-                        }
-                    }
-                    Expression_::IntLiteral(i) => {
+            if session.trace_exprs {
+                println!("{:?} {}", expr_, done_children);
+            }
+            match expr_ {
+                Expression_::Match(scrutinee, cases) => {
+                    if done_children {
+                        eval_match_cases(env, &mut stack_frame, &cases)?;
+                    } else {
                         stack_frame
-                            .evalled_values
-                            .push((expr_position, Value::Integer(i)));
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *scrutinee.clone()));
                     }
-                    Expression_::StringLiteral(s) => {
-                        stack_frame
-                            .evalled_values
-                            .push((expr_position, Value::String(s)));
-                    }
-                    Expression_::ListLiteral(items) => {
-                        if done_children {
-                            let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
-                            for _ in 0..items.len() {
-                                list_values.push(stack_frame.evalled_values.pop().expect(
-                                    "Value stack should have sufficient items for the list literal",
-                                ).1);
-                            }
-
-                            stack_frame
-                                .evalled_values
-                                .push((expr_position, Value::List(list_values)));
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-
-                            for item in items.iter() {
-                                stack_frame.exprs_to_eval.push((false, item.clone()));
-                            }
-                        }
-                    }
-                    Expression_::Variable(name_sym) => {
-                        if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
-                            stack_frame.evalled_values.push((expr_position, value));
-                        } else {
-                            let suggestion =
-                                match most_similar_var(&name_sym.name, &stack_frame, env) {
-                                    Some(closest_name) => {
-                                        format!(" Did you mean {}?", closest_name)
-                                    }
-                                    None => "".to_owned(),
-                                };
-
+                }
+                Expression_::If(condition, ref then_body, ref else_body) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_if(
+                            env,
+                            &mut stack_frame,
+                            &expr_position,
+                            &condition.0,
+                            then_body,
+                            else_body.as_ref(),
+                        ) {
                             restore_stack_frame(
                                 env,
                                 stack_frame,
                                 (done_children, Expression(expr_position, expr_copy)),
-                                &[],
+                                &restore_values,
                             );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *condition.clone()));
+                    }
+                }
+                Expression_::While(condition, ref body) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_while(
+                            env,
+                            &mut stack_frame,
+                            &condition.0,
+                            Expression(expr_position.clone(), expr_copy.clone()),
+                            body,
+                        ) {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *condition.clone()));
+                    }
+                }
+                Expression_::Return(expr) => {
+                    if done_children {
+                        // No more expressions to evaluate in this function.
+                        stack_frame.exprs_to_eval.clear();
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                    }
+                }
+                Expression_::Assign(variable, expr) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_assign(&mut stack_frame, &variable)
+                        {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                    }
+                }
+                Expression_::Let(variable, expr) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_let(&mut stack_frame, &variable)
+                        {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                    }
+                }
+                Expression_::IntLiteral(i) => {
+                    stack_frame
+                        .evalled_values
+                        .push((expr_position, Value::Integer(i)));
+                }
+                Expression_::StringLiteral(s) => {
+                    stack_frame
+                        .evalled_values
+                        .push((expr_position, Value::String(s)));
+                }
+                Expression_::ListLiteral(items) => {
+                    if done_children {
+                        let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
+                        for _ in 0..items.len() {
+                            list_values.push(stack_frame.evalled_values.pop().expect(
+                                    "Value stack should have sufficient items for the list literal",
+                                ).1);
+                        }
 
-                            return Err(EvalError::ResumableError(
-                                name_sym.pos.clone(),
-                                ErrorMessage(format!(
-                                    "Undefined variable: {}.{}",
-                                    name_sym.name, suggestion
-                                )),
-                            ));
+                        stack_frame
+                            .evalled_values
+                            .push((expr_position, Value::List(list_values)));
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+
+                        for item in items.iter() {
+                            stack_frame.exprs_to_eval.push((false, item.clone()));
                         }
                     }
-                    Expression_::BinaryOperator(
-                        lhs,
-                        op @ (BinaryOperatorKind::Add
-                        | BinaryOperatorKind::Subtract
-                        | BinaryOperatorKind::Multiply
-                        | BinaryOperatorKind::Divide
-                        | BinaryOperatorKind::LessThan
-                        | BinaryOperatorKind::LessThanOrEqual
-                        | BinaryOperatorKind::GreaterThan
-                        | BinaryOperatorKind::GreaterThanOrEqual),
-                        rhs,
-                    ) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_integer_binop(env, &mut stack_frame, &expr_position, op)
-                            {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
+                }
+                Expression_::Variable(name_sym) => {
+                    if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
+                        stack_frame.evalled_values.push((expr_position, value));
+                    } else {
+                        let suggestion = match most_similar_var(&name_sym.name, &stack_frame, env) {
+                            Some(closest_name) => {
+                                format!(" Did you mean {}?", closest_name)
                             }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *rhs.clone()));
-                            stack_frame.exprs_to_eval.push((false, *lhs.clone()));
-                        }
-                    }
-                    Expression_::BinaryOperator(
-                        lhs,
-                        op @ (BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual),
-                        rhs,
-                    ) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_equality_binop(&mut stack_frame, &expr_position, op)
-                            {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
-                            }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *rhs.clone()));
-                            stack_frame.exprs_to_eval.push((false, *lhs.clone()));
-                        }
-                    }
-                    Expression_::BinaryOperator(
-                        lhs,
-                        op @ (BinaryOperatorKind::And | BinaryOperatorKind::Or),
-                        rhs,
-                    ) => {
-                        if done_children {
-                            if let Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) = eval_boolean_binop(env, &mut stack_frame, &expr_position, op)
-                            {
-                                restore_stack_frame(
-                                    env,
-                                    stack_frame,
-                                    (done_children, Expression(expr_position, expr_copy)),
-                                    &restore_values,
-                                );
-                                return Err(EvalError::ResumableError(position, message));
-                            }
-                        } else {
-                            // TODO: do short-circuit evaluation of && and ||.
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-                            stack_frame.exprs_to_eval.push((false, *rhs.clone()));
-                            stack_frame.exprs_to_eval.push((false, *lhs.clone()));
-                        }
-                    }
-                    Expression_::FunLiteral(fun_info) => {
-                        stack_frame.evalled_values.push((
-                            expr_position,
-                            Value::Closure(stack_frame.bindings.0.clone(), fun_info),
+                            None => "".to_owned(),
+                        };
+
+                        restore_stack_frame(
+                            env,
+                            stack_frame,
+                            (done_children, Expression(expr_position, expr_copy)),
+                            &[],
+                        );
+
+                        return Err(EvalError::ResumableError(
+                            name_sym.pos.clone(),
+                            ErrorMessage(format!(
+                                "Undefined variable: {}.{}",
+                                name_sym.name, suggestion
+                            )),
                         ));
                     }
-                    Expression_::Call(receiver, ref args) => {
-                        if done_children {
-                            let mut arg_values = vec![];
-                            for _ in 0..args.len() {
-                                arg_values.push(
-                                    stack_frame.evalled_values.pop().expect(
-                                        "Popped an empty value for stack for call arguments",
-                                    ),
-                                );
-                            }
-                            let receiver_value = stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Popped an empty value stack for call receiver");
-
-                            if matches!(receiver_value.1, Value::Enum(_, _, _)) {
-                                match eval_enum_constructor(
-                                    env,
-                                    &expr_position,
-                                    &arg_values,
-                                    receiver_value,
-                                ) {
-                                    Ok(value) => {
-                                        stack_frame.evalled_values.push((expr_position, value));
-                                    }
-                                    Err(ErrorInfo {
-                                        message,
-                                        restore_values,
-                                        error_position,
-                                    }) => {
-                                        restore_stack_frame(
-                                            env,
-                                            stack_frame,
-                                            (done_children, Expression(expr_position, expr_copy)),
-                                            &restore_values,
-                                        );
-                                        return Err(EvalError::ResumableError(
-                                            error_position,
-                                            message,
-                                        ));
-                                    }
-                                }
-                            } else {
-                                match eval_call(
-                                    env,
-                                    &mut stack_frame,
-                                    &expr_position,
-                                    &arg_values,
-                                    receiver_value,
-                                    session,
-                                ) {
-                                    Ok(Some(new_stack_frame)) => {
-                                        env.stack.push(stack_frame);
-                                        env.stack.push(new_stack_frame);
-                                        continue;
-                                    }
-                                    Ok(None) => {}
-                                    Err(ErrorInfo {
-                                        message,
-                                        restore_values,
-                                        error_position: position,
-                                    }) => {
-                                        restore_stack_frame(
-                                            env,
-                                            stack_frame,
-                                            (done_children, Expression(expr_position, expr_copy)),
-                                            &restore_values,
-                                        );
-                                        return Err(EvalError::ResumableError(position, message));
-                                    }
-                                }
-                            }
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-
-                            for arg in args {
-                                stack_frame.exprs_to_eval.push((false, arg.clone()));
-                            }
-                            // Push the receiver after arguments, so
-                            // we evaluate it before arguments. This
-                            // makes it easier to use :replace on bad
-                            // functions.
-                            stack_frame.exprs_to_eval.push((false, *receiver.clone()));
-                        }
-                    }
-                    Expression_::MethodCall(receiver_expr, meth_name, args) => {
-                        if done_children {
-                            match eval_method_call(
+                }
+                Expression_::BinaryOperator(
+                    lhs,
+                    op @ (BinaryOperatorKind::Add
+                    | BinaryOperatorKind::Subtract
+                    | BinaryOperatorKind::Multiply
+                    | BinaryOperatorKind::Divide
+                    | BinaryOperatorKind::LessThan
+                    | BinaryOperatorKind::LessThanOrEqual
+                    | BinaryOperatorKind::GreaterThan
+                    | BinaryOperatorKind::GreaterThanOrEqual),
+                    rhs,
+                ) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_integer_binop(env, &mut stack_frame, &expr_position, op)
+                        {
+                            restore_stack_frame(
                                 env,
-                                &mut stack_frame,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *rhs.clone()));
+                        stack_frame.exprs_to_eval.push((false, *lhs.clone()));
+                    }
+                }
+                Expression_::BinaryOperator(
+                    lhs,
+                    op @ (BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual),
+                    rhs,
+                ) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_equality_binop(&mut stack_frame, &expr_position, op)
+                        {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *rhs.clone()));
+                        stack_frame.exprs_to_eval.push((false, *lhs.clone()));
+                    }
+                }
+                Expression_::BinaryOperator(
+                    lhs,
+                    op @ (BinaryOperatorKind::And | BinaryOperatorKind::Or),
+                    rhs,
+                ) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_boolean_binop(env, &mut stack_frame, &expr_position, op)
+                        {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        // TODO: do short-circuit evaluation of && and ||.
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *rhs.clone()));
+                        stack_frame.exprs_to_eval.push((false, *lhs.clone()));
+                    }
+                }
+                Expression_::FunLiteral(fun_info) => {
+                    stack_frame.evalled_values.push((
+                        expr_position,
+                        Value::Closure(stack_frame.bindings.0.clone(), fun_info),
+                    ));
+                }
+                Expression_::Call(receiver, ref args) => {
+                    if done_children {
+                        let mut arg_values = vec![];
+                        for _ in 0..args.len() {
+                            arg_values.push(
+                                stack_frame
+                                    .evalled_values
+                                    .pop()
+                                    .expect("Popped an empty value for stack for call arguments"),
+                            );
+                        }
+                        let receiver_value = stack_frame
+                            .evalled_values
+                            .pop()
+                            .expect("Popped an empty value stack for call receiver");
+
+                        if matches!(receiver_value.1, Value::Enum(_, _, _)) {
+                            match eval_enum_constructor(
+                                env,
                                 &expr_position,
-                                &meth_name,
-                                &args,
+                                &arg_values,
+                                receiver_value,
                             ) {
-                                Ok(Some(new_stack_frame)) => {
-                                    env.stack.push(stack_frame);
-                                    env.stack.push(new_stack_frame);
-                                    continue;
+                                Ok(value) => {
+                                    stack_frame.evalled_values.push((expr_position, value));
                                 }
-                                Ok(None) => {}
                                 Err(ErrorInfo {
                                     message,
                                     restore_values,
@@ -2211,81 +2133,152 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                 }
                             }
                         } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-
-                            for arg in args {
-                                stack_frame.exprs_to_eval.push((false, arg.clone()));
+                            match eval_call(
+                                env,
+                                &mut stack_frame,
+                                &expr_position,
+                                &arg_values,
+                                receiver_value,
+                                session,
+                            ) {
+                                Ok(Some(new_stack_frame)) => {
+                                    env.stack.push(stack_frame);
+                                    env.stack.push(new_stack_frame);
+                                    continue;
+                                }
+                                Ok(None) => {}
+                                Err(ErrorInfo {
+                                    message,
+                                    restore_values,
+                                    error_position: position,
+                                }) => {
+                                    restore_stack_frame(
+                                        env,
+                                        stack_frame,
+                                        (done_children, Expression(expr_position, expr_copy)),
+                                        &restore_values,
+                                    );
+                                    return Err(EvalError::ResumableError(position, message));
+                                }
                             }
-                            // Push the receiver after arguments, so
-                            // we evaluate it before arguments.
-                            stack_frame
-                                .exprs_to_eval
-                                .push((false, *receiver_expr.clone()));
                         }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+
+                        for arg in args {
+                            stack_frame.exprs_to_eval.push((false, arg.clone()));
+                        }
+                        // Push the receiver after arguments, so
+                        // we evaluate it before arguments. This
+                        // makes it easier to use :replace on bad
+                        // functions.
+                        stack_frame.exprs_to_eval.push((false, *receiver.clone()));
                     }
-                    Expression_::Block(block) => {
-                        if done_children {
-                            stack_frame.exit_block();
-                        } else {
-                            stack_frame
-                                .exprs_to_eval
-                                .push((true, Expression(expr_position, expr_copy)));
-
-                            stack_frame.enter_block();
-                            for (sym, expr) in block.bindings {
-                                stack_frame.bindings.add_new(&sym.name, expr);
+                }
+                Expression_::MethodCall(receiver_expr, meth_name, args) => {
+                    if done_children {
+                        match eval_method_call(
+                            env,
+                            &mut stack_frame,
+                            &expr_position,
+                            &meth_name,
+                            &args,
+                        ) {
+                            Ok(Some(new_stack_frame)) => {
+                                env.stack.push(stack_frame);
+                                env.stack.push(new_stack_frame);
+                                continue;
                             }
-
-                            for expr in block.exprs.iter().rev() {
-                                stack_frame.exprs_to_eval.push((false, expr.clone()));
+                            Ok(None) => {}
+                            Err(ErrorInfo {
+                                message,
+                                restore_values,
+                                error_position,
+                            }) => {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(expr_position, expr_copy)),
+                                    &restore_values,
+                                );
+                                return Err(EvalError::ResumableError(error_position, message));
                             }
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+
+                        for arg in args {
+                            stack_frame.exprs_to_eval.push((false, arg.clone()));
+                        }
+                        // Push the receiver after arguments, so
+                        // we evaluate it before arguments.
+                        stack_frame
+                            .exprs_to_eval
+                            .push((false, *receiver_expr.clone()));
+                    }
+                }
+                Expression_::Block(block) => {
+                    if done_children {
+                        stack_frame.exit_block();
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+
+                        stack_frame.enter_block();
+                        for (sym, expr) in block.bindings {
+                            stack_frame.bindings.add_new(&sym.name, expr);
+                        }
+
+                        for expr in block.exprs.iter().rev() {
+                            stack_frame.exprs_to_eval.push((false, expr.clone()));
                         }
                     }
                 }
             }
+        }
 
-            if stack_frame.exprs_to_eval.is_empty() {
-                // No more statements in this stack frame.
-                if env.stack.is_empty() {
-                    // Don't pop the outer scope: that's for the top level environment.
-                    env.stack.push(stack_frame);
-                    break;
-                } else {
-                    // Check that the value matches the return type.
-                    let ret_val_and_pos = stack_frame
-                        .evalled_values
-                        .pop()
-                        .expect("Should have a value");
-                    let (return_value_pos, return_value) = ret_val_and_pos.clone();
+        if stack_frame.exprs_to_eval.is_empty() {
+            // No more statements in this stack frame.
+            if env.stack.is_empty() {
+                // Don't pop the outer scope: that's for the top level environment.
+                env.stack.push(stack_frame);
+                break;
+            } else {
+                // Check that the value matches the return type.
+                let ret_val_and_pos = stack_frame
+                    .evalled_values
+                    .pop()
+                    .expect("Should have a value");
+                let (return_value_pos, return_value) = ret_val_and_pos.clone();
 
-                    if let Some(ref fun) = stack_frame.enclosing_fun {
-                        if let Some(return_type) = &fun.return_type {
-                            if let Err(msg) = check_type(&return_value, return_type, env) {
-                                stack_frame.evalled_values.push(ret_val_and_pos.clone());
-                                env.stack.push(stack_frame);
+                if let Some(ref fun) = stack_frame.enclosing_fun {
+                    if let Some(return_type) = &fun.return_type {
+                        if let Err(msg) = check_type(&return_value, return_type, env) {
+                            stack_frame.evalled_values.push(ret_val_and_pos.clone());
+                            env.stack.push(stack_frame);
 
-                                return Err(EvalError::ResumableError(return_value_pos, msg));
-                            }
+                            return Err(EvalError::ResumableError(return_value_pos, msg));
                         }
                     }
-
-                    // The final evaluation result of the function
-                    // call should be used in the previous stack
-                    // frame.
-                    env.stack
-                        .last_mut()
-                        .unwrap()
-                        .evalled_values
-                        .push(ret_val_and_pos);
                 }
-            } else {
-                // Keep going on this stack frame.
-                env.stack.push(stack_frame);
+
+                // The final evaluation result of the function
+                // call should be used in the previous stack
+                // frame.
+                env.stack
+                    .last_mut()
+                    .unwrap()
+                    .evalled_values
+                    .push(ret_val_and_pos);
             }
         } else {
-            unreachable!();
+            // Keep going on this stack frame.
+            env.stack.push(stack_frame);
         }
     }
 

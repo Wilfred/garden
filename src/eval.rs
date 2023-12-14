@@ -2235,10 +2235,6 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 
                             stack_frame.enter_block();
                             for (sym, expr) in block.bindings {
-                                if sym.name.is_underscore() {
-                                    continue;
-                                }
-
                                 stack_frame.bindings.add_new(&sym.name, expr);
                             }
 
@@ -2358,12 +2354,11 @@ fn eval_match_cases(
         };
 
         if value_type_name == pattern_type_name && value_variant_idx == pattern_variant_idx {
+            let mut bindings: Vec<(Symbol, Value)> = vec![];
             match (&value_payload, &pattern.argument) {
                 (Some(payload), Some(payload_sym)) => {
                     if !payload_sym.name.is_underscore() {
-                        stack_frame
-                            .bindings
-                            .add_new(&payload_sym.name, *payload.clone());
+                        bindings.push((payload_sym.clone(), (**payload).clone()));
                     }
                 }
                 (None, None) => {}
@@ -2374,9 +2369,17 @@ fn eval_match_cases(
                 }
             }
 
+            let case_expr_pos = &case_expr.0;
+            let case_block = Expression_::Block(Block {
+                open_brace: case_expr_pos.clone(),
+                exprs: vec![(**case_expr).clone()],
+                close_brace: case_expr_pos.clone(),
+                bindings,
+            });
+
             stack_frame
                 .exprs_to_eval
-                .push((false, (**case_expr).clone()));
+                .push((false, Expression(case_expr_pos.clone(), case_block)));
             return Ok(());
         }
     }

@@ -2248,34 +2248,34 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 // Don't pop the outer scope: that's for the top level environment.
                 env.stack.push(stack_frame);
                 break;
-            } else {
-                // Check that the value matches the return type.
-                let ret_val_and_pos = stack_frame
-                    .evalled_values
-                    .pop()
-                    .expect("Should have a value");
-                let (return_value_pos, return_value) = ret_val_and_pos.clone();
+            }
 
-                if let Some(ref fun) = stack_frame.enclosing_fun {
-                    if let Some(return_type) = &fun.return_type {
-                        if let Err(msg) = check_type(&return_value, return_type, env) {
-                            stack_frame.evalled_values.push(ret_val_and_pos.clone());
-                            env.stack.push(stack_frame);
+            // Check that the value matches the return type.
+            let ret_val_and_pos = stack_frame
+                .evalled_values
+                .pop()
+                .expect("Should have a value");
+            let (return_value_pos, return_value) = ret_val_and_pos.clone();
 
-                            return Err(EvalError::ResumableError(return_value_pos, msg));
-                        }
+            if let Some(ref fun) = stack_frame.enclosing_fun {
+                if let Some(return_type) = &fun.return_type {
+                    if let Err(msg) = check_type(&return_value, return_type, env) {
+                        stack_frame.evalled_values.push(ret_val_and_pos.clone());
+                        env.stack.push(stack_frame);
+
+                        return Err(EvalError::ResumableError(return_value_pos, msg));
                     }
                 }
-
-                // The final evaluation result of the function
-                // call should be used in the previous stack
-                // frame.
-                env.stack
-                    .last_mut()
-                    .unwrap()
-                    .evalled_values
-                    .push(ret_val_and_pos);
             }
+
+            // The final evaluation result of the function
+            // call should be used in the previous stack
+            // frame.
+            env.stack
+                .last_mut()
+                .unwrap()
+                .evalled_values
+                .push(ret_val_and_pos);
         } else {
             // Keep going on this stack frame.
             env.stack.push(stack_frame);

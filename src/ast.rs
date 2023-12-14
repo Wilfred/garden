@@ -114,6 +114,11 @@ pub(crate) enum Expression_ {
     /// ```
     /// match (x) { Some(y) => { z; } _ => { zz; }}
     /// ```
+    // TODO: this needs some kind of terminator in the expression
+    // case, or it's hard to read. Support something like this:
+    // ```
+    // match (x) { Some (y) => y + 1; _ => 0 }
+    // ```
     Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
     /// ```
     /// if (x) { y; }

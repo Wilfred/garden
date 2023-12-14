@@ -72,6 +72,7 @@ impl Bindings {
     }
 
     fn add_new(&mut self, name: &SymbolName, value: Value) {
+        // TODO: Handle underscore checks here rather than at all the call sites.
         let block_bindings = self
             .0
             .last_mut()

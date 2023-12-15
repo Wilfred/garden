@@ -17,27 +17,27 @@ fun main(args: List): Unit {
     }
     let needle = args.get(0);
 
-    if (in_git_repo()) {
-        let all_branches = shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]).lines();
-
-        if (all_branches.contains(needle)) {
-            // If there's a branch with this name exactly, use it.
-            check_out(needle);
-            return Unit;
-        }
-
-        let branches = all_branches.filter(fun(name) { name.contains(needle); });
-        if (branches.is_empty()) {
-            println("No branches found maching: ".concat(needle));
-        } else if (branches.len() == 1) {
-            let branch_name = branches.get(0);
-            check_out(branch_name);
-        } else {
-            let formatted_branches = ", ".join(branches);
-            let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches]);
-            print(msg);
-        }
-    } else {
+    if (in_git_repo() == False) {
         println("Not in a git repository.");
+        return Unit;
+    }
+
+    let all_branches = shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"]).lines();
+    if (all_branches.contains(needle)) {
+        // If there's a branch with this name exactly, use it.
+        check_out(needle);
+        return Unit;
+    }
+
+    let branches = all_branches.filter(fun(name) { name.contains(needle); });
+    if (branches.is_empty()) {
+        println("No branches found maching: ".concat(needle));
+    } else if (branches.len() == 1) {
+        let branch_name = branches.get(0);
+        check_out(branch_name);
+    } else {
+        let formatted_branches = ", ".join(branches);
+        let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches]);
+        print(msg);
     }
 }

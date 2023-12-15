@@ -291,7 +291,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         caller_pos: None,
         bindings: Bindings::default(),
         exprs_to_eval,
-        evalled_values: vec![(test.body.open_brace.clone(), unit_value())],
+        evalled_values: vec![(test.body.close_brace.clone(), unit_value())],
     };
     env.stack.push(stack_frame);
 }
@@ -1178,10 +1178,7 @@ fn eval_call(
                 caller_pos: Some(position.clone()),
                 bindings: Bindings(bindings),
                 exprs_to_eval: fun_subexprs,
-                // TODO: find a better position for the unit value,
-                // perhaps the position of the curly brace function
-                // body.
-                evalled_values: vec![(receiver_value.0, unit_value())],
+                evalled_values: vec![(fun_info.body.close_brace.clone(), unit_value())],
                 enclosing_fun: Some(fun_info.clone()),
                 enclosing_name: SymbolName("(closure)".to_string()),
                 src: fun_info.src_string.clone(),
@@ -1214,7 +1211,7 @@ fn eval_call(
                 enclosing_name: name_sym.name.clone(),
                 bindings: Bindings::new_with(fun_bindings),
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![(name_sym.pos.clone(), unit_value())],
+                evalled_values: vec![(fi.body.close_brace.clone(), unit_value())],
             }));
         }
         Value::BuiltinFunction(kind) => eval_builtin_call(
@@ -1469,10 +1466,7 @@ fn eval_method_call(
         caller_pos: Some(receiver_value.0.clone()),
         bindings: Bindings::new_with(fun_bindings),
         exprs_to_eval: method_subexprs,
-        // TODO: find a better position for the void value,
-        // perhaps the position of the curly brace function
-        // body.
-        evalled_values: vec![(receiver_value.0, unit_value())],
+        evalled_values: vec![(fun_info.body.close_brace.clone(), unit_value())],
     }))
 }
 

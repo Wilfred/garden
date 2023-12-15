@@ -111,6 +111,20 @@ fun (self: String) contains(substring: String): Bool {
 
 // List methods.
 
+// Get the first item in this list, if the list is non-empty.
+fun (self: List) first(): Option {
+    if (self.is_empty()) {
+        None;
+    } else {
+        Some(self.get(0));
+    }
+}
+
+test first {
+    should_equal([].first(), None);
+    should_equal([123].first(), Some(123));
+}
+
 // Return a copy of this list with the items where `f(item)` returns
 // True.
 fun (self: List) filter(f): List {

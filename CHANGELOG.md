@@ -7,6 +7,8 @@
 
 Added the `Result` type.
 
+Added the `List::first` method.
+
 ### Commands
 
 `:source` now shows the source code of a single definition, rather

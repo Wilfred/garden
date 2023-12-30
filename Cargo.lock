@@ -236,6 +236,7 @@ dependencies = [
  "assert_cmd",
  "clap",
  "ctrlc",
+ "garden_lang_parser",
  "humantime",
  "itertools",
  "lazy_static",
@@ -249,6 +250,16 @@ dependencies = [
  "strsim",
  "strum",
  "strum_macros",
+]
+
+[[package]]
+name = "garden_lang_parser"
+version = "0.0.0"
+dependencies = [
+ "lazy_static",
+ "line-numbers",
+ "regex",
+ "serde",
 ]
 
 [[package]]

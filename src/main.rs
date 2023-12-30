@@ -27,6 +27,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
+use garden_lang_parser;
 
 use crate::ast::SourceString;
 use crate::diagnostics::ErrorMessage;

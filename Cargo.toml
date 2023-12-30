@@ -1,3 +1,6 @@
+[workspace]
+members = []
+
 [package]
 name = "garden-lang"
 description = "A live programming language."

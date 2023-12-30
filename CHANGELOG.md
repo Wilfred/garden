@@ -1,7 +1,9 @@
+# 0.12 (unreleased)
+**Goal: WASM and website.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
-# 0.11 (unreleased)
+# 0.11 (released 30th December 2023)
 
 ### Syntax
 

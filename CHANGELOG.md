@@ -1,7 +1,18 @@
-# 0.11 (unreleased)
-
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
+
+# 0.11 (unreleased)
+
+### Syntax
+
+Added pattern matching.
+
+```
+match (x) {
+  Some(i) => { i + 1; }
+  _ => 0
+}
+```
 
 ### Stdlib
 

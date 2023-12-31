@@ -112,6 +112,16 @@ pub(crate) struct StackFrame {
     /// The position of the call site.
     pub(crate) caller_pos: Option<Position>,
     pub(crate) bindings: Bindings,
+    /// If we are entering a block with extra bindings that are only
+    /// defined for the duration of the block, pass them here.
+    ///
+    /// For example:
+    /// ```garden
+    /// match (x) { Some(y) => { y + 1; } _ => {}}
+    /// ```
+    ///
+    /// We want `y` to be bound, but only in the block.
+    pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
     pub(crate) exprs_to_eval: Vec<(bool, Expression)>,
     pub(crate) evalled_values: Vec<(Position, Value)>,
 }
@@ -285,6 +295,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         enclosing_fun: None,
         caller_pos: None,
         bindings: Bindings::default(),
+        bindings_next_block: vec![],
         exprs_to_eval,
         evalled_values: vec![(test.body.close_brace.clone(), unit_value())],
     };
@@ -1172,6 +1183,7 @@ fn eval_call(
             return Ok(Some(StackFrame {
                 caller_pos: Some(position.clone()),
                 bindings: Bindings(bindings),
+                bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(fun_info.body.close_brace.clone(), unit_value())],
                 enclosing_fun: Some(fun_info.clone()),
@@ -1205,6 +1217,7 @@ fn eval_call(
                 caller_pos: Some(receiver_value.0.clone()),
                 enclosing_name: name_sym.name.clone(),
                 bindings: Bindings::new_with(fun_bindings),
+                bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![(fi.body.close_brace.clone(), unit_value())],
             }));
@@ -1460,6 +1473,7 @@ fn eval_method_call(
         src: fun_info.src_string.clone(),
         caller_pos: Some(receiver_value.0.clone()),
         bindings: Bindings::new_with(fun_bindings),
+        bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
         evalled_values: vec![(fun_info.body.close_brace.clone(), unit_value())],
     }))
@@ -2219,7 +2233,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             .push((true, Expression(expr_position, expr_copy)));
 
                         stack_frame.enter_block();
-                        for (sym, expr) in block.bindings {
+
+                        let bindings_next_block =
+                            std::mem::take(&mut stack_frame.bindings_next_block);
+                        for (sym, expr) in bindings_next_block {
                             stack_frame.bindings.add_new(&sym.name, expr);
                         }
 
@@ -2356,8 +2373,10 @@ fn eval_match_cases(
                 open_brace: case_expr_pos.clone(),
                 exprs: vec![(**case_expr).clone()],
                 close_brace: case_expr_pos.clone(),
-                bindings,
+                bindings: bindings.clone(),
             });
+
+            stack_frame.bindings_next_block = bindings;
 
             stack_frame
                 .exprs_to_eval

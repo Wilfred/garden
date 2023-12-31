@@ -136,6 +136,7 @@ impl Default for Env {
             stack: vec![StackFrame {
                 caller_pos: None,
                 bindings: Bindings::default(),
+                bindings_next_block: vec![],
                 exprs_to_eval: vec![],
                 evalled_values: vec![(
                     Position {

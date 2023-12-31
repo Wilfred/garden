@@ -2870,6 +2870,16 @@ mod tests {
     }
 
     #[test]
+    fn test_eval_match() {
+        let exprs =
+            parse_exprs_from_str("let x = Some(1); match (x) { Some(i) => i + 1 _ => {}}").unwrap();
+
+        let mut env = Env::default();
+        let value = eval_exprs(&exprs, &mut env).unwrap();
+        assert_eq!(value, Value::Integer(2));
+    }
+
+    #[test]
     fn test_eval_empty_test() {
         let interrupted = Arc::new(AtomicBool::new(false));
         let mut session = Session {

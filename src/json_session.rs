@@ -11,7 +11,6 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::{format_error, format_parse_error, Warning};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
-use crate::values::ValueExt as _;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},

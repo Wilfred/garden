@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
 
+use crate::values::{unit_value, BuiltinFunctionKind, Value};
 use crate::{
     eval::{eval_toplevel_defs, Bindings, StackFrame},
     types::{BuiltinType, Type},
@@ -11,7 +12,6 @@ use garden_lang_parser::ast::{
     TestInfo, TypeName,
 };
 use garden_lang_parser::parse_toplevel_items;
-use garden_lang_parser::values::{unit_value, BuiltinFunctionKind, Value};
 
 #[derive(Debug)]
 pub(crate) struct Env {

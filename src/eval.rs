@@ -19,17 +19,23 @@ use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
-use crate::values::ValueExt as _;
+use crate::values::{bool_value, type_representation, unit_value, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
     SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
-use garden_lang_parser::values::{
-    bool_value, type_representation, unit_value, BuiltinFunctionKind, Value,
-};
 
-use garden_lang_parser::values::BlockBindings;
+// TODO: Is it correct to define equality here? Closures should only
+// have reference equality probably.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BlockBindings(pub Rc<RefCell<HashMap<SymbolName, Value>>>);
+
+impl Default for BlockBindings {
+    fn default() -> Self {
+        Self(Rc::new(RefCell::new(HashMap::new())))
+    }
+}
 
 #[derive(Debug)]
 pub(crate) struct Bindings(pub(crate) Vec<BlockBindings>);

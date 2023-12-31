@@ -9,11 +9,10 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::types::{BuiltinType, Type};
-use crate::values::ValueExt as _;
+use crate::values::{builtin_fun_doc, type_representation, Value};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
-use garden_lang_parser::values::{builtin_fun_doc, type_representation, Value};
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_item, ParseError};
 
 #[derive(Debug, EnumIter)]

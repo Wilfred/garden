@@ -13,7 +13,6 @@ use crate::env::Env;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use crate::values::ValueExt as _;
 use garden_lang_parser::ast::ToplevelItem;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 

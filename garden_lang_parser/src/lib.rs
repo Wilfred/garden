@@ -189,7 +189,6 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
                 open_brace: if_expr.0.clone(),
                 close_brace: if_expr.0.clone(),
                 exprs: vec![if_expr],
-                bindings: vec![],
             })
         } else {
             Some(parse_block(src, tokens)?)
@@ -870,7 +869,6 @@ fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError>
         open_brace: open_brace.position,
         exprs,
         close_brace: close_brace.position,
-        bindings: vec![],
     })
 }
 
@@ -1385,7 +1383,6 @@ mod tests {
                             path: path.clone()
                         },
                         exprs: vec![],
-                        bindings: vec![],
                     },
                     Some(Block {
                         open_brace: Position {
@@ -1401,7 +1398,6 @@ mod tests {
                             path: path.clone()
                         },
                         exprs: vec![],
-                        bindings: vec![],
                     }),
                 )
             )]
@@ -1454,7 +1450,6 @@ mod tests {
                             path: path.clone()
                         },
                         exprs: vec![],
-                        bindings: vec![],
                     },
                     Some(Block {
                         open_brace: Position {
@@ -1508,12 +1503,10 @@ mod tests {
                                         path: path.clone()
                                     },
                                     exprs: vec![],
-                                    bindings: vec![],
                                 },
                                 None,
                             )
                         )],
-                        bindings: vec![],
                     }),
                 )
             )]
@@ -1566,7 +1559,6 @@ mod tests {
                             path: path.clone()
                         },
                         exprs: vec![],
-                        bindings: vec![],
                     },
                     None,
                 )
@@ -1716,7 +1708,6 @@ mod tests {
                                 path: path.clone()
                             },
                             exprs: vec![],
-                            bindings: vec![],
                         },
                         return_type: None,
                     }

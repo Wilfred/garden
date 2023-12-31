@@ -274,6 +274,7 @@ dependencies = [
 name = "garden_lang_web"
 version = "0.0.0"
 dependencies = [
+ "garden_lang_parser",
  "wasm-bindgen",
 ]
 

@@ -14,3 +14,6 @@ release:
     git push --tags
 
     cargo set-version --bump minor
+
+web:
+    cd garden_lang_web && wasm-pack build

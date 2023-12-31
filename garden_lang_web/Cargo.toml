@@ -1,6 +1,11 @@
 [package]
 name = "garden_lang_web"
 edition = "2021"
+license.workspace = true
+description.workspace = true
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
 
 [lib]
 crate-type = ["cdylib"]

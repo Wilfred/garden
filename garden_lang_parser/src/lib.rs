@@ -1,6 +1,7 @@
-mod ast;
-mod lex;
-mod diagnostics;
+pub mod ast;
+pub mod diagnostics;
+pub mod lex;
+pub mod values;
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -36,7 +37,7 @@ use crate::lex::SYMBOL_RE;
 
 #[derive(Debug)]
 #[allow(dead_code)] // additional isn't used yet.
-pub(crate) enum ParseError {
+pub enum ParseError {
     Invalid {
         position: Position,
         message: ErrorMessage,
@@ -1110,25 +1111,22 @@ fn parse_toplevel_item_from_tokens(
     parse_toplevel_expr(src, tokens)
 }
 
-pub(crate) fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
+pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
     let mut tokens = lex(path, src)?;
     parse_inline_expression(src, &mut tokens)
 }
 
-pub(crate) fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
+pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
     let items = parse_toplevel_items(path, src)?;
     Ok(items[0].clone())
 }
 
-pub(crate) fn parse_toplevel_items(
-    path: &Path,
-    src: &str,
-) -> Result<Vec<ToplevelItem>, ParseError> {
+pub fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut tokens = lex(path, src)?;
     parse_toplevel_items_from_tokens(src, &mut tokens)
 }
 
-pub(crate) fn parse_toplevel_items_from_span(
+pub fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
     offset: usize,
@@ -1138,8 +1136,7 @@ pub(crate) fn parse_toplevel_items_from_span(
     parse_toplevel_items_from_tokens(src, &mut tokens)
 }
 
-#[cfg(test)]
-pub(crate) fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
+pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
     use std::path::PathBuf;
 
     let mut tokens = lex(&PathBuf::from("__test.gdn"), src)?;
@@ -1152,8 +1149,7 @@ pub(crate) fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseEr
     Ok(res)
 }
 
-#[cfg(test)]
-pub(crate) fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
+pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
     use std::path::PathBuf;
 
     let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), src)?;
@@ -1805,4 +1801,3 @@ mod tests {
         assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(_, _) {}").is_ok());
     }
 }
-

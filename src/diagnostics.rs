@@ -5,18 +5,16 @@ use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::{
+use crate::eval::StackFrame;
+use garden_lang_parser::{
     ast::{Position, SourceString, SymbolName},
-    eval::StackFrame,
+    diagnostics::ErrorMessage,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Warning {
     pub(crate) message: String,
 }
-
-#[derive(Debug)]
-pub(crate) struct ErrorMessage(pub(crate) String);
 
 pub(crate) fn format_error_with_stack(
     message: &ErrorMessage,

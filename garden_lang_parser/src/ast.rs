@@ -8,19 +8,19 @@ use crate::values::Value;
 
 /// A position is an offset into source code.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub(crate) struct Position {
+pub struct Position {
     /// The start of this position, relative to the start of the file.
-    pub(crate) start_offset: usize,
+    pub start_offset: usize,
     /// The end of this position, relative to the start of the file.
-    pub(crate) end_offset: usize,
+    pub end_offset: usize,
     // TODO: Use LineNumber instead, finding a way to serialize it.
-    pub(crate) line_number: usize,
+    pub line_number: usize,
     // TODO: consider storing a &Path to reduce memory usage.
-    pub(crate) path: PathBuf,
+    pub path: PathBuf,
 }
 
 impl Position {
-    pub(crate) fn todo() -> Self {
+    pub fn todo() -> Self {
         Self {
             start_offset: 0,
             end_offset: 0,
@@ -31,7 +31,7 @@ impl Position {
 
     /// Return the merged position of `first` and `second`. Assumes
     /// that `second` occurs after `first`.
-    pub(crate) fn merge(first: Self, second: Self) -> Self {
+    pub fn merge(first: Self, second: Self) -> Self {
         Self {
             start_offset: first.start_offset,
             end_offset: second.end_offset,
@@ -43,17 +43,17 @@ impl Position {
 
 /// An owned string of the source text associated with a definition.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct SourceString {
+pub struct SourceString {
     /// The offset of this string into the defining file, at the time
     /// of evaluation.
-    pub(crate) offset: usize,
+    pub offset: usize,
     /// The string containing this definition.
-    pub(crate) src: String,
+    pub src: String,
 }
 
 // TODO: store positions of type hints too.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct TypeName(pub(crate) String);
+pub struct TypeName(pub String);
 
 impl Display for TypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -62,7 +62,7 @@ impl Display for TypeName {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub(crate) struct SymbolName(pub(crate) String);
+pub struct SymbolName(pub String);
 
 impl Display for SymbolName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -71,25 +71,25 @@ impl Display for SymbolName {
 }
 
 impl SymbolName {
-    pub(crate) fn is_underscore(&self) -> bool {
+    pub fn is_underscore(&self) -> bool {
         self.0 == "_"
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Symbol {
-    pub(crate) pos: Position,
-    pub(crate) name: SymbolName,
+pub struct Symbol {
+    pub pos: Position,
+    pub name: SymbolName,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct SymbolWithType {
-    pub(crate) symbol: Symbol,
-    pub(crate) type_: Option<TypeName>,
+pub struct SymbolWithType {
+    pub symbol: Symbol,
+    pub type_: Option<TypeName>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum BinaryOperatorKind {
+pub enum BinaryOperatorKind {
     Add,
     Subtract,
     Multiply,
@@ -106,13 +106,13 @@ pub(crate) enum BinaryOperatorKind {
 
 /// The left hand side of a case in a `match` expression.
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Pattern {
-    pub(crate) symbol: Symbol,
-    pub(crate) argument: Option<Symbol>,
+pub struct Pattern {
+    pub symbol: Symbol,
+    pub argument: Option<Symbol>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum Expression_ {
+pub enum Expression_ {
     /// ```
     /// match (x) { Some(y) => { z; } _ => { zz; }}
     /// ```
@@ -184,13 +184,13 @@ pub(crate) enum Expression_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Expression(pub(crate) Position, pub(crate) Expression_);
+pub struct Expression(pub Position, pub Expression_);
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Block {
-    pub(crate) open_brace: Position,
-    pub(crate) exprs: Vec<Expression>,
-    pub(crate) close_brace: Position,
+pub struct Block {
+    pub open_brace: Position,
+    pub exprs: Vec<Expression>,
+    pub close_brace: Position,
     /// If we are entering a block with extra bindings that are only
     /// defined for the duration of the block, pass them here.
     ///
@@ -200,38 +200,38 @@ pub(crate) struct Block {
     /// ```
     ///
     /// We want `y` to be bound, but only in the block.
-    pub(crate) bindings: Vec<(Symbol, Value)>,
+    pub bindings: Vec<(Symbol, Value)>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct ToplevelExpression(pub(crate) String, pub(crate) Expression);
+pub struct ToplevelExpression(pub String, pub Expression);
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct FunInfo {
-    pub(crate) src_string: SourceString,
-    pub(crate) doc_comment: Option<String>,
+pub struct FunInfo {
+    pub src_string: SourceString,
+    pub doc_comment: Option<String>,
     /// The name of the function. This is `None` for closures.
-    pub(crate) name: Option<Symbol>,
-    pub(crate) params: Vec<SymbolWithType>,
-    pub(crate) return_type: Option<TypeName>,
-    pub(crate) body: Block,
+    pub name: Option<Symbol>,
+    pub params: Vec<SymbolWithType>,
+    pub return_type: Option<TypeName>,
+    pub body: Block,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct TestInfo {
-    pub(crate) src_string: SourceString,
-    pub(crate) doc_comment: Option<String>,
+pub struct TestInfo {
+    pub src_string: SourceString,
+    pub doc_comment: Option<String>,
     /// The name of the test. This is optional in test definitions.
-    pub(crate) name: Option<Symbol>,
-    pub(crate) body: Block,
+    pub name: Option<Symbol>,
+    pub body: Block,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct VariantInfo {
-    pub(crate) name_sym: Symbol,
+pub struct VariantInfo {
+    pub name_sym: Symbol,
     /// Does this variant wrap a value? For example, the Some variant
     /// in Option.
-    pub(crate) has_payload: bool,
+    pub has_payload: bool,
 }
 
 impl Display for VariantInfo {
@@ -241,15 +241,15 @@ impl Display for VariantInfo {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct EnumInfo {
-    pub(crate) src_string: SourceString,
-    pub(crate) doc_comment: Option<String>,
-    pub(crate) name: TypeName,
-    pub(crate) variants: Vec<VariantInfo>,
+pub struct EnumInfo {
+    pub src_string: SourceString,
+    pub doc_comment: Option<String>,
+    pub name: TypeName,
+    pub variants: Vec<VariantInfo>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum BuiltinMethodKind {
+pub enum BuiltinMethodKind {
     ListAppend,
     ListGet,
     ListLen,
@@ -259,30 +259,30 @@ pub(crate) enum BuiltinMethodKind {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum MethodKind {
+pub enum MethodKind {
     BuiltinMethod(BuiltinMethodKind),
     UserDefinedMethod(FunInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct MethodInfo {
+pub struct MethodInfo {
     /// The type that has this method.
-    pub(crate) receiver_type: TypeName,
+    pub receiver_type: TypeName,
     /// The name of the receiver in the method definition. This is
     /// typically `self`.
     ///
     /// TODO: this only exists for user-defined methods, so it's
     /// clunky to have it for all methods.
-    pub(crate) receiver_name: SymbolName,
+    pub receiver_name: SymbolName,
     /// The name of the method itself, e.g. `len` in
     /// `some_string.len()`.
-    pub(crate) name_sym: Symbol,
+    pub name_sym: Symbol,
     /// User-defined or built-in.
-    pub(crate) kind: MethodKind,
+    pub kind: MethodKind,
 }
 
 impl MethodInfo {
-    pub(crate) fn doc_comment(&self) -> Option<String> {
+    pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
             MethodKind::BuiltinMethod(kind) => match kind {
                 BuiltinMethodKind::ListAppend => Some(
@@ -341,7 +341,7 @@ Errors if the index is less than 0 or greater than length - 1.
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum Definition_ {
+pub enum Definition_ {
     /// ```garden
     /// fun foo() {}
     /// ```
@@ -355,14 +355,10 @@ pub(crate) enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Definition(
-    pub(crate) SourceString,
-    pub(crate) Position,
-    pub(crate) Definition_,
-);
+pub struct Definition(pub SourceString, pub Position, pub Definition_);
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum ToplevelItem {
+pub enum ToplevelItem {
     Def(Definition),
     Expr(ToplevelExpression),
 }

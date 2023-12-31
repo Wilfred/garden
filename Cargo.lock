@@ -260,6 +260,8 @@ dependencies = [
  "line-numbers",
  "regex",
  "serde",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]

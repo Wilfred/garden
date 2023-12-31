@@ -5,7 +5,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
 
-use crate::ast::ToplevelItem;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandParseError, EvalAction,
 };
@@ -13,8 +12,10 @@ use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{push_test_stackframe, EvalError};
-use crate::parse::{parse_toplevel_items, ParseError};
 use crate::prompt::prompt_symbol;
+use crate::values::ValueExt as _;
+use garden_lang_parser::ast::ToplevelItem;
+use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;
 use rustyline::Editor;

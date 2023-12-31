@@ -1,4 +1,2 @@
 #[derive(Debug)]
-pub(crate) struct ErrorMessage(pub(crate) String);
-
-
+pub struct ErrorMessage(pub String);

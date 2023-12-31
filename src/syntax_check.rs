@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::path::Path;
 
-use crate::parse::{self, parse_toplevel_items};
+use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 #[derive(Debug, Serialize)]
 struct CheckDiagnostic {
@@ -15,7 +15,7 @@ pub(crate) fn check(path: &Path, src: &str) {
     let errors = match parse_toplevel_items(path, src) {
         Ok(_) => vec![],
         Err(e) => match e {
-            parse::ParseError::Invalid {
+            ParseError::Invalid {
                 position, message, ..
             } => {
                 // Expose line numbers as 1-indexed.
@@ -26,7 +26,7 @@ pub(crate) fn check(path: &Path, src: &str) {
                     end_offset: position.end_offset,
                 }]
             }
-            parse::ParseError::Incomplete {
+            ParseError::Incomplete {
                 message, position, ..
             } => {
                 // TODO: last line would be better?

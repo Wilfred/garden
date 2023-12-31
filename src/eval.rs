@@ -10,31 +10,26 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
+use garden_lang_parser::diagnostics::ErrorMessage;
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
-use crate::ast::{
-    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
-    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
-};
-use crate::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use crate::checks::{check_free_variables, check_types_exist};
-use crate::diagnostics::{ErrorMessage, Warning};
+use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
-use crate::values::{bool_value, type_representation, unit_value, BuiltinFunctionKind, Value};
+use crate::values::ValueExt as _;
+use garden_lang_parser::ast::{
+    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
+    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
+};
+use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
+use garden_lang_parser::values::{
+    bool_value, type_representation, unit_value, BuiltinFunctionKind, Value,
+};
 
-// TODO: Is it correct to define equality here? Closures should only
-// have reference equality probably.
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct BlockBindings(Rc<RefCell<HashMap<SymbolName, Value>>>);
-
-impl Default for BlockBindings {
-    fn default() -> Self {
-        Self(Rc::new(RefCell::new(HashMap::new())))
-    }
-}
+use garden_lang_parser::values::BlockBindings;
 
 #[derive(Debug)]
 pub(crate) struct Bindings(pub(crate) Vec<BlockBindings>);
@@ -2396,8 +2391,8 @@ pub(crate) fn eval_exprs(
 mod tests {
     use std::path::PathBuf;
 
-    use crate::ast::Position;
-    use crate::parse::{parse_defs_from_str, parse_exprs_from_str, parse_toplevel_items};
+    use garden_lang_parser::ast::Position;
+    use garden_lang_parser::{parse_defs_from_str, parse_exprs_from_str, parse_toplevel_items};
 
     use super::*;
 

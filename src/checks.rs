@@ -1,8 +1,10 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::ast::{Block, Expression, Expression_, FunInfo, Position, Symbol, SymbolName};
 use crate::diagnostics::Warning;
 use crate::env::Env;
+use garden_lang_parser::ast::{
+    Block, Expression, Expression_, FunInfo, Position, Symbol, SymbolName,
+};
 
 pub(crate) fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
@@ -188,14 +190,14 @@ fn free_variable_symbol(symbol: &Symbol, info: &mut VarInfo, env: &Env) {
 
 #[cfg(test)]
 mod tests {
-    use crate::parse::parse_defs_from_str;
+    use garden_lang_parser::parse_defs_from_str;
 
     use super::*;
 
     fn parse_fun_from_str(src: &str) -> FunInfo {
         let defs = parse_defs_from_str(src).unwrap();
         match &defs[0].2 {
-            crate::ast::Definition_::Fun(_, fun_info) => fun_info.clone(),
+            garden_lang_parser::ast::Definition_::Fun(_, fun_info) => fun_info.clone(),
             _ => unreachable!(),
         }
     }

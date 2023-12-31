@@ -4,7 +4,6 @@
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
 
-mod ast;
 mod checks;
 mod cli_session;
 mod colors;
@@ -13,8 +12,6 @@ mod diagnostics;
 mod env;
 mod eval;
 mod json_session;
-mod lex;
-mod parse;
 mod prompt;
 mod syntax_check;
 mod types;
@@ -27,16 +24,15 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use garden_lang_parser;
 
-use crate::ast::SourceString;
-use crate::diagnostics::ErrorMessage;
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Session};
-use crate::parse::{parse_toplevel_item, parse_toplevel_items};
 use crate::values::escape_string_literal;
+use garden_lang_parser::ast::SourceString;
+use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::{parse_toplevel_item, parse_toplevel_items, ParseError};
 
 #[derive(Debug, Parser)]
 #[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]
@@ -138,7 +134,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     }
                 }
             }
-            Err(parse::ParseError::Invalid {
+            Err(ParseError::Invalid {
                 position,
                 message: e,
                 additional: _,
@@ -152,7 +148,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     )
                 );
             }
-            Err(parse::ParseError::Incomplete { message: e, .. }) => {
+            Err(ParseError::Incomplete { message: e, .. }) => {
                 eprintln!("Parse error (incomplete input): {}", e.0);
             }
         },
@@ -189,7 +185,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     }
                 }
             }
-            Err(parse::ParseError::Invalid {
+            Err(ParseError::Invalid {
                 position,
                 message: e,
                 additional: _,
@@ -203,7 +199,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     )
                 );
             }
-            Err(parse::ParseError::Incomplete { message: e, .. }) => {
+            Err(ParseError::Incomplete { message: e, .. }) => {
                 eprintln!("Parse error (incomplete input): {}", e.0);
             }
         },

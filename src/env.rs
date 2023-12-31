@@ -3,14 +3,15 @@ use std::{collections::HashMap, path::PathBuf};
 use strum::IntoEnumIterator;
 
 use crate::{
-    ast::{
-        BuiltinMethodKind, MethodInfo, MethodKind, Position, SourceString, Symbol, SymbolName,
-        TestInfo, TypeName,
-    },
     eval::{eval_toplevel_defs, Bindings, StackFrame},
-    parse::parse_toplevel_items,
-    values::{unit_value, BuiltinFunctionKind, Value}, types::{Type, BuiltinType},
+    types::{BuiltinType, Type},
 };
+use garden_lang_parser::ast::{
+    BuiltinMethodKind, MethodInfo, MethodKind, Position, SourceString, Symbol, SymbolName,
+    TestInfo, TypeName,
+};
+use garden_lang_parser::parse_toplevel_items;
+use garden_lang_parser::values::{unit_value, BuiltinFunctionKind, Value};
 
 #[derive(Debug)]
 pub(crate) struct Env {

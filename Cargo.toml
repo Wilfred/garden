@@ -1,5 +1,5 @@
 [workspace]
-members = ["garden_lang_parser"]
+members = ["garden_lang_parser", "garden_lang_web"]
 
 [package]
 name = "garden-lang"

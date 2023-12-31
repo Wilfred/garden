@@ -1,0 +1,12 @@
+[package]
+name = "garden_lang_web"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2.89"
+
+[profile.release]
+opt-level = "s"

@@ -113,7 +113,7 @@ pub struct Pattern {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
-    /// ```
+    /// ```garden
     /// match (x) { Some(y) => { z; } _ => { zz; }}
     /// ```
     // TODO: this needs some kind of terminator in the expression
@@ -122,62 +122,62 @@ pub enum Expression_ {
     // match (x) { Some (y) => y + 1; _ => 0 }
     // ```
     Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
-    /// ```
+    /// ```garden
     /// if (x) { y; }
     /// if (x) { y; } else { z; }
     /// ```
     If(Box<Expression>, Block, Option<Block>),
-    /// ```
+    /// ```garden
     /// while (x) { y; z; }
     /// ```
     While(Box<Expression>, Block),
-    /// ```
+    /// ```garden
     /// x = y;
     /// ```
     Assign(Symbol, Box<Expression>),
-    /// ```
+    /// ```garden
     /// let x = y;
     /// ```
     Let(Symbol, Box<Expression>),
-    /// ```
+    /// ```garden
     /// return x;
     /// ```
     Return(Box<Expression>),
-    /// ```
+    /// ```garden
     /// 123;
     /// ```
     IntLiteral(i64),
-    /// ```
+    /// ```garden
     /// "foo";
     /// ```
     StringLiteral(String),
-    /// ```
+    /// ```garden
     /// [x, y];
     /// ```
     ListLiteral(Vec<Expression>),
-    /// ```
+    /// ```garden
     /// x + y;
     /// x < y;
     /// x && y;
     /// ```
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
-    /// ```
+    /// ```garden
     /// x;
     /// ```
     Variable(Symbol),
-    /// ```
+    /// ```garden
     /// x();
     /// ```
     Call(Box<Expression>, Vec<Expression>),
-    /// ```
+    /// ```garden
     /// foo.bar(x, y)
     /// ```
     MethodCall(Box<Expression>, Symbol, Vec<Expression>),
-    /// ```
+    /// ```garden
     /// fun(x, y) { x + y; }
     /// ```
     FunLiteral(FunInfo),
-    /// ```
+    /// ```garden
     /// { x; y; }
     /// ```
     Block(Block),
@@ -195,7 +195,7 @@ pub struct Block {
     /// defined for the duration of the block, pass them here.
     ///
     /// For example:
-    /// ```
+    /// ```garden
     /// match (x) { Some(y) => { y + 1; } _ => {}}
     /// ```
     ///

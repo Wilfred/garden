@@ -486,7 +486,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 ///
 /// Examples:
 ///
-/// ```
+/// ```garden
 /// foo()
 /// x + 1
 /// if (a) { b } else { c }
@@ -501,7 +501,7 @@ fn parse_inline_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 ///
 /// Examples:
 ///
-/// ```
+/// ```garden
 /// foo();
 /// let x = y + 1;
 /// if (a) { b; } else { c; }

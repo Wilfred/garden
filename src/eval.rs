@@ -29,7 +29,7 @@ use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
 #[derive(Debug, Clone, PartialEq)]
-pub struct BlockBindings(pub Rc<RefCell<HashMap<SymbolName, Value>>>);
+pub(crate) struct BlockBindings(pub(crate) Rc<RefCell<HashMap<SymbolName, Value>>>);
 
 impl Default for BlockBindings {
     fn default() -> Self {

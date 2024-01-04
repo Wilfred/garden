@@ -15,5 +15,8 @@ release:
 
     cargo set-version --bump minor
 
+wasm:
+    cd garden_lang_web && wasm-pack build --target web
+
 web:
-    cd garden_lang_web && wasm-pack build
+    cd website && python -m http.server

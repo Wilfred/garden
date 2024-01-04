@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: extractions/setup-just@v1
+      - run: just wasm
+
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:

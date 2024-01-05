@@ -17,6 +17,7 @@ release:
 
 wasm:
     cd garden_lang_web && wasm-pack build --target web
+    cp -r garden_lang_web/pkg website
 
 web:
     cd website && python -m http.server

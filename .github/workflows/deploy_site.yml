@@ -18,7 +18,7 @@ jobs:
 
       - run: just wasm
 
-      - run: rm website/.gitignore
+      - run: rm website/pkg/.gitignore
 
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@v4.4.3

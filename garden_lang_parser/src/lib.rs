@@ -336,7 +336,7 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
             return Err(ParseError::Incomplete {
                 position: Position::todo(),
                 message: ErrorMessage(
-                    "Invalid syntax: Expected `}}` here, but got EOF".to_string(),
+                    "Invalid syntax: Expected `}` here, but got EOF".to_string(),
                 ),
             });
         };
@@ -638,7 +638,7 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
                 return Err(ParseError::Invalid {
                     position: token.position,
                     message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
+                        "Invalid syntax: Expected `,` or `}` here, but got `{}`",
                         token.text
                     )),
                     additional: vec![],
@@ -854,7 +854,7 @@ fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError>
             return Err(ParseError::Incomplete {
                 position: Position::todo(),
                 message: ErrorMessage(
-                    "Invalid syntax: Expected `}}` here, but got EOF".to_string(),
+                    "Invalid syntax: Expected `}` here, but got EOF".to_string(),
                 ),
             });
         }

@@ -34,12 +34,17 @@
         </div>
       </nav>
 
-      <h2>Parser</h2>
+      <div class="form-floating mt-5">
+        <textarea
+          class="form-control is-invalid"
+          placeholder="Your program here"
+          id="parse-input"
+        >
+fun f() {}</textarea
+        >
+        <label for="parse-input">Parser Playground</label>
+      </div>
 
-      <textarea id="parse-input">
-fun f() {}
-</textarea
-      >
       <p>Parse succeeded: <span id="parse-status"></span></p>
     </div>
 

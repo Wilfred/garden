@@ -4,8 +4,13 @@ function showParseState(textarea) {
   let src = textarea.value;
   const result = check_parse(src);
 
+  if (result) {
+    textarea.classList.remove("is-invalid");
+  } else {
+    textarea.classList.add("is-invalid");
+  }
+
   let parseStatusSpan = document.getElementById("parse-status");
-  console.log(`parse succeeded ${result}`);
   parseStatusSpan.innerHTML = "" + result;
 }
 

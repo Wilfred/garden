@@ -6,6 +6,16 @@ use wasm_bindgen::prelude::*;
 // https://rustwasm.github.io/docs/book/game-of-life/hello-world.html#build-the-project
 
 #[wasm_bindgen]
-pub fn check_parse(src: &str) -> bool {
-    parse_toplevel_items(&PathBuf::new(), src).is_ok()
+pub fn check_parse(src: &str) -> Option<String> {
+    match parse_toplevel_items(&PathBuf::new(), src) {
+        Ok(_) => None,
+        Err(e) => match e {
+            garden_lang_parser::ParseError::Invalid { message, .. } => {
+                Some(format!("Invalid: {}", message.0))
+            }
+            garden_lang_parser::ParseError::Incomplete { message, .. } => {
+                Some(format!("Incomplete: {}", message.0))
+            }
+        },
+    }
 }

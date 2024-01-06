@@ -4,14 +4,14 @@ function showParseState(textarea) {
   let src = textarea.value;
   const result = check_parse(src);
 
-  if (result) {
+  let parseStatusSpan = document.getElementById("parse-status");
+  if (result == null) {
     textarea.classList.remove("is-invalid");
+    parseStatusSpan.innerHTML = "";
   } else {
     textarea.classList.add("is-invalid");
+    parseStatusSpan.innerHTML = result;
   }
-
-  let parseStatusSpan = document.getElementById("parse-status");
-  parseStatusSpan.innerHTML = "" + result;
 }
 
 async function run() {

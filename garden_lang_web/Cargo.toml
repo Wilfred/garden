@@ -13,6 +13,3 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = "0.2.89"
 garden_lang_parser = { path = "../garden_lang_parser" }
-
-[profile.release]
-opt-level = "s"

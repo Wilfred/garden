@@ -44,3 +44,6 @@ path = "src/main.rs"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
+
+[profile.release]
+opt-level = "s"

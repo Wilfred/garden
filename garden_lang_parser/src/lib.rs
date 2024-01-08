@@ -638,7 +638,7 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
                 return Err(ParseError::Invalid {
                     position: token.position,
                     message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `}` here, but got `{}`",
+                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
                         token.text
                     )),
                     additional: vec![],

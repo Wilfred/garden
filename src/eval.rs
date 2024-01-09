@@ -982,7 +982,6 @@ fn eval_builtin_call(
                                 command.arg(item);
                             }
 
-                            // TODO: define a result type in garden to report errors to the user.
                             let output = command.output().expect("failed to execute process");
 
                             let mut s = String::new();
@@ -992,9 +991,13 @@ fn eval_builtin_call(
                             s.write_str(&String::from_utf8_lossy(&output.stderr))
                                 .unwrap();
 
-                            stack_frame
-                                .evalled_values
-                                .push((position.clone(), Value::String(s)));
+                            let v = if output.status.success() {
+                                result_ok_value(Value::String(s))
+                            } else {
+                                result_err_value(Value::String(s))
+                            };
+
+                            stack_frame.evalled_values.push((position.clone(), v));
                         }
                         Err(v) => {
                             let mut saved_values = vec![];

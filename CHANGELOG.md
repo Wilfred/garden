@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+## Stdlib
+
+Added the `read_file` function.
+
 # 0.11 (released 30th December 2023)
 
 ### Syntax

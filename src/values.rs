@@ -38,6 +38,18 @@ pub(crate) fn bool_value(b: bool) -> Value {
     Value::Enum(TypeName("Bool".to_owned()), if b { 0 } else { 1 }, None)
 }
 
+pub(crate) fn result_ok_value(v: Value) -> Value {
+    // We can assume that Result is always defined because it's in the
+    // prelude.
+    Value::Enum(TypeName("Result".to_owned()), 0, Some(Box::new(v)))
+}
+
+pub(crate) fn result_err_value(v: Value) -> Value {
+    // We can assume that Result is always defined because it's in the
+    // prelude.
+    Value::Enum(TypeName("Result".to_owned()), 1, Some(Box::new(v)))
+}
+
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName(
         match value {
@@ -63,6 +75,7 @@ pub(crate) enum BuiltinFunctionKind {
     PathExists,
     Print,
     Println,
+    ReadFile,
     WorkingDirectory,
 }
 
@@ -77,6 +90,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::PathExists => "path_exists",
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
+            BuiltinFunctionKind::ReadFile => "read_file",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
         };
         write!(f, "{}", name)
@@ -140,6 +154,13 @@ print(\"hello world\n\");
 
 ```
 print(\"hello world\");
+```"
+        }
+        BuiltinFunctionKind::ReadFile => {
+            "Read the contents of `path` as a string.
+
+```
+read_file(\"/tmp/foo.txt\");
 ```"
         }
         BuiltinFunctionKind::WorkingDirectory => {

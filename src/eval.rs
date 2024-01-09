@@ -19,7 +19,10 @@ use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
-use crate::values::{bool_value, type_representation, unit_value, BuiltinFunctionKind, Value};
+use crate::values::{
+    bool_value, result_err_value, result_ok_value, type_representation, unit_value,
+    BuiltinFunctionKind, Value,
+};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
     SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
@@ -1116,6 +1119,41 @@ fn eval_builtin_call(
             };
 
             stack_frame.evalled_values.push((position.clone(), value));
+        }
+        BuiltinFunctionKind::ReadFile => {
+            check_arity(
+                &SymbolName("read_file".to_owned()),
+                &receiver_value,
+                1,
+                arg_values,
+            )?;
+
+            // TODO: define a separate path type in Garden.
+            let path_s = match &arg_values[0].1 {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format_type_error(&TypeName("String".into()), v, env),
+                        restore_values: saved_values,
+                        error_position: arg_values[0].0.clone(),
+                    });
+                }
+            };
+
+            let path = PathBuf::from(path_s);
+
+            let v = match std::fs::read_to_string(path) {
+                Ok(s) => result_ok_value(Value::String(s)),
+                Err(e) => result_err_value(Value::String(e.to_string())),
+            };
+
+            stack_frame.evalled_values.push((position.clone(), v));
         }
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(

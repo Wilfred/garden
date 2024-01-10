@@ -369,6 +369,7 @@ the user entering a value in the *garden* buffer."
 
     (,(rx
        (seq
+        (* "_")
         (any upper)
         (* (or (syntax word) (syntax symbol)))))
      . font-lock-type-face)

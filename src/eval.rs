@@ -316,14 +316,14 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
     let mut new_syms: Vec<SymbolName> = vec![];
 
     for definition in definitions {
-        // TODO: check that types in definitions are defined, and emit
-        // warnings otherwise.
-        //
-        // ```
-        // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
-        // ```
         match &definition.2 {
             Definition_::Fun(name_sym, fun_info) => {
+                if is_builtin_stub(fun_info) {
+                    // TODO: support this for methods too.
+                    update_builtin_fun_info(fun_info, env, &mut warnings);
+                    continue;
+                }
+
                 env.set_with_file_scope(
                     &name_sym.name,
                     Value::Fun(name_sym.clone(), fun_info.clone()),
@@ -334,6 +334,12 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 new_syms.push(name_sym.name.clone());
             }
             Definition_::Method(meth_info) => {
+                // TODO: check that types in definitions are defined, and emit
+                // warnings otherwise.
+                //
+                // ```
+                // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
+                // ```
                 env.add_method(meth_info);
                 new_syms.push(meth_info.name_sym.name.clone());
             }
@@ -371,6 +377,51 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
         warnings,
         tests_passed: 0,
         tests_failed: 0,
+    }
+}
+
+fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec<Warning>) {
+    let Some(symbol) = &fun_info.name else {
+        return;
+    };
+
+    let Some(value) = env.file_scope.get(&symbol.name) else {
+        warnings.push(Warning {
+            message: format!(
+                "Tried to update a built-in stub for a function {} that doesn't exist.",
+                symbol.name
+            ),
+        });
+        return;
+    };
+
+    let Value::BuiltinFunction(kind, _) = value else {
+        warnings.push(Warning {
+            message: format!(
+                "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
+                symbol.name,
+                type_representation(value).0,
+            ),
+        });
+        return;
+    };
+
+    env.set_with_file_scope(
+        &symbol.name,
+        Value::BuiltinFunction(*kind, Some(fun_info.clone())),
+    );
+}
+
+fn is_builtin_stub(fun_info: &FunInfo) -> bool {
+    let exprs = &fun_info.body.exprs;
+    if exprs.len() != 1 {
+        return false;
+    }
+
+    let expr_ = &exprs[0].1;
+    match expr_ {
+        Expression_::Variable(variable) => variable.name.0 == "__BUILTIN_IMPLEMENTATION",
+        _ => false,
     }
 }
 

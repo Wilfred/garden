@@ -10,6 +10,8 @@ Added the `read_file` function.
 `shell` now returns a `Result`, where `Err` represents a non-zero exit
 code.
 
+Added a `NoValue` type.
+
 # 0.11 (released 30th December 2023)
 
 ### Syntax

@@ -27,6 +27,8 @@ enum Result {
     Err(_),
 }
 
+enum NoValue {}
+
 // String methods.
 
 // Split this string into a list of lines.

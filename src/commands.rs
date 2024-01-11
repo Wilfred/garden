@@ -212,48 +212,8 @@ fn describe_type(type_: &Type) -> String {
 
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
-        Value::Fun(
-            name_sym,
-            ast::FunInfo {
-                doc_comment,
-                params,
-                return_type,
-                ..
-            },
-        ) => {
-            let mut res = String::new();
-            match doc_comment {
-                Some(doc_comment) => {
-                    res.push_str(doc_comment);
-                }
-                None => res.push_str(&format!(
-                    "`{}` has no documentation comment.",
-                    name_sym.name
-                )),
-            }
-            res.push_str("\n\n");
-
-            // show type hints
-            res.push_str(&format!("fn {}", name_sym.name));
-            res.push('(');
-            for (i, param) in params.iter().enumerate() {
-                if i != 0 {
-                    res.push_str(", ");
-                }
-
-                res.push_str(&format!("{}", &param.symbol.name));
-
-                if let Some(param_ty) = &param.type_ {
-                    res.push_str(&format!(": {}", param_ty));
-                }
-            }
-            res.push(')');
-
-            if let Some(return_type) = return_type {
-                res.push_str(&format!(": {}", return_type));
-            }
-
-            res.push_str(" { ... }");
+        Value::Fun(name_sym, fun_info) => {
+            let res = format_fun_info(fun_info, name_sym);
 
             Some(res)
         }
@@ -263,6 +223,51 @@ fn describe_fun(value: &Value) -> Option<String> {
         }
         _ => None,
     }
+}
+
+/// Format `fun_info` as a signature with doc comment.
+fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
+    let ast::FunInfo {
+        doc_comment,
+        params,
+        return_type,
+        ..
+    } = fun_info;
+
+    let mut res = String::new();
+    match doc_comment {
+        Some(doc_comment) => {
+            res.push_str(doc_comment);
+        }
+        None => res.push_str(&format!(
+            "`{}` has no documentation comment.",
+            name_sym.name
+        )),
+    }
+    res.push_str("\n\n");
+
+    // show type hints
+    res.push_str(&format!("fn {}", name_sym.name));
+    res.push('(');
+    for (i, param) in params.iter().enumerate() {
+        if i != 0 {
+            res.push_str(", ");
+        }
+
+        res.push_str(&format!("{}", &param.symbol.name));
+
+        if let Some(param_ty) = &param.type_ {
+            res.push_str(&format!(": {}", param_ty));
+        }
+    }
+    res.push(')');
+
+    if let Some(return_type) = return_type {
+        res.push_str(&format!(": {}", return_type));
+    }
+
+    res.push_str(" { ... }");
+    res
 }
 
 pub(crate) fn run_command<T: Write>(

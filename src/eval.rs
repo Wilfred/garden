@@ -1269,7 +1269,7 @@ fn eval_call(
                 evalled_values: vec![(fi.body.close_brace.clone(), unit_value())],
             }));
         }
-        Value::BuiltinFunction(kind) => eval_builtin_call(
+        Value::BuiltinFunction(kind, _) => eval_builtin_call(
             env,
             *kind,
             receiver_value,

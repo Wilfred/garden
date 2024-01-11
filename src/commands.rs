@@ -257,7 +257,7 @@ fn describe_fun(value: &Value) -> Option<String> {
 
             Some(res)
         }
-        Value::BuiltinFunction(kind) => {
+        Value::BuiltinFunction(kind, _) => {
             // TODO: show signature of built-in functions.
             Some(builtin_fun_doc(kind).to_owned())
         }

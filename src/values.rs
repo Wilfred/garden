@@ -16,7 +16,7 @@ pub(crate) enum Value {
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo),
     /// A reference to a built-in function.
-    BuiltinFunction(BuiltinFunctionKind),
+    BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>),
     /// A string value.
     String(String),
     /// A list value.
@@ -56,7 +56,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::Integer(_) => "Int",
             Value::Fun(_, _) => "Fun",
             Value::Closure(_, _) => "Fun",
-            Value::BuiltinFunction(_) => "Fun",
+            Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
             Value::List(_) => "List",
             Value::Enum(name, _, _) => &name.0,
@@ -180,7 +180,7 @@ impl Value {
             Value::Integer(i) => format!("{}", i),
             Value::Fun(name_sym, _) => format!("(function: {})", name_sym.name),
             Value::Closure(..) => "(closure)".to_string(),
-            Value::BuiltinFunction(kind) => format!("(function: {})", kind),
+            Value::BuiltinFunction(kind, _) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),
             Value::List(items) => {
                 let mut s = String::new();

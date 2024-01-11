@@ -31,7 +31,7 @@ impl Default for Env {
         for fun_kind in BuiltinFunctionKind::iter() {
             file_scope.insert(
                 SymbolName(format!("{}", fun_kind)),
-                Value::BuiltinFunction(fun_kind),
+                Value::BuiltinFunction(fun_kind, None),
             );
         }
 

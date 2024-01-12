@@ -322,14 +322,14 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     // TODO: support this for methods too.
                     update_builtin_fun_info(fun_info, env, &mut warnings);
                     continue;
+                } else {
+                    env.set_with_file_scope(
+                        &name_sym.name,
+                        Value::Fun(name_sym.clone(), fun_info.clone()),
+                    );
+                    warnings.extend(check_types_exist(fun_info, env));
+                    warnings.extend(check_free_variables(fun_info, env));
                 }
-
-                env.set_with_file_scope(
-                    &name_sym.name,
-                    Value::Fun(name_sym.clone(), fun_info.clone()),
-                );
-                warnings.extend(check_types_exist(fun_info, env));
-                warnings.extend(check_free_variables(fun_info, env));
 
                 new_syms.push(name_sym.name.clone());
             }

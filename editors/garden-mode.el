@@ -63,7 +63,10 @@
   "Move point back to the start of the expression before point."
   (when (looking-back (rx "}") 1)
     (backward-sexp 1))
-  (beginning-of-line))
+  (beginning-of-line)
+  (while (and (not (bobp))
+              (looking-back (rx "//" (* not-newline) "\n")))
+    (forward-line -1)))
 
 (defun garden--flash-region (start end)
   "Temporarily highlight from START to END."

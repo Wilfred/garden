@@ -1,0 +1,104 @@
+
+// Write an arbitrary value to stdout, along with debugging metadata.
+//
+// ```
+// dbg([1, 2]);
+// ```
+fun dbg(_): Unit {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Stop the program immediately, and report the error message given.
+//
+// ```
+// error(\"Computer is melting!\");
+// ```
+fun error(_: String): NoValue {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// List the contents of the specified directory.
+//
+// ```
+// list_directory("/");
+// ```
+fun list_directory(_: String): List {
+    __BUILTIN_IMPLEMENTATION;
+
+}
+
+// Return True if this path exists.
+//
+// ```
+// path_exists("/"); // True
+// path_exists("/no_such_dir"); // False
+// ```
+// 
+// Note that a path may exist without the current user having
+// permission to read it.
+fun path_exists(_): Bool {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Write a string to stdout.
+//
+// ```
+// print("hello world\n");
+// ```
+fun print(_: String): Unit {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Write a string to stdout, with a newline appended.
+//
+// ```
+// println("hello world");
+// ```
+fun println(_: String): Unit {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Execute the given string as a shell command, and return stdout
+// concatenated with stderr.
+//
+// ```
+// shell(\"ls\", [\"-l\", \"/\"]);
+// ```
+fun shell(_, _): String {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Pretty print a value.
+//
+// ```
+// string_repr(123); // \"123\"
+// ```
+fun string_repr(_): String {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Read the contents of `path` as a string.
+
+// ```
+// read_file(\"/tmp/foo.txt\");
+// ```
+fun read_file(path: String): STring {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+// Return the path of the current working directory.
+
+// ```
+// working_directory(); // \"/home/yourname/awesome_garden_project\"
+// ```
+fun working_directory(): String {
+    __BUILTIN_IMPLEMENTATION;
+}
+
+
+
+
+
+
+
+

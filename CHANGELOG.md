@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+## Emacs
+
+`C-c C-z` now toggles between session and source code buffers.
+
 ## Stdlib
 
 Added the `read_file` function.

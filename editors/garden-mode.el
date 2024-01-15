@@ -416,16 +416,24 @@ the user entering a value in the *garden* buffer."
     (modify-syntax-entry ?\# "<" table)
     table))
 
-(defun garden-switch-to-session ()
-  "Switch to the current *garden* buffer."
+(defvar garden--previous-buf nil)
+
+(defun garden-toggle-session ()
+  "Toggle between the current *garden* buffer and a source buffer."
   (interactive)
-  (switch-to-buffer (garden--active-buffer)))
+  (let ((current-buf (current-buffer))
+        (session-buf (garden--active-buffer)))
+    (if (eq (current-buffer) session-buf)
+        (when garden--previous-buf
+          (switch-to-buffer garden--previous-buf))
+      (setq garden--previous-buf current-buf)
+      (switch-to-buffer session-buf))))
 
 (defvar garden-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
-    (define-key map (kbd "C-c C-z") #'garden-switch-to-session)
+    (define-key map (kbd "C-c C-z") #'garden-toggle-session)
     map)
   "Keymap for `garden-mode'.")
 
@@ -443,6 +451,12 @@ the user entering a value in the *garden* buffer."
   (setq-local comment-end "")
 
   (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
+
+(defvar garden-session-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-z") #'garden-toggle-session)
+    map)
+  "Keymap for `garden-session-mode'.")
 
 (define-derived-mode garden-session-mode comint-mode "Garden Session"
   :syntax-table garden-mode-syntax-table

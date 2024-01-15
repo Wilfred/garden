@@ -162,6 +162,11 @@ impl Default for Env {
             .expect("Prelude should be syntactically legal");
         eval_toplevel_defs(&prelude_items, &mut env);
 
+        let prelude_src = include_str!("builtins.gdn");
+        let prelude_items = parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src)
+            .expect("Stubs for built-ins should be syntactically legal");
+        eval_toplevel_defs(&prelude_items, &mut env);
+
         env
     }
 }

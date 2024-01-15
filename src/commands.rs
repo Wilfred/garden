@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::types::{BuiltinType, Type};
-use crate::values::{builtin_fun_doc, type_representation, Value};
+use crate::values::{type_representation, Value};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
@@ -212,14 +212,15 @@ fn describe_type(type_: &Type) -> String {
 
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
-        Value::Fun(name_sym, fun_info) => {
-            let res = format_fun_info(fun_info, name_sym);
+        Value::Fun(name_sym, fun_info) => Some(format_fun_info(fun_info, name_sym)),
+        Value::BuiltinFunction(_kind, fun_info) => {
+            if let Some(fun_info) = fun_info {
+                if let Some(fun_name) = &fun_info.name {
+                    return Some(format_fun_info(fun_info, fun_name));
+                }
+            }
 
-            Some(res)
-        }
-        Value::BuiltinFunction(kind, _) => {
-            // TODO: show signature of built-in functions.
-            Some(builtin_fun_doc(kind).to_owned())
+            Some("Undocumented built-in function.".to_owned())
         }
         _ => None,
     }

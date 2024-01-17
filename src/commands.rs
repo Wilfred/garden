@@ -445,7 +445,7 @@ pub(crate) fn run_command<T: Write>(
         Command::FrameValues => {
             if let Some(stack_frame) = env.stack.last() {
                 for value in stack_frame.evalled_values.iter().rev() {
-                    writeln!(buf, "{}", value.1.display(env)).unwrap();
+                    writeln!(buf, "{}", value.display(env)).unwrap();
                 }
             }
         }

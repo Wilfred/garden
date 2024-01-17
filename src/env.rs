@@ -138,16 +138,7 @@ impl Default for Env {
                 bindings: Bindings::default(),
                 bindings_next_block: vec![],
                 exprs_to_eval: vec![],
-                evalled_values: vec![(
-                    Position {
-                        // TODO: do these values make sense?
-                        start_offset: 0,
-                        end_offset: 0,
-                        line_number: 0,
-                        path: PathBuf::from("__toplevel__"),
-                    },
-                    unit_value(),
-                )],
+                evalled_values: vec![unit_value()],
                 enclosing_fun: None,
                 enclosing_name: SymbolName("__toplevel__".to_owned()),
                 src: SourceString {

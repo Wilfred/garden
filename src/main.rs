@@ -3,6 +3,8 @@
 #![allow(suspicious_double_ref_op)]
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
+// Garden is too much of a prototype for this to be an issue.
+#![allow(clippy::too_many_arguments)]
 
 mod checks;
 mod cli_session;

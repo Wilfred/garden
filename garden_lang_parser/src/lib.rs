@@ -338,9 +338,7 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
         let Some(token) = tokens.peek() else {
             return Err(ParseError::Incomplete {
                 position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `}` here, but got EOF".to_string(),
-                ),
+                message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
             });
         };
 
@@ -856,9 +854,7 @@ fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError>
         } else {
             return Err(ParseError::Incomplete {
                 position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `}` here, but got EOF".to_string(),
-                ),
+                message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
             });
         }
 

@@ -18,6 +18,16 @@ Added `Result::or_error()`.
 
 Added a `NoValue` type.
 
+## Syntax
+
+Match cases now support an optional trailing comma.
+
+```
+match (x) {
+  None => 0,
+  Some(i) => { i + 1; }
+}
+```
 # 0.11 (released 30th December 2023)
 
 ### Syntax

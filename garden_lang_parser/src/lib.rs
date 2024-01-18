@@ -765,7 +765,7 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
 
 fn parse_type_name(tokens: &mut TokenStream) -> Result<TypeName, ParseError> {
     let name = parse_symbol(tokens)?;
-    Ok(TypeName(name.name.0))
+    Ok(TypeName { name: name.name.0 })
 }
 
 fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeName>, ParseError> {

@@ -51,11 +51,15 @@ pub struct SourceString {
 
 // TODO: store positions of type hints too.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct TypeName(pub String);
+pub struct TypeName {
+    pub name: String,
+}
+
+// TODO: Define TypeHint.
 
 impl Display for TypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.name)
     }
 }
 

@@ -29,40 +29,64 @@ pub(crate) enum Value {
 pub(crate) fn unit_value() -> Value {
     // We can assume that Unit is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Unit".to_owned()), 0, None)
+    Value::Enum(
+        TypeName {
+            name: "Unit".to_owned(),
+        },
+        0,
+        None,
+    )
 }
 
 pub(crate) fn bool_value(b: bool) -> Value {
     // We can assume that Bool is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Bool".to_owned()), if b { 0 } else { 1 }, None)
+    Value::Enum(
+        TypeName {
+            name: "Bool".to_owned(),
+        },
+        if b { 0 } else { 1 },
+        None,
+    )
 }
 
 pub(crate) fn result_ok_value(v: Value) -> Value {
     // We can assume that Result is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Result".to_owned()), 0, Some(Box::new(v)))
+    Value::Enum(
+        TypeName {
+            name: "Result".to_owned(),
+        },
+        0,
+        Some(Box::new(v)),
+    )
 }
 
 pub(crate) fn result_err_value(v: Value) -> Value {
     // We can assume that Result is always defined because it's in the
     // prelude.
-    Value::Enum(TypeName("Result".to_owned()), 1, Some(Box::new(v)))
+    Value::Enum(
+        TypeName {
+            name: "Result".to_owned(),
+        },
+        1,
+        Some(Box::new(v)),
+    )
 }
 
 pub(crate) fn type_representation(value: &Value) -> TypeName {
-    TypeName(
-        match value {
+    TypeName {
+        name: match value {
             Value::Integer(_) => "Int",
             Value::Fun(_, _) => "Fun",
             Value::Closure(_, _) => "Fun",
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
             Value::List(_) => "List",
-            Value::Enum(name, _, _) => &name.0,
+            Value::Enum(name, _, _) => &name.name,
         }
         .to_owned(),
-    )
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
@@ -161,7 +185,7 @@ impl Value {
 
     pub(crate) fn display_unless_unit(&self, env: &Env) -> Option<String> {
         match self {
-            Value::Enum(name, variant_idx, _) if name.0 == "Unit" && *variant_idx == 0 => None,
+            Value::Enum(name, variant_idx, _) if name.name == "Unit" && *variant_idx == 0 => None,
             _ => Some(self.display(env)),
         }
     }

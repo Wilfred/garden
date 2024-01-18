@@ -365,7 +365,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     );
                 }
 
-                let name_as_sym = SymbolName(enum_info.name.0.clone());
+                let name_as_sym = SymbolName(enum_info.name.name.clone());
                 new_syms.push(name_as_sym);
             }
         }
@@ -400,7 +400,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                type_representation(value).0,
+                type_representation(value).name,
             ),
         });
         return;
@@ -513,7 +513,7 @@ fn eval_if(
         }
     } else {
         return Err(ErrorInfo {
-            message: format_type_error(&TypeName("Bool".into()), &condition_value, env),
+            message: format_type_error(&TypeName { name: "Bool".into() }, &condition_value, env),
             restore_values: vec![condition_value],
             error_position: bool_position.clone(),
         });
@@ -525,7 +525,7 @@ fn eval_if(
 /// If `value` is a Bool value, convert it to a Rust bool.
 fn to_rust_bool(value: &Value) -> Option<bool> {
     match value {
-        Value::Enum(name, variant_idx, _) if name.0 == "Bool" => {
+        Value::Enum(name, variant_idx, _) if name.name == "Bool" => {
             // TODO: this assumes users never redefine Bool.
             Some(*variant_idx == 0)
         }
@@ -561,7 +561,7 @@ fn eval_while(
         }
     } else {
         return Err(ErrorInfo {
-            message: format_type_error(&TypeName("Bool".into()), &condition_value, env),
+            message: format_type_error(&TypeName { name: "Bool".into() }, &condition_value, env),
             restore_values: vec![condition_value],
             error_position: condition_pos.clone(),
         });
@@ -625,8 +625,8 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
 fn format_type_error(expected: &TypeName, value: &Value, env: &Env) -> ErrorMessage {
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
-        expected.0,
-        type_representation(value).0,
+        expected.name,
+        type_representation(value).name,
         value.display(env)
     ))
 }
@@ -652,7 +652,7 @@ fn eval_boolean_binop(
             Some(b) => b,
             None => {
                 return Err(ErrorInfo {
-                    message: format_type_error(&TypeName("Bool".into()), &lhs_value, env),
+                    message: format_type_error(&TypeName { name: "Bool".into() }, &lhs_value, env),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_position.clone(),
                 });
@@ -663,7 +663,7 @@ fn eval_boolean_binop(
             Some(b) => b,
             None => {
                 return Err(ErrorInfo {
-                    message: format_type_error(&TypeName("Bool".into()), &rhs_value, env),
+                    message: format_type_error(&TypeName { name: "Bool".into() }, &rhs_value, env),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_position.clone(),
                 });
@@ -738,7 +738,7 @@ fn eval_integer_binop(
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: format_type_error(&TypeName("Int".into()), &lhs_value, env),
+                    message: format_type_error(&TypeName { name: "Int".into() }, &lhs_value, env),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_position.clone(),
                 });
@@ -748,7 +748,7 @@ fn eval_integer_binop(
             Value::Integer(i) => i,
             _ => {
                 return Err(ErrorInfo {
-                    message: format_type_error(&TypeName("Int".into()), &rhs_value, env),
+                    message: format_type_error(&TypeName { name: "Int".into() }, &rhs_value, env),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_position.clone(),
                 });
@@ -904,7 +904,7 @@ fn eval_builtin_call(
                 }
                 v => {
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -943,7 +943,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -983,7 +983,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1062,7 +1062,7 @@ fn eval_builtin_call(
                             saved_values.push(receiver_value.clone());
 
                             return Err(ErrorInfo {
-                                message: format_type_error(&TypeName("List".into()), &v, env),
+                                message: format_type_error(&TypeName { name: "List".into() }, &v, env),
                                 restore_values: saved_values,
                                 error_position: arg_positions[0].clone(),
                             });
@@ -1077,7 +1077,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1119,7 +1119,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1150,7 +1150,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1202,7 +1202,7 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1360,7 +1360,7 @@ fn eval_call(
 
             return Err(ErrorInfo {
                 error_position: receiver_pos.clone(),
-                message: format_type_error(&TypeName("Function".into()), v, env),
+                message: format_type_error(&TypeName { name: "Function".into() }, v, env),
                 restore_values: saved_values,
             });
         }
@@ -1457,7 +1457,7 @@ fn eval_enum_constructor(
 
             Err(ErrorInfo {
                 error_position: receiver_pos.clone(),
-                message: format_type_error(&TypeName("Function".into()), receiver_value, env),
+                message: format_type_error(&TypeName { name: "Function".into() }, receiver_value, env),
                 restore_values: saved_values,
             })
         }
@@ -1640,7 +1640,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("List".into()), v, env),
+                        message: format_type_error(&TypeName { name: "List".into() }, v, env),
                         restore_values: saved_values,
                         error_position: receiver_pos.clone(),
                     });
@@ -1695,7 +1695,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("List".into()), v, env),
+                        message: format_type_error(&TypeName { name: "List".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1708,7 +1708,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("Int".into()), v, env),
+                        message: format_type_error(&TypeName { name: "Int".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[1].clone(),
                     });
@@ -1739,7 +1739,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("List".into()), v, env),
+                        message: format_type_error(&TypeName { name: "List".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1766,7 +1766,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1782,7 +1782,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[1].clone(),
                     });
@@ -1816,7 +1816,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1843,7 +1843,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("String".into()), v, env),
+                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1859,7 +1859,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("Int".into()), v, env),
+                        message: format_type_error(&TypeName { name: "Int".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[1].clone(),
                     });
@@ -1875,7 +1875,7 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName("Int".into()), v, env),
+                        message: format_type_error(&TypeName { name: "Int".into() }, v, env),
                         restore_values: saved_values,
                         error_position: arg_positions[2].clone(),
                     });
@@ -2445,7 +2445,7 @@ fn eval_match_cases(
     let Value::Enum(value_type_name, value_variant_idx, value_payload) = scrutinee_value else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            type_representation(&scrutinee_value).0,
+            type_representation(&scrutinee_value).name,
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

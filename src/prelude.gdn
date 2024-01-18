@@ -27,6 +27,16 @@ enum Result {
     Err(_),
 }
 
+// Unwrap a value that is `Ok`, or terminate with an error.
+//
+// TODO: support generic types.
+fun (self: Result) or_error() {
+    match (self) {
+        Ok(v) => v
+        Err(e) => error(string_repr(e))
+    }
+}
+
 enum NoValue {}
 
 // String methods.

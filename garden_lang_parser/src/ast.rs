@@ -112,13 +112,12 @@ pub struct Pattern {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
     /// ```garden
-    /// match (x) { Some(y) => { z; } _ => { zz; }}
+    /// match (x) {
+    ///     None => { get_value(); }
+    ///     Some(y) => y + 1,
+    ///     _ => error("yikes"),
+    /// }
     /// ```
-    // TODO: this needs some kind of terminator in the expression
-    // case, or it's hard to read. Support something like this:
-    // ```
-    // match (x) { Some (y) => y + 1; _ => 0 }
-    // ```
     Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
     /// ```garden
     /// if (x) { y; }

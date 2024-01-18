@@ -348,7 +348,7 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
 
         let pattern = parse_pattern(tokens)?;
         require_token(tokens, "=>")?;
-        let case_expr = parse_inline_expression(src, tokens)?;
+        let case_expr = parse_case_expr(src, tokens)?;
         cases.push((pattern, Box::new(case_expr)));
     }
 
@@ -358,6 +358,15 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
         match_keyword.position,
         Expression_::Match(Box::new(scrutinee), cases),
     ))
+}
+
+fn parse_case_expr(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
+    let case_expr = parse_inline_expression(src, tokens)?;
+    if next_token_is(tokens, ",") {
+        tokens.pop().unwrap();
+    }
+
+    Ok(case_expr)
 }
 
 fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {

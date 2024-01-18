@@ -69,6 +69,9 @@ fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     expected: &str,
 ) -> Result<Token<'a>, ParseError> {
+    // TODO: If we have an open delimiter, we want the incorrect
+    // current token. If we've forgotten a terminator like ; we want
+    // the previous token.
     let prev_token = tokens.prev();
 
     match tokens.pop() {

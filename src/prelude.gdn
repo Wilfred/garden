@@ -42,7 +42,7 @@ enum NoValue {}
 // String methods.
 
 // Split this string into a list of lines.
-fun (self: String) lines(): List {
+fun (self: String) lines(): List<String> {
     let parts = [];
 
     let line_start = 0;
@@ -74,7 +74,7 @@ test lines {
 }
 
 // Join `items` (a list of strings) with this string as a separator.
-fun (self: String) join(items: List): String {
+fun (self: String) join(items: List<String>): String {
     if (items.is_empty()) {
         return "";
     }
@@ -124,7 +124,7 @@ fun (self: String) contains(substring: String): Bool {
 // List methods.
 
 // Get the first item in this list, if the list is non-empty.
-fun (self: List) first(): Option {
+fun (self: List<T>) first(): Option<T> {
     if (self.is_empty()) {
         None;
     } else {
@@ -139,7 +139,7 @@ test first {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-fun (self: List) filter(f): List {
+fun (self: List<T>) filter(f): List<T> {
     let result = [];
 
     let i = 0;
@@ -163,12 +163,12 @@ test filter {
 }
 
 // Is this list empty?
-fun (self: List) is_empty(): Bool {
+fun (self: List<T>) is_empty(): Bool {
     self.len() == 0;
 }
 
 // Does this list contain `item`?
-fun (self: List) contains(item): Bool {
+fun (self: List<T>) contains(item): Bool {
     let i = 0;
     while (i < self.len()) {
         if (self.get(i) == item) {

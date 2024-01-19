@@ -15,22 +15,22 @@ enum Unit {
 
 // The option type. Use this when you might have a value, but might
 // not.
-enum Option {
-    Some(_),
+enum Option<T> {
+    Some(T),
     None,
 }
 
 // `Result` represents a value that succeeded, with `Ok(...)`, or
 // failed, with `Err(...)`.
-enum Result {
-    Ok(_),
-    Err(_),
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
 }
 
 // Unwrap a value that is `Ok`, or terminate with an error.
 //
-// TODO: support generic types.
-fun (self: Result) or_error() {
+// TODO: support generic types in return position.
+fun (self: Result<T, E>) or_error() {
     match (self) {
         Ok(v) => v
         Err(e) => error(string_repr(e))

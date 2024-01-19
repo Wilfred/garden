@@ -677,7 +677,7 @@ fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError
     if let Some(next_token) = tokens.peek() {
         if next_token.text == "(" {
             tokens.pop();
-            parse_symbol(tokens)?;
+            parse_type_hint(tokens)?;
             require_token(tokens, ")")?;
             has_payload = true;
         }

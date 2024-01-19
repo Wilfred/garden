@@ -5,6 +5,8 @@ pub mod lex;
 use std::collections::HashSet;
 use std::path::Path;
 
+use ast::TypeSymbol;
+
 use crate::ast::BinaryOperatorKind;
 use crate::ast::Block;
 use crate::ast::Definition;
@@ -763,12 +765,15 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
     ))
 }
 
-fn parse_type_name(tokens: &mut TokenStream) -> Result<TypeName, ParseError> {
+fn parse_type_name(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError> {
     let name = parse_symbol(tokens)?;
-    Ok(TypeName { name: name.name.0 })
+    Ok(TypeSymbol {
+        name: TypeName { name: name.name.0 },
+        position: name.pos,
+    })
 }
 
-fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeName>, ParseError> {
+fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeSymbol>, ParseError> {
     if let Some(token) = tokens.peek() {
         if token.text == ":" {
             tokens.pop();

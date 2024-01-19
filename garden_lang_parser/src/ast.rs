@@ -49,19 +49,30 @@ pub struct SourceString {
     pub src: String,
 }
 
-// TODO: store positions of type hints too.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TypeName {
     pub name: String,
 }
-
-// TODO: Define TypeHint.
 
 impl Display for TypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)
     }
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TypeSymbol {
+    pub name: TypeName,
+    pub position: Position,
+}
+
+impl Display for TypeSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+// TODO: Define TypeHint.
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName(pub String);
@@ -87,7 +98,7 @@ pub struct Symbol {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SymbolWithType {
     pub symbol: Symbol,
-    pub type_: Option<TypeName>,
+    pub type_: Option<TypeSymbol>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -204,7 +215,7 @@ pub struct FunInfo {
     /// The name of the function. This is `None` for closures.
     pub name: Option<Symbol>,
     pub params: Vec<SymbolWithType>,
-    pub return_type: Option<TypeName>,
+    pub return_type: Option<TypeSymbol>,
     pub body: Block,
 }
 
@@ -235,7 +246,7 @@ impl Display for VariantInfo {
 pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
-    pub name: TypeName,
+    pub name: TypeSymbol,
     pub variants: Vec<VariantInfo>,
 }
 
@@ -258,7 +269,7 @@ pub enum MethodKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MethodInfo {
     /// The type that has this method.
-    pub receiver_type: TypeName,
+    pub receiver_type: TypeSymbol,
     /// The name of the receiver in the method definition. This is
     /// typically `self`.
     ///

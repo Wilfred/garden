@@ -25,7 +25,7 @@ use crate::values::{
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
-    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName,
+    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 
@@ -352,7 +352,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             Definition_::Enum(enum_info) => {
                 // Add the enum definition to the type environment.
                 env.types
-                    .insert(enum_info.name.clone(), Type::Enum(enum_info.clone()));
+                    .insert(enum_info.name.name.clone(), Type::Enum(enum_info.clone()));
 
                 // Add the values in the enum to the value environment.
                 for (idx, variant_sym) in enum_info.variants.iter().enumerate() {
@@ -361,11 +361,11 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     // current enum).
                     env.set_with_file_scope(
                         &variant_sym.name_sym.name,
-                        Value::Enum(enum_info.name.clone(), idx, None),
+                        Value::Enum(enum_info.name.name.clone(), idx, None),
                     );
                 }
 
-                let name_as_sym = SymbolName(enum_info.name.name.clone());
+                let name_as_sym = SymbolName(enum_info.name.name.name.clone());
                 new_syms.push(name_as_sym);
             }
         }
@@ -513,7 +513,13 @@ fn eval_if(
         }
     } else {
         return Err(ErrorInfo {
-            message: format_type_error(&TypeName { name: "Bool".into() }, &condition_value, env),
+            message: format_type_error(
+                &TypeName {
+                    name: "Bool".into(),
+                },
+                &condition_value,
+                env,
+            ),
             restore_values: vec![condition_value],
             error_position: bool_position.clone(),
         });
@@ -561,7 +567,13 @@ fn eval_while(
         }
     } else {
         return Err(ErrorInfo {
-            message: format_type_error(&TypeName { name: "Bool".into() }, &condition_value, env),
+            message: format_type_error(
+                &TypeName {
+                    name: "Bool".into(),
+                },
+                &condition_value,
+                env,
+            ),
             restore_values: vec![condition_value],
             error_position: condition_pos.clone(),
         });
@@ -652,7 +664,13 @@ fn eval_boolean_binop(
             Some(b) => b,
             None => {
                 return Err(ErrorInfo {
-                    message: format_type_error(&TypeName { name: "Bool".into() }, &lhs_value, env),
+                    message: format_type_error(
+                        &TypeName {
+                            name: "Bool".into(),
+                        },
+                        &lhs_value,
+                        env,
+                    ),
                     restore_values: vec![lhs_value.clone(), rhs_value],
                     error_position: lhs_position.clone(),
                 });
@@ -663,7 +681,13 @@ fn eval_boolean_binop(
             Some(b) => b,
             None => {
                 return Err(ErrorInfo {
-                    message: format_type_error(&TypeName { name: "Bool".into() }, &rhs_value, env),
+                    message: format_type_error(
+                        &TypeName {
+                            name: "Bool".into(),
+                        },
+                        &rhs_value,
+                        env,
+                    ),
                     restore_values: vec![lhs_value, rhs_value.clone()],
                     error_position: rhs_position.clone(),
                 });
@@ -856,11 +880,11 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
-fn check_type(value: &Value, expected: &TypeName, env: &Env) -> Result<(), ErrorMessage> {
+fn check_type(value: &Value, expected: &TypeSymbol, env: &Env) -> Result<(), ErrorMessage> {
     let actual_type = type_representation(value);
 
-    if actual_type != *expected {
-        return Err(format_type_error(expected, value, env));
+    if actual_type != expected.name {
+        return Err(format_type_error(&expected.name, value, env));
     }
 
     Ok(())
@@ -904,7 +928,13 @@ fn eval_builtin_call(
                 }
                 v => {
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -943,7 +973,13 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -983,7 +1019,13 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1062,7 +1104,13 @@ fn eval_builtin_call(
                             saved_values.push(receiver_value.clone());
 
                             return Err(ErrorInfo {
-                                message: format_type_error(&TypeName { name: "List".into() }, &v, env),
+                                message: format_type_error(
+                                    &TypeName {
+                                        name: "List".into(),
+                                    },
+                                    &v,
+                                    env,
+                                ),
                                 restore_values: saved_values,
                                 error_position: arg_positions[0].clone(),
                             });
@@ -1077,7 +1125,13 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1119,7 +1173,13 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1150,7 +1210,13 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1202,7 +1268,13 @@ fn eval_builtin_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1360,7 +1432,13 @@ fn eval_call(
 
             return Err(ErrorInfo {
                 error_position: receiver_pos.clone(),
-                message: format_type_error(&TypeName { name: "Function".into() }, v, env),
+                message: format_type_error(
+                    &TypeName {
+                        name: "Function".into(),
+                    },
+                    v,
+                    env,
+                ),
                 restore_values: saved_values,
             });
         }
@@ -1457,7 +1535,13 @@ fn eval_enum_constructor(
 
             Err(ErrorInfo {
                 error_position: receiver_pos.clone(),
-                message: format_type_error(&TypeName { name: "Function".into() }, receiver_value, env),
+                message: format_type_error(
+                    &TypeName {
+                        name: "Function".into(),
+                    },
+                    receiver_value,
+                    env,
+                ),
                 restore_values: saved_values,
             })
         }
@@ -1640,7 +1724,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "List".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "List".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: receiver_pos.clone(),
                     });
@@ -1695,7 +1785,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "List".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "List".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1739,7 +1835,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "List".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "List".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1766,7 +1868,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1782,7 +1890,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[1].clone(),
                     });
@@ -1816,7 +1930,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });
@@ -1843,7 +1963,13 @@ fn eval_builtin_method_call(
                     saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "String".into() }, v, env),
+                        message: format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            v,
+                            env,
+                        ),
                         restore_values: saved_values,
                         error_position: arg_positions[0].clone(),
                     });

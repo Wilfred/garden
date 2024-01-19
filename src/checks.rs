@@ -11,7 +11,7 @@ pub(crate) fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
 
     for param in &fun_info.params {
         if let Some(return_type) = &param.type_ {
-            if !env.types.contains_key(return_type) {
+            if !env.types.contains_key(&return_type.name) {
                 warnings.push(Warning {
                     message: format!("No such type: {return_type}"),
                 });
@@ -20,7 +20,7 @@ pub(crate) fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     }
 
     if let Some(return_type) = &fun_info.return_type {
-        if !env.types.contains_key(return_type) {
+        if !env.types.contains_key(&return_type.name) {
             warnings.push(Warning {
                 message: format!("No such type: {return_type}"),
             });

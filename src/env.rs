@@ -9,7 +9,7 @@ use crate::{
 };
 use garden_lang_parser::ast::{
     BuiltinMethodKind, MethodInfo, MethodKind, Position, SourceString, Symbol, SymbolName,
-    TestInfo, TypeName,
+    TestInfo, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
 
@@ -41,7 +41,12 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
-                receiver_type: TypeName { name: "String".into() },
+                receiver_type: TypeSymbol {
+                    position: Position::todo(),
+                    name: TypeName {
+                        name: "String".into(),
+                    },
+                },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
                     pos: Position::todo(),
@@ -53,7 +58,12 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("substring".to_owned()),
             MethodInfo {
-                receiver_type: TypeName { name: "String".into() },
+                receiver_type: TypeSymbol {
+                    position: Position::todo(),
+                    name: TypeName {
+                        name: "String".into(),
+                    },
+                },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
                     pos: Position::todo(),
@@ -65,7 +75,12 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("concat".to_owned()),
             MethodInfo {
-                receiver_type: TypeName { name: "String".into() },
+                receiver_type: TypeSymbol {
+                    position: Position::todo(),
+                    name: TypeName {
+                        name: "String".into(),
+                    },
+                },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
                     pos: Position::todo(),
@@ -75,13 +90,23 @@ impl Default for Env {
             },
         );
 
-        methods.insert(TypeName { name: "String".into() }, string_methods);
+        methods.insert(
+            TypeName {
+                name: "String".into(),
+            },
+            string_methods,
+        );
 
         let mut list_methods = HashMap::new();
         list_methods.insert(
             SymbolName("append".to_owned()),
             MethodInfo {
-                receiver_type: TypeName { name: "List".into() },
+                receiver_type: TypeSymbol {
+                    position: Position::todo(),
+                    name: TypeName {
+                        name: "List".into(),
+                    },
+                },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
                     pos: Position::todo(),
@@ -93,7 +118,12 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
-                receiver_type: TypeName { name: "List".into() },
+                receiver_type: TypeSymbol {
+                    position: Position::todo(),
+                    name: TypeName {
+                        name: "List".into(),
+                    },
+                },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
                     pos: Position::todo(),
@@ -105,7 +135,12 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("get".to_owned()),
             MethodInfo {
-                receiver_type: TypeName { name: "List".into() },
+                receiver_type: TypeSymbol {
+                    position: Position::todo(),
+                    name: TypeName {
+                        name: "List".into(),
+                    },
+                },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
                     pos: Position::todo(),
@@ -115,18 +150,36 @@ impl Default for Env {
             },
         );
 
-        methods.insert(TypeName { name: "List".into() }, list_methods);
+        methods.insert(
+            TypeName {
+                name: "List".into(),
+            },
+            list_methods,
+        );
 
         // Insert all the built-in types.
         let mut types = HashMap::new();
         // TODO: String literals are duplicated with type_representation.
-        types.insert(TypeName { name: "Int".into() }, Type::Builtin(BuiltinType::Int));
         types.insert(
-            TypeName { name: "String".into() },
+            TypeName { name: "Int".into() },
+            Type::Builtin(BuiltinType::Int),
+        );
+        types.insert(
+            TypeName {
+                name: "String".into(),
+            },
             Type::Builtin(BuiltinType::String),
         );
-        types.insert(TypeName { name: "List".into() }, Type::Builtin(BuiltinType::List));
-        types.insert(TypeName { name: "Fun".into() }, Type::Builtin(BuiltinType::Fun));
+        types.insert(
+            TypeName {
+                name: "List".into(),
+            },
+            Type::Builtin(BuiltinType::List),
+        );
+        types.insert(
+            TypeName { name: "Fun".into() },
+            Type::Builtin(BuiltinType::Fun),
+        );
 
         let mut env = Self {
             file_scope,
@@ -176,7 +229,7 @@ impl Env {
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
         let type_methods = self
             .methods
-            .entry(method_info.receiver_type.clone())
+            .entry(method_info.receiver_type.name.clone())
             .or_default();
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
     }

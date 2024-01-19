@@ -258,13 +258,13 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
         res.push_str(&format!("{}", &param.symbol.name));
 
         if let Some(param_ty) = &param.type_ {
-            res.push_str(&format!(": {}", param_ty));
+            res.push_str(&format!(": {}", param_ty.sym));
         }
     }
     res.push(')');
 
     if let Some(return_type) = return_type {
-        res.push_str(&format!(": {}", return_type));
+        res.push_str(&format!(": {}", return_type.sym));
     }
 
     res.push_str(" { ... }");
@@ -537,7 +537,9 @@ pub(crate) fn run_command<T: Write>(
 
 fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, String> {
     if let Some((type_name, method_name)) = name.split_once("::") {
-        if let Some(type_methods) = env.methods.get(&TypeName { name: type_name.to_owned() }) {
+        if let Some(type_methods) = env.methods.get(&TypeName {
+            name: type_name.to_owned(),
+        }) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
                 match &method_info.kind {
                     MethodKind::BuiltinMethod(_) => Ok(None),
@@ -552,7 +554,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.types.get(&TypeName { name: name.to_owned() }) {
+    } else if let Some(type_) = env.types.get(&TypeName {
+        name: name.to_owned(),
+    }) {
         match type_ {
             Type::Builtin(_) => Ok(None),
             Type::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
@@ -571,7 +575,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
 /// `Env`. This may be a function name, method name, or type name.
 fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> {
     if let Some((type_name, method_name)) = name.split_once("::") {
-        if let Some(type_methods) = env.methods.get(&TypeName { name: type_name.to_owned() }) {
+        if let Some(type_methods) = env.methods.get(&TypeName {
+            name: type_name.to_owned(),
+        }) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
                 Ok((format!("Method `{method_name}`"), method_info.doc_comment()))
             } else {
@@ -581,7 +587,9 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.types.get(&TypeName { name: name.to_owned() }) {
+    } else if let Some(type_) = env.types.get(&TypeName {
+        name: name.to_owned(),
+    }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))
     } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
         // TODO: Ideally we'd print both values and type if both are defined.

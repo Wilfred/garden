@@ -75,7 +75,7 @@ impl Display for TypeSymbol {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypeHint {
     pub sym: TypeSymbol,
-    pub args: Vec<TypeHint>
+    pub args: Vec<TypeHint>,
 }
 // TODO: Define TypeHint.
 
@@ -103,7 +103,7 @@ pub struct Symbol {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SymbolWithType {
     pub symbol: Symbol,
-    pub type_: Option<TypeSymbol>,
+    pub type_: Option<TypeHint>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -220,7 +220,7 @@ pub struct FunInfo {
     /// The name of the function. This is `None` for closures.
     pub name: Option<Symbol>,
     pub params: Vec<SymbolWithType>,
-    pub return_type: Option<TypeSymbol>,
+    pub return_type: Option<TypeHint>,
     pub body: Block,
 }
 
@@ -274,7 +274,7 @@ pub enum MethodKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MethodInfo {
     /// The type that has this method.
-    pub receiver_type: TypeSymbol,
+    pub receiver_type: TypeHint,
     /// The name of the receiver in the method definition. This is
     /// typically `self`.
     ///

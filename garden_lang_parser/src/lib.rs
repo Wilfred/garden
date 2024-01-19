@@ -826,11 +826,11 @@ fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     Ok(TypeHint { sym, args })
 }
 
-fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeSymbol>, ParseError> {
+fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
     if let Some(token) = tokens.peek() {
         if token.text == ":" {
             tokens.pop();
-            return Ok(Some(parse_type_symbol(tokens)?));
+            return Ok(Some(parse_type_hint(tokens)?));
         }
     }
 

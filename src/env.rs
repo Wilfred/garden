@@ -9,7 +9,7 @@ use crate::{
 };
 use garden_lang_parser::ast::{
     BuiltinMethodKind, MethodInfo, MethodKind, Position, SourceString, Symbol, SymbolName,
-    TestInfo, TypeName, TypeSymbol,
+    TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
 
@@ -41,10 +41,13 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
-                receiver_type: TypeSymbol {
-                    position: Position::todo(),
-                    name: TypeName {
-                        name: "String".into(),
+                receiver_type: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "String".into(),
+                        },
                     },
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
@@ -58,10 +61,13 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("substring".to_owned()),
             MethodInfo {
-                receiver_type: TypeSymbol {
-                    position: Position::todo(),
-                    name: TypeName {
-                        name: "String".into(),
+                receiver_type: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "String".into(),
+                        },
                     },
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
@@ -75,10 +81,13 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("concat".to_owned()),
             MethodInfo {
-                receiver_type: TypeSymbol {
-                    position: Position::todo(),
-                    name: TypeName {
-                        name: "String".into(),
+                receiver_type: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "String".into(),
+                        },
                     },
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
@@ -101,10 +110,13 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("append".to_owned()),
             MethodInfo {
-                receiver_type: TypeSymbol {
-                    position: Position::todo(),
-                    name: TypeName {
-                        name: "List".into(),
+                receiver_type: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "List".into(),
+                        },
                     },
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
@@ -118,10 +130,13 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
-                receiver_type: TypeSymbol {
-                    position: Position::todo(),
-                    name: TypeName {
-                        name: "List".into(),
+                receiver_type: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "List".into(),
+                        },
                     },
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
@@ -135,10 +150,13 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("get".to_owned()),
             MethodInfo {
-                receiver_type: TypeSymbol {
-                    position: Position::todo(),
-                    name: TypeName {
-                        name: "List".into(),
+                receiver_type: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "List".into(),
+                        },
                     },
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
@@ -229,7 +247,7 @@ impl Env {
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
         let type_methods = self
             .methods
-            .entry(method_info.receiver_type.name.clone())
+            .entry(method_info.receiver_type.sym.name.clone())
             .or_default();
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
     }

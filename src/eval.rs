@@ -1557,7 +1557,7 @@ fn check_param_types(
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_ty) = &param.type_ {
-            if let Err(msg) = check_type(arg_value, param_ty, env) {
+            if let Err(msg) = check_type(arg_value, &param_ty.sym, env) {
                 let mut saved_values = vec![];
                 saved_values.push(receiver_value.clone());
                 for value in arg_values.iter().rev() {
@@ -2525,7 +2525,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 
             if let Some(ref fun) = stack_frame.enclosing_fun {
                 if let Some(return_type) = &fun.return_type {
-                    if let Err(msg) = check_type(&return_value, return_type, env) {
+                    if let Err(msg) = check_type(&return_value, &return_type.sym, env) {
                         stack_frame.evalled_values.push(return_value.clone());
                         env.stack.push(stack_frame);
 

@@ -72,6 +72,11 @@ impl Display for TypeSymbol {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct TypeHint {
+    pub sym: TypeSymbol,
+    pub args: Vec<TypeHint>
+}
 // TODO: Define TypeHint.
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

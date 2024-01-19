@@ -24,6 +24,7 @@ use crate::ast::SymbolWithType;
 use crate::ast::TestInfo;
 use crate::ast::ToplevelExpression;
 use crate::ast::ToplevelItem;
+use crate::ast::TypeHint;
 use crate::ast::TypeName;
 use crate::ast::TypeSymbol;
 use crate::ast::VariantInfo;
@@ -770,6 +771,25 @@ fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError>
         name: TypeName { name: name.name.0 },
         position: name.pos,
     })
+}
+
+fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, ParseError> {
+    if !next_token_is(tokens, "<") {
+        return Ok(vec![]);
+    }
+
+    require_token(tokens, "<")?;
+    let args = todo!();
+    require_token(tokens, ">")?;
+
+    Ok(args)
+}
+
+fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
+    let sym = parse_type_symbol(tokens)?;
+    let args = parse_type_arguments(tokens)?;
+
+    Ok(TypeHint { sym, args })
 }
 
 fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeSymbol>, ParseError> {

@@ -146,6 +146,7 @@ fn parse_list_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressi
 
 fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let fun_keyword = require_token(tokens, "fun")?;
+    let type_params = parse_type_params(tokens)?;
 
     let params = parse_parameters(tokens)?;
     let return_type = parse_type_annotation(tokens)?;
@@ -167,6 +168,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
             body,
             doc_comment: None,
             name: None,
+            type_params,
             return_type,
         }),
     ))
@@ -1026,6 +1028,7 @@ fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Defin
 fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
     let doc_comment = parse_doc_comment(&fun_token);
+    let type_params = parse_type_params(tokens)?;
 
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens)?;
@@ -1063,6 +1066,7 @@ fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, Parse
         src_string: src_string.clone(),
         doc_comment,
         name: Some(name.clone()),
+        type_params,
         params,
         body,
         return_type,
@@ -1084,6 +1088,7 @@ fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, Parse
 fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     let fun_token = require_token(tokens, "fun")?;
     let doc_comment = parse_doc_comment(&fun_token);
+    let type_params = parse_type_params(tokens)?;
 
     let name = parse_symbol(tokens)?;
 
@@ -1112,6 +1117,7 @@ fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, Par
                 src_string,
                 doc_comment,
                 name: Some(name),
+                type_params,
                 params,
                 body,
                 return_type,
@@ -1808,6 +1814,7 @@ mod tests {
                             },
                             name: SymbolName("foo".into())
                         }),
+                        type_params: vec![],
                         params: vec![],
                         body: Block {
                             open_brace: Position {

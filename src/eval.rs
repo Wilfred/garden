@@ -352,7 +352,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             Definition_::Enum(enum_info) => {
                 // Add the enum definition to the type environment.
                 env.types
-                    .insert(enum_info.name.name.clone(), Type::Enum(enum_info.clone()));
+                    .insert(enum_info.name_sym.name.clone(), Type::Enum(enum_info.clone()));
 
                 // Add the values in the enum to the value environment.
                 for (idx, variant_sym) in enum_info.variants.iter().enumerate() {
@@ -361,11 +361,11 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     // current enum).
                     env.set_with_file_scope(
                         &variant_sym.name_sym.name,
-                        Value::Enum(enum_info.name.name.clone(), idx, None),
+                        Value::Enum(enum_info.name_sym.name.clone(), idx, None),
                     );
                 }
 
-                let name_as_sym = SymbolName(enum_info.name.name.name.clone());
+                let name_as_sym = SymbolName(enum_info.name_sym.name.name.clone());
                 new_syms.push(name_as_sym);
             }
         }

@@ -693,6 +693,7 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
     let enum_token = require_token(tokens, "enum")?;
     let doc_comment = parse_doc_comment(&enum_token);
     let name = parse_type_hint(tokens)?;
+    let type_params = parse_type_params(tokens)?;
 
     let _open_brace = require_token(tokens, "{")?;
 
@@ -718,6 +719,7 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
             src_string,
             doc_comment,
             name,
+            type_params,
             variants,
         }),
     ))
@@ -773,6 +775,7 @@ fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError>
     })
 }
 
+/// Parse (possibly nested type arguments), e.g. `<Int, T, Option<String>>`.
 fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, ParseError> {
     if !next_token_is(tokens, "<") {
         return Ok(vec![]);
@@ -817,6 +820,53 @@ fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, Parse
     require_token(tokens, ">")?;
 
     Ok(args)
+}
+
+/// Parse type parameters for this definition, e.g. `<T, E>`.
+fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseError> {
+    if !next_token_is(tokens, "<") {
+        return Ok(vec![]);
+    }
+
+    require_token(tokens, "<")?;
+
+    let mut params = vec![];
+    loop {
+        if next_token_is(tokens, ">") {
+            break;
+        }
+
+        let arg = parse_type_symbol(tokens)?;
+        params.push(arg);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == ">" {
+                break;
+            } else {
+                return Err(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `>` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+            }
+        } else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
+                ),
+            });
+        }
+    }
+
+    require_token(tokens, ">")?;
+
+    Ok(params)
 }
 
 fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {

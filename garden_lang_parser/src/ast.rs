@@ -252,6 +252,7 @@ pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name: TypeHint,
+    pub type_params: Vec<TypeSymbol>,
     pub variants: Vec<VariantInfo>,
 }
 

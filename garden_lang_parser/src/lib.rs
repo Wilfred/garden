@@ -5,8 +5,6 @@ pub mod lex;
 use std::collections::HashSet;
 use std::path::Path;
 
-use ast::TypeSymbol;
-
 use crate::ast::BinaryOperatorKind;
 use crate::ast::Block;
 use crate::ast::Definition;
@@ -27,6 +25,7 @@ use crate::ast::TestInfo;
 use crate::ast::ToplevelExpression;
 use crate::ast::ToplevelItem;
 use crate::ast::TypeName;
+use crate::ast::TypeSymbol;
 use crate::ast::VariantInfo;
 use crate::diagnostics::ErrorMessage;
 use crate::lex::lex;
@@ -692,7 +691,7 @@ fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError
 fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
     let enum_token = require_token(tokens, "enum")?;
     let doc_comment = parse_doc_comment(&enum_token);
-    let name = parse_type_name(tokens)?;
+    let name = parse_type_symbol(tokens)?;
 
     let _open_brace = require_token(tokens, "{")?;
 
@@ -765,7 +764,7 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
     ))
 }
 
-fn parse_type_name(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError> {
+fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError> {
     let name = parse_symbol(tokens)?;
     Ok(TypeSymbol {
         name: TypeName { name: name.name.0 },
@@ -777,7 +776,7 @@ fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeSymbol>,
     if let Some(token) = tokens.peek() {
         if token.text == ":" {
             tokens.pop();
-            return Ok(Some(parse_type_name(tokens)?));
+            return Ok(Some(parse_type_symbol(tokens)?));
         }
     }
 

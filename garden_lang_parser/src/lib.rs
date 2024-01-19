@@ -779,7 +779,41 @@ fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, Parse
     }
 
     require_token(tokens, "<")?;
-    let args = todo!();
+
+    let mut args = vec![];
+    loop {
+        if next_token_is(tokens, ">") {
+            break;
+        }
+
+        let arg = parse_type_hint(tokens)?;
+        args.push(arg);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == ">" {
+                break;
+            } else {
+                return Err(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `>` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+            }
+        } else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
+                ),
+            });
+        }
+    }
+
     require_token(tokens, ">")?;
 
     Ok(args)

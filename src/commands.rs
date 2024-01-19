@@ -199,7 +199,7 @@ fn describe_type(type_: &Type) -> String {
             }
 
             let enum_name = &enum_info.name;
-            description.push_str(&format!("enum {enum_name} {{\n",));
+            description.push_str(&format!("enum {} {{\n", &enum_name.sym));
             for variant_sym in &enum_info.variants {
                 description.push_str(&format!("   {},\n", variant_sym));
             }

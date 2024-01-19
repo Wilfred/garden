@@ -184,7 +184,7 @@ fn free_variable_symbol(symbol: &Symbol, info: &mut VarInfo, env: &Env) {
         // Variable is free.
         if !info.free.contains_key(&symbol.name) {
             // Only record the first occurrence as free.
-            info.free.insert(symbol.name.clone(), symbol.pos.clone());
+            info.free.insert(symbol.name.clone(), symbol.position.clone());
         }
     }
 }

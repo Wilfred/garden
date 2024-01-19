@@ -96,7 +96,7 @@ impl SymbolName {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Symbol {
-    pub pos: Position,
+    pub position: Position,
     pub name: SymbolName,
 }
 

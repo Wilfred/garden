@@ -591,7 +591,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
                 var_name, var_name
             )),
             restore_values: vec![],
-            error_position: variable.pos.clone(),
+            error_position: variable.position.clone(),
         });
     }
 
@@ -617,7 +617,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
                 var_name, var_name
             )),
             restore_values: vec![],
-            error_position: variable.pos.clone(),
+            error_position: variable.position.clone(),
         });
     }
 
@@ -1620,7 +1620,7 @@ fn eval_method_call(
                         meth_name.name, receiver_type_name
                     )),
                     restore_values: saved_values,
-                    error_position: meth_name.pos.clone(),
+                    error_position: meth_name.position.clone(),
                 });
             }
         }
@@ -1633,7 +1633,7 @@ fn eval_method_call(
             return Err(ErrorInfo {
                 message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name)),
                 restore_values: saved_values,
-                error_position: meth_name.pos.clone(),
+                error_position: meth_name.position.clone(),
             });
         }
     };
@@ -2240,7 +2240,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         );
 
                         return Err(EvalError::ResumableError(
-                            name_sym.pos.clone(),
+                            name_sym.position.clone(),
                             ErrorMessage(format!(
                                 "Undefined variable: {}.{}",
                                 name_sym.name, suggestion
@@ -2600,7 +2600,7 @@ fn eval_match_cases(
                 "No such value defined for pattern `{}`",
                 pattern.symbol.name
             ));
-            return Err(EvalError::ResumableError(pattern.symbol.pos.clone(), msg));
+            return Err(EvalError::ResumableError(pattern.symbol.position.clone(), msg));
         };
 
         let Value::Enum(pattern_type_name, pattern_variant_idx, _) = value else {
@@ -2609,7 +2609,7 @@ fn eval_match_cases(
                 "Patterns must be enum variants, got `{}`",
                 value.display(env)
             ));
-            return Err(EvalError::ResumableError(pattern.symbol.pos.clone(), msg));
+            return Err(EvalError::ResumableError(pattern.symbol.position.clone(), msg));
         };
 
         if value_type_name == pattern_type_name && value_variant_idx == pattern_variant_idx {
@@ -2708,7 +2708,7 @@ mod tests {
             },
             Expression_::Let(
                 Symbol {
-                    pos: Position {
+                    position: Position {
                         start_offset: 0,
                         end_offset: 0,
                         line_number: 0,
@@ -2737,7 +2737,7 @@ mod tests {
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Variable(Symbol {
-                pos: Position {
+                position: Position {
                     start_offset: 0,
                     end_offset: 0,
                     line_number: 0,

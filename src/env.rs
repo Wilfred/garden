@@ -52,7 +52,7 @@ impl Default for Env {
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
-                    pos: Position::todo(),
+                    position: Position::todo(),
                     name: SymbolName("len".to_owned()),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen),
@@ -72,7 +72,7 @@ impl Default for Env {
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
-                    pos: Position::todo(),
+                    position: Position::todo(),
                     name: SymbolName("substring".to_owned()),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring),
@@ -92,7 +92,7 @@ impl Default for Env {
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
-                    pos: Position::todo(),
+                    position: Position::todo(),
                     name: SymbolName("concat".to_owned()),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringConcat),
@@ -121,7 +121,7 @@ impl Default for Env {
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
-                    pos: Position::todo(),
+                    position: Position::todo(),
                     name: SymbolName("append".to_owned()),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend),
@@ -141,7 +141,7 @@ impl Default for Env {
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
-                    pos: Position::todo(),
+                    position: Position::todo(),
                     name: SymbolName("len".to_owned()),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen),
@@ -161,7 +161,7 @@ impl Default for Env {
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
-                    pos: Position::todo(),
+                    position: Position::todo(),
                     name: SymbolName("get".to_owned()),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet),

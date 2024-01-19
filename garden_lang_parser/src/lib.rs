@@ -117,7 +117,7 @@ fn parse_integer(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
 fn parse_variable_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
     Ok(Expression(
-        variable.pos.clone(),
+        variable.position.clone(),
         Expression_::Variable(variable),
     ))
 }
@@ -771,7 +771,7 @@ fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError>
     let name = parse_symbol(tokens)?;
     Ok(TypeSymbol {
         name: TypeName { name: name.name.0 },
-        position: name.pos,
+        position: name.position,
     })
 }
 
@@ -946,7 +946,7 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
 
         if seen.contains(param_name) {
             return Err(ParseError::Invalid {
-                position: param.symbol.pos.clone(),
+                position: param.symbol.position.clone(),
                 message: ErrorMessage(format!("Duplicate parameter: `{}`", param_name)),
                 // TODO: report the position of the previous parameter too.
                 additional: vec![],
@@ -1148,7 +1148,7 @@ fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
     }
 
     Ok(Symbol {
-        pos: variable_token.position,
+        position: variable_token.position,
         name: SymbolName(variable_token.text.to_string()),
     })
 }
@@ -1175,7 +1175,7 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let _ = require_token(tokens, ";")?;
 
     Ok(Expression(
-        variable.pos.clone(),
+        variable.position.clone(),
         Expression_::Assign(variable, Box::new(expr)),
     ))
 }
@@ -1336,7 +1336,7 @@ mod tests {
                     path: PathBuf::from("__test.gdn")
                 },
                 Expression_::Variable(Symbol {
-                    pos: Position {
+                    position: Position {
                         start_offset: 0,
                         end_offset: 7,
                         line_number: 0,
@@ -1363,7 +1363,7 @@ mod tests {
                 },
                 Expression_::Let(
                     Symbol {
-                        pos: Position {
+                        position: Position {
                             start_offset: 4,
                             end_offset: 5,
                             line_number: 0,
@@ -1400,7 +1400,7 @@ mod tests {
                 },
                 Expression_::Let(
                     Symbol {
-                        pos: Position {
+                        position: Position {
                             start_offset: 4,
                             end_offset: 5,
                             line_number: 0,
@@ -1475,7 +1475,7 @@ mod tests {
                             path: path.clone()
                         },
                         Expression_::Variable(Symbol {
-                            pos: Position {
+                            position: Position {
                                 start_offset: 4,
                                 end_offset: 8,
                                 line_number: 0,
@@ -1542,7 +1542,7 @@ mod tests {
                             path: path.clone()
                         },
                         Expression_::Variable(Symbol {
-                            pos: Position {
+                            position: Position {
                                 start_offset: 4,
                                 end_offset: 5,
                                 line_number: 0,
@@ -1595,7 +1595,7 @@ mod tests {
                                         path: path.clone()
                                     },
                                     Expression_::Variable(Symbol {
-                                        pos: Position {
+                                        position: Position {
                                             start_offset: 19,
                                             end_offset: 20,
                                             line_number: 0,
@@ -1651,7 +1651,7 @@ mod tests {
                             path: path.clone()
                         },
                         Expression_::Variable(Symbol {
-                            pos: Position {
+                            position: Position {
                                 start_offset: 4,
                                 end_offset: 8,
                                 line_number: 0,
@@ -1702,7 +1702,7 @@ mod tests {
                         path: PathBuf::from("__test.gdn")
                     },
                     Expression_::Variable(Symbol {
-                        pos: Position {
+                        position: Position {
                             start_offset: 7,
                             end_offset: 8,
                             line_number: 0,
@@ -1745,7 +1745,7 @@ mod tests {
                                     path: PathBuf::from("__test.gdn")
                                 },
                                 Expression_::Variable(Symbol {
-                                    pos: Position {
+                                    position: Position {
                                         start_offset: 0,
                                         end_offset: 3,
                                         line_number: 0,
@@ -1785,7 +1785,7 @@ mod tests {
                 },
                 Definition_::Fun(
                     Symbol {
-                        pos: Position {
+                        position: Position {
                             start_offset: 22,
                             end_offset: 25,
                             line_number: 2,
@@ -1800,7 +1800,7 @@ mod tests {
                         },
                         doc_comment: Some("Hello\nWorld".into()),
                         name: Some(Symbol {
-                            pos: Position {
+                            position: Position {
                                 start_offset: 22,
                                 end_offset: 25,
                                 line_number: 2,
@@ -1874,7 +1874,7 @@ mod tests {
                     },
                     Expression_::Let(
                         Symbol {
-                            pos: Position {
+                            position: Position {
                                 start_offset: 4,
                                 end_offset: 5,
                                 line_number: 0,

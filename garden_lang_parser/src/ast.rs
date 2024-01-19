@@ -251,7 +251,7 @@ impl Display for VariantInfo {
 pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
-    pub name: TypeHint,
+    pub name: TypeSymbol,
     pub type_params: Vec<TypeSymbol>,
     pub variants: Vec<VariantInfo>,
 }

@@ -410,8 +410,18 @@ the user entering a value in the *garden* buffer."
 
 (defvar garden-mode-syntax-table
   (let ((table (make-syntax-table)))
+    ;; Operators. Treat angle-brackets as operators so we don't try to
+    ;; pair them.
+    ;;
+    ;; TODO: Follow the pattern in rust-mode for both <> as delimiters
+    ;; and as operators.
+    (dolist (i '(?+ ?- ?* ?/ ?< ?>))
+      (modify-syntax-entry i "." table))
+
+    ;; Single-line comments.
     (modify-syntax-entry ?/ ". 12" table)
     (modify-syntax-entry ?\n ">" table)
+
     ;; TODO: # is only a comment at the beginning of a file.
     (modify-syntax-entry ?\# "<" table)
     table))

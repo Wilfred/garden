@@ -447,6 +447,9 @@ the user entering a value in the *garden* buffer."
     map)
   "Keymap for `garden-mode'.")
 
+;; If you want to toggle to garden everywhere, use this:
+;; (global-set-key (kbd "C-c C-z") #'garden-toggle-session)
+
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.
 

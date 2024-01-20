@@ -20,7 +20,7 @@ use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
 use crate::values::{
-    bool_value, result_err_value, result_ok_value, type_representation, unit_value,
+    bool_value, result_err_value, result_ok_value, runtime_type, type_representation, unit_value,
     BuiltinFunctionKind, Value,
 };
 use garden_lang_parser::ast::{
@@ -351,8 +351,10 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             }
             Definition_::Enum(enum_info) => {
                 // Add the enum definition to the type environment.
-                env.types
-                    .insert(enum_info.name_sym.name.clone(), Type::Enum(enum_info.clone()));
+                env.types.insert(
+                    enum_info.name_sym.name.clone(),
+                    Type::Enum(enum_info.clone()),
+                );
 
                 // Add the values in the enum to the value environment.
                 for (idx, variant_sym) in enum_info.variants.iter().enumerate() {
@@ -400,7 +402,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                type_representation(value).name,
+                runtime_type(value),
             ),
         });
         return;
@@ -638,7 +640,7 @@ fn format_type_error(expected: &TypeName, value: &Value, env: &Env) -> ErrorMess
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.name,
-        type_representation(value).name,
+        runtime_type(value),
         value.display(env)
     ))
 }
@@ -2571,7 +2573,7 @@ fn eval_match_cases(
     let Value::Enum(value_type_name, value_variant_idx, value_payload) = scrutinee_value else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            type_representation(&scrutinee_value).name,
+            runtime_type(&scrutinee_value),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
@@ -2600,7 +2602,10 @@ fn eval_match_cases(
                 "No such value defined for pattern `{}`",
                 pattern.symbol.name
             ));
-            return Err(EvalError::ResumableError(pattern.symbol.position.clone(), msg));
+            return Err(EvalError::ResumableError(
+                pattern.symbol.position.clone(),
+                msg,
+            ));
         };
 
         let Value::Enum(pattern_type_name, pattern_variant_idx, _) = value else {
@@ -2609,7 +2614,10 @@ fn eval_match_cases(
                 "Patterns must be enum variants, got `{}`",
                 value.display(env)
             ));
-            return Err(EvalError::ResumableError(pattern.symbol.position.clone(), msg));
+            return Err(EvalError::ResumableError(
+                pattern.symbol.position.clone(),
+                msg,
+            ));
         };
 
         if value_type_name == pattern_type_name && value_variant_idx == pattern_variant_idx {

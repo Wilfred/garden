@@ -74,6 +74,66 @@ pub(crate) fn result_err_value(v: Value) -> Value {
     )
 }
 
+pub(crate) struct RuntimeType {
+    name: TypeName,
+    args: Vec<RuntimeType>,
+}
+
+impl Display for RuntimeType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.args.is_empty() {
+            write!(f, "{}", self.name.name)
+        } else {
+            write!(
+                f,
+                "{}<{}>",
+                self.name.name,
+                self.args
+                    .iter()
+                    .map(|arg| format!("{}", arg))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        }
+    }
+}
+
+pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
+    match value {
+        Value::Integer(_) => RuntimeType {
+            name: TypeName {
+                name: "Int".to_owned(),
+            },
+            args: vec![],
+        },
+        Value::Fun(_, _) | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => RuntimeType {
+            name: TypeName {
+                name: "Fun".to_owned(),
+            },
+            // TODO: Fun should be a parameterized type.
+            args: vec![],
+        },
+        Value::String(_) => RuntimeType {
+            name: TypeName {
+                name: "String".to_owned(),
+            },
+            args: vec![],
+        },
+        Value::List(_) => RuntimeType {
+            name: TypeName {
+                name: "List".to_owned(),
+            },
+            // TODO
+            args: vec![runtime_type(&Value::Integer(0))],
+        },
+        Value::Enum(name, _, _) => RuntimeType {
+            name: name.clone(),
+            // TODO
+            args: vec![],
+        },
+    }
+}
+
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
         name: match value {

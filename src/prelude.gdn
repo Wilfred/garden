@@ -30,7 +30,7 @@ enum Result<T, E> {
 // Unwrap a value that is `Ok`, or terminate with an error.
 //
 // TODO: support generic types in return position.
-fun (self: Result<T, E>) or_error() {
+fun<T> (self: Result<T, E>) or_error() {
     match (self) {
         Ok(v) => v
         Err(e) => error(string_repr(e))

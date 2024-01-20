@@ -1,3 +1,6 @@
+#![warn(clippy::todo)]
+#![warn(clippy::dbg_macro)]
+
 pub mod ast;
 pub mod diagnostics;
 pub mod lex;

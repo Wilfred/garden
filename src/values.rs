@@ -79,6 +79,35 @@ pub(crate) struct RuntimeType {
     args: Vec<RuntimeType>,
 }
 
+impl RuntimeType {
+    fn no_value() -> Self {
+        RuntimeType {
+            name: TypeName {
+                name: "NoValue".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
+    fn empty_list() -> Self {
+        RuntimeType {
+            name: TypeName {
+                name: "List".to_owned(),
+            },
+            args: vec![Self::no_value()],
+        }
+    }
+
+    fn string_list() -> Self {
+        RuntimeType {
+            name: TypeName {
+                name: "List".to_owned(),
+            },
+            args: vec![Self::no_value()],
+        }
+    }
+}
+
 impl Display for RuntimeType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.args.is_empty() {
@@ -124,12 +153,12 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
                 name: "List".to_owned(),
             },
             // TODO
-            args: vec![runtime_type(&Value::Integer(0))],
+            args: vec![RuntimeType::no_value()],
         },
         Value::Enum(name, _, _) => RuntimeType {
             name: name.clone(),
             // TODO
-            args: vec![],
+            args: vec![RuntimeType::no_value()],
         },
     }
 }

@@ -74,13 +74,14 @@ pub(crate) fn result_err_value(v: Value) -> Value {
     )
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct RuntimeType {
     name: TypeName,
     args: Vec<RuntimeType>,
 }
 
 impl RuntimeType {
-    fn no_value() -> Self {
+    pub(crate) fn no_value() -> Self {
         RuntimeType {
             name: TypeName {
                 name: "NoValue".to_owned(),
@@ -89,22 +90,39 @@ impl RuntimeType {
         }
     }
 
-    fn empty_list() -> Self {
+    pub(crate) fn int() -> Self {
         RuntimeType {
             name: TypeName {
-                name: "List".to_owned(),
+                name: "Int".to_owned(),
             },
-            args: vec![Self::no_value()],
+            args: vec![],
         }
     }
 
-    fn string_list() -> Self {
+    pub(crate) fn string() -> Self {
+        RuntimeType {
+            name: TypeName {
+                name: "String".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
+    pub(crate) fn list(element_type: RuntimeType) -> Self {
         RuntimeType {
             name: TypeName {
                 name: "List".to_owned(),
             },
-            args: vec![Self::no_value()],
+            args: vec![element_type],
         }
+    }
+
+    pub(crate) fn empty_list() -> Self {
+        Self::list(Self::no_value())
+    }
+
+    pub(crate) fn string_list() -> Self {
+        Self::list(Self::string())
     }
 }
 
@@ -129,12 +147,7 @@ impl Display for RuntimeType {
 
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
-        Value::Integer(_) => RuntimeType {
-            name: TypeName {
-                name: "Int".to_owned(),
-            },
-            args: vec![],
-        },
+        Value::Integer(_) => RuntimeType::int(),
         Value::Fun(_, _) | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => RuntimeType {
             name: TypeName {
                 name: "Fun".to_owned(),
@@ -142,12 +155,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             // TODO: Fun should be a parameterized type.
             args: vec![],
         },
-        Value::String(_) => RuntimeType {
-            name: TypeName {
-                name: "String".to_owned(),
-            },
-            args: vec![],
-        },
+        Value::String(_) => RuntimeType::string(),
         Value::List(_) => RuntimeType {
             name: TypeName {
                 name: "List".to_owned(),

@@ -77,7 +77,6 @@ pub struct TypeHint {
     pub sym: TypeSymbol,
     pub args: Vec<TypeHint>,
 }
-// TODO: Define TypeHint.
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName(pub String);

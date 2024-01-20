@@ -1013,12 +1013,22 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
 }
 
 fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    match tokens.peek_two() {
-        Some((_, second_token)) => {
-            if second_token.text == "(" {
-                parse_method(src, tokens)
+    let fun_token = require_token(tokens, "fun")?;
+    let type_params = parse_type_params(tokens)?;
+
+    // We can distinguish between functions and methods based on the
+    // token after the type parameters.
+    //
+    // ```
+    // fun<T> i_am_a_fun() {}
+    // fun<T> (self: String) i_am_a_method() {}
+    // ```
+    match tokens.peek() {
+        Some(token) => {
+            if token.text == "(" {
+                parse_method(src, tokens, fun_token, type_params)
             } else {
-                parse_function(src, tokens)
+                parse_function(src, tokens, fun_token, type_params)
             }
         }
         None => Err(ParseError::Incomplete {
@@ -1028,10 +1038,13 @@ fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Defin
     }
 }
 
-fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    let fun_token = require_token(tokens, "fun")?;
+fn parse_method(
+    src: &str,
+    tokens: &mut TokenStream,
+    fun_token: Token,
+    type_params: Vec<TypeSymbol>,
+) -> Result<Definition, ParseError> {
     let doc_comment = parse_doc_comment(&fun_token);
-    let type_params = parse_type_params(tokens)?;
 
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens)?;
@@ -1088,10 +1101,13 @@ fn parse_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, Parse
     ))
 }
 
-fn parse_function(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    let fun_token = require_token(tokens, "fun")?;
+fn parse_function(
+    src: &str,
+    tokens: &mut TokenStream,
+    fun_token: Token,
+    type_params: Vec<TypeSymbol>,
+) -> Result<Definition, ParseError> {
     let doc_comment = parse_doc_comment(&fun_token);
-    let type_params = parse_type_params(tokens)?;
 
     let name = parse_symbol(tokens)?;
 

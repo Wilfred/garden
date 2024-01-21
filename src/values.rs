@@ -19,8 +19,8 @@ pub(crate) enum Value {
     BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>),
     /// A string value.
     String(String),
-    /// A list value.
-    List(Vec<Value>),
+    /// A list value, along with the type of its elements.
+    List(Vec<Value>, RuntimeType),
     // A value in a user-defined enum.
     Enum(TypeName, usize, Option<Box<Value>>),
 }
@@ -156,12 +156,11 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             args: vec![],
         },
         Value::String(_) => RuntimeType::string(),
-        Value::List(_) => RuntimeType {
+        Value::List(_, element_type) => RuntimeType {
             name: TypeName {
                 name: "List".to_owned(),
             },
-            // TODO
-            args: vec![RuntimeType::no_value()],
+            args: vec![element_type.clone()],
         },
         Value::Enum(name, _, _) => RuntimeType {
             name: name.clone(),
@@ -179,7 +178,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::Closure(_, _) => "Fun",
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
-            Value::List(_) => "List",
+            Value::List(_, _) => "List",
             Value::Enum(name, _, _) => &name.name,
         }
         .to_owned(),
@@ -227,7 +226,7 @@ impl Value {
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind, _) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),
-            Value::List(items) => {
+            Value::List(items, _) => {
                 let mut s = String::new();
 
                 s.push('[');

@@ -21,7 +21,7 @@ use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
 use crate::values::{
     bool_value, result_err_value, result_ok_value, runtime_type, type_representation, unit_value,
-    BuiltinFunctionKind, Value,
+    BuiltinFunctionKind, RuntimeType, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
@@ -431,7 +431,8 @@ fn is_builtin_stub(fun_info: &FunInfo) -> bool {
 // an error otherwise.
 fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
     match value {
-        Value::List(items) => {
+        Value::List(items, _runtime_type) => {
+            // TODO: check runtime_type instead.
             let mut res: Vec<String> = vec![];
             for item in items {
                 match item {
@@ -1237,13 +1238,13 @@ fn eval_builtin_call(
                         }
                     }
 
-                    Value::List(items)
+                    Value::List(items, RuntimeType::string_list())
                 }
                 Err(_) => {
                     // TODO: list_directory() should return a Result
                     // rather than silently returning an empty list on
                     // failure.
-                    Value::List(vec![])
+                    Value::List(vec![], RuntimeType::empty_list())
                 }
             };
 
@@ -1713,10 +1714,15 @@ fn eval_builtin_method_call(
             )?;
 
             match &receiver_value {
-                Value::List(items) => {
+                Value::List(items, runtime_type) => {
                     let mut new_items = items.clone();
                     new_items.push(arg_values[0].clone());
-                    stack_frame.evalled_values.push(Value::List(new_items));
+
+                    // TODO: check that the new value has the same
+                    // type as the existing list items.
+                    stack_frame
+                        .evalled_values
+                        .push(Value::List(new_items, runtime_type.clone()));
                 }
                 v => {
                     let mut saved_values = vec![];
@@ -1750,7 +1756,7 @@ fn eval_builtin_method_call(
             )?;
 
             match (&receiver_value, &arg_values[0]) {
-                (Value::List(items), Value::Integer(i)) => {
+                (Value::List(items, _element_type), Value::Integer(i)) => {
                     let index: usize = if *i >= items.len() as i64 || *i < 0 {
                         let mut saved_values = vec![];
                         for value in arg_values.iter().rev() {
@@ -1824,7 +1830,7 @@ fn eval_builtin_method_call(
             )?;
 
             match &receiver_value {
-                Value::List(items) => {
+                Value::List(items, _) => {
                     stack_frame
                         .evalled_values
                         .push(Value::Integer(items.len() as i64));
@@ -2206,13 +2212,21 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::ListLiteral(items) => {
                     if done_children {
                         let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
+                        let mut element_type = RuntimeType::no_value();
+
                         for _ in 0..items.len() {
-                            list_values.push(stack_frame.evalled_values.pop().expect(
+                            let element = stack_frame.evalled_values.pop().expect(
                                 "Value stack should have sufficient items for the list literal",
-                            ));
+                            );
+                            // TODO: check that all elements are of a compatible type.
+                            // [1, None] should be an error.
+                            element_type = runtime_type(&element);
+                            list_values.push(element);
                         }
 
-                        stack_frame.evalled_values.push(Value::List(list_values));
+                        stack_frame
+                            .evalled_values
+                            .push(Value::List(list_values, element_type));
                     } else {
                         stack_frame
                             .exprs_to_eval
@@ -2801,7 +2815,10 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::List(vec![Value::Integer(3), Value::Integer(12)])
+            Value::List(
+                vec![Value::Integer(3), Value::Integer(12)],
+                RuntimeType::list(RuntimeType::int())
+            )
         );
     }
 
@@ -2872,11 +2889,10 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::List(vec![
-                Value::Integer(1),
-                Value::Integer(2),
-                Value::Integer(3)
-            ])
+            Value::List(
+                vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
+                RuntimeType::list(RuntimeType::int())
+            )
         );
     }
 

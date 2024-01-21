@@ -542,7 +542,8 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
                 match &method_info.kind {
-                    MethodKind::BuiltinMethod(_) => Ok(None),
+                    // TODO: Offer source of stub for built-in methods.
+                    MethodKind::BuiltinMethod(_, _) => Ok(None),
                     MethodKind::UserDefinedMethod(fun_info) => {
                         Ok(Some(fun_info.src_string.clone()))
                     }
@@ -564,6 +565,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
     } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
         match value {
             Value::Fun(_, fun_info) => Ok(Some(fun_info.src_string.clone())),
+            // TODO: Offer source of stub for built-in functions.
             _ => Ok(None),
         }
     } else {

@@ -334,6 +334,11 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 new_syms.push(name_sym.name.clone());
             }
             Definition_::Method(meth_info) => {
+                // if is_builtin_stub(&meth_info.fun_info) {
+                //     update_builtin_fun_info(fun_info, env, &mut warnings);
+                //     continue;
+                // }
+
                 // TODO: check that types in definitions are defined, and emit
                 // warnings otherwise.
                 //
@@ -1642,7 +1647,7 @@ fn eval_method_call(
     };
 
     let fun_info = match &receiver_method.kind {
-        MethodKind::BuiltinMethod(kind) => {
+        MethodKind::BuiltinMethod(kind, _) => {
             eval_builtin_method_call(
                 env,
                 *kind,

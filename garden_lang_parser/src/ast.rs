@@ -268,7 +268,7 @@ pub enum BuiltinMethodKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum MethodKind {
-    BuiltinMethod(BuiltinMethodKind),
+    BuiltinMethod(BuiltinMethodKind, Option<FunInfo>),
     UserDefinedMethod(FunInfo),
 }
 
@@ -292,7 +292,7 @@ pub struct MethodInfo {
 impl MethodInfo {
     pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
-            MethodKind::BuiltinMethod(kind) => match kind {
+            MethodKind::BuiltinMethod(kind, _) => match kind {
                 BuiltinMethodKind::ListAppend => Some(
                     "Return a new list with the value added to the end.
 

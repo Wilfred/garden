@@ -24,8 +24,8 @@ use crate::values::{
     BuiltinFunctionKind, RuntimeType, Value,
 };
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodKind, Pattern, Position,
-    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
+    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
+    Position, SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 
@@ -334,10 +334,12 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 new_syms.push(name_sym.name.clone());
             }
             Definition_::Method(meth_info) => {
-                // if is_builtin_stub(&meth_info.fun_info) {
-                //     update_builtin_fun_info(fun_info, env, &mut warnings);
-                //     continue;
-                // }
+                if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
+                    if is_builtin_stub(fun_info) {
+                        update_builtin_meth_info(meth_info, fun_info, env, &mut warnings);
+                        continue;
+                    }
+                }
 
                 // TODO: check that types in definitions are defined, and emit
                 // warnings otherwise.
@@ -385,6 +387,50 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
         tests_passed: 0,
         tests_failed: 0,
     }
+}
+
+fn update_builtin_meth_info(
+    meth_info: &MethodInfo,
+    fun_info: &FunInfo,
+    env: &mut Env,
+    warnings: &mut Vec<Warning>,
+) {
+    let type_name = &meth_info.receiver_type.sym.name;
+    let Some(type_methods) = env.methods.get_mut(type_name) else {
+        warnings.push(Warning {
+            message: format!(
+                "Tried to update a built-in stub for a type {} that doesn't exist.",
+                type_name
+            ),
+        });
+        return;
+    };
+
+    let Some(curr_meth_info) = type_methods.get_mut(&meth_info.name_sym.name) else {
+        warnings.push(Warning {
+            message: format!(
+                "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
+                meth_info.name_sym.name, type_name
+            ),
+        });
+        return;
+    };
+
+    let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
+        warnings.push(Warning {
+            message: format!(
+                // TODO: we need a better design principle around
+                // warning phrasing. It should probably always include
+                // an explanation of what will happen (in this case
+                // nothing).
+                "{}::{} is not a built-in method.",
+                type_name, meth_info.name_sym.name
+            ),
+        });
+        return;
+    };
+
+    curr_meth_info.kind = MethodKind::BuiltinMethod(*kind, Some(fun_info.clone()));
 }
 
 fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec<Warning>) {

@@ -22,6 +22,12 @@
 (defvar garden-executable
   "/home/wilfred/projects/garden/target/debug/garden")
 
+;; TODO: support evaluating snippets in comments, much like
+;;
+;; ;; (some-fun-call)|
+;;
+;; does in lisp. This could support backticks and triple backticks
+;; from comments.
 (defun garden-send ()
   (interactive)
   (let (start-pos end-pos)

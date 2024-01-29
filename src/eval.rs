@@ -2868,7 +2868,7 @@ mod tests {
             value,
             Value::List(
                 vec![Value::Integer(3), Value::Integer(12)],
-                RuntimeType::list(RuntimeType::int())
+                RuntimeType::int()
             )
         );
     }
@@ -2942,7 +2942,7 @@ mod tests {
             value,
             Value::List(
                 vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
-                RuntimeType::list(RuntimeType::int())
+                RuntimeType::int()
             )
         );
     }

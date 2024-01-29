@@ -55,7 +55,7 @@ impl Default for Env {
                     position: Position::todo(),
                     name: SymbolName("len".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None)
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
             },
         );
         string_methods.insert(
@@ -75,7 +75,7 @@ impl Default for Env {
                     position: Position::todo(),
                     name: SymbolName("substring".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None)
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
             },
         );
         string_methods.insert(
@@ -95,7 +95,7 @@ impl Default for Env {
                     position: Position::todo(),
                     name: SymbolName("concat".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringConcat, None)
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringConcat, None),
             },
         );
 
@@ -124,7 +124,7 @@ impl Default for Env {
                     position: Position::todo(),
                     name: SymbolName("append".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None)
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None),
             },
         );
         list_methods.insert(
@@ -144,7 +144,7 @@ impl Default for Env {
                     position: Position::todo(),
                     name: SymbolName("len".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None)
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None),
             },
         );
         list_methods.insert(
@@ -164,7 +164,7 @@ impl Default for Env {
                     position: Position::todo(),
                     name: SymbolName("get".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None)
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None),
             },
         );
 

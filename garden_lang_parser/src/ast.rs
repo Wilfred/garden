@@ -292,57 +292,9 @@ pub struct MethodInfo {
 impl MethodInfo {
     pub fn doc_comment(&self) -> Option<String> {
         match &self.kind {
-            MethodKind::BuiltinMethod(kind, _) => match kind {
-                BuiltinMethodKind::ListAppend => Some(
-                    "Return a new list with the value added to the end.
-
-```
-[10].append(11); // [10, 11]
-```"
-                    .to_owned(),
-                ),
-                BuiltinMethodKind::ListGet => Some(
-                    "Get the item in the list at the index specified.
-Errors if the index is less than 0 or greater than length - 1.
-
-```
-[4, 5, 6].get(1); // 5
-```"
-                    .to_owned(),
-                ),
-                BuiltinMethodKind::ListLen => Some(
-                    "Return the length of the list.
-
-```
-[10, 11, 12].len(); // 3
-```"
-                    .to_owned(),
-                ),
-                BuiltinMethodKind::StringConcat => Some(
-                    "Return a new string with the two string arguments concatenated.
-
-```
-\"foo\".concat(\"bar\"); // \"foobar\"
-```"
-                    .to_owned(),
-                ),
-                BuiltinMethodKind::StringLen => Some(
-                    "Return the number of characters (codepoints) in the string.
-
-```
-\"abc\".len(); // 3
-```"
-                    .to_owned(),
-                ),
-                BuiltinMethodKind::StringSubstring => Some(
-                    "Return the substring of the string between the indexes specified.
-
-```
-\"abcdef\".substring(1, 3); // \"bc\"
-```"
-                    .to_owned(),
-                ),
-            },
+            MethodKind::BuiltinMethod(_, fun_info) => {
+                fun_info.as_ref().and_then(|fi| fi.doc_comment.clone())
+            }
             MethodKind::UserDefinedMethod(fun_info) => fun_info.doc_comment.clone(),
         }
     }

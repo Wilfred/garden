@@ -335,17 +335,17 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
                     if is_builtin_stub(fun_info) {
                         update_builtin_meth_info(meth_info, fun_info, env, &mut warnings);
-                        continue;
+                    } else {
+                        // TODO: check that types in definitions are defined, and emit
+                        // warnings otherwise.
+                        //
+                        // ```
+                        // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
+                        // ```
+                        env.add_method(meth_info);
                     }
                 }
 
-                // TODO: check that types in definitions are defined, and emit
-                // warnings otherwise.
-                //
-                // ```
-                // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
-                // ```
-                env.add_method(meth_info);
                 new_syms.push(meth_info.name_sym.name.clone());
             }
             Definition_::Test(test) => {

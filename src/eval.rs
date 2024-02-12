@@ -321,7 +321,6 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 if is_builtin_stub(fun_info) {
                     // TODO: support this for methods too.
                     update_builtin_fun_info(fun_info, env, &mut warnings);
-                    continue;
                 } else {
                     env.set_with_file_scope(
                         &name_sym.name,

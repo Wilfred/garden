@@ -64,6 +64,9 @@ enum Commands {
     /// Check the Garden program at the path specified for syntax
     /// issues.
     Check { path: PathBuf },
+    /// Parse the Garden program at the path specified and print the
+    /// AST.
+    DumpAst { path: PathBuf },
 }
 
 fn main() {
@@ -103,6 +106,51 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
+        Commands::DumpAst { path } => match std::fs::read(&path) {
+            Ok(src_bytes) => dump_ast(src_bytes, &path),
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+    }
+}
+
+fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
+    match String::from_utf8(src_bytes) {
+        Ok(src) => match parse_toplevel_items(path, &src) {
+            Ok(items) => {
+                for item in items {
+                    match item {
+                        garden_lang_parser::ast::ToplevelItem::Def(d) => {
+                            println!("{:#?}", d.2);
+                        }
+                        garden_lang_parser::ast::ToplevelItem::Expr(e) => {
+                            println!("{:#?}", e);
+                        }
+                    }
+                }
+            }
+            Err(ParseError::Invalid {
+                position,
+                message: e,
+                additional: _,
+            }) => {
+                eprintln!(
+                    "{}",
+                    &format_parse_error(
+                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &position,
+                        &SourceString { src, offset: 0 }
+                    )
+                );
+            }
+            Err(ParseError::Incomplete { message: e, .. }) => {
+                eprintln!("Parse error (incomplete input): {}", e.0);
+            }
+        },
+        Err(e) => {
+            eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
+        }
     }
 }
 

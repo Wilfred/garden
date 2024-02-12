@@ -376,12 +376,21 @@ the user entering a value in the *garden* buffer."
        'symbols)
      . font-lock-builtin-face)
 
+    ;; Assume names in CamelCase are types.
     (,(rx
        (seq
         (* "_")
         (any upper)
         (any lower)
         (* (or (syntax word) (syntax symbol)))))
+     . font-lock-type-face)
+
+    ;; For single uppercase characters, highlight them as types.
+    (,(rx
+       (seq
+        symbol-start
+        (any upper)
+        symbol-end))
      . font-lock-type-face)
 
     (,(rx

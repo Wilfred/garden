@@ -5,7 +5,7 @@ use std::{fmt::Display, path::PathBuf};
 use serde::{Deserialize, Serialize};
 
 /// A position is an offset into source code.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     /// The start of this position, relative to the start of the file.
     pub start_offset: usize,
@@ -15,6 +15,24 @@ pub struct Position {
     pub line_number: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
+}
+
+impl std::fmt::Debug for Position {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if std::env::var("VERBOSE").is_ok() {
+            f.debug_struct("Position")
+                .field("start_offset", &self.start_offset)
+                .field("end_offset", &self.end_offset)
+                .field("line_number", &self.line_number)
+                .finish()
+        } else {
+            if self.path == PathBuf::from("/position/todo") {
+                f.write_str("Position { TODO }")
+            } else {
+                f.write_str("Position { ... }")
+            }
+        }
+    }
 }
 
 impl Position {
@@ -40,13 +58,26 @@ impl Position {
 }
 
 /// An owned string of the source text associated with a definition.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct SourceString {
     /// The offset of this string into the defining file, at the time
     /// of evaluation.
     pub offset: usize,
     /// The string containing this definition.
     pub src: String,
+}
+
+impl std::fmt::Debug for SourceString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if std::env::var("VERBOSE").is_ok() {
+            f.debug_struct("SourceString")
+                .field("offset", &self.offset)
+                .field("src", &self.src)
+                .finish()
+        } else {
+            f.write_str("SourceString")
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

@@ -5,9 +5,7 @@ fun foo(): Unit {}
 // Fun(
 //     Symbol {
 //         position: Position { ... },
-//         name: SymbolName(
-//             "foo",
-//         ),
+//         name: foo,
 //     },
 //     FunInfo {
 //         src_string: SourceString,
@@ -15,9 +13,7 @@ fun foo(): Unit {}
 //         name: Some(
 //             Symbol {
 //                 position: Position { ... },
-//                 name: SymbolName(
-//                     "foo",
-//                 ),
+//                 name: foo,
 //             },
 //         ),
 //         type_params: [],
@@ -25,9 +21,7 @@ fun foo(): Unit {}
 //         return_type: Some(
 //             TypeHint {
 //                 sym: TypeSymbol {
-//                     name: TypeName {
-//                         name: "Unit",
-//                     },
+//                     name: Unit,
 //                     position: Position { ... },
 //                 },
 //                 args: [],

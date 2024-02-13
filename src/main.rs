@@ -275,4 +275,13 @@ mod tests {
         cmd.arg("run").arg("sample_programs/hello_world.gdn");
         cmd.assert().success().stdout("Hello, World!\n");
     }
+
+    use goldentests::{TestConfig, TestResult};
+
+    #[test]
+    fn parser() -> TestResult<()> {
+        let mut config = TestConfig::new("target/debug/garden", "src/parser_test_files", "// ")?;
+        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
+        config.run_tests()
+    }
 }

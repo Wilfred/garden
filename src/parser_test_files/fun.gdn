@@ -1,0 +1,71 @@
+fun foo(): Unit {}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol {
+//         position: Position {
+//             start_offset: 4,
+//             end_offset: 7,
+//             line_number: 0,
+//             path: "src/parser_test_files/fun.gdn",
+//         },
+//         name: SymbolName(
+//             "foo",
+//         ),
+//     },
+//     FunInfo {
+//         src_string: SourceString {
+//             offset: 0,
+//             src: "fun foo(): Unit {}",
+//         },
+//         doc_comment: None,
+//         name: Some(
+//             Symbol {
+//                 position: Position {
+//                     start_offset: 4,
+//                     end_offset: 7,
+//                     line_number: 0,
+//                     path: "src/parser_test_files/fun.gdn",
+//                 },
+//                 name: SymbolName(
+//                     "foo",
+//                 ),
+//             },
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_type: Some(
+//             TypeHint {
+//                 sym: TypeSymbol {
+//                     name: TypeName {
+//                         name: "Unit",
+//                     },
+//                     position: Position {
+//                         start_offset: 11,
+//                         end_offset: 15,
+//                         line_number: 0,
+//                         path: "src/parser_test_files/fun.gdn",
+//                     },
+//                 },
+//                 args: [],
+//             },
+//         ),
+//         body: Block {
+//             open_brace: Position {
+//                 start_offset: 16,
+//                 end_offset: 17,
+//                 line_number: 0,
+//                 path: "src/parser_test_files/fun.gdn",
+//             },
+//             exprs: [],
+//             close_brace: Position {
+//                 start_offset: 17,
+//                 end_offset: 18,
+//                 line_number: 0,
+//                 path: "src/parser_test_files/fun.gdn",
+//             },
+//         },
+//     },
+// )
+

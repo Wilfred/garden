@@ -126,7 +126,7 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
                 // exprs_to_eval is the first expression from the
                 // user.
                 for expr in exprs.iter().rev() {
-                    stack_frame.exprs_to_eval.push((false, expr.1.clone()));
+                    stack_frame.exprs_to_eval.push((false, expr.0.clone()));
                 }
             }
             Err(ReadError::NeedsEval(EvalAction::Abort)) => {

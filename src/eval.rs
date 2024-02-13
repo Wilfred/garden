@@ -228,7 +228,7 @@ pub(crate) fn eval_all_toplevel_items(
                 defs.push(def.clone());
             }
             ToplevelItem::Expr(expr) => {
-                exprs.push(expr.1.clone());
+                exprs.push(expr.0.clone());
             }
         }
     }

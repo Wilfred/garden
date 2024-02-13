@@ -252,7 +252,7 @@ pub struct Block {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ToplevelExpression(pub String, pub Expression);
+pub struct ToplevelExpression(pub Expression);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunInfo {

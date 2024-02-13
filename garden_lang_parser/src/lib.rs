@@ -1210,17 +1210,12 @@ fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelIt
     let initial_token_idx = tokens.idx;
 
     if let Ok(expr) = parse_block_member_expression(src, tokens) {
-        let pos = &expr.0.clone();
-        let toplevel_expr =
-            ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-        return Ok(ToplevelItem::Expr(toplevel_expr));
+        return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
     }
 
     tokens.idx = initial_token_idx;
     let expr = parse_inline_expression(src, tokens)?;
-    let pos = &expr.0.clone();
-    let toplevel_expr = ToplevelExpression(src[pos.start_offset..pos.end_offset].to_owned(), expr);
-    Ok(ToplevelItem::Expr(toplevel_expr))
+    Ok(ToplevelItem::Expr(ToplevelExpression(expr)))
 }
 
 fn parse_toplevel_items_from_tokens(

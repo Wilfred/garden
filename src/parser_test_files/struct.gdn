@@ -1,4 +1,5 @@
 struct Foo<T> {
+    // Stuff.
     x: Int,
     foo_bar_baz: T,
 }
@@ -15,27 +16,25 @@ struct Foo<T> {
 //         ],
 //         fields: [
 //             FieldInfo {
-//                 field_sym: SymbolWithType {
-//                     symbol: Symbol"x",
-//                     type_: Some(
-//                         TypeHint {
-//                             sym: TypeSymbol"Int",
-//                             args: [],
-//                         },
-//                     ),
-//                 },
-//                 doc_comment: None,
+//                 sym: Symbol"x",
+//                 hint: Some(
+//                     TypeHint {
+//                         sym: TypeSymbol"Int",
+//                         args: [],
+//                     },
+//                 ),
+//                 doc_comment: Some(
+//                     "Stuff.",
+//                 ),
 //             },
 //             FieldInfo {
-//                 field_sym: SymbolWithType {
-//                     symbol: Symbol"foo_bar_baz",
-//                     type_: Some(
-//                         TypeHint {
-//                             sym: TypeSymbol"T",
-//                             args: [],
-//                         },
-//                     ),
-//                 },
+//                 sym: Symbol"foo_bar_baz",
+//                 hint: Some(
+//                     TypeHint {
+//                         sym: TypeSymbol"T",
+//                         args: [],
+//                     },
+//                 ),
 //                 doc_comment: None,
 //             },
 //         ],

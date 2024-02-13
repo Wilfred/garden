@@ -1014,11 +1014,23 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
             break;
         }
 
-        let field_sym = parse_parameter(tokens)?;
-        fields.push(FieldInfo {
-            field_sym,
-            doc_comment: None,
-        });
+        if let Some(token) = tokens.peek() {
+            let doc_comment = parse_doc_comment(&token);
+            let sym = parse_symbol(tokens)?;
+            let hint = parse_type_annotation(tokens)?;
+            fields.push(FieldInfo {
+                sym,
+                hint,
+                doc_comment,
+            });
+        } else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected a struct field name here like `foo: String`, but got EOF".to_string(),
+                ),
+            });
+        }
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {

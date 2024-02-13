@@ -1,0 +1,14 @@
+abc_def;
+
+// args: dump-ast
+// expected stdout:
+// Expression(
+//     Position { ... },
+//     Variable(
+//         Symbol {
+//             position: Position { ... },
+//             name: abc_def,
+//         },
+//     ),
+// )
+

@@ -1,0 +1,11 @@
+"a\nb\\c\"d";
+
+// args: dump-ast
+// expected stdout:
+// Expression(
+//     Position { ... },
+//     StringLiteral(
+//         "a\nb\\c\"d",
+//     ),
+// )
+

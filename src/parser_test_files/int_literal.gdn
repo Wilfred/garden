@@ -1,0 +1,11 @@
+-123;
+
+// args: dump-ast
+// expected stdout:
+// Expression(
+//     Position { ... },
+//     IntLiteral(
+//         -123,
+//     ),
+// )
+

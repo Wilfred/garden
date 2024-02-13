@@ -1,0 +1,17 @@
+match (1) {}
+
+// args: dump-ast
+// expected stdout:
+// Expression(
+//     Position { ... },
+//     Match(
+//         Expression(
+//             Position { ... },
+//             IntLiteral(
+//                 1,
+//             ),
+//         ),
+//         [],
+//     ),
+// )
+

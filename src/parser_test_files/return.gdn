@@ -1,0 +1,19 @@
+return x;
+
+// args: dump-ast
+// expected stdout:
+// Expression(
+//     Position { ... },
+//     Return(
+//         Expression(
+//             Position { ... },
+//             Variable(
+//                 Symbol {
+//                     position: Position { ... },
+//                     name: x,
+//                 },
+//             ),
+//         ),
+//     ),
+// )
+

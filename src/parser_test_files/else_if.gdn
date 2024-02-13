@@ -1,0 +1,52 @@
+if (x) {} else if (y) {}
+
+// args: dump-ast
+// expected stdout:
+// Expression(
+//     Position { ... },
+//     If(
+//         Expression(
+//             Position { ... },
+//             Variable(
+//                 Symbol {
+//                     position: Position { ... },
+//                     name: x,
+//                 },
+//             ),
+//         ),
+//         Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//         Some(
+//             Block {
+//                 open_brace: Position { ... },
+//                 exprs: [
+//                     Expression(
+//                         Position { ... },
+//                         If(
+//                             Expression(
+//                                 Position { ... },
+//                                 Variable(
+//                                     Symbol {
+//                                         position: Position { ... },
+//                                         name: y,
+//                                     },
+//                                 ),
+//                             ),
+//                             Block {
+//                                 open_brace: Position { ... },
+//                                 exprs: [],
+//                                 close_brace: Position { ... },
+//                             },
+//                             None,
+//                         ),
+//                     ),
+//                 ],
+//                 close_brace: Position { ... },
+//             },
+//         ),
+//     ),
+// )
+

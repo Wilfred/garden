@@ -9,6 +9,7 @@ pub mod lex;
 use std::collections::HashSet;
 use std::path::Path;
 
+use ast::FieldInfo;
 use ast::StructInfo;
 
 use crate::ast::BinaryOperatorKind;
@@ -744,6 +745,8 @@ fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, P
 
     let _open_brace = require_token(tokens, "{")?;
 
+    let fields = parse_struct_fields(tokens)?;
+
     let close_brace = require_token(tokens, "}")?;
 
     let mut start_offset = enum_token.position.start_offset;
@@ -765,6 +768,7 @@ fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, P
             doc_comment,
             name_sym,
             type_params,
+            fields,
         }),
     ))
 }
@@ -1001,6 +1005,49 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
     }
 
     Ok(params)
+}
+
+fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, ParseError> {
+    let mut fields = vec![];
+    loop {
+        if peeked_symbol_is(tokens, "}") {
+            break;
+        }
+
+        let field_sym = parse_parameter(tokens)?;
+        fields.push(FieldInfo {
+            field_sym,
+            doc_comment: None,
+        });
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == "}" {
+                break;
+            } else {
+                return Err(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+            }
+        } else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `}}` here, but got EOF".to_string(),
+                ),
+            });
+        }
+    }
+
+    // TODO: error on duplicate fields
+
+    Ok(fields)
 }
 
 fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError> {

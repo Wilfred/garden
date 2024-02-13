@@ -303,6 +303,12 @@ pub struct VariantInfo {
     pub has_payload: bool,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct FieldInfo {
+    pub field_sym: SymbolWithType,
+    pub doc_comment: Option<String>,
+}
+
 impl Display for VariantInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name_sym.name.0)
@@ -324,6 +330,7 @@ pub struct StructInfo {
     pub doc_comment: Option<String>,
     pub name_sym: TypeSymbol,
     pub type_params: Vec<TypeSymbol>,
+    pub fields: Vec<FieldInfo>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

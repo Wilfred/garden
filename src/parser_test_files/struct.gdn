@@ -1,4 +1,7 @@
-struct Foo {}
+struct Foo<T> {
+    x: Int,
+    foo_bar_baz: T,
+}
 
 // args: dump-ast
 // expected stdout:
@@ -7,7 +10,35 @@ struct Foo {}
 //         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: TypeSymbol"Foo",
-//         type_params: [],
+//         type_params: [
+//             TypeSymbol"T",
+//         ],
+//         fields: [
+//             FieldInfo {
+//                 field_sym: SymbolWithType {
+//                     symbol: Symbol"x",
+//                     type_: Some(
+//                         TypeHint {
+//                             sym: TypeSymbol"Int",
+//                             args: [],
+//                         },
+//                     ),
+//                 },
+//                 doc_comment: None,
+//             },
+//             FieldInfo {
+//                 field_sym: SymbolWithType {
+//                     symbol: Symbol"foo_bar_baz",
+//                     type_: Some(
+//                         TypeHint {
+//                             sym: TypeSymbol"T",
+//                             args: [],
+//                         },
+//                     ),
+//                 },
+//                 doc_comment: None,
+//             },
+//         ],
 //     },
 // )
 

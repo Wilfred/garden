@@ -5,20 +5,14 @@ fun foo() {}
 // args: dump-ast
 // expected stdout:
 // Fun(
-//     Symbol {
-//         position: Position { ... },
-//         name: foo,
-//     },
+//     Symbol"foo",
 //     FunInfo {
 //         src_string: SourceString,
 //         doc_comment: Some(
 //             "Hello\nWorld",
 //         ),
 //         name: Some(
-//             Symbol {
-//                 position: Position { ... },
-//                 name: foo,
-//             },
+//             Symbol"foo",
 //         ),
 //         type_params: [],
 //         params: [],

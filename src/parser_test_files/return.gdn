@@ -6,10 +6,7 @@ return x;
 //     Expression(
 //         Position { ... },
 //         Variable(
-//             Symbol {
-//                 position: Position { ... },
-//                 name: x,
-//             },
+//             Symbol"x",
 //         ),
 //     ),
 // )

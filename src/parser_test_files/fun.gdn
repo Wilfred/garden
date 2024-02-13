@@ -3,27 +3,18 @@ fun foo(): Unit {}
 // args: dump-ast
 // expected stdout:
 // Fun(
-//     Symbol {
-//         position: Position { ... },
-//         name: foo,
-//     },
+//     Symbol"foo",
 //     FunInfo {
 //         src_string: SourceString,
 //         doc_comment: None,
 //         name: Some(
-//             Symbol {
-//                 position: Position { ... },
-//                 name: foo,
-//             },
+//             Symbol"foo",
 //         ),
 //         type_params: [],
 //         params: [],
 //         return_type: Some(
 //             TypeHint {
-//                 sym: TypeSymbol {
-//                     name: Unit,
-//                     position: Position { ... },
-//                 },
+//                 sym: TypeSymbol"Unit",
 //                 args: [],
 //             },
 //         ),

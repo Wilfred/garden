@@ -5,26 +5,19 @@ fun (self: List) foo() {}
 // Method(
 //     MethodInfo {
 //         receiver_type: TypeHint {
-//             sym: TypeSymbol {
-//                 name: List,
-//                 position: Position { ... },
-//             },
+//             sym: TypeSymbol"List",
 //             args: [],
 //         },
-//         receiver_name: self,
-//         name_sym: Symbol {
-//             position: Position { ... },
-//             name: foo,
-//         },
+//         receiver_name: SymbolName(
+//             "self",
+//         ),
+//         name_sym: Symbol"foo",
 //         kind: UserDefinedMethod(
 //             FunInfo {
 //                 src_string: SourceString,
 //                 doc_comment: None,
 //                 name: Some(
-//                     Symbol {
-//                         position: Position { ... },
-//                         name: foo,
-//                     },
+//                     Symbol"foo",
 //                 ),
 //                 type_params: [],
 //                 params: [],

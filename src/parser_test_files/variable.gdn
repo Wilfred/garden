@@ -3,9 +3,6 @@ abc_def;
 // args: dump-ast
 // expected stdout:
 // Variable(
-//     Symbol {
-//         position: Position { ... },
-//         name: abc_def,
-//     },
+//     Symbol"abc_def",
 // )
 

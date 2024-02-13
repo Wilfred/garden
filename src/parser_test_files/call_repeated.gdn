@@ -9,10 +9,7 @@ foo()();
 //             Expression(
 //                 Position { ... },
 //                 Variable(
-//                     Symbol {
-//                         position: Position { ... },
-//                         name: foo,
-//                     },
+//                     Symbol"foo",
 //                 ),
 //             ),
 //             [],

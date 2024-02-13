@@ -96,10 +96,23 @@ impl Display for TypeName {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
+}
+
+impl std::fmt::Debug for TypeSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if std::env::var("VERBOSE").is_ok() {
+            f.debug_struct("TypeSymbol")
+                .field("name", &self.name)
+                .field("position", &self.position)
+                .finish()
+        } else {
+            write!(f, "TypeSymbol\"{}\"", self.name.name)
+        }
+    }
 }
 
 impl Display for TypeSymbol {
@@ -114,14 +127,8 @@ pub struct TypeHint {
     pub args: Vec<TypeHint>,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName(pub String);
-
-impl std::fmt::Debug for SymbolName {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
 
 impl Display for SymbolName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -135,10 +142,23 @@ impl SymbolName {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
+}
+
+impl std::fmt::Debug for Symbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if std::env::var("VERBOSE").is_ok() {
+            f.debug_struct("Symbol")
+                .field("name", &self.name)
+                .field("position", &self.position)
+                .finish()
+        } else {
+            write!(f, "Symbol\"{}\"", self.name.0)
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

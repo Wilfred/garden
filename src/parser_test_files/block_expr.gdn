@@ -3,10 +3,7 @@ let x = 1;
 // args: dump-ast
 // expected stdout:
 // Let(
-//     Symbol {
-//         position: Position { ... },
-//         name: x,
-//     },
+//     Symbol"x",
 //     Expression(
 //         Position { ... },
 //         IntLiteral(

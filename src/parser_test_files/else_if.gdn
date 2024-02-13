@@ -6,10 +6,7 @@ if (x) {} else if (y) {}
 //     Expression(
 //         Position { ... },
 //         Variable(
-//             Symbol {
-//                 position: Position { ... },
-//                 name: x,
-//             },
+//             Symbol"x",
 //         ),
 //     ),
 //     Block {
@@ -27,10 +24,7 @@ if (x) {} else if (y) {}
 //                         Expression(
 //                             Position { ... },
 //                             Variable(
-//                                 Symbol {
-//                                     position: Position { ... },
-//                                     name: y,
-//                                 },
+//                                 Symbol"y",
 //                             ),
 //                         ),
 //                         Block {

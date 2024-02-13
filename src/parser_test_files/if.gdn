@@ -6,10 +6,7 @@ if (True) {}
 //     Expression(
 //         Position { ... },
 //         Variable(
-//             Symbol {
-//                 position: Position { ... },
-//                 name: True,
-//             },
+//             Symbol"True",
 //         ),
 //     ),
 //     Block {

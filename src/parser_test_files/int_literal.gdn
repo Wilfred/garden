@@ -2,10 +2,7 @@
 
 // args: dump-ast
 // expected stdout:
-// Expression(
-//     Position { ... },
-//     IntLiteral(
-//         -123,
-//     ),
+// IntLiteral(
+//     -123,
 // )
 

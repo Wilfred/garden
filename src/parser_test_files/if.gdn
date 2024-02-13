@@ -2,24 +2,21 @@ if (True) {}
 
 // args: dump-ast
 // expected stdout:
-// Expression(
-//     Position { ... },
-//     If(
-//         Expression(
-//             Position { ... },
-//             Variable(
-//                 Symbol {
-//                     position: Position { ... },
-//                     name: True,
-//                 },
-//             ),
+// If(
+//     Expression(
+//         Position { ... },
+//         Variable(
+//             Symbol {
+//                 position: Position { ... },
+//                 name: True,
+//             },
 //         ),
-//         Block {
-//             open_brace: Position { ... },
-//             exprs: [],
-//             close_brace: Position { ... },
-//         },
-//         None,
 //     ),
+//     Block {
+//         open_brace: Position { ... },
+//         exprs: [],
+//         close_brace: Position { ... },
+//     },
+//     None,
 // )
 

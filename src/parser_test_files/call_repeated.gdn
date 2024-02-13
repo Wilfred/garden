@@ -2,25 +2,22 @@ foo()();
 
 // args: dump-ast
 // expected stdout:
-// Expression(
-//     Position { ... },
-//     Call(
-//         Expression(
-//             Position { ... },
-//             Call(
-//                 Expression(
-//                     Position { ... },
-//                     Variable(
-//                         Symbol {
-//                             position: Position { ... },
-//                             name: foo,
-//                         },
-//                     ),
+// Call(
+//     Expression(
+//         Position { ... },
+//         Call(
+//             Expression(
+//                 Position { ... },
+//                 Variable(
+//                     Symbol {
+//                         position: Position { ... },
+//                         name: foo,
+//                     },
 //                 ),
-//                 [],
 //             ),
+//             [],
 //         ),
-//         [],
 //     ),
+//     [],
 // )
 

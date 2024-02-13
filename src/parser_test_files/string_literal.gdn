@@ -2,10 +2,7 @@
 
 // args: dump-ast
 // expected stdout:
-// Expression(
-//     Position { ... },
-//     StringLiteral(
-//         "a\nb\\c\"d",
-//     ),
+// StringLiteral(
+//     "a\nb\\c\"d",
 // )
 

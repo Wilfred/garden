@@ -34,14 +34,11 @@ fun foo(): Unit {} {}
 //         },
 //     },
 // )
-// Expression(
-//     Position { ... },
-//     Block(
-//         Block {
-//             open_brace: Position { ... },
-//             exprs: [],
-//             close_brace: Position { ... },
-//         },
-//     ),
+// Block(
+//     Block {
+//         open_brace: Position { ... },
+//         exprs: [],
+//         close_brace: Position { ... },
+//     },
 // )
 

@@ -2,18 +2,15 @@ let x = 1;
 
 // args: dump-ast
 // expected stdout:
-// Expression(
-//     Position { ... },
-//     Let(
-//         Symbol {
-//             position: Position { ... },
-//             name: x,
-//         },
-//         Expression(
-//             Position { ... },
-//             IntLiteral(
-//                 1,
-//             ),
+// Let(
+//     Symbol {
+//         position: Position { ... },
+//         name: x,
+//     },
+//     Expression(
+//         Position { ... },
+//         IntLiteral(
+//             1,
 //         ),
 //     ),
 // )

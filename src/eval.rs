@@ -375,6 +375,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 let name_as_sym = SymbolName(enum_info.name_sym.name.name.clone());
                 new_syms.push(name_as_sym);
             }
+            Definition_::Struct(struct_info) => todo!(),
         }
     }
 

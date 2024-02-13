@@ -318,6 +318,14 @@ pub struct EnumInfo {
     pub variants: Vec<VariantInfo>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct StructInfo {
+    pub src_string: SourceString,
+    pub doc_comment: Option<String>,
+    pub name_sym: TypeSymbol,
+    pub type_params: Vec<TypeSymbol>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BuiltinMethodKind {
     ListAppend,
@@ -374,6 +382,7 @@ pub enum Definition_ {
     Method(MethodInfo),
     Test(TestInfo),
     Enum(EnumInfo),
+    Struct(StructInfo),
 }
 
 #[derive(Debug, Clone, PartialEq)]

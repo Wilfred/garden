@@ -1,0 +1,13 @@
+struct Foo {}
+
+// args: dump-ast
+// expected stdout:
+// Struct(
+//     StructInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: TypeSymbol"Foo",
+//         type_params: [],
+//     },
+// )
+

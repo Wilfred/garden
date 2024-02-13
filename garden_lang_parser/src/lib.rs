@@ -9,6 +9,8 @@ pub mod lex;
 use std::collections::HashSet;
 use std::path::Path;
 
+use ast::StructInfo;
+
 use crate::ast::BinaryOperatorKind;
 use crate::ast::Block;
 use crate::ast::Definition;
@@ -622,6 +624,9 @@ fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, P
         if token.text == "enum" {
             return parse_enum(src, tokens);
         }
+        if token.text == "struct" {
+            return parse_struct(src, tokens);
+        }
 
         // TODO: Include the token in the error message.
         return Err(ParseError::Invalid {
@@ -727,6 +732,39 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
             name_sym,
             type_params,
             variants,
+        }),
+    ))
+}
+
+fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
+    let enum_token = require_token(tokens, "struct")?;
+    let doc_comment = parse_doc_comment(&enum_token);
+    let name_sym = parse_type_symbol(tokens)?;
+    let type_params = parse_type_params(tokens)?;
+
+    let _open_brace = require_token(tokens, "{")?;
+
+    let close_brace = require_token(tokens, "}")?;
+
+    let mut start_offset = enum_token.position.start_offset;
+    if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = close_brace.position.end_offset;
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    Ok(Definition(
+        src_string.clone(),
+        enum_token.position,
+        Definition_::Struct(StructInfo {
+            src_string,
+            doc_comment,
+            name_sym,
+            type_params,
         }),
     ))
 }
@@ -1236,7 +1274,11 @@ fn parse_toplevel_item_from_tokens(
     tokens: &mut TokenStream,
 ) -> Result<ToplevelItem, ParseError> {
     if let Some(token) = tokens.peek() {
-        if token.text == "fun" || token.text == "test" || token.text == "enum" {
+        if token.text == "fun"
+            || token.text == "test"
+            || token.text == "enum"
+            || token.text == "struct"
+        {
             let def = parse_definition(src, tokens)?;
             return Ok(ToplevelItem::Def(def));
         }

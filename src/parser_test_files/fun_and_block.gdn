@@ -1,0 +1,47 @@
+fun foo(): Unit {} {}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol {
+//         position: Position { ... },
+//         name: foo,
+//     },
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name: Some(
+//             Symbol {
+//                 position: Position { ... },
+//                 name: foo,
+//             },
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_type: Some(
+//             TypeHint {
+//                 sym: TypeSymbol {
+//                     name: Unit,
+//                     position: Position { ... },
+//                 },
+//                 args: [],
+//             },
+//         ),
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+// Expression(
+//     Position { ... },
+//     Block(
+//         Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     ),
+// )
+

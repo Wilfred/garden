@@ -1,0 +1,33 @@
+// Hello
+// World
+fun foo() {}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol {
+//         position: Position { ... },
+//         name: foo,
+//     },
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "Hello\nWorld",
+//         ),
+//         name: Some(
+//             Symbol {
+//                 position: Position { ... },
+//                 name: foo,
+//             },
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_type: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+

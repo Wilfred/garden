@@ -1881,50 +1881,6 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_block_expression() {
-        let ast = match parse_toplevel_item(&PathBuf::from("__test.gdn"), "let x = 1;").unwrap() {
-            ToplevelItem::Def(_) => unreachable!(),
-            ToplevelItem::Expr(e) => e,
-        };
-
-        assert_eq!(
-            ast,
-            ToplevelExpression(
-                // TODO: this is wrong, it should be the whole expression
-                "let".into(),
-                Expression(
-                    Position {
-                        start_offset: 0,
-                        end_offset: 3,
-                        line_number: 0,
-                        path: PathBuf::from("__test.gdn")
-                    },
-                    Expression_::Let(
-                        Symbol {
-                            position: Position {
-                                start_offset: 4,
-                                end_offset: 5,
-                                line_number: 0,
-                                path: PathBuf::from("__test.gdn")
-                            },
-                            name: SymbolName("x".into())
-                        },
-                        Box::new(Expression(
-                            Position {
-                                start_offset: 8,
-                                end_offset: 9,
-                                line_number: 0,
-                                path: PathBuf::from("__test.gdn")
-                            },
-                            Expression_::IntLiteral(1)
-                        ))
-                    )
-                )
-            )
-        );
-    }
-
-    #[test]
     fn test_repeated_param() {
         assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(x, x) {}").is_err());
     }

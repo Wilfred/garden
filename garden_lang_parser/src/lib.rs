@@ -1,5 +1,6 @@
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
+#![allow(clippy::collapsible_else_if)]
 
 pub mod ast;
 pub mod diagnostics;

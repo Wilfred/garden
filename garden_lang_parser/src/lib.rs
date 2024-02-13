@@ -56,7 +56,7 @@ pub enum ParseError {
     },
 }
 
-fn next_token_is(tokens: &TokenStream, token: &str) -> bool {
+fn peeked_symbol_is(tokens: &TokenStream, token: &str) -> bool {
     tokens.peek().map(|t| t.text == token).unwrap_or(false)
 }
 
@@ -189,10 +189,10 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
 
     let then_body = parse_block(src, tokens)?;
 
-    let else_body: Option<Block> = if next_token_is(tokens, "else") {
+    let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
 
-        if next_token_is(tokens, "if") {
+        if peeked_symbol_is(tokens, "if") {
             let if_expr = parse_if_expression(src, tokens)?;
             Some(Block {
                 // TODO: when there is a chain of if/else if
@@ -372,7 +372,7 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
 
 fn parse_case_expr(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let case_expr = parse_inline_expression(src, tokens)?;
-    if next_token_is(tokens, ",") {
+    if peeked_symbol_is(tokens, ",") {
         tokens.pop().unwrap();
     }
 
@@ -382,7 +382,7 @@ fn parse_case_expr(src: &str, tokens: &mut TokenStream) -> Result<Expression, Pa
 fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
     let symbol = parse_symbol(tokens)?;
 
-    let argument = if next_token_is(tokens, "(") {
+    let argument = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, "(")?;
         let arg = parse_symbol(tokens)?;
         require_token(tokens, ")")?;
@@ -401,7 +401,7 @@ fn parse_comma_separated_exprs(
 ) -> Result<Vec<Expression>, ParseError> {
     let mut items = vec![];
     loop {
-        if next_token_is(tokens, terminator) {
+        if peeked_symbol_is(tokens, terminator) {
             break;
         }
 
@@ -645,7 +645,7 @@ fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, P
 fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, ParseError> {
     let mut variants = vec![];
     loop {
-        if next_token_is(tokens, "}") {
+        if peeked_symbol_is(tokens, "}") {
             break;
         }
 
@@ -821,7 +821,7 @@ fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError>
 
 /// Parse (possibly nested type arguments), e.g. `<Int, T, Option<String>>`.
 fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, ParseError> {
-    if !next_token_is(tokens, "<") {
+    if !peeked_symbol_is(tokens, "<") {
         return Ok(vec![]);
     }
 
@@ -829,7 +829,7 @@ fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, Parse
 
     let mut args = vec![];
     loop {
-        if next_token_is(tokens, ">") {
+        if peeked_symbol_is(tokens, ">") {
             break;
         }
 
@@ -868,7 +868,7 @@ fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, Parse
 
 /// Parse type parameters for this definition, e.g. `<T, E>`.
 fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseError> {
-    if !next_token_is(tokens, "<") {
+    if !peeked_symbol_is(tokens, "<") {
         return Ok(vec![]);
     }
 
@@ -876,7 +876,7 @@ fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseE
 
     let mut params = vec![];
     loop {
-        if next_token_is(tokens, ">") {
+        if peeked_symbol_is(tokens, ">") {
             break;
         }
 
@@ -945,7 +945,7 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
 
     let mut params = vec![];
     loop {
-        if next_token_is(tokens, ")") {
+        if peeked_symbol_is(tokens, ")") {
             break;
         }
 

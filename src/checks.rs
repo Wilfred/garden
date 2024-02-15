@@ -143,7 +143,9 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
         Expression_::Return(expr) => free_variable_expr(expr, info, env),
         Expression_::IntLiteral(_) => {}
         Expression_::StringLiteral(_) => {}
-        Expression_::ListLiteral(_) => {}
+        Expression_::ListLiteral(exprs) => {
+            free_variable_exprs(exprs, info, env);
+        }
         Expression_::BinaryOperator(lhs, _op, rhs) => {
             free_variable_expr(lhs, info, env);
             free_variable_expr(rhs, info, env);
@@ -207,6 +209,13 @@ mod tests {
     #[test]
     fn test_free_variable() {
         let fun_info = parse_fun_from_str("fun f() { x; }");
+        let warnings = check_free_variables(&fun_info, &Env::default());
+        assert_eq!(warnings.len(), 1);
+    }
+
+    #[test]
+    fn test_free_variable_in_list() {
+        let fun_info = parse_fun_from_str("fun f() { [x]; }");
         let warnings = check_free_variables(&fun_info, &Env::default());
         assert_eq!(warnings.len(), 1);
     }

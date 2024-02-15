@@ -146,6 +146,7 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
         Expression_::ListLiteral(exprs) => {
             free_variable_exprs(exprs, info, env);
         }
+        Expression_::StructLiteral() => {}
         Expression_::BinaryOperator(lhs, _op, rhs) => {
             free_variable_expr(lhs, info, env);
             free_variable_expr(rhs, info, env);

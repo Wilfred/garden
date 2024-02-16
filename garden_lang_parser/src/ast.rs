@@ -1,6 +1,6 @@
 //! Syntax tree definitions for Garden.
 
-use std::{fmt::Display, path::PathBuf};
+use std::{collections::HashMap, fmt::Display, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -236,7 +236,7 @@ pub enum Expression_ {
     /// ```garden
     /// Foo { x: 1, y: bar() };
     /// ```
-    StructLiteral(),
+    StructLiteral(HashMap<SymbolName, Expression>),
     /// ```garden
     /// x + y;
     /// x < y;

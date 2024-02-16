@@ -208,7 +208,24 @@ fn describe_type(type_: &Type) -> String {
             description
         }
         Type::Struct(struct_info) => {
-            todo!()
+            let mut description = String::new();
+
+            if let Some(doc_comment) = &struct_info.doc_comment {
+                description.push_str(doc_comment);
+                description.push_str("\n\n");
+            }
+
+            let struct_name = &struct_info.name_sym;
+            description.push_str(&format!("struct {} {{\n", &struct_name));
+
+            for field in &struct_info.fields {
+                let hint: String = todo!();
+                description.push_str(&format!("   {}: {},\n", field.sym.name, hint));
+            }
+
+            description.push('}');
+
+            description
         }
     }
 }

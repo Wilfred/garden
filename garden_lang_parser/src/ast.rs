@@ -335,6 +335,11 @@ pub struct StructInfo {
     pub doc_comment: Option<String>,
     pub name_sym: TypeSymbol,
     pub type_params: Vec<TypeSymbol>,
+    /// The fields of this struct.
+    ///
+    /// We deliberately want an ordered data type here, so we can
+    /// display field information in the same order as the user
+    /// defined the fields.
     pub fields: Vec<FieldInfo>,
 }
 

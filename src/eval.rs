@@ -1524,6 +1524,9 @@ fn eval_enum_constructor(
 
             match env.types.get(name) {
                 Some(type_) => match type_ {
+                    // TODO: this is probably reachable if the user
+                    // defines an enum whose name clashes with
+                    // built-in types.
                     Type::Builtin(_) => unreachable!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {

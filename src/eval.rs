@@ -1528,6 +1528,7 @@ fn eval_enum_constructor(
                     // defines an enum whose name clashes with
                     // built-in types.
                     Type::Builtin(_) => unreachable!(),
+                    Type::Struct(struct_info) => todo!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
                             if variant_sym.has_payload {

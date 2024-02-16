@@ -263,6 +263,9 @@ impl Value {
                         }
                         None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),
                     },
+                    Type::Struct(struct_info) => {
+                        format!("{}__OLD_DEFINITION", struct_info.name_sym)
+                    }
                 };
 
                 match payload {

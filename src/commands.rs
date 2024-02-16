@@ -207,6 +207,9 @@ fn describe_type(type_: &Type) -> String {
 
             description
         }
+        Type::Struct(struct_info) => {
+            todo!()
+        }
     }
 }
 
@@ -561,6 +564,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         match type_ {
             Type::Builtin(_) => Ok(None),
             Type::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
+            Type::Struct(struct_info) => Ok(Some(struct_info.src_string.clone())),
         }
     } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
         match value {

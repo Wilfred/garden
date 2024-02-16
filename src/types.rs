@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::EnumInfo;
+use garden_lang_parser::ast::{EnumInfo, StructInfo};
 
 #[derive(Debug)]
 pub(crate) enum BuiltinType {
@@ -13,4 +13,5 @@ pub(crate) enum BuiltinType {
 pub(crate) enum Type {
     Builtin(BuiltinType),
     Enum(EnumInfo),
+    Struct(StructInfo),
 }

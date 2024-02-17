@@ -121,6 +121,9 @@ impl Display for TypeSymbol {
     }
 }
 
+/// Represents a type name in source code. This might be a concrete
+/// type, such as `List<Int>`, or may refer to generics
+/// e.g. `List<T>`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypeHint {
     pub sym: TypeSymbol,

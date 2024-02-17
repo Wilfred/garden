@@ -2300,7 +2300,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
-                Expression_::StructLiteral(named_values) => todo!(),
+                Expression_::StructLiteral(_, named_values) => todo!(),
                 Expression_::Variable(name_sym) => {
                     if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
                         stack_frame.evalled_values.push(value);

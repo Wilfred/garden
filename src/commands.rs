@@ -210,8 +210,12 @@ fn describe_type(type_: &Type) -> String {
             }
 
             description.push_str("{\n");
-            for variant_sym in &enum_info.variants {
-                description.push_str(&format!("   {},\n", variant_sym.name_sym.name));
+            for variant_info in &enum_info.variants {
+                let variant_desc = match &variant_info.payload_hint {
+                    Some(hint) => format!("   {}(TODO_HINT),\n", variant_info.name_sym.name),
+                    None => format!("   {},\n", variant_info.name_sym.name),
+                };
+                description.push_str(&variant_desc)
             }
             description.push('}');
 

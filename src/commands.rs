@@ -235,8 +235,11 @@ fn describe_type(type_: &Type) -> String {
             description.push_str(&format!("struct {} {{\n", &struct_name));
 
             for field in &struct_info.fields {
-                let hint: String = todo!();
-                description.push_str(&format!("   {}: {},\n", field.sym.name, hint));
+                description.push_str(&format!(
+                    "   {}: {},\n",
+                    field.sym.name,
+                    field.hint.as_src()
+                ));
             }
 
             description.push('}');

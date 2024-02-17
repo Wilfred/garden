@@ -1,11 +1,11 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::BlockBindings;
 use crate::types::Type;
-use garden_lang_parser::ast::{FunInfo, Symbol, TypeName};
+use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Value {
@@ -21,8 +21,10 @@ pub(crate) enum Value {
     String(String),
     /// A list value, along with the type of its elements.
     List(Vec<Value>, RuntimeType),
-    // A value in a user-defined enum.
+    /// A value in a user-defined enum.
     Enum(TypeName, usize, Option<Box<Value>>),
+    /// A value with the type of a user-defined struct.
+    Struct(TypeName, HashMap<SymbolName, Value>),
 }
 
 /// A helper for creating a unit value.
@@ -167,6 +169,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             // TODO
             args: vec![RuntimeType::no_value()],
         },
+        Value::Struct(_, _) => todo!(),
     }
 }
 
@@ -180,6 +183,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::String(_) => "String",
             Value::List(_, _) => "List",
             Value::Enum(name, _, _) => &name.name,
+            Value::Struct(_, _) => todo!(),
         }
         .to_owned(),
     }
@@ -279,6 +283,7 @@ impl Value {
                     }
                 }
             }
+            Value::Struct(_, _) => todo!(),
         }
     }
 

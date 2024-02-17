@@ -258,7 +258,7 @@ impl Value {
                     }
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
-                            variant_takes_payload = variant_sym.has_payload;
+                            variant_takes_payload = variant_sym.payload_hint.is_some();
                             format!("{}", variant_sym)
                         }
                         None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),

@@ -1531,7 +1531,7 @@ fn eval_enum_constructor(
                     Type::Struct(struct_info) => todo!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
-                            if variant_sym.has_payload {
+                            if variant_sym.payload_hint.is_some() {
                                 Ok(Value::Enum(
                                     name.clone(),
                                     *variant_idx,

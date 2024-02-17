@@ -662,19 +662,16 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
 fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError> {
     let name = parse_symbol(tokens)?;
 
-    // Parse the payload argument to this variant, if present.
-    let mut has_payload = false;
-    if let Some(next_token) = tokens.peek() {
-        if next_token.text == "(" {
-            tokens.pop();
-            parse_type_hint(tokens)?;
-            require_token(tokens, ")")?;
-            has_payload = true;
-        }
+    let mut payload_hint = None;
+    if peeked_symbol_is(tokens, "(") {
+        tokens.pop();
+        payload_hint = Some(parse_type_hint(tokens)?);
+        require_token(tokens, ")")?;
     }
+
     let variant = VariantInfo {
         name_sym: name,
-        has_payload,
+        payload_hint,
     };
     Ok(variant)
 }

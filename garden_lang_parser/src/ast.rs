@@ -305,9 +305,9 @@ pub struct TestInfo {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VariantInfo {
     pub name_sym: Symbol,
-    /// Does this variant wrap a value? For example, the Some variant
-    /// in Option.
-    pub has_payload: bool,
+    /// If this variant is of the form `Foo(T)`, the type hint inside
+    /// the parentheses.
+    pub payload_hint: Option<TypeHint>,
 }
 
 #[derive(Debug, Clone, PartialEq)]

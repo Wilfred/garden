@@ -294,13 +294,13 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
         res.push_str(&format!("{}", &param.symbol.name));
 
         if let Some(param_ty) = &param.type_ {
-            res.push_str(&format!(": {}", param_ty.sym));
+            res.push_str(&format!(": {}", param_ty.as_src()));
         }
     }
     res.push(')');
 
     if let Some(return_type) = return_type {
-        res.push_str(&format!(": {}", return_type.sym));
+        res.push_str(&format!(": {}", return_type.as_src()));
     }
 
     res.push_str(" { ... }");

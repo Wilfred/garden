@@ -130,6 +130,23 @@ pub struct TypeHint {
     pub args: Vec<TypeHint>,
 }
 
+impl TypeHint {
+    /// The source code equivalent of this type hint.
+    pub fn as_src(&self) -> String {
+        if self.args.is_empty() {
+            format!("{}", self.sym.name)
+        } else {
+            let formatted_args = self
+                .args
+                .iter()
+                .map(|a| a.as_src())
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("{}<{}>", self.sym.name, formatted_args)
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName(pub String);
 

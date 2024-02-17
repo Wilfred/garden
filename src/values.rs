@@ -169,7 +169,11 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             // TODO
             args: vec![RuntimeType::no_value()],
         },
-        Value::Struct(_, _) => todo!(),
+        Value::Struct(name, _) => RuntimeType {
+            name: name.clone(),
+            // TODO
+            args: vec![RuntimeType::no_value()],
+        },
     }
 }
 
@@ -183,7 +187,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::String(_) => "String",
             Value::List(_, _) => "List",
             Value::Enum(name, _, _) => &name.name,
-            Value::Struct(_, _) => todo!(),
+            Value::Struct(name, _) => &name.name,
         }
         .to_owned(),
     }
@@ -283,7 +287,21 @@ impl Value {
                     }
                 }
             }
-            Value::Struct(_, _) => todo!(),
+            Value::Struct(name, fields) => {
+                let mut s = format!("{name} {{");
+
+                for (i, (field_name, value)) in fields.iter().enumerate() {
+                    if i != 0 {
+                        s.push_str(", ");
+                    }
+
+                    s.push_str(&format!("{}: {}", field_name, value.display(env)));
+                }
+
+                s.push('}');
+
+                s
+            }
         }
     }
 

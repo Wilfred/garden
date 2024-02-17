@@ -2300,7 +2300,30 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
-                Expression_::StructLiteral(_, named_values) => todo!(),
+                Expression_::StructLiteral(name, field_exprs) => {
+                    // TODO: we should check that the definition of this struct still matches these fields.
+                    if done_children {
+                        let mut fields = HashMap::new();
+
+                        for _ in 0..field_exprs.len() {
+                            let field_value = stack_frame.evalled_values.pop().expect(
+                                "Value stack should have sufficient items for the struct literal",
+                            );
+                            // TODO: check that all field values are of a compatible type.
+                            todo!();
+                        }
+
+                        stack_frame.evalled_values.push(Value::Struct(name, fields));
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+
+                        for (_, field_expr) in field_exprs.iter() {
+                            stack_frame.exprs_to_eval.push((false, field_expr.clone()));
+                        }
+                    }
+                }
                 Expression_::Variable(name_sym) => {
                     if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
                         stack_frame.evalled_values.push(value);

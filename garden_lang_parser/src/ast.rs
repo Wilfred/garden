@@ -317,12 +317,6 @@ pub struct FieldInfo {
     pub doc_comment: Option<String>,
 }
 
-impl Display for VariantInfo {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name_sym.name.0)
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumInfo {
     pub src_string: SourceString,

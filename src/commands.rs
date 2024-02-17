@@ -212,7 +212,9 @@ fn describe_type(type_: &Type) -> String {
             description.push_str("{\n");
             for variant_info in &enum_info.variants {
                 let variant_desc = match &variant_info.payload_hint {
-                    Some(hint) => format!("   {}(TODO_HINT),\n", variant_info.name_sym.name),
+                    Some(hint) => {
+                        format!("   {}({}),\n", variant_info.name_sym.name, hint.as_src())
+                    }
                     None => format!("   {},\n", variant_info.name_sym.name),
                 };
                 description.push_str(&variant_desc)

@@ -376,11 +376,16 @@ the user entering a value in the *garden* buffer."
        'symbols)
      . font-lock-builtin-face)
 
-    ;; Assume names in CamelCase are types.
+    ;; Assume names in CamelCase are types. Require a type name to
+    ;; start with an uppercase letter, and at least one lowercase
+    ;; letter.
+    ;;
+    ;; E.g. `Foo`, `FooBar`, `FBar`, `_FooBar`.
     (,(rx
        (seq
         (* "_")
         (any upper)
+        (* (or (syntax word) (syntax symbol)))
         (any lower)
         (* (or (syntax word) (syntax symbol)))))
      . font-lock-type-face)

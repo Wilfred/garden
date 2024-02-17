@@ -375,7 +375,16 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 let name_as_sym = SymbolName(enum_info.name_sym.name.name.clone());
                 new_syms.push(name_as_sym);
             }
-            Definition_::Struct(struct_info) => todo!(),
+            Definition_::Struct(struct_info) => {
+                // Add the struct definition to the type environment.
+                env.types.insert(
+                    struct_info.name_sym.name.clone(),
+                    Type::Struct(struct_info.clone()),
+                );
+
+                let name_as_sym = SymbolName(struct_info.name_sym.name.name.clone());
+                new_syms.push(name_as_sym);
+            }
         }
     }
 
@@ -1524,11 +1533,11 @@ fn eval_enum_constructor(
 
             match env.types.get(name) {
                 Some(type_) => match type_ {
-                    // TODO: this is probably reachable if the user
+                    // TODO: these are probably reachable if the user
                     // defines an enum whose name clashes with
                     // built-in types.
                     Type::Builtin(_) => unreachable!(),
-                    Type::Struct(struct_info) => todo!(),
+                    Type::Struct(_) => unreachable!(),
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
                             if variant_sym.payload_hint.is_some() {

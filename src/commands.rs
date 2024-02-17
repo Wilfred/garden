@@ -2,6 +2,7 @@ use std::time::Duration;
 use std::{fmt::Display, io::Write, path::PathBuf};
 
 use humantime::format_duration;
+use itertools::Itertools as _;
 use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -199,7 +200,16 @@ fn describe_type(type_: &Type) -> String {
             }
 
             let enum_name = &enum_info.name_sym;
-            description.push_str(&format!("enum {} {{\n", &enum_name));
+            description.push_str(&format!("enum {}", &enum_name));
+
+            if !enum_info.type_params.is_empty() {
+                description.push_str(&format!(
+                    "<{}>",
+                    enum_info.type_params.iter().map(|p| &p.name).join(", ")
+                ));
+            }
+
+            description.push_str("{\n");
             for variant_sym in &enum_info.variants {
                 description.push_str(&format!("   {},\n", variant_sym));
             }

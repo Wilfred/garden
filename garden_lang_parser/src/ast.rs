@@ -330,7 +330,7 @@ pub struct VariantInfo {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldInfo {
     pub sym: Symbol,
-    pub hint: Option<TypeHint>,
+    pub hint: TypeHint,
     pub doc_comment: Option<String>,
 }
 

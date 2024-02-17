@@ -994,7 +994,17 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
             let sym = parse_symbol(tokens)?;
-            let hint = parse_type_annotation(tokens)?;
+
+            let Some(hint) = parse_type_annotation(tokens)? else {
+                return Err(ParseError::Incomplete {
+                    position: Position::todo(),
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: A struct field requires a type, such as `{}: String`",
+                        sym.name
+                    )),
+                });
+            };
+
             fields.push(FieldInfo {
                 sym,
                 hint,

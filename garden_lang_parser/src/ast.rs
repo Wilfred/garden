@@ -162,6 +162,10 @@ impl SymbolName {
     }
 }
 
+/// A symbol representing a value, such as a local variable or a
+/// function name.
+///
+/// See also `TypeSymbol`.
 #[derive(Clone, PartialEq)]
 pub struct Symbol {
     pub position: Position,

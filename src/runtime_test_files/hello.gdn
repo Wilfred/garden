@@ -1,0 +1,7 @@
+fun main(args: List): Unit {
+    println("Hello, World!");
+}
+
+// args: run
+// expected stdout: Hello, World!
+

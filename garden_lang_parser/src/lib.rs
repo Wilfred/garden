@@ -120,7 +120,7 @@ fn parse_parenthesis_expression(
     Ok(expr)
 }
 
-fn parse_list_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
+fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let open_brace = require_token(tokens, "[")?;
     let items = parse_comma_separated_exprs(src, tokens, "]")?;
     let close_brace = require_token(tokens, "]")?;
@@ -276,7 +276,7 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         }
 
         if token.text == "[" {
-            return parse_list_expression(src, tokens);
+            return parse_list_literal(src, tokens);
         }
 
         if token.text == "fun" {

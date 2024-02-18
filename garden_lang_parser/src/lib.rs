@@ -8,6 +8,7 @@ pub mod ast;
 pub mod diagnostics;
 pub mod lex;
 
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -284,6 +285,12 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         }
 
         if SYMBOL_RE.is_match(token.text) {
+            if let Some((_, token)) = tokens.peek_two() {
+                if token.text == "{" {
+                    return parse_struct_literal(src, tokens);
+                }
+            }
+
             return parse_variable_expression(tokens);
         }
 
@@ -313,6 +320,19 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         message: ErrorMessage("Expected an expression".to_owned()),
         position: Position::todo(),
     })
+}
+
+fn parse_struct_literal(_src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
+    let name = parse_type_symbol(tokens)?;
+    let open_brace = require_token(tokens, "{")?;
+    let fields = HashMap::new();
+
+    let close_brace = require_token(tokens, "}")?;
+
+    Ok(Expression(
+        Position::merge(open_brace.position, close_brace.position),
+        Expression_::StructLiteral(name, fields),
+    ))
 }
 
 fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {

@@ -260,7 +260,7 @@ pub enum Expression_ {
     /// ```garden
     /// Foo { x: 1, y: bar() };
     /// ```
-    StructLiteral(TypeName, HashMap<SymbolName, Expression>),
+    StructLiteral(TypeSymbol, HashMap<SymbolName, Expression>),
     /// ```garden
     /// x + y;
     /// x < y;

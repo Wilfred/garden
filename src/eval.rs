@@ -2300,7 +2300,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
-                Expression_::StructLiteral(name, field_exprs) => {
+                Expression_::StructLiteral(name_sym, field_exprs) => {
                     // TODO: we should check that the definition of this struct still matches these fields.
                     if done_children {
                         let mut fields = HashMap::new();
@@ -2313,7 +2313,9 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             todo!();
                         }
 
-                        stack_frame.evalled_values.push(Value::Struct(name, fields));
+                        stack_frame
+                            .evalled_values
+                            .push(Value::Struct(name_sym.name, fields));
                     } else {
                         stack_frame
                             .exprs_to_eval

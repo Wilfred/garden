@@ -1,0 +1,9 @@
+Foo {};
+
+// args: dump-ast
+// expected stdout:
+// StructLiteral(
+//     TypeSymbol"Foo",
+//     {},
+// )
+

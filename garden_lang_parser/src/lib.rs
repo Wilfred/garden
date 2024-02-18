@@ -122,12 +122,12 @@ fn parse_parenthesis_expression(
 }
 
 fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let open_brace = require_token(tokens, "[")?;
+    let open_bracket = require_token(tokens, "[")?;
     let items = parse_comma_separated_exprs(src, tokens, "]")?;
-    let close_brace = require_token(tokens, "]")?;
+    let close_bracket = require_token(tokens, "]")?;
 
     Ok(Expression(
-        Position::merge(open_brace.position, close_brace.position),
+        Position::merge(open_bracket.position, close_bracket.position),
         Expression_::ListLiteral(items),
     ))
 }

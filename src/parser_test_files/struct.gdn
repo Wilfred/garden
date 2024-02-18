@@ -17,24 +17,20 @@ struct Foo<T> {
 //         fields: [
 //             FieldInfo {
 //                 sym: Symbol"x",
-//                 hint: Some(
-//                     TypeHint {
-//                         sym: TypeSymbol"Int",
-//                         args: [],
-//                     },
-//                 ),
+//                 hint: TypeHint {
+//                     sym: TypeSymbol"Int",
+//                     args: [],
+//                 },
 //                 doc_comment: Some(
 //                     "Stuff.",
 //                 ),
 //             },
 //             FieldInfo {
 //                 sym: Symbol"foo_bar_baz",
-//                 hint: Some(
-//                     TypeHint {
-//                         sym: TypeSymbol"T",
-//                         args: [],
-//                     },
-//                 ),
+//                 hint: TypeHint {
+//                     sym: TypeSymbol"T",
+//                     args: [],
+//                 },
 //                 doc_comment: None,
 //             },
 //         ],

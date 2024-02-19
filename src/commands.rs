@@ -14,7 +14,9 @@ use crate::values::{runtime_type, Value};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
-use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_item, ParseError};
+use garden_lang_parser::{
+    parse_inline_expr_from_str, parse_toplevel_item, parse_toplevel_items, ParseError,
+};
 
 #[derive(Debug, EnumIter)]
 pub(crate) enum Command {
@@ -526,8 +528,12 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                match parse_toplevel_item(&PathBuf::from("__interactive__"), src) {
-                    Ok(ast) => write!(buf, "{:#?}", ast).unwrap(),
+                match parse_toplevel_items(&PathBuf::from("__interactive__"), src) {
+                    Ok(items) => {
+                        for (i, item) in items.iter().enumerate() {
+                            write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()
+                        }
+                    }
                     Err(ParseError::Incomplete { message: e, .. })
                     | Err(ParseError::Invalid { message: e, .. }) => {
                         write!(buf, "{}: {}", "Error".bright_red(), e.0).unwrap();

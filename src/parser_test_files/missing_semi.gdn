@@ -1,0 +1,10 @@
+fun foo() { 1 }
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Expected `;`, got `}`
+// 
+// [2m--> src/parser_test_files/missing_semi.gdn:1[0m
+// fun foo() { 1 }
+//             [31m^[39m
+

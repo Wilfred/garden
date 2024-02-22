@@ -1,5 +1,7 @@
 //! Error and warning data types, along with logic to display them.
 
+use std::io::IsTerminal as _;
+
 use itertools::Itertools;
 use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
@@ -75,20 +77,30 @@ fn format_pos_in_fun(
     name: Option<&SymbolName>,
     underline: bool,
 ) -> String {
+    let use_color = std::io::stdout().is_terminal();
+
     let mut res = String::new();
 
-    res.push_str(
-        &format!(
-            "--> {}:{}",
-            position.path.display(),
-            position.line_number + 1,
-        )
-        .dimmed()
-        .to_string(),
+    let formatted_pos = format!(
+        "--> {}:{}",
+        position.path.display(),
+        position.line_number + 1,
     );
 
+    if use_color {
+        res.push_str(&formatted_pos.dimmed().to_string());
+    } else {
+        res.push_str(&formatted_pos);
+    }
+
     if let Some(name) = name {
-        res.push_str(&format!("\t{}", name.0.bold()).dimmed().to_string());
+        res.push('\t');
+
+        if use_color {
+            res.push_str(&name.0.bold().dimmed().to_string());
+        } else {
+            res.push_str(&name.0);
+        }
     }
     res.push('\n');
 
@@ -118,11 +130,13 @@ fn format_pos_in_fun(
             if underline {
                 res.push('\n');
                 res.push_str(&" ".repeat(span.start_col as usize));
-                res.push_str(
-                    &"^".repeat((span.end_col - span.start_col) as usize)
-                        .red()
-                        .to_string(),
-                );
+
+                let carets = "^".repeat((span.end_col - span.start_col) as usize);
+                if use_color {
+                    res.push_str(&carets.red().to_string());
+                } else {
+                    res.push_str(&carets);
+                }
             }
         }
     }

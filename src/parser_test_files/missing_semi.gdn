@@ -4,7 +4,7 @@ fun foo() { 1 }
 // expected stderr:
 // Error: Parse error: Expected `;`, got `}`
 // 
-// [2m--> src/parser_test_files/missing_semi.gdn:1[0m
+// --> src/parser_test_files/missing_semi.gdn:1
 // fun foo() { 1 }
-//             [31m^[39m
+//             ^
 

@@ -321,10 +321,38 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     })
 }
 
-fn parse_struct_literal(_src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
+fn parse_struct_literal_fields(
+    src: &str,
+    tokens: &mut TokenStream,
+) -> Result<Vec<(Symbol, Expression)>, ParseError> {
+    let mut fields = vec![];
+    loop {
+        let Some(next_token) = tokens.peek() else {
+            todo!()
+        };
+
+        if next_token.text == "}" {
+            break;
+        }
+
+        let sym = parse_symbol(tokens)?;
+        require_token(tokens, ":")?;
+        let expr = parse_inline_expression(src, tokens)?;
+        fields.push((sym, expr));
+
+        // TODO: comma should be required if the field isn't last.
+        if peeked_symbol_is(tokens, ",") {
+            tokens.pop();
+        }
+    }
+
+    Ok(fields)
+}
+
+fn parse_struct_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let name = parse_type_symbol(tokens)?;
     let open_brace = require_token(tokens, "{")?;
-    let fields = vec![];
+    let fields = parse_struct_literal_fields(src, tokens)?;
 
     let close_brace = require_token(tokens, "}")?;
 

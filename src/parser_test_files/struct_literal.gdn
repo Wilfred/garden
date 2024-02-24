@@ -1,9 +1,28 @@
-Foo {};
+Foo { x: 1, y: 2 };
 
 // args: dump-ast
 // expected stdout:
 // StructLiteral(
 //     TypeSymbol"Foo",
-//     [],
+//     [
+//         (
+//             Symbol"x",
+//             Expression(
+//                 Position { ... },
+//                 IntLiteral(
+//                     1,
+//                 ),
+//             ),
+//         ),
+//         (
+//             Symbol"y",
+//             Expression(
+//                 Position { ... },
+//                 IntLiteral(
+//                     2,
+//                 ),
+//             ),
+//         ),
+//     ],
 // )
 

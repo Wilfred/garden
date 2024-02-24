@@ -263,7 +263,7 @@ pub enum Expression_ {
     ///
     /// Field values are executed in the order they occur in source
     /// code, so we want an ordered data type here.
-    StructLiteral(TypeSymbol, Vec<(SymbolName, Expression)>),
+    StructLiteral(TypeSymbol, Vec<(Symbol, Expression)>),
     /// ```garden
     /// x + y;
     /// x < y;

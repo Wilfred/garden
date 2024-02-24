@@ -14,9 +14,7 @@ use crate::values::{runtime_type, Value};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
-use garden_lang_parser::{
-    parse_inline_expr_from_str, parse_toplevel_item, parse_toplevel_items, ParseError,
-};
+use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
 #[derive(Debug, EnumIter)]
 pub(crate) enum Command {

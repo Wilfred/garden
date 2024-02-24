@@ -2300,9 +2300,17 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
-                Expression_::StructLiteral(name_sym, field_exprs) => {
-                    // TODO: we should check that the definition of this struct still matches these fields.
+                Expression_::StructLiteral(type_sym, field_exprs) => {
                     if done_children {
+                        let Some(type_info) = env.types.get(&type_sym.name) else {
+                            todo!()
+                        };
+                        let Type::Struct(struct_info) = type_info else {
+                            todo!()
+                        };
+
+                        // let literal_fields = HashMap::new();
+
                         let mut fields = HashMap::new();
 
                         for _ in 0..field_exprs.len() {
@@ -2315,7 +2323,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 
                         stack_frame
                             .evalled_values
-                            .push(Value::Struct(name_sym.name, fields));
+                            .push(Value::Struct(type_sym.name, fields));
                     } else {
                         stack_frame
                             .exprs_to_eval

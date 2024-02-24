@@ -1313,13 +1313,25 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelItem, ParseError> {
     let initial_token_idx = tokens.idx;
 
-    if let Ok(expr) = parse_block_member_expression(src, tokens) {
-        return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
-    }
+    // Always allow a semicolon-terminated expresison at the top level.
+    let block_expr_err = match parse_block_member_expression(src, tokens) {
+        Ok(expr) => {
+            return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
+        }
+        Err(e) => e,
+    };
 
+    // Try parsing again as an inline expression, but only if this
+    // consumes the rest of the token stream. This ensures that `1 2`
+    // does not parse but `1; 2` does.
     tokens.idx = initial_token_idx;
     let expr = parse_inline_expression(src, tokens)?;
-    Ok(ToplevelItem::Expr(ToplevelExpression(expr)))
+
+    if tokens.is_empty() {
+        Ok(ToplevelItem::Expr(ToplevelExpression(expr)))
+    } else {
+        Err(block_expr_err)
+    }
 }
 
 fn parse_toplevel_items_from_tokens(

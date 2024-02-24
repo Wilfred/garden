@@ -1,0 +1,10 @@
+1 2;
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Expected `;`, got `2`
+// 
+// --> src/parser_test_files/expr_missing_semi.gdn:1
+// 1 2;
+// ^
+

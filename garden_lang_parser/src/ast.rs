@@ -1,6 +1,6 @@
 //! Syntax tree definitions for Garden.
 
-use std::{collections::HashMap, fmt::Display, path::PathBuf};
+use std::{fmt::Display, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -260,7 +260,10 @@ pub enum Expression_ {
     /// ```garden
     /// Foo { x: 1, y: bar() };
     /// ```
-    StructLiteral(TypeSymbol, HashMap<SymbolName, Expression>),
+    ///
+    /// Field values are executed in the order they occur in source
+    /// code, so we want an ordered data type here.
+    StructLiteral(TypeSymbol, Vec<(SymbolName, Expression)>),
     /// ```garden
     /// x + y;
     /// x < y;

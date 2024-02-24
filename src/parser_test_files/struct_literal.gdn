@@ -4,6 +4,6 @@ Foo {};
 // expected stdout:
 // StructLiteral(
 //     TypeSymbol"Foo",
-//     {},
+//     [],
 // )
 

@@ -147,7 +147,7 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
             free_variable_exprs(exprs, info, env);
         }
         Expression_::StructLiteral(_, key_values) => {
-            for value in key_values.values() {
+            for (_, value) in key_values {
                 free_variable_expr(value, info, env);
             }
         }

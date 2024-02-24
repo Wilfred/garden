@@ -8,7 +8,6 @@ pub mod ast;
 pub mod diagnostics;
 pub mod lex;
 
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -325,7 +324,7 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 fn parse_struct_literal(_src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let name = parse_type_symbol(tokens)?;
     let open_brace = require_token(tokens, "{")?;
-    let fields = HashMap::new();
+    let fields = vec![];
 
     let close_brace = require_token(tokens, "}")?;
 

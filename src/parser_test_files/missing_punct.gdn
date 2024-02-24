@@ -1,0 +1,10 @@
+let a b c
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Expected `=`, got `b`
+// 
+// --> src/parser_test_files/missing_punct.gdn:1
+// let a b c
+//     ^
+

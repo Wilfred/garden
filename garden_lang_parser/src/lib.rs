@@ -1325,12 +1325,9 @@ fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelIt
     // consumes the rest of the token stream. This ensures that `1 2`
     // does not parse but `1; 2` does.
     tokens.idx = initial_token_idx;
-    let expr = parse_inline_expression(src, tokens)?;
-
-    if tokens.is_empty() {
-        Ok(ToplevelItem::Expr(ToplevelExpression(expr)))
-    } else {
-        Err(block_expr_err)
+    match parse_inline_expression(src, tokens) {
+        Ok(expr) if tokens.is_empty() => Ok(ToplevelItem::Expr(ToplevelExpression(expr))),
+        _ => Err(block_expr_err),
     }
 }
 

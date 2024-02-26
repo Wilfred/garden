@@ -1095,33 +1095,6 @@ fn eval_builtin_call(
             }
             stack_frame.evalled_values.push(unit_value());
         }
-        BuiltinFunctionKind::DebugPrint => {
-            check_arity(
-                &SymbolName("dbg".to_owned()),
-                receiver_value,
-                receiver_pos,
-                1,
-                arg_positions,
-                arg_values,
-            )?;
-
-            // TODO: define a proper pretty-printer for values
-            // rather than using Rust's Debug.
-            let value = &arg_values[0];
-            if session.has_attached_stdout {
-                println!("{:?}", value);
-            } else {
-                let response = Response {
-                    kind: ResponseKind::Printed,
-                    value: Ok(format!("{:?}\n", value)),
-                    warnings: vec![],
-                };
-                let serialized = serde_json::to_string(&response).unwrap();
-                println!("{}", serialized);
-            }
-
-            stack_frame.evalled_values.push(unit_value());
-        }
         BuiltinFunctionKind::Shell => {
             check_arity(
                 &SymbolName("shell".to_owned()),

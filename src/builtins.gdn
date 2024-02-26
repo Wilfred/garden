@@ -1,13 +1,3 @@
-
-// Write an arbitrary value to stdout, along with debugging metadata.
-//
-// ```
-// dbg([1, 2]);
-// ```
-fun dbg(_): Unit {
-    __BUILTIN_IMPLEMENTATION;
-}
-
 // Stop the program immediately, and report the error message given.
 //
 // ```

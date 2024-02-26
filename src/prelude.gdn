@@ -27,6 +27,23 @@ enum Result<T, E> {
     Err(E),
 }
 
+// Write an arbitrary value to stdout, along with debugging metadata.
+//
+// ```
+// dbg([1, 2]);
+// ```
+fun dbg(value): Unit {
+    println(string_repr(value));
+}
+// TODO: write with generics, like this:
+//
+// fun<T> dbg(value: T): Unit {
+//     println(string_repr(value));
+// }
+
+
+fun foo(): Unit {}
+
 // Unwrap a value that is `Ok`, or terminate with an error.
 //
 // TODO: support generic types in return position.

@@ -4,11 +4,9 @@ struct Foo {
 }
 
 fun main(args: List): Unit {
-    // Should this use the string_repr now?
-    // dbg(Foo { x: 1 + 2, y: "abc" });
-
-    print(string_repr(Foo { x: 1 + 2, y: "abc" }));
+    dbg(Foo { x: 1 + 2, y: "abc" });
 }
 
 // args: run
-// expected stdout: Foo {y: "abc", x: 3}
+// expected stdout: Foo {x: 3, y: "abc"}
+

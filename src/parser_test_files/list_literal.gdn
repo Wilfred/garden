@@ -1,0 +1,21 @@
+[1, 2]
+
+// args: dump-ast
+// expected stdout:
+// ListLiteral(
+//     [
+//         Expression(
+//             Position { ... },
+//             IntLiteral(
+//                 1,
+//             ),
+//         ),
+//         Expression(
+//             Position { ... },
+//             IntLiteral(
+//                 2,
+//             ),
+//         ),
+//     ],
+// )
+

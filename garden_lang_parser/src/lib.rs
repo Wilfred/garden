@@ -443,17 +443,6 @@ fn parse_comma_separated_exprs(
         if let Some(token) = tokens.peek() {
             if token.text == "," {
                 tokens.pop();
-            } else if token.text == terminator {
-                break;
-            } else {
-                return Err(ParseError::Invalid {
-                    position: token.position,
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `{}` here, but got `{}`",
-                        terminator, token.text
-                    )),
-                    additional: vec![],
-                });
             }
         } else {
             return Err(ParseError::Incomplete {

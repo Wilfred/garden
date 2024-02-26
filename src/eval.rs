@@ -2275,38 +2275,20 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 }
                 Expression_::StructLiteral(type_sym, field_exprs) => {
                     if done_children {
-                        let Some(type_info) = env.types.get(&type_sym.name) else {
-                            todo!()
-                        };
-                        let Type::Struct(struct_info) = type_info else {
-                            todo!()
-                        };
-
-                        let mut expected_fields_by_name = HashMap::new();
-                        for field_info in &struct_info.fields {
-                            expected_fields_by_name
-                                .insert(&field_info.sym.name, field_info.clone());
-                        }
-
-                        let mut fields = vec![];
-
-                        for (field_sym, _) in field_exprs {
-                            let field_value = stack_frame.evalled_values.pop().expect(
-                                "Value stack should have sufficient items for the struct literal",
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_struct_value(env, &mut stack_frame, type_sym, &field_exprs)
+                        {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
                             );
-
-                            let Some(field_info) = expected_fields_by_name.remove(&field_sym.name)
-                            else {
-                                todo!("Error on struct definition not having this field");
-                            };
-
-                            // TODO: check that all field values are of a compatible type.
-                            fields.push((field_sym.name, field_value));
+                            return Err(EvalError::ResumableError(position, message));
                         }
-
-                        stack_frame
-                            .evalled_values
-                            .push(Value::Struct(type_sym.name, fields));
                     } else {
                         // TODO: error on duplicate fields in literal, perhaps in parser.
                         stack_frame
@@ -2652,6 +2634,47 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
         .evalled_values
         .pop()
         .expect("Should have a value from the last expression"))
+}
+
+fn eval_struct_value(
+    env: &mut Env,
+    stack_frame: &mut StackFrame,
+    type_sym: TypeSymbol,
+    field_exprs: &[(Symbol, Expression)],
+) -> Result<(), ErrorInfo> {
+    let Some(type_info) = env.types.get(&type_sym.name) else {
+        todo!()
+    };
+    let Type::Struct(struct_info) = type_info else {
+        todo!()
+    };
+
+    let mut expected_fields_by_name = HashMap::new();
+    for field_info in &struct_info.fields {
+        expected_fields_by_name.insert(&field_info.sym.name, field_info.clone());
+    }
+
+    let mut fields = vec![];
+
+    for (field_sym, _) in field_exprs {
+        let field_value = stack_frame
+            .evalled_values
+            .pop()
+            .expect("Value stack should have sufficient items for the struct literal");
+
+        let Some(field_info) = expected_fields_by_name.remove(&field_sym.name) else {
+            todo!("Error on struct definition not having this field");
+        };
+
+        // TODO: check that all field values are of a compatible type.
+        fields.push((field_sym.name.clone(), field_value));
+    }
+
+    stack_frame
+        .evalled_values
+        .push(Value::Struct(type_sym.name, fields));
+
+    Ok(())
 }
 
 fn eval_match_cases(

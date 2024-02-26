@@ -2309,22 +2309,33 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             todo!()
                         };
 
-                        // let literal_fields = HashMap::new();
+                        let mut expected_fields_by_name = HashMap::new();
+                        for field_info in &struct_info.fields {
+                            expected_fields_by_name
+                                .insert(&field_info.sym.name, field_info.clone());
+                        }
 
                         let mut fields = HashMap::new();
 
-                        for _ in 0..field_exprs.len() {
+                        for (field_sym, _) in field_exprs {
                             let field_value = stack_frame.evalled_values.pop().expect(
                                 "Value stack should have sufficient items for the struct literal",
                             );
+
+                            let Some(field_info) = expected_fields_by_name.remove(&field_sym.name)
+                            else {
+                                todo!("Error on struct definition not having this field");
+                            };
+
                             // TODO: check that all field values are of a compatible type.
-                            todo!();
+                            fields.insert(field_sym.name, field_value);
                         }
 
                         stack_frame
                             .evalled_values
                             .push(Value::Struct(type_sym.name, fields));
                     } else {
+                        // TODO: error on duplicate fields in literal, perhaps in parser.
                         stack_frame
                             .exprs_to_eval
                             .push((true, Expression(expr_position, expr_copy)));

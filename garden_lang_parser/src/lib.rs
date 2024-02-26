@@ -327,11 +327,7 @@ fn parse_struct_literal_fields(
 ) -> Result<Vec<(Symbol, Expression)>, ParseError> {
     let mut fields = vec![];
     loop {
-        let Some(next_token) = tokens.peek() else {
-            todo!()
-        };
-
-        if next_token.text == "}" {
+        if peeked_symbol_is(tokens, "}") {
             break;
         }
 
@@ -340,8 +336,16 @@ fn parse_struct_literal_fields(
         let expr = parse_inline_expression(src, tokens)?;
         fields.push((sym, expr));
 
-        // TODO: comma should be required if the field isn't last.
-        if peeked_symbol_is(tokens, ",") {
+        let Some(token) = tokens.peek() else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
+                ),
+            });
+        };
+
+        if token.text == "," {
             tokens.pop();
         }
     }

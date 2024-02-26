@@ -1,0 +1,10 @@
+struct { x: Int }
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Invalid name: '{'
+// 
+// --> src/parser_test_files/struct_missing_name.gdn:1
+// struct { x: Int }
+//        ^
+

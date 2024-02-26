@@ -1279,7 +1279,7 @@ fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
     if !SYMBOL_RE.is_match(variable_token.text) {
         return Err(ParseError::Invalid {
             position: variable_token.position,
-            message: ErrorMessage(format!("Invalid variable name: '{}'", variable_token.text)),
+            message: ErrorMessage(format!("Invalid name: '{}'", variable_token.text)),
             additional: vec![],
         });
     }
@@ -1289,7 +1289,7 @@ fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
             return Err(ParseError::Invalid {
                 position: variable_token.position,
                 message: ErrorMessage(format!(
-                    "'{}' is a reserved word that cannot be used as a variable",
+                    "'{}' is a reserved word that cannot be used as a name",
                     variable_token.text
                 )),
                 additional: vec![],

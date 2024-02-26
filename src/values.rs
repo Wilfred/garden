@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 use strum_macros::EnumIter;
 
@@ -23,8 +23,9 @@ pub(crate) enum Value {
     List(Vec<Value>, RuntimeType),
     /// A value in a user-defined enum.
     Enum(TypeName, usize, Option<Box<Value>>),
-    /// A value with the type of a user-defined struct.
-    Struct(TypeName, HashMap<SymbolName, Value>),
+    /// A value with the type of a user-defined struct. Fields are
+    /// ordered according to the definition of the type.
+    Struct(TypeName, Vec<(SymbolName, Value)>),
 }
 
 /// A helper for creating a unit value.

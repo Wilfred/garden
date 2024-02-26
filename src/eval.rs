@@ -2288,7 +2288,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                 .insert(&field_info.sym.name, field_info.clone());
                         }
 
-                        let mut fields = HashMap::new();
+                        let mut fields = vec![];
 
                         for (field_sym, _) in field_exprs {
                             let field_value = stack_frame.evalled_values.pop().expect(
@@ -2301,7 +2301,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             };
 
                             // TODO: check that all field values are of a compatible type.
-                            fields.insert(field_sym.name, field_value);
+                            fields.push((field_sym.name, field_value));
                         }
 
                         stack_frame

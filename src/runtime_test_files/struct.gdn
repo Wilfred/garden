@@ -8,5 +8,5 @@ fun main(args: List): Unit {
 }
 
 // args: run
-// expected stdout: Foo {x: 3, y: "abc"}
+// expected stdout: Foo { x: 3, y: "abc" }
 

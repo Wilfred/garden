@@ -286,7 +286,7 @@ impl Value {
                 }
             }
             Value::Struct(name, fields) => {
-                let mut s = format!("{name} {{");
+                let mut s = format!("{name} {{ ");
 
                 for (i, (field_name, value)) in fields.iter().enumerate() {
                     if i != 0 {
@@ -296,7 +296,7 @@ impl Value {
                     s.push_str(&format!("{}: {}", field_name, value.display(env)));
                 }
 
-                s.push('}');
+                s.push_str(" }");
 
                 s
             }

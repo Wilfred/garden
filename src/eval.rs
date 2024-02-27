@@ -2646,7 +2646,15 @@ fn eval_struct_value(
         todo!()
     };
     let Type::Struct(struct_info) = type_info else {
-        todo!()
+        let message = ErrorMessage(format!(
+            "`{}` is not a struct, so it cannot be initialized with struct syntax.",
+            type_sym.name,
+        ));
+        return Err(ErrorInfo {
+            message,
+            restore_values: vec![],
+            error_position: type_sym.position.clone(),
+        });
     };
 
     let mut expected_fields_by_name = HashMap::new();

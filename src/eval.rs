@@ -2663,7 +2663,18 @@ fn eval_struct_value(
             .expect("Value stack should have sufficient items for the struct literal");
 
         let Some(field_info) = expected_fields_by_name.remove(&field_sym.name) else {
-            todo!("Error on struct definition not having this field");
+            // TODO: this would be a good candidate for additional
+            // positions, in this case the definition site of the
+            // struct.
+            let message = ErrorMessage(format!(
+                "`{}` does not have a field named `{}`.",
+                type_sym.name, field_sym.name
+            ));
+            return Err(ErrorInfo {
+                message,
+                restore_values: vec![], // TODO
+                error_position: field_sym.position.clone(),
+            });
         };
 
         // TODO: check that all field values are of a compatible type.

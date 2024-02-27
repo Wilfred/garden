@@ -1,0 +1,16 @@
+struct Foo {}
+
+fun main(args: List): Unit {
+    Foo { x: 1 };
+}
+
+// args: run
+// expected stderr:
+// Error: `Foo` does not have a field named `x`.
+// 
+// --> src/runtime_test_files/struct_extra_field.gdn:4	main
+//     Foo { x: 1 };
+//           ^
+// --> __main_fun__:1	__toplevel__
+// // __toplevel__
+

@@ -2643,7 +2643,11 @@ fn eval_struct_value(
     field_exprs: &[(Symbol, Expression)],
 ) -> Result<(), ErrorInfo> {
     let Some(type_info) = env.types.get(&type_sym.name) else {
-        todo!()
+        return Err(ErrorInfo {
+            message: ErrorMessage(format!("No type exists named `{}`.", type_sym.name)),
+            restore_values: vec![],
+            error_position: type_sym.position.clone(),
+        });
     };
     let Type::Struct(struct_info) = type_info else {
         let message = ErrorMessage(format!(

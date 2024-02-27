@@ -23,9 +23,19 @@ pub(crate) fn format_error_with_stack(
     position: &Position,
     stack: &[StackFrame],
 ) -> String {
+    let use_color = std::io::stdout().is_terminal();
+
     let mut res = String::new();
 
-    res.push_str(&format!("{}: {}\n\n", "Error".bold().red(), message.0));
+    res.push_str(&format!(
+        "{}: {}\n\n",
+        if use_color {
+            "Error".bold().red().to_string()
+        } else {
+            "Error".to_owned()
+        },
+        message.0
+    ));
 
     // For the topmost (most recently called) stack frame, the
     // relevant position is where the error occurred.

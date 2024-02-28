@@ -1416,9 +1416,14 @@ fn eval_call(
                 }
             }
 
+            let mut type_bindings = HashMap::new();
+            for type_param in &fun_info.type_params {
+                type_bindings.insert(type_param.name.clone(), ());
+            }
+
             bindings.push(BlockBindings {
                 values: Rc::new(RefCell::new(fun_bindings)),
-                types: HashMap::new(),
+                types: type_bindings,
             });
 
             return Ok(Some(StackFrame {

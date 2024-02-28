@@ -376,7 +376,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             }
             Definition_::Enum(enum_info) => {
                 // Add the enum definition to the type environment.
-                env.types.insert(
+                env.add_type(
                     enum_info.name_sym.name.clone(),
                     Type::Enum(enum_info.clone()),
                 );
@@ -397,7 +397,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             }
             Definition_::Struct(struct_info) => {
                 // Add the struct definition to the type environment.
-                env.types.insert(
+                env.add_type(
                     struct_info.name_sym.name.clone(),
                     Type::Struct(struct_info.clone()),
                 );
@@ -1532,7 +1532,7 @@ fn eval_enum_constructor(
                 });
             };
 
-            match env.types.get(name) {
+            match env.get_type(name) {
                 Some(type_) => match type_ {
                     // TODO: these are probably reachable if the user
                     // defines an enum whose name clashes with
@@ -2670,7 +2670,7 @@ fn eval_struct_value(
     type_sym: TypeSymbol,
     field_exprs: &[(Symbol, Expression)],
 ) -> Result<(), ErrorInfo> {
-    let Some(type_info) = env.types.get(&type_sym.name) else {
+    let Some(type_info) = env.get_type(&type_sym.name) else {
         return Err(ErrorInfo {
             message: ErrorMessage(format!("No type exists named `{}`.", type_sym.name)),
             restore_values: vec![],
@@ -2748,7 +2748,7 @@ fn eval_match_cases(
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
-    let _type = match env.types.get(&value_type_name) {
+    let _type = match env.get_type(&value_type_name) {
         Some(type_) => type_,
         None => {
             let msg = ErrorMessage(format!(

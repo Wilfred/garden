@@ -251,7 +251,7 @@ impl Value {
                 s
             }
             Value::Enum(name, variant_idx, payload) => {
-                let type_ = match env.types.get(name) {
+                let type_ = match env.get_type(name) {
                     Some(type_) => type_,
                     None => {
                         return format!("{}__OLD_DEFINITION::{}", name, variant_idx);

@@ -564,7 +564,7 @@ pub(crate) fn run_command<T: Write>(
             }
         }
         Command::Types => {
-            let mut names: Vec<_> = env.types.keys().map(|s| &s.name).collect();
+            let mut names: Vec<_> = env.all_types().into_iter().map(|s| s.name).collect();
             names.sort();
 
             for (i, var_name) in names.iter().enumerate() {
@@ -598,7 +598,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.types.get(&TypeName {
+    } else if let Some(type_) = env.get_type(&TypeName {
         name: name.to_owned(),
     }) {
         match type_ {
@@ -633,7 +633,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.types.get(&TypeName {
+    } else if let Some(type_) = env.get_type(&TypeName {
         name: name.to_owned(),
     }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))

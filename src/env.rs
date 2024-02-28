@@ -18,7 +18,7 @@ pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
-    pub(crate) types: HashMap<TypeName, Type>,
+    types: HashMap<TypeName, Type>,
     // TODO: should this be stored separately?
     pub(crate) stack: Vec<StackFrame>,
 }
@@ -250,5 +250,21 @@ impl Env {
             .entry(method_info.receiver_type.sym.name.clone())
             .or_default();
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
+    }
+
+    pub(crate) fn get_type<'a>(&'a self, name: &TypeName) -> Option<&'a Type> {
+        self.types.get(name)
+    }
+
+    pub(crate) fn has_type(&self, name: &TypeName) -> bool {
+        self.get_type(name).is_some()
+    }
+
+    pub(crate) fn all_types(&self) -> Vec<TypeName> {
+        self.types.keys().cloned().collect()
+    }
+
+    pub(crate) fn add_type(&mut self, name: TypeName, type_: Type) {
+        self.types.insert(name, type_);
     }
 }

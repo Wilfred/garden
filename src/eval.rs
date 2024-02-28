@@ -33,13 +33,20 @@ use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, 
 // have reference equality probably.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct BlockBindings {
+    /// Values bound in this block, such as local variables or
+    /// function parameters.
     pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
+    /// Type bound in this block, due to generic parameters.
+    ///
+    /// TODO: store the actual type associated with this name.
+    types: HashMap<TypeName, ()>,
 }
 
 impl Default for BlockBindings {
     fn default() -> Self {
         Self {
             values: Rc::new(RefCell::new(HashMap::new())),
+            types: HashMap::new(),
         }
     }
 }
@@ -51,6 +58,7 @@ impl Bindings {
     fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
         Self(vec![BlockBindings {
             values: Rc::new(RefCell::new(outer_scope)),
+            types: HashMap::new(),
         }])
     }
 
@@ -1410,6 +1418,7 @@ fn eval_call(
 
             bindings.push(BlockBindings {
                 values: Rc::new(RefCell::new(fun_bindings)),
+                types: HashMap::new(),
             });
 
             return Ok(Some(StackFrame {

@@ -32,11 +32,15 @@ use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct BlockBindings(pub(crate) Rc<RefCell<HashMap<SymbolName, Value>>>);
+pub(crate) struct BlockBindings {
+    pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
+}
 
 impl Default for BlockBindings {
     fn default() -> Self {
-        Self(Rc::new(RefCell::new(HashMap::new())))
+        Self {
+            values: Rc::new(RefCell::new(HashMap::new())),
+        }
     }
 }
 
@@ -45,7 +49,9 @@ pub(crate) struct Bindings(pub(crate) Vec<BlockBindings>);
 
 impl Bindings {
     fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
-        Self(vec![BlockBindings(Rc::new(RefCell::new(outer_scope)))])
+        Self(vec![BlockBindings {
+            values: Rc::new(RefCell::new(outer_scope)),
+        }])
     }
 
     fn get(&self, name: &SymbolName) -> Option<Value> {
@@ -54,7 +60,7 @@ impl Bindings {
         //
         // (Probably not, as long as users can inspect everything.)
         for block_bindings in self.0.iter().rev() {
-            if let Some(value) = block_bindings.0.borrow().get(name) {
+            if let Some(value) = block_bindings.values.borrow().get(name) {
                 return Some(value.clone());
             }
         }
@@ -69,8 +75,8 @@ impl Bindings {
     /// remove the innermost binding.
     pub(crate) fn remove(&mut self, name: &SymbolName) {
         for block_bindings in self.0.iter_mut().rev() {
-            if block_bindings.0.borrow().get(name).is_some() {
-                block_bindings.0.borrow_mut().remove(name);
+            if block_bindings.values.borrow().get(name).is_some() {
+                block_bindings.values.borrow_mut().remove(name);
             }
         }
     }
@@ -81,13 +87,19 @@ impl Bindings {
             .0
             .last_mut()
             .expect("Vec of bindings should always be non-empty");
-        block_bindings.0.borrow_mut().insert(name.clone(), value);
+        block_bindings
+            .values
+            .borrow_mut()
+            .insert(name.clone(), value);
     }
 
     fn set_existing(&mut self, name: &SymbolName, value: Value) {
         for block_bindings in self.0.iter_mut().rev() {
-            if block_bindings.0.borrow().contains_key(name) {
-                block_bindings.0.borrow_mut().insert(name.clone(), value);
+            if block_bindings.values.borrow().contains_key(name) {
+                block_bindings
+                    .values
+                    .borrow_mut()
+                    .insert(name.clone(), value);
                 return;
             }
         }
@@ -97,7 +109,7 @@ impl Bindings {
     pub(crate) fn all(&self) -> Vec<(SymbolName, Value)> {
         let mut res = vec![];
         for block_bindings in self.0.iter().rev() {
-            for (k, v) in block_bindings.0.borrow().iter() {
+            for (k, v) in block_bindings.values.borrow().iter() {
                 res.push((k.clone(), v.clone()));
             }
         }
@@ -1396,7 +1408,9 @@ fn eval_call(
                 }
             }
 
-            bindings.push(BlockBindings(Rc::new(RefCell::new(fun_bindings))));
+            bindings.push(BlockBindings {
+                values: Rc::new(RefCell::new(fun_bindings)),
+            });
 
             return Ok(Some(StackFrame {
                 caller_pos: Some(position.clone()),

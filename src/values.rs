@@ -80,7 +80,10 @@ pub(crate) fn result_err_value(v: Value) -> Value {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum RuntimeType {
+    /// The bottom type, no runtime values can have this type.
     NoValue,
+    /// The top type, which includes
+    Top,
     String,
     Int,
     List(Box<RuntimeType>),
@@ -130,6 +133,7 @@ impl Display for RuntimeType {
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
                 write!(f, "Fun<({}), {}>", formatted_args, return_)
             }
+            RuntimeType::Top => write!(f, "_"),
         }
     }
 }
@@ -140,14 +144,14 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         Value::Fun(_, fun_info) | Value::Closure(_, fun_info) => RuntimeType::Fun {
             // TODO: use fun_info
             args: vec![],
-            return_: Box::new(RuntimeType::NoValue),
+            return_: Box::new(RuntimeType::Top),
         },
         Value::BuiltinFunction(_, fun_info) => match fun_info {
             Some(fun_info) => {
                 RuntimeType::Fun {
                     // TODO: use fun_info
                     args: vec![],
-                    return_: Box::new(RuntimeType::NoValue),
+                    return_: Box::new(RuntimeType::Top),
                 }
             }
             None => todo!(),
@@ -157,12 +161,12 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         Value::Enum(name, _, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
-            args: vec![RuntimeType::NoValue],
+            args: vec![RuntimeType::Top],
         },
         Value::Struct(name, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
-            args: vec![RuntimeType::NoValue],
+            args: vec![RuntimeType::Top],
         },
     }
 }

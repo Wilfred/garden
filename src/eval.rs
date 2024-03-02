@@ -2291,7 +2291,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::ListLiteral(items) => {
                     if done_children {
                         let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
-                        let mut element_type = RuntimeType::no_value();
+                        let mut element_type = RuntimeType::NoValue;
 
                         for _ in 0..items.len() {
                             let element = stack_frame.evalled_values.pop().expect(

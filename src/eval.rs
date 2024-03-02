@@ -344,7 +344,11 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     let return_type = RuntimeType::Top;
                     env.set_with_file_scope(
                         &name_sym.name,
-                        Value::Fun(name_sym.clone(), fun_info.clone(), return_type),
+                        Value::Fun {
+                            name_sym: name_sym.clone(),
+                            fun_info: fun_info.clone(),
+                            return_type,
+                        },
                     );
                     warnings.extend(check_types_exist(fun_info, env));
                     warnings.extend(check_free_variables(fun_info, env));
@@ -1438,7 +1442,11 @@ fn eval_call(
                 src: fun_info.src_string.clone(),
             }));
         }
-        Value::Fun(name_sym, fi @ FunInfo { params, body, .. }, _) => {
+        Value::Fun {
+            name_sym,
+            fun_info: fi @ FunInfo { params, body, .. },
+            return_type: _,
+        } => {
             // Calling a user-defined function.
 
             check_arity(

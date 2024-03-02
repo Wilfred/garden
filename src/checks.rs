@@ -140,7 +140,11 @@ fn free_variable_expr(expr: &Expression, info: &mut VarInfo, env: &Env) {
             free_variable_expr(expr, info, env);
             info.add_binding(&symbol.name);
         }
-        Expression_::Return(expr) => free_variable_expr(expr, info, env),
+        Expression_::Return(expr) => {
+            if let Some(expr) = expr {
+                free_variable_expr(expr, info, env)
+            };
+        }
         Expression_::IntLiteral(_) => {}
         Expression_::StringLiteral(_) => {}
         Expression_::ListLiteral(exprs) => {

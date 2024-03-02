@@ -3,10 +3,12 @@ return x;
 // args: dump-ast
 // expected stdout:
 // Return(
-//     Expression(
-//         Position { ... },
-//         Variable(
-//             Symbol"x",
+//     Some(
+//         Expression(
+//             Position { ... },
+//             Variable(
+//                 Symbol"x",
+//             ),
 //         ),
 //     ),
 // )

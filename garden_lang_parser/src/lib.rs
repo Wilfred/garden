@@ -214,12 +214,16 @@ fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
 fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
-    // TODO: allow `return;`
+    if peeked_symbol_is(tokens, ";") {
+        let _ = require_token(tokens, ";")?;
+        return Ok(Expression(return_token.position, Expression_::Return(None)));
+    }
+
     let expr = parse_inline_expression(src, tokens)?;
     let _ = require_token(tokens, ";")?;
     Ok(Expression(
         return_token.position,
-        Expression_::Return(Box::new(expr)),
+        Expression_::Return(Some(Box::new(expr))),
     ))
 }
 

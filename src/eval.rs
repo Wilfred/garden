@@ -2217,8 +2217,23 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((true, Expression(expr_position, expr_copy)));
-                        stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                            .push((true, Expression(expr_position.clone(), expr_copy)));
+
+                        let next_expr_to_eval = match expr {
+                            Some(expr) => *expr.clone(),
+                            None => {
+                                // Evaluate `return;` as `return Unit;`.
+                                Expression(
+                                    expr_position.clone(),
+                                    Expression_::Variable(Symbol {
+                                        position: expr_position,
+                                        name: "Unit".into(),
+                                    }),
+                                )
+                            }
+                        };
+
+                        stack_frame.exprs_to_eval.push((false, next_expr_to_eval));
                     }
                 }
                 Expression_::Assign(variable, expr) => {

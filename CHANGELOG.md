@@ -28,6 +28,10 @@ match (x) {
   Some(i) => { i + 1; }
 }
 ```
+
+`return;` is now syntax sugar for `return Unit;`.
+
+
 # 0.11 (released 30th December 2023)
 
 ### Syntax

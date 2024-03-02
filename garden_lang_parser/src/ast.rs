@@ -162,6 +162,12 @@ impl SymbolName {
     }
 }
 
+impl From<&str> for SymbolName {
+    fn from(s: &str) -> Self {
+        SymbolName(s.to_owned())
+    }
+}
+
 /// A symbol representing a value, such as a local variable or a
 /// function name.
 ///

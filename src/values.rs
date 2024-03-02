@@ -81,6 +81,7 @@ pub(crate) fn result_err_value(v: Value) -> Value {
 pub(crate) enum RuntimeType {
     NoValue,
     String,
+    Int,
     UserDefined {
         name: TypeName,
         args: Vec<RuntimeType>,
@@ -88,15 +89,6 @@ pub(crate) enum RuntimeType {
 }
 
 impl RuntimeType {
-    pub(crate) fn int() -> Self {
-        RuntimeType::UserDefined {
-            name: TypeName {
-                name: "Int".to_owned(),
-            },
-            args: vec![],
-        }
-    }
-
     pub(crate) fn list(element_type: RuntimeType) -> Self {
         RuntimeType::UserDefined {
             name: TypeName {
@@ -135,13 +127,14 @@ impl Display for RuntimeType {
             }
             RuntimeType::NoValue => write!(f, "NoValue"),
             RuntimeType::String => write!(f, "String"),
+            RuntimeType::Int => write!(f, "Int"),
         }
     }
 }
 
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
-        Value::Integer(_) => RuntimeType::int(),
+        Value::Integer(_) => RuntimeType::Int,
         Value::Fun(_, _) | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => {
             RuntimeType::UserDefined {
                 name: TypeName {

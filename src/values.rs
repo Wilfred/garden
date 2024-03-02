@@ -78,14 +78,16 @@ pub(crate) fn result_err_value(v: Value) -> Value {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct RuntimeType {
-    name: TypeName,
-    args: Vec<RuntimeType>,
+pub(crate) enum RuntimeType {
+    UserDefined {
+        name: TypeName,
+        args: Vec<RuntimeType>,
+    },
 }
 
 impl RuntimeType {
     pub(crate) fn no_value() -> Self {
-        RuntimeType {
+        RuntimeType::UserDefined {
             name: TypeName {
                 name: "NoValue".to_owned(),
             },
@@ -94,7 +96,7 @@ impl RuntimeType {
     }
 
     pub(crate) fn int() -> Self {
-        RuntimeType {
+        RuntimeType::UserDefined {
             name: TypeName {
                 name: "Int".to_owned(),
             },
@@ -103,7 +105,7 @@ impl RuntimeType {
     }
 
     pub(crate) fn string() -> Self {
-        RuntimeType {
+        RuntimeType::UserDefined {
             name: TypeName {
                 name: "String".to_owned(),
             },
@@ -112,7 +114,7 @@ impl RuntimeType {
     }
 
     pub(crate) fn list(element_type: RuntimeType) -> Self {
-        RuntimeType {
+        RuntimeType::UserDefined {
             name: TypeName {
                 name: "List".to_owned(),
             },
@@ -131,19 +133,22 @@ impl RuntimeType {
 
 impl Display for RuntimeType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.args.is_empty() {
-            write!(f, "{}", self.name.name)
-        } else {
-            write!(
-                f,
-                "{}<{}>",
-                self.name.name,
-                self.args
-                    .iter()
-                    .map(|arg| format!("{}", arg))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
+        match self {
+            RuntimeType::UserDefined { name, args } => {
+                if args.is_empty() {
+                    write!(f, "{}", name.name)
+                } else {
+                    write!(
+                        f,
+                        "{}<{}>",
+                        name.name,
+                        args.iter()
+                            .map(|arg| format!("{}", arg))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                }
+            }
         }
     }
 }
@@ -151,26 +156,28 @@ impl Display for RuntimeType {
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
         Value::Integer(_) => RuntimeType::int(),
-        Value::Fun(_, _) | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => RuntimeType {
-            name: TypeName {
-                name: "Fun".to_owned(),
-            },
-            // TODO: Fun should be a parameterized type.
-            args: vec![],
-        },
+        Value::Fun(_, _) | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => {
+            RuntimeType::UserDefined {
+                name: TypeName {
+                    name: "Fun".to_owned(),
+                },
+                // TODO: Fun should be a parameterized type.
+                args: vec![],
+            }
+        }
         Value::String(_) => RuntimeType::string(),
-        Value::List(_, element_type) => RuntimeType {
+        Value::List(_, element_type) => RuntimeType::UserDefined {
             name: TypeName {
                 name: "List".to_owned(),
             },
             args: vec![element_type.clone()],
         },
-        Value::Enum(name, _, _) => RuntimeType {
+        Value::Enum(name, _, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
             args: vec![RuntimeType::no_value()],
         },
-        Value::Struct(name, _) => RuntimeType {
+        Value::Struct(name, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
             args: vec![RuntimeType::no_value()],

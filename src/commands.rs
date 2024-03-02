@@ -251,7 +251,7 @@ fn describe_type(type_: &Type) -> String {
 
 fn describe_fun(value: &Value) -> Option<String> {
     match value {
-        Value::Fun(name_sym, fun_info) => Some(format_fun_info(fun_info, name_sym)),
+        Value::Fun(name_sym, fun_info, _) => Some(format_fun_info(fun_info, name_sym)),
         Value::BuiltinFunction(_kind, fun_info) => {
             if let Some(fun_info) = fun_info {
                 if let Some(fun_name) = &fun_info.name {
@@ -608,7 +608,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         }
     } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
         match value {
-            Value::Fun(_, fun_info) => Ok(Some(fun_info.src_string.clone())),
+            Value::Fun(_, fun_info, _) => Ok(Some(fun_info.src_string.clone())),
             // TODO: Offer source of stub for built-in functions.
             _ => Ok(None),
         }

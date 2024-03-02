@@ -12,8 +12,9 @@ use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 pub(crate) enum Value {
     /// An integer value.
     Integer(i64),
-    /// A reference to a user-defined function.
-    Fun(Symbol, FunInfo),
+    /// A reference to a user-defined function, along with its return
+    /// type.
+    Fun(Symbol, FunInfo, RuntimeType),
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo),
     /// A reference to a built-in function.
@@ -144,7 +145,7 @@ impl Display for RuntimeType {
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
         Value::Integer(_) => RuntimeType::Int,
-        Value::Fun(_, fun_info) | Value::Closure(_, fun_info) => RuntimeType::Fun {
+        Value::Fun(_, fun_info, _) | Value::Closure(_, fun_info) => RuntimeType::Fun {
             // TODO: use fun_info
             args: vec![],
             return_: Box::new(RuntimeType::Top),
@@ -178,7 +179,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
         name: match value {
             Value::Integer(_) => "Int",
-            Value::Fun(_, _) => "Fun",
+            Value::Fun(..) => "Fun",
             Value::Closure(_, _) => "Fun",
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
@@ -225,7 +226,7 @@ impl Value {
     pub(crate) fn display(&self, env: &Env) -> String {
         match self {
             Value::Integer(i) => format!("{}", i),
-            Value::Fun(name_sym, _) => format!("(function: {})", name_sym.name),
+            Value::Fun(name_sym, _, _) => format!("(function: {})", name_sym.name),
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind, _) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),

@@ -84,6 +84,8 @@ pub(crate) enum RuntimeType {
     NoValue,
     /// The top type, which includes
     Top,
+    /// A unresolved type variable.
+    TypeVariable(TypeName),
     String,
     Int,
     List(Box<RuntimeType>),
@@ -134,6 +136,7 @@ impl Display for RuntimeType {
                 write!(f, "Fun<({}), {}>", formatted_args, return_)
             }
             RuntimeType::Top => write!(f, "_"),
+            RuntimeType::TypeVariable(name) => write!(f, "?{}", name),
         }
     }
 }

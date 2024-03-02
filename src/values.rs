@@ -154,7 +154,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
                     return_: Box::new(RuntimeType::Top),
                 }
             }
-            None => todo!(),
+            None => RuntimeType::Top,
         },
         Value::String(_) => RuntimeType::String,
         Value::List(_, element_type) => RuntimeType::List(Box::new(element_type.clone())),

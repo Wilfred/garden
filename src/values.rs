@@ -82,6 +82,7 @@ pub(crate) enum RuntimeType {
     NoValue,
     String,
     Int,
+    List(Box<RuntimeType>),
     UserDefined {
         name: TypeName,
         args: Vec<RuntimeType>,
@@ -89,21 +90,12 @@ pub(crate) enum RuntimeType {
 }
 
 impl RuntimeType {
-    pub(crate) fn list(element_type: RuntimeType) -> Self {
-        RuntimeType::UserDefined {
-            name: TypeName {
-                name: "List".to_owned(),
-            },
-            args: vec![element_type],
-        }
-    }
-
     pub(crate) fn empty_list() -> Self {
-        Self::list(Self::NoValue)
+        Self::List(Box::new(Self::NoValue))
     }
 
     pub(crate) fn string_list() -> Self {
-        Self::list(Self::String)
+        Self::List(Box::new(Self::String))
     }
 }
 
@@ -128,6 +120,7 @@ impl Display for RuntimeType {
             RuntimeType::NoValue => write!(f, "NoValue"),
             RuntimeType::String => write!(f, "String"),
             RuntimeType::Int => write!(f, "Int"),
+            RuntimeType::List(elem_type) => write!(f, "List<{}>", elem_type),
         }
     }
 }
@@ -145,12 +138,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             }
         }
         Value::String(_) => RuntimeType::String,
-        Value::List(_, element_type) => RuntimeType::UserDefined {
-            name: TypeName {
-                name: "List".to_owned(),
-            },
-            args: vec![element_type.clone()],
-        },
+        Value::List(_, element_type) => RuntimeType::List(Box::new(element_type.clone())),
         Value::Enum(name, _, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO

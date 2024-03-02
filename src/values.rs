@@ -80,6 +80,7 @@ pub(crate) fn result_err_value(v: Value) -> Value {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum RuntimeType {
     NoValue,
+    String,
     UserDefined {
         name: TypeName,
         args: Vec<RuntimeType>,
@@ -91,15 +92,6 @@ impl RuntimeType {
         RuntimeType::UserDefined {
             name: TypeName {
                 name: "Int".to_owned(),
-            },
-            args: vec![],
-        }
-    }
-
-    pub(crate) fn string() -> Self {
-        RuntimeType::UserDefined {
-            name: TypeName {
-                name: "String".to_owned(),
             },
             args: vec![],
         }
@@ -119,7 +111,7 @@ impl RuntimeType {
     }
 
     pub(crate) fn string_list() -> Self {
-        Self::list(Self::string())
+        Self::list(Self::String)
     }
 }
 
@@ -142,6 +134,7 @@ impl Display for RuntimeType {
                 }
             }
             RuntimeType::NoValue => write!(f, "NoValue"),
+            RuntimeType::String => write!(f, "String"),
         }
     }
 }
@@ -158,7 +151,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
                 args: vec![],
             }
         }
-        Value::String(_) => RuntimeType::string(),
+        Value::String(_) => RuntimeType::String,
         Value::List(_, element_type) => RuntimeType::UserDefined {
             name: TypeName {
                 name: "List".to_owned(),

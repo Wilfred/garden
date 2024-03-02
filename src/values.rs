@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use itertools::Itertools as _;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
@@ -83,6 +84,10 @@ pub(crate) enum RuntimeType {
     String,
     Int,
     List(Box<RuntimeType>),
+    Fun {
+        args: Vec<RuntimeType>,
+        return_: Box<RuntimeType>,
+    },
     UserDefined {
         name: TypeName,
         args: Vec<RuntimeType>,
@@ -121,6 +126,10 @@ impl Display for RuntimeType {
             RuntimeType::String => write!(f, "String"),
             RuntimeType::Int => write!(f, "Int"),
             RuntimeType::List(elem_type) => write!(f, "List<{}>", elem_type),
+            RuntimeType::Fun { args, return_ } => {
+                let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
+                write!(f, "Fun<({}), {}>", formatted_args, return_)
+            }
         }
     }
 }
@@ -128,15 +137,21 @@ impl Display for RuntimeType {
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
         Value::Integer(_) => RuntimeType::Int,
-        Value::Fun(_, _) | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => {
-            RuntimeType::UserDefined {
-                name: TypeName {
-                    name: "Fun".to_owned(),
-                },
-                // TODO: Fun should be a parameterized type.
-                args: vec![],
+        Value::Fun(_, fun_info) | Value::Closure(_, fun_info) => RuntimeType::Fun {
+            // TODO: use fun_info
+            args: vec![],
+            return_: Box::new(RuntimeType::NoValue),
+        },
+        Value::BuiltinFunction(_, fun_info) => match fun_info {
+            Some(fun_info) => {
+                RuntimeType::Fun {
+                    // TODO: use fun_info
+                    args: vec![],
+                    return_: Box::new(RuntimeType::NoValue),
+                }
             }
-        }
+            None => todo!(),
+        },
         Value::String(_) => RuntimeType::String,
         Value::List(_, element_type) => RuntimeType::List(Box::new(element_type.clone())),
         Value::Enum(name, _, _) => RuntimeType::UserDefined {

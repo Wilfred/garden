@@ -41,9 +41,6 @@ fun dbg(value): Unit {
 //     println(string_repr(value));
 // }
 
-
-fun foo(): Unit {}
-
 // Unwrap a value that is `Ok`, or terminate with an error.
 //
 // TODO: support generic types in return position.

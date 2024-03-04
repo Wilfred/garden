@@ -93,7 +93,7 @@ pub(crate) enum RuntimeType {
     Int,
     List(Box<RuntimeType>),
     Fun {
-        args: Vec<RuntimeType>,
+        params: Vec<RuntimeType>,
         return_: Box<RuntimeType>,
     },
     UserDefined {
@@ -134,7 +134,10 @@ impl Display for RuntimeType {
             RuntimeType::String => write!(f, "String"),
             RuntimeType::Int => write!(f, "Int"),
             RuntimeType::List(elem_type) => write!(f, "List<{}>", elem_type),
-            RuntimeType::Fun { args, return_ } => {
+            RuntimeType::Fun {
+                params: args,
+                return_,
+            } => {
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
                 write!(f, "Fun<({}), {}>", formatted_args, return_)
             }
@@ -153,7 +156,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         }
         | Value::Closure(_, fun_info) => RuntimeType::Fun {
             // TODO: use fun_info
-            args: vec![],
+            params: vec![],
             return_: Box::new(RuntimeType::Top),
         },
         Value::BuiltinFunction(_, fun_info) => match fun_info {
@@ -169,7 +172,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
 
                 RuntimeType::Fun {
                     // TODO: use fun_info
-                    args: param_types,
+                    params: param_types,
                     return_: Box::new(RuntimeType::Top),
                 }
             }

@@ -158,9 +158,18 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         },
         Value::BuiltinFunction(_, fun_info) => match fun_info {
             Some(fun_info) => {
+                let mut param_types = vec![];
+                for param in &fun_info.params {
+                    let type_ = match &param.type_ {
+                        Some(hint) => todo!(),
+                        None => RuntimeType::Top,
+                    };
+                    param_types.push(type_);
+                }
+
                 RuntimeType::Fun {
                     // TODO: use fun_info
-                    args: vec![],
+                    args: param_types,
                     return_: Box::new(RuntimeType::Top),
                 }
             }

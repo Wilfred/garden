@@ -6,7 +6,7 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::BlockBindings;
 use crate::types::Type;
-use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
+use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeHint, TypeName};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Value {
@@ -146,36 +146,42 @@ impl Display for RuntimeType {
     }
 }
 
+pub(crate) fn runtime_type_from_hint(hint: &TypeHint) -> RuntimeType {
+    let name = &hint.sym.name;
+    if name.name == "NoValue" {
+        return RuntimeType::NoValue;
+    }
+    if name.name == "String" {
+        return RuntimeType::String;
+    }
+    if name.name == "Int" {
+        return RuntimeType::Int;
+    }
+    if name.name == "List" {
+        let elem_type = match hint.args.first() {
+            Some(arg) => runtime_type_from_hint(arg),
+            None => RuntimeType::Top,
+        };
+
+        return RuntimeType::List(Box::new(elem_type));
+    }
+
+    let args: Vec<_> = hint.args.iter().map(runtime_type_from_hint).collect();
+
+    RuntimeType::UserDefined {
+        name: name.clone(),
+        args,
+    }
+}
+
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
         Value::Integer(_) => RuntimeType::Int,
-        Value::Fun {
-            name_sym: _,
-            fun_info,
-            return_type: _,
+        Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
+            runtime_type_from_fun_info(fun_info)
         }
-        | Value::Closure(_, fun_info) => RuntimeType::Fun {
-            // TODO: use fun_info
-            params: vec![],
-            return_: Box::new(RuntimeType::Top),
-        },
         Value::BuiltinFunction(_, fun_info) => match fun_info {
-            Some(fun_info) => {
-                let mut param_types = vec![];
-                for param in &fun_info.params {
-                    let type_ = match &param.type_ {
-                        Some(hint) => todo!(),
-                        None => RuntimeType::Top,
-                    };
-                    param_types.push(type_);
-                }
-
-                RuntimeType::Fun {
-                    // TODO: use fun_info
-                    params: param_types,
-                    return_: Box::new(RuntimeType::Top),
-                }
-            }
+            Some(fun_info) => runtime_type_from_fun_info(fun_info),
             None => RuntimeType::Top,
         },
         Value::String(_) => RuntimeType::String,
@@ -190,6 +196,23 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             // TODO
             args: vec![RuntimeType::Top],
         },
+    }
+}
+
+fn runtime_type_from_fun_info(fun_info: &FunInfo) -> RuntimeType {
+    let mut param_types = vec![];
+    for param in &fun_info.params {
+        let type_ = match &param.type_ {
+            Some(hint) => runtime_type_from_hint(hint),
+            None => RuntimeType::Top,
+        };
+        param_types.push(type_);
+    }
+
+    RuntimeType::Fun {
+        // TODO: use fun_info
+        params: param_types,
+        return_: Box::new(RuntimeType::Top),
     }
 }
 

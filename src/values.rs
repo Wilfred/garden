@@ -87,10 +87,8 @@ pub(crate) fn result_err_value(v: Value) -> Value {
 pub(crate) enum RuntimeType {
     /// The bottom type, no runtime values can have this type.
     NoValue,
-    /// The top type, which includes
+    /// The top type, which includes all values.
     Top,
-    /// A unresolved type variable.
-    TypeVariable(TypeName),
     String,
     Int,
     List(Box<RuntimeType>),
@@ -141,7 +139,6 @@ impl Display for RuntimeType {
                 write!(f, "Fun<({}), {}>", formatted_args, return_)
             }
             RuntimeType::Top => write!(f, "_"),
-            RuntimeType::TypeVariable(name) => write!(f, "?{}", name),
         }
     }
 }

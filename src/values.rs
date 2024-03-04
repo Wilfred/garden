@@ -14,11 +14,7 @@ pub(crate) enum Value {
     Integer(i64),
     /// A reference to a user-defined function, along with its return
     /// type.
-    Fun {
-        name_sym: Symbol,
-        fun_info: FunInfo,
-        return_type: RuntimeType,
-    },
+    Fun { name_sym: Symbol, fun_info: FunInfo },
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo),
     /// A reference to a built-in function.

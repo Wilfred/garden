@@ -341,13 +341,11 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, &mut warnings);
                 } else {
-                    let return_type = RuntimeType::Top;
                     env.set_with_file_scope(
                         &name_sym.name,
                         Value::Fun {
                             name_sym: name_sym.clone(),
                             fun_info: fun_info.clone(),
-                            return_type,
                         },
                     );
                     warnings.extend(check_types_exist(fun_info, env));
@@ -1445,7 +1443,6 @@ fn eval_call(
         Value::Fun {
             name_sym,
             fun_info: fi @ FunInfo { params, body, .. },
-            return_type: _,
         } => {
             // Calling a user-defined function.
 

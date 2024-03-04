@@ -185,12 +185,12 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         Value::Enum(name, _, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
-            args: vec![RuntimeType::Top],
+            args: vec![],
         },
         Value::Struct(name, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
-            args: vec![RuntimeType::Top],
+            args: vec![],
         },
     }
 }

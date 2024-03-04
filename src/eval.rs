@@ -20,8 +20,8 @@ use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::Type;
 use crate::values::{
-    bool_value, result_err_value, result_ok_value, runtime_type, type_representation, unit_value,
-    BuiltinFunctionKind, RuntimeType, Value,
+    bool_value, result_err_value, result_ok_value, runtime_type, runtime_type_from_hint,
+    type_representation, unit_value, BuiltinFunctionKind, RuntimeType, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
@@ -974,25 +974,14 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
-fn check_type(value: &Value, expected: &TypeSymbol, env: &Env) -> Result<(), ErrorMessage> {
-    let actual_type = type_representation(value);
-
-    if actual_type != expected.name {
-        return Err(format_type_error(&expected.name, value, env));
-    }
-
-    Ok(())
-}
-
-/// Check that `value` has `expected` type.
-fn value_has_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), ErrorMessage> {
+fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), ErrorMessage> {
     let value_type = runtime_type(value);
 
-    if !is_subtype(&value_type, expected) {
-        return Err(format_runtime_type_error(&expected, value, env));
+    if is_subtype(&value_type, expected) {
+        Ok(())
+    } else {
+        Err(format_runtime_type_error(expected, value, env))
     }
-
-    Ok(())
 }
 
 fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
@@ -1731,8 +1720,10 @@ fn check_param_types(
     arg_values: &[Value],
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
-        if let Some(param_ty) = &param.type_ {
-            if let Err(msg) = check_type(arg_value, &param_ty.sym, env) {
+        if let Some(param_hint) = &param.type_ {
+            let param_ty = runtime_type_from_hint(param_hint);
+
+            if let Err(msg) = check_type(arg_value, &param_ty, env) {
                 let mut saved_values = vec![];
                 saved_values.push(receiver_value.clone());
                 for value in arg_values.iter().rev() {
@@ -2754,8 +2745,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 .expect("Should have a value");
 
             if let Some(ref fun) = stack_frame.enclosing_fun {
-                if let Some(return_type) = &fun.return_type {
-                    if let Err(msg) = check_type(&return_value, &return_type.sym, env) {
+                if let Some(return_hint) = &fun.return_type {
+                    let return_ty = runtime_type_from_hint(return_hint);
+
+                    if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());
                         env.stack.push(stack_frame);
 

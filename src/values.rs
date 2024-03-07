@@ -106,6 +106,15 @@ pub(crate) enum RuntimeType {
 }
 
 impl RuntimeType {
+    pub(crate) fn unit() -> Self {
+        Self::UserDefined {
+            name: TypeName {
+                name: "Unit".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn empty_list() -> Self {
         Self::List(Box::new(Self::NoValue))
     }

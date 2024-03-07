@@ -22,7 +22,10 @@ pub(crate) enum Value {
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
-    List(Vec<Value>, RuntimeType),
+    List {
+        items: Vec<Value>,
+        elem_type: RuntimeType,
+    },
     /// A value in a user-defined enum.
     Enum(TypeName, usize, Option<Box<Value>>),
     /// A value with the type of a user-defined struct. Fields are
@@ -181,7 +184,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             None => RuntimeType::Top,
         },
         Value::String(_) => RuntimeType::String,
-        Value::List(_, element_type) => RuntimeType::List(Box::new(element_type.clone())),
+        Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
         Value::Enum(name, _, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
@@ -220,7 +223,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::Closure(_, _) => "Fun",
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
-            Value::List(_, _) => "List",
+            Value::List { .. } => "List",
             Value::Enum(name, _, _) => &name.name,
             Value::Struct(name, _) => &name.name,
         }
@@ -267,7 +270,7 @@ impl Value {
             Value::Closure(..) => "(closure)".to_string(),
             Value::BuiltinFunction(kind, _) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),
-            Value::List(items, _) => {
+            Value::List { items, .. } => {
                 let mut s = String::new();
 
                 s.push('[');

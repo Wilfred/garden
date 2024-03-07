@@ -513,7 +513,7 @@ fn is_builtin_stub(fun_info: &FunInfo) -> bool {
 // an error otherwise.
 fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
     match value {
-        Value::List(items, _runtime_type) => {
+        Value::List { items, .. } => {
             // TODO: check runtime_type instead.
             let mut res: Vec<String> = vec![];
             for item in items {
@@ -1384,13 +1384,19 @@ fn eval_builtin_call(
                         }
                     }
 
-                    Value::List(items, RuntimeType::string_list())
+                    Value::List {
+                        items,
+                        elem_type: RuntimeType::string_list(),
+                    }
                 }
                 Err(_) => {
                     // TODO: list_directory() should return a Result
                     // rather than silently returning an empty list on
                     // failure.
-                    Value::List(vec![], RuntimeType::empty_list())
+                    Value::List {
+                        items: vec![],
+                        elem_type: RuntimeType::empty_list(),
+                    }
                 }
             };
 
@@ -1877,15 +1883,16 @@ fn eval_builtin_method_call(
             )?;
 
             match &receiver_value {
-                Value::List(items, runtime_type) => {
+                Value::List { items, elem_type } => {
                     let mut new_items = items.clone();
                     new_items.push(arg_values[0].clone());
 
                     // TODO: check that the new value has the same
                     // type as the existing list items.
-                    stack_frame
-                        .evalled_values
-                        .push(Value::List(new_items, runtime_type.clone()));
+                    stack_frame.evalled_values.push(Value::List {
+                        items: new_items,
+                        elem_type: elem_type.clone(),
+                    });
                 }
                 v => {
                     let mut saved_values = vec![];
@@ -1919,7 +1926,7 @@ fn eval_builtin_method_call(
             )?;
 
             match (&receiver_value, &arg_values[0]) {
-                (Value::List(items, _element_type), Value::Integer(i)) => {
+                (Value::List { items, .. }, Value::Integer(i)) => {
                     let index: usize = if *i >= items.len() as i64 || *i < 0 {
                         let mut saved_values = vec![];
                         for value in arg_values.iter().rev() {
@@ -1993,7 +2000,7 @@ fn eval_builtin_method_call(
             )?;
 
             match &receiver_value {
-                Value::List(items, _) => {
+                Value::List { items, .. } => {
                     stack_frame
                         .evalled_values
                         .push(Value::Integer(items.len() as i64));
@@ -2402,9 +2409,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             list_values.push(element);
                         }
 
-                        stack_frame
-                            .evalled_values
-                            .push(Value::List(list_values, element_type));
+                        stack_frame.evalled_values.push(Value::List {
+                            items: list_values,
+                            elem_type: element_type,
+                        });
                     } else {
                         stack_frame
                             .exprs_to_eval
@@ -3086,10 +3094,10 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::List(
-                vec![Value::Integer(3), Value::Integer(12)],
-                RuntimeType::Int
-            )
+            Value::List {
+                items: vec![Value::Integer(3), Value::Integer(12)],
+                elem_type: RuntimeType::Int
+            }
         );
     }
 
@@ -3160,10 +3168,10 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::List(
-                vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
-                RuntimeType::Int
-            )
+            Value::List {
+                items: vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
+                elem_type: RuntimeType::Int
+            }
         );
     }
 

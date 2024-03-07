@@ -27,7 +27,11 @@ pub(crate) enum Value {
         elem_type: RuntimeType,
     },
     /// A value in a user-defined enum.
-    Enum(TypeName, usize, Option<Box<Value>>),
+    Enum {
+        type_name: TypeName,
+        variant_idx: usize,
+        payload: Option<Box<Value>>,
+    },
     /// A value with the type of a user-defined struct. Fields are
     /// ordered according to the definition of the type.
     Struct(TypeName, Vec<(SymbolName, Value)>),
@@ -37,49 +41,49 @@ pub(crate) enum Value {
 pub(crate) fn unit_value() -> Value {
     // We can assume that Unit is always defined because it's in the
     // prelude.
-    Value::Enum(
-        TypeName {
+    Value::Enum {
+        type_name: TypeName {
             name: "Unit".to_owned(),
         },
-        0,
-        None,
-    )
+        variant_idx: 0,
+        payload: None,
+    }
 }
 
 pub(crate) fn bool_value(b: bool) -> Value {
     // We can assume that Bool is always defined because it's in the
     // prelude.
-    Value::Enum(
-        TypeName {
+    Value::Enum {
+        type_name: TypeName {
             name: "Bool".to_owned(),
         },
-        if b { 0 } else { 1 },
-        None,
-    )
+        variant_idx: if b { 0 } else { 1 },
+        payload: None,
+    }
 }
 
 pub(crate) fn result_ok_value(v: Value) -> Value {
     // We can assume that Result is always defined because it's in the
     // prelude.
-    Value::Enum(
-        TypeName {
+    Value::Enum {
+        type_name: TypeName {
             name: "Result".to_owned(),
         },
-        0,
-        Some(Box::new(v)),
-    )
+        variant_idx: 0,
+        payload: Some(Box::new(v)),
+    }
 }
 
 pub(crate) fn result_err_value(v: Value) -> Value {
     // We can assume that Result is always defined because it's in the
     // prelude.
-    Value::Enum(
-        TypeName {
+    Value::Enum {
+        type_name: TypeName {
             name: "Result".to_owned(),
         },
-        1,
-        Some(Box::new(v)),
-    )
+        variant_idx: 1,
+        payload: Some(Box::new(v)),
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -185,8 +189,8 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         },
         Value::String(_) => RuntimeType::String,
         Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
-        Value::Enum(name, _, _) => RuntimeType::UserDefined {
-            name: name.clone(),
+        Value::Enum { type_name, .. } => RuntimeType::UserDefined {
+            name: type_name.clone(),
             // TODO
             args: vec![],
         },
@@ -224,7 +228,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
             Value::List { .. } => "List",
-            Value::Enum(name, _, _) => &name.name,
+            Value::Enum { type_name, .. } => &type_name.name,
             Value::Struct(name, _) => &name.name,
         }
         .to_owned(),
@@ -287,11 +291,15 @@ impl Value {
 
                 s
             }
-            Value::Enum(name, variant_idx, payload) => {
-                let type_ = match env.get_type(name) {
+            Value::Enum {
+                type_name,
+                variant_idx,
+                payload,
+            } => {
+                let type_ = match env.get_type(type_name) {
                     Some(type_) => type_,
                     None => {
-                        return format!("{}__OLD_DEFINITION::{}", name, variant_idx);
+                        return format!("{}__OLD_DEFINITION::{}", type_name, variant_idx);
                     }
                 };
 
@@ -305,7 +313,7 @@ impl Value {
                             variant_takes_payload = variant_sym.payload_hint.is_some();
                             format!("{}", variant_sym.name_sym.name)
                         }
-                        None => format!("{}::__OLD_VARIANT_{}", name, variant_idx),
+                        None => format!("{}::__OLD_VARIANT_{}", type_name, variant_idx),
                     },
                     Type::Struct(struct_info) => {
                         format!("{}__OLD_DEFINITION", struct_info.name_sym)
@@ -343,7 +351,11 @@ impl Value {
 
     pub(crate) fn display_unless_unit(&self, env: &Env) -> Option<String> {
         match self {
-            Value::Enum(name, variant_idx, _) if name.name == "Unit" && *variant_idx == 0 => None,
+            Value::Enum {
+                type_name,
+                variant_idx,
+                ..
+            } if type_name.name == "Unit" && *variant_idx == 0 => None,
             _ => Some(self.display(env)),
         }
     }

@@ -385,13 +385,17 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 );
 
                 // Add the values in the enum to the value environment.
-                for (idx, variant_sym) in enum_info.variants.iter().enumerate() {
+                for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
                     // TODO: warn if we're clobbering a name from a
                     // different enum (i.e. not just redefining the
                     // current enum).
                     env.set_with_file_scope(
                         &variant_sym.name_sym.name,
-                        Value::Enum(enum_info.name_sym.name.clone(), idx, None),
+                        Value::Enum {
+                            type_name: enum_info.name_sym.name.clone(),
+                            variant_idx,
+                            payload: None,
+                        },
                     );
                 }
 
@@ -616,7 +620,11 @@ fn eval_if(
 /// If `value` is a Bool value, convert it to a Rust bool.
 fn to_rust_bool(value: &Value) -> Option<bool> {
     match value {
-        Value::Enum(name, variant_idx, _) if name.name == "Bool" => {
+        Value::Enum {
+            type_name,
+            variant_idx,
+            ..
+        } if type_name.name == "Bool" => {
             // TODO: this assumes users never redefine Bool.
             Some(*variant_idx == 0)
         }
@@ -1621,7 +1629,11 @@ fn eval_enum_constructor(
     receiver_value: &Value,
 ) -> Result<Value, ErrorInfo> {
     match receiver_value {
-        Value::Enum(ref name, variant_idx, None) => {
+        Value::Enum {
+            ref type_name,
+            variant_idx,
+            payload: None,
+        } => {
             let wrapped_value = if arg_values.len() == 1 {
                 &arg_values[0]
             } else {
@@ -1635,7 +1647,7 @@ fn eval_enum_constructor(
                 });
             };
 
-            match env.get_type(name) {
+            match env.get_type(type_name) {
                 Some(type_) => match type_ {
                     // TODO: these are probably reachable if the user
                     // defines an enum whose name clashes with
@@ -1645,11 +1657,11 @@ fn eval_enum_constructor(
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
                             if variant_sym.payload_hint.is_some() {
-                                Ok(Value::Enum(
-                                    name.clone(),
-                                    *variant_idx,
-                                    Some(Box::new(wrapped_value.clone())),
-                                ))
+                                Ok(Value::Enum {
+                                    type_name: type_name.clone(),
+                                    variant_idx: *variant_idx,
+                                    payload: Some(Box::new(wrapped_value.clone())),
+                                })
                             } else {
                                 let mut saved_values = vec![];
                                 for value in arg_values.iter().rev() {
@@ -1661,7 +1673,7 @@ fn eval_enum_constructor(
                                     error_position: position.clone(),
                                     message: ErrorMessage(format!(
                                         "{}::{} does not take an argument",
-                                        name, variant_sym.name_sym.name
+                                        type_name, variant_sym.name_sym.name
                                     )),
                                     restore_values: saved_values,
                                 })
@@ -1674,11 +1686,11 @@ fn eval_enum_constructor(
                             // TODO: store a copy of the old
                             // definition so this behaves the same as
                             // the current definition.
-                            Ok(Value::Enum(
-                                name.clone(),
-                                *variant_idx,
-                                Some(Box::new(wrapped_value.clone())),
-                            ))
+                            Ok(Value::Enum {
+                                type_name: type_name.clone(),
+                                variant_idx: *variant_idx,
+                                payload: Some(Box::new(wrapped_value.clone())),
+                            })
                         }
                     },
                 },
@@ -1690,7 +1702,7 @@ fn eval_enum_constructor(
                     // definition.
                     Err(ErrorInfo {
                         error_position: position.clone(),
-                        message: ErrorMessage(format!("{name} no longer has this variant")),
+                        message: ErrorMessage(format!("{type_name} no longer has this variant")),
                         restore_values: vec![],
                     })
                 }
@@ -2598,7 +2610,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             .pop()
                             .expect("Popped an empty value stack for call receiver");
 
-                        if matches!(receiver_value, Value::Enum(_, _, _)) {
+                        if matches!(receiver_value, Value::Enum { .. }) {
                             match eval_enum_constructor(
                                 env,
                                 &expr_position,
@@ -2863,7 +2875,12 @@ fn eval_match_cases(
         .pop()
         .expect("Popped an empty value stack for match");
 
-    let Value::Enum(value_type_name, value_variant_idx, value_payload) = scrutinee_value else {
+    let Value::Enum {
+        type_name: value_type_name,
+        variant_idx: value_variant_idx,
+        payload: value_payload,
+    } = scrutinee_value
+    else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
             runtime_type(&scrutinee_value),
@@ -2876,7 +2893,7 @@ fn eval_match_cases(
         Some(type_) => type_,
         None => {
             let msg = ErrorMessage(format!(
-                "Could not find an enum type named {value_type_name}",
+                "Could not find an enum type named {value_type_name}"
             ));
             return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
         }
@@ -2901,7 +2918,12 @@ fn eval_match_cases(
             ));
         };
 
-        let Value::Enum(pattern_type_name, pattern_variant_idx, _) = value else {
+        let Value::Enum {
+            type_name: pattern_type_name,
+            variant_idx: pattern_variant_idx,
+            ..
+        } = value
+        else {
             // TODO: error messages should include examples of valid code.
             let msg = ErrorMessage(format!(
                 "Patterns must be enum variants, got `{}`",

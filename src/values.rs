@@ -115,6 +115,15 @@ impl RuntimeType {
         }
     }
 
+    pub(crate) fn bool() -> Self {
+        Self::UserDefined {
+            name: TypeName {
+                name: "Bool".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn empty_list() -> Self {
         Self::List(Box::new(Self::NoValue))
     }

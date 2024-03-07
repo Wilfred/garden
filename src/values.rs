@@ -29,6 +29,7 @@ pub(crate) enum Value {
     /// A value in a user-defined enum.
     Enum {
         type_name: TypeName,
+        runtime_type: RuntimeType,
         variant_idx: usize,
         payload: Option<Box<Value>>,
     },
@@ -51,6 +52,7 @@ pub(crate) fn unit_value() -> Value {
         type_name: TypeName {
             name: "Unit".to_owned(),
         },
+        runtime_type: RuntimeType::unit(),
         variant_idx: 0,
         payload: None,
     }
@@ -63,12 +65,15 @@ pub(crate) fn bool_value(b: bool) -> Value {
         type_name: TypeName {
             name: "Bool".to_owned(),
         },
+        runtime_type: RuntimeType::bool(),
         variant_idx: if b { 0 } else { 1 },
         payload: None,
     }
 }
 
 pub(crate) fn result_ok_value(v: Value) -> Value {
+    let value_type = runtime_type(&v);
+
     // We can assume that Result is always defined because it's in the
     // prelude.
     Value::Enum {
@@ -77,15 +82,29 @@ pub(crate) fn result_ok_value(v: Value) -> Value {
         },
         variant_idx: 0,
         payload: Some(Box::new(v)),
+        runtime_type: RuntimeType::UserDefined {
+            name: TypeName {
+                name: "Result".to_owned(),
+            },
+            args: vec![value_type, RuntimeType::NoValue],
+        },
     }
 }
 
 pub(crate) fn result_err_value(v: Value) -> Value {
+    let value_type = runtime_type(&v);
+
     // We can assume that Result is always defined because it's in the
     // prelude.
     Value::Enum {
         type_name: TypeName {
             name: "Result".to_owned(),
+        },
+        runtime_type: RuntimeType::UserDefined {
+            name: TypeName {
+                name: "Result".to_owned(),
+            },
+            args: vec![RuntimeType::NoValue, value_type],
         },
         variant_idx: 1,
         payload: Some(Box::new(v)),
@@ -330,6 +349,7 @@ impl Value {
                 type_name,
                 variant_idx,
                 payload,
+                ..
             } => {
                 let type_ = match env.get_type(type_name) {
                     Some(type_) => type_,

@@ -392,8 +392,17 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                             variant_idx,
                         }
                     } else {
+                        let runtime_type = enum_value_runtime_type(
+                            env,
+                            &enum_info.name_sym.name,
+                            variant_idx,
+                            &RuntimeType::Top,
+                        )
+                        .unwrap_or(RuntimeType::NoValue);
+
                         Value::Enum {
                             type_name: enum_info.name_sym.name.clone(),
+                            runtime_type,
                             variant_idx,
                             payload: None,
                         }
@@ -1616,11 +1625,21 @@ fn eval_call(
                 arg_values,
             )?;
 
+            let runtime_type = enum_value_runtime_type(
+                env,
+                type_name,
+                *variant_idx,
+                &runtime_type(&arg_values[0]),
+            )
+            .unwrap_or(RuntimeType::NoValue);
+
             let value = Value::Enum {
                 type_name: type_name.clone(),
                 variant_idx: *variant_idx,
-                // TODO: check type of arg_values[0].
+                // TODO: check type of arg_values[0] is compatible
+                // with the declared type of the variant.
                 payload: Some(Box::new(arg_values[0].clone())),
+                runtime_type,
             };
             stack_frame.evalled_values.push(value);
         }
@@ -1648,6 +1667,54 @@ fn eval_call(
     Ok(None)
 }
 
+fn enum_value_runtime_type(
+    env: &Env,
+    type_name: &TypeName,
+    variant_idx: usize,
+    payload_value_type: &RuntimeType,
+) -> Option<RuntimeType> {
+    let Some(type_) = env.get_type(type_name) else {
+        return None;
+    };
+    let Type::Enum(enum_info) = type_ else {
+        return None;
+    };
+
+    let Some(variant_info) = enum_info.variants.get(variant_idx) else {
+        return None;
+    };
+
+    match &variant_info.payload_hint {
+        Some(hint) => {
+            // If this variant has a payload whose type is a type
+            // parameter, fill in that type argument accordingly.
+            let mut args = vec![];
+            for type_param in &enum_info.type_params {
+                if type_param.name == hint.sym.name {
+                    args.push(payload_value_type.clone());
+                } else {
+                    args.push(RuntimeType::NoValue);
+                }
+            }
+
+            Some(RuntimeType::UserDefined {
+                name: type_name.clone(),
+                args,
+            })
+        }
+        None => {
+            let args = vec![RuntimeType::NoValue; enum_info.type_params.len()];
+
+            // This variant does not have a payload. Resolve all the
+            // type parameters in this enum definition to NoValue.
+            Some(RuntimeType::UserDefined {
+                name: type_name.clone(),
+                args,
+            })
+        }
+    }
+}
+
 fn eval_enum_constructor(
     env: &Env,
     position: &Position,
@@ -1660,6 +1727,7 @@ fn eval_enum_constructor(
             ref type_name,
             variant_idx,
             payload: None,
+            ..
         } => {
             let wrapped_value = if arg_values.len() == 1 {
                 &arg_values[0]
@@ -1684,10 +1752,19 @@ fn eval_enum_constructor(
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
                             if variant_sym.payload_hint.is_some() {
+                                let runtime_type = enum_value_runtime_type(
+                                    env,
+                                    type_name,
+                                    *variant_idx,
+                                    &runtime_type(wrapped_value),
+                                )
+                                .unwrap_or(RuntimeType::NoValue);
+
                                 Ok(Value::Enum {
                                     type_name: type_name.clone(),
                                     variant_idx: *variant_idx,
                                     payload: Some(Box::new(wrapped_value.clone())),
+                                    runtime_type,
                                 })
                             } else {
                                 let mut saved_values = vec![];
@@ -1707,6 +1784,8 @@ fn eval_enum_constructor(
                             }
                         }
                         None => {
+                            // This enum no longer has a variant at this index.
+
                             // Assume that the previous definition
                             // accepted a payload.
                             //
@@ -1717,6 +1796,8 @@ fn eval_enum_constructor(
                                 type_name: type_name.clone(),
                                 variant_idx: *variant_idx,
                                 payload: Some(Box::new(wrapped_value.clone())),
+                                // TODO: use the old definition to compute the exact type here.
+                                runtime_type: RuntimeType::Top,
                             })
                         }
                     },
@@ -2906,6 +2987,7 @@ fn eval_match_cases(
         type_name: value_type_name,
         variant_idx: value_variant_idx,
         payload: value_payload,
+        ..
     } = scrutinee_value
     else {
         let msg = ErrorMessage(format!(

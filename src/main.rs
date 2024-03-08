@@ -266,16 +266,6 @@ fn call_to_main_src(cli_args: &[String]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use assert_cmd::Command;
-
-    #[test]
-    fn test_hello_world() {
-        let mut cmd = Command::cargo_bin("garden").unwrap();
-
-        cmd.arg("run").arg("sample_programs/hello_world.gdn");
-        cmd.assert().success().stdout("Hello, World!\n");
-    }
-
     use goldentests::{TestConfig, TestResult};
 
     #[test]

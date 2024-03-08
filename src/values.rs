@@ -32,6 +32,12 @@ pub(crate) enum Value {
         variant_idx: usize,
         payload: Option<Box<Value>>,
     },
+    // A function that takes one argument, the payload of this enum
+    // variant, and returns an enum value.
+    EnumConstructor {
+        type_name: TypeName,
+        variant_idx: usize,
+    },
     /// A value with the type of a user-defined struct. Fields are
     /// ordered according to the definition of the type.
     Struct(TypeName, Vec<(SymbolName, Value)>),
@@ -212,6 +218,15 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             // TODO
             args: vec![],
         },
+        Value::EnumConstructor { type_name, .. } => RuntimeType::Fun {
+            // TODO: store the type for the expected argument of this variant.
+            params: vec![RuntimeType::Top],
+            return_: Box::new(RuntimeType::UserDefined {
+                name: type_name.clone(),
+                // TODO: look up type arguments.
+                args: vec![],
+            }),
+        },
         Value::Struct(name, _) => RuntimeType::UserDefined {
             name: name.clone(),
             // TODO
@@ -246,7 +261,9 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
             Value::List { .. } => "List",
-            Value::Enum { type_name, .. } => &type_name.name,
+            Value::Enum { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
+                &type_name.name
+            }
             Value::Struct(name, _) => &name.name,
         }
         .to_owned(),
@@ -321,14 +338,12 @@ impl Value {
                     }
                 };
 
-                let mut variant_takes_payload = false;
                 let variant_name = match type_ {
                     Type::Builtin(_) => {
                         unreachable!("Enum type names should never map to built-in types")
                     }
                     Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
-                            variant_takes_payload = variant_sym.payload_hint.is_some();
                             format!("{}", variant_sym.name_sym.name)
                         }
                         None => format!("{}::__OLD_VARIANT_{}", type_name, variant_idx),
@@ -340,12 +355,37 @@ impl Value {
 
                 match payload {
                     Some(value) => format!("{variant_name}({})", value.display(env)),
+                    None => variant_name,
+                }
+            }
+            Value::EnumConstructor {
+                type_name,
+                variant_idx,
+            } => {
+                let type_ = match env.get_type(type_name) {
+                    Some(type_) => type_,
                     None => {
-                        if variant_takes_payload {
-                            format!("{variant_name} (constructor)")
-                        } else {
-                            variant_name
+                        return format!(
+                            "{}__OLD_DEFINITION::{} (constructor)",
+                            type_name, variant_idx
+                        );
+                    }
+                };
+
+                match type_ {
+                    Type::Builtin(_) => {
+                        unreachable!("Enum type names should never map to built-in types")
+                    }
+                    Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
+                        Some(variant_sym) => {
+                            format!("{} (constructor)", variant_sym.name_sym.name)
                         }
+                        None => {
+                            format!("{}::__OLD_VARIANT_{} (constructor)", type_name, variant_idx)
+                        }
+                    },
+                    Type::Struct(struct_info) => {
+                        format!("{}__OLD_DEFINITION (constructor)", struct_info.name_sym)
                     }
                 }
             }

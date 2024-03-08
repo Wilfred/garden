@@ -386,17 +386,23 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
 
                 // Add the values in the enum to the value environment.
                 for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
-                    // TODO: warn if we're clobbering a name from a
-                    // different enum (i.e. not just redefining the
-                    // current enum).
-                    env.set_with_file_scope(
-                        &variant_sym.name_sym.name,
+                    let enum_value = if variant_sym.payload_hint.is_some() {
+                        Value::EnumConstructor {
+                            type_name: enum_info.name_sym.name.clone(),
+                            variant_idx,
+                        }
+                    } else {
                         Value::Enum {
                             type_name: enum_info.name_sym.name.clone(),
                             variant_idx,
                             payload: None,
-                        },
-                    );
+                        }
+                    };
+
+                    // TODO: warn if we're clobbering a name from a
+                    // different enum (i.e. not just redefining the
+                    // current enum).
+                    env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
                 }
 
                 let name_as_sym = SymbolName(enum_info.name_sym.name.name.clone());
@@ -1597,6 +1603,27 @@ fn eval_call(
             position,
             session,
         )?,
+        Value::EnumConstructor {
+            type_name,
+            variant_idx,
+        } => {
+            check_arity(
+                &SymbolName(type_name.name.clone()),
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let value = Value::Enum {
+                type_name: type_name.clone(),
+                variant_idx: *variant_idx,
+                // TODO: check type of arg_values[0].
+                payload: Some(Box::new(arg_values[0].clone())),
+            };
+            stack_frame.evalled_values.push(value);
+        }
         v => {
             let mut saved_values = vec![];
             for value in arg_values.iter().rev() {
@@ -2918,7 +2945,7 @@ fn eval_match_cases(
             ));
         };
 
-        let Value::Enum {
+        let Value::EnumConstructor {
             type_name: pattern_type_name,
             variant_idx: pattern_variant_idx,
             ..

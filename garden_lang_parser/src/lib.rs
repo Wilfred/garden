@@ -943,9 +943,18 @@ fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseE
 
 fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     let sym = parse_type_symbol(tokens)?;
-    let (args, _) = parse_type_arguments(tokens)?;
+    let (args, close_pos) = parse_type_arguments(tokens)?;
 
-    Ok(TypeHint { sym, args })
+    let position = match close_pos {
+        Some(close_pos) => Position::merge(sym.position.clone(), close_pos),
+        None => sym.position.clone(),
+    };
+
+    Ok(TypeHint {
+        sym,
+        args,
+        position,
+    })
 }
 
 fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {

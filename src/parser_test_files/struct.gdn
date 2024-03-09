@@ -20,6 +20,7 @@ struct Foo<T> {
 //                 hint: TypeHint {
 //                     sym: TypeSymbol"Int",
 //                     args: [],
+//                     position: Position { ... },
 //                 },
 //                 doc_comment: Some(
 //                     "Stuff.",
@@ -30,6 +31,7 @@ struct Foo<T> {
 //                 hint: TypeHint {
 //                     sym: TypeSymbol"T",
 //                     args: [],
+//                     position: Position { ... },
 //                 },
 //                 doc_comment: None,
 //             },

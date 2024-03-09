@@ -134,6 +134,7 @@ impl Display for TypeSymbol {
 pub struct TypeHint {
     pub sym: TypeSymbol,
     pub args: Vec<TypeHint>,
+    pub position: Position,
 }
 
 impl TypeHint {

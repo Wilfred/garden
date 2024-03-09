@@ -49,6 +49,7 @@ impl Default for Env {
                             name: "String".into(),
                         },
                     },
+                    position: Position::todo(),
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
@@ -69,6 +70,7 @@ impl Default for Env {
                             name: "String".into(),
                         },
                     },
+                    position: Position::todo(),
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
@@ -89,6 +91,7 @@ impl Default for Env {
                             name: "String".into(),
                         },
                     },
+                    position: Position::todo(),
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
@@ -118,6 +121,7 @@ impl Default for Env {
                             name: "List".into(),
                         },
                     },
+                    position: Position::todo(),
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
@@ -138,6 +142,7 @@ impl Default for Env {
                             name: "List".into(),
                         },
                     },
+                    position: Position::todo(),
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {
@@ -158,6 +163,7 @@ impl Default for Env {
                             name: "List".into(),
                         },
                     },
+                    position: Position::todo(),
                 },
                 receiver_name: SymbolName("__irrelevant".to_owned()),
                 name_sym: Symbol {

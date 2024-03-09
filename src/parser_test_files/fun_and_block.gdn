@@ -16,6 +16,7 @@ fun foo(): Unit {} {}
 //             TypeHint {
 //                 sym: TypeSymbol"Unit",
 //                 args: [],
+//                 position: Position { ... },
 //             },
 //         ),
 //         body: Block {

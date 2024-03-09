@@ -8,8 +8,9 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
 use crate::eval::StackFrame;
+use garden_lang_parser::position::Position;
 use garden_lang_parser::{
-    ast::{Position, SourceString, SymbolName},
+    ast::{SourceString, SymbolName},
     diagnostics::ErrorMessage,
 };
 

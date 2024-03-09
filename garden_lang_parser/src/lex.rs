@@ -5,7 +5,8 @@ use line_numbers::LinePositions;
 use regex::Regex;
 
 use crate::diagnostics::ErrorMessage;
-use crate::{ast::Position, ParseError};
+use crate::position::Position;
+use crate::ParseError;
 
 lazy_static! {
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();

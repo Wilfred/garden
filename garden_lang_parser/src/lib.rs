@@ -7,12 +7,14 @@
 pub mod ast;
 pub mod diagnostics;
 pub mod lex;
+pub mod position;
 
 use std::collections::HashSet;
 use std::path::Path;
 
 use ast::FieldInfo;
 use ast::StructInfo;
+use position::Position;
 
 use crate::ast::*;
 use crate::diagnostics::ErrorMessage;

@@ -15,7 +15,8 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{self, SourceString};
+use garden_lang_parser::ast::SourceString;
+use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items_from_span, ParseError};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -47,7 +48,7 @@ pub(crate) enum ResponseKind {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct ResponseError {
-    position: Option<ast::Position>,
+    position: Option<Position>,
     message: String,
     stack: Option<String>,
 }

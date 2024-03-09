@@ -25,9 +25,10 @@ use crate::values::{
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
-    Position, SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
+    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
+use garden_lang_parser::position::Position;
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
@@ -3102,7 +3103,7 @@ pub(crate) fn eval_exprs(
 mod tests {
     use std::path::PathBuf;
 
-    use garden_lang_parser::ast::Position;
+    use garden_lang_parser::position::Position;
     use garden_lang_parser::{parse_defs_from_str, parse_exprs_from_str, parse_toplevel_items};
 
     use super::*;

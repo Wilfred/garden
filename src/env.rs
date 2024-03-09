@@ -8,10 +8,11 @@ use crate::{
     types::{BuiltinType, Type},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, MethodInfo, MethodKind, Position, SourceString, Symbol, SymbolName,
-    TestInfo, TypeHint, TypeName, TypeSymbol,
+    BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, TestInfo,
+    TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
+use garden_lang_parser::position::Position;
 
 #[derive(Debug)]
 pub(crate) struct Env {

@@ -2,9 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
-use garden_lang_parser::ast::{
-    Block, Expression, Expression_, FunInfo, Position, Symbol, SymbolName,
-};
+use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, Symbol, SymbolName};
+use garden_lang_parser::position::Position;
 
 pub(crate) fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     // TODO: check type arity too.

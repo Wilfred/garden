@@ -844,20 +844,23 @@ fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError>
     })
 }
 
-/// Parse (possibly nested type arguments), e.g. `<Int, T, Option<String>>`.
-fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, ParseError> {
+/// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
+fn parse_type_arguments(
+    tokens: &mut TokenStream,
+) -> Result<(Vec<TypeHint>, Option<Position>), ParseError> {
     if !peeked_symbol_is(tokens, "<") {
-        return Ok(vec![]);
+        return Ok((vec![], None));
     }
 
     require_token(tokens, "<")?;
 
     let mut args = vec![];
-    loop {
-        if peeked_symbol_is(tokens, ">") {
-            break;
+    let close_pos = loop {
+        if let Some(token) = tokens.peek() {
+            if token.text == ">" {
+                break token.position;
+            }
         }
-
         let arg = parse_type_hint(tokens)?;
         args.push(arg);
 
@@ -865,7 +868,7 @@ fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, Parse
             if token.text == "," {
                 tokens.pop();
             } else if token.text == ">" {
-                break;
+                break token.position;
             } else {
                 return Err(ParseError::Invalid {
                     position: token.position,
@@ -884,11 +887,11 @@ fn parse_type_arguments(tokens: &mut TokenStream) -> Result<Vec<TypeHint>, Parse
                 ),
             });
         }
-    }
+    };
 
     require_token(tokens, ">")?;
 
-    Ok(args)
+    Ok((args, Some(close_pos)))
 }
 
 /// Parse type parameters for this definition, e.g. `<T, E>`.
@@ -940,7 +943,7 @@ fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseE
 
 fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     let sym = parse_type_symbol(tokens)?;
-    let args = parse_type_arguments(tokens)?;
+    let (args, _) = parse_type_arguments(tokens)?;
 
     Ok(TypeHint { sym, args })
 }

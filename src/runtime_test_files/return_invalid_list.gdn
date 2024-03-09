@@ -11,9 +11,9 @@ fun main(args: List): Unit {
 // expected stderr:
 // Error: Expected List<Int>, but got List<String>: [""]
 // 
-// --> /position/todo:1	foo
+// --> src/runtime_test_files/return_invalid_list.gdn:1	foo
 // fun foo(): List<Int> {
-// 
+//            ^^^^
 // --> src/runtime_test_files/return_invalid_list.gdn:6	main
 //     foo();
 // --> __main_fun__:1	__toplevel__

@@ -2874,13 +2874,14 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 
             if let Some(ref fun) = stack_frame.enclosing_fun {
                 if let Some(return_hint) = &fun.return_type {
+                    let err_pos = return_hint.sym.position.clone();
                     let return_ty = runtime_type_from_hint(return_hint);
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());
                         env.stack.push(stack_frame);
 
-                        return Err(EvalError::ResumableError(Position::todo(), msg));
+                        return Err(EvalError::ResumableError(err_pos, msg));
                     }
                 }
             }

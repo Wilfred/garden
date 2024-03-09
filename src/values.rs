@@ -232,11 +232,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
         },
         Value::String(_) => RuntimeType::String,
         Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
-        Value::Enum { type_name, .. } => RuntimeType::UserDefined {
-            name: type_name.clone(),
-            // TODO
-            args: vec![],
-        },
+        Value::Enum { runtime_type, .. } => runtime_type.clone(),
         Value::EnumConstructor { type_name, .. } => RuntimeType::Fun {
             // TODO: store the type for the expected argument of this variant.
             params: vec![RuntimeType::Top],

@@ -1,0 +1,21 @@
+fun foo(): Option<Int> {
+    Some(""); // should error
+}
+
+fun main(args: List): Unit {
+    foo();
+    return;
+}
+
+// args: run
+// expected stderr:
+// Error: Expected Option<Int>, but got Option<String>: Some("")
+// 
+// --> /position/todo:1	foo
+// fun foo(): Option<Int> {
+// 
+// --> src/runtime_test_files/return_invalid_option.gdn:6	main
+//     foo();
+// --> __main_fun__:1	__toplevel__
+// // __toplevel__
+

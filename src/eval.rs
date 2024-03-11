@@ -2974,9 +2974,10 @@ fn eval_struct_value(
         fields.push((field_sym.name.clone(), field_value));
     }
 
-    stack_frame
-        .evalled_values
-        .push(Value::Struct(type_sym.name, fields));
+    stack_frame.evalled_values.push(Value::Struct {
+        type_name: type_sym.name,
+        fields,
+    });
 
     Ok(())
 }

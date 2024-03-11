@@ -41,7 +41,10 @@ pub(crate) enum Value {
     },
     /// A value with the type of a user-defined struct. Fields are
     /// ordered according to the definition of the type.
-    Struct(TypeName, Vec<(SymbolName, Value)>),
+    Struct {
+        type_name: TypeName,
+        fields: Vec<(SymbolName, Value)>,
+    },
 }
 
 /// A helper for creating a unit value.
@@ -242,8 +245,8 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
                 args: vec![],
             }),
         },
-        Value::Struct(name, _) => RuntimeType::UserDefined {
-            name: name.clone(),
+        Value::Struct { type_name, .. } => RuntimeType::UserDefined {
+            name: type_name.clone(),
             // TODO
             args: vec![],
         },
@@ -279,7 +282,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::Enum { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
                 &type_name.name
             }
-            Value::Struct(name, _) => &name.name,
+            Value::Struct { type_name, .. } => &type_name.name,
         }
         .to_owned(),
     }
@@ -405,8 +408,8 @@ impl Value {
                     }
                 }
             }
-            Value::Struct(name, fields) => {
-                let mut s = format!("{name} {{ ");
+            Value::Struct { type_name, fields } => {
+                let mut s = format!("{type_name} {{ ");
 
                 for (i, (field_name, value)) in fields.iter().enumerate() {
                     if i != 0 {

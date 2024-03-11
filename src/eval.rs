@@ -1716,129 +1716,6 @@ fn enum_value_runtime_type(
     }
 }
 
-fn eval_enum_constructor(
-    env: &Env,
-    position: &Position,
-    arg_values: &[Value],
-    receiver_pos: &Position,
-    receiver_value: &Value,
-) -> Result<Value, ErrorInfo> {
-    match receiver_value {
-        Value::Enum {
-            ref type_name,
-            variant_idx,
-            payload: None,
-            ..
-        } => {
-            let wrapped_value = if arg_values.len() == 1 {
-                &arg_values[0]
-            } else {
-                return Err(ErrorInfo {
-                    error_position: position.clone(),
-                    message: ErrorMessage(format!(
-                        "Enum variant constructors should take 1 argument, got {}",
-                        arg_values.len()
-                    )),
-                    restore_values: vec![],
-                });
-            };
-
-            match env.get_type(type_name) {
-                Some(type_) => match type_ {
-                    // TODO: these are probably reachable if the user
-                    // defines an enum whose name clashes with
-                    // built-in types.
-                    Type::Builtin(_) => unreachable!(),
-                    Type::Struct(_) => unreachable!(),
-                    Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
-                        Some(variant_sym) => {
-                            if variant_sym.payload_hint.is_some() {
-                                let runtime_type = enum_value_runtime_type(
-                                    env,
-                                    type_name,
-                                    *variant_idx,
-                                    &runtime_type(wrapped_value),
-                                )
-                                .unwrap_or(RuntimeType::NoValue);
-
-                                Ok(Value::Enum {
-                                    type_name: type_name.clone(),
-                                    variant_idx: *variant_idx,
-                                    payload: Some(Box::new(wrapped_value.clone())),
-                                    runtime_type,
-                                })
-                            } else {
-                                let mut saved_values = vec![];
-                                for value in arg_values.iter().rev() {
-                                    saved_values.push(value.clone());
-                                }
-                                saved_values.push(receiver_value.clone());
-
-                                Err(ErrorInfo {
-                                    error_position: position.clone(),
-                                    message: ErrorMessage(format!(
-                                        "{}::{} does not take an argument",
-                                        type_name, variant_sym.name_sym.name
-                                    )),
-                                    restore_values: saved_values,
-                                })
-                            }
-                        }
-                        None => {
-                            // This enum no longer has a variant at this index.
-
-                            // Assume that the previous definition
-                            // accepted a payload.
-                            //
-                            // TODO: store a copy of the old
-                            // definition so this behaves the same as
-                            // the current definition.
-                            Ok(Value::Enum {
-                                type_name: type_name.clone(),
-                                variant_idx: *variant_idx,
-                                payload: Some(Box::new(wrapped_value.clone())),
-                                // TODO: use the old definition to compute the exact type here.
-                                runtime_type: RuntimeType::Top,
-                            })
-                        }
-                    },
-                },
-                None => {
-                    // Type no longer exists.
-                    //
-                    // TODO: store a copy of the old definition so
-                    // this behaves the same as the current
-                    // definition.
-                    Err(ErrorInfo {
-                        error_position: position.clone(),
-                        message: ErrorMessage(format!("{type_name} no longer has this variant")),
-                        restore_values: vec![],
-                    })
-                }
-            }
-        }
-        _ => {
-            let mut saved_values = vec![];
-            for value in arg_values.iter().rev() {
-                saved_values.push(value.clone());
-            }
-            saved_values.push(receiver_value.clone());
-
-            Err(ErrorInfo {
-                error_position: receiver_pos.clone(),
-                message: format_type_error(
-                    &TypeName {
-                        name: "Function".into(),
-                    },
-                    receiver_value,
-                    env,
-                ),
-                restore_values: saved_values,
-            })
-        }
-    }
-}
-
 fn check_param_types(
     env: &Env,
     receiver_value: &Value,
@@ -2719,61 +2596,34 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             .pop()
                             .expect("Popped an empty value stack for call receiver");
 
-                        if matches!(receiver_value, Value::Enum { .. }) {
-                            match eval_enum_constructor(
-                                env,
-                                &expr_position,
-                                &arg_values,
-                                &receiver.0,
-                                &receiver_value,
-                            ) {
-                                Ok(value) => {
-                                    stack_frame.evalled_values.push(value);
-                                }
-                                Err(ErrorInfo {
-                                    message,
-                                    restore_values,
-                                    error_position,
-                                }) => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(expr_position, expr_copy)),
-                                        &restore_values,
-                                    );
-                                    return Err(EvalError::ResumableError(error_position, message));
-                                }
+                        match eval_call(
+                            env,
+                            &mut stack_frame,
+                            &expr_position,
+                            &arg_positions,
+                            &arg_values,
+                            &receiver_value,
+                            &receiver.0,
+                            session,
+                        ) {
+                            Ok(Some(new_stack_frame)) => {
+                                env.stack.push(stack_frame);
+                                env.stack.push(new_stack_frame);
+                                continue;
                             }
-                        } else {
-                            match eval_call(
-                                env,
-                                &mut stack_frame,
-                                &expr_position,
-                                &arg_positions,
-                                &arg_values,
-                                &receiver_value,
-                                &receiver.0,
-                                session,
-                            ) {
-                                Ok(Some(new_stack_frame)) => {
-                                    env.stack.push(stack_frame);
-                                    env.stack.push(new_stack_frame);
-                                    continue;
-                                }
-                                Ok(None) => {}
-                                Err(ErrorInfo {
-                                    message,
-                                    restore_values,
-                                    error_position: position,
-                                }) => {
-                                    restore_stack_frame(
-                                        env,
-                                        stack_frame,
-                                        (done_children, Expression(expr_position, expr_copy)),
-                                        &restore_values,
-                                    );
-                                    return Err(EvalError::ResumableError(position, message));
-                                }
+                            Ok(None) => {}
+                            Err(ErrorInfo {
+                                message,
+                                restore_values,
+                                error_position: position,
+                            }) => {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (done_children, Expression(expr_position, expr_copy)),
+                                    &restore_values,
+                                );
+                                return Err(EvalError::ResumableError(position, message));
                             }
                         }
                     } else {

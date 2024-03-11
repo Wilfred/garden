@@ -2,7 +2,7 @@
 #![allow(clippy::manual_flatten)]
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -2935,6 +2935,9 @@ fn eval_struct_value(
         });
     };
 
+    let type_params: HashSet<_> = struct_info.type_params.iter().map(|p| &p.name).collect();
+    let mut used_type_params = HashSet::new();
+
     let mut expected_fields_by_name = HashMap::new();
     for field_info in &struct_info.fields {
         expected_fields_by_name.insert(&field_info.sym.name, field_info.clone());
@@ -2962,6 +2965,10 @@ fn eval_struct_value(
                 error_position: field_sym.position.clone(),
             });
         };
+
+        if type_params.contains(&field_info.hint.sym.name) {
+            used_type_params.insert(field_info.hint.sym.name.clone());
+        }
 
         // TODO: check that all field values are of a compatible type.
         fields.push((field_sym.name.clone(), field_value));

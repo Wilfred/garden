@@ -44,6 +44,7 @@ pub(crate) enum Value {
     Struct {
         type_name: TypeName,
         fields: Vec<(SymbolName, Value)>,
+        runtime_type: RuntimeType,
     },
 }
 
@@ -408,7 +409,9 @@ impl Value {
                     }
                 }
             }
-            Value::Struct { type_name, fields } => {
+            Value::Struct {
+                type_name, fields, ..
+            } => {
                 let mut s = format!("{type_name} {{ ");
 
                 for (i, (field_name, value)) in fields.iter().enumerate() {

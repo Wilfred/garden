@@ -2786,7 +2786,7 @@ fn eval_struct_value(
     };
 
     let type_params: HashSet<_> = struct_info.type_params.iter().map(|p| &p.name).collect();
-    let mut used_type_params = HashSet::new();
+    let mut type_arg_bindings = HashMap::new();
 
     let mut expected_fields_by_name = HashMap::new();
     for field_info in &struct_info.fields {
@@ -2817,16 +2817,30 @@ fn eval_struct_value(
         };
 
         if type_params.contains(&field_info.hint.sym.name) {
-            used_type_params.insert(field_info.hint.sym.name.clone());
+            type_arg_bindings.insert(field_info.hint.sym.name.clone(), runtime_type(&field_value));
         }
 
         // TODO: check that all field values are of a compatible type.
         fields.push((field_sym.name.clone(), field_value));
     }
 
+    let mut type_args = vec![];
+    for type_param in &struct_info.type_params {
+        let param_value = type_arg_bindings
+            .get(&type_param.name)
+            .unwrap_or(&RuntimeType::NoValue);
+        type_args.push(param_value.clone());
+    }
+
+    let runtime_type = RuntimeType::UserDefined {
+        name: type_sym.name.clone(),
+        args: type_args,
+    };
+
     stack_frame.evalled_values.push(Value::Struct {
         type_name: type_sym.name,
         fields,
+        runtime_type,
     });
 
     Ok(())

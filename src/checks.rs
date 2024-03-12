@@ -4,7 +4,7 @@ use crate::diagnostics::Warning;
 use crate::env::Env;
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, Expression, Expression_, FunInfo, MethodKind, Symbol,
-    SymbolName,
+    SymbolName, TypeHint,
 };
 use garden_lang_parser::position::Position;
 
@@ -46,25 +46,26 @@ fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
     for param in &fun_info.params {
-        if let Some(return_type) = &param.type_ {
-            if !env.has_type(&return_type.sym.name) {
-                warnings.push(Warning {
-                    message: format!("No such type: {}", &return_type.sym),
-                    position: return_type.position.clone(),
-                });
-            }
+        if let Some(param_hint) = &param.type_ {
+            warnings.extend(check_type_hint(param_hint, env));
         }
     }
 
-    if let Some(return_type) = &fun_info.return_type {
-        if !env.has_type(&return_type.sym.name) {
-            warnings.push(Warning {
-                message: format!("No such type: {}", &return_type.sym),
-                position: return_type.position.clone(),
-            });
-        }
+    if let Some(return_hint) = &fun_info.return_type {
+        warnings.extend(check_type_hint(return_hint, env));
     }
 
+    warnings
+}
+
+fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
+    let mut warnings = vec![];
+    if !env.has_type(&type_hint.sym.name) {
+        warnings.push(Warning {
+            message: format!("No such type: {}", &type_hint.sym),
+            position: type_hint.position.clone(),
+        });
+    }
     warnings
 }
 

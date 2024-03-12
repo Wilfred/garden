@@ -276,6 +276,13 @@ mod tests {
     }
 
     #[test]
+    fn test_checks() -> TestResult<()> {
+        let mut config = TestConfig::new("target/debug/garden", "src/check_test_files", "// ")?;
+        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
+        config.run_tests()
+    }
+
+    #[test]
     fn test_runtime() -> TestResult<()> {
         let mut config = TestConfig::new("target/debug/garden", "src/runtime_test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();

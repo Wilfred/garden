@@ -23,7 +23,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
                 vec![]
             }
         }
-        Definition_::Test(_) => vec![],
+        Definition_::Test(test_info) => check_free_variables_block(&test_info.body, env),
         Definition_::Enum(_) => vec![],
         Definition_::Struct(_) => vec![],
     }
@@ -73,6 +73,22 @@ fn check_free_variables(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
 
     let mut info = VarInfo::default();
     free_variable_fun(fun_info, &mut info, env);
+
+    for (free_sym, position) in info.free {
+        warnings.push(Warning {
+            message: format!("Unbound symbol: {free_sym}"),
+            position,
+        });
+    }
+
+    warnings
+}
+
+fn check_free_variables_block(block: &Block, env: &Env) -> Vec<Warning> {
+    let mut warnings = vec![];
+
+    let mut info = VarInfo::default();
+    free_variable_block(block, &mut info, env);
 
     for (free_sym, position) in info.free {
         warnings.push(Warning {

@@ -17,6 +17,9 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     }
 }
 
+// TODO: define separate checks for things we can check without an
+// environment, and checks that are relative to a given environment
+// (e.g. type is defined).
 fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 

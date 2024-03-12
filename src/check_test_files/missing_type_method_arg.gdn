@@ -1,0 +1,7 @@
+fun (self: String) do_stuff(arg: NoSuchType): Unit {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// {"line_number":1,"message":"No such type: NoSuchType","start_offset":33,"end_offset":43,"severity":"warning"}
+

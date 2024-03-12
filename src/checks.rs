@@ -3,14 +3,26 @@ use std::collections::{HashMap, HashSet};
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use garden_lang_parser::ast::{
-    Block, Definition, Definition_, Expression, Expression_, FunInfo, Symbol, SymbolName,
+    Block, Definition, Definition_, Expression, Expression_, FunInfo, MethodKind, Symbol,
+    SymbolName,
 };
 use garden_lang_parser::position::Position;
 
 pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     match &def.2 {
         Definition_::Fun(_, fun_info) => check(fun_info, env),
-        Definition_::Method(_) => vec![],
+        Definition_::Method(meth_info) => {
+            let fun_info = match &meth_info.kind {
+                MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
+                MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
+            };
+
+            if let Some(fun_info) = fun_info {
+                check(fun_info, env)
+            } else {
+                vec![]
+            }
+        }
         Definition_::Test(_) => vec![],
         Definition_::Enum(_) => vec![],
         Definition_::Struct(_) => vec![],

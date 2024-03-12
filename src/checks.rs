@@ -5,7 +5,16 @@ use crate::env::Env;
 use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, Symbol, SymbolName};
 use garden_lang_parser::position::Position;
 
-pub(crate) fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
+pub(crate) fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
+    let mut warnings = vec![];
+
+    warnings.extend(check_types_exist(fun_info, env));
+    warnings.extend(check_free_variables(fun_info, env));
+
+    warnings
+}
+
+fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     // TODO: check type arity too.
     let mut warnings = vec![];
 
@@ -30,7 +39,7 @@ pub(crate) fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     warnings
 }
 
-pub(crate) fn check_free_variables(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
+fn check_free_variables(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
     let mut info = VarInfo::default();

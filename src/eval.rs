@@ -14,7 +14,7 @@ use garden_lang_parser::diagnostics::ErrorMessage;
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
-use crate::checks::{check_free_variables, check_types_exist};
+use crate::checks::check;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
@@ -349,8 +349,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                             fun_info: fun_info.clone(),
                         },
                     );
-                    warnings.extend(check_types_exist(fun_info, env));
-                    warnings.extend(check_free_variables(fun_info, env));
+                    warnings.extend(check(fun_info, env));
                 }
 
                 new_syms.push(name_sym.name.clone());

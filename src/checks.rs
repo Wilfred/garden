@@ -2,10 +2,22 @@ use std::collections::{HashMap, HashSet};
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
-use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, Symbol, SymbolName};
+use garden_lang_parser::ast::{
+    Block, Definition, Definition_, Expression, Expression_, FunInfo, Symbol, SymbolName,
+};
 use garden_lang_parser::position::Position;
 
-pub(crate) fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
+pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
+    match &def.2 {
+        Definition_::Fun(_, fun_info) => check(fun_info, env),
+        Definition_::Method(_) => vec![],
+        Definition_::Test(_) => vec![],
+        Definition_::Enum(_) => vec![],
+        Definition_::Struct(_) => vec![],
+    }
+}
+
+fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
     warnings.extend(check_types_exist(fun_info, env));
@@ -218,7 +230,7 @@ mod tests {
     fn parse_fun_from_str(src: &str) -> FunInfo {
         let defs = parse_defs_from_str(src).unwrap();
         match &defs[0].2 {
-            garden_lang_parser::ast::Definition_::Fun(_, fun_info) => fun_info.clone(),
+            Definition_::Fun(_, fun_info) => fun_info.clone(),
             _ => unreachable!(),
         }
     }

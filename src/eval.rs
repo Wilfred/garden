@@ -428,7 +428,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             }
         }
 
-        warnings.extend(check_def(&definition, env));
+        warnings.extend(check_def(definition, env));
     }
 
     ToplevelEvalSummary {

@@ -1,7 +1,18 @@
 use serde::Serialize;
 use std::path::Path;
 
-use garden_lang_parser::{parse_toplevel_items, ParseError};
+use garden_lang_parser::{
+    ast::{Definition_, ToplevelItem},
+    parse_toplevel_items, ParseError,
+};
+
+use crate::{checks::check_def, diagnostics::Warning, env::Env};
+
+#[derive(Debug, Serialize)]
+enum Severity {
+    Error,
+    Warning,
+}
 
 #[derive(Debug, Serialize)]
 struct CheckDiagnostic {
@@ -9,45 +20,65 @@ struct CheckDiagnostic {
     message: String,
     start_offset: usize,
     end_offset: usize,
+    severity: Severity,
 }
 
 pub(crate) fn check(path: &Path, src: &str) {
-    let errors = match parse_toplevel_items(path, src) {
-        Ok(_) => vec![],
-        Err(e) => match e {
-            ParseError::Invalid {
-                position, message, ..
-            } => {
-                // Expose line numbers as 1-indexed.
-                vec![CheckDiagnostic {
-                    line_number: position.line_number + 1,
-                    message: message.0,
-                    start_offset: position.start_offset,
-                    end_offset: position.end_offset,
-                }]
-            }
-            ParseError::Incomplete {
-                message, position, ..
-            } => {
-                // TODO: last line would be better?
-                vec![CheckDiagnostic {
-                    line_number: 1,
-                    message: message.0,
-                    start_offset: position.start_offset,
-                    end_offset: position.end_offset,
-                }]
-            }
-        },
+    let mut diagnostics = vec![];
+
+    let _items = match parse_toplevel_items(path, src) {
+        Ok(items) => items,
+        Err(e) => {
+            match e {
+                ParseError::Invalid {
+                    position, message, ..
+                } => {
+                    // Expose line numbers as 1-indexed.
+                    diagnostics.push(CheckDiagnostic {
+                        line_number: position.line_number + 1,
+                        message: message.0,
+                        start_offset: position.start_offset,
+                        end_offset: position.end_offset,
+                        severity: Severity::Error,
+                    });
+                }
+                ParseError::Incomplete {
+                    message, position, ..
+                } => {
+                    // TODO: last line would be better?
+                    diagnostics.push(CheckDiagnostic {
+                        line_number: 1,
+                        message: message.0,
+                        start_offset: position.start_offset,
+                        end_offset: position.end_offset,
+                        severity: Severity::Error,
+                    });
+                }
+            };
+            vec![]
+        }
     };
 
-    for error in &errors {
+    // let env = Env::default();
+    // for item in items {
+    //     match item {
+    //         ToplevelItem::Def(def) => {
+    //             for Warning { message } in check_def(&def, &env) {
+    //                 diagnostics.push(diagnostic);
+    //             }
+    //         }
+    //         ToplevelItem::Expr(_) => {}
+    //     }
+    // }
+
+    for diagnostic in &diagnostics {
         println!(
             "{}",
-            serde_json::to_string(error).expect("TODO: can this ever fail?")
+            serde_json::to_string(diagnostic).expect("TODO: can this ever fail?")
         );
     }
 
-    if !errors.is_empty() {
+    if !diagnostics.is_empty() {
         std::process::exit(1);
     }
 }

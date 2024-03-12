@@ -1,7 +1,7 @@
 // Stop the program immediately, and report the error message given.
 //
 // ```
-// error(\"Computer is melting!\");
+// error("Computer is melting!");
 // ```
 fun error(_: String): NoValue {
     __BUILTIN_IMPLEMENTATION;
@@ -52,7 +52,7 @@ fun println(_: String): Unit {
 // concatenated with stderr.
 //
 // ```
-// shell(\"ls\", [\"-l\", \"/\"]);
+// shell("ls", ["-l", "/"]);
 // ```
 fun shell(_, _): String {
     __BUILTIN_IMPLEMENTATION;
@@ -61,7 +61,7 @@ fun shell(_, _): String {
 // Pretty print a value.
 //
 // ```
-// string_repr(123); // \"123\"
+// string_repr(123); // "123"
 // ```
 fun string_repr(_): String {
     __BUILTIN_IMPLEMENTATION;
@@ -70,7 +70,7 @@ fun string_repr(_): String {
 // Read the contents of `path` as a string.
 
 // ```
-// read_file(\"/tmp/foo.txt\");
+// read_file("/tmp/foo.txt");
 // ```
 fun read_file(path: String): STring {
     __BUILTIN_IMPLEMENTATION;
@@ -79,7 +79,7 @@ fun read_file(path: String): STring {
 // Return the path of the current working directory.
 
 // ```
-// working_directory(); // \"/home/yourname/awesome_garden_project\"
+// working_directory(); // "/home/yourname/awesome_garden_project"
 // ```
 fun working_directory(): String {
     __BUILTIN_IMPLEMENTATION;
@@ -116,7 +116,7 @@ fun<T> (self: List<T>) len(): Int {
 // Return a new string with the string argument concatenated.
 //
 // ```
-// \"foo\".concat(\"bar\"); // \"foobar\"
+// "foo".concat("bar"); // "foobar"
 // ```
 fun (self: String) concat(value: String): String {
     __BUILTIN_IMPLEMENTATION;
@@ -125,7 +125,7 @@ fun (self: String) concat(value: String): String {
 // Return the number of characters (codepoints) in the string.
 //
 // ```
-// \"abc\".len(); // 3
+// "abc".len(); // 3
 // ```
 fun (self: String) len(): Int {
     __BUILTIN_IMPLEMENTATION;
@@ -134,7 +134,7 @@ fun (self: String) len(): Int {
 // Return the substring of the string between the indexes specified.
 //
 // ```
-// \"abcdef\".substring(1, 3); // \"bc\"
+// "abcdef".substring(1, 3); // "bc"
 // ```
 fun (self: String) substring(from_index: Int, to_index: Int): String {
     __BUILTIN_IMPLEMENTATION;

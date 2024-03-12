@@ -61,8 +61,7 @@ enum Commands {
     },
     /// Run all the tests in the Garden program at the path specified.
     Test { path: PathBuf },
-    /// Check the Garden program at the path specified for syntax
-    /// issues.
+    /// Check the Garden program at the path specified for issues.
     Check { path: PathBuf },
     /// Parse the Garden program at the path specified and print the
     /// AST.

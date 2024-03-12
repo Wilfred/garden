@@ -1,10 +1,7 @@
 use serde::Serialize;
 use std::path::Path;
 
-use garden_lang_parser::{
-    ast::{Definition_, ToplevelItem},
-    parse_toplevel_items, ParseError,
-};
+use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items, ParseError};
 
 use crate::{checks::check_def, diagnostics::Warning, env::Env};
 
@@ -26,7 +23,7 @@ struct CheckDiagnostic {
 pub(crate) fn check(path: &Path, src: &str) {
     let mut diagnostics = vec![];
 
-    let _items = match parse_toplevel_items(path, src) {
+    let items = match parse_toplevel_items(path, src) {
         Ok(items) => items,
         Err(e) => {
             match e {
@@ -59,17 +56,23 @@ pub(crate) fn check(path: &Path, src: &str) {
         }
     };
 
-    // let env = Env::default();
-    // for item in items {
-    //     match item {
-    //         ToplevelItem::Def(def) => {
-    //             for Warning { message } in check_def(&def, &env) {
-    //                 diagnostics.push(diagnostic);
-    //             }
-    //         }
-    //         ToplevelItem::Expr(_) => {}
-    //     }
-    // }
+    let env = Env::default();
+    for item in items {
+        match item {
+            ToplevelItem::Def(def) => {
+                for Warning { message, position } in check_def(&def, &env) {
+                    diagnostics.push(CheckDiagnostic {
+                        line_number: position.line_number + 1,
+                        message,
+                        start_offset: position.start_offset,
+                        end_offset: position.end_offset,
+                        severity: Severity::Warning,
+                    });
+                }
+            }
+            ToplevelItem::Expr(_) => {}
+        }
+    }
 
     for diagnostic in &diagnostics {
         println!(

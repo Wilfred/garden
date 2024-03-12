@@ -1,0 +1,25 @@
+struct Box<T> {
+    value: T,
+}
+
+fun foo(): Box<Int> {
+    Box { value: "not an int" };
+}
+
+fun main(args: List): Unit {
+    foo();
+    return;
+}
+
+// args: run
+// expected stderr:
+// Error: Expected Box<Int>, but got Box<String>: Box { value: "not an int" }
+// 
+// --> src/runtime_test_files/struct_invalid_type_param.gdn:5	foo
+// fun foo(): Box<Int> {
+//            ^^^^^^^^
+// --> src/runtime_test_files/struct_invalid_type_param.gdn:10	main
+//     foo();
+// --> __main_fun__:1	__toplevel__
+// // __toplevel__
+

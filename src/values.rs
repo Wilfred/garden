@@ -246,11 +246,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
                 args: vec![],
             }),
         },
-        Value::Struct { type_name, .. } => RuntimeType::UserDefined {
-            name: type_name.clone(),
-            // TODO
-            args: vec![],
-        },
+        Value::Struct { runtime_type, .. } => runtime_type.clone(),
     }
 }
 

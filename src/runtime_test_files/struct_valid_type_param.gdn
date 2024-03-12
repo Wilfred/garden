@@ -1,0 +1,14 @@
+struct Box<T> {
+    value: T,
+}
+
+fun foo(): Box<Int> {
+    Box { value: 1234 };
+}
+
+fun main(args: List): Unit {
+    foo();
+    return;
+}
+
+// args: run

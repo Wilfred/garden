@@ -1,0 +1,8 @@
+fun f(x) {
+    match (x) {
+        Some(y) => { y + 1; }
+        None => { 42; }
+    }
+}
+
+// args: check

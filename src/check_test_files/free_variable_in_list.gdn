@@ -1,0 +1,9 @@
+fun foo() {
+    [x];
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// {"line_number":2,"message":"Unbound symbol: x","start_offset":17,"end_offset":18,"severity":"warning"}
+

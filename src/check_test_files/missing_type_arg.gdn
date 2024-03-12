@@ -1,0 +1,12 @@
+fun foo(): Option {
+    None;
+}
+
+// expected exit status: 2
+// expected stderr:
+// error: unrecognized subcommand 'src/check_test_files/missing_type_arg.gdn'
+// 
+// Usage: garden <COMMAND>
+// 
+// For more information, try '--help'.
+

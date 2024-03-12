@@ -453,6 +453,7 @@ fn update_builtin_meth_info(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
             ),
+            position: meth_info.receiver_type.sym.position.clone(),
         });
         return;
     };
@@ -463,6 +464,7 @@ fn update_builtin_meth_info(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
                 meth_info.name_sym.name, type_name
             ),
+            position: meth_info.name_sym.position.clone(),
         });
         return;
     };
@@ -477,6 +479,7 @@ fn update_builtin_meth_info(
                 "{}::{} is not a built-in method.",
                 type_name, meth_info.name_sym.name
             ),
+            position: meth_info.name_sym.position.clone(),
         });
         return;
     };
@@ -495,6 +498,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
                 "Tried to update a built-in stub for a function {} that doesn't exist.",
                 symbol.name
             ),
+            position: symbol.position.clone(),
         });
         return;
     };
@@ -506,6 +510,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
                 symbol.name,
                 runtime_type(value),
             ),
+            position: symbol.position.clone(),
         });
         return;
     };

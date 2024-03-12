@@ -35,6 +35,7 @@ fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
             if !env.has_type(&return_type.sym.name) {
                 warnings.push(Warning {
                     message: format!("No such type: {}", &return_type.sym),
+                    position: return_type.position.clone(),
                 });
             }
         }
@@ -44,6 +45,7 @@ fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
         if !env.has_type(&return_type.sym.name) {
             warnings.push(Warning {
                 message: format!("No such type: {}", &return_type.sym),
+                position: return_type.position.clone(),
             });
         }
     }
@@ -57,10 +59,10 @@ fn check_free_variables(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut info = VarInfo::default();
     free_variable_fun(fun_info, &mut info, env);
 
-    for (free_sym, _pos) in info.free {
-        // TODO: report positions too.
+    for (free_sym, position) in info.free {
         warnings.push(Warning {
             message: format!("Unbound symbol: {free_sym}"),
+            position,
         });
     }
 

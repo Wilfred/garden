@@ -17,6 +17,7 @@ use garden_lang_parser::{
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Warning {
     pub(crate) message: String,
+    pub(crate) position: Position,
 }
 
 pub(crate) fn format_error_with_stack(

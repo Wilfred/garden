@@ -6,6 +6,7 @@ use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items, ParseError};
 use crate::{checks::check_def, diagnostics::Warning, env::Env};
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
 enum Severity {
     Error,
     Warning,

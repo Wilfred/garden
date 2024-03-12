@@ -513,11 +513,12 @@ the user entering a value in the *garden* buffer."
         (let* ((error-info (json-parse-string line :object-type 'plist :null-object nil))
                (message (plist-get error-info :message))
                (start-offset (plist-get error-info :start_offset))
-               (end-offset (plist-get error-info :end_offset)))
+               (end-offset (plist-get error-info :end_offset))
+               (severity (plist-get error-info :severity)))
           (push
            (flycheck-error-new-at-pos
             (1+ start-offset)
-            'error
+            (if (string= severity "warning") 'warning 'error)
             message
             :end-pos (1+ end-offset))
            errors))))

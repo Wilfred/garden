@@ -60,6 +60,21 @@ fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     expected: &str,
 ) -> Result<Token<'a>, ParseError> {
+    require_token_inner(tokens, expected, false)
+}
+
+fn require_end_token<'a>(
+    tokens: &mut TokenStream<'a>,
+    expected: &str,
+) -> Result<Token<'a>, ParseError> {
+    require_token_inner(tokens, expected, true)
+}
+
+fn require_token_inner<'a>(
+    tokens: &mut TokenStream<'a>,
+    expected: &str,
+    highlight_prev_token: bool,
+) -> Result<Token<'a>, ParseError> {
     // TODO: If we have an open delimiter, we want the incorrect
     // current token. If we've forgotten a terminator like ; we want
     // the previous token.
@@ -71,8 +86,8 @@ fn require_token<'a>(
                 Ok(token)
             } else {
                 let position = match prev_token {
-                    Some(prev_token) => prev_token.position,
-                    None => token.position,
+                    Some(prev_token) if highlight_prev_token => prev_token.position,
+                    _ => token.position,
                 };
 
                 Err(ParseError::Invalid {
@@ -222,7 +237,7 @@ fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     }
 
     let expr = parse_inline_expression(src, tokens)?;
-    let _ = require_token(tokens, ";")?;
+    let _ = require_end_token(tokens, ";")?;
     Ok(Expression(
         return_token.position,
         Expression_::Return(Some(Box::new(expr))),
@@ -602,7 +617,7 @@ fn parse_general_expression(
 
     let expr = parse_simple_expression_or_binop(src, tokens)?;
     if !is_inline {
-        let _ = require_token(tokens, ";")?;
+        let _ = require_end_token(tokens, ";")?;
     }
 
     Ok(expr)
@@ -1327,7 +1342,7 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(src, tokens)?;
-    let _ = require_token(tokens, ";")?;
+    let _ = require_end_token(tokens, ";")?;
 
     Ok(Expression(
         let_token.position, // TODO: this should be a larger span.
@@ -1340,7 +1355,7 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(src, tokens)?;
-    let _ = require_token(tokens, ";")?;
+    let _ = require_end_token(tokens, ";")?;
 
     Ok(Expression(
         variable.position.clone(),

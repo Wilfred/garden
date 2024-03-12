@@ -6,5 +6,5 @@ let a b c
 // 
 // --> src/parser_test_files/missing_punct.gdn:1
 // let a b c
-//     ^
+//       ^
 

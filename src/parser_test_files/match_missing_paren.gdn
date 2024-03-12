@@ -1,0 +1,12 @@
+fun foo() {
+    match x {}
+}
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Expected `(`, got `x`
+// 
+// --> src/parser_test_files/match_missing_paren.gdn:2
+//     match x {}
+//           ^
+

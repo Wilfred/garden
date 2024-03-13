@@ -42,6 +42,6 @@ fun main(args: List): Unit {
                 println(msg);
             }
         }
-        None => println("No branches found maching: ".concat(needle))
+        None => println("No branches found matching: ".concat(needle))
     }
 }

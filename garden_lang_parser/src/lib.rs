@@ -1,7 +1,7 @@
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
 #![allow(clippy::collapsible_else_if)]
-// Comon in unfinished code.
+// Common in unfinished code.
 #![allow(clippy::if_same_then_else)]
 
 pub mod ast;
@@ -1366,7 +1366,7 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelItem, ParseError> {
     let initial_token_idx = tokens.idx;
 
-    // Always allow a semicolon-terminated expresison at the top level.
+    // Always allow a semicolon-terminated expression at the top level.
     let block_expr_err = match parse_block_member_expression(src, tokens) {
         Ok(expr) => {
             return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));

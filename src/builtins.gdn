@@ -72,7 +72,7 @@ fun string_repr(_): String {
 // ```
 // read_file("/tmp/foo.txt");
 // ```
-fun read_file(path: String): STring {
+fun read_file(path: String): String {
     __BUILTIN_IMPLEMENTATION;
 }
 

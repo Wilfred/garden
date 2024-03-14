@@ -1,0 +1,9 @@
+fun foo(): Option<NoSuchType> {
+    None;
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// {"line_number":1,"message":"No such type: NoSuchType","start_offset":18,"end_offset":28,"severity":"warning"}
+

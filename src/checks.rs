@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
+use crate::types::Type;
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, Expression, Expression_, FunInfo, MethodKind, Symbol,
     SymbolName, TypeHint,
@@ -60,12 +61,43 @@ fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
 
 fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
-    if !env.has_type(&type_hint.sym.name) {
-        warnings.push(Warning {
-            message: format!("No such type: {}", &type_hint.sym),
-            position: type_hint.position.clone(),
-        });
+
+    match env.get_type(&type_hint.sym.name) {
+        Some(type_) => {
+            match type_ {
+                Type::Builtin(_) => {
+                    // TODO: check type arguments on built-in types
+                }
+                Type::Enum(enum_info) => {
+                    if enum_info.type_params.len() != type_hint.args.len() {
+                        warnings.push(Warning {
+                            message: format!(
+                                "{} takes {} type arguments, but got {} arguments.",
+                                &type_hint.sym.name,
+                                enum_info.type_params.len(),
+                                type_hint.args.len()
+                            ),
+                            position: type_hint.position.clone(),
+                        });
+                    }
+                }
+                Type::Struct(_) => {
+                    // TODO: check type arguments on enums.
+                }
+            }
+        }
+        None => {
+            warnings.push(Warning {
+                message: format!("No such type: {}", &type_hint.sym),
+                position: type_hint.position.clone(),
+            });
+        }
     }
+
+    for type_arg in &type_hint.args {
+        warnings.extend(check_type_hint(type_arg, env));
+    }
+
     warnings
 }
 

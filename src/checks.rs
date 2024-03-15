@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
+use crate::eval::eval_defs;
 use crate::types::Type;
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, Expression, Expression_, FunInfo, MethodKind, Symbol,
@@ -9,11 +10,15 @@ use garden_lang_parser::ast::{
 };
 use garden_lang_parser::position::Position;
 
-pub(crate) fn check_defs(defs: &[Definition]) -> Vec<Warning> {
-    let env = Env::default();
+pub(crate) fn check_defs(definitions: &[Definition]) -> Vec<Warning> {
+    // TODO: define separate checks for things we can check without an
+    // environment, and checks that are relative to a given environment
+    // (e.g. type is defined).
+    let mut env = Env::default();
+    eval_defs(definitions, &mut env);
 
     let mut warnings = vec![];
-    for def in defs {
+    for def in definitions {
         warnings.extend(check_def(def, &env));
     }
 
@@ -41,9 +46,6 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     }
 }
 
-// TODO: define separate checks for things we can check without an
-// environment, and checks that are relative to a given environment
-// (e.g. type is defined).
 fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 

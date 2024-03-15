@@ -3,7 +3,7 @@ use std::path::Path;
 
 use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items, ParseError};
 
-use crate::{checks::check_def, diagnostics::Warning, env::Env};
+use crate::{checks::check_defs, diagnostics::Warning};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -57,22 +57,24 @@ pub(crate) fn check(path: &Path, src: &str) {
         }
     };
 
-    let env = Env::default();
+    let mut defs = vec![];
     for item in items {
         match item {
             ToplevelItem::Def(def) => {
-                for Warning { message, position } in check_def(&def, &env) {
-                    diagnostics.push(CheckDiagnostic {
-                        line_number: position.line_number + 1,
-                        message,
-                        start_offset: position.start_offset,
-                        end_offset: position.end_offset,
-                        severity: Severity::Warning,
-                    });
-                }
+                defs.push(def);
             }
             ToplevelItem::Expr(_) => {}
         }
+    }
+
+    for Warning { message, position } in check_defs(&defs) {
+        diagnostics.push(CheckDiagnostic {
+            line_number: position.line_number + 1,
+            message,
+            start_offset: position.start_offset,
+            end_offset: position.end_offset,
+            severity: Severity::Warning,
+        });
     }
 
     for diagnostic in &diagnostics {

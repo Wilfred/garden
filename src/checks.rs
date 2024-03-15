@@ -9,6 +9,17 @@ use garden_lang_parser::ast::{
 };
 use garden_lang_parser::position::Position;
 
+pub(crate) fn check_defs(defs: &[Definition]) -> Vec<Warning> {
+    let env = Env::default();
+
+    let mut warnings = vec![];
+    for def in defs {
+        warnings.extend(check_def(def, &env));
+    }
+
+    warnings
+}
+
 pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     match &def.2 {
         Definition_::Fun(_, fun_info) => check(fun_info, env),

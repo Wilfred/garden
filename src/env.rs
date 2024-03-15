@@ -263,10 +263,6 @@ impl Env {
         self.types.get(name)
     }
 
-    pub(crate) fn has_type(&self, name: &TypeName) -> bool {
-        self.get_type(name).is_some()
-    }
-
     pub(crate) fn all_types(&self) -> Vec<TypeName> {
         self.types.keys().cloned().collect()
     }

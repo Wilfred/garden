@@ -94,8 +94,18 @@ fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
                         });
                     }
                 }
-                Type::Struct(_) => {
-                    // TODO: check type arguments on enums.
+                Type::Struct(struct_info) => {
+                    if struct_info.type_params.len() != type_hint.args.len() {
+                        warnings.push(Warning {
+                            message: format!(
+                                "{} takes {} type arguments, but got {} arguments.",
+                                &type_hint.sym.name,
+                                struct_info.type_params.len(),
+                                type_hint.args.len()
+                            ),
+                            position: type_hint.position.clone(),
+                        });
+                    }
                 }
             }
         }

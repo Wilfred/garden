@@ -1,0 +1,7 @@
+fun (self Foo) doStuff() {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// {"line_number":1,"message":"This `self` argument requires a type.","start_offset":5,"end_offset":9,"severity":"error"}
+

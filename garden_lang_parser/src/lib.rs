@@ -1211,8 +1211,8 @@ fn parse_method(
         Some(type_name) => type_name,
         None => {
             return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage("A type name for this method is expected.".to_owned()),
+                position: receiver_param.symbol.position.clone(),
+                message: ErrorMessage("This `self` argument requires a type.".to_owned()),
             });
         }
     };

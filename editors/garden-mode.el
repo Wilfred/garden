@@ -383,6 +383,7 @@ the user entering a value in the *garden* buffer."
     ;; E.g. `Foo`, `FooBar`, `FBar`, `_FooBar`.
     (,(rx
        (seq
+        symbol-start
         (* "_")
         (any upper)
         (* (or (syntax word) (syntax symbol)))

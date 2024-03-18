@@ -2,7 +2,8 @@ use serde::Serialize;
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::ToplevelItem, diagnostics::ErrorMessage, parse_toplevel_items, ParseError,
+    ast::ToplevelItem, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
+    ParseError,
 };
 
 use crate::{checks::check_defs, diagnostics::Warning};
@@ -16,6 +17,8 @@ enum Severity {
 
 #[derive(Debug, Serialize)]
 struct CheckDiagnostic {
+    #[serde(skip)]
+    position: Position,
     line_number: usize,
     message: ErrorMessage,
     start_offset: usize,
@@ -35,6 +38,7 @@ pub(crate) fn check(path: &Path, src: &str) {
                 } => {
                     // Expose line numbers as 1-indexed.
                     diagnostics.push(CheckDiagnostic {
+                        position: position.clone(),
                         line_number: position.line_number + 1,
                         message,
                         start_offset: position.start_offset,
@@ -47,6 +51,7 @@ pub(crate) fn check(path: &Path, src: &str) {
                 } => {
                     // TODO: last line would be better?
                     diagnostics.push(CheckDiagnostic {
+                        position: position.clone(),
                         line_number: 1,
                         message,
                         start_offset: position.start_offset,
@@ -71,6 +76,7 @@ pub(crate) fn check(path: &Path, src: &str) {
 
     for Warning { message, position } in check_defs(&defs) {
         diagnostics.push(CheckDiagnostic {
+            position: position.clone(),
             line_number: position.line_number + 1,
             message: ErrorMessage(message),
             start_offset: position.start_offset,

@@ -62,7 +62,11 @@ enum Commands {
     /// Run all the tests in the Garden program at the path specified.
     Test { path: PathBuf },
     /// Check the Garden program at the path specified for issues.
-    Check { path: PathBuf },
+    Check {
+        path: PathBuf,
+        #[clap(long, action)]
+        json: bool,
+    },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
@@ -90,10 +94,10 @@ fn main() {
         Commands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
         }
-        Commands::Check { path } => match std::fs::read(&path) {
+        Commands::Check { path, json } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                syntax_check::check(&path, &src);
+                syntax_check::check(&path, &src, json);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

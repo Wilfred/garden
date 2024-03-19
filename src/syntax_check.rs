@@ -2,11 +2,17 @@ use serde::Serialize;
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::ToplevelItem, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
+    ast::{SourceString, ToplevelItem},
+    diagnostics::ErrorMessage,
+    parse_toplevel_items,
+    position::Position,
     ParseError,
 };
 
-use crate::{checks::check_defs, diagnostics::Warning};
+use crate::{
+    checks::check_defs,
+    diagnostics::{format_parse_error, Warning},
+};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -26,7 +32,7 @@ struct CheckDiagnostic {
     severity: Severity,
 }
 
-pub(crate) fn check(path: &Path, src: &str) {
+pub(crate) fn check(path: &Path, src: &str, json: bool) {
     let mut diagnostics = vec![];
 
     let items = match parse_toplevel_items(path, src) {
@@ -85,11 +91,18 @@ pub(crate) fn check(path: &Path, src: &str) {
         });
     }
 
+    let src_string = SourceString {
+        src: src.to_owned(),
+        offset: 0,
+    };
     for diagnostic in &diagnostics {
-        println!(
-            "{}",
+        let s = if json {
             serde_json::to_string(diagnostic).expect("TODO: can this ever fail?")
-        );
+        } else {
+            format_parse_error(&diagnostic.message, &diagnostic.position, &src_string)
+        };
+
+        println!("{}", s);
     }
 
     if !diagnostics.is_empty() {

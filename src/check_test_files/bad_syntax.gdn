@@ -5,5 +5,9 @@ fun foo(): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// {"line_number":2,"message":"Expected `;`, got `}`","start_offset":21,"end_offset":22,"severity":"error"}
+// Error: Expected `;`, got `}`
+// 
+// --> src/check_test_files/bad_syntax.gdn:2
+//     1
+//     ^
 

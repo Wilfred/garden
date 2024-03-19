@@ -5,5 +5,9 @@ fun foo(): Option {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// {"line_number":1,"message":"Option takes 1 type arguments, but got 0 arguments.","start_offset":11,"end_offset":17,"severity":"warning"}
+// Error: Option takes 1 type arguments, but got 0 arguments.
+// 
+// --> src/check_test_files/missing_type_arg.gdn:1
+// fun foo(): Option {
+//            ^^^^^^
 

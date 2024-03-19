@@ -527,7 +527,7 @@ the user entering a value in the *garden* buffer."
 
 (flycheck-define-checker garden
   "A Garden syntax checker."
-  :command ("garden" "check"  source)
+  :command ("garden" "check" "--json" source)
   :error-parser garden-flycheck--parse
   :modes (garden-mode))
 

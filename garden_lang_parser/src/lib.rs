@@ -153,7 +153,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let type_params = parse_type_params(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_type = parse_type_annotation(tokens)?;
+    let return_type = parse_type_annotation_opt(tokens)?;
 
     let body = parse_block(src, tokens)?;
 
@@ -974,23 +974,37 @@ fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     })
 }
 
-fn parse_type_annotation(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
-    if let Some(token) = tokens.peek() {
-        if token.text == ":" {
-            tokens.pop();
-            return Ok(Some(parse_type_hint(tokens)?));
-        }
+/// Parse a colon and a type hint, e.g. `: Int`.
+fn parse_type_annotation(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
+    require_token(tokens, ":")?;
+    parse_type_hint(tokens)
+}
+
+/// Parse a type annotation, if present.
+fn parse_type_annotation_opt(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
+    if peeked_symbol_is(tokens, ":") {
+        let type_hint = parse_type_annotation(tokens)?;
+        return Ok(Some(type_hint));
     }
 
     Ok(None)
 }
 
-fn parse_parameter(tokens: &mut TokenStream) -> Result<SymbolWithType, ParseError> {
+fn parse_parameter(
+    tokens: &mut TokenStream,
+    require_type: bool,
+) -> Result<SymbolWithType, ParseError> {
     let param = parse_symbol(tokens)?;
-    let param_type = parse_type_annotation(tokens)?;
+
+    let type_ = if require_type {
+        Some(parse_type_annotation(tokens)?)
+    } else {
+        parse_type_annotation_opt(tokens)?
+    };
+
     Ok(SymbolWithType {
         symbol: param,
-        type_: param_type,
+        type_,
     })
 }
 
@@ -1003,7 +1017,7 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, Par
             break;
         }
 
-        let param = parse_parameter(tokens)?;
+        let param = parse_parameter(tokens, false)?;
         params.push(param);
 
         if let Some(token) = tokens.peek() {
@@ -1067,16 +1081,7 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
             let sym = parse_symbol(tokens)?;
-
-            let Some(hint) = parse_type_annotation(tokens)? else {
-                return Err(ParseError::Incomplete {
-                    position: Position::todo(),
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: A struct field requires a type, such as `{}: String`",
-                        sym.name
-                    )),
-                });
-            };
+            let hint = parse_type_annotation(tokens)?;
 
             fields.push(FieldInfo {
                 sym,
@@ -1205,7 +1210,7 @@ fn parse_method(
     let doc_comment = parse_doc_comment(&fun_token);
 
     require_token(tokens, "(")?;
-    let receiver_param = parse_parameter(tokens)?;
+    let receiver_param = parse_parameter(tokens, true)?;
     let receiver_name = receiver_param.symbol.name;
     let receiver_type = match receiver_param.type_ {
         Some(type_name) => type_name,
@@ -1221,7 +1226,7 @@ fn parse_method(
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_type = parse_type_annotation(tokens)?;
+    let return_type = parse_type_annotation_opt(tokens)?;
 
     let body = parse_block(src, tokens)?;
 
@@ -1270,7 +1275,7 @@ fn parse_function(
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_type = parse_type_annotation(tokens)?;
+    let return_type = parse_type_annotation_opt(tokens)?;
 
     let body = parse_block(src, tokens)?;
 

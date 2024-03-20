@@ -3,9 +3,9 @@ fun (self Foo) doStuff() {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: This `self` argument requires a type.
+// Error: Expected `:`, got `Foo`
 // 
 // --> src/check_test_files/missing_colon_method_receiver.gdn:1
 // fun (self Foo) doStuff() {}
-//      ^^^^
+//           ^^^
 

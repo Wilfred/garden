@@ -72,6 +72,19 @@ fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     warnings
 }
 
+fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String {
+    let num_actual = type_hint.args.len();
+
+    format!(
+        "{} takes {} type argument{}, but got {} argument{}.",
+        &type_hint.sym.name,
+        num_expected,
+        if num_expected == 1 { "" } else { "s" },
+        num_actual,
+        if num_actual == 1 { "" } else { "s" },
+    )
+}
+
 fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
@@ -84,11 +97,9 @@ fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
                 Type::Enum(enum_info) => {
                     if enum_info.type_params.len() != type_hint.args.len() {
                         warnings.push(Warning {
-                            message: format!(
-                                "{} takes {} type arguments, but got {} arguments.",
-                                &type_hint.sym.name,
+                            message: format_type_arity_error(
+                                type_hint,
                                 enum_info.type_params.len(),
-                                type_hint.args.len()
                             ),
                             position: type_hint.position.clone(),
                         });
@@ -97,11 +108,9 @@ fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
                 Type::Struct(struct_info) => {
                     if struct_info.type_params.len() != type_hint.args.len() {
                         warnings.push(Warning {
-                            message: format!(
-                                "{} takes {} type arguments, but got {} arguments.",
-                                &type_hint.sym.name,
+                            message: format_type_arity_error(
+                                type_hint,
                                 struct_info.type_params.len(),
-                                type_hint.args.len()
                             ),
                             position: type_hint.position.clone(),
                         });

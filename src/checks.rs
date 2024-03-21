@@ -42,7 +42,14 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
         }
         Definition_::Test(test_info) => check_free_variables_block(&test_info.body, env),
         Definition_::Enum(_) => vec![],
-        Definition_::Struct(_) => vec![],
+        Definition_::Struct(struct_info) => {
+            let mut warnings = vec![];
+            for field in &struct_info.fields {
+                warnings.extend(check_type_hint(&field.hint, env));
+            }
+
+            warnings
+        }
     }
 }
 

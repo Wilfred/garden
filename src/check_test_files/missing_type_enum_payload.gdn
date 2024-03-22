@@ -1,0 +1,6 @@
+enum Foo {
+    One,
+    Two(NoSuchType),
+}
+
+// args: check

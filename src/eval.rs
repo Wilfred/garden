@@ -18,7 +18,7 @@ use crate::checks::check_def;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::types::Type;
+use crate::types::{BuiltinType, Type};
 use crate::values::{
     bool_value, result_err_value, result_ok_value, runtime_type, runtime_type_from_hint,
     type_representation, unit_value, BuiltinFunctionKind, RuntimeType, Value,
@@ -37,10 +37,8 @@ pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
     pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
-    /// Type bound in this block, due to generic parameters.
-    ///
-    /// TODO: store the actual type associated with this name.
-    types: HashMap<TypeName, ()>,
+    /// Types bound in this block, due to generic parameters.
+    types: HashMap<TypeName, Type>,
 }
 
 impl Default for BlockBindings {
@@ -1547,7 +1545,8 @@ fn eval_call(
 
             let mut type_bindings = HashMap::new();
             for type_param in &fun_info.type_params {
-                type_bindings.insert(type_param.name.clone(), ());
+                // TODO: compute the value of these type params properly.
+                type_bindings.insert(type_param.name.clone(), Type::Builtin(BuiltinType::Int));
             }
 
             bindings.push(BlockBindings {

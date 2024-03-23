@@ -1,6 +1,6 @@
 use garden_lang_parser::ast::{EnumInfo, StructInfo};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) enum BuiltinType {
     Int,
     String,
@@ -9,7 +9,7 @@ pub(crate) enum BuiltinType {
     List,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Type {
     Builtin(BuiltinType),
     Enum(EnumInfo),

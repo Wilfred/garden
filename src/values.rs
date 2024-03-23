@@ -172,7 +172,7 @@ impl RuntimeType {
         Self::List(Box::new(Self::String))
     }
 
-    pub(crate) fn from_hint(hint: &TypeHint) -> Self {
+    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Self {
         let name = &hint.sym.name;
         if name.name == "NoValue" {
             return RuntimeType::NoValue;
@@ -185,14 +185,18 @@ impl RuntimeType {
         }
         if name.name == "List" {
             let elem_type = match hint.args.first() {
-                Some(arg) => RuntimeType::from_hint(arg),
+                Some(arg) => RuntimeType::from_hint(arg, env),
                 None => RuntimeType::Top,
             };
 
             return RuntimeType::List(Box::new(elem_type));
         }
 
-        let args: Vec<_> = hint.args.iter().map(RuntimeType::from_hint).collect();
+        let args: Vec<_> = hint
+            .args
+            .iter()
+            .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
+            .collect();
 
         RuntimeType::UserDefined {
             // TODO: Look up this named type in the env.
@@ -206,10 +210,18 @@ impl RuntimeType {
         match value {
             Value::Integer(_) => RuntimeType::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-                Self::from_fun_info(fun_info)
+                // TODO: store runtime type information in closures,
+                // and this shouldn't be necessary?
+                let env = Env::default();
+                Self::from_fun_info(fun_info, &env)
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
-                Some(fun_info) => Self::from_fun_info(fun_info),
+                Some(fun_info) => {
+                    // TODO: store runtime type information in closures,
+                    // and this shouldn't be necessary?
+                    let env = Env::default();
+                    Self::from_fun_info(fun_info, &env)
+                }
                 None => RuntimeType::Top,
             },
             Value::String(_) => RuntimeType::String,
@@ -229,18 +241,18 @@ impl RuntimeType {
         }
     }
 
-    fn from_fun_info(fun_info: &FunInfo) -> Self {
+    fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Self {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.type_ {
-                Some(hint) => RuntimeType::from_hint(hint),
+                Some(hint) => RuntimeType::from_hint(hint, env),
                 None => RuntimeType::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_type {
-            Some(hint) => Self::from_hint(hint),
+            Some(hint) => Self::from_hint(hint, env),
             None => RuntimeType::Top,
         };
 

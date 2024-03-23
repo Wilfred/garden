@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::eval_defs;
-use crate::types::Type;
+use crate::types::TypeDef;
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, Expression, Expression_, FunInfo, MethodKind, Symbol,
     SymbolName, TypeHint,
@@ -107,10 +107,10 @@ fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
     match env.get_type(&type_hint.sym.name) {
         Some(type_) => {
             match type_ {
-                Type::Builtin(_) => {
+                TypeDef::Builtin(_) => {
                     // TODO: check type arguments on built-in types
                 }
-                Type::Enum(enum_info) => {
+                TypeDef::Enum(enum_info) => {
                     if enum_info.type_params.len() != type_hint.args.len() {
                         warnings.push(Warning {
                             message: format_type_arity_error(
@@ -121,7 +121,7 @@ fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
                         });
                     }
                 }
-                Type::Struct(struct_info) => {
+                TypeDef::Struct(struct_info) => {
                     if struct_info.type_params.len() != type_hint.args.len() {
                         warnings.push(Warning {
                             message: format_type_arity_error(

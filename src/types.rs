@@ -10,7 +10,7 @@ pub(crate) enum BuiltinType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum Type {
+pub(crate) enum TypeDef {
     Builtin(BuiltinType),
     Enum(EnumInfo),
     Struct(StructInfo),

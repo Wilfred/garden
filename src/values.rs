@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::BlockBindings;
-use crate::types::Type;
+use crate::types::TypeDef;
 use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeHint, TypeName};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -355,16 +355,16 @@ impl Value {
                 };
 
                 let variant_name = match type_ {
-                    Type::Builtin(_) => {
+                    TypeDef::Builtin(_) => {
                         unreachable!("Enum type names should never map to built-in types")
                     }
-                    Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
+                    TypeDef::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
                             format!("{}", variant_sym.name_sym.name)
                         }
                         None => format!("{}::__OLD_VARIANT_{}", type_name, variant_idx),
                     },
-                    Type::Struct(struct_info) => {
+                    TypeDef::Struct(struct_info) => {
                         format!("{}__OLD_DEFINITION", struct_info.name_sym)
                     }
                 };
@@ -389,10 +389,10 @@ impl Value {
                 };
 
                 match type_ {
-                    Type::Builtin(_) => {
+                    TypeDef::Builtin(_) => {
                         unreachable!("Enum type names should never map to built-in types")
                     }
-                    Type::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
+                    TypeDef::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
                         Some(variant_sym) => {
                             format!("{} (constructor)", variant_sym.name_sym.name)
                         }
@@ -400,7 +400,7 @@ impl Value {
                             format!("{}::__OLD_VARIANT_{} (constructor)", type_name, variant_idx)
                         }
                     },
-                    Type::Struct(struct_info) => {
+                    TypeDef::Struct(struct_info) => {
                         format!("{}__OLD_DEFINITION (constructor)", struct_info.name_sym)
                     }
                 }

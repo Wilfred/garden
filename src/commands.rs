@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::eval_exprs;
-use crate::types::{BuiltinType, Type};
+use crate::types::{BuiltinType, TypeDef};
 use crate::values::{runtime_type, Value};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
@@ -179,9 +179,9 @@ pub(crate) enum EvalAction {
     Skip,
 }
 
-fn describe_type(type_: &Type) -> String {
+fn describe_type(type_: &TypeDef) -> String {
     match type_ {
-        Type::Builtin(builtin_type) => {
+        TypeDef::Builtin(builtin_type) => {
             let name = match builtin_type {
                 BuiltinType::Int => "Int",
                 BuiltinType::String => "String",
@@ -191,7 +191,7 @@ fn describe_type(type_: &Type) -> String {
             // TODO: Offer more comprehensive docs on built-in types.
             format!("{name} is a built-in type.")
         }
-        Type::Enum(enum_info) => {
+        TypeDef::Enum(enum_info) => {
             let mut description = String::new();
 
             if let Some(doc_comment) = &enum_info.doc_comment {
@@ -223,7 +223,7 @@ fn describe_type(type_: &Type) -> String {
 
             description
         }
-        Type::Struct(struct_info) => {
+        TypeDef::Struct(struct_info) => {
             let mut description = String::new();
 
             if let Some(doc_comment) = &struct_info.doc_comment {
@@ -604,9 +604,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         name: name.to_owned(),
     }) {
         match type_ {
-            Type::Builtin(_) => Ok(None),
-            Type::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
-            Type::Struct(struct_info) => Ok(Some(struct_info.src_string.clone())),
+            TypeDef::Builtin(_) => Ok(None),
+            TypeDef::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
+            TypeDef::Struct(struct_info) => Ok(Some(struct_info.src_string.clone())),
         }
     } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
         match value {

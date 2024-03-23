@@ -18,7 +18,7 @@ use crate::checks::check_def;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::types::{BuiltinType, Type};
+use crate::types::{BuiltinType, TypeDef};
 use crate::values::{
     bool_value, result_err_value, result_ok_value, runtime_type, runtime_type_from_hint,
     type_representation, unit_value, BuiltinFunctionKind, RuntimeType, Value,
@@ -38,7 +38,7 @@ pub(crate) struct BlockBindings {
     /// function parameters.
     pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
     /// Types bound in this block, due to generic parameters.
-    types: HashMap<TypeName, Type>,
+    types: HashMap<TypeName, TypeDef>,
 }
 
 impl Default for BlockBindings {
@@ -378,7 +378,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 // Add the enum definition to the type environment.
                 env.add_type(
                     enum_info.name_sym.name.clone(),
-                    Type::Enum(enum_info.clone()),
+                    TypeDef::Enum(enum_info.clone()),
                 );
 
                 // Add the values in the enum to the value environment.
@@ -418,7 +418,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 // Add the struct definition to the type environment.
                 env.add_type(
                     struct_info.name_sym.name.clone(),
-                    Type::Struct(struct_info.clone()),
+                    TypeDef::Struct(struct_info.clone()),
                 );
 
                 let name_as_sym = SymbolName(struct_info.name_sym.name.name.clone());
@@ -1546,7 +1546,7 @@ fn eval_call(
             let mut type_bindings = HashMap::new();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), Type::Builtin(BuiltinType::Int));
+                type_bindings.insert(type_param.name.clone(), TypeDef::Builtin(BuiltinType::Int));
             }
 
             bindings.push(BlockBindings {
@@ -1681,7 +1681,7 @@ fn enum_value_runtime_type(
     let Some(type_) = env.get_type(type_name) else {
         return None;
     };
-    let Type::Enum(enum_info) = type_ else {
+    let TypeDef::Enum(enum_info) = type_ else {
         return None;
     };
 
@@ -2777,7 +2777,7 @@ fn eval_struct_value(
             error_position: type_sym.position.clone(),
         });
     };
-    let Type::Struct(struct_info) = type_info else {
+    let TypeDef::Struct(struct_info) = type_info else {
         let message = ErrorMessage(format!(
             "`{}` is not a struct, so it cannot be initialized with struct syntax.",
             type_sym.name,

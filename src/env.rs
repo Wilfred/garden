@@ -5,7 +5,7 @@ use strum::IntoEnumIterator;
 use crate::values::{unit_value, BuiltinFunctionKind, Value};
 use crate::{
     eval::{eval_toplevel_defs, Bindings, StackFrame},
-    types::{BuiltinType, Type},
+    types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
     BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, TestInfo,
@@ -19,7 +19,7 @@ pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
-    types: HashMap<TypeName, Type>,
+    types: HashMap<TypeName, TypeDef>,
     // TODO: should this be stored separately?
     pub(crate) stack: Vec<StackFrame>,
 }
@@ -187,23 +187,23 @@ impl Default for Env {
         // TODO: String literals are duplicated with type_representation.
         types.insert(
             TypeName { name: "Int".into() },
-            Type::Builtin(BuiltinType::Int),
+            TypeDef::Builtin(BuiltinType::Int),
         );
         types.insert(
             TypeName {
                 name: "String".into(),
             },
-            Type::Builtin(BuiltinType::String),
+            TypeDef::Builtin(BuiltinType::String),
         );
         types.insert(
             TypeName {
                 name: "List".into(),
             },
-            Type::Builtin(BuiltinType::List),
+            TypeDef::Builtin(BuiltinType::List),
         );
         types.insert(
             TypeName { name: "Fun".into() },
-            Type::Builtin(BuiltinType::Fun),
+            TypeDef::Builtin(BuiltinType::Fun),
         );
 
         let mut env = Self {
@@ -259,7 +259,7 @@ impl Env {
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
     }
 
-    pub(crate) fn get_type<'a>(&'a self, name: &TypeName) -> Option<&'a Type> {
+    pub(crate) fn get_type<'a>(&'a self, name: &TypeName) -> Option<&'a TypeDef> {
         self.types.get(name)
     }
 
@@ -267,7 +267,7 @@ impl Env {
         self.types.keys().cloned().collect()
     }
 
-    pub(crate) fn add_type(&mut self, name: TypeName, type_: Type) {
+    pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name, type_);
     }
 }

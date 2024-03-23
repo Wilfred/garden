@@ -239,10 +239,14 @@ impl RuntimeType {
             param_types.push(type_);
         }
 
+        let return_ = match &fun_info.return_type {
+            Some(hint) => Self::from_hint(hint),
+            None => RuntimeType::Top,
+        };
+
         RuntimeType::Fun {
-            // TODO: use fun_info
             params: param_types,
-            return_: Box::new(RuntimeType::Top),
+            return_: Box::new(return_),
         }
     }
 }

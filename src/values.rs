@@ -206,10 +206,10 @@ impl RuntimeType {
         match value {
             Value::Integer(_) => RuntimeType::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-                runtime_type_from_fun_info(fun_info)
+                Self::from_fun_info(fun_info)
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
-                Some(fun_info) => runtime_type_from_fun_info(fun_info),
+                Some(fun_info) => Self::from_fun_info(fun_info),
                 None => RuntimeType::Top,
             },
             Value::String(_) => RuntimeType::String,
@@ -226,6 +226,23 @@ impl RuntimeType {
                 }),
             },
             Value::Struct { runtime_type, .. } => runtime_type.clone(),
+        }
+    }
+
+    fn from_fun_info(fun_info: &FunInfo) -> Self {
+        let mut param_types = vec![];
+        for param in &fun_info.params {
+            let type_ = match &param.type_ {
+                Some(hint) => RuntimeType::from_hint(hint),
+                None => RuntimeType::Top,
+            };
+            param_types.push(type_);
+        }
+
+        RuntimeType::Fun {
+            // TODO: use fun_info
+            params: param_types,
+            return_: Box::new(RuntimeType::Top),
         }
     }
 }
@@ -261,23 +278,6 @@ impl Display for RuntimeType {
             }
             RuntimeType::Top => write!(f, "_"),
         }
-    }
-}
-
-fn runtime_type_from_fun_info(fun_info: &FunInfo) -> RuntimeType {
-    let mut param_types = vec![];
-    for param in &fun_info.params {
-        let type_ = match &param.type_ {
-            Some(hint) => RuntimeType::from_hint(hint),
-            None => RuntimeType::Top,
-        };
-        param_types.push(type_);
-    }
-
-    RuntimeType::Fun {
-        // TODO: use fun_info
-        params: param_types,
-        return_: Box::new(RuntimeType::Top),
     }
 }
 

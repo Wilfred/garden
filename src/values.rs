@@ -171,6 +171,36 @@ impl RuntimeType {
     pub(crate) fn string_list() -> Self {
         Self::List(Box::new(Self::String))
     }
+
+    pub(crate) fn from_hint(hint: &TypeHint) -> Self {
+        let name = &hint.sym.name;
+        if name.name == "NoValue" {
+            return RuntimeType::NoValue;
+        }
+        if name.name == "String" {
+            return RuntimeType::String;
+        }
+        if name.name == "Int" {
+            return RuntimeType::Int;
+        }
+        if name.name == "List" {
+            let elem_type = match hint.args.first() {
+                Some(arg) => RuntimeType::from_hint(arg),
+                None => RuntimeType::Top,
+            };
+
+            return RuntimeType::List(Box::new(elem_type));
+        }
+
+        let args: Vec<_> = hint.args.iter().map(RuntimeType::from_hint).collect();
+
+        RuntimeType::UserDefined {
+            // TODO: Look up this named type in the env.
+            kind: TypeDefKind::Enum,
+            name: name.clone(),
+            args,
+        }
+    }
 }
 
 impl Display for RuntimeType {
@@ -207,36 +237,6 @@ impl Display for RuntimeType {
     }
 }
 
-pub(crate) fn runtime_type_from_hint(hint: &TypeHint) -> RuntimeType {
-    let name = &hint.sym.name;
-    if name.name == "NoValue" {
-        return RuntimeType::NoValue;
-    }
-    if name.name == "String" {
-        return RuntimeType::String;
-    }
-    if name.name == "Int" {
-        return RuntimeType::Int;
-    }
-    if name.name == "List" {
-        let elem_type = match hint.args.first() {
-            Some(arg) => runtime_type_from_hint(arg),
-            None => RuntimeType::Top,
-        };
-
-        return RuntimeType::List(Box::new(elem_type));
-    }
-
-    let args: Vec<_> = hint.args.iter().map(runtime_type_from_hint).collect();
-
-    RuntimeType::UserDefined {
-        // TODO: Look up this named type in the env.
-        kind: TypeDefKind::Enum,
-        name: name.clone(),
-        args,
-    }
-}
-
 pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
     match value {
         Value::Integer(_) => RuntimeType::Int,
@@ -268,7 +268,7 @@ fn runtime_type_from_fun_info(fun_info: &FunInfo) -> RuntimeType {
     let mut param_types = vec![];
     for param in &fun_info.params {
         let type_ = match &param.type_ {
-            Some(hint) => runtime_type_from_hint(hint),
+            Some(hint) => RuntimeType::from_hint(hint),
             None => RuntimeType::Top,
         };
         param_types.push(type_);

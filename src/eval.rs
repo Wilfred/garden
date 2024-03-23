@@ -20,8 +20,8 @@ use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{
-    bool_value, result_err_value, result_ok_value, runtime_type, runtime_type_from_hint,
-    type_representation, unit_value, BuiltinFunctionKind, RuntimeType, TypeDefKind, Value,
+    bool_value, result_err_value, result_ok_value, runtime_type, type_representation, unit_value,
+    BuiltinFunctionKind, RuntimeType, TypeDefKind, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
@@ -1733,7 +1733,7 @@ fn check_param_types(
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.type_ {
-            let param_ty = runtime_type_from_hint(param_hint);
+            let param_ty = RuntimeType::from_hint(param_hint);
 
             if let Err(msg) = check_type(arg_value, &param_ty, env) {
                 let mut saved_values = vec![];
@@ -2734,7 +2734,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             if let Some(ref fun) = stack_frame.enclosing_fun {
                 if let Some(return_hint) = &fun.return_type {
                     let err_pos = return_hint.position.clone();
-                    let return_ty = runtime_type_from_hint(return_hint);
+                    let return_ty = RuntimeType::from_hint(return_hint);
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());

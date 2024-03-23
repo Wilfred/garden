@@ -87,6 +87,7 @@ pub(crate) fn result_ok_value(v: Value) -> Value {
         variant_idx: 0,
         payload: Some(Box::new(v)),
         runtime_type: RuntimeType::UserDefined {
+            kind: TypeDefKind::Enum,
             name: TypeName {
                 name: "Result".to_owned(),
             },
@@ -105,6 +106,7 @@ pub(crate) fn result_err_value(v: Value) -> Value {
             name: "Result".to_owned(),
         },
         runtime_type: RuntimeType::UserDefined {
+            kind: TypeDefKind::Enum,
             name: TypeName {
                 name: "Result".to_owned(),
             },
@@ -113,6 +115,12 @@ pub(crate) fn result_err_value(v: Value) -> Value {
         variant_idx: 1,
         payload: Some(Box::new(v)),
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum TypeDefKind {
+    Enum,
+    Struct,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -129,6 +137,7 @@ pub(crate) enum RuntimeType {
         return_: Box<RuntimeType>,
     },
     UserDefined {
+        kind: TypeDefKind,
         name: TypeName,
         args: Vec<RuntimeType>,
     },
@@ -137,6 +146,7 @@ pub(crate) enum RuntimeType {
 impl RuntimeType {
     pub(crate) fn unit() -> Self {
         Self::UserDefined {
+            kind: TypeDefKind::Enum,
             name: TypeName {
                 name: "Unit".to_owned(),
             },
@@ -146,6 +156,7 @@ impl RuntimeType {
 
     pub(crate) fn bool() -> Self {
         Self::UserDefined {
+            kind: TypeDefKind::Enum,
             name: TypeName {
                 name: "Bool".to_owned(),
             },
@@ -165,7 +176,7 @@ impl RuntimeType {
 impl Display for RuntimeType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RuntimeType::UserDefined { name, args } => {
+            RuntimeType::UserDefined { name, args, .. } => {
                 if args.is_empty() {
                     write!(f, "{}", name.name)
                 } else {
@@ -219,6 +230,8 @@ pub(crate) fn runtime_type_from_hint(hint: &TypeHint) -> RuntimeType {
     let args: Vec<_> = hint.args.iter().map(runtime_type_from_hint).collect();
 
     RuntimeType::UserDefined {
+        // TODO: Look up this named type in the env.
+        kind: TypeDefKind::Enum,
         name: name.clone(),
         args,
     }
@@ -241,6 +254,7 @@ pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
             // TODO: store the type for the expected argument of this variant.
             params: vec![RuntimeType::Top],
             return_: Box::new(RuntimeType::UserDefined {
+                kind: TypeDefKind::Enum,
                 name: type_name.clone(),
                 // TODO: look up type arguments.
                 args: vec![],

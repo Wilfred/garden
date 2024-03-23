@@ -21,7 +21,7 @@ use crate::json_session::{Response, ResponseKind};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{
     bool_value, result_err_value, result_ok_value, runtime_type, runtime_type_from_hint,
-    type_representation, unit_value, BuiltinFunctionKind, RuntimeType, Value,
+    type_representation, unit_value, BuiltinFunctionKind, RuntimeType, TypeDefKind, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
@@ -1054,10 +1054,12 @@ fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
         (RuntimeType::Fun { .. }, _) => false,
         (
             RuntimeType::UserDefined {
+                kind: _,
                 name: lhs_name,
                 args: lhs_args,
             },
             RuntimeType::UserDefined {
+                kind: _,
                 name: rhs_name,
                 args: rhs_args,
             },
@@ -1703,6 +1705,7 @@ fn enum_value_runtime_type(
             }
 
             Some(RuntimeType::UserDefined {
+                kind: TypeDefKind::Enum,
                 name: type_name.clone(),
                 args,
             })
@@ -1713,6 +1716,7 @@ fn enum_value_runtime_type(
             // This variant does not have a payload. Resolve all the
             // type parameters in this enum definition to NoValue.
             Some(RuntimeType::UserDefined {
+                kind: TypeDefKind::Enum,
                 name: type_name.clone(),
                 args,
             })
@@ -2837,6 +2841,7 @@ fn eval_struct_value(
     }
 
     let runtime_type = RuntimeType::UserDefined {
+        kind: TypeDefKind::Struct,
         name: type_sym.name.clone(),
         args: type_args,
     };

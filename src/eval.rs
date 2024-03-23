@@ -20,7 +20,7 @@ use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{
-    bool_value, result_err_value, result_ok_value, runtime_type, type_representation, unit_value,
+    bool_value, result_err_value, result_ok_value, type_representation, unit_value,
     BuiltinFunctionKind, RuntimeType, TypeDefKind, Value,
 };
 use garden_lang_parser::ast::{
@@ -506,7 +506,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                runtime_type(value),
+                RuntimeType::from_value(value),
             ),
             position: symbol.position.clone(),
         });
@@ -750,7 +750,7 @@ fn format_type_error(expected: &TypeName, value: &Value, env: &Env) -> ErrorMess
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.name,
-        runtime_type(value),
+        RuntimeType::from_value(value),
         value.display(env)
     ))
 }
@@ -759,7 +759,7 @@ fn format_runtime_type_error(expected: &RuntimeType, value: &Value, env: &Env) -
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected,
-        runtime_type(value),
+        RuntimeType::from_value(value),
         value.display(env)
     ))
 }
@@ -1002,7 +1002,7 @@ fn check_arity(
 
 /// Check that `value` has `expected` type.
 fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = runtime_type(value);
+    let value_type = RuntimeType::from_value(value);
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -1636,7 +1636,7 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &runtime_type(&arg_values[0]),
+                &RuntimeType::from_value(&arg_values[0]),
             )
             .unwrap_or(RuntimeType::NoValue);
 
@@ -2411,7 +2411,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             );
                             // TODO: check that all elements are of a compatible type.
                             // [1, None] should be an error.
-                            element_type = runtime_type(&element);
+                            element_type = RuntimeType::from_value(&element);
                             list_values.push(element);
                         }
 
@@ -2825,7 +2825,10 @@ fn eval_struct_value(
         };
 
         if type_params.contains(&field_info.hint.sym.name) {
-            type_arg_bindings.insert(field_info.hint.sym.name.clone(), runtime_type(&field_value));
+            type_arg_bindings.insert(
+                field_info.hint.sym.name.clone(),
+                RuntimeType::from_value(&field_value),
+            );
         }
 
         // TODO: check that all field values are of a compatible type.
@@ -2875,7 +2878,7 @@ fn eval_match_cases(
     else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            runtime_type(&scrutinee_value),
+            RuntimeType::from_value(&scrutinee_value),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

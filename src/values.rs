@@ -76,7 +76,7 @@ pub(crate) fn bool_value(b: bool) -> Value {
 }
 
 pub(crate) fn result_ok_value(v: Value) -> Value {
-    let value_type = runtime_type(&v);
+    let value_type = RuntimeType::from_value(&v);
 
     // We can assume that Result is always defined because it's in the
     // prelude.
@@ -97,7 +97,7 @@ pub(crate) fn result_ok_value(v: Value) -> Value {
 }
 
 pub(crate) fn result_err_value(v: Value) -> Value {
-    let value_type = runtime_type(&v);
+    let value_type = RuntimeType::from_value(&v);
 
     // We can assume that Result is always defined because it's in the
     // prelude.
@@ -201,6 +201,33 @@ impl RuntimeType {
             args,
         }
     }
+
+    pub(crate) fn from_value(value: &Value) -> Self {
+        match value {
+            Value::Integer(_) => RuntimeType::Int,
+            Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
+                runtime_type_from_fun_info(fun_info)
+            }
+            Value::BuiltinFunction(_, fun_info) => match fun_info {
+                Some(fun_info) => runtime_type_from_fun_info(fun_info),
+                None => RuntimeType::Top,
+            },
+            Value::String(_) => RuntimeType::String,
+            Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
+            Value::Enum { runtime_type, .. } => runtime_type.clone(),
+            Value::EnumConstructor { type_name, .. } => RuntimeType::Fun {
+                // TODO: store the type for the expected argument of this variant.
+                params: vec![RuntimeType::Top],
+                return_: Box::new(RuntimeType::UserDefined {
+                    kind: TypeDefKind::Enum,
+                    name: type_name.clone(),
+                    // TODO: look up type arguments.
+                    args: vec![],
+                }),
+            },
+            Value::Struct { runtime_type, .. } => runtime_type.clone(),
+        }
+    }
 }
 
 impl Display for RuntimeType {
@@ -234,33 +261,6 @@ impl Display for RuntimeType {
             }
             RuntimeType::Top => write!(f, "_"),
         }
-    }
-}
-
-pub(crate) fn runtime_type(value: &Value) -> RuntimeType {
-    match value {
-        Value::Integer(_) => RuntimeType::Int,
-        Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-            runtime_type_from_fun_info(fun_info)
-        }
-        Value::BuiltinFunction(_, fun_info) => match fun_info {
-            Some(fun_info) => runtime_type_from_fun_info(fun_info),
-            None => RuntimeType::Top,
-        },
-        Value::String(_) => RuntimeType::String,
-        Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
-        Value::Enum { runtime_type, .. } => runtime_type.clone(),
-        Value::EnumConstructor { type_name, .. } => RuntimeType::Fun {
-            // TODO: store the type for the expected argument of this variant.
-            params: vec![RuntimeType::Top],
-            return_: Box::new(RuntimeType::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: type_name.clone(),
-                // TODO: look up type arguments.
-                args: vec![],
-            }),
-        },
-        Value::Struct { runtime_type, .. } => runtime_type.clone(),
     }
 }
 

@@ -10,7 +10,7 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::types::{BuiltinType, TypeDef};
-use crate::values::{runtime_type, Value};
+use crate::values::{RuntimeType, Value};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
@@ -554,7 +554,7 @@ pub(crate) fn run_command<T: Write>(
             if let Some(expr) = expr {
                 match eval_exprs(&[expr.clone()], env, session) {
                     Ok(value) => {
-                        write!(buf, "{}", runtime_type(&value)).unwrap();
+                        write!(buf, "{}", RuntimeType::from_value(&value)).unwrap();
                     }
                     Err(e) => {
                         // TODO: Print a proper stack trace.

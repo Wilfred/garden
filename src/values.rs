@@ -222,14 +222,14 @@ impl RuntimeType {
                 // TODO: store runtime type information in closures,
                 // and this shouldn't be necessary?
                 let env = Env::default();
-                Self::from_fun_info(fun_info, &env)
+                Self::from_fun_info(fun_info, &env).unwrap_or(RuntimeType::Top)
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
                 Some(fun_info) => {
                     // TODO: store runtime type information in closures,
                     // and this shouldn't be necessary?
                     let env = Env::default();
-                    Self::from_fun_info(fun_info, &env)
+                    Self::from_fun_info(fun_info, &env).unwrap_or(RuntimeType::Top)
                 }
                 None => RuntimeType::Top,
             },
@@ -250,25 +250,25 @@ impl RuntimeType {
         }
     }
 
-    fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Self {
+    fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Result<Self, ()> {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.type_ {
-                Some(hint) => RuntimeType::from_hint(hint, env).unwrap(),
+                Some(hint) => RuntimeType::from_hint(hint, env)?,
                 None => RuntimeType::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_type {
-            Some(hint) => Self::from_hint(hint, env).unwrap(),
+            Some(hint) => Self::from_hint(hint, env)?,
             None => RuntimeType::Top,
         };
 
-        RuntimeType::Fun {
+        Ok(RuntimeType::Fun {
             params: param_types,
             return_: Box::new(return_),
-        }
+        })
     }
 }
 

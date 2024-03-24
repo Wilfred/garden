@@ -9,8 +9,9 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::eval_exprs;
+use crate::runtime_type::RuntimeType;
 use crate::types::{BuiltinType, TypeDef};
-use crate::values::{RuntimeType, Value};
+use crate::values::Value;
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};

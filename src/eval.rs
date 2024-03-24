@@ -18,10 +18,11 @@ use crate::checks::check_def;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
+use crate::runtime_type::{RuntimeType, TypeDefKind};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{
     bool_value, result_err_value, result_ok_value, type_representation, unit_value,
-    BuiltinFunctionKind, RuntimeType, TypeDefKind, Value,
+    BuiltinFunctionKind, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,

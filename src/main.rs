@@ -15,6 +15,7 @@ mod env;
 mod eval;
 mod json_session;
 mod prompt;
+mod runtime_type;
 mod syntax_check;
 mod types;
 mod values;

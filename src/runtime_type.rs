@@ -4,7 +4,11 @@ use itertools::Itertools as _;
 
 use garden_lang_parser::ast::{FunInfo, TypeHint, TypeName};
 
-use crate::{env::Env, types::TypeDef, values::Value};
+use crate::{
+    env::Env,
+    types::{BuiltinType, TypeDef},
+    values::Value,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum TypeDefKind {
@@ -89,7 +93,12 @@ impl RuntimeType {
 
         let typedef_kind = match env.get_type(name) {
             Some(type_) => match type_ {
-                TypeDef::Builtin(_) => todo!(),
+                TypeDef::Builtin(builtin_type) => match builtin_type {
+                    BuiltinType::Int => todo!(),
+                    BuiltinType::String => todo!(),
+                    BuiltinType::Fun => todo!(),
+                    BuiltinType::List => todo!(),
+                },
                 TypeDef::Enum(_) => TypeDefKind::Enum,
                 TypeDef::Struct(_) => TypeDefKind::Struct,
             },

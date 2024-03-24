@@ -198,7 +198,7 @@ impl Value {
                 payload,
                 ..
             } => {
-                let type_ = match env.get_type(type_name) {
+                let type_ = match env.get_type_def(type_name) {
                     Some(type_) => type_,
                     None => {
                         return format!("{}__OLD_DEFINITION::{}", type_name, variant_idx);
@@ -229,7 +229,7 @@ impl Value {
                 type_name,
                 variant_idx,
             } => {
-                let type_ = match env.get_type(type_name) {
+                let type_ = match env.get_type_def(type_name) {
                     Some(type_) => type_,
                     None => {
                         return format!(

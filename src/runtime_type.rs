@@ -89,7 +89,7 @@ impl RuntimeType {
             .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
             .collect::<Result<Vec<_>, _>>()?;
 
-        match env.get_type(name) {
+        match env.get_type_def(name) {
             Some(type_) => match type_ {
                 TypeDef::Builtin(builtin_type) => match builtin_type {
                     BuiltinType::Int => Ok(RuntimeType::Int),

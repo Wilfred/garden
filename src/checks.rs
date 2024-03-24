@@ -104,7 +104,7 @@ fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String 
 fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
-    match env.get_type(&type_hint.sym.name) {
+    match env.get_type_def(&type_hint.sym.name) {
         Some(type_) => {
             match type_ {
                 TypeDef::Builtin(_) => {

@@ -601,7 +601,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.get_type(&TypeName {
+    } else if let Some(type_) = env.get_type_def(&TypeName {
         name: name.to_owned(),
     }) {
         match type_ {
@@ -636,7 +636,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             // TODO: distinguish between no type with this name, and the type having no methods.
             Err(format!("No type named `{type_name}`."))
         }
-    } else if let Some(type_) = env.get_type(&TypeName {
+    } else if let Some(type_) = env.get_type_def(&TypeName {
         name: name.to_owned(),
     }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))

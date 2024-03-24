@@ -1681,7 +1681,7 @@ fn enum_value_runtime_type(
     variant_idx: usize,
     payload_value_type: &RuntimeType,
 ) -> Option<RuntimeType> {
-    let Some(type_) = env.get_type(type_name) else {
+    let Some(type_) = env.get_type_def(type_name) else {
         return None;
     };
     let TypeDef::Enum(enum_info) = type_ else {
@@ -2781,7 +2781,7 @@ fn eval_struct_value(
     type_sym: TypeSymbol,
     field_exprs: &[(Symbol, Expression)],
 ) -> Result<(), ErrorInfo> {
-    let Some(type_info) = env.get_type(&type_sym.name) else {
+    let Some(type_info) = env.get_type_def(&type_sym.name) else {
         return Err(ErrorInfo {
             message: ErrorMessage(format!("No type exists named `{}`.", type_sym.name)),
             restore_values: vec![],
@@ -2892,7 +2892,7 @@ fn eval_match_cases(
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
-    let _type = match env.get_type(&value_type_name) {
+    let _type = match env.get_type_def(&value_type_name) {
         Some(type_) => type_,
         None => {
             let msg = ErrorMessage(format!(

@@ -259,7 +259,11 @@ impl Env {
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
     }
 
-    pub(crate) fn get_type<'a>(&'a self, name: &TypeName) -> Option<&'a TypeDef> {
+    /// Get the type definition associated with this `name`.
+    ///
+    /// This handles global type definitions, and type variables are
+    /// not considered here.
+    pub(crate) fn get_type_def<'a>(&'a self, name: &TypeName) -> Option<&'a TypeDef> {
         self.types.get(name)
     }
 

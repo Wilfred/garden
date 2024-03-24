@@ -198,9 +198,18 @@ impl RuntimeType {
             .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
             .collect();
 
+        let typedef_kind = match env.get_type(name) {
+            Some(type_) => match type_ {
+                TypeDef::Builtin(_) => todo!(),
+                TypeDef::Enum(_) => TypeDefKind::Enum,
+                TypeDef::Struct(_) => TypeDefKind::Struct,
+            },
+            // TODO: Return a result.
+            None => TypeDefKind::Enum,
+        };
+
         RuntimeType::UserDefined {
-            // TODO: Look up this named type in the env.
-            kind: TypeDefKind::Enum,
+            kind: typedef_kind,
             name: name.clone(),
             args,
         }

@@ -82,51 +82,41 @@ impl RuntimeType {
 
     pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, ()> {
         let name = &hint.sym.name;
-        if name.name == "NoValue" {
-            return Ok(RuntimeType::no_value());
-        }
-        if name.name == "String" {
-            return Ok(RuntimeType::String);
-        }
-        if name.name == "Int" {
-            return Ok(RuntimeType::Int);
-        }
-        if name.name == "List" {
-            let elem_type = match hint.args.first() {
-                Some(arg) => RuntimeType::from_hint(arg, env)?,
-                None => RuntimeType::Top,
-            };
 
-            return Ok(RuntimeType::List(Box::new(elem_type)));
-        }
-
-        let args: Result<Vec<_>, _> = hint
+        let args = hint
             .args
             .iter()
             .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
-            .collect();
+            .collect::<Result<Vec<_>, _>>()?;
 
-        let typedef_kind = match env.get_type(name) {
+        match env.get_type(name) {
             Some(type_) => match type_ {
                 TypeDef::Builtin(builtin_type) => match builtin_type {
-                    BuiltinType::Int => todo!(),
-                    BuiltinType::String => todo!(),
-                    BuiltinType::Fun => todo!(),
-                    BuiltinType::List => todo!(),
-                },
-                TypeDef::Enum(_) => TypeDefKind::Enum,
-                TypeDef::Struct(_) => TypeDefKind::Struct,
-            },
-            None => {
-                return Err(());
-            }
-        };
+                    BuiltinType::Int => Ok(RuntimeType::Int),
+                    BuiltinType::String => Ok(RuntimeType::String),
+                    BuiltinType::List => {
+                        let elem_type = match args.first() {
+                            Some(type_) => type_.clone(),
+                            None => RuntimeType::Top,
+                        };
 
-        Ok(RuntimeType::UserDefined {
-            kind: typedef_kind,
-            name: name.clone(),
-            args: args?,
-        })
+                        Ok(RuntimeType::List(Box::new(elem_type)))
+                    }
+                    BuiltinType::Fun => todo!(),
+                },
+                TypeDef::Enum(_) => Ok(RuntimeType::UserDefined {
+                    kind: TypeDefKind::Enum,
+                    name: name.clone(),
+                    args,
+                }),
+                TypeDef::Struct(_) => Ok(RuntimeType::UserDefined {
+                    kind: TypeDefKind::Struct,
+                    name: name.clone(),
+                    args,
+                }),
+            },
+            None => Err(()),
+        }
     }
 
     pub(crate) fn from_value(value: &Value) -> Self {

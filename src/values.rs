@@ -172,27 +172,27 @@ impl RuntimeType {
         Self::List(Box::new(Self::String))
     }
 
-    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Self {
+    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, ()> {
         let name = &hint.sym.name;
         if name.name == "NoValue" {
-            return RuntimeType::NoValue;
+            return Ok(RuntimeType::NoValue);
         }
         if name.name == "String" {
-            return RuntimeType::String;
+            return Ok(RuntimeType::String);
         }
         if name.name == "Int" {
-            return RuntimeType::Int;
+            return Ok(RuntimeType::Int);
         }
         if name.name == "List" {
             let elem_type = match hint.args.first() {
-                Some(arg) => RuntimeType::from_hint(arg, env),
+                Some(arg) => RuntimeType::from_hint(arg, env)?,
                 None => RuntimeType::Top,
             };
 
-            return RuntimeType::List(Box::new(elem_type));
+            return Ok(RuntimeType::List(Box::new(elem_type)));
         }
 
-        let args: Vec<_> = hint
+        let args: Result<Vec<_>, _> = hint
             .args
             .iter()
             .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
@@ -208,11 +208,11 @@ impl RuntimeType {
             None => TypeDefKind::Enum,
         };
 
-        RuntimeType::UserDefined {
+        Ok(RuntimeType::UserDefined {
             kind: typedef_kind,
             name: name.clone(),
-            args,
-        }
+            args: args?,
+        })
     }
 
     pub(crate) fn from_value(value: &Value) -> Self {
@@ -254,14 +254,14 @@ impl RuntimeType {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.type_ {
-                Some(hint) => RuntimeType::from_hint(hint, env),
+                Some(hint) => RuntimeType::from_hint(hint, env).unwrap(),
                 None => RuntimeType::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_type {
-            Some(hint) => Self::from_hint(hint, env),
+            Some(hint) => Self::from_hint(hint, env).unwrap(),
             None => RuntimeType::Top,
         };
 

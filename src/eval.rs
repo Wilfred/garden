@@ -396,7 +396,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                             variant_idx,
                             &RuntimeType::Top,
                         )
-                        .unwrap_or(RuntimeType::NoValue);
+                        .unwrap_or(RuntimeType::no_value());
 
                         Value::Enum {
                             type_name: enum_info.name_sym.name.clone(),
@@ -1015,7 +1015,7 @@ fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), Er
 fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
     match (lhs, rhs) {
         (_, RuntimeType::Top) => true,
-        (RuntimeType::NoValue, _) => true,
+        (_, _) if lhs.is_no_value() => true,
         (RuntimeType::Int, RuntimeType::Int) => true,
         (RuntimeType::Int, _) => false,
         (RuntimeType::String, RuntimeType::String) => true,
@@ -1639,7 +1639,7 @@ fn eval_call(
                 *variant_idx,
                 &RuntimeType::from_value(&arg_values[0]),
             )
-            .unwrap_or(RuntimeType::NoValue);
+            .unwrap_or(RuntimeType::no_value());
 
             let value = Value::Enum {
                 type_name: type_name.clone(),
@@ -1701,7 +1701,7 @@ fn enum_value_runtime_type(
                 if type_param.name == hint.sym.name {
                     args.push(payload_value_type.clone());
                 } else {
-                    args.push(RuntimeType::NoValue);
+                    args.push(RuntimeType::no_value());
                 }
             }
 
@@ -1712,7 +1712,7 @@ fn enum_value_runtime_type(
             })
         }
         None => {
-            let args = vec![RuntimeType::NoValue; enum_info.type_params.len()];
+            let args = vec![RuntimeType::no_value(); enum_info.type_params.len()];
 
             // This variant does not have a payload. Resolve all the
             // type parameters in this enum definition to NoValue.
@@ -2404,7 +2404,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::ListLiteral(items) => {
                     if done_children {
                         let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
-                        let mut element_type = RuntimeType::NoValue;
+                        let mut element_type = RuntimeType::no_value();
 
                         for _ in 0..items.len() {
                             let element = stack_frame.evalled_values.pop().expect(
@@ -2840,8 +2840,9 @@ fn eval_struct_value(
     for type_param in &struct_info.type_params {
         let param_value = type_arg_bindings
             .get(&type_param.name)
-            .unwrap_or(&RuntimeType::NoValue);
-        type_args.push(param_value.clone());
+            .cloned()
+            .unwrap_or(RuntimeType::no_value());
+        type_args.push(param_value);
     }
 
     let runtime_type = RuntimeType::UserDefined {

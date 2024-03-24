@@ -18,8 +18,6 @@ pub(crate) enum TypeDefKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum RuntimeType {
-    /// The bottom type, no runtime values can have this type.
-    NoValue,
     /// The top type, which includes all values.
     Top,
     String,
@@ -37,6 +35,23 @@ pub(crate) enum RuntimeType {
 }
 
 impl RuntimeType {
+    pub(crate) fn is_no_value(&self) -> bool {
+        match self {
+            RuntimeType::UserDefined { name, .. } => name.name == "NoValue",
+            _ => false,
+        }
+    }
+
+    pub(crate) fn no_value() -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Enum,
+            name: TypeName {
+                name: "NoValue".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn unit() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
@@ -58,7 +73,7 @@ impl RuntimeType {
     }
 
     pub(crate) fn empty_list() -> Self {
-        Self::List(Box::new(Self::NoValue))
+        Self::List(Box::new(Self::no_value()))
     }
 
     pub(crate) fn string_list() -> Self {
@@ -68,7 +83,7 @@ impl RuntimeType {
     pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, ()> {
         let name = &hint.sym.name;
         if name.name == "NoValue" {
-            return Ok(RuntimeType::NoValue);
+            return Ok(RuntimeType::no_value());
         }
         if name.name == "String" {
             return Ok(RuntimeType::String);
@@ -189,7 +204,6 @@ impl Display for RuntimeType {
                     )
                 }
             }
-            RuntimeType::NoValue => write!(f, "NoValue"),
             RuntimeType::String => write!(f, "String"),
             RuntimeType::Int => write!(f, "Int"),
             RuntimeType::List(elem_type) => write!(f, "List<{}>", elem_type),

@@ -92,7 +92,7 @@ pub(crate) fn result_ok_value(v: Value) -> Value {
             name: TypeName {
                 name: "Result".to_owned(),
             },
-            args: vec![value_type, RuntimeType::NoValue],
+            args: vec![value_type, RuntimeType::no_value()],
         },
     }
 }
@@ -111,7 +111,7 @@ pub(crate) fn result_err_value(v: Value) -> Value {
             name: TypeName {
                 name: "Result".to_owned(),
             },
-            args: vec![RuntimeType::NoValue, value_type],
+            args: vec![RuntimeType::no_value(), value_type],
         },
         variant_idx: 1,
         payload: Some(Box::new(v)),

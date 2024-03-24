@@ -1734,7 +1734,13 @@ fn check_param_types(
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.type_ {
-            let param_ty = RuntimeType::from_hint(param_hint, env).unwrap();
+            let Ok(param_ty) = RuntimeType::from_hint(param_hint, env) else {
+                return Err(ErrorInfo {
+                    error_position: arg_positions[i].clone(),
+                    message: ErrorMessage(format!("Unbound type in hint: {}", param_hint.sym)),
+                    restore_values: vec![],
+                });
+            };
 
             if let Err(msg) = check_type(arg_value, &param_ty, env) {
                 let mut saved_values = vec![];

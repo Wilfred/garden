@@ -1,0 +1,16 @@
+fun<T> foo(x: T): Unit {}
+
+fun main(args: List<String>): Unit {
+    foo(1);
+}
+
+// args: run
+// expected stderr:
+// Error: Unbound type in hint: T
+// 
+// --> src/runtime_test_files/call_generic_fun.gdn:4	main
+//     foo(1);
+//         ^
+// --> __main_fun__:1	__toplevel__
+// // __toplevel__
+

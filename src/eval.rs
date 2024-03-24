@@ -38,15 +38,12 @@ pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
     pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
-    /// Types bound in this block, due to generic parameters.
-    types: HashMap<TypeName, RuntimeType>,
 }
 
 impl Default for BlockBindings {
     fn default() -> Self {
         Self {
             values: Rc::new(RefCell::new(HashMap::new())),
-            types: HashMap::new(),
         }
     }
 }
@@ -63,7 +60,6 @@ impl Bindings {
         Self {
             block_bindings: vec![BlockBindings {
                 values: Rc::new(RefCell::new(outer_scope)),
-                types: HashMap::new(),
             }],
             type_bindings: HashMap::new(),
         }
@@ -1564,7 +1560,6 @@ fn eval_call(
 
             bindings.push(BlockBindings {
                 values: Rc::new(RefCell::new(fun_bindings)),
-                types: type_bindings.clone(),
             });
 
             return Ok(Some(StackFrame {

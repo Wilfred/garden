@@ -54,6 +54,8 @@ impl Default for BlockBindings {
 #[derive(Debug)]
 pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,
+    /// Types bound in this stack frame, due to generic parameters.
+    type_bindings: HashMap<TypeName, RuntimeType>,
 }
 
 impl Bindings {
@@ -63,6 +65,7 @@ impl Bindings {
                 values: Rc::new(RefCell::new(outer_scope)),
                 types: HashMap::new(),
             }],
+            type_bindings: HashMap::new(),
         }
     }
 
@@ -134,6 +137,7 @@ impl Default for Bindings {
     fn default() -> Self {
         Self {
             block_bindings: vec![BlockBindings::default()],
+            type_bindings: HashMap::new(),
         }
     }
 }
@@ -1560,13 +1564,14 @@ fn eval_call(
 
             bindings.push(BlockBindings {
                 values: Rc::new(RefCell::new(fun_bindings)),
-                types: type_bindings,
+                types: type_bindings.clone(),
             });
 
             return Ok(Some(StackFrame {
                 caller_pos: Some(position.clone()),
                 bindings: Bindings {
                     block_bindings: bindings,
+                    type_bindings,
                 },
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,

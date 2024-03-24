@@ -52,14 +52,18 @@ impl Default for BlockBindings {
 }
 
 #[derive(Debug)]
-pub(crate) struct Bindings(pub(crate) Vec<BlockBindings>);
+pub(crate) struct Bindings {
+    pub(crate) block_bindings: Vec<BlockBindings>,
+}
 
 impl Bindings {
     fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
-        Self(vec![BlockBindings {
-            values: Rc::new(RefCell::new(outer_scope)),
-            types: HashMap::new(),
-        }])
+        Self {
+            block_bindings: vec![BlockBindings {
+                values: Rc::new(RefCell::new(outer_scope)),
+                types: HashMap::new(),
+            }],
+        }
     }
 
     fn get(&self, name: &SymbolName) -> Option<Value> {
@@ -67,7 +71,7 @@ impl Bindings {
         // make REPL workflows less convenient when it's harder to inspect?
         //
         // (Probably not, as long as users can inspect everything.)
-        for block_bindings in self.0.iter().rev() {
+        for block_bindings in self.block_bindings.iter().rev() {
             if let Some(value) = block_bindings.values.borrow().get(name) {
                 return Some(value.clone());
             }
@@ -82,7 +86,7 @@ impl Bindings {
     /// Remove `name` from bindings. If this variable is shadowed,
     /// remove the innermost binding.
     pub(crate) fn remove(&mut self, name: &SymbolName) {
-        for block_bindings in self.0.iter_mut().rev() {
+        for block_bindings in self.block_bindings.iter_mut().rev() {
             if block_bindings.values.borrow().get(name).is_some() {
                 block_bindings.values.borrow_mut().remove(name);
             }
@@ -92,7 +96,7 @@ impl Bindings {
     fn add_new(&mut self, name: &SymbolName, value: Value) {
         // TODO: Handle underscore checks here rather than at all the call sites.
         let block_bindings = self
-            .0
+            .block_bindings
             .last_mut()
             .expect("Vec of bindings should always be non-empty");
         block_bindings
@@ -102,7 +106,7 @@ impl Bindings {
     }
 
     fn set_existing(&mut self, name: &SymbolName, value: Value) {
-        for block_bindings in self.0.iter_mut().rev() {
+        for block_bindings in self.block_bindings.iter_mut().rev() {
             if block_bindings.values.borrow().contains_key(name) {
                 block_bindings
                     .values
@@ -116,7 +120,7 @@ impl Bindings {
 
     pub(crate) fn all(&self) -> Vec<(SymbolName, Value)> {
         let mut res = vec![];
-        for block_bindings in self.0.iter().rev() {
+        for block_bindings in self.block_bindings.iter().rev() {
             for (k, v) in block_bindings.values.borrow().iter() {
                 res.push((k.clone(), v.clone()));
             }
@@ -128,7 +132,9 @@ impl Bindings {
 
 impl Default for Bindings {
     fn default() -> Self {
-        Self(vec![BlockBindings::default()])
+        Self {
+            block_bindings: vec![BlockBindings::default()],
+        }
     }
 }
 
@@ -157,12 +163,12 @@ pub(crate) struct StackFrame {
 
 impl StackFrame {
     fn enter_block(&mut self) {
-        self.bindings.0.push(BlockBindings::default());
+        self.bindings.block_bindings.push(BlockBindings::default());
     }
 
     fn exit_block(&mut self) {
-        self.bindings.0.pop();
-        assert!(!self.bindings.0.is_empty());
+        self.bindings.block_bindings.pop();
+        assert!(!self.bindings.block_bindings.is_empty());
     }
 }
 
@@ -1559,7 +1565,9 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 caller_pos: Some(position.clone()),
-                bindings: Bindings(bindings),
+                bindings: Bindings {
+                    block_bindings: bindings,
+                },
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![unit_value()],
@@ -2589,9 +2597,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     }
                 }
                 Expression_::FunLiteral(fun_info) => {
-                    stack_frame
-                        .evalled_values
-                        .push(Value::Closure(stack_frame.bindings.0.clone(), fun_info));
+                    stack_frame.evalled_values.push(Value::Closure(
+                        stack_frame.bindings.block_bindings.clone(),
+                        fun_info,
+                    ));
                 }
                 Expression_::Call(receiver, ref args) => {
                     if done_children {

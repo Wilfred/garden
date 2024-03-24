@@ -244,7 +244,7 @@ impl Env {
     pub(crate) fn pop_to_toplevel(&mut self) {
         self.stack.truncate(1);
         self.stack[0].evalled_values.truncate(1);
-        self.stack[0].bindings.0.truncate(1);
+        self.stack[0].bindings.block_bindings.truncate(1);
     }
 
     pub(crate) fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {

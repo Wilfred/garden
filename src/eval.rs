@@ -19,7 +19,7 @@ use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::runtime_type::{RuntimeType, TypeDefKind};
-use crate::types::{BuiltinType, TypeDef};
+use crate::types::TypeDef;
 use crate::values::{
     bool_value, result_err_value, result_ok_value, type_representation, unit_value,
     BuiltinFunctionKind, Value,
@@ -39,7 +39,7 @@ pub(crate) struct BlockBindings {
     /// function parameters.
     pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
     /// Types bound in this block, due to generic parameters.
-    types: HashMap<TypeName, TypeDef>,
+    types: HashMap<TypeName, RuntimeType>,
 }
 
 impl Default for BlockBindings {
@@ -1549,7 +1549,7 @@ fn eval_call(
             let mut type_bindings = HashMap::new();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), TypeDef::Builtin(BuiltinType::Int));
+                type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
             }
 
             bindings.push(BlockBindings {

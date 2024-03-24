@@ -102,8 +102,9 @@ impl RuntimeType {
                 TypeDef::Enum(_) => TypeDefKind::Enum,
                 TypeDef::Struct(_) => TypeDefKind::Struct,
             },
-            // TODO: Return a result.
-            None => TypeDefKind::Enum,
+            None => {
+                return Err(());
+            }
         };
 
         Ok(RuntimeType::UserDefined {

@@ -1,0 +1,5 @@
+struct MyStruct<T> {
+    x: T,
+}
+
+// args: check

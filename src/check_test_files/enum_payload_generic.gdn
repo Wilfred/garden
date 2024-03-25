@@ -1,0 +1,6 @@
+enum Foo<T> {
+    One,
+    Two(T),
+}
+
+// args: check

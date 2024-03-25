@@ -6,7 +6,7 @@ use crate::eval::eval_defs;
 use crate::types::TypeDef;
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, Expression, Expression_, FunInfo, MethodKind, Symbol,
-    SymbolName, TypeHint,
+    SymbolName, TypeHint, TypeName,
 };
 use garden_lang_parser::position::Position;
 
@@ -42,19 +42,23 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
         }
         Definition_::Test(test_info) => check_free_variables_block(&test_info.body, env),
         Definition_::Enum(enum_info) => {
+            let type_params: HashSet<_> = enum_info.type_params.iter().map(|p| &p.name).collect();
+
             let mut warnings = vec![];
             for variant in &enum_info.variants {
                 if let Some(hint) = &variant.payload_hint {
-                    warnings.extend(check_type_hint(hint, env));
+                    warnings.extend(check_type_hint(hint, &type_params, env));
                 }
             }
 
             warnings
         }
         Definition_::Struct(struct_info) => {
+            let type_params: HashSet<_> = struct_info.type_params.iter().map(|p| &p.name).collect();
+
             let mut warnings = vec![];
             for field in &struct_info.fields {
-                warnings.extend(check_type_hint(&field.hint, env));
+                warnings.extend(check_type_hint(&field.hint, &type_params, env));
             }
 
             warnings
@@ -74,14 +78,16 @@ fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
 fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
+    let type_params = HashSet::new();
+
     for param in &fun_info.params {
         if let Some(param_hint) = &param.type_ {
-            warnings.extend(check_type_hint(param_hint, env));
+            warnings.extend(check_type_hint(param_hint, &type_params, env));
         }
     }
 
     if let Some(return_hint) = &fun_info.return_type {
-        warnings.extend(check_type_hint(return_hint, env));
+        warnings.extend(check_type_hint(return_hint, &type_params, env));
     }
 
     warnings
@@ -100,10 +106,18 @@ fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String 
     )
 }
 
-fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
+fn check_type_hint(
+    type_hint: &TypeHint,
+    type_params: &HashSet<&TypeName>,
+    env: &Env,
+) -> Vec<Warning> {
     let mut warnings = vec![];
 
     match env.get_type_def(&type_hint.sym.name) {
+        _ if type_params.contains(&type_hint.sym.name) => {
+            // TODO: Type parameters should not take arguments
+            // themselves.
+        }
         Some(type_) => {
             match type_ {
                 TypeDef::Builtin(_) => {
@@ -142,7 +156,7 @@ fn check_type_hint(type_hint: &TypeHint, env: &Env) -> Vec<Warning> {
     }
 
     for type_arg in &type_hint.args {
-        warnings.extend(check_type_hint(type_arg, env));
+        warnings.extend(check_type_hint(type_arg, type_params, env));
     }
 
     warnings

@@ -1864,12 +1864,12 @@ fn eval_method_call(
 
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
-    let mut fun_bindings = HashMap::new();
+    let mut fun_bindings: HashMap<SymbolName, Value> = HashMap::new();
     for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
         let param_name = &param.symbol.name;
         fun_bindings.insert(param_name.clone(), value.clone());
     }
-    fun_bindings.insert(receiver_method.receiver_name.clone(), receiver_value);
+    fun_bindings.insert(receiver_method.receiver_name.name.clone(), receiver_value);
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),

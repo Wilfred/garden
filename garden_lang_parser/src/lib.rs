@@ -1211,7 +1211,7 @@ fn parse_method(
 
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens, true)?;
-    let receiver_name = receiver_param.symbol.name;
+    let receiver_name = receiver_param.symbol.clone();
     let receiver_type = match receiver_param.type_ {
         Some(type_name) => type_name,
         None => {

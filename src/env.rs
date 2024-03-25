@@ -52,7 +52,10 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: SymbolName("__irrelevant".to_owned()),
+                receiver_name: Symbol {
+                    position: Position::todo(),
+                    name: SymbolName("__irrelevant".to_owned()),
+                },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("len".to_owned()),
@@ -73,7 +76,10 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: SymbolName("__irrelevant".to_owned()),
+                receiver_name: Symbol {
+                    position: Position::todo(),
+                    name: SymbolName("__irrelevant".to_owned()),
+                },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("substring".to_owned()),
@@ -94,7 +100,10 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: SymbolName("__irrelevant".to_owned()),
+                receiver_name: Symbol {
+                    position: Position::todo(),
+                    name: SymbolName("__irrelevant".to_owned()),
+                },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("concat".to_owned()),
@@ -124,7 +133,10 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: SymbolName("__irrelevant".to_owned()),
+                receiver_name: Symbol {
+                    position: Position::todo(),
+                    name: SymbolName("__irrelevant".to_owned()),
+                },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("append".to_owned()),
@@ -145,7 +157,10 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: SymbolName("__irrelevant".to_owned()),
+                receiver_name: Symbol {
+                    position: Position::todo(),
+                    name: SymbolName("__irrelevant".to_owned()),
+                },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("len".to_owned()),
@@ -166,7 +181,10 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: SymbolName("__irrelevant".to_owned()),
+                receiver_name: Symbol {
+                    position: Position::todo(),
+                    name: SymbolName("__irrelevant".to_owned()),
+                },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("get".to_owned()),

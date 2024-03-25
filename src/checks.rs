@@ -78,7 +78,7 @@ fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
 fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
-    let type_params = HashSet::new();
+    let type_params: HashSet<_> = fun_info.type_params.iter().map(|p| &p.name).collect();
 
     for param in &fun_info.params {
         if let Some(param_hint) = &param.type_ {

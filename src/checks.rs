@@ -72,7 +72,6 @@ fn check(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
 }
 
 fn check_types_exist(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
-    // TODO: check type arity too.
     let mut warnings = vec![];
 
     for param in &fun_info.params {

@@ -1,7 +1,11 @@
-# 0.12 (unreleased)
+# 0.13 (unreleased)
 **Goal: WASM and website.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
+
+# 0.12 (unreleased)
+**Goal: Add structs.**
+**Goal: Implement generics.**
 
 ## Emacs
 

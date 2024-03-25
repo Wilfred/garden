@@ -1,0 +1,5 @@
+fun (self: String) doStuff(): String {
+    self;
+}
+
+// args: check

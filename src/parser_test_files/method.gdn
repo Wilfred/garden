@@ -9,7 +9,7 @@ fun (self: List) foo() {}
 //             args: [],
 //             position: Position { ... },
 //         },
-//         receiver_name: Symbol"self",
+//         receiver_sym: Symbol"self",
 //         name_sym: Symbol"foo",
 //         kind: UserDefinedMethod(
 //             FunInfo {

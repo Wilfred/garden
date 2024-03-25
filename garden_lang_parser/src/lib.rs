@@ -1211,7 +1211,7 @@ fn parse_method(
 
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens, true)?;
-    let receiver_name = receiver_param.symbol.clone();
+    let receiver_sym = receiver_param.symbol.clone();
     let receiver_type = match receiver_param.type_ {
         Some(type_name) => type_name,
         None => {
@@ -1252,7 +1252,7 @@ fn parse_method(
     };
     let meth_info = MethodInfo {
         receiver_type,
-        receiver_name,
+        receiver_sym,
         name_sym: name,
         kind: MethodKind::UserDefinedMethod(fun_info),
     };

@@ -1869,7 +1869,7 @@ fn eval_method_call(
         let param_name = &param.symbol.name;
         fun_bindings.insert(param_name.clone(), value.clone());
     }
-    fun_bindings.insert(receiver_method.receiver_name.name.clone(), receiver_value);
+    fun_bindings.insert(receiver_method.receiver_sym.name.clone(), receiver_value);
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),

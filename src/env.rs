@@ -52,7 +52,7 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: Symbol {
+                receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
                 },
@@ -76,7 +76,7 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: Symbol {
+                receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
                 },
@@ -100,7 +100,7 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: Symbol {
+                receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
                 },
@@ -133,7 +133,7 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: Symbol {
+                receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
                 },
@@ -157,7 +157,7 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: Symbol {
+                receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
                 },
@@ -181,7 +181,7 @@ impl Default for Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_name: Symbol {
+                receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
                 },

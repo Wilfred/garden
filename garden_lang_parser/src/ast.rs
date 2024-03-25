@@ -350,7 +350,7 @@ pub struct MethodInfo {
     ///
     /// TODO: this only exists for user-defined methods, so it's
     /// clunky to have it for all methods.
-    pub receiver_name: Symbol,
+    pub receiver_sym: Symbol,
     /// The name of the method itself, e.g. `len` in
     /// `some_string.len()`.
     pub name_sym: Symbol,

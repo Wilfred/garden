@@ -115,8 +115,12 @@ fn check_type_hint(
 
     match env.get_type_def(&type_hint.sym.name) {
         _ if type_params.contains(&type_hint.sym.name) => {
-            // TODO: Type parameters should not take arguments
-            // themselves.
+            if let Some(first_arg) = type_hint.args.first() {
+                warnings.push(Warning {
+                    message: "Generic type arguments cannot take parameters.".to_owned(),
+                    position: first_arg.position.clone(),
+                });
+            }
         }
         Some(type_) => {
             match type_ {

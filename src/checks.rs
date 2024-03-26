@@ -1,4 +1,5 @@
 mod free_variables;
+mod struct_fields;
 
 use std::collections::HashSet;
 

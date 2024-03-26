@@ -29,7 +29,7 @@ pub(crate) fn check_defs(definitions: &[Definition]) -> Vec<Warning> {
 
 pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     match &def.2 {
-        Definition_::Fun(_, fun_info) => check(fun_info, env, None),
+        Definition_::Fun(_, fun_info) => check_fun_info(fun_info, env, None),
         Definition_::Method(meth_info) => {
             let fun_info = match &meth_info.kind {
                 MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
@@ -37,7 +37,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
             };
 
             if let Some(fun_info) = fun_info {
-                check(fun_info, env, Some(&meth_info.receiver_sym))
+                check_fun_info(fun_info, env, Some(&meth_info.receiver_sym))
             } else {
                 vec![]
             }
@@ -68,7 +68,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     }
 }
 
-fn check(fun_info: &FunInfo, env: &Env, receiver_sym: Option<&Symbol>) -> Vec<Warning> {
+fn check_fun_info(fun_info: &FunInfo, env: &Env, receiver_sym: Option<&Symbol>) -> Vec<Warning> {
     let mut warnings = vec![];
 
     warnings.extend(check_types_exist(fun_info, env));

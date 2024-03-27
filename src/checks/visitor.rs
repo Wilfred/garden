@@ -1,7 +1,13 @@
-use garden_lang_parser::ast::{Block, Expression, Expression_};
+use garden_lang_parser::ast::{Block, Expression, Expression_, Pattern};
 
+/// A checker inspects every expression in an AST.
+///
+/// This is separate from the `Visitor` trait, so the checker itself
+/// does not need to worry about visiting. There's no super call to
+/// forget.
 pub(crate) trait Checker {
-    fn check_expr(&mut self, expr: &Expression);
+    fn check_expr(&mut self, expr: &Expression) {}
+    fn check_pattern(&mut self, pattern: &Pattern) {}
 
     fn enter_block(&mut self) {}
     fn leave_block(&mut self) {}
@@ -40,8 +46,9 @@ impl Visitor for Expression {
         match &self.1 {
             Expression_::Match(scrutinee, cases) => {
                 scrutinee.visit(checker);
-                for (_, case_expr) in cases {
+                for (pattern, case_expr) in cases {
                     checker.enter_block();
+                    checker.check_pattern(pattern);
                     checker.check_expr(case_expr);
                     checker.leave_block();
                 }

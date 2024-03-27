@@ -1,0 +1,23 @@
+{
+  "name": "garden_lang_web",
+  "collaborators": [
+    "Wilfred Hughes <me@wilfred.me.uk>"
+  ],
+  "description": "A live programming language.",
+  "version": "0.12.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wilfred/garden"
+  },
+  "files": [
+    "garden_lang_web_bg.wasm",
+    "garden_lang_web.js",
+    "garden_lang_web.d.ts"
+  ],
+  "module": "garden_lang_web.js",
+  "types": "garden_lang_web.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

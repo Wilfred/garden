@@ -1,5 +1,6 @@
 mod free_variables;
 mod struct_fields;
+mod visitor;
 
 use std::collections::HashSet;
 
@@ -11,7 +12,10 @@ use garden_lang_parser::ast::{
     Definition, Definition_, FunInfo, MethodKind, Symbol, TypeHint, TypeName,
 };
 
-use self::free_variables::{check_free_variables, check_free_variables_block};
+use self::{
+    free_variables::{check_free_variables, check_free_variables_block},
+    struct_fields::check_struct_fields,
+};
 
 pub(crate) fn check_defs(definitions: &[Definition]) -> Vec<Warning> {
     // TODO: define separate checks for things we can check without an
@@ -74,6 +78,7 @@ fn check_fun_info(fun_info: &FunInfo, env: &Env, receiver_sym: Option<&Symbol>) 
 
     warnings.extend(check_types_exist(fun_info, env));
     warnings.extend(check_free_variables(fun_info, env, receiver_sym));
+    warnings.extend(check_struct_fields(&fun_info.body, env));
 
     warnings
 }

@@ -2,6 +2,9 @@ use garden_lang_parser::ast::{Block, Expression, Expression_};
 
 pub(crate) trait Checker {
     fn check_expr(&mut self, expr: &Expression);
+
+    fn enter_block(&mut self) {}
+    fn leave_block(&mut self) {}
 }
 
 pub(crate) trait Visitor {
@@ -38,7 +41,9 @@ impl Visitor for Expression {
             Expression_::Match(scrutinee, cases) => {
                 scrutinee.visit(checker);
                 for (_, case_expr) in cases {
+                    checker.enter_block();
                     checker.check_expr(case_expr);
+                    checker.leave_block();
                 }
             }
             Expression_::If(cond, then_body, else_body) => {
@@ -87,10 +92,14 @@ impl Visitor for Expression {
                 }
             }
             Expression_::FunLiteral(fun_info) => {
+                checker.enter_block();
                 fun_info.body.visit(checker);
+                checker.leave_block();
             }
             Expression_::Block(b) => {
+                checker.enter_block();
                 b.visit(checker);
+                checker.leave_block();
             }
             Expression_::IntLiteral(_) => {}
             Expression_::StringLiteral(_) => {}

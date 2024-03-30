@@ -1,0 +1,17 @@
+struct Foo {
+    x: Int,
+}
+
+fun main(args: List<String>): Unit {
+    let f = Foo { x: 1 + 2, x: 42 };
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Duplicate field `x` in struct literal.
+// 
+// --> src/check_test_files/struct_repeated_field.gdn:6
+//     let f = Foo { x: 1 + 2, x: 42 };
+//                             ^
+

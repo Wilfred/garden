@@ -1,0 +1,9 @@
+struct Foo {
+    x: Int,
+}
+
+fun main(args: List<String>): Unit {
+    let f = Foo {};
+}
+
+// args: check

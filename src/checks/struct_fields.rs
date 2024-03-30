@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use garden_lang_parser::ast::{Block, Expression, Symbol, TypeSymbol};
 
 use crate::{diagnostics::Warning, env::Env, types::TypeDef};
@@ -23,19 +25,39 @@ impl Visitor for StructFieldVisitor<'_> {
             return;
         };
 
-        for (field_sym, _) in field_exprs {
-            let defined_field = struct_info
-                .fields
-                .iter()
-                .find(|field_info| field_info.sym.name == field_sym.name);
+        let mut fields_by_name = HashMap::new();
+        for field_info in &struct_info.fields {
+            fields_by_name.insert(field_info.sym.name.clone(), field_info);
+        }
 
-            if defined_field.is_none() {
+        let mut seen_fields = HashSet::new();
+
+        for (field_sym, _) in field_exprs {
+            if seen_fields.contains(&field_sym.name) {
+                self.warnings.push(Warning {
+                    message: format!("Duplicate field `{}` in struct literal.", field_sym.name),
+                    position: field_sym.position.clone(),
+                });
+            }
+
+            seen_fields.insert(field_sym.name.clone());
+
+            if !fields_by_name.contains_key(&field_sym.name) {
                 self.warnings.push(Warning {
                     message: format!(
                         "Struct `{}` has no field named `{}`",
                         name_sym.name, field_sym.name,
                     ),
                     position: field_sym.position.clone(),
+                });
+            }
+        }
+
+        for field_info in struct_info.fields.iter() {
+            if !seen_fields.contains(&field_info.sym.name) {
+                self.warnings.push(Warning {
+                    message: format!("Missing field `{}` in struct literal.", field_info.sym.name,),
+                    position: name_sym.position.clone(),
                 });
             }
         }

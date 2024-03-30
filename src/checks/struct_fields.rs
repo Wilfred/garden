@@ -2,14 +2,14 @@ use garden_lang_parser::ast::{Block, Expression, Symbol, TypeSymbol};
 
 use crate::{diagnostics::Warning, env::Env, types::TypeDef};
 
-use super::visitor::VisitorMut;
+use super::visitor::Visitor;
 
 struct StructFieldVisitor<'a> {
     env: &'a Env,
     warnings: Vec<Warning>,
 }
 
-impl VisitorMut for StructFieldVisitor<'_> {
+impl Visitor for StructFieldVisitor<'_> {
     fn visit_expr_struct_literal(
         &mut self,
         name_sym: &TypeSymbol,

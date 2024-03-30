@@ -7,7 +7,7 @@ use garden_lang_parser::ast::{
 /// Unlike pattern matching, a visitor makes it easy to recurse but
 /// hook in to specific variants. For example, looking for
 /// occurrences of string literals anywhere in a function body.
-pub(crate) trait VisitorMut {
+pub(crate) trait Visitor {
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         self.visit_block(&fun_info.body);
     }

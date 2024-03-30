@@ -7,7 +7,7 @@ use garden_lang_parser::{
 
 use crate::{diagnostics::Warning, env::Env};
 
-use super::visitor::VisitorMut;
+use super::visitor::Visitor;
 
 pub(crate) fn check_free_variables(
     fun_info: &FunInfo,
@@ -100,7 +100,7 @@ impl FreeVariableVisitor<'_> {
     }
 }
 
-impl VisitorMut for FreeVariableVisitor<'_> {
+impl Visitor for FreeVariableVisitor<'_> {
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         self.push_scope();
         for param in &fun_info.params {

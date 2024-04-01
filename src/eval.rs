@@ -2818,19 +2818,33 @@ fn eval_dot_access(
         .expect("Popped an empty value when evaluating dot access");
 
     match recv_value {
-        Value::Struct {
-            type_name,
-            fields,
-            runtime_type,
-        } => todo!(),
-        Value::Enum {
-            type_name,
-            runtime_type,
-            variant_idx,
-            payload,
-        } => todo!(),
+        Value::Struct { ref fields, .. } => {
+            let mut found = false;
+
+            for (field_name, field_value) in fields {
+                if *field_name == sym.name {
+                    stack_frame.evalled_values.push(field_value.clone());
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                return Err(ErrorInfo {
+                    message: ErrorMessage(format!(
+                        "This struct has no field named `{}`.",
+                        sym.name
+                    )),
+                    restore_values: vec![recv_value],
+                    error_position: sym.position.clone(),
+                });
+            }
+        }
+        Value::Enum { .. } => todo!(),
         _ => todo!("Error on bad type"),
     }
+
+    Ok(())
 }
 
 fn eval_struct_value(

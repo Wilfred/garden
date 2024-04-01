@@ -2730,7 +2730,29 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
-                Expression_::DotAccess(_, _) => todo!(),
+                Expression_::DotAccess(recv, sym) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_dot_access(env, &mut stack_frame, &sym)
+                        {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, Expression(expr_position, expr_copy)),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((true, Expression(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((false, *recv.clone()));
+                    }
+                }
             }
         }
 
@@ -2783,6 +2805,32 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
         .evalled_values
         .pop()
         .expect("Should have a value from the last expression"))
+}
+
+fn eval_dot_access(
+    env: &mut Env,
+    stack_frame: &mut StackFrame,
+    sym: &Symbol,
+) -> Result<(), ErrorInfo> {
+    let recv_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value when evaluating dot access");
+
+    match recv_value {
+        Value::Struct {
+            type_name,
+            fields,
+            runtime_type,
+        } => todo!(),
+        Value::Enum {
+            type_name,
+            runtime_type,
+            variant_idx,
+            payload,
+        } => todo!(),
+        _ => todo!("Error on bad type"),
+    }
 }
 
 fn eval_struct_value(

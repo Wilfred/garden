@@ -2730,6 +2730,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
+                Expression_::DotAccess(_, _) => todo!(),
             }
         }
 

@@ -244,6 +244,10 @@ pub enum Expression_ {
     /// ```
     MethodCall(Box<Expression>, Symbol, Vec<Expression>),
     /// ```garden
+    /// foo.bar
+    /// ```
+    DotAccess(Box<Expression>, Symbol),
+    /// ```garden
     /// fun(x, y) { x + y; }
     /// ```
     FunLiteral(FunInfo),

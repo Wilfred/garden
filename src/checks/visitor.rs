@@ -84,6 +84,10 @@ pub(crate) trait Visitor {
             Expression_::StringLiteral(_) => {
                 // TODO: custom method for this variant
             }
+            Expression_::DotAccess(recv, _) => {
+                // TODO: custom method for this variant
+                self.visit_expr(recv);
+            }
         }
     }
 

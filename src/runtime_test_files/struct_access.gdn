@@ -1,0 +1,15 @@
+struct Foo {
+    x: Int,
+}
+
+fun get_x(foo: Foo): Int {
+    foo.x;
+}
+
+fun main(args: List): Unit {
+    dbg(get_x(Foo { x: 1 + 2 }));
+}
+
+// args: run
+// expected stdout: 3
+

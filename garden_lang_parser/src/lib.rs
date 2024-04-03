@@ -510,11 +510,20 @@ fn parse_simple_expression_with_trailing(
             Some(token) if token.text == "." => {
                 tokens.pop();
                 let variable = parse_symbol(tokens)?;
-                let arguments = parse_call_arguments(src, tokens)?;
-                expr = Expression(
-                    expr.0.clone(),
-                    Expression_::MethodCall(Box::new(expr), variable, arguments),
-                );
+
+                if peeked_symbol_is(tokens, "(") {
+                    // TODO: just treat a method call as a call of a dot access.
+                    let arguments = parse_call_arguments(src, tokens)?;
+                    expr = Expression(
+                        expr.0.clone(),
+                        Expression_::MethodCall(Box::new(expr), variable, arguments),
+                    );
+                } else {
+                    expr = Expression(
+                        expr.0.clone(),
+                        Expression_::DotAccess(Box::new(expr), variable),
+                    );
+                }
             }
             _ => break,
         }

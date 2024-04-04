@@ -1,0 +1,16 @@
+struct Foo {
+    x: Int,
+}
+
+fun (self: Foo) get_x(): Int {
+    self.x;
+}
+
+fun main(args: List): Unit {
+    let f = Foo { x: 123 };
+    dbg(f.get_x());
+}
+
+// args: run
+// expected stdout: 123
+

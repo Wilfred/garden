@@ -1,0 +1,15 @@
+fun main(args: List): Unit {
+    let x = 1;
+    x.y;
+}
+
+// args: run
+// expected stderr:
+// Error: Expected a struct or enum value, but got Int: 1
+// 
+// --> src/runtime_test_files/dot_access_bad_type.gdn:3	main
+//     x.y;
+//     ^
+// --> __main_fun__:1	__toplevel__
+// // __toplevel__
+

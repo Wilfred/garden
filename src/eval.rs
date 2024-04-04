@@ -2742,7 +2742,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_dot_access(env, &mut stack_frame, &sym)
+                        }) = eval_dot_access(env, &mut stack_frame, &sym, &recv.0)
                         {
                             restore_stack_frame(
                                 env,
@@ -2814,9 +2814,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 }
 
 fn eval_dot_access(
-    env: &mut Env,
+    env: &Env,
     stack_frame: &mut StackFrame,
     sym: &Symbol,
+    recv_pos: &Position,
 ) -> Result<(), ErrorInfo> {
     let recv_value = stack_frame
         .evalled_values
@@ -2847,7 +2848,13 @@ fn eval_dot_access(
             }
         }
         Value::Enum { .. } => todo!(),
-        _ => todo!("Error on bad type"),
+        _ => {
+            return Err(ErrorInfo {
+                message: format_runtime_type_error("a struct or enum value", &recv_value, env),
+                restore_values: vec![recv_value],
+                error_position: recv_pos.clone(),
+            })
+        }
     }
 
     Ok(())

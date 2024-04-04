@@ -2,7 +2,7 @@ struct Foo {
     x: Int,
 }
 
-fun main(args: List): Unit {
+fun main(args: List<String>): Unit {
     let f = Foo { x: 1 + 2, y: 2 };
 }
 

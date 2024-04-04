@@ -4,6 +4,11 @@
 **Goal: Evaluate functions up to the cursor.**
 **Goal: Implement generics.**
 
+## Checks
+
+Type hints for built-in types are now checked for the correct arity
+(e.g. `List` or `String<Foo>`).
+
 # 0.12 (released 3 April 2024)
 **Goal: Add structs.**
 

@@ -4,10 +4,10 @@ mod visitor;
 
 use std::collections::HashSet;
 
-use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::eval_defs;
 use crate::types::TypeDef;
+use crate::{diagnostics::Warning, types::BuiltinType};
 use garden_lang_parser::ast::{
     Definition, Definition_, FunInfo, MethodKind, Symbol, TypeHint, TypeName,
 };
@@ -132,8 +132,22 @@ fn check_type_hint(
         }
         Some(type_) => {
             match type_ {
-                TypeDef::Builtin(_) => {
-                    // TODO: check type arguments on built-in types
+                TypeDef::Builtin(b) => {
+                    let num_expected = match b {
+                        BuiltinType::Int => 0,
+                        BuiltinType::String => 0,
+                        BuiltinType::Fun => {
+                            // TODO: define a syntax and arity for function types.
+                            0
+                        }
+                        BuiltinType::List => 1,
+                    };
+                    if num_expected != type_hint.args.len() {
+                        warnings.push(Warning {
+                            message: format_type_arity_error(type_hint, num_expected),
+                            position: type_hint.position.clone(),
+                        });
+                    }
                 }
                 TypeDef::Enum(enum_info) => {
                     if enum_info.type_params.len() != type_hint.args.len() {

@@ -53,7 +53,7 @@ fun println(_: String): Unit {
 // ```
 // shell("ls", ["-l", "/"]);
 // ```
-fun shell(_, _): String {
+fun shell(_, _): Result<String, String> {
     __BUILTIN_IMPLEMENTATION;
 }
 
@@ -71,7 +71,7 @@ fun string_repr(_): String {
 // ```
 // read_file("/tmp/foo.txt");
 // ```
-fun read_file(path: String): String {
+fun read_file(path: String): Result<String, String> {
     __BUILTIN_IMPLEMENTATION;
 }
 

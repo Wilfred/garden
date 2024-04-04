@@ -14,7 +14,6 @@ fun error(_: String): NoValue {
 // ```
 fun list_directory(_: String): List {
     __BUILTIN_IMPLEMENTATION;
-
 }
 
 // Return True if this path exists.

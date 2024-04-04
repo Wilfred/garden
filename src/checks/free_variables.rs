@@ -64,6 +64,10 @@ impl FreeVariableVisitor<'_> {
     }
 
     fn is_bound(&self, name: &SymbolName) -> bool {
+        if name.0 == "__BUILTIN_IMPLEMENTATION" {
+            return true;
+        }
+
         for scope in &self.bound_scopes {
             if scope.contains(name) {
                 return true;

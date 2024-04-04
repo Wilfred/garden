@@ -102,7 +102,9 @@ impl RuntimeType {
 
                         Ok(RuntimeType::List(Box::new(elem_type)))
                     }
-                    BuiltinType::Fun => todo!(),
+                    BuiltinType::Fun => {
+                        unreachable!("Currently no userland syntax for function types")
+                    }
                 },
                 TypeDef::Enum(_) => Ok(RuntimeType::UserDefined {
                     kind: TypeDefKind::Enum,

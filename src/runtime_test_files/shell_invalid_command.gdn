@@ -1,0 +1,7 @@
+fun main(_: List<String>) {
+    dbg(shell("no_such_command", []));
+}
+
+// args: run
+// expected stdout: Err("No such file or directory (os error 2)")
+

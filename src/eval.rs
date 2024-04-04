@@ -1270,19 +1270,26 @@ fn eval_builtin_call(
                                 command.arg(item);
                             }
 
-                            let output = command.output().expect("failed to execute process");
+                            let v = match command.output() {
+                                Ok(output) => {
+                                    let mut s = String::new();
 
-                            let mut s = String::new();
-                            // TODO: complain if output is not UTF-8.
-                            s.write_str(&String::from_utf8_lossy(&output.stdout))
-                                .unwrap();
-                            s.write_str(&String::from_utf8_lossy(&output.stderr))
-                                .unwrap();
+                                    // TODO: complain if output is not UTF-8.
+                                    s.write_str(&String::from_utf8_lossy(&output.stdout))
+                                        .unwrap();
+                                    s.write_str(&String::from_utf8_lossy(&output.stderr))
+                                        .unwrap();
 
-                            let v = if output.status.success() {
-                                result_ok_value(Value::String(s))
-                            } else {
-                                result_err_value(Value::String(s))
+                                    if output.status.success() {
+                                        result_ok_value(Value::String(s))
+                                    } else {
+                                        result_err_value(Value::String(s))
+                                    }
+                                }
+                                Err(e) => {
+                                    let s = Value::String(format!("{}", e));
+                                    result_err_value(s)
+                                }
                             };
 
                             stack_frame.evalled_values.push(v);

@@ -13,6 +13,8 @@ Type hints for built-in types are now checked for the correct arity
 
 `list_directory` now returns a `Result`.
 
+Fixed a crash on `shell()` with a nonexistent command.
+
 # 0.12 (released 3 April 2024)
 **Goal: Add structs.**
 

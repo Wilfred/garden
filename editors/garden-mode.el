@@ -404,6 +404,12 @@ the user entering a value in the *garden* buffer."
        symbol-start
        "fun"
        symbol-end
+
+       ;; Generics, if present.
+       (? "<"
+          (* (not (any ">")))
+          ">")
+
        (+ space)
        ;; Method receiver, if present
        (? "("

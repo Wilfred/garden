@@ -2,10 +2,10 @@
 **Goal: WASM and website.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
+**Goal: Implement generics.**
 
 # 0.12 (unreleased)
 **Goal: Add structs.**
-**Goal: Implement generics.**
 
 ## Emacs
 
@@ -24,6 +24,8 @@ Added a `NoValue` type.
 
 ## Syntax
 
+Added structs.
+
 Match cases now support an optional trailing comma.
 
 ```
@@ -35,6 +37,13 @@ match (x) {
 
 `return;` is now syntax sugar for `return Unit;`.
 
+## Checks
+
+Added a type hint arity checker.
+
+## Website
+
+Added a placeholder site with a parser sandbox.
 
 # 0.11 (released 30th December 2023)
 

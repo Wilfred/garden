@@ -9,6 +9,10 @@
 Type hints for built-in types are now checked for the correct arity
 (e.g. `List` or `String<Foo>`).
 
+## Stdlib
+
+`list_directory` now returns a `Result`.
+
 # 0.12 (released 3 April 2024)
 **Goal: Add structs.**
 

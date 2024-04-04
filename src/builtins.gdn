@@ -12,7 +12,7 @@ fun error(_: String): NoValue {
 // ```
 // list_directory("/");
 // ```
-fun list_directory(_: String): List<String> {
+fun list_directory(_: String): Result<List<String>, String> {
     __BUILTIN_IMPLEMENTATION;
 }
 

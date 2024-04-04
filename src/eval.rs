@@ -1426,19 +1426,14 @@ fn eval_builtin_call(
                         }
                     }
 
-                    Value::List {
+                    result_ok_value(Value::List {
                         items,
                         elem_type: RuntimeType::string_list(),
-                    }
+                    })
                 }
-                Err(_) => {
-                    // TODO: list_directory() should return a Result
-                    // rather than silently returning an empty list on
-                    // failure.
-                    Value::List {
-                        items: vec![],
-                        elem_type: RuntimeType::empty_list(),
-                    }
+                Err(e) => {
+                    let s = Value::String(format!("{}", e));
+                    result_err_value(s)
                 }
             };
 

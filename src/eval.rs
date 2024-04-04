@@ -755,20 +755,7 @@ fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Error
     Ok(())
 }
 
-fn format_type_error(expected: &TypeName, value: &Value, env: &Env) -> ErrorMessage {
-    ErrorMessage(format!(
-        "Expected {}, but got {}: {}",
-        expected.name,
-        RuntimeType::from_value(value),
-        value.display(env)
-    ))
-}
-
-fn format_runtime_type_error<T: ToString + ?Sized>(
-    expected: &T,
-    value: &Value,
-    env: &Env,
-) -> ErrorMessage {
+fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &Env) -> ErrorMessage {
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.to_string(),
@@ -1020,7 +1007,7 @@ fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), Er
     if is_subtype(&value_type, expected) {
         Ok(())
     } else {
-        Err(format_runtime_type_error(expected, value, env))
+        Err(format_type_error(expected, value, env))
     }
 }
 
@@ -2851,7 +2838,7 @@ fn eval_dot_access(
         }
         _ => {
             return Err(ErrorInfo {
-                message: format_runtime_type_error("a struct", &recv_value, env),
+                message: format_type_error("a struct", &recv_value, env),
                 restore_values: vec![recv_value],
                 error_position: recv_pos.clone(),
             })

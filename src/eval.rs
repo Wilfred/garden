@@ -52,6 +52,8 @@ impl Default for BlockBindings {
 pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,
     /// Types bound in this stack frame, due to generic parameters.
+    // TODO: populate and check generic types in arguments and return values.
+    #[allow(dead_code)]
     pub(crate) type_bindings: HashMap<TypeName, RuntimeType>,
 }
 

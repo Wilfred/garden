@@ -1,13 +1,13 @@
 fun main(args: List<String>): Unit {
-    let x = 1;
+    let x = Some(1);
     x.y;
 }
 
 // args: run
 // expected stderr:
-// Error: Expected a struct, but got Int: 1
+// Error: Expected a struct, but got Option<Int>: Some(1)
 // 
-// --> src/runtime_test_files/dot_access_bad_type.gdn:3	main
+// --> src/runtime_test_files/dot_access_enum.gdn:3	main
 //     x.y;
 //     ^
 // --> __main_fun__:1	__toplevel__

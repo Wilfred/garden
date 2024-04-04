@@ -2847,10 +2847,9 @@ fn eval_dot_access(
                 });
             }
         }
-        Value::Enum { .. } => todo!(),
         _ => {
             return Err(ErrorInfo {
-                message: format_runtime_type_error("a struct or enum value", &recv_value, env),
+                message: format_runtime_type_error("a struct", &recv_value, env),
                 restore_values: vec![recv_value],
                 error_position: recv_pos.clone(),
             })

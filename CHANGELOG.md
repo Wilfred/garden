@@ -4,7 +4,7 @@
 **Goal: Evaluate functions up to the cursor.**
 **Goal: Implement generics.**
 
-# 0.12 (unreleased)
+# 0.12 (released 3 April 2024)
 **Goal: Add structs.**
 
 ## Emacs

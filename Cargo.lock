@@ -228,7 +228,7 @@ dependencies = [
 
 [[package]]
 name = "garden-lang"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "clap",
  "ctrlc",
@@ -251,7 +251,7 @@ dependencies = [
 
 [[package]]
 name = "garden_lang_parser"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "lazy_static",
  "line-numbers",
@@ -263,7 +263,7 @@ dependencies = [
 
 [[package]]
 name = "garden_lang_web"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "garden_lang_parser",
  "wasm-bindgen",

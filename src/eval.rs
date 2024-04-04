@@ -764,10 +764,14 @@ fn format_type_error(expected: &TypeName, value: &Value, env: &Env) -> ErrorMess
     ))
 }
 
-fn format_runtime_type_error(expected: &RuntimeType, value: &Value, env: &Env) -> ErrorMessage {
+fn format_runtime_type_error<T: ToString + ?Sized>(
+    expected: &T,
+    value: &Value,
+    env: &Env,
+) -> ErrorMessage {
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
-        expected,
+        expected.to_string(),
         RuntimeType::from_value(value),
         value.display(env)
     ))

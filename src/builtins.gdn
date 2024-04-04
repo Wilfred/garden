@@ -12,7 +12,7 @@ fun error(_: String): NoValue {
 // ```
 // list_directory("/");
 // ```
-fun list_directory(_: String): Result<List<String>, String> {
+fun list_directory(path: String): Result<List<String>, String> {
     __BUILTIN_IMPLEMENTATION;
 }
 
@@ -25,7 +25,7 @@ fun list_directory(_: String): Result<List<String>, String> {
 // 
 // Note that a path may exist without the current user having
 // permission to read it.
-fun path_exists(_): Bool {
+fun path_exists(path: String): Bool {
     __BUILTIN_IMPLEMENTATION;
 }
 
@@ -53,7 +53,7 @@ fun println(_: String): Unit {
 // ```
 // shell("ls", ["-l", "/"]);
 // ```
-fun shell(_, _): Result<String, String> {
+fun shell(command: String, args: List<String>): Result<String, String> {
     __BUILTIN_IMPLEMENTATION;
 }
 
@@ -62,7 +62,7 @@ fun shell(_, _): Result<String, String> {
 // ```
 // string_repr(123); // "123"
 // ```
-fun string_repr(_): String {
+fun<T> string_repr(value: T): String {
     __BUILTIN_IMPLEMENTATION;
 }
 

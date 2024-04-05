@@ -58,12 +58,15 @@ pub(crate) struct Bindings {
 }
 
 impl Bindings {
-    fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
+    fn new_with(
+        outer_scope: HashMap<SymbolName, Value>,
+        type_bindings: HashMap<TypeName, RuntimeType>,
+    ) -> Self {
         Self {
             block_bindings: vec![BlockBindings {
                 values: Rc::new(RefCell::new(outer_scope)),
             }],
-            type_bindings: HashMap::new(),
+            type_bindings,
         }
     }
 
@@ -1601,12 +1604,14 @@ fn eval_call(
                 }
             }
 
+            let type_bindings = HashMap::new();
+
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(receiver_pos.clone()),
                 enclosing_name: name_sym.name.clone(),
-                bindings: Bindings::new_with(fun_bindings),
+                bindings: Bindings::new_with(fun_bindings, type_bindings),
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![unit_value()],
@@ -1866,12 +1871,14 @@ fn eval_method_call(
     }
     fun_bindings.insert(receiver_method.receiver_sym.name.clone(), receiver_value);
 
+    let type_bindings = HashMap::new();
+
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
         enclosing_name: SymbolName(format!("{}::{}", receiver_type_name, meth_name.name)),
         src: fun_info.src_string.clone(),
         caller_pos: Some(receiver_pos.clone()),
-        bindings: Bindings::new_with(fun_bindings),
+        bindings: Bindings::new_with(fun_bindings, type_bindings),
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
         evalled_values: vec![unit_value()],

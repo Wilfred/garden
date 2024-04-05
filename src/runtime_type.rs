@@ -72,10 +72,6 @@ impl RuntimeType {
         }
     }
 
-    pub(crate) fn empty_list() -> Self {
-        Self::List(Box::new(Self::no_value()))
-    }
-
     pub(crate) fn string_list() -> Self {
         Self::List(Box::new(Self::String))
     }

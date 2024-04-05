@@ -6,7 +6,7 @@ fun main(args: List<String>): Unit {
 
 // args: run
 // expected stderr:
-// Error: Unbound type in hint: T
+// Error: Unbound type in hint: No such type: T
 // 
 // --> src/runtime_test_files/call_generic_fun.gdn:4	main
 //     foo(1);

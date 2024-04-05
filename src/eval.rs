@@ -1589,7 +1589,11 @@ fn eval_call(
                 arg_values,
             )?;
 
-            let type_bindings = HashMap::new();
+            let mut type_bindings = HashMap::new();
+            for param_sym in &fi.type_params {
+                // TODO: calculate the value of type parameters properly.
+                type_bindings.insert(param_sym.name.clone(), RuntimeType::Top);
+            }
 
             check_param_types(
                 env,

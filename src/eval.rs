@@ -1589,7 +1589,16 @@ fn eval_call(
                 arg_values,
             )?;
 
-            check_param_types(env, receiver_value, params, arg_positions, arg_values)?;
+            let type_bindings = HashMap::new();
+
+            check_param_types(
+                env,
+                receiver_value,
+                params,
+                arg_positions,
+                arg_values,
+                &type_bindings,
+            )?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
             for expr in body.exprs.iter().rev() {
@@ -1603,8 +1612,6 @@ fn eval_call(
                     fun_bindings.insert(param_name.clone(), value.clone());
                 }
             }
-
-            let type_bindings = HashMap::new();
 
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
@@ -1739,10 +1746,11 @@ fn check_param_types(
     params: &[SymbolWithType],
     arg_positions: &[Position],
     arg_values: &[Value],
+    type_bindings: &HashMap<TypeName, RuntimeType>,
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.type_ {
-            let Ok(param_ty) = RuntimeType::from_hint(param_hint, env) else {
+            let Ok(param_ty) = RuntimeType::from_hint(param_hint, env, type_bindings) else {
                 return Err(ErrorInfo {
                     error_position: arg_positions[i].clone(),
                     message: ErrorMessage(format!("Unbound type in hint: {}", param_hint.sym)),
@@ -2775,7 +2783,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             if let Some(ref fun) = stack_frame.enclosing_fun {
                 if let Some(return_hint) = &fun.return_type {
                     let err_pos = return_hint.position.clone();
-                    let return_ty = RuntimeType::from_hint(return_hint, env).unwrap();
+                    let return_ty =
+                        RuntimeType::from_hint(return_hint, env, &HashMap::new()).unwrap();
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());

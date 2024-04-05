@@ -80,7 +80,7 @@ impl RuntimeType {
         Self::List(Box::new(Self::String))
     }
 
-    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, ()> {
+    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, String> {
         let name = &hint.sym.name;
 
         let args = hint
@@ -117,7 +117,7 @@ impl RuntimeType {
                     args,
                 }),
             },
-            None => Err(()),
+            None => Err(format!("No such type: {}", name)),
         }
     }
 
@@ -156,7 +156,7 @@ impl RuntimeType {
         }
     }
 
-    fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Result<Self, ()> {
+    fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Result<Self, String> {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.type_ {

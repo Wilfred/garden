@@ -274,6 +274,7 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
         doc_comment,
         params,
         return_type,
+        name,
         ..
     } = fun_info;
 
@@ -310,6 +311,11 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
     }
 
     res.push_str(" { ... }");
+
+    if let Some(name_sym) = name {
+        res.push_str(&format!("\n\n{}", name_sym.position.as_ide_string()));
+    }
+
     res
 }
 

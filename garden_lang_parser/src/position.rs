@@ -53,4 +53,14 @@ impl Position {
             path: first.path,
         }
     }
+
+    /// Format this position as a human-friendly string, e.g. "foo.gdn:123".
+    pub fn as_ide_string(&self) -> String {
+        format!(
+            "{}:{}",
+            self.path.display(),
+            // 1-indexed line number
+            self.line_number + 1,
+        )
+    }
 }

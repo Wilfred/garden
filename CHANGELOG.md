@@ -17,6 +17,10 @@ Added `write_file()`.
 
 Fixed a crash on `shell()` with a nonexistent command.
 
+## Commands
+
+`:doc` now prints the position of functions.
+
 ## Test Runner
 
 If tests fail, the test runner now has an exit code of 1.

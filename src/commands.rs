@@ -634,7 +634,10 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             name: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
-                Ok((format!("Method `{method_name}`"), method_info.doc_comment()))
+                Ok((
+                    format!("Method `{method_name}`"),
+                    format_method_info(method_info),
+                ))
             } else {
                 Err(format!("No method named `{method_name}` on `{type_name}`."))
             }
@@ -655,6 +658,15 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
     } else {
         Err(format!("No function defined named `{name}`."))
     }
+}
+
+fn format_method_info(method_info: &ast::MethodInfo) -> Option<String> {
+    let fun_info = match &method_info.kind {
+        MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
+        MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
+    };
+
+    fun_info.map(|fi| format_fun_info(fi, &method_info.name_sym))
 }
 
 fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {

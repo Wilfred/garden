@@ -362,17 +362,6 @@ pub struct MethodInfo {
     pub kind: MethodKind,
 }
 
-impl MethodInfo {
-    pub fn doc_comment(&self) -> Option<String> {
-        match &self.kind {
-            MethodKind::BuiltinMethod(_, fun_info) => {
-                fun_info.as_ref().and_then(|fi| fi.doc_comment.clone())
-            }
-            MethodKind::UserDefinedMethod(fun_info) => fun_info.doc_comment.clone(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     /// ```garden

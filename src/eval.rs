@@ -21,7 +21,7 @@ use crate::json_session::{Response, ResponseKind};
 use crate::runtime_type::{RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::{
-    bool_value, result_err_value, result_ok_value, type_representation, BuiltinFunctionKind, Value,
+    result_err_value, result_ok_value, type_representation, BuiltinFunctionKind, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
@@ -819,12 +819,12 @@ fn eval_boolean_binop(
             BinaryOperatorKind::And => {
                 stack_frame
                     .evalled_values
-                    .push(bool_value(lhs_bool && rhs_bool));
+                    .push(Value::bool(lhs_bool && rhs_bool));
             }
             BinaryOperatorKind::Or => {
                 stack_frame
                     .evalled_values
-                    .push(bool_value(lhs_bool || rhs_bool));
+                    .push(Value::bool(lhs_bool || rhs_bool));
             }
             _ => unreachable!(),
         }
@@ -849,12 +849,12 @@ fn eval_equality_binop(
         BinaryOperatorKind::Equal => {
             stack_frame
                 .evalled_values
-                .push(bool_value(lhs_value == rhs_value));
+                .push(Value::bool(lhs_value == rhs_value));
         }
         BinaryOperatorKind::NotEqual => {
             stack_frame
                 .evalled_values
-                .push(bool_value(lhs_value != rhs_value));
+                .push(Value::bool(lhs_value != rhs_value));
         }
         _ => unreachable!(),
     }
@@ -936,22 +936,22 @@ fn eval_integer_binop(
             BinaryOperatorKind::LessThan => {
                 stack_frame
                     .evalled_values
-                    .push(bool_value(lhs_num < rhs_num));
+                    .push(Value::bool(lhs_num < rhs_num));
             }
             BinaryOperatorKind::GreaterThan => {
                 stack_frame
                     .evalled_values
-                    .push(bool_value(lhs_num > rhs_num));
+                    .push(Value::bool(lhs_num > rhs_num));
             }
             BinaryOperatorKind::LessThanOrEqual => {
                 stack_frame
                     .evalled_values
-                    .push(bool_value(lhs_num <= rhs_num));
+                    .push(Value::bool(lhs_num <= rhs_num));
             }
             BinaryOperatorKind::GreaterThanOrEqual => {
                 stack_frame
                     .evalled_values
-                    .push(bool_value(lhs_num >= rhs_num));
+                    .push(Value::bool(lhs_num >= rhs_num));
             }
             _ => {
                 unreachable!()
@@ -1372,7 +1372,7 @@ fn eval_builtin_call(
             };
 
             let path = PathBuf::from(path_s);
-            stack_frame.evalled_values.push(bool_value(path.exists()));
+            stack_frame.evalled_values.push(Value::bool(path.exists()));
         }
         BuiltinFunctionKind::ListDirectory => {
             check_arity(
@@ -3177,7 +3177,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(false));
+        assert_eq!(value, Value::bool(false));
     }
 
     #[test]
@@ -3240,7 +3240,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(false));
+        assert_eq!(value, Value::bool(false));
     }
 
     #[test]
@@ -3258,7 +3258,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(true));
+        assert_eq!(value, Value::bool(true));
     }
 
     #[test]
@@ -3267,7 +3267,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(false));
+        assert_eq!(value, Value::bool(false));
     }
 
     #[test]
@@ -3308,7 +3308,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(true));
+        assert_eq!(value, Value::bool(true));
     }
 
     #[test]
@@ -3429,7 +3429,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(true));
+        assert_eq!(value, Value::bool(true));
     }
 
     #[test]
@@ -3501,7 +3501,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("\"\".f();").unwrap();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, bool_value(true));
+        assert_eq!(value, Value::bool(true));
     }
 
     #[test]

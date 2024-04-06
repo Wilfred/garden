@@ -63,18 +63,18 @@ impl Value {
             payload: None,
         }
     }
-}
 
-pub(crate) fn bool_value(b: bool) -> Value {
-    // We can assume that Bool is always defined because it's in the
-    // prelude.
-    Value::Enum {
-        type_name: TypeName {
-            name: "Bool".to_owned(),
-        },
-        runtime_type: RuntimeType::bool(),
-        variant_idx: if b { 0 } else { 1 },
-        payload: None,
+    pub(crate) fn bool(b: bool) -> Self {
+        // We can assume that Bool is always defined because it's in the
+        // prelude.
+        Value::Enum {
+            type_name: TypeName {
+                name: "Bool".to_owned(),
+            },
+            runtime_type: RuntimeType::bool(),
+            variant_idx: if b { 0 } else { 1 },
+            payload: None,
+        }
     }
 }
 

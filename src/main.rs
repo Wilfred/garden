@@ -277,6 +277,9 @@ fn call_to_main_src(cli_args: &[String]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use assert_cmd::prelude::*;
+    use std::process::Command;
+
     use goldentests::{TestConfig, TestResult};
 
     #[test]
@@ -298,5 +301,15 @@ mod tests {
         let mut config = TestConfig::new("target/debug/garden", "src/runtime_test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
+    }
+
+    #[test]
+    #[ignore] // TODO: currently failing
+    fn test_prelude_unit_tests() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("test").arg("src/prelude.gdn");
+        cmd.assert().success();
     }
 }

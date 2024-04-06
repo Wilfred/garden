@@ -20,9 +20,7 @@ use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::runtime_type::{RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
-use crate::values::{
-    result_err_value, result_ok_value, type_representation, BuiltinFunctionKind, Value,
-};
+use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
     SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
@@ -1268,14 +1266,14 @@ fn eval_builtin_call(
                                         .unwrap();
 
                                     if output.status.success() {
-                                        result_ok_value(Value::String(s))
+                                        Value::ok(Value::String(s))
                                     } else {
-                                        result_err_value(Value::String(s))
+                                        Value::err(Value::String(s))
                                     }
                                 }
                                 Err(e) => {
                                     let s = Value::String(format!("{}", e));
-                                    result_err_value(s)
+                                    Value::err(s)
                                 }
                             };
 
@@ -1420,14 +1418,14 @@ fn eval_builtin_call(
                         }
                     }
 
-                    result_ok_value(Value::List {
+                    Value::ok(Value::List {
                         items,
                         elem_type: RuntimeType::string_list(),
                     })
                 }
                 Err(e) => {
                     let s = Value::String(format!("{}", e));
-                    result_err_value(s)
+                    Value::err(s)
                 }
             };
 
@@ -1470,8 +1468,8 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::read_to_string(path) {
-                Ok(s) => result_ok_value(Value::String(s)),
-                Err(e) => result_err_value(Value::String(e.to_string())),
+                Ok(s) => Value::ok(Value::String(s)),
+                Err(e) => Value::err(Value::String(e.to_string())),
             };
 
             stack_frame.evalled_values.push(v);
@@ -1540,8 +1538,8 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::write(path, content_s) {
-                Ok(()) => result_ok_value(Value::unit()),
-                Err(e) => result_err_value(Value::String(format!("{}", e))),
+                Ok(()) => Value::ok(Value::unit()),
+                Err(e) => Value::err(Value::String(format!("{}", e))),
             };
 
             stack_frame.evalled_values.push(v);

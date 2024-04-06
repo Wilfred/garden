@@ -76,47 +76,47 @@ impl Value {
             payload: None,
         }
     }
-}
 
-pub(crate) fn result_ok_value(v: Value) -> Value {
-    let value_type = RuntimeType::from_value(&v);
+    pub(crate) fn ok(v: Value) -> Self {
+        let value_type = RuntimeType::from_value(&v);
 
-    // We can assume that Result is always defined because it's in the
-    // prelude.
-    Value::Enum {
-        type_name: TypeName {
-            name: "Result".to_owned(),
-        },
-        variant_idx: 0,
-        payload: Some(Box::new(v)),
-        runtime_type: RuntimeType::UserDefined {
-            kind: TypeDefKind::Enum,
-            name: TypeName {
+        // We can assume that Result is always defined because it's in the
+        // prelude.
+        Value::Enum {
+            type_name: TypeName {
                 name: "Result".to_owned(),
             },
-            args: vec![value_type, RuntimeType::no_value()],
-        },
+            variant_idx: 0,
+            payload: Some(Box::new(v)),
+            runtime_type: RuntimeType::UserDefined {
+                kind: TypeDefKind::Enum,
+                name: TypeName {
+                    name: "Result".to_owned(),
+                },
+                args: vec![value_type, RuntimeType::no_value()],
+            },
+        }
     }
-}
 
-pub(crate) fn result_err_value(v: Value) -> Value {
-    let value_type = RuntimeType::from_value(&v);
+    pub(crate) fn err(v: Value) -> Self {
+        let value_type = RuntimeType::from_value(&v);
 
-    // We can assume that Result is always defined because it's in the
-    // prelude.
-    Value::Enum {
-        type_name: TypeName {
-            name: "Result".to_owned(),
-        },
-        runtime_type: RuntimeType::UserDefined {
-            kind: TypeDefKind::Enum,
-            name: TypeName {
+        // We can assume that Result is always defined because it's in the
+        // prelude.
+        Value::Enum {
+            type_name: TypeName {
                 name: "Result".to_owned(),
             },
-            args: vec![RuntimeType::no_value(), value_type],
-        },
-        variant_idx: 1,
-        payload: Some(Box::new(v)),
+            runtime_type: RuntimeType::UserDefined {
+                kind: TypeDefKind::Enum,
+                name: TypeName {
+                    name: "Result".to_owned(),
+                },
+                args: vec![RuntimeType::no_value(), value_type],
+            },
+            variant_idx: 1,
+            payload: Some(Box::new(v)),
+        }
     }
 }
 

@@ -1,0 +1,18 @@
+fun foo(): Option<NoSuchType> {
+    None;
+}
+
+fun main(args: List<String>): Unit {
+    foo();
+}
+
+// args: run
+// expected stderr:
+// Error: No such type: NoSuchType
+// 
+// --> src/runtime_test_files/nonexistent_type_return_type_arg.gdn:1	main
+// fun main(args: List<String>): Unit {
+// 
+// --> __main_fun__:1	__toplevel__
+// // __toplevel__
+

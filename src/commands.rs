@@ -290,8 +290,22 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
     }
     res.push_str("\n\n");
 
-    // show type hints
-    res.push_str(&format!("fn {}", name_sym.name));
+    // Format signature.
+    res.push_str("fn");
+
+    if !fun_info.type_params.is_empty() {
+        res.push('<');
+        for (i, param) in fun_info.type_params.iter().enumerate() {
+            if i != 0 {
+                res.push_str(", ");
+            }
+            res.push_str(&format!("{}", param.name));
+        }
+
+        res.push('>');
+    }
+
+    res.push_str(&format!(" {}", name_sym.name));
     res.push('(');
     for (i, param) in params.iter().enumerate() {
         if i != 0 {

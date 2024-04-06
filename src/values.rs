@@ -49,17 +49,19 @@ pub(crate) enum Value {
     },
 }
 
-/// A helper for creating a unit value.
-pub(crate) fn unit_value() -> Value {
-    // We can assume that Unit is always defined because it's in the
-    // prelude.
-    Value::Enum {
-        type_name: TypeName {
-            name: "Unit".to_owned(),
-        },
-        runtime_type: RuntimeType::unit(),
-        variant_idx: 0,
-        payload: None,
+impl Value {
+    /// A helper for creating a unit value.
+    pub(crate) fn unit() -> Self {
+        // We can assume that Unit is always defined because it's in the
+        // prelude.
+        Value::Enum {
+            type_name: TypeName {
+                name: "Unit".to_owned(),
+            },
+            runtime_type: RuntimeType::unit(),
+            variant_idx: 0,
+            payload: None,
+        }
     }
 }
 

@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
 
-use crate::values::{unit_value, BuiltinFunctionKind, Value};
+use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
     eval::{eval_toplevel_defs, Bindings, StackFrame},
     types::{BuiltinType, TypeDef},
@@ -234,7 +234,7 @@ impl Default for Env {
                 bindings: Bindings::default(),
                 bindings_next_block: vec![],
                 exprs_to_eval: vec![],
-                evalled_values: vec![unit_value()],
+                evalled_values: vec![Value::unit()],
                 enclosing_fun: None,
                 enclosing_name: SymbolName("__toplevel__".to_owned()),
                 src: SourceString {

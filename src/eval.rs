@@ -21,8 +21,7 @@ use crate::json_session::{Response, ResponseKind};
 use crate::runtime_type::{RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::{
-    bool_value, result_err_value, result_ok_value, type_representation, unit_value,
-    BuiltinFunctionKind, Value,
+    bool_value, result_err_value, result_ok_value, type_representation, BuiltinFunctionKind, Value,
 };
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
@@ -335,7 +334,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         bindings: Bindings::default(),
         bindings_next_block: vec![],
         exprs_to_eval,
-        evalled_values: vec![unit_value()],
+        evalled_values: vec![Value::unit()],
     };
     env.stack.push(stack_frame);
 }
@@ -625,7 +624,7 @@ fn eval_if(
                     ));
                 }
                 None => {
-                    stack_frame.evalled_values.push(unit_value());
+                    stack_frame.evalled_values.push(Value::unit());
                 }
             }
         }
@@ -685,7 +684,7 @@ fn eval_while(
         } else {
             // TODO: It's weird using the position of the
             // condition when there's no else.
-            stack_frame.evalled_values.push(unit_value());
+            stack_frame.evalled_values.push(Value::unit());
         }
     } else {
         return Err(ErrorInfo {
@@ -1191,7 +1190,7 @@ fn eval_builtin_call(
                     });
                 }
             }
-            stack_frame.evalled_values.push(unit_value());
+            stack_frame.evalled_values.push(Value::unit());
         }
         BuiltinFunctionKind::Println => {
             check_arity(
@@ -1237,7 +1236,7 @@ fn eval_builtin_call(
                     });
                 }
             }
-            stack_frame.evalled_values.push(unit_value());
+            stack_frame.evalled_values.push(Value::unit());
         }
         BuiltinFunctionKind::Shell => {
             check_arity(
@@ -1541,7 +1540,7 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::write(path, content_s) {
-                Ok(()) => result_ok_value(unit_value()),
+                Ok(()) => result_ok_value(Value::unit()),
                 Err(e) => result_err_value(Value::String(format!("{}", e))),
             };
 
@@ -1619,7 +1618,7 @@ fn eval_call(
                 },
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![unit_value()],
+                evalled_values: vec![Value::unit()],
                 enclosing_fun: Some(fun_info.clone()),
                 enclosing_name: SymbolName("(closure)".to_string()),
                 src: fun_info.src_string.clone(),
@@ -1676,7 +1675,7 @@ fn eval_call(
                 bindings: Bindings::new_with(fun_bindings, type_bindings),
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![unit_value()],
+                evalled_values: vec![Value::unit()],
             }));
         }
         Value::BuiltinFunction(kind, _) => eval_builtin_call(
@@ -1951,7 +1950,7 @@ fn eval_method_call(
         bindings: Bindings::new_with(fun_bindings, type_bindings),
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
-        evalled_values: vec![unit_value()],
+        evalled_values: vec![Value::unit()],
     }))
 }
 
@@ -3342,7 +3341,7 @@ mod tests {
     fn test_eval_empty() {
         let mut env = Env::default();
         let value = eval_exprs(&[], &mut env).unwrap();
-        assert_eq!(value, unit_value());
+        assert_eq!(value, Value::unit());
     }
 
     #[test]
@@ -3522,7 +3521,7 @@ mod tests {
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, unit_value());
+        assert_eq!(value, Value::unit());
     }
 
     #[test]

@@ -1,0 +1,11 @@
+fun<T> option_identity(value: Option<T>): Option<T> {
+    value;
+}
+
+fun main(_) {
+    dbg(option_identity(Some(1)));
+}
+
+// args: run
+// expected stdout: Some(1)
+

@@ -52,8 +52,6 @@ impl Default for BlockBindings {
 pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,
     /// Types bound in this stack frame, due to generic parameters.
-    // TODO: populate and check generic types in arguments and return values.
-    #[allow(dead_code)]
     pub(crate) type_bindings: HashMap<TypeName, RuntimeType>,
 }
 
@@ -1886,7 +1884,11 @@ fn eval_method_call(
     }
     fun_bindings.insert(receiver_method.receiver_sym.name.clone(), receiver_value);
 
-    let type_bindings = HashMap::new();
+    let mut type_bindings = HashMap::new();
+    for type_param in &fun_info.type_params {
+        // TODO: compute the value of these type params properly.
+        type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
+    }
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
@@ -2790,8 +2792,12 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             if let Some(ref fun) = stack_frame.enclosing_fun {
                 if let Some(return_hint) = &fun.return_type {
                     let err_pos = return_hint.position.clone();
-                    let return_ty =
-                        RuntimeType::from_hint(return_hint, env, &HashMap::new()).unwrap();
+                    let return_ty = RuntimeType::from_hint(
+                        return_hint,
+                        env,
+                        &stack_frame.bindings.type_bindings,
+                    )
+                    .unwrap();
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());

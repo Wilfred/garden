@@ -380,7 +380,7 @@ pub enum Definition_ {
     /// ```
     Fun(Symbol, FunInfo),
     /// ```garden
-    /// fun (self: List) foo() {}
+    /// fun (self: MyType) foo() {}
     /// ```
     Method(MethodInfo),
     Test(TestInfo),

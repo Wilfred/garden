@@ -2,7 +2,7 @@ fun foo(): Option<Int> {
     Some(""); // should error
 }
 
-fun main(args: List): Unit {
+fun main(args: List<String>): Unit {
     foo();
     return;
 }

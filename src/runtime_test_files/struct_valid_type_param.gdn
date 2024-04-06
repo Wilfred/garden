@@ -6,7 +6,7 @@ fun foo(): Box<Int> {
     Box { value: 1234 };
 }
 
-fun main(args: List): Unit {
+fun main(args: List<String>): Unit {
     foo();
     return;
 }

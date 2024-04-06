@@ -3,7 +3,7 @@ struct Foo {
     y: String,
 }
 
-fun main(args: List): Unit {
+fun main(args: List<String>): Unit {
     dbg(Foo { x: 1 + 2, y: "abc" });
 }
 

@@ -67,7 +67,7 @@ fun<T> string_repr(value: T): String {
 }
 
 // Read the contents of `path` as a string.
-
+//
 // ```
 // read_file("/tmp/foo.txt");
 // ```
@@ -76,7 +76,7 @@ fun read_file(path: String): Result<String, String> {
 }
 
 // Return the path of the current working directory.
-
+//
 // ```
 // working_directory(); // "/home/yourname/awesome_garden_project"
 // ```

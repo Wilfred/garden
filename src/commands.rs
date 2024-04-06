@@ -270,27 +270,23 @@ fn describe_fun(value: &Value) -> Option<String> {
 
 /// Format `fun_info` as a signature with doc comment.
 fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
-    let ast::FunInfo {
-        doc_comment,
-        params,
-        return_type,
-        name,
-        ..
-    } = fun_info;
-
     let mut res = String::new();
-    match doc_comment {
-        Some(doc_comment) => {
-            res.push_str(doc_comment);
-        }
-        None => res.push_str(&format!(
-            "`{}` has no documentation comment.",
-            name_sym.name
-        )),
+    if let Some(doc_comment) = &fun_info.doc_comment {
+        res.push_str(doc_comment);
+        res.push_str("\n\n");
     }
-    res.push_str("\n\n");
 
-    // Format signature.
+    res.push_str(&format_signature(fun_info, name_sym));
+
+    if let Some(name_sym) = &fun_info.name {
+        res.push_str(&format!("\n\n{}", name_sym.position.as_ide_string()));
+    }
+
+    res
+}
+
+fn format_signature(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
+    let mut res = String::new();
     res.push_str("fn");
 
     if !fun_info.type_params.is_empty() {
@@ -307,7 +303,7 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
 
     res.push_str(&format!(" {}", name_sym.name));
     res.push('(');
-    for (i, param) in params.iter().enumerate() {
+    for (i, param) in fun_info.params.iter().enumerate() {
         if i != 0 {
             res.push_str(", ");
         }
@@ -320,16 +316,11 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
     }
     res.push(')');
 
-    if let Some(return_type) = return_type {
+    if let Some(return_type) = &fun_info.return_type {
         res.push_str(&format!(": {}", return_type.as_src()));
     }
 
     res.push_str(" { ... }");
-
-    if let Some(name_sym) = name {
-        res.push_str(&format!("\n\n{}", name_sym.position.as_ide_string()));
-    }
-
     res
 }
 

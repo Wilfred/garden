@@ -14,7 +14,7 @@ use crate::types::{BuiltinType, TypeDef};
 use crate::values::Value;
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
-use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeName};
+use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeHint, TypeName};
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
 #[derive(Debug, EnumIter)]
@@ -254,11 +254,11 @@ fn describe_fun(value: &Value) -> Option<String> {
     match value {
         Value::Fun {
             name_sym, fun_info, ..
-        } => Some(format_fun_info(fun_info, name_sym)),
+        } => Some(format_fun_info(fun_info, name_sym, None)),
         Value::BuiltinFunction(_kind, fun_info) => {
             if let Some(fun_info) = fun_info {
                 if let Some(fun_name) = &fun_info.name {
-                    return Some(format_fun_info(fun_info, fun_name));
+                    return Some(format_fun_info(fun_info, fun_name, None));
                 }
             }
 
@@ -269,14 +269,18 @@ fn describe_fun(value: &Value) -> Option<String> {
 }
 
 /// Format `fun_info` as a signature with doc comment.
-fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
+fn format_fun_info(
+    fun_info: &ast::FunInfo,
+    name_sym: &ast::Symbol,
+    recv_hint: Option<&TypeHint>,
+) -> String {
     let mut res = String::new();
     if let Some(doc_comment) = &fun_info.doc_comment {
         res.push_str(doc_comment);
         res.push_str("\n\n");
     }
 
-    res.push_str(&format_signature(fun_info, name_sym));
+    res.push_str(&format_signature(fun_info, name_sym, recv_hint));
 
     if let Some(name_sym) = &fun_info.name {
         res.push_str(&format!("\n\n{}", name_sym.position.as_ide_string()));
@@ -285,7 +289,11 @@ fn format_fun_info(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
     res
 }
 
-fn format_signature(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
+fn format_signature(
+    fun_info: &ast::FunInfo,
+    name_sym: &ast::Symbol,
+    recv_hint: Option<&TypeHint>,
+) -> String {
     let mut res = String::new();
     res.push_str("fn");
 
@@ -299,6 +307,10 @@ fn format_signature(fun_info: &ast::FunInfo, name_sym: &ast::Symbol) -> String {
         }
 
         res.push('>');
+    }
+
+    if let Some(recv_hint) = recv_hint {
+        res.push_str(&format!(" (self: {})", recv_hint.as_src()));
     }
 
     res.push_str(&format!(" {}", name_sym.name));
@@ -671,7 +683,7 @@ fn format_method_info(method_info: &ast::MethodInfo) -> Option<String> {
         MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
     };
 
-    fun_info.map(|fi| format_fun_info(fi, &method_info.name_sym))
+    fun_info.map(|fi| format_fun_info(fi, &method_info.name_sym, Some(&method_info.receiver_type)))
 }
 
 fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {

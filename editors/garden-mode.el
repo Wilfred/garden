@@ -455,9 +455,13 @@ the user entering a value in the *garden* buffer."
 
 (defvar garden--previous-buf nil)
 
-(defun garden-toggle-session ()
-  "Toggle between the current *garden* buffer and a source buffer."
-  (interactive)
+(defun garden-toggle-session (prefix)
+  "Toggle between the current *garden* buffer and a source buffer.
+If called with a prefix, stop the previous session."
+  (interactive "P")
+  (when prefix
+    (garden-stop-session))
+
   (let ((current-buf (current-buffer))
         (session-buf (garden--active-buffer)))
     (if (eq (current-buffer) session-buf)

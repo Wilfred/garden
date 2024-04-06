@@ -75,6 +75,17 @@ fun read_file(path: String): Result<String, String> {
     __BUILTIN_IMPLEMENTATION;
 }
 
+// Write `content` to file `path`.
+//
+// If `path` already exists, its content is replaced with `content`.
+//
+// ```
+// write_file("hello world", "/tmp/foo.txt");
+// ```
+fun write_file(content: String, path: String): Result<Unit, String> {
+    __BUILTIN_IMPLEMENTATION;
+}
+
 // Return the path of the current working directory.
 //
 // ```

@@ -11,6 +11,8 @@ Type hints for built-in types are now checked for the correct arity
 
 ## Stdlib
 
+Added `write_file()`.
+
 `list_directory` now returns a `Result`.
 
 Fixed a crash on `shell()` with a nonexistent command.

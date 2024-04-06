@@ -147,6 +147,7 @@ pub(crate) enum BuiltinFunctionKind {
     Println,
     ReadFile,
     WorkingDirectory,
+    WriteFile,
 }
 
 impl Display for BuiltinFunctionKind {
@@ -161,6 +162,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Println => "println",
             BuiltinFunctionKind::ReadFile => "read_file",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
+            BuiltinFunctionKind::WriteFile => "write_file",
         };
         write!(f, "{}", name)
     }

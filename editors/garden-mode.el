@@ -372,7 +372,7 @@ the user entering a value in the *garden* buffer."
      . font-lock-keyword-face)
     (,(regexp-opt
        '("error" "list_directory" "path_exists" "print" "println"
-         "read_file" "shell" "string_repr" "working_directory")
+         "read_file" "shell" "string_repr" "working_directory" "write_file")
        'symbols)
      . font-lock-builtin-face)
 

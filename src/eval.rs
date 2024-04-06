@@ -1494,6 +1494,59 @@ fn eval_builtin_call(
                 .evalled_values
                 .push(Value::String(path.display().to_string()));
         }
+        BuiltinFunctionKind::WriteFile => {
+            check_arity(
+                &SymbolName("write_file".to_owned()),
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let content_s = match &arg_values[0] {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format_type_error("String", v, env),
+                        restore_values: saved_values,
+                        error_position: arg_positions[0].clone(),
+                    });
+                }
+            };
+
+            let path_s = match &arg_values[1] {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err(ErrorInfo {
+                        message: format_type_error("String", v, env),
+                        restore_values: saved_values,
+                        error_position: arg_positions[0].clone(),
+                    });
+                }
+            };
+
+            let path = PathBuf::from(path_s);
+
+            let v = match std::fs::write(path, content_s) {
+                Ok(()) => result_ok_value(unit_value()),
+                Err(e) => result_err_value(Value::String(format!("{}", e))),
+            };
+
+            stack_frame.evalled_values.push(v);
+        }
     }
 
     Ok(())

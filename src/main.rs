@@ -160,6 +160,8 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
 
 // TODO: Much of this logic is duplicated with run_file.
 fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBool>) {
+    let mut succeeded = false;
+
     match String::from_utf8(src_bytes) {
         Ok(src) => match parse_toplevel_items(path, &src) {
             Ok(items) => {
@@ -179,6 +181,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                         // after the first failure?
                         // TODO: print incremental progress as tests run.
                         println!("All {} test(s) passed.", summary.tests_passed);
+                        succeeded = true;
                     }
                     Err(EvalError::ResumableError(position, e)) => {
                         eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack));
@@ -209,6 +212,10 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
         Err(e) => {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
+    }
+
+    if !succeeded {
+        std::process::exit(1);
     }
 }
 

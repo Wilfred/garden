@@ -301,6 +301,7 @@ pub(crate) fn eval_toplevel_tests(
     for test in test_defs {
         push_test_stackframe(test, env);
         eval_env(env, session)?;
+        env.stack.pop();
 
         tests_passed += 1;
     }

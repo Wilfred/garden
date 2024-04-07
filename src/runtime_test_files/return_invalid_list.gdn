@@ -11,11 +11,11 @@ fun main(args: List): Unit {
 // expected stderr:
 // Error: Expected List<Int>, but got List<String>: [""]
 // 
-// --> src/runtime_test_files/return_invalid_list.gdn:1	foo
+// --> src/runtime_test_files/return_invalid_list.gdn:1[2m[1m	 fun foo()[0m[0m
 // fun foo(): List<Int> {
 //            ^^^^^^^^^
-// --> src/runtime_test_files/return_invalid_list.gdn:6	main
+// --> src/runtime_test_files/return_invalid_list.gdn:6[2m[1m	 fun main()[0m[0m
 //     foo();
-// --> __main_fun__:1	__toplevel__
+// --> __main_fun__:1[2m[1m	 fun __toplevel__()[0m[0m
 // // __toplevel__
 

@@ -106,13 +106,8 @@ fn format_pos_in_fun(
     }
 
     if let Some(name) = name {
-        res.push('\t');
-
-        if use_color {
-            res.push_str(&name.0.bold().dimmed().to_string());
-        } else {
-            res.push_str(&name.0);
-        }
+        let signature = format!("\t fun {}()", name.0);
+        res.push_str(&signature.bold().dimmed().to_string());
     }
     res.push('\n');
 

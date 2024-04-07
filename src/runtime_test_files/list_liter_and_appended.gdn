@@ -1,0 +1,12 @@
+fun main(_: List<String>) {
+    let literal = [1];
+
+    let changed = [];
+    changed = changed.append(1);
+
+    dbg(literal == changed);
+}
+
+// args: run
+// expected stdout: False
+

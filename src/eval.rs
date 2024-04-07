@@ -18,7 +18,7 @@ use crate::checks::check_def;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::runtime_type::{RuntimeType, TypeDefKind};
+use crate::runtime_type::{self, RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
@@ -1973,7 +1973,7 @@ fn eval_builtin_method_call(
             )?;
 
             match &receiver_value {
-                Value::List { items, elem_type } => {
+                Value::List { items, .. } => {
                     let mut new_items = items.clone();
                     new_items.push(arg_values[0].clone());
 
@@ -1981,7 +1981,7 @@ fn eval_builtin_method_call(
                     // type as the existing list items.
                     stack_frame.evalled_values.push(Value::List {
                         items: new_items,
-                        elem_type: elem_type.clone(),
+                        elem_type: RuntimeType::from_value(&arg_values[0]),
                     });
                 }
                 v => {

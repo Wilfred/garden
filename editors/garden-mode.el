@@ -78,7 +78,7 @@
   "Temporarily highlight from START to END."
   (let* ((overlay (make-overlay start end)))
     (overlay-put overlay 'face 'bold-italic)
-    (run-with-timer 0.3 nil 'delete-overlay overlay)))
+    (run-with-timer 0.5 nil 'delete-overlay overlay)))
 
 (defun garden--flash-error-region (start end)
   "Temporarily highlight from START to END."

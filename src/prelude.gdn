@@ -87,6 +87,41 @@ test lines {
     should_equal("a\nb\n".lines(), ["a", "b"]);
 }
 
+// Split this string on the first occurrence of `needle`, and return
+// the text before and after `needle`.
+//
+// ```
+// "abcd".split_once("b"); // Some(["a", "cd"])
+// ```
+fun (self: String) split_once(needle: String): Option<List<String>> {
+    let i = 0;
+    while ((i + needle.len()) < self.len()) {
+        let substring = self.substring(i, i + needle.len());
+        if (substring == needle) {
+            return Some([
+                    self.substring(0, i),
+                    self.substring(i + needle.len(), self.len()),
+                ]);
+        }
+
+        i = i + 1;
+    }
+
+    return None;
+}
+
+test split_once {
+    // Needle not present.
+    should_equal("abc".split_once("x"), None);
+
+    // Needle present once.
+    should_equal("abc".split_once("b"), Some(["a", "c"]));
+
+    // Needle present multiple times.
+    should_equal("abcbe".split_once("b"), Some(["a", "cbe"]));
+}
+
+
 // Join `items` (a list of strings) with this string as a separator.
 fun (self: String) join(items: List<String>): String {
     if (items.is_empty()) {

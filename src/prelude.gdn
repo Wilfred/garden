@@ -101,7 +101,7 @@ fun (self: String) split_once(needle: String): Option<List<String>> {
             return Some([
                     self.substring(0, i),
                     self.substring(i + needle.len(), self.len()),
-                ]);
+            ]);
         }
 
         i = i + 1;

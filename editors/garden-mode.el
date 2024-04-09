@@ -114,14 +114,13 @@
   (interactive)
   (let* ((syntax-bol (syntax-ppss (line-beginning-position)))
          (paren-depth (nth 0 syntax-bol))
+         (paren-depth-eol (nth 0 (syntax-ppss (line-end-position))))
          (current-line (s-trim
                         (buffer-substring
                          (line-beginning-position)
                          (line-end-position)))))
-    (when (or (s-starts-with-p "}" current-line)
-              (s-starts-with-p ")" current-line)
-              (s-starts-with-p "]" current-line))
-      (setq paren-depth (1- paren-depth)))
+    (when (< paren-depth-eol paren-depth)
+      (setq paren-depth paren-depth-eol))
 
     (indent-line-to (* garden-indent-offset paren-depth))))
 

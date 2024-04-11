@@ -18,7 +18,7 @@ use crate::checks::check_def;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::runtime_type::{self, RuntimeType, TypeDefKind};
+use crate::runtime_type::{RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{

@@ -99,8 +99,8 @@ fun (self: String) split_once(needle: String): Option<List<String>> {
         let substring = self.substring(i, i + needle.len());
         if (substring == needle) {
             return Some([
-                    self.substring(0, i),
-                    self.substring(i + needle.len(), self.len()),
+                self.substring(0, i),
+                self.substring(i + needle.len(), self.len()),
             ]);
         }
 

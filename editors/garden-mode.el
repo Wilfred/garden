@@ -109,18 +109,44 @@
          s
          "\n")))))
 
+(defun garden--effective-paren-depth (pos)
+  "Return the parenthesis/bracket depth of position POS, but ignore
+repeated parentheses/brackets on the same line."
+  (let ((paren-depth 0)
+        (syntax (syntax-ppss pos))
+        (current-line (line-number-at-pos pos)))
+    (save-excursion
+      ;; Keep going whilst we're inside parens.
+      (while (> (nth 0 syntax) 0)
+        ;; Go to the most recent enclosing open paren.
+        (goto-char (nth 1 syntax))
+
+        ;; Count this paren, but only if it was on another line.
+        (let ((new-line (line-number-at-pos (point))))
+          (unless (= new-line current-line)
+            (setq paren-depth (1+ paren-depth))
+            (setq current-line new-line)))
+
+        (setq syntax (syntax-ppss (point)))))
+    paren-depth))
+
+(defun garden--current-line ()
+  "The current line enclosing point."
+  (buffer-substring-no-properties
+   (line-beginning-position) (line-end-position)))
+
 (defun garden-indent-line ()
   "Indent the line at point."
   (interactive)
-  (let* ((syntax-bol (syntax-ppss (line-beginning-position)))
-         (paren-depth (nth 0 syntax-bol))
-         (paren-depth-eol (nth 0 (syntax-ppss (line-end-position))))
-         (current-line (s-trim
-                        (buffer-substring
-                         (line-beginning-position)
-                         (line-end-position)))))
-    (when (< paren-depth-eol paren-depth)
-      (setq paren-depth paren-depth-eol))
+  (let* ((paren-depth (garden--effective-paren-depth (line-beginning-position)))
+         (current-line (s-trim (garden--current-line))))
+    ;; If this line starts with a closing paren, unindent by one level.
+    ;;   if {
+    ;;   } <- this should not be indented.
+    (when (or (s-starts-with-p "}" current-line)
+              (s-starts-with-p ")" current-line)
+              (s-starts-with-p "]" current-line))
+      (setq paren-depth (1- paren-depth)))
 
     (indent-line-to (* garden-indent-offset paren-depth))))
 

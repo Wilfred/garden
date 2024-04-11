@@ -121,6 +121,18 @@ test split_once {
     should_equal("abcbe".split_once("b"), Some(["a", "cbe"]));
 }
 
+fun (self: String) index_of(substring: String): Option<Int> {
+    None;
+}
+
+test string_index_of {
+    should_equal("abc".index_of("x"), None);
+
+    should_equal("abc".index_of("a"), Some(0));
+    should_equal("abca".index_of("a"), Some(0));
+
+    should_equal("abc".index_of("c"), Some(2));
+}
 
 // Join `items` (a list of strings) with this string as a separator.
 fun (self: String) join(items: List<String>): String {

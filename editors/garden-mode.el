@@ -514,7 +514,7 @@ If called with a prefix, stop the previous session."
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))
 
-(defun garden-flycheck--parse (json-output _checker buffer)
+(defun garden-flycheck--parse (json-output _checker _buffer)
   "Parse JSON output from garden check."
   ;; (garden--log-json-to-buf json-output)
   (let (errors)

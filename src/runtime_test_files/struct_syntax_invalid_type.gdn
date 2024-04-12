@@ -11,6 +11,6 @@ fun main(args: List): Unit {
 // --> src/runtime_test_files/struct_syntax_invalid_type.gdn:4[2m[1m	 fun main()[0m[0m
 //     Foo { x: 1 };
 //     ^^^
-// --> __main_fun__:1[2m[1m	 fun __toplevel__()[0m[0m
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__
 

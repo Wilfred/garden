@@ -20,6 +20,6 @@ fun main(args: List): Unit {
 //            ^^^^^^^^
 // --> src/runtime_test_files/struct_invalid_type_param.gdn:10[2m[1m	 fun main()[0m[0m
 //     foo();
-// --> __main_fun__:1[2m[1m	 fun __toplevel__()[0m[0m
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__
 

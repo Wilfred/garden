@@ -7,12 +7,9 @@ use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::eval::StackFrame;
+use crate::eval::{EnclosingSymbol, StackFrame};
 use garden_lang_parser::position::Position;
-use garden_lang_parser::{
-    ast::{SourceString, SymbolName},
-    diagnostics::ErrorMessage,
-};
+use garden_lang_parser::{ast::SourceString, diagnostics::ErrorMessage};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Warning {
@@ -86,7 +83,7 @@ pub(crate) fn format_parse_error(
 fn format_pos_in_fun(
     position: &Position,
     src_string: &SourceString,
-    name: Option<&SymbolName>,
+    enclosing_sym: Option<&EnclosingSymbol>,
     underline: bool,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
@@ -105,8 +102,8 @@ fn format_pos_in_fun(
         res.push_str(&formatted_pos);
     }
 
-    if let Some(name) = name {
-        let signature = format!("\t fun {}()", name.0);
+    if let Some(enclosing_sym) = enclosing_sym {
+        let signature = format!("\t {}", enclosing_sym);
         res.push_str(&signature.bold().dimmed().to_string());
     }
     res.push('\n');

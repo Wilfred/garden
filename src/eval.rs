@@ -139,10 +139,34 @@ impl Default for Bindings {
 }
 
 #[derive(Debug)]
+pub(crate) enum EnclosingSymbol {
+    Fun(Symbol),
+    Method(TypeName, Symbol),
+    Test(Option<Symbol>),
+    Closure,
+    Toplevel,
+}
+
+impl std::fmt::Display for EnclosingSymbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            EnclosingSymbol::Fun(fun_sym) => write!(f, "fun {}()", fun_sym.name),
+            EnclosingSymbol::Method(type_name, meth_sym) => {
+                write!(f, "fun (self: {}) {}()", type_name.name, meth_sym.name)
+            }
+            EnclosingSymbol::Test(None) => write!(f, "test"),
+            EnclosingSymbol::Test(Some(test_sym)) => write!(f, "test {}", test_sym.name),
+            EnclosingSymbol::Closure => write!(f, "closure"),
+            EnclosingSymbol::Toplevel => write!(f, "__toplevel__"),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub(crate) struct StackFrame {
     pub(crate) src: SourceString,
     // The name of the function, method or test that we're evaluating.
-    pub(crate) enclosing_name: SymbolName,
+    pub(crate) enclosing_name: EnclosingSymbol,
     pub(crate) enclosing_fun: Option<FunInfo>,
     /// The position of the call site.
     pub(crate) caller_pos: Option<Position>,
@@ -316,10 +340,6 @@ pub(crate) fn eval_toplevel_tests(
 }
 
 pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
-    let enclosing_name = match &test.name {
-        Some(name_sym) => name_sym.name.clone(),
-        None => SymbolName("__unnamed_test".to_owned()),
-    };
     let mut exprs_to_eval: Vec<(bool, Expression)> = vec![];
     for expr in test.body.exprs.iter().rev() {
         exprs_to_eval.push((false, expr.clone()));
@@ -327,7 +347,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 
     let stack_frame = StackFrame {
         src: test.src_string.clone(),
-        enclosing_name,
+        enclosing_name: EnclosingSymbol::Test(test.name.clone()),
         enclosing_fun: None,
         caller_pos: None,
         bindings: Bindings::default(),
@@ -1619,7 +1639,7 @@ fn eval_call(
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
                 enclosing_fun: Some(fun_info.clone()),
-                enclosing_name: SymbolName("(closure)".to_string()),
+                enclosing_name: EnclosingSymbol::Closure,
                 src: fun_info.src_string.clone(),
             }));
         }
@@ -1670,7 +1690,7 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(receiver_pos.clone()),
-                enclosing_name: name_sym.name.clone(),
+                enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
                 bindings: Bindings::new_with(fun_bindings, type_bindings),
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
@@ -1943,7 +1963,7 @@ fn eval_method_call(
 
     Ok(Some(StackFrame {
         enclosing_fun: Some(fun_info.clone()),
-        enclosing_name: SymbolName(format!("{}::{}", receiver_type_name, meth_name.name)),
+        enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
         caller_pos: Some(receiver_pos.clone()),
         bindings: Bindings::new_with(fun_bindings, type_bindings),

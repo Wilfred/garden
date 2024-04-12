@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
 
+use crate::eval::EnclosingSymbol;
 use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
     eval::{eval_toplevel_defs, Bindings, StackFrame},
@@ -236,7 +237,7 @@ impl Default for Env {
                 exprs_to_eval: vec![],
                 evalled_values: vec![Value::unit()],
                 enclosing_fun: None,
-                enclosing_name: SymbolName("__toplevel__".to_owned()),
+                enclosing_name: EnclosingSymbol::Toplevel,
                 src: SourceString {
                     offset: 0,
                     src: "// __toplevel__".to_owned(),

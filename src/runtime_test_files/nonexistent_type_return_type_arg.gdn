@@ -13,6 +13,6 @@ fun main(args: List<String>): Unit {
 // --> src/runtime_test_files/nonexistent_type_return_type_arg.gdn:1[2m[1m	 fun main()[0m[0m
 // fun main(args: List<String>): Unit {
 // 
-// --> __main_fun__:1[2m[1m	 fun __toplevel__()[0m[0m
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__
 

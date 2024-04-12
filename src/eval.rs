@@ -1769,16 +1769,11 @@ fn enum_value_runtime_type(
     variant_idx: usize,
     payload_value_type: &RuntimeType,
 ) -> Option<RuntimeType> {
-    let Some(type_) = env.get_type_def(type_name) else {
-        return None;
-    };
-    let TypeDef::Enum(enum_info) = type_ else {
+    let TypeDef::Enum(enum_info) = env.get_type_def(type_name)? else {
         return None;
     };
 
-    let Some(variant_info) = enum_info.variants.get(variant_idx) else {
-        return None;
-    };
+    let variant_info = enum_info.variants.get(variant_idx)?;
 
     match &variant_info.payload_hint {
         Some(hint) => {

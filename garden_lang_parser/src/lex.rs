@@ -217,11 +217,11 @@ pub(crate) fn lex_between<'a>(
         return Err(ParseError::Invalid {
             position: Position {
                 start_offset: offset,
-                end_offset: s.len(),
+                end_offset: offset + 1,
                 line_number: lp.from_offset(offset).as_usize(),
                 path: path.to_path_buf(),
             },
-            message: ErrorMessage(format!("Unrecognized syntax: '{}'", &s[offset..])),
+            message: ErrorMessage(format!("Unrecognized syntax: `{}`", &s[offset..offset + 1])),
             additional: vec![],
         });
     }

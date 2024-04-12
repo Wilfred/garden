@@ -4,16 +4,9 @@ fun foo() {
 
 // args: dump-ast
 // expected stderr:
-// Error: Parse error: Unrecognized syntax: '!(1);
-// }
-// 
-// // args: dump-ast
-// '
+// Error: Parse error: Unrecognized syntax: `!`
 // 
 // --> src/parser_test_files/accidental_rust_dbg.gdn:2
 //     dbg!(1);
-//        ^^^^^}
-// ^
-// // args: dump-ast
-// ^^^^^^^^^^^^^^^^^
+//        ^
 

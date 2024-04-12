@@ -304,7 +304,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // TODO: currently failing
     fn test_prelude_unit_tests() {
         let path = assert_cmd::cargo::cargo_bin("garden");
         let mut cmd = Command::new(path);

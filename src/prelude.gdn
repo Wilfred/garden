@@ -95,7 +95,7 @@ test lines {
 // ```
 fun (self: String) split_once(needle: String): Option<List<String>> {
     let i = 0;
-    while ((i + needle.len()) < self.len()) {
+    while ((i + needle.len()) <= self.len()) {
         let substring = self.substring(i, i + needle.len());
         if (substring == needle) {
             return Some([
@@ -117,11 +117,26 @@ test split_once {
     // Needle present once.
     should_equal("abc".split_once("b"), Some(["a", "c"]));
 
+    // Needle present at end
+    should_equal("abc".split_once("c"), Some(["ab", ""]));
+
     // Needle present multiple times.
     should_equal("abcbe".split_once("b"), Some(["a", "cbe"]));
 }
 
-fun (self: String) index_of(substring: String): Option<Int> {
+fun (self: String) index_of(needle: String): Option<Int> {
+    let i = 0;
+    while ((i + needle.len()) <= self.len()) {
+        let substring = self.substring(i, i + needle.len());
+
+        // TODO: better error on ! here
+        if (substring == needle) {
+            return Some(i);
+        }
+
+        i = i + 1;
+    }
+
     None;
 }
 

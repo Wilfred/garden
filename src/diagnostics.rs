@@ -127,9 +127,15 @@ fn format_pos_in_fun(
         res.push_str(&relevant_line);
     } else {
         let line_positions = LinePositions::from(src.as_str());
+
         for span in line_positions.from_offsets(offset, end_offset) {
-            let relevant_line = s_lines[span.line.as_usize()].to_owned();
-            res.push_str(&relevant_line);
+            // .lines() in the Rust stdlib discards the trailing
+            // newline, so we end up with s_lines not having the last line.
+            let Some(relevant_line) = s_lines.get(span.line.as_usize()) else {
+                continue;
+            };
+
+            res.push_str(relevant_line);
 
             if underline {
                 res.push('\n');

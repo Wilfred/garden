@@ -503,8 +503,10 @@ If called with a prefix, stop the previous session."
     map)
   "Keymap for `garden-mode'.")
 
-;; If you want to toggle to garden everywhere, use this:
-;; (global-set-key (kbd "C-c C-z") #'garden-toggle-session)
+(defun garden-enable-globally ()
+  "Add a keybinding for toggling the garden session from any buffer."
+  (interactive)
+  (global-set-key (kbd "C-c C-z") #'garden-toggle-session))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

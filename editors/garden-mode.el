@@ -336,6 +336,11 @@ the user entering a value in the *garden* buffer."
   (let ((buf (garden--active-buffer)))
     (garden--send-run (get-buffer-process buf) string path offset end-offset)))
 
+(defun garden--find-def (name)
+  (let* ((buf (garden--active-buffer))
+         (args `((method . "find_definition") (input . ,name))))
+    (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
+
 (defun garden-help-command ()
   (interactive)
   (garden-send-input ":help"))

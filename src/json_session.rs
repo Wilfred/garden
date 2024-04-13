@@ -20,9 +20,10 @@ use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items_from_span, ParseError};
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 enum Method {
     Run,
+    FindDefinition,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -273,6 +274,11 @@ fn handle_request(
             Err(CommandParseError::NotCommandSyntax) => {
                 handle_eval_request(req, env, session, complete_src)
             }
+        },
+        Method::FindDefinition => Response {
+            kind: ResponseKind::RunCommand,
+            value: Ok("all good".to_owned()),
+            warnings: vec![],
         },
     }
 }

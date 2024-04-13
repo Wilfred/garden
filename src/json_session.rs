@@ -29,8 +29,11 @@ enum Method {
 struct Request {
     method: Method,
     input: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     path: Option<PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     offset: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     end_offset: Option<usize>,
 }
 

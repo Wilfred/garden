@@ -29,6 +29,8 @@
 ;; does in lisp. This could support backticks and triple backticks
 ;; from comments.
 (defun garden-send ()
+  "Send the active region or expression before point to the current garden session,
+evaluate, and display the result."
   (interactive)
   (let (start-pos end-pos)
     (cond
@@ -333,6 +335,7 @@ the user entering a value in the *garden* buffer."
     (garden--process-send-string proc (garden--encode args))))
 
 (defun garden-send-input (string &optional path offset end-offset)
+  "Send STRING to the current garden session for evaluation."
   (let ((buf (garden--active-buffer)))
     (garden--send-run (get-buffer-process buf) string path offset end-offset)))
 

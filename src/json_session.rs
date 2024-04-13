@@ -39,7 +39,7 @@ struct Request {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 pub(crate) enum ResponseKind {
     Evaluate,
     RunCommand,

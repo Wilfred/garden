@@ -1388,12 +1388,23 @@ fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelIt
         Err(e) => e,
     };
 
-    // Try parsing again as an inline expression, but only if this
-    // consumes the rest of the token stream. This ensures that `1 2`
-    // does not parse but `1; 2` does.
     tokens.idx = initial_token_idx;
     match parse_inline_expression(src, tokens) {
-        Ok(expr) if tokens.is_empty() => Ok(ToplevelItem::Expr(ToplevelExpression(expr))),
+        Ok(expr) => {
+            if tokens.is_empty() {
+                // Try parsing again as an inline expression, but only if this
+                // consumes the rest of the token stream. This ensures that `1 2`
+                // does not parse but `1; 2` does.
+                return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
+            };
+
+            if matches!(expr.1, Expression_::Block(_)) {
+                // Also allow standalone blocks at the top level.
+                return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
+            }
+
+            Err(block_expr_err)
+        }
         _ => Err(block_expr_err),
     }
 }

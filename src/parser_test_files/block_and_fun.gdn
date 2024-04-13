@@ -1,0 +1,31 @@
+{}
+
+fun foo() {}
+
+// args: dump-ast
+// expected stdout:
+// Block(
+//     Block {
+//         open_brace: Position { ... },
+//         exprs: [],
+//         close_brace: Position { ... },
+//     },
+// )
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name: Some(
+//             Symbol"foo",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_type: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )

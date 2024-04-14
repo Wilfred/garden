@@ -11,11 +11,12 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::{format_error, format_parse_error, Warning};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
+use crate::values::Value;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::SourceString;
+use garden_lang_parser::ast::{SourceString, SymbolName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items_from_span, ParseError};
 
@@ -276,11 +277,54 @@ fn handle_request(
                 handle_eval_request(req, env, session, complete_src)
             }
         },
-        Method::FindDefinition => Response {
-            kind: ResponseKind::FoundDefinition,
-            value: Ok(format!("def: {}", req.input)),
-            warnings: vec![],
+        Method::FindDefinition => handle_find_def_request(req, env),
+    }
+}
+
+fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
+    let fun_info = match v {
+        Value::Fun { fun_info, .. } => Some(fun_info),
+        Value::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
+        _ => {
+            return Err(format!("`{}` is not a function.", name));
+        }
+    };
+
+    let Some(fun_info) = fun_info else {
+        return Err(format!("`{}` does not have any function information (closure or undocumented built-in function).", name));
+    };
+    let Some(name) = &fun_info.name else {
+        return Err(format!(
+            "`{}` does not have a name symbol (it's a closure).",
+            name
+        ));
+    };
+
+    Ok(name.position.clone())
+}
+
+fn handle_find_def_request(req: Request, env: &mut Env) -> Response {
+    let name = &req.input;
+    let value = match env.file_scope.get(&SymbolName(name.to_owned())) {
+        Some(v) => match position_of_fun(name, v) {
+            Ok(pos) => Ok(pos.as_ide_string()),
+            Err(message) => Err(ResponseError {
+                position: None,
+                message,
+                stack: None,
+            }),
         },
+        None => Err(ResponseError {
+            position: None,
+            message: format!("`{}` is not defined", name),
+            stack: None,
+        }),
+    };
+
+    Response {
+        kind: ResponseKind::FoundDefinition,
+        value,
+        warnings: vec![],
     }
 }
 

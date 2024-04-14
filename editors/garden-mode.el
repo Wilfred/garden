@@ -260,6 +260,8 @@ the user entering a value in the *garden* buffer."
                         ((string= response-kind "run_command")
                          (garden--fontify-command-output
                           (concat response-ok-value "\n")))
+                        ((string= response-kind "found_definition")
+                         (message "found: %S" response-ok-value))
                         ((and (string= response-kind "evaluate")
                               response-ok-value)
                          (unless (string= response-ok-value "void")

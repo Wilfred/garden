@@ -48,6 +48,7 @@ pub(crate) enum ResponseKind {
     Printed,
     // TODO: find a nice way to suspend the interpreter.
     InteractivePrompt,
+    FoundDefinition,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -276,8 +277,8 @@ fn handle_request(
             }
         },
         Method::FindDefinition => Response {
-            kind: ResponseKind::RunCommand,
-            value: Ok("all good".to_owned()),
+            kind: ResponseKind::FoundDefinition,
+            value: Ok(format!("def: {}", req.input)),
             warnings: vec![],
         },
     }

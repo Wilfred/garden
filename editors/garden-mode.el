@@ -4,7 +4,7 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: languages
-;; Package-Requires: ((emacs "25") (s "1.11.0") (flycheck "1"))
+;; Package-Requires: ((emacs "25") (s "1.11.0") (flycheck "1") (dash "2.12.0"))
 ;; Version: 0.3
 
 ;; This file is distributed under the terms of the MIT license.
@@ -15,9 +15,11 @@
 
 ;;; Code:
 
+(require 'dash)
 (require 's)
 (require 'ansi-color)
 (require 'comint)
+(require 'xref)
 
 (defvar garden-executable
   "/home/wilfred/projects/garden/target/debug/garden")
@@ -261,7 +263,7 @@ the user entering a value in the *garden* buffer."
                          (garden--fontify-command-output
                           (concat response-ok-value "\n")))
                         ((string= response-kind "found_definition")
-                         (message "found: %S" response-ok-value))
+                         (garden--visit response-ok-value))
                         ((and (string= response-kind "evaluate")
                               response-ok-value)
                          (unless (string= response-ok-value "void")
@@ -289,6 +291,23 @@ the user entering a value in the *garden* buffer."
                    :warning)))))))
     ;; No newline so far, we haven't seen the whole JSON line yet.
     (setq garden--output output)))
+
+(defun garden--visit (file-and-line-num)
+  "Visit a position expressed in the format \"/path/foo.gdn:123\"."
+  (let* ((parts (s-split ":" file-and-line-num ))
+         (file-name (car parts))
+         (line-num (string-to-number (cl-second parts))))
+    (with-current-buffer
+        (if (s-starts-with-p "/" file-name)
+            (find-file file-name)
+          ;; For prelude and builtins, we don't have a fully qualified
+          ;; path. Switch to the current prelude.gdn or builtins.gdn,
+          ;; if open.
+          (let ((target-buf (--find (string= (buffer-name it) file-name) (buffer-list))))
+            (when target-buf
+              (switch-to-buffer target-buf))))
+      (goto-char (point-min))
+      (forward-line (1- line-num)))))
 
 (defun garden--buffer ()
   "Get the *garden* buffer, creating it if necessary."
@@ -345,6 +364,12 @@ the user entering a value in the *garden* buffer."
   (let* ((buf (garden--active-buffer))
          (args `((method . "find_definition") (input . ,name))))
     (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
+
+(defun garden-go-to-def ()
+  (interactive)
+  (xref-push-marker-stack)
+  (let ((sym-name (symbol-name (symbol-at-point))))
+    (garden--find-def sym-name)))
 
 (defun garden-help-command ()
   (interactive)
@@ -507,8 +532,11 @@ If called with a prefix, stop the previous session."
 
 (defvar garden-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-.") #'garden-go-to-def)
+
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
+
     (define-key map (kbd "C-c C-z") #'garden-toggle-session)
     map)
   "Keymap for `garden-mode'.")

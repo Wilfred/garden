@@ -41,11 +41,25 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
                 MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
             };
 
+            let mut warnings = vec![];
+
+            let recv_type_params: HashSet<_> = meth_info
+                .receiver_type
+                .args
+                .iter()
+                .map(|p| &p.sym.name)
+                .collect();
+            warnings.extend(check_type_hint(
+                &meth_info.receiver_type,
+                &recv_type_params,
+                env,
+            ));
+
             if let Some(fun_info) = fun_info {
-                check_fun_info(fun_info, env, Some(&meth_info.receiver_sym))
-            } else {
-                vec![]
+                warnings.extend(check_fun_info(fun_info, env, Some(&meth_info.receiver_sym)));
             }
+
+            warnings
         }
         Definition_::Test(test_info) => check_free_variables_block(&test_info.body, env),
         Definition_::Enum(enum_info) => {

@@ -1,0 +1,12 @@
+fun (self: Option<NoSuchType>) foo() {
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: No such type: NoSuchType
+// 
+// --> src/check_test_files/unbound_type_in_method_receiver_generic.gdn:1
+// fun (self: Option<NoSuchType>) foo() {
+//                   ^^^^^^^^^^
+

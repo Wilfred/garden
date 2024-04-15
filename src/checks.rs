@@ -43,15 +43,13 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
 
             let mut warnings = vec![];
 
-            let recv_type_params: HashSet<_> = meth_info
-                .receiver_type
-                .args
-                .iter()
-                .map(|p| &p.sym.name)
-                .collect();
+            let bound_type_params: HashSet<_> = match fun_info {
+                Some(fun_info) => fun_info.type_params.iter().map(|p| &p.name).collect(),
+                None => HashSet::default(),
+            };
             warnings.extend(check_type_hint(
                 &meth_info.receiver_type,
-                &recv_type_params,
+                &bound_type_params,
                 env,
             ));
 

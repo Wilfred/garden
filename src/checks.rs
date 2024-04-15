@@ -128,15 +128,17 @@ fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String 
     )
 }
 
+/// Check that `type_hint` mentions a defined type, and that it has
+/// the correct number of type arguments.
 fn check_type_hint(
     type_hint: &TypeHint,
-    type_params: &HashSet<&TypeName>,
+    bound_type_params: &HashSet<&TypeName>,
     env: &Env,
 ) -> Vec<Warning> {
     let mut warnings = vec![];
 
     match env.get_type_def(&type_hint.sym.name) {
-        _ if type_params.contains(&type_hint.sym.name) => {
+        _ if bound_type_params.contains(&type_hint.sym.name) => {
             if let Some(first_arg) = type_hint.args.first() {
                 warnings.push(Warning {
                     message: "Generic type arguments cannot take parameters.".to_owned(),
@@ -196,7 +198,7 @@ fn check_type_hint(
     }
 
     for type_arg in &type_hint.args {
-        warnings.extend(check_type_hint(type_arg, type_params, env));
+        warnings.extend(check_type_hint(type_arg, bound_type_params, env));
     }
 
     warnings

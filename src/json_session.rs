@@ -11,12 +11,13 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::{format_error, format_parse_error, Warning};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
+use crate::types::TypeDef;
 use crate::values::Value;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName};
+use garden_lang_parser::ast::{SourceString, SymbolName, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items_from_span, ParseError};
 
@@ -281,6 +282,26 @@ fn handle_request(
     }
 }
 
+fn position_of_name(name: &str, env: &Env) -> Result<Position, String> {
+    if let Some(type_) = env.get_type_def(&TypeName {
+        name: name.to_owned(),
+    }) {
+        let pos = match type_ {
+            TypeDef::Builtin(_) => return Err(format!("`{}` is a built-in type.", name)),
+            TypeDef::Enum(enum_info) => &enum_info.name_sym.position,
+            TypeDef::Struct(struct_info) => &struct_info.name_sym.position,
+        };
+
+        return Ok(pos.clone());
+    }
+
+    if let Some(v) = env.file_scope.get(&SymbolName(name.to_owned())) {
+        return position_of_fun(name, v);
+    }
+
+    Err(format!("`{}` is not a function or type.", name))
+}
+
 fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
     let fun_info = match v {
         Value::Fun { fun_info, .. } => Some(fun_info),
@@ -305,18 +326,12 @@ fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
 
 fn handle_find_def_request(req: Request, env: &mut Env) -> Response {
     let name = &req.input;
-    let value = match env.file_scope.get(&SymbolName(name.to_owned())) {
-        Some(v) => match position_of_fun(name, v) {
-            Ok(pos) => Ok(pos.as_ide_string()),
-            Err(message) => Err(ResponseError {
-                position: None,
-                message,
-                stack: None,
-            }),
-        },
-        None => Err(ResponseError {
+
+    let value = match position_of_name(name, env) {
+        Ok(pos) => Ok(pos.as_ide_string()),
+        Err(message) => Err(ResponseError {
             position: None,
-            message: format!("`{}` is not defined", name),
+            message,
             stack: None,
         }),
     };

@@ -18,5 +18,5 @@ fun foo(): Int<String> {
 // 
 // --> src/check_test_files/missing_type_arg_list.gdn:5
 // fun foo(): Int<String> {
-//            ^^^^^^^^^^^
+//                ^^^^^^
 

@@ -145,6 +145,11 @@ fn check_type_hint(
             }
         }
         Some(type_) => {
+            let type_args_pos = match type_hint.args.last() {
+                Some(arg) => arg.sym.position.clone(),
+                None => type_hint.position.clone(),
+            };
+
             match type_ {
                 TypeDef::Builtin(b) => {
                     let num_expected = match b {
@@ -159,7 +164,7 @@ fn check_type_hint(
                     if num_expected != type_hint.args.len() {
                         warnings.push(Warning {
                             message: format_type_arity_error(type_hint, num_expected),
-                            position: type_hint.position.clone(),
+                            position: type_args_pos,
                         });
                     }
                 }
@@ -170,7 +175,7 @@ fn check_type_hint(
                                 type_hint,
                                 enum_info.type_params.len(),
                             ),
-                            position: type_hint.position.clone(),
+                            position: type_args_pos,
                         });
                     }
                 }
@@ -181,7 +186,7 @@ fn check_type_hint(
                                 type_hint,
                                 struct_info.type_params.len(),
                             ),
-                            position: type_hint.position.clone(),
+                            position: type_args_pos,
                         });
                     }
                 }

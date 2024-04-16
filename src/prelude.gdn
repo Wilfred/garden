@@ -32,15 +32,9 @@ enum Result<T, E> {
 // ```
 // dbg([1, 2]);
 // ```
-fun dbg(value): Unit {
+fun<T> dbg(value: T): Unit {
     println(string_repr(value));
 }
-// TODO: write with generics, like this:
-//
-// fun<T> dbg(value: T): Unit {
-//     println(string_repr(value));
-// }
-
 // If this value is `Ok`, unwrap it, otherwise error.
 fun<T, E> (self: Result<T, E>) or_error(): T {
     match (self) {

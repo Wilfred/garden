@@ -11,8 +11,14 @@ foo()();
 //                 Variable(
 //                     Symbol"foo",
 //                 ),
+//                 OnceCell(
+//                     <uninit>,
+//                 ),
 //             ),
 //             [],
+//         ),
+//         OnceCell(
+//             <uninit>,
 //         ),
 //     ),
 //     [],

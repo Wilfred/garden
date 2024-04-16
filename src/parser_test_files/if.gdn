@@ -8,6 +8,9 @@ if (True) {}
 //         Variable(
 //             Symbol"True",
 //         ),
+//         OnceCell(
+//             <uninit>,
+//         ),
 //     ),
 //     Block {
 //         open_brace: Position { ... },

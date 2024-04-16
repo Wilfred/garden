@@ -9,6 +9,9 @@ let A = 1;
 //         IntLiteral(
 //             1,
 //         ),
+//         OnceCell(
+//             <uninit>,
+//         ),
 //     ),
 // )
 

@@ -9,11 +9,17 @@
 //             IntLiteral(
 //                 1,
 //             ),
+//             OnceCell(
+//                 <uninit>,
+//             ),
 //         ),
 //         Expression(
 //             Position { ... },
 //             IntLiteral(
 //                 2,
+//             ),
+//             OnceCell(
+//                 <uninit>,
 //             ),
 //         ),
 //     ],

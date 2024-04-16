@@ -2336,7 +2336,7 @@ fn eval_builtin_method_call(
 
 pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.pop() {
-        if let Some((done_children, Expression(expr_position, expr_))) =
+        if let Some((done_children, Expression(expr_position, expr_, _))) =
             stack_frame.exprs_to_eval.pop()
         {
             if session.interrupted.load(Ordering::SeqCst) {

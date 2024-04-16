@@ -27,19 +27,6 @@ enum Result<T, E> {
     Err(E),
 }
 
-// If this value is `Ok`, unwrap it, otherwise error.
-fun<T, E> (self: Result<T, E>) unwrap(): T {
-    match (self) {
-        Ok(v) => v,
-        Err(e) => error("Called .unwrap() on an Err.")
-    }
-}
-
-test unwrap {
-    should_equal(Ok("foo").unwrap(), "foo");
-}
-
-
 // Write an arbitrary value to stdout, along with debugging metadata.
 //
 // ```
@@ -54,14 +41,16 @@ fun dbg(value): Unit {
 //     println(string_repr(value));
 // }
 
-// Unwrap a value that is `Ok`, or terminate with an error.
-//
-// TODO: support generic types in return position.
-fun<T> (self: Result<T, E>) or_error() {
+// If this value is `Ok`, unwrap it, otherwise error.
+fun<T, E> (self: Result<T, E>) or_error(): T {
     match (self) {
         Ok(v) => v
-        Err(e) => error(string_repr(e))
+        Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
     }
+}
+
+test or_error {
+    should_equal(Ok("foo").or_error(), "foo");
 }
 
 enum NoValue {}

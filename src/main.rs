@@ -27,6 +27,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
+use owo_colors::OwoColorize as _;
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error};
 use crate::env::Env;
@@ -180,7 +181,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                         // TODO: should we allow tests to keep going
                         // after the first failure?
                         // TODO: print incremental progress as tests run.
-                        println!("All {} test(s) passed.", summary.tests_passed);
+                        println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
                         succeeded = true;
                     }
                     Err(EvalError::ResumableError(position, e)) => {

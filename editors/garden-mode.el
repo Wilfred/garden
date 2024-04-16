@@ -433,7 +433,8 @@ the user entering a value in the *garden* buffer."
 
     (,(regexp-opt
        '("error" "list_directory" "path_exists" "print" "println"
-         "read_file" "shell" "string_repr" "working_directory" "write_file")
+         "read_file" "shell" "should_equal" "string_repr"
+         "working_directory" "write_file")
        'symbols)
      . font-lock-builtin-face)
 

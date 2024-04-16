@@ -108,7 +108,7 @@ fn parse_integer(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let token = require_a_token(tokens, "integer literal")?;
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
-        Ok(Expression(token.position, Expression_::IntLiteral(i)))
+        Ok(Expression::new(token.position, Expression_::IntLiteral(i)))
     } else {
         Err(ParseError::Invalid {
             position: token.position,
@@ -120,7 +120,7 @@ fn parse_integer(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
 
 fn parse_variable_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
-    Ok(Expression(
+    Ok(Expression::new(
         variable.position.clone(),
         Expression_::Variable(variable),
     ))
@@ -142,7 +142,7 @@ fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression,
     let items = parse_comma_separated_exprs(src, tokens, "]")?;
     let close_bracket = require_token(tokens, "]")?;
 
-    Ok(Expression(
+    Ok(Expression::new(
         Position::merge(open_bracket.position, close_bracket.position),
         Expression_::ListLiteral(items),
     ))
@@ -164,7 +164,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         src: src[start_offset..end_offset].to_owned(),
     };
 
-    Ok(Expression(
+    Ok(Expression::new(
         fun_keyword.position,
         Expression_::FunLiteral(FunInfo {
             src_string,
@@ -207,7 +207,7 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
         None
     };
 
-    Ok(Expression(
+    Ok(Expression::new(
         if_token.position,
         Expression_::If(Box::new(condition), then_body, else_body),
     ))
@@ -222,7 +222,7 @@ fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
 
     let body = parse_block(src, tokens)?;
 
-    Ok(Expression(
+    Ok(Expression::new(
         while_token.position,
         Expression_::While(Box::new(condition), body),
     ))
@@ -233,12 +233,15 @@ fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 
     if peeked_symbol_is(tokens, ";") {
         let _ = require_token(tokens, ";")?;
-        return Ok(Expression(return_token.position, Expression_::Return(None)));
+        return Ok(Expression::new(
+            return_token.position,
+            Expression_::Return(None),
+        ));
     }
 
     let expr = parse_inline_expression(src, tokens)?;
     let _ = require_end_token(tokens, ";")?;
-    Ok(Expression(
+    Ok(Expression::new(
         return_token.position,
         Expression_::Return(Some(Box::new(expr))),
     ))
@@ -289,7 +292,7 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     if let Some(token) = tokens.peek() {
         if token.text == "{" {
             let exprs = parse_block(src, tokens)?;
-            return Ok(Expression(token.position, Expression_::Block(exprs)));
+            return Ok(Expression::new(token.position, Expression_::Block(exprs)));
         }
 
         if token.text == "(" {
@@ -316,7 +319,7 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 
         if token.text.starts_with('\"') {
             tokens.pop();
-            return Ok(Expression(
+            return Ok(Expression::new(
                 token.position,
                 Expression_::StringLiteral(unescape_string(token.text)),
             ));
@@ -381,7 +384,7 @@ fn parse_struct_literal(src: &str, tokens: &mut TokenStream) -> Result<Expressio
 
     let close_brace = require_token(tokens, "}")?;
 
-    Ok(Expression(
+    Ok(Expression::new(
         Position::merge(open_brace.position, close_brace.position),
         Expression_::StructLiteral(name, fields),
     ))
@@ -417,7 +420,7 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
 
     require_token(tokens, "}")?;
 
-    Ok(Expression(
+    Ok(Expression::new(
         match_keyword.position,
         Expression_::Match(Box::new(scrutinee), cases),
     ))
@@ -505,7 +508,8 @@ fn parse_simple_expression_with_trailing(
         match tokens.peek() {
             Some(token) if token.text == "(" => {
                 let arguments = parse_call_arguments(src, tokens)?;
-                expr = Expression(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
+                expr =
+                    Expression::new(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
@@ -514,12 +518,12 @@ fn parse_simple_expression_with_trailing(
                 if peeked_symbol_is(tokens, "(") {
                     // TODO: just treat a method call as a call of a dot access.
                     let arguments = parse_call_arguments(src, tokens)?;
-                    expr = Expression(
+                    expr = Expression::new(
                         expr.0.clone(),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
                     );
                 } else {
-                    expr = Expression(
+                    expr = Expression::new(
                         expr.0.clone(),
                         Expression_::DotAccess(Box::new(expr), variable),
                     );
@@ -654,7 +658,7 @@ fn parse_simple_expression_or_binop(
             tokens.pop();
 
             let rhs_expr = parse_simple_expression_with_trailing(src, tokens)?;
-            expr = Expression(
+            expr = Expression::new(
                 expr.0.clone(),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
             );
@@ -1358,7 +1362,7 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
     let expr = parse_inline_expression(src, tokens)?;
     let _ = require_end_token(tokens, ";")?;
 
-    Ok(Expression(
+    Ok(Expression::new(
         let_token.position, // TODO: this should be a larger span.
         Expression_::Let(variable, Box::new(expr)),
     ))
@@ -1371,7 +1375,7 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let expr = parse_inline_expression(src, tokens)?;
     let _ = require_end_token(tokens, ";")?;
 
-    Ok(Expression(
+    Ok(Expression::new(
         variable.position.clone(),
         Expression_::Assign(variable, Box::new(expr)),
     ))

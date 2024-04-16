@@ -260,6 +260,12 @@ pub enum Expression_ {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression(pub Position, pub Expression_);
 
+impl Expression {
+    pub fn new(position: Position, expr_: Expression_) -> Self {
+        Self(position, expr_)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Block {
     pub open_brace: Position,

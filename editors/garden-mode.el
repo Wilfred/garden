@@ -430,11 +430,15 @@ the user entering a value in the *garden* buffer."
        '("let" "fun" "enum" "struct" "if" "else" "while" "return" "test" "match")
        'symbols)
      . font-lock-keyword-face)
+
     (,(regexp-opt
        '("error" "list_directory" "path_exists" "print" "println"
          "read_file" "shell" "string_repr" "working_directory" "write_file")
        'symbols)
      . font-lock-builtin-face)
+
+    (,(regexp-opt '("self") 'symbols)
+     . font-lock-variable-name-face)
 
     ;; Assume names in CamelCase are types. Require a type name to
     ;; start with an uppercase letter, and at least one lowercase

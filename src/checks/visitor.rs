@@ -19,7 +19,11 @@ pub(crate) trait Visitor {
     }
 
     fn visit_expr(&mut self, expr: &Expression) {
-        match &expr.1 {
+        self.visit_expr_(&expr.1);
+    }
+
+    fn visit_expr_(&mut self, expr_: &Expression_) {
+        match expr_ {
             Expression_::Match(scrutinee, cases) => {
                 self.visit_expr_match(scrutinee.as_ref(), cases);
             }

@@ -20,6 +20,7 @@ mod syntax_check;
 mod types;
 mod values;
 mod version;
+mod visitor;
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};

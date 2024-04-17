@@ -5,9 +5,8 @@ use garden_lang_parser::{
     position::Position,
 };
 
+use crate::visitor::Visitor;
 use crate::{diagnostics::Warning, env::Env};
-
-use super::visitor::Visitor;
 
 pub(crate) fn check_free_variables(
     fun_info: &FunInfo,

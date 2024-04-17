@@ -1,7 +1,6 @@
 mod free_variables;
 mod hints;
 mod struct_fields;
-mod visitor;
 
 use std::collections::HashSet;
 

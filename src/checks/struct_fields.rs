@@ -2,9 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{Block, Expression, Symbol, TypeSymbol};
 
+use crate::visitor::Visitor;
 use crate::{diagnostics::Warning, env::Env, types::TypeDef};
-
-use super::visitor::Visitor;
 
 struct StructFieldVisitor<'a> {
     env: &'a Env,

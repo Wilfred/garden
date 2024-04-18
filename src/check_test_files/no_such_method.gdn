@@ -1,0 +1,6 @@
+{
+    let parts = ["a"];
+    parts.nth(0);
+}
+
+// args: check

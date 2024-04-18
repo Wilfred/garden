@@ -1,6 +1,7 @@
 mod free_variables;
 mod hints;
 mod struct_fields;
+mod type_checker;
 
 use std::collections::HashSet;
 
@@ -10,6 +11,7 @@ use crate::eval::eval_defs;
 use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, Symbol};
 
 use self::hints::{check_type_hint, check_types_exist};
+use self::type_checker::check_types;
 use self::{
     free_variables::{check_free_variables, check_free_variables_block},
     struct_fields::check_struct_fields,
@@ -89,6 +91,7 @@ fn check_fun_info(fun_info: &FunInfo, env: &Env, receiver_sym: Option<&Symbol>) 
     warnings.extend(check_types_exist(fun_info, env));
     warnings.extend(check_free_variables(fun_info, env, receiver_sym));
     warnings.extend(check_struct_fields(&fun_info.body, env));
+    warnings.extend(check_types(fun_info));
 
     warnings
 }

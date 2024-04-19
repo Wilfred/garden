@@ -1,5 +1,6 @@
 use garden_lang_parser::ast::{
-    Block, Expression, Expression_, FunInfo, Pattern, Symbol, TypeSymbol,
+    Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
+    MethodKind, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -8,6 +9,45 @@ use garden_lang_parser::ast::{
 /// hook in to specific variants. For example, looking for
 /// occurrences of string literals anywhere in a function body.
 pub(crate) trait Visitor {
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
+        match item {
+            ToplevelItem::Def(def) => self.visit_def(def),
+            ToplevelItem::Expr(expr) => self.visit_expr(&expr.0),
+        }
+    }
+
+    fn visit_def(&mut self, def: &Definition) {
+        self.visit_def_(&def.2);
+    }
+
+    fn visit_def_(&mut self, def_: &Definition_) {
+        match &def_ {
+            Definition_::Fun(_, fun_info) => self.visit_fun_info(fun_info),
+            Definition_::Method(method_info) => self.visit_method_info(method_info),
+            Definition_::Test(test_info) => self.visit_test_info(test_info),
+            Definition_::Enum(enum_info) => self.visit_enum_info(enum_info),
+            Definition_::Struct(struct_info) => self.visit_struct_info(struct_info),
+        }
+    }
+
+    fn visit_method_info(&mut self, method_info: &MethodInfo) {
+        let fun_info = match &method_info.kind {
+            MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
+            MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
+        };
+        if let Some(fun_info) = fun_info {
+            self.visit_fun_info(fun_info);
+        }
+    }
+
+    fn visit_test_info(&mut self, test_info: &TestInfo) {
+        self.visit_block(&test_info.body);
+    }
+
+    fn visit_enum_info(&mut self, _enum_info: &EnumInfo) {}
+
+    fn visit_struct_info(&mut self, _struct_info: &StructInfo) {}
+
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         self.visit_block(&fun_info.body);
     }

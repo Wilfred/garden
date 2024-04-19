@@ -12,10 +12,7 @@ use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, Symb
 
 use self::hints::{check_type_hint, check_types_exist};
 use self::type_checker::check_types;
-use self::{
-    free_variables::{check_free_variables, check_free_variables_block},
-    struct_fields::check_struct_fields,
-};
+use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
 
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
     let mut warnings = vec![];
@@ -32,6 +29,8 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
     // (e.g. type is defined).
     let mut env = Env::default();
     eval_defs(&definitions, &mut env);
+
+    warnings.extend(check_free_variables(items, &env));
 
     for def in &definitions {
         warnings.extend(check_def(def, &env));
@@ -67,7 +66,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
 
             warnings
         }
-        Definition_::Test(test_info) => check_free_variables_block(&test_info.body, env),
+        Definition_::Test(_) => vec![],
         Definition_::Enum(enum_info) => {
             let type_params: HashSet<_> = enum_info.type_params.iter().map(|p| &p.name).collect();
 
@@ -97,7 +96,6 @@ fn check_fun_info(fun_info: &FunInfo, env: &Env, receiver_sym: Option<&Symbol>) 
     let mut warnings = vec![];
 
     warnings.extend(check_types_exist(fun_info, env));
-    warnings.extend(check_free_variables(fun_info, env, receiver_sym));
     warnings.extend(check_struct_fields(&fun_info.body, env));
     warnings.extend(check_types(fun_info));
 

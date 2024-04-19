@@ -39,7 +39,7 @@ pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<War
                 Definition_::Enum(_) => {}
                 Definition_::Struct(_) => {}
             },
-            ToplevelItem::Expr(expr) => {}
+            ToplevelItem::Expr(expr) => warnings.extend(check_free_variables_expr(&expr.0, env)),
         }
     }
 
@@ -72,6 +72,22 @@ fn check_free_variables_fun_info(
 fn check_free_variables_block(block: &Block, env: &Env) -> Vec<Warning> {
     let mut visitor = FreeVariableVisitor::new(env);
     visitor.visit_block(block);
+
+    let mut warnings = vec![];
+
+    for (free_sym, position) in visitor.free {
+        warnings.push(Warning {
+            message: format!("Unbound symbol: {free_sym}"),
+            position,
+        });
+    }
+
+    warnings
+}
+
+fn check_free_variables_expr(expr: &Expression, env: &Env) -> Vec<Warning> {
+    let mut visitor = FreeVariableVisitor::new(env);
+    visitor.visit_expr(expr);
 
     let mut warnings = vec![];
 

@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::eval_defs;
-use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, Symbol, ToplevelItem};
+use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, ToplevelItem};
 
 use self::hints::{check_type_hint, check_types_exist};
 use self::type_checker::check_types;
@@ -41,7 +41,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
 
 pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     match &def.2 {
-        Definition_::Fun(_, fun_info) => check_fun_info(fun_info, env, None),
+        Definition_::Fun(_, fun_info) => check_fun_info(fun_info, env),
         Definition_::Method(meth_info) => {
             let fun_info = match &meth_info.kind {
                 MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
@@ -61,7 +61,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
             ));
 
             if let Some(fun_info) = fun_info {
-                warnings.extend(check_fun_info(fun_info, env, Some(&meth_info.receiver_sym)));
+                warnings.extend(check_fun_info(fun_info, env));
             }
 
             warnings
@@ -92,7 +92,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     }
 }
 
-fn check_fun_info(fun_info: &FunInfo, env: &Env, receiver_sym: Option<&Symbol>) -> Vec<Warning> {
+fn check_fun_info(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
     warnings.extend(check_types_exist(fun_info, env));

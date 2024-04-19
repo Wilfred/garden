@@ -57,48 +57,19 @@ fn check_free_variables_fun_info(
     }
 
     visitor.visit_fun_info(fun_info);
-
-    let mut warnings = vec![];
-    for (free_sym, position) in visitor.free {
-        warnings.push(Warning {
-            message: format!("Unbound symbol: {free_sym}"),
-            position,
-        });
-    }
-
-    warnings
+    visitor.warnings()
 }
 
 fn check_free_variables_block(block: &Block, env: &Env) -> Vec<Warning> {
     let mut visitor = FreeVariableVisitor::new(env);
     visitor.visit_block(block);
-
-    let mut warnings = vec![];
-
-    for (free_sym, position) in visitor.free {
-        warnings.push(Warning {
-            message: format!("Unbound symbol: {free_sym}"),
-            position,
-        });
-    }
-
-    warnings
+    visitor.warnings()
 }
 
 fn check_free_variables_expr(expr: &Expression, env: &Env) -> Vec<Warning> {
     let mut visitor = FreeVariableVisitor::new(env);
     visitor.visit_expr(expr);
-
-    let mut warnings = vec![];
-
-    for (free_sym, position) in visitor.free {
-        warnings.push(Warning {
-            message: format!("Unbound symbol: {free_sym}"),
-            position,
-        });
-    }
-
-    warnings
+    visitor.warnings()
 }
 
 struct FreeVariableVisitor<'a> {
@@ -114,6 +85,18 @@ impl FreeVariableVisitor<'_> {
             bound_scopes: vec![HashSet::new()],
             free: HashMap::new(),
         }
+    }
+
+    fn warnings(&self) -> Vec<Warning> {
+        let mut warnings = vec![];
+        for (free_sym, position) in &self.free {
+            warnings.push(Warning {
+                message: format!("Unbound symbol: {free_sym}"),
+                position: position.clone(),
+            });
+        }
+
+        warnings
     }
 
     fn is_bound(&self, name: &SymbolName) -> bool {

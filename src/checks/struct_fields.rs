@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use garden_lang_parser::ast::{Block, Expression, Symbol, TypeSymbol};
+use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
 
 use crate::visitor::Visitor;
 use crate::{diagnostics::Warning, env::Env, types::TypeDef};
@@ -63,13 +63,13 @@ impl Visitor for StructFieldVisitor<'_> {
     }
 }
 
-pub(crate) fn check_struct_fields(block: &Block, env: &Env) -> Vec<Warning> {
+pub(crate) fn check_struct_fields(items: &[ToplevelItem], env: &Env) -> Vec<Warning> {
     let mut visitor = StructFieldVisitor {
         env,
         warnings: vec![],
     };
-
-    visitor.visit_block(block);
-
+    for item in items {
+        visitor.visit_toplevel_item(item);
+    }
     visitor.warnings
 }

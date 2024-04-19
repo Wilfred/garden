@@ -31,6 +31,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
     eval_defs(&definitions, &mut env);
 
     warnings.extend(check_free_variables(items, &env));
+    warnings.extend(check_struct_fields(items, &env));
 
     for def in &definitions {
         warnings.extend(check_def(def, &env));
@@ -96,7 +97,6 @@ fn check_fun_info(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
     let mut warnings = vec![];
 
     warnings.extend(check_types_exist(fun_info, env));
-    warnings.extend(check_struct_fields(&fun_info.body, env));
     warnings.extend(check_types(fun_info));
 
     warnings

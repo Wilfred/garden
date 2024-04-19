@@ -69,7 +69,7 @@ fn check_free_variables_fun_info(
     warnings
 }
 
-pub(crate) fn check_free_variables_block(block: &Block, env: &Env) -> Vec<Warning> {
+fn check_free_variables_block(block: &Block, env: &Env) -> Vec<Warning> {
     let mut visitor = FreeVariableVisitor::new(env);
     visitor.visit_block(block);
 

@@ -8,7 +8,7 @@ use std::collections::HashSet;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::eval_defs;
-use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, Symbol};
+use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, Symbol, ToplevelItem};
 
 use self::hints::{check_type_hint, check_types_exist};
 use self::type_checker::check_types;
@@ -17,15 +17,23 @@ use self::{
     struct_fields::check_struct_fields,
 };
 
-pub(crate) fn check_defs(definitions: &[Definition]) -> Vec<Warning> {
+pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
+    let mut warnings = vec![];
+
+    let mut definitions: Vec<Definition> = vec![];
+    for item in items {
+        if let ToplevelItem::Def(def) = item {
+            definitions.push(def.clone());
+        }
+    }
+
     // TODO: define separate checks for things we can check without an
     // environment, and checks that are relative to a given environment
     // (e.g. type is defined).
     let mut env = Env::default();
-    eval_defs(definitions, &mut env);
+    eval_defs(&definitions, &mut env);
 
-    let mut warnings = vec![];
-    for def in definitions {
+    for def in &definitions {
         warnings.extend(check_def(def, &env));
     }
 

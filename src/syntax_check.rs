@@ -2,15 +2,12 @@ use serde::Serialize;
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{SourceString, ToplevelItem},
-    diagnostics::ErrorMessage,
-    parse_toplevel_items,
-    position::Position,
+    ast::SourceString, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
     ParseError,
 };
 
 use crate::{
-    checks::check_defs,
+    checks::check_toplevel_items,
     diagnostics::{format_parse_error, Warning},
 };
 
@@ -70,17 +67,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         }
     };
 
-    let mut defs = vec![];
-    for item in items {
-        match item {
-            ToplevelItem::Def(def) => {
-                defs.push(def);
-            }
-            ToplevelItem::Expr(_) => {}
-        }
-    }
-
-    for Warning { message, position } in check_defs(&defs) {
+    for Warning { message, position } in check_toplevel_items(&items) {
         diagnostics.push(CheckDiagnostic {
             position: position.clone(),
             line_number: position.line_number + 1,

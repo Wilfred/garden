@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::{
     ast::{
-        Block, Definition_, Expression, FunInfo, MethodKind, Pattern, Symbol, SymbolName,
+        Block, Definition, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName,
         ToplevelItem,
     },
     position::Position,
@@ -12,63 +12,10 @@ use crate::visitor::Visitor;
 use crate::{diagnostics::Warning, env::Env};
 
 pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Warning> {
-    let mut warnings = vec![];
-
+    let mut visitor = FreeVariableVisitor::new(env);
     for item in items {
-        match item {
-            ToplevelItem::Def(def) => match &def.2 {
-                Definition_::Fun(_, fun_info) => {
-                    warnings.extend(check_free_variables_fun_info(fun_info, env, None))
-                }
-                Definition_::Method(method_info) => {
-                    let fun_info = match &method_info.kind {
-                        MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
-                        MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
-                    };
-                    if let Some(fun_info) = fun_info {
-                        warnings.extend(check_free_variables_fun_info(
-                            fun_info,
-                            env,
-                            Some(&method_info.receiver_sym),
-                        ));
-                    }
-                }
-                Definition_::Test(test_info) => {
-                    warnings.extend(check_free_variables_block(&test_info.body, env));
-                }
-                Definition_::Enum(_) => {}
-                Definition_::Struct(_) => {}
-            },
-            ToplevelItem::Expr(expr) => warnings.extend(check_free_variables_expr(&expr.0, env)),
-        }
+        visitor.visit_toplevel_item(item);
     }
-
-    warnings
-}
-
-fn check_free_variables_fun_info(
-    fun_info: &FunInfo,
-    env: &Env,
-    receiver_sym: Option<&Symbol>,
-) -> Vec<Warning> {
-    let mut visitor = FreeVariableVisitor::new(env);
-    if let Some(receiver_sym) = receiver_sym {
-        visitor.add_binding(&receiver_sym.name);
-    }
-
-    visitor.visit_fun_info(fun_info);
-    visitor.warnings()
-}
-
-fn check_free_variables_block(block: &Block, env: &Env) -> Vec<Warning> {
-    let mut visitor = FreeVariableVisitor::new(env);
-    visitor.visit_block(block);
-    visitor.warnings()
-}
-
-fn check_free_variables_expr(expr: &Expression, env: &Env) -> Vec<Warning> {
-    let mut visitor = FreeVariableVisitor::new(env);
-    visitor.visit_expr(expr);
     visitor.warnings()
 }
 
@@ -141,6 +88,16 @@ impl FreeVariableVisitor<'_> {
 }
 
 impl Visitor for FreeVariableVisitor<'_> {
+    fn visit_def(&mut self, def: &Definition) {
+        self.push_scope();
+        if let Definition_::Method(method_info) = &def.2 {
+            self.add_binding(&method_info.receiver_sym.name);
+        }
+
+        self.visit_def_(&def.2);
+        self.pop_scope();
+    }
+
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         self.push_scope();
         for param in &fun_info.params {

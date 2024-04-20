@@ -4,6 +4,7 @@ use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, ToplevelI
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
+use crate::eval::Bindings;
 use crate::runtime_type::RuntimeType;
 use crate::visitor::Visitor;
 
@@ -44,8 +45,10 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_block(&mut self, block: &Block) {
         assign_expr_ids(block);
 
+        let mut bindings = Bindings::default();
+
         // check_block recurses, so don't recurse in the visitor
-        check_block(block, self.env, &mut self.inferred);
+        check_block(block, self.env, &mut self.inferred, &mut bindings);
     }
 }
 
@@ -70,22 +73,32 @@ impl Visitor for AssignExprIds {
     }
 }
 
-fn check_block(block: &Block, env: &mut Env, inferred: &mut HashMap<usize, RuntimeType>) {
+fn check_block(
+    block: &Block,
+    env: &mut Env,
+    inferred: &mut HashMap<usize, RuntimeType>,
+    bindings: &mut Bindings,
+) {
     for expr in &block.exprs {
-        check_expr(expr, env, inferred);
+        check_expr(expr, env, inferred, bindings);
     }
 }
 
-fn check_expr(expr: &Expression, env: &mut Env, inferred: &mut HashMap<usize, RuntimeType>) {
+fn check_expr(
+    expr: &Expression,
+    env: &mut Env,
+    inferred: &mut HashMap<usize, RuntimeType>,
+    bindings: &mut Bindings,
+) {
     match &expr.1 {
         Expression_::Match(_, _) => {}
         Expression_::If(_, _, _) => {}
         Expression_::While(_, _) => {}
         Expression_::Assign(_sym, expr) => {
-            check_expr(expr, env, inferred);
+            check_expr(expr, env, inferred, bindings);
         }
         Expression_::Let(_sym, expr) => {
-            check_expr(expr, env, inferred);
+            check_expr(expr, env, inferred, bindings);
         }
         Expression_::Return(_) => {}
         Expression_::IntLiteral(_) => {}
@@ -98,6 +111,6 @@ fn check_expr(expr: &Expression, env: &mut Env, inferred: &mut HashMap<usize, Ru
         Expression_::MethodCall(_, _, _) => {}
         Expression_::DotAccess(_, _) => {}
         Expression_::FunLiteral(_) => {}
-        Expression_::Block(block) => check_block(block, env, inferred),
+        Expression_::Block(block) => check_block(block, env, inferred, bindings),
     }
 }

@@ -10,7 +10,7 @@ use crate::env::Env;
 use crate::eval::eval_defs;
 use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, ToplevelItem};
 
-use self::hints::{check_type_hint, check_types_exist};
+use self::hints::{check_hints, check_type_hint};
 use self::type_checker::check_types;
 use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
 
@@ -32,6 +32,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
 
     warnings.extend(check_free_variables(items, &env));
     warnings.extend(check_struct_fields(items, &env));
+    warnings.extend(check_hints(items, &env));
 
     for def in &definitions {
         warnings.extend(check_def(def, &env));
@@ -42,7 +43,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
 
 pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     match &def.2 {
-        Definition_::Fun(_, fun_info) => check_fun_info(fun_info, env),
+        Definition_::Fun(_, fun_info) => check_fun_info(fun_info),
         Definition_::Method(meth_info) => {
             let fun_info = match &meth_info.kind {
                 MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
@@ -62,7 +63,7 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
             ));
 
             if let Some(fun_info) = fun_info {
-                warnings.extend(check_fun_info(fun_info, env));
+                warnings.extend(check_fun_info(fun_info));
             }
 
             warnings
@@ -93,10 +94,9 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
     }
 }
 
-fn check_fun_info(fun_info: &FunInfo, env: &Env) -> Vec<Warning> {
+fn check_fun_info(fun_info: &FunInfo) -> Vec<Warning> {
     let mut warnings = vec![];
 
-    warnings.extend(check_types_exist(fun_info, env));
     warnings.extend(check_types(fun_info));
 
     warnings

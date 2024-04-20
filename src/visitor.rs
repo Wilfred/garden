@@ -1,6 +1,6 @@
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
-    MethodKind, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeSymbol,
+    MethodKind, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -49,8 +49,27 @@ pub(crate) trait Visitor {
     fn visit_struct_info(&mut self, _struct_info: &StructInfo) {}
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
+        self.visit_fun_info_default(fun_info);
+    }
+
+    // The default visit method for a `FunInfo`. This is split out as
+    // a separate method because Rust does not have a notion of
+    // calling a 'super method'.
+    fn visit_fun_info_default(&mut self, fun_info: &FunInfo) {
+        for param in &fun_info.params {
+            if let Some(param_hint) = &param.type_ {
+                self.visit_type_hint(param_hint);
+            }
+        }
+
+        if let Some(return_hint) = &fun_info.return_type {
+            self.visit_type_hint(return_hint);
+        }
+
         self.visit_block(&fun_info.body);
     }
+
+    fn visit_type_hint(&mut self, _type_hint: &TypeHint) {}
 
     fn visit_block(&mut self, block: &Block) {
         for expr in &block.exprs {

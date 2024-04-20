@@ -3,11 +3,15 @@ use std::collections::HashMap;
 use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, ToplevelItem};
 
 use crate::diagnostics::Warning;
+use crate::env::Env;
 use crate::runtime_type::RuntimeType;
 use crate::visitor::Visitor;
 
-pub(crate) fn check_types(items: &[ToplevelItem]) -> Vec<Warning> {
-    let mut visitor = TypeCheckVisitor {};
+pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning> {
+    let mut visitor = TypeCheckVisitor {
+        env,
+        inferred: HashMap::new(),
+    };
     for item in items {
         visitor.visit_toplevel_item(item);
     }
@@ -15,10 +19,13 @@ pub(crate) fn check_types(items: &[ToplevelItem]) -> Vec<Warning> {
     vec![]
 }
 
-#[derive(Debug, Default, Clone)]
-struct TypeCheckVisitor {}
+#[derive(Debug)]
+struct TypeCheckVisitor<'a> {
+    env: &'a mut Env,
+    inferred: HashMap<usize, RuntimeType>,
+}
 
-impl Visitor for TypeCheckVisitor {
+impl Visitor for TypeCheckVisitor<'_> {
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         // Skip typechecking builtins and prelude to help print debugging.
         if let Some(n) = &fun_info.name {
@@ -37,10 +44,8 @@ impl Visitor for TypeCheckVisitor {
     fn visit_block(&mut self, block: &Block) {
         assign_expr_ids(block);
 
-        let mut inferred: HashMap<usize, RuntimeType> = HashMap::new();
-
         // check_block recurses, so don't recurse in the visitor
-        check_block(block, &mut inferred);
+        check_block(block, self.env, &mut self.inferred);
     }
 }
 
@@ -65,22 +70,22 @@ impl Visitor for AssignExprIds {
     }
 }
 
-fn check_block(block: &Block, inferred: &mut HashMap<usize, RuntimeType>) {
+fn check_block(block: &Block, env: &mut Env, inferred: &mut HashMap<usize, RuntimeType>) {
     for expr in &block.exprs {
-        check_expr(expr, inferred);
+        check_expr(expr, env, inferred);
     }
 }
 
-fn check_expr(expr: &Expression, inferred: &mut HashMap<usize, RuntimeType>) {
+fn check_expr(expr: &Expression, env: &mut Env, inferred: &mut HashMap<usize, RuntimeType>) {
     match &expr.1 {
         Expression_::Match(_, _) => {}
         Expression_::If(_, _, _) => {}
         Expression_::While(_, _) => {}
         Expression_::Assign(_sym, expr) => {
-            check_expr(expr, inferred);
+            check_expr(expr, env, inferred);
         }
         Expression_::Let(_sym, expr) => {
-            check_expr(expr, inferred);
+            check_expr(expr, env, inferred);
         }
         Expression_::Return(_) => {}
         Expression_::IntLiteral(_) => {}
@@ -93,6 +98,6 @@ fn check_expr(expr: &Expression, inferred: &mut HashMap<usize, RuntimeType>) {
         Expression_::MethodCall(_, _, _) => {}
         Expression_::DotAccess(_, _) => {}
         Expression_::FunLiteral(_) => {}
-        Expression_::Block(block) => check_block(block, inferred),
+        Expression_::Block(block) => check_block(block, env, inferred),
     }
 }

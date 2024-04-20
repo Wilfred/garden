@@ -53,6 +53,15 @@ pub(crate) struct Bindings {
 }
 
 impl Bindings {
+    fn push_block(&mut self) {
+        self.block_bindings.push(BlockBindings::default());
+    }
+
+    fn pop_block(&mut self) {
+        self.block_bindings.pop();
+        assert!(!self.block_bindings.is_empty());
+    }
+
     fn new_with(
         outer_scope: HashMap<SymbolName, Value>,
         type_bindings: HashMap<TypeName, RuntimeType>,
@@ -183,17 +192,6 @@ pub(crate) struct StackFrame {
     pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
     pub(crate) exprs_to_eval: Vec<(bool, Expression)>,
     pub(crate) evalled_values: Vec<Value>,
-}
-
-impl StackFrame {
-    fn enter_block(&mut self) {
-        self.bindings.block_bindings.push(BlockBindings::default());
-    }
-
-    fn exit_block(&mut self) {
-        self.bindings.block_bindings.pop();
-        assert!(!self.bindings.block_bindings.is_empty());
-    }
 }
 
 fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
@@ -2797,13 +2795,13 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 }
                 Expression_::Block(block) => {
                     if done_children {
-                        stack_frame.exit_block();
+                        stack_frame.bindings.pop_block();
                     } else {
                         stack_frame
                             .exprs_to_eval
                             .push((true, Expression::new(expr_position, expr_copy)));
 
-                        stack_frame.enter_block();
+                        stack_frame.bindings.push_block();
 
                         let bindings_next_block =
                             std::mem::take(&mut stack_frame.bindings_next_block);

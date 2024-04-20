@@ -3,14 +3,12 @@ mod hints;
 mod struct_fields;
 mod type_checker;
 
-use std::collections::HashSet;
-
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::eval_defs;
 use garden_lang_parser::ast::{Definition, Definition_, FunInfo, MethodKind, ToplevelItem};
 
-use self::hints::{check_hints, check_type_hint};
+use self::hints::check_hints;
 use self::type_checker::check_types;
 use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
 
@@ -35,13 +33,13 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
     warnings.extend(check_hints(items, &env));
 
     for def in &definitions {
-        warnings.extend(check_def(def, &env));
+        warnings.extend(check_def(def));
     }
 
     warnings
 }
 
-pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
+pub(crate) fn check_def(def: &Definition) -> Vec<Warning> {
     match &def.2 {
         Definition_::Fun(_, fun_info) => check_fun_info(fun_info),
         Definition_::Method(meth_info) => {
@@ -52,16 +50,6 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
 
             let mut warnings = vec![];
 
-            let bound_type_params: HashSet<_> = match fun_info {
-                Some(fun_info) => fun_info.type_params.iter().map(|p| &p.name).collect(),
-                None => HashSet::default(),
-            };
-            warnings.extend(check_type_hint(
-                &meth_info.receiver_type,
-                &bound_type_params,
-                env,
-            ));
-
             if let Some(fun_info) = fun_info {
                 warnings.extend(check_fun_info(fun_info));
             }
@@ -69,28 +57,8 @@ pub(crate) fn check_def(def: &Definition, env: &Env) -> Vec<Warning> {
             warnings
         }
         Definition_::Test(_) => vec![],
-        Definition_::Enum(enum_info) => {
-            let type_params: HashSet<_> = enum_info.type_params.iter().map(|p| &p.name).collect();
-
-            let mut warnings = vec![];
-            for variant in &enum_info.variants {
-                if let Some(hint) = &variant.payload_hint {
-                    warnings.extend(check_type_hint(hint, &type_params, env));
-                }
-            }
-
-            warnings
-        }
-        Definition_::Struct(struct_info) => {
-            let type_params: HashSet<_> = struct_info.type_params.iter().map(|p| &p.name).collect();
-
-            let mut warnings = vec![];
-            for field in &struct_info.fields {
-                warnings.extend(check_type_hint(&field.hint, &type_params, env));
-            }
-
-            warnings
-        }
+        Definition_::Enum(_) => vec![],
+        Definition_::Struct(_) => vec![],
     }
 }
 

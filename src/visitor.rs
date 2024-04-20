@@ -31,6 +31,8 @@ pub(crate) trait Visitor {
     }
 
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
+        self.visit_type_hint(&method_info.receiver_type);
+
         let fun_info = match &method_info.kind {
             MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
             MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
@@ -44,9 +46,27 @@ pub(crate) trait Visitor {
         self.visit_block(&test_info.body);
     }
 
-    fn visit_enum_info(&mut self, _enum_info: &EnumInfo) {}
+    fn visit_enum_info(&mut self, enum_info: &EnumInfo) {
+        self.visit_enum_info_default(enum_info);
+    }
 
-    fn visit_struct_info(&mut self, _struct_info: &StructInfo) {}
+    fn visit_enum_info_default(&mut self, enum_info: &EnumInfo) {
+        for variant in &enum_info.variants {
+            if let Some(hint) = &variant.payload_hint {
+                self.visit_type_hint(hint);
+            }
+        }
+    }
+
+    fn visit_struct_info(&mut self, struct_info: &StructInfo) {
+        self.visit_struct_info_default(struct_info);
+    }
+
+    fn visit_struct_info_default(&mut self, struct_info: &StructInfo) {
+        for field in &struct_info.fields {
+            self.visit_type_hint(&field.hint);
+        }
+    }
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         self.visit_fun_info_default(fun_info);

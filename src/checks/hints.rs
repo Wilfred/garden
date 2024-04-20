@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{FunInfo, ToplevelItem, TypeHint, TypeName};
+use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
 
 use crate::{
     diagnostics::Warning,
@@ -22,6 +22,8 @@ pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Warning> {
     visitor.warnings
 }
 
+/// Check that every type hint mentions a defined type, and that it
+/// has the correct number of type arguments.
 struct HintVisitor<'a> {
     env: &'a Env,
     warnings: Vec<Warning>,
@@ -35,8 +37,29 @@ impl Visitor for HintVisitor<'_> {
         for type_param in &fun_info.type_params {
             self.bound_type_params.insert(type_param.name.clone());
         }
-        self.visit_fun_info_default(fun_info);
 
+        self.visit_fun_info_default(fun_info);
+        self.bound_type_params = old_type_params;
+    }
+
+    fn visit_enum_info(&mut self, enum_info: &EnumInfo) {
+        let old_type_params = self.bound_type_params.clone();
+
+        for type_param in &enum_info.type_params {
+            self.bound_type_params.insert(type_param.name.clone());
+        }
+
+        self.visit_enum_info_default(enum_info);
+        self.bound_type_params = old_type_params;
+    }
+
+    fn visit_struct_info(&mut self, struct_info: &StructInfo) {
+        let old_type_params = self.bound_type_params.clone();
+
+        for type_param in &struct_info.type_params {
+            self.bound_type_params.insert(type_param.name.clone());
+        }
+        self.visit_struct_info_default(struct_info);
         self.bound_type_params = old_type_params;
     }
 
@@ -123,85 +146,4 @@ fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String 
         num_actual,
         if num_actual == 1 { "" } else { "s" },
     )
-}
-
-/// Check that `type_hint` mentions a defined type, and that it has
-/// the correct number of type arguments.
-pub(crate) fn check_type_hint(
-    type_hint: &TypeHint,
-    bound_type_params: &HashSet<&TypeName>,
-    env: &Env,
-) -> Vec<Warning> {
-    let mut warnings = vec![];
-
-    match env.get_type_def(&type_hint.sym.name) {
-        _ if bound_type_params.contains(&type_hint.sym.name) => {
-            if let Some(first_arg) = type_hint.args.first() {
-                warnings.push(Warning {
-                    message: "Generic type arguments cannot take parameters.".to_owned(),
-                    position: first_arg.position.clone(),
-                });
-            }
-        }
-        Some(type_) => {
-            let type_args_pos = match type_hint.args.last() {
-                Some(arg) => arg.sym.position.clone(),
-                None => type_hint.position.clone(),
-            };
-
-            match type_ {
-                TypeDef::Builtin(b) => {
-                    let num_expected = match b {
-                        BuiltinType::Int => 0,
-                        BuiltinType::String => 0,
-                        BuiltinType::Fun => {
-                            // TODO: define a syntax and arity for function types.
-                            0
-                        }
-                        BuiltinType::List => 1,
-                    };
-                    if num_expected != type_hint.args.len() {
-                        warnings.push(Warning {
-                            message: format_type_arity_error(type_hint, num_expected),
-                            position: type_args_pos,
-                        });
-                    }
-                }
-                TypeDef::Enum(enum_info) => {
-                    if enum_info.type_params.len() != type_hint.args.len() {
-                        warnings.push(Warning {
-                            message: format_type_arity_error(
-                                type_hint,
-                                enum_info.type_params.len(),
-                            ),
-                            position: type_args_pos,
-                        });
-                    }
-                }
-                TypeDef::Struct(struct_info) => {
-                    if struct_info.type_params.len() != type_hint.args.len() {
-                        warnings.push(Warning {
-                            message: format_type_arity_error(
-                                type_hint,
-                                struct_info.type_params.len(),
-                            ),
-                            position: type_args_pos,
-                        });
-                    }
-                }
-            }
-        }
-        None => {
-            warnings.push(Warning {
-                message: format!("No such type: {}", &type_hint.sym),
-                position: type_hint.position.clone(),
-            });
-        }
-    }
-
-    for type_arg in &type_hint.args {
-        warnings.extend(check_type_hint(type_arg, bound_type_params, env));
-    }
-
-    warnings
 }

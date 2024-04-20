@@ -1,30 +1,47 @@
 use std::collections::HashMap;
 
-use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo};
+use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, ToplevelItem};
 
 use crate::diagnostics::Warning;
 use crate::runtime_type::RuntimeType;
 use crate::visitor::Visitor;
 
-pub(crate) fn check_types(fun_info: &FunInfo) -> Vec<Warning> {
-    let b = &fun_info.body;
-    assign_expr_ids(b);
-
-    // Skip typechecking builtins and prelude to help print debugging.
-    if let Some(n) = &fun_info.name {
-        let path = n.position.path.clone();
-        if path.display().to_string().ends_with("prelude.gdn") {
-            return vec![];
-        }
-        if path.display().to_string().ends_with("builtins.gdn") {
-            return vec![];
-        }
+pub(crate) fn check_types(items: &[ToplevelItem]) -> Vec<Warning> {
+    let mut visitor = TypeCheckVisitor {};
+    for item in items {
+        visitor.visit_toplevel_item(item);
     }
 
-    let mut inferred: HashMap<usize, RuntimeType> = HashMap::new();
-    check_block(b, &mut inferred);
-
     vec![]
+}
+
+#[derive(Debug, Default, Clone)]
+struct TypeCheckVisitor {}
+
+impl Visitor for TypeCheckVisitor {
+    fn visit_fun_info(&mut self, fun_info: &FunInfo) {
+        // Skip typechecking builtins and prelude to help print debugging.
+        if let Some(n) = &fun_info.name {
+            let path = n.position.path.clone();
+            if path.display().to_string().ends_with("prelude.gdn") {
+                return;
+            }
+            if path.display().to_string().ends_with("builtins.gdn") {
+                return;
+            }
+        }
+
+        self.visit_fun_info_default(fun_info);
+    }
+
+    fn visit_block(&mut self, block: &Block) {
+        assign_expr_ids(block);
+
+        let mut inferred: HashMap<usize, RuntimeType> = HashMap::new();
+
+        // check_block recurses, so don't recurse in the visitor
+        check_block(block, &mut inferred);
+    }
 }
 
 fn assign_expr_ids(block: &Block) {

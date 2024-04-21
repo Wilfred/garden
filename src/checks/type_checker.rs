@@ -129,7 +129,22 @@ fn check_expr(
             let methods = env.methods.get(&recv_ty_name)?;
 
             match methods.get(&sym.name) {
-                Some(method_info) => None,
+                Some(method_info) => {
+                    let fun_info = method_info.fun_info()?;
+                    if fun_info.params.len() != args.len() {
+                        warnings.push(Warning {
+                            message: format!(
+                                "`{}::{}` requires {} arguments, but got {}.",
+                                recv_ty_name,
+                                sym.name,
+                                fun_info.params.len(),
+                                args.len()
+                            ),
+                            position: sym.position.clone(),
+                        });
+                    }
+                    None
+                }
                 None => {
                     warnings.push(Warning {
                         message: format!("`{}` has no method `{}`.", recv_ty_name, sym.name),

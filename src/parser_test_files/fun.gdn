@@ -20,6 +20,7 @@ fun foo(): Unit {}
 //             },
 //         ),
 //         body: Block {
+//             is_loop_body: false,
 //             open_brace: Position { ... },
 //             exprs: [],
 //             close_brace: Position { ... },

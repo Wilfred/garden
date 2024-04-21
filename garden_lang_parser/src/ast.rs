@@ -272,6 +272,7 @@ impl Expression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Block {
+    pub is_loop_body: bool,
     pub open_brace: Position,
     pub exprs: Vec<Expression>,
     pub close_brace: Position,

@@ -22,6 +22,7 @@ fun (self: List) foo() {}
 //                 params: [],
 //                 return_type: None,
 //                 body: Block {
+//                     is_loop_body: false,
 //                     open_brace: Position { ... },
 //                     exprs: [],
 //                     close_brace: Position { ... },

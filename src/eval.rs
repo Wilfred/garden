@@ -3132,6 +3132,7 @@ fn eval_match_cases(
                 open_brace: case_expr_pos.clone(),
                 exprs: vec![(**case_expr).clone()],
                 close_brace: case_expr_pos.clone(),
+                is_loop_body: false,
             });
 
             stack_frame.bindings_next_block = bindings;

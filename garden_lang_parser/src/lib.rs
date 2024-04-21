@@ -155,7 +155,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let params = parse_parameters(tokens)?;
     let return_type = parse_type_annotation_opt(tokens)?;
 
-    let body = parse_block(src, tokens)?;
+    let body = parse_block(src, tokens, false)?;
 
     let start_offset = fun_keyword.position.start_offset;
     let end_offset = body.close_brace.end_offset;
@@ -185,7 +185,7 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
     let condition = parse_inline_expression(src, tokens)?;
     require_token(tokens, ")")?;
 
-    let then_body = parse_block(src, tokens)?;
+    let then_body = parse_block(src, tokens, false)?;
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
@@ -199,9 +199,10 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
                 open_brace: if_expr.0.clone(),
                 close_brace: if_expr.0.clone(),
                 exprs: vec![if_expr],
+                is_loop_body: false,
             })
         } else {
-            Some(parse_block(src, tokens)?)
+            Some(parse_block(src, tokens, false)?)
         }
     } else {
         None
@@ -220,7 +221,7 @@ fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
     let condition = parse_inline_expression(src, tokens)?;
     require_token(tokens, ")")?;
 
-    let body = parse_block(src, tokens)?;
+    let body = parse_block(src, tokens, true)?;
 
     Ok(Expression::new(
         while_token.position,
@@ -297,7 +298,7 @@ fn unescape_string(src: &str) -> String {
 fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     if let Some(token) = tokens.peek() {
         if token.text == "{" {
-            let exprs = parse_block(src, tokens)?;
+            let exprs = parse_block(src, tokens, false)?;
             return Ok(Expression::new(token.position, Expression_::Block(exprs)));
         }
 
@@ -850,7 +851,7 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
         });
     };
 
-    let body = parse_block(src, tokens)?;
+    let body = parse_block(src, tokens, false)?;
 
     let mut start_offset = test_token.position.start_offset;
     if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
@@ -1149,7 +1150,11 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
     Ok(fields)
 }
 
-fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError> {
+fn parse_block(
+    src: &str,
+    tokens: &mut TokenStream,
+    is_loop_body: bool,
+) -> Result<Block, ParseError> {
     let open_brace = require_token(tokens, "{")?;
 
     let mut exprs = vec![];
@@ -1174,6 +1179,7 @@ fn parse_block(src: &str, tokens: &mut TokenStream) -> Result<Block, ParseError>
         open_brace: open_brace.position,
         exprs,
         close_brace: close_brace.position,
+        is_loop_body,
     })
 }
 
@@ -1250,7 +1256,7 @@ fn parse_method(
     let params = parse_parameters(tokens)?;
     let return_type = parse_type_annotation_opt(tokens)?;
 
-    let body = parse_block(src, tokens)?;
+    let body = parse_block(src, tokens, false)?;
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
@@ -1299,7 +1305,7 @@ fn parse_function(
     let params = parse_parameters(tokens)?;
     let return_type = parse_type_annotation_opt(tokens)?;
 
-    let body = parse_block(src, tokens)?;
+    let body = parse_block(src, tokens, false)?;
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {

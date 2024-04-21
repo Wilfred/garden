@@ -1,6 +1,13 @@
 {
-    let parts = ["a"];
-    parts.nth(0);
+    "abc".foo();
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `String` has no method `foo`.
+// 
+// --> src/check_test_files/no_such_method.gdn:2
+//     "abc".foo();
+//           ^^^
+

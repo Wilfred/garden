@@ -118,10 +118,26 @@ fn check_expr(
         Expression_::BinaryOperator(_, _, _) => None,
         Expression_::Variable(_) => None,
         Expression_::Call(_, _) => None,
-        Expression_::MethodCall(recv, name, args) => {
-            let recv_ty = check_expr(recv, env, inferred, bindings, warnings);
+        Expression_::MethodCall(recv, sym, args) => {
+            for arg in args {
+                check_expr(arg, env, inferred, bindings, warnings);
+            }
 
-            None
+            let recv_ty = check_expr(recv, env, inferred, bindings, warnings)?;
+            let recv_ty_name = recv_ty.type_name()?;
+
+            let methods = env.methods.get(&recv_ty_name)?;
+
+            match methods.get(&sym.name) {
+                Some(method_info) => None,
+                None => {
+                    warnings.push(Warning {
+                        message: format!("`{}` has no method `{}`.", recv_ty_name, sym.name),
+                        position: sym.position.clone(),
+                    });
+                    None
+                }
+            }
         }
         Expression_::DotAccess(_, _) => None,
         Expression_::FunLiteral(_) => None,

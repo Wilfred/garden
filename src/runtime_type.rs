@@ -184,6 +184,25 @@ impl RuntimeType {
             return_: Box::new(return_),
         })
     }
+
+    pub(crate) fn type_name(&self) -> Option<TypeName> {
+        match self {
+            RuntimeType::Top => None,
+            RuntimeType::String => Some(TypeName {
+                name: "String".to_owned(),
+            }),
+            RuntimeType::Int => Some(TypeName {
+                name: "Int".to_owned(),
+            }),
+            RuntimeType::List(_) => Some(TypeName {
+                name: "List".to_owned(),
+            }),
+            RuntimeType::Fun { .. } => Some(TypeName {
+                name: "Fun".to_owned(),
+            }),
+            RuntimeType::UserDefined { kind: _, name, .. } => Some(name.clone()),
+        }
+    }
 }
 
 impl Display for RuntimeType {

@@ -691,7 +691,7 @@ fn eval_while(
 
     if let Some(b) = to_rust_bool(&condition_value) {
         if b {
-            // Start loop evaluation again.
+            // After the loop body, we will want to evaluate the expression again.
             stack_frame.exprs_to_eval.push((false, expr.clone()));
 
             // Evaluate the body.

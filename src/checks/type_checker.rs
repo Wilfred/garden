@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use garden_lang_parser::ast::{Block, Expression, Expression_, FunInfo, ToplevelItem};
+use garden_lang_parser::ast::{
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, ToplevelItem,
+};
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
@@ -115,7 +117,67 @@ fn check_expr(
         Expression_::StringLiteral(_) => Some(RuntimeType::String),
         Expression_::ListLiteral(_list) => None,
         Expression_::StructLiteral(_, _) => None,
-        Expression_::BinaryOperator(_, _, _) => None,
+        Expression_::BinaryOperator(lhs, op, rhs) => {
+            let lhs_ty = check_expr(lhs, env, inferred, bindings, warnings);
+            let rhs_ty = check_expr(rhs, env, inferred, bindings, warnings);
+
+            match op {
+                BinaryOperatorKind::Add
+                | BinaryOperatorKind::Subtract
+                | BinaryOperatorKind::Multiply
+                | BinaryOperatorKind::Divide
+                | BinaryOperatorKind::LessThan
+                | BinaryOperatorKind::LessThanOrEqual
+                | BinaryOperatorKind::GreaterThan
+                | BinaryOperatorKind::GreaterThanOrEqual => {
+                    if let Some(lhs_ty) = lhs_ty {
+                        if lhs_ty != RuntimeType::Int {
+                            warnings.push(Warning {
+                                message: format!("Expected `Int`, but got `{}`.", lhs_ty),
+                                position: lhs.0.clone(),
+                            });
+                        }
+                    }
+                    if let Some(rhs_ty) = rhs_ty {
+                        if rhs_ty != RuntimeType::Int {
+                            warnings.push(Warning {
+                                message: format!("Expected `Int`, but got `{}`.", rhs_ty),
+                                position: rhs.0.clone(),
+                            });
+                        }
+                    }
+                }
+                BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
+                    if let (Some(lhs_ty), Some(rhs_ty)) = (lhs_ty, rhs_ty) {
+                        if lhs_ty != rhs_ty {
+                            warnings.push(Warning {
+                                message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
+                                position: rhs.0.clone(),
+                            });
+                        }
+                    }
+                }
+                BinaryOperatorKind::And | BinaryOperatorKind::Or => {
+                    if let Some(lhs_ty) = lhs_ty {
+                        if lhs_ty != RuntimeType::bool() {
+                            warnings.push(Warning {
+                                message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
+                                position: lhs.0.clone(),
+                            });
+                        }
+                    }
+                    if let Some(rhs_ty) = rhs_ty {
+                        if rhs_ty != RuntimeType::bool() {
+                            warnings.push(Warning {
+                                message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
+                                position: rhs.0.clone(),
+                            });
+                        }
+                    }
+                }
+            }
+            None
+        }
         Expression_::Variable(_) => None,
         Expression_::Call(_, _) => None,
         Expression_::MethodCall(recv, sym, args) => {

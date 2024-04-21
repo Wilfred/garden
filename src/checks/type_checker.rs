@@ -125,8 +125,27 @@ fn check_expr(
                 BinaryOperatorKind::Add
                 | BinaryOperatorKind::Subtract
                 | BinaryOperatorKind::Multiply
-                | BinaryOperatorKind::Divide
-                | BinaryOperatorKind::LessThan
+                | BinaryOperatorKind::Divide => {
+                    if let Some(lhs_ty) = lhs_ty {
+                        if lhs_ty != RuntimeType::Int {
+                            warnings.push(Warning {
+                                message: format!("Expected `Int`, but got `{}`.", lhs_ty),
+                                position: lhs.0.clone(),
+                            });
+                        }
+                    }
+                    if let Some(rhs_ty) = rhs_ty {
+                        if rhs_ty != RuntimeType::Int {
+                            warnings.push(Warning {
+                                message: format!("Expected `Int`, but got `{}`.", rhs_ty),
+                                position: rhs.0.clone(),
+                            });
+                        }
+                    }
+
+                    Some(RuntimeType::Int)
+                }
+                BinaryOperatorKind::LessThan
                 | BinaryOperatorKind::LessThanOrEqual
                 | BinaryOperatorKind::GreaterThan
                 | BinaryOperatorKind::GreaterThanOrEqual => {
@@ -146,6 +165,8 @@ fn check_expr(
                             });
                         }
                     }
+
+                    Some(RuntimeType::bool())
                 }
                 BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
                     if let (Some(lhs_ty), Some(rhs_ty)) = (lhs_ty, rhs_ty) {
@@ -156,6 +177,8 @@ fn check_expr(
                             });
                         }
                     }
+
+                    Some(RuntimeType::bool())
                 }
                 BinaryOperatorKind::And | BinaryOperatorKind::Or => {
                     if let Some(lhs_ty) = lhs_ty {
@@ -174,9 +197,10 @@ fn check_expr(
                             });
                         }
                     }
+
+                    Some(RuntimeType::bool())
                 }
             }
-            None
         }
         Expression_::Variable(_) => None,
         Expression_::Call(_, _) => None,

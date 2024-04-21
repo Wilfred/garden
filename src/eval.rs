@@ -700,8 +700,6 @@ fn eval_while(
                 Expression::new(expr.0, Expression_::Block(body.clone())),
             ))
         } else {
-            // TODO: It's weird using the position of the
-            // condition when there's no else.
             stack_frame.evalled_values.push(Value::unit());
         }
     } else {

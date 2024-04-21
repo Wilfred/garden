@@ -53,11 +53,11 @@ pub(crate) struct Bindings {
 }
 
 impl Bindings {
-    fn push_block(&mut self) {
+    pub(crate) fn push_block(&mut self) {
         self.block_bindings.push(BlockBindings::default());
     }
 
-    fn pop_block(&mut self) {
+    pub(crate) fn pop_block(&mut self) {
         self.block_bindings.pop();
         assert!(!self.block_bindings.is_empty());
     }

@@ -79,9 +79,13 @@ fn check_block(
     inferred: &mut HashMap<usize, RuntimeType>,
     bindings: &mut Bindings,
 ) {
+    bindings.push_block();
+
     for expr in &block.exprs {
         check_expr(expr, env, inferred, bindings);
     }
+
+    bindings.pop_block();
 }
 
 fn check_expr(
@@ -89,28 +93,31 @@ fn check_expr(
     env: &mut Env,
     inferred: &mut HashMap<usize, RuntimeType>,
     bindings: &mut Bindings,
-) {
+) -> Option<RuntimeType> {
     match &expr.1 {
-        Expression_::Match(_, _) => {}
-        Expression_::If(_, _, _) => {}
-        Expression_::While(_, _) => {}
-        Expression_::Assign(_sym, expr) => {
-            check_expr(expr, env, inferred, bindings);
+        Expression_::Match(_, _) => None,
+        Expression_::If(_, _, _) => None,
+        Expression_::While(_, _) => None,
+        Expression_::Assign(_sym, expr) => check_expr(expr, env, inferred, bindings),
+        Expression_::Let(_sym, expr) => check_expr(expr, env, inferred, bindings),
+        Expression_::Return(_) => None,
+        Expression_::IntLiteral(_) => Some(RuntimeType::Int),
+        Expression_::StringLiteral(_) => Some(RuntimeType::String),
+        Expression_::ListLiteral(_list) => None,
+        Expression_::StructLiteral(_, _) => None,
+        Expression_::BinaryOperator(_, _, _) => None,
+        Expression_::Variable(_) => None,
+        Expression_::Call(_, _) => None,
+        Expression_::MethodCall(recv, name, args) => {
+            let recv_ty = check_expr(recv, env, inferred, bindings);
+
+            None
         }
-        Expression_::Let(_sym, expr) => {
-            check_expr(expr, env, inferred, bindings);
+        Expression_::DotAccess(_, _) => None,
+        Expression_::FunLiteral(_) => None,
+        Expression_::Block(block) => {
+            check_block(block, env, inferred, bindings);
+            None
         }
-        Expression_::Return(_) => {}
-        Expression_::IntLiteral(_) => {}
-        Expression_::StringLiteral(_) => {}
-        Expression_::ListLiteral(_list) => {}
-        Expression_::StructLiteral(_, _) => {}
-        Expression_::BinaryOperator(_, _, _) => {}
-        Expression_::Variable(_) => {}
-        Expression_::Call(_, _) => {}
-        Expression_::MethodCall(_, _, _) => {}
-        Expression_::DotAccess(_, _) => {}
-        Expression_::FunLiteral(_) => {}
-        Expression_::Block(block) => check_block(block, env, inferred, bindings),
     }
 }

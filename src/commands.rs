@@ -610,13 +610,11 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             name: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
-                match &method_info.kind {
-                    // TODO: Offer source of stub for built-in methods.
-                    MethodKind::BuiltinMethod(_, _) => Ok(None),
-                    MethodKind::UserDefinedMethod(fun_info) => {
-                        Ok(Some(fun_info.src_string.clone()))
-                    }
-                }
+                Ok(if let Some(fun_info) = method_info.fun_info() {
+                    Some(fun_info.src_string.clone())
+                } else {
+                    None
+                })
             } else {
                 Err(format!("No method named `{method_name}` on `{type_name}`."))
             }

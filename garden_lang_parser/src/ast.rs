@@ -368,6 +368,15 @@ pub struct MethodInfo {
     pub kind: MethodKind,
 }
 
+impl MethodInfo {
+    pub fn fun_info(&self) -> Option<FunInfo> {
+        match &self.kind {
+            MethodKind::BuiltinMethod(_, fun_info) => fun_info.clone(),
+            MethodKind::UserDefinedMethod(fun_info) => Some(fun_info.clone()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Definition_ {
     /// ```garden

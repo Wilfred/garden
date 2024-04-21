@@ -1,6 +1,6 @@
 use garden_lang_parser::ast::{
     Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
-    MethodKind, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -33,12 +33,8 @@ pub(crate) trait Visitor {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.visit_type_hint(&method_info.receiver_type);
 
-        let fun_info = match &method_info.kind {
-            MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
-            MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
-        };
-        if let Some(fun_info) = fun_info {
-            self.visit_fun_info(fun_info);
+        if let Some(fun_info) = method_info.fun_info() {
+            self.visit_fun_info(&fun_info);
         }
     }
 

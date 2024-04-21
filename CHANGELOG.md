@@ -6,7 +6,7 @@
 
 ## Syntax
 
-Added `break;` inside loops.
+Added `break;` inside loops. `continue` is now a reserved word.
 
 ## Checks
 

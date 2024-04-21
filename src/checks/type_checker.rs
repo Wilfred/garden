@@ -98,7 +98,14 @@ fn check_expr(
         Expression_::Return(_) => None,
         Expression_::IntLiteral(_) => Some(RuntimeType::Int),
         Expression_::StringLiteral(_) => Some(RuntimeType::String),
-        Expression_::ListLiteral(_list) => None,
+        Expression_::ListLiteral(items) => {
+            for item in items {
+                check_expr(item, env, bindings, warnings);
+            }
+
+            // TODO: accurately calculate list generic type argument.
+            Some(RuntimeType::List(Box::new(RuntimeType::Top)))
+        }
         Expression_::StructLiteral(_, _) => None,
         Expression_::BinaryOperator(lhs, op, rhs) => {
             let lhs_ty = check_expr(lhs, env, bindings, warnings);

@@ -1,5 +1,6 @@
 {
     "abc".foo();
+    [1].foo();
 }
 
 // args: check
@@ -10,4 +11,9 @@
 // --> src/check_test_files/no_such_method.gdn:2
 //     "abc".foo();
 //           ^^^
+// Error: `List` has no method `foo`.
+// 
+// --> src/check_test_files/no_such_method.gdn:3
+//     [1].foo();
+//         ^^^
 

@@ -4,6 +4,10 @@
 **Goal: Evaluate functions up to the cursor.**
 **Goal: Implement generics.**
 
+## Syntax
+
+Added `break;` inside loops.
+
 ## Checks
 
 Type hints for built-in types are now checked for the correct arity

@@ -1,0 +1,16 @@
+fun main(_: List<String>) {
+    let i = 0;
+    while (True) {
+        if (i == 10) {
+            break;
+        }
+
+        i = i + 1;
+    }
+
+    dbg(i);
+}
+
+// args: run
+// expected stdout: 10
+

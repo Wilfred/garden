@@ -2835,7 +2835,9 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         stack_frame.exprs_to_eval.push((false, *recv.clone()));
                     }
                 }
-                Expression_::Break => todo!(),
+                Expression_::Break => {
+                    eval_break(&mut stack_frame);
+                }
             }
         }
 
@@ -2898,6 +2900,28 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
         .evalled_values
         .pop()
         .expect("Should have a value from the last expression"))
+}
+
+fn eval_break(stack_frame: &mut StackFrame) {
+    // Pop all the currently evaluating expressions until we are no
+    // longer inside the innermost loop.
+    while let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+        if matches!(
+            expr.1,
+            Expression_::Block(Block {
+                is_loop_body: true,
+                ..
+            })
+        ) {
+            // While loops are implemented as a copy of the loop after
+            // the body, so pop that too.
+            stack_frame.exprs_to_eval.pop();
+
+            break;
+        }
+    }
+
+    stack_frame.evalled_values.push(Value::unit());
 }
 
 fn eval_dot_access(

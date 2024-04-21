@@ -12,18 +12,20 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning>
     let mut visitor = TypeCheckVisitor {
         env,
         inferred: HashMap::new(),
+        warnings: vec![],
     };
     for item in items {
         visitor.visit_toplevel_item(item);
     }
 
-    vec![]
+    visitor.warnings
 }
 
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
     inferred: HashMap<usize, RuntimeType>,
+    warnings: Vec<Warning>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
@@ -48,7 +50,13 @@ impl Visitor for TypeCheckVisitor<'_> {
         let mut bindings = Bindings::default();
 
         // check_block recurses, so don't recurse in the visitor
-        check_block(block, self.env, &mut self.inferred, &mut bindings);
+        check_block(
+            block,
+            self.env,
+            &mut self.inferred,
+            &mut bindings,
+            &mut self.warnings,
+        );
     }
 }
 
@@ -78,11 +86,12 @@ fn check_block(
     env: &mut Env,
     inferred: &mut HashMap<usize, RuntimeType>,
     bindings: &mut Bindings,
+    warnings: &mut Vec<Warning>,
 ) {
     bindings.push_block();
 
     for expr in &block.exprs {
-        check_expr(expr, env, inferred, bindings);
+        check_expr(expr, env, inferred, bindings, warnings);
     }
 
     bindings.pop_block();
@@ -93,13 +102,14 @@ fn check_expr(
     env: &mut Env,
     inferred: &mut HashMap<usize, RuntimeType>,
     bindings: &mut Bindings,
+    warnings: &mut Vec<Warning>,
 ) -> Option<RuntimeType> {
     match &expr.1 {
         Expression_::Match(_, _) => None,
         Expression_::If(_, _, _) => None,
         Expression_::While(_, _) => None,
-        Expression_::Assign(_sym, expr) => check_expr(expr, env, inferred, bindings),
-        Expression_::Let(_sym, expr) => check_expr(expr, env, inferred, bindings),
+        Expression_::Assign(_sym, expr) => check_expr(expr, env, inferred, bindings, warnings),
+        Expression_::Let(_sym, expr) => check_expr(expr, env, inferred, bindings, warnings),
         Expression_::Return(_) => None,
         Expression_::IntLiteral(_) => Some(RuntimeType::Int),
         Expression_::StringLiteral(_) => Some(RuntimeType::String),
@@ -109,14 +119,14 @@ fn check_expr(
         Expression_::Variable(_) => None,
         Expression_::Call(_, _) => None,
         Expression_::MethodCall(recv, name, args) => {
-            let recv_ty = check_expr(recv, env, inferred, bindings);
+            let recv_ty = check_expr(recv, env, inferred, bindings, warnings);
 
             None
         }
         Expression_::DotAccess(_, _) => None,
         Expression_::FunLiteral(_) => None,
         Expression_::Block(block) => {
-            check_block(block, env, inferred, bindings);
+            check_block(block, env, inferred, bindings, warnings);
             None
         }
     }

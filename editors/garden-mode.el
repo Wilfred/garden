@@ -543,6 +543,8 @@ If called with a prefix, stop the previous session."
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
 
+    (define-key map (kbd "C-c a") #'garden-abort-command)
+
     (define-key map (kbd "C-c C-z") #'garden-toggle-session)
     map)
   "Keymap for `garden-mode'.")

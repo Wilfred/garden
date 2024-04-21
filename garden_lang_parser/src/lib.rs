@@ -228,6 +228,12 @@ fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
     ))
 }
 
+fn parse_break_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
+    let break_token = require_token(tokens, "break")?;
+    let _ = require_end_token(tokens, ";")?;
+    Ok(Expression::new(break_token.position, Expression_::Break))
+}
+
 fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let return_token = require_token(tokens, "return")?;
 
@@ -611,6 +617,9 @@ fn parse_general_expression(
             }
             if token.text == "while" {
                 return parse_while_expression(src, tokens);
+            }
+            if token.text == "break" {
+                return parse_break_expression(tokens);
             }
         }
     }

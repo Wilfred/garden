@@ -211,10 +211,11 @@ fn check_expr(
                     if fun_info.params.len() != args.len() {
                         warnings.push(Warning {
                             message: format!(
-                                "`{}::{}` requires {} arguments, but got {}.",
+                                "`{}::{}` requires {} argument{}, but got {}.",
                                 recv_ty_name,
                                 sym.name,
                                 fun_info.params.len(),
+                                if fun_info.params.len() == 1 { "" } else { "s" },
                                 args.len()
                             ),
                             position: sym.position.clone(),

@@ -93,6 +93,7 @@ fn check_expr(
         Expression_::Match(_, _) => None,
         Expression_::If(_, _, _) => None,
         Expression_::While(_, _) => None,
+        Expression_::Break => Some(RuntimeType::unit()),
         Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),
         Expression_::Let(_sym, expr) => check_expr(expr, env, bindings, warnings),
         Expression_::Return(_) => None,

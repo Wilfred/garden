@@ -2837,6 +2837,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         stack_frame.exprs_to_eval.push((false, *recv.clone()));
                     }
                 }
+                Expression_::Break => todo!(),
             }
         }
 

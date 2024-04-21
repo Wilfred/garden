@@ -108,6 +108,7 @@ pub(crate) trait Visitor {
             Expression_::While(cond, body) => {
                 self.visit_expr_while(cond.as_ref(), body);
             }
+            Expression_::Break => {}
             Expression_::Assign(sym, expr) => {
                 self.visit_expr_assign(sym, expr);
             }

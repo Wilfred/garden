@@ -1322,7 +1322,8 @@ fn parse_function(
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "enum", "struct", "if", "else", "while", "return", "test", "match",
+    "let", "fun", "enum", "struct", "if", "else", "while", "return", "test", "match", "break",
+    "continue",
 ];
 
 fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {

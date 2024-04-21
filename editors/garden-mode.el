@@ -427,7 +427,8 @@ the user entering a value in the *garden* buffer."
 
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
-       '("let" "fun" "enum" "struct" "if" "else" "while" "return" "test" "match")
+       '("let" "fun" "enum" "struct" "if" "else" "while" "return" "test" "match"
+         "break" "continue")
        'symbols)
      . font-lock-keyword-face)
 

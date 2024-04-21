@@ -194,6 +194,10 @@ pub enum Expression_ {
     /// ```
     While(Box<Expression>, Block),
     /// ```garden
+    /// break;
+    /// ```
+    Break,
+    /// ```garden
     /// x = y;
     /// ```
     Assign(Symbol, Box<Expression>),

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, Expression, Expression_, FunInfo, ToplevelItem,
 };
@@ -13,7 +11,6 @@ use crate::visitor::Visitor;
 pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning> {
     let mut visitor = TypeCheckVisitor {
         env,
-        inferred: HashMap::new(),
         warnings: vec![],
     };
     for item in items {
@@ -26,7 +23,6 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning>
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
-    inferred: HashMap<usize, RuntimeType>,
     warnings: Vec<Warning>,
 }
 
@@ -52,13 +48,7 @@ impl Visitor for TypeCheckVisitor<'_> {
         let mut bindings = Bindings::default();
 
         // check_block recurses, so don't recurse in the visitor
-        check_block(
-            block,
-            self.env,
-            &mut self.inferred,
-            &mut bindings,
-            &mut self.warnings,
-        );
+        check_block(block, self.env, &mut bindings, &mut self.warnings);
     }
 }
 
@@ -83,17 +73,11 @@ impl Visitor for AssignExprIds {
     }
 }
 
-fn check_block(
-    block: &Block,
-    env: &mut Env,
-    inferred: &mut HashMap<usize, RuntimeType>,
-    bindings: &mut Bindings,
-    warnings: &mut Vec<Warning>,
-) {
+fn check_block(block: &Block, env: &mut Env, bindings: &mut Bindings, warnings: &mut Vec<Warning>) {
     bindings.push_block();
 
     for expr in &block.exprs {
-        check_expr(expr, env, inferred, bindings, warnings);
+        check_expr(expr, env, bindings, warnings);
     }
 
     bindings.pop_block();
@@ -102,7 +86,6 @@ fn check_block(
 fn check_expr(
     expr: &Expression,
     env: &mut Env,
-    inferred: &mut HashMap<usize, RuntimeType>,
     bindings: &mut Bindings,
     warnings: &mut Vec<Warning>,
 ) -> Option<RuntimeType> {
@@ -110,16 +93,16 @@ fn check_expr(
         Expression_::Match(_, _) => None,
         Expression_::If(_, _, _) => None,
         Expression_::While(_, _) => None,
-        Expression_::Assign(_sym, expr) => check_expr(expr, env, inferred, bindings, warnings),
-        Expression_::Let(_sym, expr) => check_expr(expr, env, inferred, bindings, warnings),
+        Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),
+        Expression_::Let(_sym, expr) => check_expr(expr, env, bindings, warnings),
         Expression_::Return(_) => None,
         Expression_::IntLiteral(_) => Some(RuntimeType::Int),
         Expression_::StringLiteral(_) => Some(RuntimeType::String),
         Expression_::ListLiteral(_list) => None,
         Expression_::StructLiteral(_, _) => None,
         Expression_::BinaryOperator(lhs, op, rhs) => {
-            let lhs_ty = check_expr(lhs, env, inferred, bindings, warnings);
-            let rhs_ty = check_expr(rhs, env, inferred, bindings, warnings);
+            let lhs_ty = check_expr(lhs, env, bindings, warnings);
+            let rhs_ty = check_expr(rhs, env, bindings, warnings);
 
             match op {
                 BinaryOperatorKind::Add
@@ -206,10 +189,10 @@ fn check_expr(
         Expression_::Call(_, _) => None,
         Expression_::MethodCall(recv, sym, args) => {
             for arg in args {
-                check_expr(arg, env, inferred, bindings, warnings);
+                check_expr(arg, env, bindings, warnings);
             }
 
-            let recv_ty = check_expr(recv, env, inferred, bindings, warnings)?;
+            let recv_ty = check_expr(recv, env, bindings, warnings)?;
             let recv_ty_name = recv_ty.type_name()?;
 
             let methods = env.methods.get(&recv_ty_name)?;
@@ -243,7 +226,7 @@ fn check_expr(
         Expression_::DotAccess(_, _) => None,
         Expression_::FunLiteral(_) => None,
         Expression_::Block(block) => {
-            check_block(block, env, inferred, bindings, warnings);
+            check_block(block, env, bindings, warnings);
             None
         }
     }

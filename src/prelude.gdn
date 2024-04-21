@@ -214,6 +214,27 @@ test trim_left {
     should_equal("a ".trim_left(), "a ");
 }
 
+fun (self: String) trim_right(): String {
+    let i = self.len() - 1;
+    while (i >= 0) {
+        let char = self.substring(i, i + 1);
+        if (char != " ") {
+            break;
+        }
+
+        i = i - 1;
+    }
+
+    self.substring(0, i + 1);
+}
+
+test trim_left {
+    should_equal("a".trim_right(), "a");
+    should_equal("a b".trim_right(), "a b");
+    should_equal(" a".trim_right(), " a");
+    should_equal("a  ".trim_right(), "a");
+}
+
 // List methods.
 
 // Get the first item in this list, if the list is non-empty.

@@ -15,7 +15,8 @@ Type hints for built-in types are now checked for the correct arity
 
 ## Stdlib
 
-Added `write_file()`, `String::trim_left()` and `String::split_once()`.
+Added `write_file()`, `String::trim_left()`, `String::trim_right()`
+and `String::split_once()`.
 
 `list_directory` now returns a `Result`.
 

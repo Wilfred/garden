@@ -193,6 +193,27 @@ fun (self: String) contains(substring: String): Bool {
     False;
 }
 
+fun (self: String) trim_left(): String {
+    let i = 0;
+    while (i < self.len()) {
+        let char = self.substring(i, i + 1);
+        if (char != " ") {
+            break;
+        }
+
+        i = i + 1;
+    }
+
+    self.substring(i, self.len());
+}
+
+test trim_left {
+    should_equal("a".trim_left(), "a");
+    should_equal("a b".trim_left(), "a b");
+    should_equal("  a".trim_left(), "a");
+    should_equal("a ".trim_left(), "a ");
+}
+
 // List methods.
 
 // Get the first item in this list, if the list is non-empty.

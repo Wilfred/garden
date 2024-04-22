@@ -4,7 +4,7 @@ fun do_it() {
     let website_dir = "/home/wilfred/projects/garden/website";
 
     let tmpl_path = "/".join([website_dir, "template.html"]);
-    
+
     let s = read_file(tmpl_path).or_error();
     let parts = match (s.split_once("MAIN_CONTENT")) {
         Some(s) => s,

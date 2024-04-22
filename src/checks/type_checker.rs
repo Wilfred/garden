@@ -296,7 +296,41 @@ fn check_expr(
                 }
             }
         }
-        Expression_::DotAccess(_, _) => None,
+        Expression_::DotAccess(recv, field_sym) => {
+            let recv_ty = check_expr(recv, env, bindings, warnings)?;
+            let recv_ty_name = recv_ty.type_name()?;
+
+            match recv_ty {
+                RuntimeType::UserDefined {
+                    kind: TypeDefKind::Struct,
+                    name,
+                    ..
+                } => {
+                    if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&name) {
+                        for field in &struct_info.fields {
+                            if field.sym.name == field_sym.name {
+                                let field_ty =
+                                    RuntimeType::from_hint(&field.hint, env, &HashMap::new())
+                                        .unwrap_or(RuntimeType::Top);
+                                return Some(field_ty);
+                            }
+                        }
+
+                        warnings.push(Warning {
+                            message: format!(
+                                "Struct `{}` has no field `{}`.",
+                                recv_ty_name, field_sym.name
+                            ),
+                            position: field_sym.position.clone(),
+                        });
+                        None
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
+        }
         Expression_::FunLiteral(_) => None,
         Expression_::Block(block) => {
             check_block(block, env, bindings, warnings);

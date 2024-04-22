@@ -1,38 +1,30 @@
-
-
-fun do_it() {
+fun build_site() {
     let website_dir = "/home/wilfred/projects/garden/website";
 
     let tmpl_path = "/".join([website_dir, "template.html"]);
 
-    let s = read_file(tmpl_path).or_error();
-    let parts = match (s.split_once("MAIN_CONTENT")) {
+    let index_tmpl_path = "/".join([website_dir, "index.tmpl.html"]);
+    let dest_path = "/".join([website_dir, "index.html"]);
+    write_website_file(tmpl_path, index_tmpl_path, dest_path);
+}
+
+fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {
+    let base_tmpl_src = read_file(base_tmpl_path).or_error();
+    let parts = match (base_tmpl_src.split_once("MAIN_CONTENT")) {
         Some(s) => s,
         None => ["", ""]
     };
 
-    let index_tmpl_path = "/".join([website_dir, "index.tmpl.html"]);
-    let tmpl = read_file(index_tmpl_path).or_error();
+    let tmpl = read_file(page_path).or_error();
 
     let src = "".join([parts.get(0).trim_right(), tmpl, parts.get(1).trim_left()]);
-
-    let dest_path = "/".join([website_dir, "index.html"]);
     write_file(src, dest_path).or_error();
 }
 
 {
-    do_it();
-}
-
-fun write_website_file(contents: String, path: String): Unit {
-
+    build_site();
 }
 
 fun main(_: List<String>) {
-    do_it();
-    // let s = read_file("/home/wilfred/projects/garden/website/template.html").or_error();
-    // let parts = s.split_once("MAIN_CONTENT");
-
-    // let tmpl = read_file("/home/wilfred/projects/garden/website/index.tmpl.html").or_error();
-    // tmpl;
+    build_site();
 }

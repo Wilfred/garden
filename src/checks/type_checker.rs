@@ -193,8 +193,43 @@ fn check_expr(
                 }
             }
         }
-        Expression_::Variable(_) => None,
-        Expression_::Call(_, _) => None,
+        Expression_::Variable(sym) => {
+            let value = env.file_scope.get(&sym.name)?;
+            let value_ty = RuntimeType::from_value(value);
+            Some(value_ty)
+        }
+        Expression_::Call(recv, args) => {
+            let recv_ty = check_expr(recv, env, bindings, warnings)?;
+            for arg in args {
+                check_expr(arg, env, bindings, warnings);
+            }
+
+            match recv_ty {
+                RuntimeType::Fun { params, return_ } => {
+                    if params.len() != args.len() {
+                        warnings.push(Warning {
+                            message: format!(
+                                "This function expects {} argument{}, but got {}.",
+                                params.len(),
+                                if params.len() == 1 { "" } else { "s" },
+                                args.len()
+                            ),
+                            position: recv.0.clone(),
+                        });
+                    }
+
+                    Some(*return_)
+                }
+                _ => {
+                    warnings.push(Warning {
+                        message: format!("Expected a function, but got a `{}`.", recv_ty),
+                        position: recv.0.clone(),
+                    });
+
+                    None
+                }
+            }
+        }
         Expression_::MethodCall(recv, sym, args) => {
             for arg in args {
                 check_expr(arg, env, bindings, warnings);

@@ -9,6 +9,7 @@ use crate::env::Env;
 use crate::eval::Bindings;
 use crate::runtime_type::{RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
+use crate::values::Value;
 use crate::visitor::Visitor;
 
 pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning> {
@@ -93,7 +94,52 @@ fn check_expr(
     warnings: &mut Vec<Warning>,
 ) -> Option<RuntimeType> {
     match &expr.1 {
-        Expression_::Match(_, _) => None,
+        Expression_::Match(scrutinee, cases) => {
+            let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings);
+            let scrutinee_ty_name = scrutinee_ty.and_then(|ty| ty.type_name());
+
+            for (pattern, case_expr) in cases {
+                check_expr(case_expr, env, bindings, warnings);
+
+                // Matching `_` works for any type.
+                if pattern.symbol.name.is_underscore() {
+                    continue;
+                }
+
+                let Some(value) = env.file_scope.get(&pattern.symbol.name) else {
+                    continue;
+                };
+
+                let pattern_type_name = match value {
+                    Value::Enum { type_name, .. } => type_name,
+                    Value::EnumConstructor { type_name, .. } => type_name,
+                    _ => {
+                        warnings.push(Warning {
+                            message: format!(
+                                "Expected an enum variant here, but got `{}`.",
+                                value.display(env)
+                            ),
+                            position: pattern.symbol.position.clone(),
+                        });
+                        continue;
+                    }
+                };
+
+                let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
+                    continue;
+                };
+                if pattern_type_name != scrutinee_ty_name {
+                    warnings.push(Warning {
+                        message: format!(
+                            "This match case is for `{}`, but you're matching on a `{}`.",
+                            pattern_type_name, &scrutinee_ty_name,
+                        ),
+                        position: pattern.symbol.position.clone(),
+                    });
+                }
+            }
+            None
+        }
         Expression_::If(_, _, _) => None,
         Expression_::While(_, _) => None,
         Expression_::Break => Some(RuntimeType::unit()),

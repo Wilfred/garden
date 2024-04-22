@@ -30,6 +30,10 @@ Fixed a crash on `shell()` with a nonexistent command.
 
 If tests fail, the test runner now has an exit code of 1.
 
+## Build
+
+Garden now requires Rust 1.73 to build.
+
 # 0.12 (released 3 April 2024)
 **Goal: Add structs.**
 

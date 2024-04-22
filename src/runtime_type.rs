@@ -166,7 +166,7 @@ impl RuntimeType {
         }
     }
 
-    fn from_fun_info(
+    pub(crate) fn from_fun_info(
         fun_info: &FunInfo,
         env: &Env,
         type_bindings: &HashMap<TypeName, RuntimeType>,

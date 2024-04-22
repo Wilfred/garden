@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, Expression, Expression_, FunInfo, ToplevelItem,
 };
@@ -256,7 +258,19 @@ fn check_expr(
                             position: sym.position.clone(),
                         });
                     }
-                    None
+
+                    let mut type_bindings = HashMap::new();
+                    for type_param in &fun_info.type_params {
+                        type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
+                    }
+
+                    let fun_ty = RuntimeType::from_fun_info(&fun_info, env, &type_bindings)
+                        .unwrap_or(RuntimeType::Top);
+
+                    match fun_ty {
+                        RuntimeType::Fun { return_, .. } => Some(*return_),
+                        _ => None,
+                    }
                 }
                 None => {
                     warnings.push(Warning {

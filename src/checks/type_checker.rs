@@ -7,7 +7,8 @@ use garden_lang_parser::ast::{
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::Bindings;
-use crate::runtime_type::RuntimeType;
+use crate::runtime_type::{RuntimeType, TypeDefKind};
+use crate::types::TypeDef;
 use crate::visitor::Visitor;
 
 pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning> {
@@ -109,7 +110,21 @@ fn check_expr(
             // TODO: accurately calculate list generic type argument.
             Some(RuntimeType::List(Box::new(RuntimeType::Top)))
         }
-        Expression_::StructLiteral(_, _) => None,
+        Expression_::StructLiteral(name_sym, fields) => {
+            for (_, expr) in fields {
+                check_expr(expr, env, bindings, warnings);
+            }
+
+            if let Some(TypeDef::Struct(_)) = env.get_type_def(&name_sym.name) {
+                Some(RuntimeType::UserDefined {
+                    kind: TypeDefKind::Struct,
+                    name: name_sym.name.clone(),
+                    args: vec![],
+                })
+            } else {
+                None
+            }
+        }
         Expression_::BinaryOperator(lhs, op, rhs) => {
             let lhs_ty = check_expr(lhs, env, bindings, warnings);
             let rhs_ty = check_expr(rhs, env, bindings, warnings);
@@ -240,7 +255,7 @@ fn check_expr(
             let recv_ty = check_expr(recv, env, bindings, warnings)?;
             let recv_ty_name = recv_ty.type_name()?;
 
-            let methods = env.methods.get(&recv_ty_name)?;
+            let methods = env.methods.get(&recv_ty_name).cloned().unwrap_or_default();
 
             match methods.get(&sym.name) {
                 Some(method_info) => {

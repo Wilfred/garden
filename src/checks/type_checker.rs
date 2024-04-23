@@ -7,7 +7,7 @@ use garden_lang_parser::ast::{
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::eval::Bindings;
-use crate::runtime_type::{RuntimeType, TypeDefKind};
+use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
@@ -143,7 +143,7 @@ fn check_expr(
         Expression_::If(cond_expr, then_block, else_block) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings);
             if let Some(cond_ty) = cond_ty {
-                if cond_ty != RuntimeType::bool() {
+                if !is_subtype(&cond_ty, &RuntimeType::bool()) {
                     warnings.push(Warning {
                         message: format!(
                             "Expected `Bool` inside an `if` condition, but got `{}`.",
@@ -163,7 +163,7 @@ fn check_expr(
         Expression_::While(cond_expr, body) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings);
             if let Some(cond_ty) = cond_ty {
-                if cond_ty != RuntimeType::bool() {
+                if !is_subtype(&cond_ty, &RuntimeType::bool()) {
                     warnings.push(Warning {
                         message: format!(
                             "Expected `Bool` inside an `while` condition, but got `{}`.",
@@ -217,7 +217,7 @@ fn check_expr(
                 | BinaryOperatorKind::Multiply
                 | BinaryOperatorKind::Divide => {
                     if let Some(lhs_ty) = lhs_ty {
-                        if lhs_ty != RuntimeType::Int {
+                        if !is_subtype(&lhs_ty, &RuntimeType::Int) {
                             warnings.push(Warning {
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
@@ -225,7 +225,7 @@ fn check_expr(
                         }
                     }
                     if let Some(rhs_ty) = rhs_ty {
-                        if rhs_ty != RuntimeType::Int {
+                        if !is_subtype(&rhs_ty, &RuntimeType::Int) {
                             warnings.push(Warning {
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
@@ -240,7 +240,7 @@ fn check_expr(
                 | BinaryOperatorKind::GreaterThan
                 | BinaryOperatorKind::GreaterThanOrEqual => {
                     if let Some(lhs_ty) = lhs_ty {
-                        if lhs_ty != RuntimeType::Int {
+                        if !is_subtype(&lhs_ty, &RuntimeType::Int) {
                             warnings.push(Warning {
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
@@ -248,7 +248,7 @@ fn check_expr(
                         }
                     }
                     if let Some(rhs_ty) = rhs_ty {
-                        if rhs_ty != RuntimeType::Int {
+                        if !is_subtype(&rhs_ty, &RuntimeType::Int) {
                             warnings.push(Warning {
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
@@ -272,7 +272,7 @@ fn check_expr(
                 }
                 BinaryOperatorKind::And | BinaryOperatorKind::Or => {
                     if let Some(lhs_ty) = lhs_ty {
-                        if lhs_ty != RuntimeType::bool() {
+                        if !is_subtype(&lhs_ty, &RuntimeType::bool()) {
                             warnings.push(Warning {
                                 message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
@@ -280,7 +280,7 @@ fn check_expr(
                         }
                     }
                     if let Some(rhs_ty) = rhs_ty {
-                        if rhs_ty != RuntimeType::bool() {
+                        if !is_subtype(&rhs_ty, &RuntimeType::bool()) {
                             warnings.push(Warning {
                                 message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),

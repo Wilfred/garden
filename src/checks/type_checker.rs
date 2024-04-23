@@ -235,7 +235,14 @@ fn check_expr(
         }
         Expression_::Break => Some(RuntimeType::unit()),
         Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),
-        Expression_::Let(_sym, expr) => check_expr(expr, env, bindings, warnings),
+        Expression_::Let(sym, expr) => {
+            let expr_ty = check_expr(expr, env, bindings, warnings);
+            if let Some(expr_ty) = &expr_ty {
+                bindings.set(sym.name.clone(), expr_ty.clone());
+            }
+
+            expr_ty
+        }
         Expression_::Return(_) => None,
         Expression_::IntLiteral(_) => Some(RuntimeType::Int),
         Expression_::StringLiteral(_) => Some(RuntimeType::String),

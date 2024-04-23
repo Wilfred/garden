@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, ToplevelItem,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, SymbolName, ToplevelItem,
 };
 
 use crate::diagnostics::Warning;
 use crate::env::Env;
-use crate::eval::Bindings;
 use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::Value;
@@ -22,6 +21,39 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning>
     }
 
     visitor.warnings
+}
+
+#[derive(Debug)]
+struct LocalBindings {
+    blocks: Vec<HashMap<SymbolName, RuntimeType>>,
+}
+
+impl Default for LocalBindings {
+    fn default() -> Self {
+        Self {
+            blocks: vec![HashMap::new()],
+        }
+    }
+}
+
+impl LocalBindings {
+    fn enter_block(&mut self) {
+        self.blocks.push(HashMap::new());
+    }
+
+    fn exit_block(&mut self) {
+        self.blocks.pop();
+    }
+
+    fn get(&self, name: &SymbolName) -> Option<&RuntimeType> {
+        for block in self.blocks.iter().rev() {
+            if let Some(ty) = block.get(name) {
+                return Some(ty);
+            }
+        }
+
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -49,7 +81,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_block(&mut self, block: &Block) {
         assign_expr_ids(block);
 
-        let mut bindings = Bindings::default();
+        let mut bindings = LocalBindings::default();
 
         // check_block recurses, so don't recurse in the visitor
         check_block(block, self.env, &mut bindings, &mut self.warnings);
@@ -77,20 +109,25 @@ impl Visitor for AssignExprIds {
     }
 }
 
-fn check_block(block: &Block, env: &mut Env, bindings: &mut Bindings, warnings: &mut Vec<Warning>) {
-    bindings.push_block();
+fn check_block(
+    block: &Block,
+    env: &mut Env,
+    bindings: &mut LocalBindings,
+    warnings: &mut Vec<Warning>,
+) {
+    bindings.enter_block();
 
     for expr in &block.exprs {
         check_expr(expr, env, bindings, warnings);
     }
 
-    bindings.pop_block();
+    bindings.exit_block();
 }
 
 fn check_expr(
     expr: &Expression,
     env: &mut Env,
-    bindings: &mut Bindings,
+    bindings: &mut LocalBindings,
     warnings: &mut Vec<Warning>,
 ) -> Option<RuntimeType> {
     match &expr.1 {
@@ -293,6 +330,10 @@ fn check_expr(
             }
         }
         Expression_::Variable(sym) => {
+            if let Some(value_ty) = bindings.get(&sym.name) {
+                return Some(value_ty.clone());
+            }
+
             let value = env.file_scope.get(&sym.name)?;
             let value_ty = RuntimeType::from_value(value);
             Some(value_ty)

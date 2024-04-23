@@ -399,7 +399,6 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             Definition_::Test(test) => {
                 if let Some(test_sym) = &test.name {
                     env.tests.insert(test_sym.name.clone(), test.clone());
-                    new_syms.push(test_sym.name.clone());
                 }
             }
             Definition_::Enum(enum_info) => {

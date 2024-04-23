@@ -27,6 +27,8 @@ Fixed a crash on `shell()` with a nonexistent command.
 
 `:doc` now prints the position of functions.
 
+`:funs` now only shows callable values in the file scope.
+
 ## Test Runner
 
 If tests fail, the test runner now has an exit code of 1.

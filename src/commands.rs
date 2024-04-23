@@ -448,7 +448,23 @@ pub(crate) fn run_command<T: Write>(
             write!(buf, "{}", format_duration(uptime)).unwrap();
         }
         Command::Functions => {
-            let mut names: Vec<_> = env.file_scope.keys().map(|s| &s.0).collect();
+            let mut names = vec![];
+            for (name, value) in env.file_scope.iter() {
+                let is_fun = match value {
+                    Value::Fun { .. } | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => true,
+                    Value::Integer(_) => false,
+                    Value::String(_) => false,
+                    Value::List { .. } => false,
+                    Value::Enum { .. } => false,
+                    Value::EnumConstructor { .. } => false,
+                    Value::Struct { .. } => false,
+                };
+
+                if is_fun {
+                    names.push(&name.0);
+                }
+            }
+
             names.sort();
 
             for (i, var_name) in names.iter().enumerate() {

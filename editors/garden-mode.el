@@ -572,6 +572,7 @@ If called with a prefix, stop the previous session."
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-z") #'garden-toggle-session)
+    (define-key map (kbd "C-c a") #'garden-abort-command)
     map)
   "Keymap for `garden-session-mode'.")
 

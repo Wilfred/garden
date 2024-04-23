@@ -51,6 +51,24 @@ enum NoValue {}
 
 // String methods.
 
+// Does this string start with `s`?
+fun (self: String) starts_with(s: String): Bool {
+    if (s.len() > self.len()) {
+        return False;
+    }
+
+    self.substring(0, s.len()) == s;
+}
+
+test starts_with {
+    should_equal("abc".starts_with("ab"), True);
+    should_equal("abc".starts_with(""), True);
+
+    should_equal("abc".starts_with("x"), False);
+    should_equal("abc".starts_with("b"), False);
+    should_equal("abc".starts_with("abcaa"), False);
+}
+
 // Does this string end with `s`?
 fun (self: String) ends_with(s: String): Bool {
     if (s.len() > self.len()) {

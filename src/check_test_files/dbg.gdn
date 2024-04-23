@@ -1,0 +1,5 @@
+{
+    dbg("abc");
+}
+
+// args: check

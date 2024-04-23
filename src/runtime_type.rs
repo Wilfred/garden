@@ -132,7 +132,13 @@ impl RuntimeType {
                 // TODO: store runtime type information in closures,
                 // and this shouldn't be necessary?
                 let env = Env::default();
-                Self::from_fun_info(fun_info, &env, &HashMap::new()).unwrap_or(RuntimeType::Top)
+
+                let mut type_bindings: HashMap<TypeName, RuntimeType> = HashMap::new();
+                for type_param in &fun_info.type_params {
+                    type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
+                }
+
+                Self::from_fun_info(fun_info, &env, &type_bindings).unwrap_or(RuntimeType::Top)
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
                 Some(fun_info) => {

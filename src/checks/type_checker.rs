@@ -140,7 +140,26 @@ fn check_expr(
             }
             None
         }
-        Expression_::If(_, _, _) => None,
+        Expression_::If(cond_expr, then_block, else_block) => {
+            let cond_ty = check_expr(cond_expr, env, bindings, warnings);
+            if let Some(cond_ty) = cond_ty {
+                if cond_ty != RuntimeType::bool() {
+                    warnings.push(Warning {
+                        message: format!(
+                            "Expected `Bool` inside an `if` condition, but got `{}`.",
+                            cond_ty
+                        ),
+                        position: cond_expr.0.clone(),
+                    });
+                }
+            }
+
+            check_block(then_block, env, bindings, warnings);
+            if let Some(else_block) = else_block {
+                check_block(else_block, env, bindings, warnings);
+            }
+            None
+        }
         Expression_::While(_, _) => None,
         Expression_::Break => Some(RuntimeType::unit()),
         Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),

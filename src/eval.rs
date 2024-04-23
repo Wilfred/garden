@@ -18,7 +18,7 @@ use crate::checks::check_toplevel_items;
 use crate::diagnostics::Warning;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::runtime_type::{RuntimeType, TypeDefKind};
+use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
@@ -1024,90 +1024,6 @@ fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), Er
         Ok(())
     } else {
         Err(format_type_error(expected, value, env))
-    }
-}
-
-fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
-    match (lhs, rhs) {
-        (_, RuntimeType::Top) => true,
-        (_, _) if lhs.is_no_value() => true,
-        (RuntimeType::Int, RuntimeType::Int) => true,
-        (RuntimeType::Int, _) => false,
-        (RuntimeType::String, RuntimeType::String) => true,
-        (RuntimeType::String, _) => false,
-        (RuntimeType::List(lhs_elem), RuntimeType::List(rhs_elem)) => {
-            // List is covariant in its element.
-            // List<NoValue> <: List<Int>
-            is_subtype(lhs_elem, rhs_elem)
-        }
-        (RuntimeType::List(_), _) => false,
-        (
-            RuntimeType::Fun {
-                params: lhs_params,
-                return_: lhs_return,
-            },
-            RuntimeType::Fun {
-                params: rhs_params,
-                return_: rhs_return,
-            },
-        ) => {
-            if lhs_params.len() != rhs_params.len() {
-                return false;
-            }
-
-            // Functions are contravariant in their arguments.
-            // Fun<(Top,), Unit> <: Fun<(Int,), Unit>
-            for (lhs_param, rhs_param) in lhs_params.iter().zip(rhs_params) {
-                if !is_subtype(lhs_param, rhs_param) {
-                    return false;
-                }
-            }
-
-            // Functions are covariant in their return types, so flip the arguments.
-            // Fun<(), NoValue> <: Fun<(), Int>
-            is_subtype(rhs_return, lhs_return)
-        }
-        (RuntimeType::Fun { .. }, _) => false,
-        (
-            RuntimeType::UserDefined {
-                kind: _,
-                name: lhs_name,
-                args: lhs_args,
-            },
-            RuntimeType::UserDefined {
-                kind: _,
-                name: rhs_name,
-                args: rhs_args,
-            },
-        ) => {
-            // Values in Garden are nominally typed, so we only need
-            // to compare type names.
-            if lhs_name != rhs_name {
-                return false;
-            }
-
-            if lhs_args.len() != rhs_args.len() {
-                return false;
-            }
-
-            // Garden values are currently exclusively immutable, so
-            // we can assume that all user-defined types have
-            // covariant arguments.
-            // Foo<NoValue> <: Foo<Int>
-            for (lhs_arg, rhs_arg) in lhs_args.iter().zip(rhs_args) {
-                if !is_subtype(lhs_arg, rhs_arg) {
-                    return false;
-                }
-            }
-
-            true
-        }
-        (RuntimeType::UserDefined { .. }, _) => false,
-        (RuntimeType::Top, _) => {
-            // Top is only a subtype of itself, but we've already
-            // matched the case where RHS is Top.
-            false
-        }
     }
 }
 

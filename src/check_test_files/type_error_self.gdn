@@ -1,0 +1,13 @@
+fun (self: String) bad(): Bool {
+    self.no_such_meth();
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `String` has no method `no_such_meth`.
+// 
+// --> src/check_test_files/type_error_self.gdn:2
+//     self.no_such_meth();
+//          ^^^^^^^^^^^^
+

@@ -31,6 +31,10 @@ pub(crate) trait Visitor {
     }
 
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
+        self.visit_method_info_default(method_info);
+    }
+
+    fn visit_method_info_default(&mut self, method_info: &MethodInfo) {
         self.visit_type_hint(&method_info.receiver_type);
 
         if let Some(fun_info) = method_info.fun_info() {

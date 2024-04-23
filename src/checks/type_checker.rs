@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, SymbolName, ToplevelItem,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, SymbolName,
+    ToplevelItem,
 };
 
 use crate::diagnostics::Warning;
@@ -70,6 +71,19 @@ struct TypeCheckVisitor<'a> {
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
+    fn visit_method_info(&mut self, method_info: &MethodInfo) {
+        self.bindings.enter_block();
+
+        let self_ty = RuntimeType::from_hint(&method_info.receiver_type, self.env, &HashMap::new())
+            .unwrap_or(RuntimeType::Top);
+        self.bindings
+            .set(method_info.receiver_sym.name.clone(), self_ty);
+
+        self.visit_method_info_default(method_info);
+
+        self.bindings.exit_block();
+    }
+
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         // Skip typechecking builtins and prelude to help print debugging.
         if let Some(n) = &fun_info.name {

@@ -479,7 +479,32 @@ fn check_expr(
                 _ => None,
             }
         }
-        Expression_::FunLiteral(_) => None,
+        Expression_::FunLiteral(fun_info) => {
+            check_block(&fun_info.body, env, bindings, warnings);
+
+            let mut param_tys = vec![];
+            for param in &fun_info.params {
+                let param_ty = match &param.type_ {
+                    Some(hint) => RuntimeType::from_hint(hint, env, &HashMap::new())
+                        .unwrap_or(RuntimeType::Top),
+                    None => RuntimeType::Top,
+                };
+                param_tys.push(param_ty);
+            }
+
+            let return_ty = match &fun_info.return_type {
+                Some(hint) => {
+                    RuntimeType::from_hint(hint, env, &HashMap::new()).unwrap_or(RuntimeType::Top)
+                }
+                None => RuntimeType::Top,
+            };
+
+            let fun_ty = RuntimeType::Fun {
+                params: param_tys,
+                return_: Box::new(return_ty),
+            };
+            Some(fun_ty)
+        }
         Expression_::Block(block) => {
             check_block(block, env, bindings, warnings);
             None

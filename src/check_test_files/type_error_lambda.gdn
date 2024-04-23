@@ -1,0 +1,14 @@
+{
+    let f = fun(x: Int): Int { x; };
+    f();
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: This function expects 1 argument, but got 0.
+// 
+// --> src/check_test_files/type_error_lambda.gdn:3
+//     f();
+//     ^
+

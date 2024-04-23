@@ -51,6 +51,25 @@ enum NoValue {}
 
 // String methods.
 
+// Does this string end with `s`?
+fun (self: String) ends_with(s: String): Bool {
+    if (s.len() > self.len()) {
+        return False;
+    }
+
+    self.substring(self.len() - s.len(), self.len()) == s;
+}
+
+test ends_with {
+    should_equal("abc".ends_with("bc"), True);
+    should_equal("abc".ends_with(""), True);
+
+    should_equal("abc".ends_with("x"), False);
+    should_equal("abc".ends_with("b"), False);
+    should_equal("abc".ends_with("aabc"), False);
+}
+
+
 // Split this string into a list of lines.
 fun (self: String) lines(): List<String> {
     let parts = [];

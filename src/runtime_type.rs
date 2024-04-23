@@ -186,7 +186,7 @@ impl RuntimeType {
             param_types.push(type_);
         }
 
-        let return_ = match &fun_info.return_type {
+        let return_ = match &fun_info.return_hint {
             Some(hint) => Self::from_hint(hint, env, type_bindings)?,
             None => RuntimeType::Top,
         };

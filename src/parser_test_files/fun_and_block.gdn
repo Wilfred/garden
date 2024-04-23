@@ -12,7 +12,7 @@ fun foo(): Unit {} {}
 //         ),
 //         type_params: [],
 //         params: [],
-//         return_type: Some(
+//         return_hint: Some(
 //             TypeHint {
 //                 sym: TypeSymbol"Unit",
 //                 args: [],

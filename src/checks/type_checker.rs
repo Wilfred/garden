@@ -506,7 +506,7 @@ fn check_expr(
                 param_tys.push(param_ty);
             }
 
-            let return_ty = match &fun_info.return_type {
+            let return_ty = match &fun_info.return_hint {
                 Some(hint) => {
                     RuntimeType::from_hint(hint, env, &HashMap::new()).unwrap_or(RuntimeType::Top)
                 }

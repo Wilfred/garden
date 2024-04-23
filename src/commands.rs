@@ -328,8 +328,8 @@ fn format_signature(
     }
     res.push(')');
 
-    if let Some(return_type) = &fun_info.return_type {
-        res.push_str(&format!(": {}", return_type.as_src()));
+    if let Some(return_hint) = &fun_info.return_hint {
+        res.push_str(&format!(": {}", return_hint.as_src()));
     }
 
     res.push_str(" { ... }");

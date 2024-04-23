@@ -2772,7 +2772,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 .expect("Should have a value");
 
             if let Some(ref fun) = stack_frame.enclosing_fun {
-                if let Some(return_hint) = &fun.return_type {
+                if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();
 
                     let return_ty = match RuntimeType::from_hint(

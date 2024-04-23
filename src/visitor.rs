@@ -82,7 +82,7 @@ pub(crate) trait Visitor {
             }
         }
 
-        if let Some(return_hint) = &fun_info.return_type {
+        if let Some(return_hint) = &fun_info.return_hint {
             self.visit_type_hint(return_hint);
         }
 

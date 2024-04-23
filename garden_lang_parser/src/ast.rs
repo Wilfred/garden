@@ -289,7 +289,7 @@ pub struct FunInfo {
     pub name: Option<Symbol>,
     pub type_params: Vec<TypeSymbol>,
     pub params: Vec<SymbolWithType>,
-    pub return_type: Option<TypeHint>,
+    pub return_hint: Option<TypeHint>,
     pub body: Block,
 }
 

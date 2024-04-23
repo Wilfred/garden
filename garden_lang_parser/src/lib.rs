@@ -153,7 +153,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let type_params = parse_type_params(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_type = parse_type_annotation_opt(tokens)?;
+    let return_hint = parse_type_annotation_opt(tokens)?;
 
     let body = parse_block(src, tokens, false)?;
 
@@ -173,7 +173,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
             doc_comment: None,
             name: None,
             type_params,
-            return_type,
+            return_hint,
         }),
     ))
 }
@@ -1254,7 +1254,7 @@ fn parse_method(
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_type = parse_type_annotation_opt(tokens)?;
+    let return_hint = parse_type_annotation_opt(tokens)?;
 
     let body = parse_block(src, tokens, false)?;
 
@@ -1276,7 +1276,7 @@ fn parse_method(
         type_params,
         params,
         body,
-        return_type,
+        return_hint,
     };
     let meth_info = MethodInfo {
         receiver_type,
@@ -1303,7 +1303,7 @@ fn parse_function(
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_type = parse_type_annotation_opt(tokens)?;
+    let return_hint = parse_type_annotation_opt(tokens)?;
 
     let body = parse_block(src, tokens, false)?;
 
@@ -1330,7 +1330,7 @@ fn parse_function(
                 type_params,
                 params,
                 body,
-                return_type,
+                return_hint,
             },
         ),
     ))

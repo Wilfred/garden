@@ -16,7 +16,7 @@ fun foo() {}
 //         ),
 //         type_params: [],
 //         params: [],
-//         return_type: None,
+//         return_hint: None,
 //         body: Block {
 //             is_loop_body: false,
 //             open_brace: Position { ... },

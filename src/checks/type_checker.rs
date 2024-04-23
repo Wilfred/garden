@@ -15,6 +15,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning>
     let mut visitor = TypeCheckVisitor {
         env,
         warnings: vec![],
+        bindings: LocalBindings::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -54,12 +55,18 @@ impl LocalBindings {
 
         None
     }
+
+    fn set(&mut self, name: SymbolName, ty: RuntimeType) {
+        let block = self.blocks.last_mut().expect("Should be non-empty");
+        block.insert(name, ty);
+    }
 }
 
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
     warnings: Vec<Warning>,
+    bindings: LocalBindings,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
@@ -75,16 +82,27 @@ impl Visitor for TypeCheckVisitor<'_> {
             }
         }
 
+        self.bindings.enter_block();
+
+        for param in &fun_info.params {
+            let param_ty = match &param.type_ {
+                Some(hint) => RuntimeType::from_hint(hint, self.env, &HashMap::new())
+                    .unwrap_or(RuntimeType::Top),
+                None => RuntimeType::Top,
+            };
+            self.bindings.set(param.symbol.name.clone(), param_ty);
+        }
+
         self.visit_fun_info_default(fun_info);
+
+        self.bindings.exit_block();
     }
 
     fn visit_block(&mut self, block: &Block) {
         assign_expr_ids(block);
 
-        let mut bindings = LocalBindings::default();
-
         // check_block recurses, so don't recurse in the visitor
-        check_block(block, self.env, &mut bindings, &mut self.warnings);
+        check_block(block, self.env, &mut self.bindings, &mut self.warnings);
     }
 }
 

@@ -322,8 +322,8 @@ fn format_signature(
 
         res.push_str(&format!("{}", &param.symbol.name));
 
-        if let Some(param_ty) = &param.type_ {
-            res.push_str(&format!(": {}", param_ty.as_src()));
+        if let Some(param_hint) = &param.hint {
+            res.push_str(&format!(": {}", param_hint.as_src()));
         }
     }
     res.push(')');
@@ -697,7 +697,7 @@ fn format_method_info(method_info: &ast::MethodInfo) -> Option<String> {
         MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
     };
 
-    fun_info.map(|fi| format_fun_info(fi, &method_info.name_sym, Some(&method_info.receiver_type)))
+    fun_info.map(|fi| format_fun_info(fi, &method_info.name_sym, Some(&method_info.receiver_hint)))
 }
 
 fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {

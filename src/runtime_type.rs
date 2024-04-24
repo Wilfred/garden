@@ -179,7 +179,7 @@ impl RuntimeType {
     ) -> Result<Self, String> {
         let mut param_types = vec![];
         for param in &fun_info.params {
-            let type_ = match &param.type_ {
+            let type_ = match &param.hint {
                 Some(hint) => RuntimeType::from_hint(hint, env, type_bindings)?,
                 None => RuntimeType::Top,
             };

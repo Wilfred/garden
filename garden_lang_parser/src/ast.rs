@@ -146,9 +146,9 @@ impl std::fmt::Debug for Symbol {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SymbolWithType {
+pub struct SymbolWithHint {
     pub symbol: Symbol,
-    pub type_: Option<TypeHint>,
+    pub hint: Option<TypeHint>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -288,7 +288,7 @@ pub struct FunInfo {
     /// The name of the function. This is `None` for closures.
     pub name: Option<Symbol>,
     pub type_params: Vec<TypeSymbol>,
-    pub params: Vec<SymbolWithType>,
+    pub params: Vec<SymbolWithHint>,
     pub return_hint: Option<TypeHint>,
     pub body: Block,
 }
@@ -359,7 +359,7 @@ pub enum MethodKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MethodInfo {
     /// The type that has this method.
-    pub receiver_type: TypeHint,
+    pub receiver_hint: TypeHint,
     /// The name of the receiver in the method definition. This is
     /// typically `self`.
     ///

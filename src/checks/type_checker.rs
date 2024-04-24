@@ -74,7 +74,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let self_ty = RuntimeType::from_hint(&method_info.receiver_type, self.env, &HashMap::new())
+        let self_ty = RuntimeType::from_hint(&method_info.receiver_hint, self.env, &HashMap::new())
             .unwrap_or(RuntimeType::Top);
         self.bindings
             .set(method_info.receiver_sym.name.clone(), self_ty);
@@ -99,7 +99,7 @@ impl Visitor for TypeCheckVisitor<'_> {
         self.bindings.enter_block();
 
         for param in &fun_info.params {
-            let param_ty = match &param.type_ {
+            let param_ty = match &param.hint {
                 Some(hint) => RuntimeType::from_hint(hint, self.env, &HashMap::new())
                     .unwrap_or(RuntimeType::Top),
                 None => RuntimeType::Top,
@@ -500,7 +500,7 @@ fn check_expr(
             // Only bind and check locals that have an explicit type
             // hint.
             for param in &fun_info.params {
-                if let Some(hint) = &param.type_ {
+                if let Some(hint) = &param.hint {
                     let param_ty = RuntimeType::from_hint(hint, env, &HashMap::new())
                         .unwrap_or(RuntimeType::Top);
                     bindings.set(param.symbol.name.clone(), param_ty);
@@ -514,7 +514,7 @@ fn check_expr(
             // Build the type representation of a function matching this lambda.
             let mut param_tys = vec![];
             for param in &fun_info.params {
-                let param_ty = match &param.type_ {
+                let param_ty = match &param.hint {
                     Some(hint) => RuntimeType::from_hint(hint, env, &HashMap::new())
                         .unwrap_or(RuntimeType::Top),
                     None => RuntimeType::Top,

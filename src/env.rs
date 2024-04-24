@@ -43,7 +43,7 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
-                receiver_type: TypeHint {
+                receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
                         position: Position::todo(),
@@ -67,7 +67,7 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("substring".to_owned()),
             MethodInfo {
-                receiver_type: TypeHint {
+                receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
                         position: Position::todo(),
@@ -91,7 +91,7 @@ impl Default for Env {
         string_methods.insert(
             SymbolName("concat".to_owned()),
             MethodInfo {
-                receiver_type: TypeHint {
+                receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
                         position: Position::todo(),
@@ -124,7 +124,7 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("append".to_owned()),
             MethodInfo {
-                receiver_type: TypeHint {
+                receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
                         position: Position::todo(),
@@ -148,7 +148,7 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("len".to_owned()),
             MethodInfo {
-                receiver_type: TypeHint {
+                receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
                         position: Position::todo(),
@@ -172,7 +172,7 @@ impl Default for Env {
         list_methods.insert(
             SymbolName("get".to_owned()),
             MethodInfo {
-                receiver_type: TypeHint {
+                receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
                         position: Position::todo(),
@@ -273,7 +273,7 @@ impl Env {
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
         let type_methods = self
             .methods
-            .entry(method_info.receiver_type.sym.name.clone())
+            .entry(method_info.receiver_hint.sym.name.clone())
             .or_default();
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
     }

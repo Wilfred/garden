@@ -4,7 +4,7 @@ fun (self: List) foo() {}
 // expected stdout:
 // Method(
 //     MethodInfo {
-//         receiver_type: TypeHint {
+//         receiver_hint: TypeHint {
 //             sym: TypeSymbol"List",
 //             args: [],
 //             position: Position { ... },

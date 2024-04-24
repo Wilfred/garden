@@ -1015,23 +1015,23 @@ fn parse_type_annotation_opt(tokens: &mut TokenStream) -> Result<Option<TypeHint
 
 fn parse_parameter(
     tokens: &mut TokenStream,
-    require_type: bool,
-) -> Result<SymbolWithType, ParseError> {
+    require_type_hint: bool,
+) -> Result<SymbolWithHint, ParseError> {
     let param = parse_symbol(tokens)?;
 
-    let type_ = if require_type {
+    let hint = if require_type_hint {
         Some(parse_type_annotation(tokens)?)
     } else {
         parse_type_annotation_opt(tokens)?
     };
 
-    Ok(SymbolWithType {
+    Ok(SymbolWithHint {
         symbol: param,
-        type_,
+        hint,
     })
 }
 
-fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithType>, ParseError> {
+fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithHint>, ParseError> {
     require_token(tokens, "(")?;
 
     let mut params = vec![];
@@ -1240,7 +1240,7 @@ fn parse_method(
     require_token(tokens, "(")?;
     let receiver_param = parse_parameter(tokens, true)?;
     let receiver_sym = receiver_param.symbol.clone();
-    let receiver_type = match receiver_param.type_ {
+    let receiver_hint = match receiver_param.hint {
         Some(type_name) => type_name,
         None => {
             return Err(ParseError::Incomplete {
@@ -1279,7 +1279,7 @@ fn parse_method(
         return_hint,
     };
     let meth_info = MethodInfo {
-        receiver_type,
+        receiver_hint,
         receiver_sym,
         name_sym: name,
         kind: MethodKind::UserDefinedMethod(fun_info),

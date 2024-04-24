@@ -23,7 +23,7 @@ use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
-    SourceString, Symbol, SymbolWithType, TestInfo, ToplevelItem, TypeName, TypeSymbol,
+    SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -469,14 +469,14 @@ fn update_builtin_meth_info(
     env: &mut Env,
     warnings: &mut Vec<Warning>,
 ) {
-    let type_name = &meth_info.receiver_type.sym.name;
+    let type_name = &meth_info.receiver_hint.sym.name;
     let Some(type_methods) = env.methods.get_mut(type_name) else {
         warnings.push(Warning {
             message: format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
             ),
-            position: meth_info.receiver_type.sym.position.clone(),
+            position: meth_info.receiver_hint.sym.position.clone(),
         });
         return;
     };
@@ -1723,13 +1723,13 @@ fn enum_value_runtime_type(
 fn check_param_types(
     env: &Env,
     receiver_value: &Value,
-    params: &[SymbolWithType],
+    params: &[SymbolWithHint],
     arg_positions: &[Position],
     arg_values: &[Value],
     type_bindings: &HashMap<TypeName, RuntimeType>,
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
-        if let Some(param_hint) = &param.type_ {
+        if let Some(param_hint) = &param.hint {
             let param_ty = match RuntimeType::from_hint(param_hint, env, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {

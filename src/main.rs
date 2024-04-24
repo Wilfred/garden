@@ -313,4 +313,13 @@ mod tests {
         cmd.arg("test").arg("src/prelude.gdn");
         cmd.assert().success();
     }
+
+    #[test]
+    fn test_prelude_check() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("check").arg("src/prelude.gdn");
+        cmd.assert().success();
+    }
 }

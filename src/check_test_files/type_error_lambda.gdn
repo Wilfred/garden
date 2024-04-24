@@ -1,11 +1,16 @@
 {
-    let f = fun(x: Int): Int { x; };
+    let f = fun(x: Int): Int { x.no_such_meth(); };
     f();
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Error: `Int` has no method `no_such_meth`.
+// 
+// --> src/check_test_files/type_error_lambda.gdn:2
+//     let f = fun(x: Int): Int { x.no_such_meth(); };
+//                                  ^^^^^^^^^^^^
 // Error: This function expects 1 argument, but got 0.
 // 
 // --> src/check_test_files/type_error_lambda.gdn:3

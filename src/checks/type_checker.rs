@@ -494,8 +494,24 @@ fn check_expr(
             }
         }
         Expression_::FunLiteral(fun_info) => {
+            // Check the function body with the locals bound.
+            bindings.enter_block();
+
+            // Only bind and check locals that have an explicit type
+            // hint.
+            for param in &fun_info.params {
+                if let Some(hint) = &param.type_ {
+                    let param_ty = RuntimeType::from_hint(hint, env, &HashMap::new())
+                        .unwrap_or(RuntimeType::Top);
+                    bindings.set(param.symbol.name.clone(), param_ty);
+                }
+            }
+
             check_block(&fun_info.body, env, bindings, warnings);
 
+            bindings.exit_block();
+
+            // Build the type representation of a function matching this lambda.
             let mut param_tys = vec![];
             for param in &fun_info.params {
                 let param_ty = match &param.type_ {

@@ -2,8 +2,8 @@ struct Foo {
     x: Int,
 }
 
-fun main(args: List<String>): Unit {
-    let f = Foo { x: 1 + 2, y: 2 };
+fun main(_args: List<String>): Unit {
+    let _f = Foo { x: 1 + 2, y: 2 };
 }
 
 // args: check
@@ -12,6 +12,6 @@ fun main(args: List<String>): Unit {
 // Error: Struct `Foo` has no field named `y`
 // 
 // --> src/check_test_files/struct_extra_field.gdn:6
-//     let f = Foo { x: 1 + 2, y: 2 };
-//                             ^
+//     let _f = Foo { x: 1 + 2, y: 2 };
+//                              ^
 

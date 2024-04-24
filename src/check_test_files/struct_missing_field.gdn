@@ -2,8 +2,8 @@ struct Foo {
     x: Int,
 }
 
-fun main(args: List<String>): Unit {
-    let f = Foo {};
+fun main(_args: List<String>): Unit {
+    let _f = Foo {};
 }
 
 // args: check
@@ -12,6 +12,6 @@ fun main(args: List<String>): Unit {
 // Error: Missing field `x` in struct literal.
 // 
 // --> src/check_test_files/struct_missing_field.gdn:6
-//     let f = Foo {};
-//             ^^^
+//     let _f = Foo {};
+//              ^^^
 

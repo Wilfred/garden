@@ -1,0 +1,11 @@
+fun foo(x: Int) {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `x` is unused.
+// 
+// --> src/check_test_files/bound_but_unused.gdn:1
+// fun foo(x: Int) {}
+//         ^
+

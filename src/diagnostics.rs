@@ -11,7 +11,7 @@ use crate::eval::{EnclosingSymbol, StackFrame};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{ast::SourceString, diagnostics::ErrorMessage};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub(crate) enum Level {
     Warning,
     Error,
@@ -74,7 +74,21 @@ pub(crate) fn format_error(
     position: &Position,
     src_string: &SourceString,
 ) -> String {
-    let mut res = format!("Error: {}\n\n", message.0);
+    format_diagnostic(message, position, Level::Error, src_string)
+}
+
+fn format_diagnostic(
+    message: &ErrorMessage,
+    position: &Position,
+    level: Level,
+    src_string: &SourceString,
+) -> String {
+    let level_s = match level {
+        Level::Warning => "Warning",
+        Level::Error => "Error",
+    };
+
+    let mut res = format!("{}: {}\n\n", level_s, message.0);
     res.push_str(&format_pos_in_fun(position, src_string, None, true));
     res
 }
@@ -82,9 +96,10 @@ pub(crate) fn format_error(
 pub(crate) fn format_parse_error(
     message: &ErrorMessage,
     position: &Position,
+    level: Level,
     src_string: &SourceString,
 ) -> String {
-    format_error(message, position, src_string)
+    format_diagnostic(message, position, level, src_string)
 }
 
 fn format_pos_in_fun(

@@ -97,7 +97,17 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         let s = if json {
             serde_json::to_string(diagnostic).expect("TODO: can this ever fail?")
         } else {
-            format_parse_error(&diagnostic.message, &diagnostic.position, &src_string)
+            let level = match diagnostic.severity {
+                Severity::Error => Level::Error,
+                Severity::Warning => Level::Warning,
+            };
+
+            format_parse_error(
+                &diagnostic.message,
+                &diagnostic.position,
+                level,
+                &src_string,
+            )
         };
 
         println!("{}", s);

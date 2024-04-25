@@ -30,7 +30,7 @@ use std::time::Instant;
 use clap::{Parser, Subcommand};
 use owo_colors::OwoColorize as _;
 
-use crate::diagnostics::{format_error_with_stack, format_parse_error};
+use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Session};
@@ -146,6 +146,7 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
                     &format_parse_error(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
+                        Level::Error,
                         &SourceString { src, offset: 0 }
                     )
                 );
@@ -203,6 +204,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     &format_parse_error(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
+                        Level::Error,
                         &SourceString { src, offset: 0 }
                     )
                 );
@@ -258,6 +260,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     &format_parse_error(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
+                        Level::Error,
                         &SourceString { src, offset: 0 }
                     )
                 );

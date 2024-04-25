@@ -9,7 +9,7 @@ fun main(_args: List<String>): Unit {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Missing field `x` in struct literal.
+// Warning: Missing field `x` in struct literal.
 // 
 // --> src/check_test_files/struct_missing_field.gdn:6
 //     let _f = Foo {};

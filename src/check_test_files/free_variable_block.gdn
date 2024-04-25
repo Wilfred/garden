@@ -5,7 +5,7 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Unbound symbol: foo
+// Warning: Unbound symbol: foo
 // 
 // --> src/check_test_files/free_variable_block.gdn:2
 //     foo;

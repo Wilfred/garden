@@ -8,7 +8,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::diagnostics::{format_error, format_parse_error, Diagnostic};
+use crate::diagnostics::{format_error, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
 use crate::types::TypeDef;
@@ -171,6 +171,7 @@ fn handle_eval_request(
                 let stack = Some(format_parse_error(
                     &message,
                     &position,
+                    Level::Error,
                     &SourceString {
                         src: req.input,
                         offset: 0,

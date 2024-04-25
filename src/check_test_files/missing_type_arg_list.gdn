@@ -9,12 +9,12 @@ fun foo(): Int<String> {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: List takes 1 type argument, but got 0 arguments.
+// Error: List takes 1 type argument, but got 0 arguments.
 // 
 // --> src/check_test_files/missing_type_arg_list.gdn:1
 // fun foo(): List {
 //            ^^^^
-// Warning: Int takes 0 type arguments, but got 1 argument.
+// Error: Int takes 0 type arguments, but got 1 argument.
 // 
 // --> src/check_test_files/missing_type_arg_list.gdn:5
 // fun foo(): Int<String> {

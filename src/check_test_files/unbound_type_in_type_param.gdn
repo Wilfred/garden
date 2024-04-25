@@ -5,7 +5,7 @@ fun foo(): Option<NoSuchType> {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: No such type: NoSuchType
+// Error: No such type: NoSuchType
 // 
 // --> src/check_test_files/unbound_type_in_type_param.gdn:1
 // fun foo(): Option<NoSuchType> {

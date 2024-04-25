@@ -84,7 +84,7 @@ impl Visitor for HintVisitor<'_> {
             _ if self.bound_type_params.contains(&type_hint.sym.name) => {
                 if let Some(first_arg) = type_hint.args.first() {
                     self.warnings.push(Diagnostic {
-                        level: Level::Warning,
+                        level: Level::Error,
                         message: "Generic type arguments cannot take parameters.".to_owned(),
                         position: first_arg.position.clone(),
                     });
@@ -109,7 +109,7 @@ impl Visitor for HintVisitor<'_> {
                         };
                         if num_expected != type_hint.args.len() {
                             self.warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format_type_arity_error(type_hint, num_expected),
                                 position: type_args_pos,
                             });
@@ -118,7 +118,7 @@ impl Visitor for HintVisitor<'_> {
                     TypeDef::Enum(enum_info) => {
                         if enum_info.type_params.len() != type_hint.args.len() {
                             self.warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format_type_arity_error(
                                     type_hint,
                                     enum_info.type_params.len(),
@@ -130,7 +130,7 @@ impl Visitor for HintVisitor<'_> {
                     TypeDef::Struct(struct_info) => {
                         if struct_info.type_params.len() != type_hint.args.len() {
                             self.warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format_type_arity_error(
                                     type_hint,
                                     struct_info.type_params.len(),
@@ -143,7 +143,7 @@ impl Visitor for HintVisitor<'_> {
             }
             None => {
                 self.warnings.push(Diagnostic {
-                    level: Level::Warning,
+                    level: Level::Error,
                     message: format!("No such type: {}", &type_hint.sym),
                     position: type_hint.position.clone(),
                 });

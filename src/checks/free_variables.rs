@@ -8,8 +8,8 @@ use garden_lang_parser::{
     position::Position,
 };
 
-use crate::visitor::Visitor;
 use crate::{diagnostics::Diagnostic, env::Env};
+use crate::{diagnostics::Level, visitor::Visitor};
 
 pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = FreeVariableVisitor::new(env);
@@ -49,6 +49,7 @@ impl FreeVariableVisitor<'_> {
         let mut warnings = vec![];
         for (free_sym, position) in &self.free {
             warnings.push(Diagnostic {
+                level: Level::Warning,
                 message: format!("Unbound symbol: {free_sym}"),
                 position: position.clone(),
             });
@@ -56,6 +57,7 @@ impl FreeVariableVisitor<'_> {
 
         for (name, position) in &self.unused {
             warnings.push(Diagnostic {
+                level: Level::Warning,
                 message: format!("`{name}` is unused."),
                 position: position.clone(),
             });

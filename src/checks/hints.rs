@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
 
 use crate::{
-    diagnostics::Diagnostic,
+    diagnostics::{Diagnostic, Level},
     env::Env,
     types::{BuiltinType, TypeDef},
     visitor::Visitor,
@@ -84,6 +84,7 @@ impl Visitor for HintVisitor<'_> {
             _ if self.bound_type_params.contains(&type_hint.sym.name) => {
                 if let Some(first_arg) = type_hint.args.first() {
                     self.warnings.push(Diagnostic {
+                        level: Level::Warning,
                         message: "Generic type arguments cannot take parameters.".to_owned(),
                         position: first_arg.position.clone(),
                     });
@@ -108,6 +109,7 @@ impl Visitor for HintVisitor<'_> {
                         };
                         if num_expected != type_hint.args.len() {
                             self.warnings.push(Diagnostic {
+                                level: Level::Warning,
                                 message: format_type_arity_error(type_hint, num_expected),
                                 position: type_args_pos,
                             });
@@ -116,6 +118,7 @@ impl Visitor for HintVisitor<'_> {
                     TypeDef::Enum(enum_info) => {
                         if enum_info.type_params.len() != type_hint.args.len() {
                             self.warnings.push(Diagnostic {
+                                level: Level::Warning,
                                 message: format_type_arity_error(
                                     type_hint,
                                     enum_info.type_params.len(),
@@ -127,6 +130,7 @@ impl Visitor for HintVisitor<'_> {
                     TypeDef::Struct(struct_info) => {
                         if struct_info.type_params.len() != type_hint.args.len() {
                             self.warnings.push(Diagnostic {
+                                level: Level::Warning,
                                 message: format_type_arity_error(
                                     type_hint,
                                     struct_info.type_params.len(),
@@ -139,6 +143,7 @@ impl Visitor for HintVisitor<'_> {
             }
             None => {
                 self.warnings.push(Diagnostic {
+                    level: Level::Warning,
                     message: format!("No such type: {}", &type_hint.sym),
                     position: type_hint.position.clone(),
                 });

@@ -8,7 +8,7 @@ use garden_lang_parser::{
 
 use crate::{
     checks::check_toplevel_items,
-    diagnostics::{format_parse_error, Diagnostic},
+    diagnostics::{format_parse_error, Diagnostic, Level},
 };
 
 #[derive(Debug, Serialize)]
@@ -67,14 +67,25 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         }
     };
 
-    for Diagnostic { message, position } in check_toplevel_items(&items) {
+    for Diagnostic {
+        message,
+        position,
+        level,
+    } in check_toplevel_items(&items)
+    {
+        // TODO: merge Level and Severity types.
+        let severity = match level {
+            Level::Warning => Severity::Warning,
+            Level::Error => Severity::Error,
+        };
+
         diagnostics.push(CheckDiagnostic {
             position: position.clone(),
             line_number: position.line_number + 1,
             message: ErrorMessage(message),
             start_offset: position.start_offset,
             end_offset: position.end_offset,
-            severity: Severity::Warning,
+            severity,
         });
     }
 

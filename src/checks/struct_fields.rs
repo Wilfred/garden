@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
 
+use crate::diagnostics::Level;
 use crate::visitor::Visitor;
 use crate::{diagnostics::Diagnostic, env::Env, types::TypeDef};
 
@@ -34,6 +35,7 @@ impl Visitor for StructFieldVisitor<'_> {
         for (field_sym, _) in field_exprs {
             if seen_fields.contains(&field_sym.name) {
                 self.warnings.push(Diagnostic {
+                    level: Level::Warning,
                     message: format!("Duplicate field `{}` in struct literal.", field_sym.name),
                     position: field_sym.position.clone(),
                 });
@@ -43,6 +45,7 @@ impl Visitor for StructFieldVisitor<'_> {
 
             if !fields_by_name.contains_key(&field_sym.name) {
                 self.warnings.push(Diagnostic {
+                    level: Level::Warning,
                     message: format!(
                         "Struct `{}` has no field named `{}`",
                         name_sym.name, field_sym.name,
@@ -55,6 +58,7 @@ impl Visitor for StructFieldVisitor<'_> {
         for field_info in struct_info.fields.iter() {
             if !seen_fields.contains(&field_info.sym.name) {
                 self.warnings.push(Diagnostic {
+                    level: Level::Warning,
                     message: format!("Missing field `{}` in struct literal.", field_info.sym.name,),
                     position: name_sym.position.clone(),
                 });

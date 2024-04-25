@@ -12,9 +12,16 @@ use garden_lang_parser::position::Position;
 use garden_lang_parser::{ast::SourceString, diagnostics::ErrorMessage};
 
 #[derive(Debug, Deserialize, Serialize)]
+pub(crate) enum Level {
+    Warning,
+    Error,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Diagnostic {
     pub(crate) message: String,
     pub(crate) position: Position,
+    pub(crate) level: Level,
 }
 
 pub(crate) fn format_error_with_stack(

@@ -15,7 +15,7 @@ use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
 use crate::checks::check_toplevel_items;
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
@@ -472,6 +472,7 @@ fn update_builtin_meth_info(
     let type_name = &meth_info.receiver_hint.sym.name;
     let Some(type_methods) = env.methods.get_mut(type_name) else {
         warnings.push(Diagnostic {
+            level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
@@ -483,6 +484,7 @@ fn update_builtin_meth_info(
 
     let Some(curr_meth_info) = type_methods.get_mut(&meth_info.name_sym.name) else {
         warnings.push(Diagnostic {
+            level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
                 meth_info.name_sym.name, type_name
@@ -494,6 +496,7 @@ fn update_builtin_meth_info(
 
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
         warnings.push(Diagnostic {
+            level: Level::Warning,
             message: format!(
                 // TODO: we need a better design principle around
                 // warning phrasing. It should probably always include
@@ -517,6 +520,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
 
     let Some(value) = env.file_scope.get(&symbol.name) else {
         warnings.push(Diagnostic {
+            level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub for a function {} that doesn't exist.",
                 symbol.name
@@ -528,6 +532,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
 
     let Value::BuiltinFunction(kind, _) = value else {
         warnings.push(Diagnostic {
+            level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,

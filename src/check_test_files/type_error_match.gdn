@@ -8,12 +8,12 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: This match case is for `Option`, but you're matching on a `Int`.
+// Error: This match case is for `Option`, but you're matching on a `Int`.
 // 
 // --> src/check_test_files/type_error_match.gdn:3
 //         Some(_) => {}
 //         ^^^^
-// Warning: This match case is for `Option`, but you're matching on a `Int`.
+// Error: This match case is for `Option`, but you're matching on a `Int`.
 // 
 // --> src/check_test_files/type_error_match.gdn:4
 //         None => {}

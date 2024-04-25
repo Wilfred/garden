@@ -184,7 +184,7 @@ fn check_expr(
                     Value::EnumConstructor { type_name, .. } => type_name,
                     _ => {
                         warnings.push(Diagnostic {
-                            level: Level::Warning,
+                            level: Level::Error,
                             message: format!(
                                 "Expected an enum variant here, but got `{}`.",
                                 value.display(env)
@@ -200,7 +200,7 @@ fn check_expr(
                 };
                 if pattern_type_name != scrutinee_ty_name {
                     warnings.push(Diagnostic {
-                        level: Level::Warning,
+                        level: Level::Error,
                         message: format!(
                             "This match case is for `{}`, but you're matching on a `{}`.",
                             pattern_type_name, &scrutinee_ty_name,
@@ -216,7 +216,7 @@ fn check_expr(
             if let Some(cond_ty) = cond_ty {
                 if !is_subtype(&cond_ty, &RuntimeType::bool()) {
                     warnings.push(Diagnostic {
-                        level: Level::Warning,
+                        level: Level::Error,
                         message: format!(
                             "Expected `Bool` inside an `if` condition, but got `{}`.",
                             cond_ty
@@ -237,7 +237,7 @@ fn check_expr(
             if let Some(cond_ty) = cond_ty {
                 if !is_subtype(&cond_ty, &RuntimeType::bool()) {
                     warnings.push(Diagnostic {
-                        level: Level::Warning,
+                        level: Level::Error,
                         message: format!(
                             "Expected `Bool` inside an `while` condition, but got `{}`.",
                             cond_ty
@@ -299,7 +299,7 @@ fn check_expr(
                     if let Some(lhs_ty) = lhs_ty {
                         if !is_subtype(&lhs_ty, &RuntimeType::Int) {
                             warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
                             });
@@ -308,7 +308,7 @@ fn check_expr(
                     if let Some(rhs_ty) = rhs_ty {
                         if !is_subtype(&rhs_ty, &RuntimeType::Int) {
                             warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -324,7 +324,7 @@ fn check_expr(
                     if let Some(lhs_ty) = lhs_ty {
                         if !is_subtype(&lhs_ty, &RuntimeType::Int) {
                             warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
                             });
@@ -333,7 +333,7 @@ fn check_expr(
                     if let Some(rhs_ty) = rhs_ty {
                         if !is_subtype(&rhs_ty, &RuntimeType::Int) {
                             warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -358,7 +358,7 @@ fn check_expr(
                     if let Some(lhs_ty) = lhs_ty {
                         if !is_subtype(&lhs_ty, &RuntimeType::bool()) {
                             warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
                             });
@@ -367,7 +367,7 @@ fn check_expr(
                     if let Some(rhs_ty) = rhs_ty {
                         if !is_subtype(&rhs_ty, &RuntimeType::bool()) {
                             warnings.push(Diagnostic {
-                                level: Level::Warning,
+                                level: Level::Error,
                                 message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -397,7 +397,7 @@ fn check_expr(
                 RuntimeType::Fun { params, return_ } => {
                     if params.len() != args.len() {
                         warnings.push(Diagnostic {
-                            level: Level::Warning,
+                            level: Level::Error,
                             message: format!(
                                 "This function expects {} argument{}, but got {}.",
                                 params.len(),
@@ -412,7 +412,7 @@ fn check_expr(
                 }
                 _ => {
                     warnings.push(Diagnostic {
-                        level: Level::Warning,
+                        level: Level::Error,
                         message: format!("Expected a function, but got a `{}`.", recv_ty),
                         position: recv.0.clone(),
                     });
@@ -436,7 +436,7 @@ fn check_expr(
                     let fun_info = method_info.fun_info()?;
                     if fun_info.params.len() != args.len() {
                         warnings.push(Diagnostic {
-                            level: Level::Warning,
+                            level: Level::Error,
                             message: format!(
                                 "`{}::{}` requires {} argument{}, but got {}.",
                                 recv_ty_name,
@@ -464,7 +464,7 @@ fn check_expr(
                 }
                 None => {
                     warnings.push(Diagnostic {
-                        level: Level::Warning,
+                        level: Level::Error,
                         message: format!("`{}` has no method `{}`.", recv_ty_name, sym.name),
                         position: sym.position.clone(),
                     });
@@ -493,7 +493,7 @@ fn check_expr(
                         }
 
                         warnings.push(Diagnostic {
-                            level: Level::Warning,
+                            level: Level::Error,
                             message: format!(
                                 "Struct `{}` has no field `{}`.",
                                 recv_ty_name, field_sym.name

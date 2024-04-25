@@ -9,17 +9,17 @@ struct Bar {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: `String` has no method `foo`.
+// Error: `String` has no method `foo`.
 // 
 // --> src/check_test_files/no_such_method.gdn:4
 //     "abc".foo();
 //           ^^^
-// Warning: `List` has no method `foo`.
+// Error: `List` has no method `foo`.
 // 
 // --> src/check_test_files/no_such_method.gdn:5
 //     [1].foo();
 //         ^^^
-// Warning: `Bar` has no method `foo`.
+// Error: `Bar` has no method `foo`.
 // 
 // --> src/check_test_files/no_such_method.gdn:6
 //     Bar {}.foo();

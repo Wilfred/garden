@@ -5,7 +5,7 @@ fun foo(s: String) {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: `String` has no method `no_such_meth`.
+// Error: `String` has no method `no_such_meth`.
 // 
 // --> src/check_test_files/type_error_param.gdn:2
 //     s.no_such_meth();

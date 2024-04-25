@@ -45,7 +45,7 @@ impl Visitor for StructFieldVisitor<'_> {
 
             if !fields_by_name.contains_key(&field_sym.name) {
                 self.warnings.push(Diagnostic {
-                    level: Level::Warning,
+                    level: Level::Error,
                     message: format!(
                         "Struct `{}` has no field named `{}`",
                         name_sym.name, field_sym.name,
@@ -58,7 +58,7 @@ impl Visitor for StructFieldVisitor<'_> {
         for field_info in struct_info.fields.iter() {
             if !seen_fields.contains(&field_info.sym.name) {
                 self.warnings.push(Diagnostic {
-                    level: Level::Warning,
+                    level: Level::Error,
                     message: format!("Missing field `{}` in struct literal.", field_info.sym.name,),
                     position: name_sym.position.clone(),
                 });

@@ -15,7 +15,7 @@ use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
 use crate::checks::check_toplevel_items;
-use crate::diagnostics::Warning;
+use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
 use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
@@ -240,7 +240,7 @@ pub(crate) enum EvalError {
 pub(crate) struct ToplevelEvalSummary {
     pub(crate) values: Vec<Value>,
     pub(crate) new_syms: Vec<SymbolName>,
-    pub(crate) warnings: Vec<Warning>,
+    pub(crate) warnings: Vec<Diagnostic>,
     // TODO: Report the names of tests that passed/failed.
     pub(crate) tests_passed: usize,
     pub(crate) tests_failed: usize,
@@ -359,7 +359,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 }
 
 pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
-    let mut warnings: Vec<Warning> = vec![];
+    let mut warnings: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
     for definition in definitions {
@@ -467,11 +467,11 @@ fn update_builtin_meth_info(
     meth_info: &MethodInfo,
     fun_info: &FunInfo,
     env: &mut Env,
-    warnings: &mut Vec<Warning>,
+    warnings: &mut Vec<Diagnostic>,
 ) {
     let type_name = &meth_info.receiver_hint.sym.name;
     let Some(type_methods) = env.methods.get_mut(type_name) else {
-        warnings.push(Warning {
+        warnings.push(Diagnostic {
             message: format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
@@ -482,7 +482,7 @@ fn update_builtin_meth_info(
     };
 
     let Some(curr_meth_info) = type_methods.get_mut(&meth_info.name_sym.name) else {
-        warnings.push(Warning {
+        warnings.push(Diagnostic {
             message: format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
                 meth_info.name_sym.name, type_name
@@ -493,7 +493,7 @@ fn update_builtin_meth_info(
     };
 
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
-        warnings.push(Warning {
+        warnings.push(Diagnostic {
             message: format!(
                 // TODO: we need a better design principle around
                 // warning phrasing. It should probably always include
@@ -510,13 +510,13 @@ fn update_builtin_meth_info(
     curr_meth_info.kind = MethodKind::BuiltinMethod(*kind, Some(fun_info.clone()));
 }
 
-fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec<Warning>) {
+fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec<Diagnostic>) {
     let Some(symbol) = &fun_info.name else {
         return;
     };
 
     let Some(value) = env.file_scope.get(&symbol.name) else {
-        warnings.push(Warning {
+        warnings.push(Diagnostic {
             message: format!(
                 "Tried to update a built-in stub for a function {} that doesn't exist.",
                 symbol.name
@@ -527,7 +527,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
     };
 
     let Value::BuiltinFunction(kind, _) = value else {
-        warnings.push(Warning {
+        warnings.push(Diagnostic {
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,

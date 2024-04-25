@@ -8,7 +8,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::diagnostics::{format_error, format_parse_error, Warning};
+use crate::diagnostics::{format_error, format_parse_error, Diagnostic};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
 use crate::types::TypeDef;
@@ -64,7 +64,7 @@ pub(crate) struct ResponseError {
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
     pub(crate) value: Result<String, ResponseError>,
-    pub(crate) warnings: Vec<Warning>,
+    pub(crate) warnings: Vec<Diagnostic>,
 }
 
 pub(crate) fn sample_request_as_json() -> String {

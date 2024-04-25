@@ -5,14 +5,14 @@ use garden_lang_parser::ast::{
     ToplevelItem,
 };
 
-use crate::diagnostics::Warning;
+use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
 
-pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Warning> {
+pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Diagnostic> {
     let mut visitor = TypeCheckVisitor {
         env,
         warnings: vec![],
@@ -66,7 +66,7 @@ impl LocalBindings {
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
-    warnings: Vec<Warning>,
+    warnings: Vec<Diagnostic>,
     bindings: LocalBindings,
 }
 
@@ -145,7 +145,7 @@ fn check_block(
     block: &Block,
     env: &mut Env,
     bindings: &mut LocalBindings,
-    warnings: &mut Vec<Warning>,
+    warnings: &mut Vec<Diagnostic>,
 ) {
     bindings.enter_block();
 
@@ -160,7 +160,7 @@ fn check_expr(
     expr: &Expression,
     env: &mut Env,
     bindings: &mut LocalBindings,
-    warnings: &mut Vec<Warning>,
+    warnings: &mut Vec<Diagnostic>,
 ) -> Option<RuntimeType> {
     match &expr.1 {
         Expression_::Match(scrutinee, cases) => {
@@ -183,7 +183,7 @@ fn check_expr(
                     Value::Enum { type_name, .. } => type_name,
                     Value::EnumConstructor { type_name, .. } => type_name,
                     _ => {
-                        warnings.push(Warning {
+                        warnings.push(Diagnostic {
                             message: format!(
                                 "Expected an enum variant here, but got `{}`.",
                                 value.display(env)
@@ -198,7 +198,7 @@ fn check_expr(
                     continue;
                 };
                 if pattern_type_name != scrutinee_ty_name {
-                    warnings.push(Warning {
+                    warnings.push(Diagnostic {
                         message: format!(
                             "This match case is for `{}`, but you're matching on a `{}`.",
                             pattern_type_name, &scrutinee_ty_name,
@@ -213,7 +213,7 @@ fn check_expr(
             let cond_ty = check_expr(cond_expr, env, bindings, warnings);
             if let Some(cond_ty) = cond_ty {
                 if !is_subtype(&cond_ty, &RuntimeType::bool()) {
-                    warnings.push(Warning {
+                    warnings.push(Diagnostic {
                         message: format!(
                             "Expected `Bool` inside an `if` condition, but got `{}`.",
                             cond_ty
@@ -233,7 +233,7 @@ fn check_expr(
             let cond_ty = check_expr(cond_expr, env, bindings, warnings);
             if let Some(cond_ty) = cond_ty {
                 if !is_subtype(&cond_ty, &RuntimeType::bool()) {
-                    warnings.push(Warning {
+                    warnings.push(Diagnostic {
                         message: format!(
                             "Expected `Bool` inside an `while` condition, but got `{}`.",
                             cond_ty
@@ -294,7 +294,7 @@ fn check_expr(
                 | BinaryOperatorKind::Divide => {
                     if let Some(lhs_ty) = lhs_ty {
                         if !is_subtype(&lhs_ty, &RuntimeType::Int) {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
                             });
@@ -302,7 +302,7 @@ fn check_expr(
                     }
                     if let Some(rhs_ty) = rhs_ty {
                         if !is_subtype(&rhs_ty, &RuntimeType::Int) {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -317,7 +317,7 @@ fn check_expr(
                 | BinaryOperatorKind::GreaterThanOrEqual => {
                     if let Some(lhs_ty) = lhs_ty {
                         if !is_subtype(&lhs_ty, &RuntimeType::Int) {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
                             });
@@ -325,7 +325,7 @@ fn check_expr(
                     }
                     if let Some(rhs_ty) = rhs_ty {
                         if !is_subtype(&rhs_ty, &RuntimeType::Int) {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -337,7 +337,7 @@ fn check_expr(
                 BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
                     if let (Some(lhs_ty), Some(rhs_ty)) = (lhs_ty, rhs_ty) {
                         if lhs_ty != rhs_ty {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -349,7 +349,7 @@ fn check_expr(
                 BinaryOperatorKind::And | BinaryOperatorKind::Or => {
                     if let Some(lhs_ty) = lhs_ty {
                         if !is_subtype(&lhs_ty, &RuntimeType::bool()) {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
                                 position: lhs.0.clone(),
                             });
@@ -357,7 +357,7 @@ fn check_expr(
                     }
                     if let Some(rhs_ty) = rhs_ty {
                         if !is_subtype(&rhs_ty, &RuntimeType::bool()) {
-                            warnings.push(Warning {
+                            warnings.push(Diagnostic {
                                 message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
                                 position: rhs.0.clone(),
                             });
@@ -386,7 +386,7 @@ fn check_expr(
             match recv_ty {
                 RuntimeType::Fun { params, return_ } => {
                     if params.len() != args.len() {
-                        warnings.push(Warning {
+                        warnings.push(Diagnostic {
                             message: format!(
                                 "This function expects {} argument{}, but got {}.",
                                 params.len(),
@@ -400,7 +400,7 @@ fn check_expr(
                     Some(*return_)
                 }
                 _ => {
-                    warnings.push(Warning {
+                    warnings.push(Diagnostic {
                         message: format!("Expected a function, but got a `{}`.", recv_ty),
                         position: recv.0.clone(),
                     });
@@ -423,7 +423,7 @@ fn check_expr(
                 Some(method_info) => {
                     let fun_info = method_info.fun_info()?;
                     if fun_info.params.len() != args.len() {
-                        warnings.push(Warning {
+                        warnings.push(Diagnostic {
                             message: format!(
                                 "`{}::{}` requires {} argument{}, but got {}.",
                                 recv_ty_name,
@@ -450,7 +450,7 @@ fn check_expr(
                     }
                 }
                 None => {
-                    warnings.push(Warning {
+                    warnings.push(Diagnostic {
                         message: format!("`{}` has no method `{}`.", recv_ty_name, sym.name),
                         position: sym.position.clone(),
                     });
@@ -478,7 +478,7 @@ fn check_expr(
                             }
                         }
 
-                        warnings.push(Warning {
+                        warnings.push(Diagnostic {
                             message: format!(
                                 "Struct `{}` has no field `{}`.",
                                 recv_ty_name, field_sym.name

@@ -3,13 +3,13 @@ use std::collections::HashSet;
 use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
 
 use crate::{
-    diagnostics::Warning,
+    diagnostics::Diagnostic,
     env::Env,
     types::{BuiltinType, TypeDef},
     visitor::Visitor,
 };
 
-pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Warning> {
+pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = HintVisitor {
         env,
         warnings: vec![],
@@ -26,7 +26,7 @@ pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Warning> {
 /// has the correct number of type arguments.
 struct HintVisitor<'a> {
     env: &'a Env,
-    warnings: Vec<Warning>,
+    warnings: Vec<Diagnostic>,
     bound_type_params: HashSet<TypeName>,
 }
 
@@ -83,7 +83,7 @@ impl Visitor for HintVisitor<'_> {
         match self.env.get_type_def(&type_hint.sym.name) {
             _ if self.bound_type_params.contains(&type_hint.sym.name) => {
                 if let Some(first_arg) = type_hint.args.first() {
-                    self.warnings.push(Warning {
+                    self.warnings.push(Diagnostic {
                         message: "Generic type arguments cannot take parameters.".to_owned(),
                         position: first_arg.position.clone(),
                     });
@@ -107,7 +107,7 @@ impl Visitor for HintVisitor<'_> {
                             BuiltinType::List => 1,
                         };
                         if num_expected != type_hint.args.len() {
-                            self.warnings.push(Warning {
+                            self.warnings.push(Diagnostic {
                                 message: format_type_arity_error(type_hint, num_expected),
                                 position: type_args_pos,
                             });
@@ -115,7 +115,7 @@ impl Visitor for HintVisitor<'_> {
                     }
                     TypeDef::Enum(enum_info) => {
                         if enum_info.type_params.len() != type_hint.args.len() {
-                            self.warnings.push(Warning {
+                            self.warnings.push(Diagnostic {
                                 message: format_type_arity_error(
                                     type_hint,
                                     enum_info.type_params.len(),
@@ -126,7 +126,7 @@ impl Visitor for HintVisitor<'_> {
                     }
                     TypeDef::Struct(struct_info) => {
                         if struct_info.type_params.len() != type_hint.args.len() {
-                            self.warnings.push(Warning {
+                            self.warnings.push(Diagnostic {
                                 message: format_type_arity_error(
                                     type_hint,
                                     struct_info.type_params.len(),
@@ -138,7 +138,7 @@ impl Visitor for HintVisitor<'_> {
                 }
             }
             None => {
-                self.warnings.push(Warning {
+                self.warnings.push(Diagnostic {
                     message: format!("No such type: {}", &type_hint.sym),
                     position: type_hint.position.clone(),
                 });

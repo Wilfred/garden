@@ -12,7 +12,7 @@ use garden_lang_parser::position::Position;
 use garden_lang_parser::{ast::SourceString, diagnostics::ErrorMessage};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub(crate) struct Warning {
+pub(crate) struct Diagnostic {
     pub(crate) message: String,
     pub(crate) position: Position,
 }

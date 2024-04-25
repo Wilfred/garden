@@ -3,7 +3,7 @@ mod hints;
 mod struct_fields;
 mod type_checker;
 
-use crate::diagnostics::Warning;
+use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::eval_defs;
 use garden_lang_parser::ast::{Definition, ToplevelItem};
@@ -12,7 +12,7 @@ use self::hints::check_hints;
 use self::type_checker::check_types;
 use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
 
-pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Warning> {
+pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut warnings = vec![];
 
     let mut definitions: Vec<Definition> = vec![];

@@ -82,6 +82,14 @@ impl FreeVariableVisitor<'_> {
 
     fn mark_used(&mut self, name: &SymbolName) {
         if name.0 == "__BUILTIN_IMPLEMENTATION" {
+            // Mark everything as used, because this is just a stub.
+            for scope in self.bound_scopes.iter_mut() {
+                let keys = scope.keys().cloned().collect::<Vec<_>>();
+
+                for name in keys {
+                    scope.insert(name.clone(), UseState::Used);
+                }
+            }
             return;
         }
 

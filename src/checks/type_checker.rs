@@ -12,9 +12,11 @@ use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
 
-pub(crate) fn check_types(items: &[ToplevelItem], env: &mut Env) -> Vec<Diagnostic> {
+pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+    let mut env = env.clone();
+
     let mut visitor = TypeCheckVisitor {
-        env,
+        env: &mut env,
         warnings: vec![],
         bindings: LocalBindings::default(),
     };

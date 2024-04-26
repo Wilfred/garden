@@ -14,7 +14,7 @@ use garden_lang_parser::diagnostics::ErrorMessage;
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
-use crate::checks::check_toplevel_items;
+use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
@@ -283,7 +283,9 @@ pub(crate) fn eval_all_toplevel_items(
 
     let mut summary = eval_defs(&defs, env);
 
-    summary.warnings.extend(check_toplevel_items(items));
+    summary
+        .warnings
+        .extend(check_toplevel_items_in_env(items, env));
 
     let test_summary = eval_toplevel_tests(items, env, session)?;
     summary.tests_passed = test_summary.tests_passed;

@@ -45,7 +45,7 @@ impl Default for BlockBindings {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,
     /// Types bound in this stack frame, due to generic parameters.
@@ -147,7 +147,7 @@ impl Default for Bindings {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum EnclosingSymbol {
     Fun(Symbol),
     Method(TypeName, Symbol),
@@ -171,7 +171,7 @@ impl std::fmt::Display for EnclosingSymbol {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct StackFrame {
     pub(crate) src: SourceString,
     // The name of the function, method or test that we're evaluating.

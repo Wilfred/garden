@@ -15,7 +15,7 @@ use garden_lang_parser::ast::{
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,

@@ -15,9 +15,11 @@ Type hints for built-in types are now checked for the correct arity
 
 ## Stdlib
 
-Added `write_file()`, `String::trim_left()`, `String::trim_right()`,
-`String::starts_with()`, `String::ends_with()` and
-`String::split_once()`.
+Added methods `write_file()`, `String::trim_left()`,
+`String::trim_right()`, `String::starts_with()`, `String::ends_with()`
+and `String::split_once()`.
+
+Added function `todo()`.
 
 `list_directory` now returns a `Result`.
 

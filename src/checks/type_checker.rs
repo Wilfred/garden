@@ -146,14 +146,16 @@ fn check_block(
     env: &mut Env,
     bindings: &mut LocalBindings,
     warnings: &mut Vec<Diagnostic>,
-) {
+) -> Option<RuntimeType> {
     bindings.enter_block();
 
+    let mut ty = Some(RuntimeType::unit());
     for expr in &block.exprs {
-        check_expr(expr, env, bindings, warnings);
+        ty = check_expr(expr, env, bindings, warnings);
     }
 
     bindings.exit_block();
+    ty
 }
 
 fn check_expr(
@@ -226,11 +228,13 @@ fn check_expr(
                 }
             }
 
-            check_block(then_block, env, bindings, warnings);
+            let then_ty = check_block(then_block, env, bindings, warnings);
+
+            // TODO: check if `then_block` and `else_block` are the same type.
             if let Some(else_block) = else_block {
                 check_block(else_block, env, bindings, warnings);
             }
-            None
+            then_ty
         }
         Expression_::While(cond_expr, body) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings);
@@ -522,7 +526,7 @@ fn check_expr(
                 }
             }
 
-            check_block(&fun_info.body, env, bindings, warnings);
+            let body_ty = check_block(&fun_info.body, env, bindings, warnings);
 
             bindings.exit_block();
 
@@ -541,7 +545,7 @@ fn check_expr(
                 Some(hint) => {
                     RuntimeType::from_hint(hint, env, &HashMap::new()).unwrap_or(RuntimeType::Top)
                 }
-                None => RuntimeType::Top,
+                None => body_ty.unwrap_or(RuntimeType::Top),
             };
 
             let fun_ty = RuntimeType::Fun {
@@ -550,9 +554,6 @@ fn check_expr(
             };
             Some(fun_ty)
         }
-        Expression_::Block(block) => {
-            check_block(block, env, bindings, warnings);
-            None
-        }
+        Expression_::Block(block) => check_block(block, env, bindings, warnings),
     }
 }

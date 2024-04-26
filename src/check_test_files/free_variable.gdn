@@ -5,7 +5,7 @@ fun foo(): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: Unbound symbol: x
+// Error: Unbound symbol: x
 // 
 // --> src/check_test_files/free_variable.gdn:2
 //     x;

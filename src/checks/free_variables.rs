@@ -49,7 +49,7 @@ impl FreeVariableVisitor<'_> {
         let mut warnings = vec![];
         for (free_sym, position) in &self.free {
             warnings.push(Diagnostic {
-                level: Level::Warning,
+                level: Level::Error,
                 message: format!("Unbound symbol: {free_sym}"),
                 position: position.clone(),
             });

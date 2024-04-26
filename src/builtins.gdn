@@ -3,7 +3,7 @@
 // ```
 // error("Computer is melting!");
 // ```
-fun error(_: String): NoValue {
+fun error(message: String): NoValue {
     __BUILTIN_IMPLEMENTATION;
 }
 

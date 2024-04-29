@@ -2,7 +2,7 @@ fun foo(): List {
     error("");
 }
 
-fun foo(): Int<String> {
+fun bar(): Int<String> {
     error("");
 }
 
@@ -17,6 +17,6 @@ fun foo(): Int<String> {
 // Error: Int takes 0 type arguments, but got 1 argument.
 // 
 // --> src/check_test_files/missing_type_arg_list.gdn:5
-// fun foo(): Int<String> {
+// fun bar(): Int<String> {
 //                ^^^^^^
 

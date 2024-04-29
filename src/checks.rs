@@ -1,3 +1,4 @@
+mod duplicates;
 mod free_variables;
 mod hints;
 mod struct_fields;
@@ -8,6 +9,7 @@ use crate::env::Env;
 use crate::eval::eval_defs;
 use garden_lang_parser::ast::{Definition, ToplevelItem};
 
+use self::duplicates::check_duplicates;
 use self::hints::check_hints;
 use self::type_checker::check_types;
 use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
@@ -42,6 +44,7 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     warnings.extend(check_struct_fields(items, env));
     warnings.extend(check_hints(items, env));
     warnings.extend(check_types(items, env));
+    warnings.extend(check_duplicates(items, env));
 
     warnings
 }

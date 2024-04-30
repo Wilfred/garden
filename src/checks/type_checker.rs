@@ -267,7 +267,12 @@ fn check_expr(
 
             expr_ty
         }
-        Expression_::Return(_) => None,
+        Expression_::Return(expr) => {
+            if let Some(expr) = expr {
+                check_expr(expr, env, bindings, warnings);
+            }
+            None
+        }
         Expression_::IntLiteral(_) => Some(RuntimeType::Int),
         Expression_::StringLiteral(_) => Some(RuntimeType::String),
         Expression_::ListLiteral(items) => {

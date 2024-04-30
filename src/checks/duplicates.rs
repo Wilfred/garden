@@ -4,7 +4,7 @@
 //! mistake however.
 
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{Definition, Definition_, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
@@ -16,6 +16,7 @@ use crate::{diagnostics::Diagnostic, env::Env};
 struct DuplicatesVisitor {
     funs_seen: HashMap<SymbolName, Position>,
     methods_seen: HashMap<TypeName, HashMap<SymbolName, Position>>,
+    types_seen: HashSet<TypeName>,
     warnings: Vec<Diagnostic>,
 }
 
@@ -66,8 +67,36 @@ impl Visitor for DuplicatesVisitor {
                 }
             }
             Definition_::Test(_) => {}
-            Definition_::Enum(_) => {}
-            Definition_::Struct(_) => {}
+            Definition_::Enum(enum_info) => {
+                let name_sym = &enum_info.name_sym;
+                if self.types_seen.contains(&name_sym.name) {
+                    self.warnings.push(Diagnostic {
+                        message: format!(
+                            "The type `{}` is already defined in this file.",
+                            &name_sym.name
+                        ),
+                        position: name_sym.position.clone(),
+                        level: Level::Warning,
+                    });
+                } else {
+                    self.types_seen.insert(name_sym.name.clone());
+                }
+            }
+            Definition_::Struct(struct_info) => {
+                let name_sym = &struct_info.name_sym;
+                if self.types_seen.contains(&name_sym.name) {
+                    self.warnings.push(Diagnostic {
+                        message: format!(
+                            "The type `{}` is already defined in this file.",
+                            &name_sym.name
+                        ),
+                        position: name_sym.position.clone(),
+                        level: Level::Warning,
+                    });
+                } else {
+                    self.types_seen.insert(name_sym.name.clone());
+                }
+            }
         }
 
         self.visit_def_(&def.2);
@@ -79,6 +108,7 @@ pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagno
         warnings: vec![],
         funs_seen: HashMap::default(),
         methods_seen: HashMap::default(),
+        types_seen: HashSet::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);

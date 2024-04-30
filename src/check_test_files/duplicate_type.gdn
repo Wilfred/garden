@@ -1,0 +1,13 @@
+struct Foo {}
+
+enum Foo {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: The type `Foo` is already defined in this file.
+// 
+// --> src/check_test_files/duplicate_type.gdn:3
+// enum Foo {}
+//      ^^^
+

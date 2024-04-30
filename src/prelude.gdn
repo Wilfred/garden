@@ -274,7 +274,7 @@ fun (self: String) trim_right(): String {
     self.substring(0, i + 1);
 }
 
-test trim_left {
+test trim_right {
     should_equal("a".trim_right(), "a");
     should_equal("a b".trim_right(), "a b");
     should_equal(" a".trim_right(), " a");

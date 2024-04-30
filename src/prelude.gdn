@@ -281,6 +281,37 @@ test trim_right {
     should_equal("a  ".trim_right(), "a");
 }
 
+// Returns this string without the suffix specified. If this string
+// does not end with the suffix, return the string unchanged.
+fun (self: String) strip_suffix(suffix: String): String {
+    if (self.ends_with(suffix)) {
+        return self.substring(0, self.len() - suffix.len());
+    }
+
+    self;
+}
+
+test strip_suffix {
+    should_equal("abcdef".strip_suffix("ef"), "abcd");
+    should_equal("abcdef".strip_suffix("xyz"), "abcdef");
+}
+
+// Returns this string without the prefix specified. If this string
+// does not start with the prefix, return the string unchanged.
+fun (self: String) strip_prefix(prefix: String): String {
+    if (self.starts_with(prefix)) {
+        // return self.substring(prefix.len(), self.len(), 1);
+        return self.substring(prefix.len(), self.len());
+    }
+
+    self;
+}
+
+test strip_prefix {
+    should_equal("abcdef".strip_prefix("ab"), "cdef");
+    should_equal("abcdef".strip_prefix("xyz"), "abcdef");
+}
+
 // List methods.
 
 // Get the first item in this list, if the list is non-empty.

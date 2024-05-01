@@ -376,6 +376,20 @@ test contains {
     should_equal([10, 11].contains(10), True);
 }
 
+// Option methods.
+
+// If this value is `Some(value)`, unwrap it, otherwise throw an exception.
+fun<T> (self: Option<T>) or_exception(): T {
+    match (self) {
+        Some(v) => v,
+        None => error("Called or_exception on a `None` value.")
+    }
+}
+
+test option_or_exception {
+    should_equal(Some(123).or_exception(), 123);
+}
+
 // Testing heleprs.
 
 // Assert that `actual`and `expected` are equal values.

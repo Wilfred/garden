@@ -276,12 +276,17 @@ fn check_expr(
         Expression_::IntLiteral(_) => Some(RuntimeType::Int),
         Expression_::StringLiteral(_) => Some(RuntimeType::String),
         Expression_::ListLiteral(items) => {
+            let mut elem_ty = RuntimeType::no_value();
+
             for item in items {
-                check_expr(item, env, bindings, warnings);
+                if let Some(item_ty) = check_expr(item, env, bindings, warnings) {
+                    // TODO: unify the types of all elements in the
+                    // list, rather than letting the last win.
+                    elem_ty = item_ty;
+                }
             }
 
-            // TODO: accurately calculate list generic type argument.
-            Some(RuntimeType::List(Box::new(RuntimeType::Top)))
+            Some(RuntimeType::List(Box::new(elem_ty)))
         }
         Expression_::StructLiteral(name_sym, fields) => {
             for (_, expr) in fields {

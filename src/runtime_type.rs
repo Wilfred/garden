@@ -246,10 +246,20 @@ impl Display for RuntimeType {
             RuntimeType::Fun {
                 params: args,
                 return_,
-                ..
+                type_params,
             } => {
+                let formatted_type_params = if type_params.is_empty() {
+                    "".to_owned()
+                } else {
+                    format!("({})", type_params.iter().map(|tp| &tp.name).join(", "))
+                };
+
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
-                write!(f, "Fun<({}), {}>", formatted_args, return_)
+                write!(
+                    f,
+                    "Fun{}<({}), {}>",
+                    formatted_type_params, formatted_args, return_
+                )
             }
             RuntimeType::Top => write!(f, "_"),
         }

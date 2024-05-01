@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, SymbolName,
-    ToplevelItem,
+    ToplevelItem, TypeName,
 };
 
 use crate::diagnostics::{Diagnostic, Level};
@@ -461,10 +461,14 @@ fn check_expr(
                 .map(|arg| (check_expr(arg, env, bindings, warnings), arg.0.clone()))
                 .collect::<Vec<_>>();
 
-            let recv_ty = check_expr(recv, env, bindings, warnings)?;
-            let recv_ty_name = recv_ty.type_name()?;
+            let receiver_ty = check_expr(recv, env, bindings, warnings)?;
+            let receiver_ty_name = receiver_ty.type_name()?;
 
-            let methods = env.methods.get(&recv_ty_name).cloned().unwrap_or_default();
+            let methods = env
+                .methods
+                .get(&receiver_ty_name)
+                .cloned()
+                .unwrap_or_default();
 
             match methods.get(&sym.name) {
                 Some(method_info) => {
@@ -474,7 +478,7 @@ fn check_expr(
                             level: Level::Error,
                             message: format!(
                                 "`{}::{}` requires {} argument{}, but got {}.",
-                                recv_ty_name,
+                                receiver_ty_name,
                                 sym.name,
                                 fun_info.params.len(),
                                 if fun_info.params.len() == 1 { "" } else { "s" },
@@ -484,10 +488,7 @@ fn check_expr(
                         });
                     }
 
-                    let mut type_bindings = HashMap::new();
-                    for type_param in &fun_info.type_params {
-                        type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
-                    }
+                    let type_bindings = compute_type_bindings(method_info, &receiver_ty);
 
                     for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(arg_tys) {
                         let Some(arg_ty) = arg_ty else {
@@ -524,7 +525,7 @@ fn check_expr(
                 None => {
                     warnings.push(Diagnostic {
                         level: Level::Error,
-                        message: format!("`{}` has no method `{}`.", recv_ty_name, sym.name),
+                        message: format!("`{}` has no method `{}`.", receiver_ty_name, sym.name),
                         position: sym.position.clone(),
                     });
                     None
@@ -611,4 +612,44 @@ fn check_expr(
         }
         Expression_::Block(block) => check_block(block, env, bindings, warnings),
     }
+}
+
+fn compute_type_bindings(
+    method_info: &MethodInfo,
+    receiver_ty: &RuntimeType,
+) -> HashMap<TypeName, RuntimeType> {
+    let Some(fun_info) = method_info.fun_info() else {
+        return HashMap::default();
+    };
+
+    let mut type_params_env: HashMap<TypeName, Option<RuntimeType>> = HashMap::default();
+    for type_param in &fun_info.type_params {
+        type_params_env.insert(type_param.name.clone(), None);
+    }
+
+    // TODO: implement unify properly rather than just special-casing
+    // a few situations here.
+    if method_info.receiver_hint.sym.name.name == "List" {
+        if let Some(type_arg) = &method_info.receiver_hint.args.first() {
+            if type_params_env.contains_key(&type_arg.sym.name) {
+                // This is a `List<T>` hint where T is a generic type parameter.
+                if let RuntimeType::List(elem_ty) = receiver_ty {
+                    type_params_env.insert(type_arg.sym.name.clone(), Some(*elem_ty.clone()));
+                }
+            }
+        }
+    }
+
+    let mut type_bindings: HashMap<TypeName, RuntimeType> = HashMap::default();
+    for type_param in &fun_info.type_params {
+        let ty = type_params_env
+            .get(&type_param.name)
+            .expect("We should have inserted the type parameter in the env")
+            .as_ref()
+            .cloned()
+            .unwrap_or(RuntimeType::Top);
+        type_bindings.insert(type_param.name.clone(), ty);
+    }
+
+    type_bindings
 }

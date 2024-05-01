@@ -1,0 +1,14 @@
+{
+    let items = [""];
+    items.get(0).no_such_meth();
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `String` has no method `no_such_meth`.
+// 
+// --> src/check_test_files/type_error_list_generic.gdn:3
+//     items.get(0).no_such_meth();
+//                  ^^^^^^^^^^^^
+

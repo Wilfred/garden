@@ -411,7 +411,9 @@ fn check_expr(
                 .collect::<Vec<_>>();
 
             match recv_ty {
-                RuntimeType::Fun { params, return_ } => {
+                RuntimeType::Fun {
+                    params, return_, ..
+                } => {
                     if params.len() != args.len() {
                         warnings.push(Diagnostic {
                             level: Level::Error,
@@ -605,6 +607,7 @@ fn check_expr(
             };
 
             let fun_ty = RuntimeType::Fun {
+                type_params: vec![],
                 params: param_tys,
                 return_: Box::new(return_ty),
             };

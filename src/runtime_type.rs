@@ -24,6 +24,9 @@ pub(crate) enum RuntimeType {
     Int,
     List(Box<RuntimeType>),
     Fun {
+        /// E.g. if a function's return type depends on argument
+        /// types, we need type_parameters.
+        type_params: Vec<TypeName>,
         params: Vec<RuntimeType>,
         return_: Box<RuntimeType>,
     },
@@ -159,6 +162,7 @@ impl RuntimeType {
             Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
             Value::Enum { runtime_type, .. } => runtime_type.clone(),
             Value::EnumConstructor { type_name, .. } => RuntimeType::Fun {
+                type_params: vec![],
                 // TODO: store the type for the expected argument of this variant.
                 params: vec![RuntimeType::Top],
                 return_: Box::new(RuntimeType::UserDefined {
@@ -192,6 +196,7 @@ impl RuntimeType {
         };
 
         Ok(RuntimeType::Fun {
+            type_params: vec![],
             params: param_types,
             return_: Box::new(return_),
         })
@@ -241,6 +246,7 @@ impl Display for RuntimeType {
             RuntimeType::Fun {
                 params: args,
                 return_,
+                ..
             } => {
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
                 write!(f, "Fun<({}), {}>", formatted_args, return_)
@@ -268,10 +274,12 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
             RuntimeType::Fun {
                 params: lhs_params,
                 return_: lhs_return,
+                ..
             },
             RuntimeType::Fun {
                 params: rhs_params,
                 return_: rhs_return,
+                ..
             },
         ) => {
             if lhs_params.len() != rhs_params.len() {

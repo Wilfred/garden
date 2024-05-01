@@ -1,0 +1,13 @@
+{
+    print(123);
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `String` argument but got `Int`.
+// 
+// --> src/check_test_files/type_error_arguments_fun.gdn:2
+//     print(123);
+//           ^^^
+

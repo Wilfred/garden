@@ -400,9 +400,10 @@ fn check_expr(
         }
         Expression_::Call(recv, args) => {
             let recv_ty = check_expr(recv, env, bindings, warnings)?;
-            for arg in args {
-                check_expr(arg, env, bindings, warnings);
-            }
+            let arg_tys = args
+                .iter()
+                .map(|arg| (check_expr(arg, env, bindings, warnings), arg.0.clone()))
+                .collect::<Vec<_>>();
 
             match recv_ty {
                 RuntimeType::Fun { params, return_ } => {
@@ -419,6 +420,23 @@ fn check_expr(
                         });
                     }
 
+                    for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
+                        let Some(arg_ty) = arg_ty else {
+                            continue;
+                        };
+
+                        if !is_subtype(&arg_ty, param_ty) {
+                            warnings.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected `{}` argument but got `{}`.",
+                                    param_ty, arg_ty
+                                ),
+                                position: arg_pos,
+                            });
+                        }
+                    }
+
                     Some(*return_)
                 }
                 _ => {
@@ -433,9 +451,10 @@ fn check_expr(
             }
         }
         Expression_::MethodCall(recv, sym, args) => {
-            for arg in args {
-                check_expr(arg, env, bindings, warnings);
-            }
+            let arg_tys = args
+                .iter()
+                .map(|arg| (check_expr(arg, env, bindings, warnings), arg.0.clone()))
+                .collect::<Vec<_>>();
 
             let recv_ty = check_expr(recv, env, bindings, warnings)?;
             let recv_ty_name = recv_ty.type_name()?;
@@ -463,6 +482,30 @@ fn check_expr(
                     let mut type_bindings = HashMap::new();
                     for type_param in &fun_info.type_params {
                         type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
+                    }
+
+                    for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(arg_tys) {
+                        let Some(arg_ty) = arg_ty else {
+                            continue;
+                        };
+                        let Some(param_hint) = &param.hint else {
+                            continue;
+                        };
+                        let Ok(param_ty) = RuntimeType::from_hint(param_hint, env, &type_bindings)
+                        else {
+                            continue;
+                        };
+
+                        if !is_subtype(&arg_ty, &param_ty) {
+                            warnings.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected `{}` argument but got `{}`.",
+                                    param_ty, arg_ty
+                                ),
+                                position: arg_pos,
+                            });
+                        }
                     }
 
                     let fun_ty = RuntimeType::from_fun_info(&fun_info, env, &type_bindings)

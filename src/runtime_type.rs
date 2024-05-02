@@ -35,6 +35,7 @@ pub(crate) enum RuntimeType {
         name: TypeName,
         args: Vec<RuntimeType>,
     },
+    TypeParameter(TypeName),
 }
 
 impl RuntimeType {
@@ -218,6 +219,7 @@ impl RuntimeType {
                 name: "Fun".to_owned(),
             }),
             RuntimeType::UserDefined { kind: _, name, .. } => Some(name.clone()),
+            RuntimeType::TypeParameter(name) => Some(name.clone()),
         }
     }
 }
@@ -262,6 +264,7 @@ impl Display for RuntimeType {
                 )
             }
             RuntimeType::Top => write!(f, "_"),
+            RuntimeType::TypeParameter(name) => write!(f, "{}", name.name),
         }
     }
 }
@@ -274,6 +277,12 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
         (RuntimeType::Int, _) => false,
         (RuntimeType::String, RuntimeType::String) => true,
         (RuntimeType::String, _) => false,
+        // A type parameter is only a subtype of itself.
+        // TODO: what if the parameters are in different scopes?
+        (RuntimeType::TypeParameter(lhs_name), RuntimeType::TypeParameter(rhs_name)) => {
+            lhs_name == rhs_name
+        }
+        (RuntimeType::TypeParameter(_), _) => false,
         (RuntimeType::List(lhs_elem), RuntimeType::List(rhs_elem)) => {
             // List is covariant in its element.
             // List<NoValue> <: List<Int>

@@ -544,7 +544,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                RuntimeType::from_value(value),
+                RuntimeType::from_value(value, env),
             ),
             position: symbol.position.clone(),
         });
@@ -787,7 +787,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.to_string(),
-        RuntimeType::from_value(value),
+        RuntimeType::from_value(value, env),
         value.display(env)
     ))
 }
@@ -1030,7 +1030,7 @@ fn check_arity(
 
 /// Check that `value` has `expected` type.
 fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = RuntimeType::from_value(value);
+    let value_type = RuntimeType::from_value(value, env);
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -1212,14 +1212,14 @@ fn eval_builtin_call(
                                         .unwrap();
 
                                     if output.status.success() {
-                                        Value::ok(Value::String(s))
+                                        Value::ok(Value::String(s), env)
                                     } else {
-                                        Value::err(Value::String(s))
+                                        Value::err(Value::String(s), env)
                                     }
                                 }
                                 Err(e) => {
                                     let s = Value::String(format!("{}", e));
-                                    Value::err(s)
+                                    Value::err(s, env)
                                 }
                             };
 
@@ -1364,14 +1364,17 @@ fn eval_builtin_call(
                         }
                     }
 
-                    Value::ok(Value::List {
-                        items,
-                        elem_type: RuntimeType::string_list(),
-                    })
+                    Value::ok(
+                        Value::List {
+                            items,
+                            elem_type: RuntimeType::string_list(),
+                        },
+                        env,
+                    )
                 }
                 Err(e) => {
                     let s = Value::String(format!("{}", e));
-                    Value::err(s)
+                    Value::err(s, env)
                 }
             };
 
@@ -1414,8 +1417,8 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::read_to_string(path) {
-                Ok(s) => Value::ok(Value::String(s)),
-                Err(e) => Value::err(Value::String(e.to_string())),
+                Ok(s) => Value::ok(Value::String(s), env),
+                Err(e) => Value::err(Value::String(e.to_string()), env),
             };
 
             stack_frame.evalled_values.push(v);
@@ -1484,8 +1487,8 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::write(path, content_s) {
-                Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::String(format!("{}", e))),
+                Ok(()) => Value::ok(Value::unit(), env),
+                Err(e) => Value::err(Value::String(format!("{}", e)), env),
             };
 
             stack_frame.evalled_values.push(v);
@@ -1650,7 +1653,7 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &RuntimeType::from_value(&arg_values[0]),
+                &RuntimeType::from_value(&arg_values[0], env),
             )
             .unwrap_or(RuntimeType::no_value());
 
@@ -1922,7 +1925,7 @@ fn eval_builtin_method_call(
                     // type as the existing list items.
                     stack_frame.evalled_values.push(Value::List {
                         items: new_items,
-                        elem_type: RuntimeType::from_value(&arg_values[0]),
+                        elem_type: RuntimeType::from_value(&arg_values[0], env),
                     });
                 }
                 v => {
@@ -2436,7 +2439,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             );
                             // TODO: check that all elements are of a compatible type.
                             // [1, None] should be an error.
-                            element_type = RuntimeType::from_value(&element);
+                            element_type = RuntimeType::from_value(&element, env);
                             list_values.push(element);
                         }
 
@@ -2957,7 +2960,7 @@ fn eval_struct_value(
         if type_params.contains(&field_info.hint.sym.name) {
             type_arg_bindings.insert(
                 field_info.hint.sym.name.clone(),
-                RuntimeType::from_value(&field_value),
+                RuntimeType::from_value(&field_value, env),
             );
         }
 
@@ -3009,7 +3012,7 @@ fn eval_match_cases(
     else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            RuntimeType::from_value(&scrutinee_value),
+            RuntimeType::from_value(&scrutinee_value, env),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

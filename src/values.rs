@@ -77,8 +77,8 @@ impl Value {
         }
     }
 
-    pub(crate) fn ok(v: Value) -> Self {
-        let value_type = RuntimeType::from_value(&v);
+    pub(crate) fn ok(v: Value, env: &Env) -> Self {
+        let value_type = RuntimeType::from_value(&v, env);
 
         // We can assume that Result is always defined because it's in the
         // prelude.
@@ -98,8 +98,8 @@ impl Value {
         }
     }
 
-    pub(crate) fn err(v: Value) -> Self {
-        let value_type = RuntimeType::from_value(&v);
+    pub(crate) fn err(v: Value, env: &Env) -> Self {
+        let value_type = RuntimeType::from_value(&v, env);
 
         // We can assume that Result is always defined because it's in the
         // prelude.

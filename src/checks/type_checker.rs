@@ -400,7 +400,7 @@ fn check_expr(
             }
 
             let value = env.file_scope.get(&sym.name)?;
-            let value_ty = RuntimeType::from_value(value);
+            let value_ty = RuntimeType::from_value(value, env);
             Some(value_ty)
         }
         Expression_::Call(recv, args) => {

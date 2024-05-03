@@ -594,7 +594,7 @@ pub(crate) fn run_command<T: Write>(
             if let Some(expr) = expr {
                 match eval_exprs(&[expr.clone()], env, session) {
                     Ok(value) => {
-                        write!(buf, "{}", RuntimeType::from_value(&value)).unwrap();
+                        write!(buf, "{}", RuntimeType::from_value(&value, env)).unwrap();
                     }
                     Err(e) => {
                         // TODO: Print a proper stack trace.

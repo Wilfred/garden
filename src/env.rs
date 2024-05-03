@@ -3,6 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use strum::IntoEnumIterator;
 
 use crate::eval::EnclosingSymbol;
+use crate::runtime_type::RuntimeType;
 use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
     eval::{eval_toplevel_defs, Bindings, StackFrame},
@@ -292,5 +293,13 @@ impl Env {
 
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name, type_);
+    }
+
+    pub(crate) fn type_bindings(&self) -> HashMap<TypeName, RuntimeType> {
+        let Some(stack_frame) = self.stack.last() else {
+            return HashMap::default();
+        };
+
+        stack_frame.bindings.type_bindings.clone()
     }
 }

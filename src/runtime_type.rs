@@ -162,17 +162,49 @@ impl RuntimeType {
             Value::String(_) => RuntimeType::String,
             Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
             Value::Enum { runtime_type, .. } => runtime_type.clone(),
-            Value::EnumConstructor { type_name, .. } => RuntimeType::Fun {
-                type_params: vec![],
-                // TODO: store the type for the expected argument of this variant.
-                params: vec![RuntimeType::Top],
-                return_: Box::new(RuntimeType::UserDefined {
-                    kind: TypeDefKind::Enum,
-                    name: type_name.clone(),
-                    // TODO: look up type arguments.
-                    args: vec![],
-                }),
-            },
+            Value::EnumConstructor { type_name, .. } => {
+                // TODO: store type information on EnumConstructor
+                // instead of hoping that the prelude has the
+                // information we need.
+                let env = Env::default();
+
+                let (type_params, type_args_on_enum) = match env.get_type_def(type_name) {
+                    Some(type_def) => {
+                        let type_params: Vec<TypeName> = match type_def {
+                            TypeDef::Builtin(_) => vec![],
+                            TypeDef::Enum(enum_info) => enum_info.type_params.clone(),
+                            TypeDef::Struct(struct_info) => struct_info.type_params.clone(),
+                        }
+                        .iter()
+                        .map(|tp| tp.name.clone())
+                        .collect();
+
+                        let type_args_on_enum: Vec<RuntimeType> = type_params
+                            .clone()
+                            .into_iter()
+                            .map(RuntimeType::TypeParameter)
+                            .collect::<Vec<_>>();
+
+                        (type_params, type_args_on_enum)
+                    }
+                    None => (vec![], vec![]),
+                };
+
+                RuntimeType::Fun {
+                    type_params,
+                    // TODO: this is assuming the variant is exactly
+                    // Foo(T), not e.g. Foo(Int) or Foo(Option(T)).
+                    params: vec![type_args_on_enum
+                        .first()
+                        .cloned()
+                        .unwrap_or(RuntimeType::Top)],
+                    return_: Box::new(RuntimeType::UserDefined {
+                        kind: TypeDefKind::Enum,
+                        name: type_name.clone(),
+                        args: type_args_on_enum,
+                    }),
+                }
+            }
             Value::Struct { runtime_type, .. } => runtime_type.clone(),
         }
     }

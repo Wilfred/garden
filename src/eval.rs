@@ -1592,14 +1592,7 @@ fn eval_call(
                 type_bindings.insert(param_sym.name.clone(), RuntimeType::Top);
             }
 
-            check_param_types(
-                env,
-                receiver_value,
-                params,
-                arg_positions,
-                arg_values,
-                &type_bindings,
-            )?;
+            check_param_types(env, receiver_value, params, arg_positions, arg_values)?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
             for expr in body.exprs.iter().rev() {
@@ -1742,11 +1735,10 @@ fn check_param_types(
     params: &[SymbolWithHint],
     arg_positions: &[Position],
     arg_values: &[Value],
-    type_bindings: &HashMap<TypeName, RuntimeType>,
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match RuntimeType::from_hint(param_hint, env, type_bindings) {
+            let param_ty = match RuntimeType::from_hint(param_hint, env) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err(ErrorInfo {
@@ -2790,11 +2782,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();
 
-                    let return_ty = match RuntimeType::from_hint(
-                        return_hint,
-                        env,
-                        &stack_frame.bindings.type_bindings,
-                    ) {
+                    let return_ty = match RuntimeType::from_hint(return_hint, env) {
                         Ok(ty) => ty,
                         Err(e) => {
                             return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));

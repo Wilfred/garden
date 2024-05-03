@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 use itertools::Itertools as _;
 
@@ -80,21 +80,19 @@ impl RuntimeType {
         Self::List(Box::new(Self::String))
     }
 
-    pub(crate) fn from_hint(
-        hint: &TypeHint,
-        env: &Env,
-        type_bindings: &HashMap<TypeName, RuntimeType>,
-    ) -> Result<Self, String> {
+    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, String> {
         let name = &hint.sym.name;
 
         let args = hint
             .args
             .iter()
-            .map(|hint_arg| RuntimeType::from_hint(hint_arg, env, type_bindings))
+            .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
             .collect::<Result<Vec<_>, _>>()?;
 
-        if let Some(runtime_type) = type_bindings.get(name) {
-            return Ok(runtime_type.clone());
+        if let Some(stack_frame) = env.stack.last() {
+            if let Some(runtime_type) = stack_frame.bindings.type_bindings.get(name) {
+                return Ok(runtime_type.clone());
+            }
         }
 
         match env.get_type_def(name) {
@@ -133,22 +131,10 @@ impl RuntimeType {
         match value {
             Value::Integer(_) => RuntimeType::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-                let mut type_bindings: HashMap<TypeName, RuntimeType> = HashMap::new();
-                for type_param in &fun_info.type_params {
-                    type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
-                }
-
-                Self::from_fun_info(fun_info, env, &type_bindings).unwrap_or(RuntimeType::Top)
+                Self::from_fun_info(fun_info, env).unwrap_or(RuntimeType::Top)
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
-                Some(fun_info) => {
-                    let mut type_bindings: HashMap<TypeName, RuntimeType> = HashMap::new();
-                    for type_param in &fun_info.type_params {
-                        type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
-                    }
-
-                    Self::from_fun_info(fun_info, env, &type_bindings).unwrap_or(RuntimeType::Top)
-                }
+                Some(fun_info) => Self::from_fun_info(fun_info, env).unwrap_or(RuntimeType::Top),
                 None => RuntimeType::Top,
             },
             Value::String(_) => RuntimeType::String,
@@ -201,22 +187,18 @@ impl RuntimeType {
         }
     }
 
-    pub(crate) fn from_fun_info(
-        fun_info: &FunInfo,
-        env: &Env,
-        type_bindings: &HashMap<TypeName, RuntimeType>,
-    ) -> Result<Self, String> {
+    pub(crate) fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Result<Self, String> {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, env, type_bindings)?,
+                Some(hint) => RuntimeType::from_hint(hint, env)?,
                 None => RuntimeType::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_hint {
-            Some(hint) => Self::from_hint(hint, env, type_bindings)?,
+            Some(hint) => Self::from_hint(hint, env)?,
             None => RuntimeType::Top,
         };
 

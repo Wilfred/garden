@@ -76,7 +76,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let self_ty = RuntimeType::from_hint(&method_info.receiver_hint, self.env, &HashMap::new())
+        let self_ty = RuntimeType::from_hint(&method_info.receiver_hint, self.env)
             .unwrap_or(RuntimeType::Top);
         self.bindings
             .set(method_info.receiver_sym.name.clone(), self_ty);
@@ -102,8 +102,7 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         for param in &fun_info.params {
             let param_ty = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, self.env, &HashMap::new())
-                    .unwrap_or(RuntimeType::Top),
+                Some(hint) => RuntimeType::from_hint(hint, self.env).unwrap_or(RuntimeType::Top),
                 None => RuntimeType::Top,
             };
             self.bindings.set(param.symbol.name.clone(), param_ty);
@@ -490,8 +489,6 @@ fn check_expr(
                         });
                     }
 
-                    let type_bindings = compute_type_bindings(method_info, &receiver_ty);
-
                     for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(arg_tys) {
                         let Some(arg_ty) = arg_ty else {
                             continue;
@@ -499,8 +496,7 @@ fn check_expr(
                         let Some(param_hint) = &param.hint else {
                             continue;
                         };
-                        let Ok(param_ty) = RuntimeType::from_hint(param_hint, env, &type_bindings)
-                        else {
+                        let Ok(param_ty) = RuntimeType::from_hint(param_hint, env) else {
                             continue;
                         };
 
@@ -516,11 +512,16 @@ fn check_expr(
                         }
                     }
 
-                    let fun_ty = RuntimeType::from_fun_info(&fun_info, env, &type_bindings)
-                        .unwrap_or(RuntimeType::Top);
+                    let fun_ty =
+                        RuntimeType::from_fun_info(&fun_info, env).unwrap_or(RuntimeType::Top);
 
                     match fun_ty {
-                        RuntimeType::Fun { return_, .. } => Some(*return_),
+                        RuntimeType::Fun { return_, .. } => {
+                            let type_bindings = compute_type_bindings(method_info, &receiver_ty);
+
+                            // subst generics
+                            Some(*return_)
+                        }
                         _ => None,
                     }
                 }
@@ -547,9 +548,8 @@ fn check_expr(
                     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&name) {
                         for field in &struct_info.fields {
                             if field.sym.name == field_sym.name {
-                                let field_ty =
-                                    RuntimeType::from_hint(&field.hint, env, &HashMap::new())
-                                        .unwrap_or(RuntimeType::Top);
+                                let field_ty = RuntimeType::from_hint(&field.hint, env)
+                                    .unwrap_or(RuntimeType::Top);
                                 return Some(field_ty);
                             }
                         }
@@ -578,8 +578,7 @@ fn check_expr(
             // hint.
             for param in &fun_info.params {
                 if let Some(hint) = &param.hint {
-                    let param_ty = RuntimeType::from_hint(hint, env, &HashMap::new())
-                        .unwrap_or(RuntimeType::Top);
+                    let param_ty = RuntimeType::from_hint(hint, env).unwrap_or(RuntimeType::Top);
                     bindings.set(param.symbol.name.clone(), param_ty);
                 }
             }
@@ -592,17 +591,14 @@ fn check_expr(
             let mut param_tys = vec![];
             for param in &fun_info.params {
                 let param_ty = match &param.hint {
-                    Some(hint) => RuntimeType::from_hint(hint, env, &HashMap::new())
-                        .unwrap_or(RuntimeType::Top),
+                    Some(hint) => RuntimeType::from_hint(hint, env).unwrap_or(RuntimeType::Top),
                     None => RuntimeType::Top,
                 };
                 param_tys.push(param_ty);
             }
 
             let return_ty = match &fun_info.return_hint {
-                Some(hint) => {
-                    RuntimeType::from_hint(hint, env, &HashMap::new()).unwrap_or(RuntimeType::Top)
-                }
+                Some(hint) => RuntimeType::from_hint(hint, env).unwrap_or(RuntimeType::Top),
                 None => body_ty.unwrap_or(RuntimeType::Top),
             };
 

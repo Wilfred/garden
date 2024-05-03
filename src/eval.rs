@@ -2782,13 +2782,16 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();
 
-                    let return_ty =
-                        match RuntimeType::from_hint(return_hint, env, &env.type_bindings()) {
-                            Ok(ty) => ty,
-                            Err(e) => {
-                                return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
-                            }
-                        };
+                    let return_ty = match RuntimeType::from_hint(
+                        return_hint,
+                        env,
+                        &stack_frame.bindings.type_bindings,
+                    ) {
+                        Ok(ty) => ty,
+                        Err(e) => {
+                            return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
+                        }
+                    };
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());

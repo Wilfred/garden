@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use itertools::Itertools as _;
 
@@ -80,19 +80,21 @@ impl RuntimeType {
         Self::List(Box::new(Self::String))
     }
 
-    pub(crate) fn from_hint(hint: &TypeHint, env: &Env) -> Result<Self, String> {
+    pub(crate) fn from_hint(
+        hint: &TypeHint,
+        env: &Env,
+        type_bindings: &HashMap<TypeName, RuntimeType>,
+    ) -> Result<Self, String> {
         let name = &hint.sym.name;
 
         let args = hint
             .args
             .iter()
-            .map(|hint_arg| RuntimeType::from_hint(hint_arg, env))
+            .map(|hint_arg| RuntimeType::from_hint(hint_arg, env, type_bindings))
             .collect::<Result<Vec<_>, _>>()?;
 
-        if let Some(stack_frame) = env.stack.last() {
-            if let Some(runtime_type) = stack_frame.bindings.type_bindings.get(name) {
-                return Ok(runtime_type.clone());
-            }
+        if let Some(runtime_type) = type_bindings.get(name) {
+            return Ok(runtime_type.clone());
         }
 
         match env.get_type_def(name) {
@@ -191,14 +193,14 @@ impl RuntimeType {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, env)?,
+                Some(hint) => RuntimeType::from_hint(hint, env, &env.type_bindings())?,
                 None => RuntimeType::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_hint {
-            Some(hint) => Self::from_hint(hint, env)?,
+            Some(hint) => Self::from_hint(hint, env, &env.type_bindings())?,
             None => RuntimeType::Top,
         };
 

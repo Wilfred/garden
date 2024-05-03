@@ -1738,7 +1738,7 @@ fn check_param_types(
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match RuntimeType::from_hint(param_hint, env) {
+            let param_ty = match RuntimeType::from_hint(param_hint, env, &env.type_bindings()) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err(ErrorInfo {
@@ -2782,12 +2782,13 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();
 
-                    let return_ty = match RuntimeType::from_hint(return_hint, env) {
-                        Ok(ty) => ty,
-                        Err(e) => {
-                            return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
-                        }
-                    };
+                    let return_ty =
+                        match RuntimeType::from_hint(return_hint, env, &env.type_bindings()) {
+                            Ok(ty) => ty,
+                            Err(e) => {
+                                return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
+                            }
+                        };
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());

@@ -2,8 +2,9 @@ use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, SymbolName,
-    ToplevelItem, TypeName,
+    ToplevelItem, TypeHint, TypeName,
 };
+use garden_lang_parser::position::Position;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
@@ -76,8 +77,12 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let self_ty = RuntimeType::from_hint(&method_info.receiver_hint, self.env)
-            .unwrap_or(RuntimeType::Top);
+        let self_ty = RuntimeType::from_hint(
+            &method_info.receiver_hint,
+            self.env,
+            &self.env.type_bindings(),
+        )
+        .unwrap_or(RuntimeType::Top);
         self.bindings
             .set(method_info.receiver_sym.name.clone(), self_ty);
 
@@ -102,7 +107,8 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         for param in &fun_info.params {
             let param_ty = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, self.env).unwrap_or(RuntimeType::Top),
+                Some(hint) => RuntimeType::from_hint(hint, self.env, &self.env.type_bindings())
+                    .unwrap_or(RuntimeType::Top),
                 None => RuntimeType::Top,
             };
             self.bindings.set(param.symbol.name.clone(), param_ty);
@@ -457,7 +463,7 @@ fn check_expr(
             }
         }
         Expression_::MethodCall(recv, sym, args) => {
-            let arg_tys = args
+            let arg_tys: Vec<(Option<RuntimeType>, Position)> = args
                 .iter()
                 .map(|arg| (check_expr(arg, env, bindings, warnings), arg.0.clone()))
                 .collect::<Vec<_>>();
@@ -489,41 +495,47 @@ fn check_expr(
                         });
                     }
 
-                    for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(arg_tys) {
+                    for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
                         let Some(arg_ty) = arg_ty else {
                             continue;
                         };
                         let Some(param_hint) = &param.hint else {
                             continue;
                         };
-                        let Ok(param_ty) = RuntimeType::from_hint(param_hint, env) else {
+                        let Ok(param_ty) =
+                            RuntimeType::from_hint(param_hint, env, &env.type_bindings())
+                        else {
                             continue;
                         };
 
-                        if !is_subtype(&arg_ty, &param_ty) {
+                        if !is_subtype(arg_ty, &param_ty) {
                             warnings.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!(
                                     "Expected `{}` argument but got `{}`.",
                                     param_ty, arg_ty
                                 ),
-                                position: arg_pos,
+                                position: arg_pos.clone(),
                             });
                         }
                     }
 
-                    let fun_ty =
-                        RuntimeType::from_fun_info(&fun_info, env).unwrap_or(RuntimeType::Top);
-
-                    match fun_ty {
-                        RuntimeType::Fun { return_, .. } => {
-                            let type_bindings = compute_type_bindings(method_info, &receiver_ty);
-
-                            // subst generics
-                            Some(*return_)
-                        }
-                        _ => None,
+                    let mut ty_var_env: HashMap<TypeName, Option<RuntimeType>> = HashMap::default();
+                    for type_param in &fun_info.type_params {
+                        ty_var_env.insert(type_param.name.clone(), None);
                     }
+
+                    let (more_warnings, ret_ty) = subst_type_vars_in_meth_return_ty(
+                        env,
+                        method_info,
+                        &recv.0,
+                        &receiver_ty,
+                        &arg_tys,
+                        &mut ty_var_env,
+                    );
+                    warnings.extend(more_warnings);
+
+                    ret_ty
                 }
                 None => {
                     warnings.push(Diagnostic {
@@ -548,8 +560,9 @@ fn check_expr(
                     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&name) {
                         for field in &struct_info.fields {
                             if field.sym.name == field_sym.name {
-                                let field_ty = RuntimeType::from_hint(&field.hint, env)
-                                    .unwrap_or(RuntimeType::Top);
+                                let field_ty =
+                                    RuntimeType::from_hint(&field.hint, env, &env.type_bindings())
+                                        .unwrap_or(RuntimeType::Top);
                                 return Some(field_ty);
                             }
                         }
@@ -578,7 +591,8 @@ fn check_expr(
             // hint.
             for param in &fun_info.params {
                 if let Some(hint) = &param.hint {
-                    let param_ty = RuntimeType::from_hint(hint, env).unwrap_or(RuntimeType::Top);
+                    let param_ty = RuntimeType::from_hint(hint, env, &env.type_bindings())
+                        .unwrap_or(RuntimeType::Top);
                     bindings.set(param.symbol.name.clone(), param_ty);
                 }
             }
@@ -591,14 +605,16 @@ fn check_expr(
             let mut param_tys = vec![];
             for param in &fun_info.params {
                 let param_ty = match &param.hint {
-                    Some(hint) => RuntimeType::from_hint(hint, env).unwrap_or(RuntimeType::Top),
+                    Some(hint) => RuntimeType::from_hint(hint, env, &env.type_bindings())
+                        .unwrap_or(RuntimeType::Top),
                     None => RuntimeType::Top,
                 };
                 param_tys.push(param_ty);
             }
 
             let return_ty = match &fun_info.return_hint {
-                Some(hint) => RuntimeType::from_hint(hint, env).unwrap_or(RuntimeType::Top),
+                Some(hint) => RuntimeType::from_hint(hint, env, &env.type_bindings())
+                    .unwrap_or(RuntimeType::Top),
                 None => body_ty.unwrap_or(RuntimeType::Top),
             };
 
@@ -613,42 +629,134 @@ fn check_expr(
     }
 }
 
-fn compute_type_bindings(
+/// Solve the type variables in this method, and return the resolved
+/// type of the return type hint.
+fn subst_type_vars_in_meth_return_ty(
+    env: &Env,
     method_info: &MethodInfo,
+    receiver_pos: &Position,
     receiver_ty: &RuntimeType,
-) -> HashMap<TypeName, RuntimeType> {
+    arg_tys: &[(Option<RuntimeType>, Position)],
+    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+) -> (Vec<Diagnostic>, Option<RuntimeType>) {
+    let mut diagnostics = vec![];
     let Some(fun_info) = method_info.fun_info() else {
-        return HashMap::default();
+        return (diagnostics, None);
     };
 
-    let mut type_params_env: HashMap<TypeName, Option<RuntimeType>> = HashMap::default();
-    for type_param in &fun_info.type_params {
-        type_params_env.insert(type_param.name.clone(), None);
+    if let Err(diagnostic) = unify_and_solve_hint(
+        &method_info.receiver_hint,
+        receiver_pos,
+        receiver_ty,
+        ty_var_env,
+    ) {
+        diagnostics.push(diagnostic);
     }
 
-    // TODO: implement unify properly rather than just special-casing
-    // a few situations here.
-    if method_info.receiver_hint.sym.name.name == "List" {
-        if let Some(type_arg) = &method_info.receiver_hint.args.first() {
-            if type_params_env.contains_key(&type_arg.sym.name) {
-                // This is a `List<T>` hint where T is a generic type parameter.
-                if let RuntimeType::List(elem_ty) = receiver_ty {
-                    type_params_env.insert(type_arg.sym.name.clone(), Some(*elem_ty.clone()));
-                }
+    subst_type_vars_in_fun_info_return_ty(env, &fun_info, arg_tys, ty_var_env)
+}
+
+/// Solve the type variables in this function, and return the resolved
+/// type of the return type hint.
+fn subst_type_vars_in_fun_info_return_ty(
+    env: &Env,
+    fun_info: &FunInfo,
+    arg_tys: &[(Option<RuntimeType>, Position)],
+    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+) -> (Vec<Diagnostic>, Option<RuntimeType>) {
+    let mut diagnostics = vec![];
+
+    for ((arg_ty, arg_pos), param) in arg_tys.iter().zip(&fun_info.params) {
+        if let (Some(param_hint), Some(arg_ty)) = (&param.hint, arg_ty) {
+            if let Err(diagnostic) = unify_and_solve_hint(param_hint, arg_pos, arg_ty, ty_var_env) {
+                diagnostics.push(diagnostic);
             }
         }
     }
 
-    let mut type_bindings: HashMap<TypeName, RuntimeType> = HashMap::default();
-    for type_param in &fun_info.type_params {
-        let ty = type_params_env
-            .get(&type_param.name)
-            .expect("We should have inserted the type parameter in the env")
-            .as_ref()
-            .cloned()
-            .unwrap_or(RuntimeType::Top);
-        type_bindings.insert(type_param.name.clone(), ty);
+    match &fun_info.return_hint {
+        Some(return_hint) => {
+            let hint_name = &return_hint.sym.name;
+            let ty = if let Some(ty_var_val) = ty_var_env.get(hint_name) {
+                match ty_var_val {
+                    Some(ty) => ty.clone(),
+                    None => {
+                        // This type variable was never used, other
+                        // than the return position. Solve to bottom.
+                        RuntimeType::no_value()
+                    }
+                }
+            } else {
+                RuntimeType::from_hint(return_hint, env, &env.type_bindings())
+                    .unwrap_or(RuntimeType::Top)
+            };
+
+            (diagnostics, Some(ty))
+        }
+        None => (diagnostics, None),
+    }
+}
+
+/// If `hint` is `Option<T>` and `ty` is the type representation of
+/// `Option<Int>`, insert `T = Int` into `ty_var_env`.
+fn unify_and_solve_hint(
+    hint: &TypeHint,
+    position: &Position,
+    ty: &RuntimeType,
+    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+) -> Result<(), Diagnostic> {
+    let hint_name = &hint.sym.name;
+    if let Some(ty_var_val) = ty_var_env.get(hint_name) {
+        // If the type named in this hint is a generic type, we're done.
+        match ty_var_val {
+            Some(bound_ty) => {
+                if !is_subtype(ty, bound_ty) {
+                    return Err(Diagnostic {
+                        message: format!(
+                            "Type is not compatible with `{}` is `{}` but got `{}`.",
+                            hint_name,
+                            bound_ty
+                                .type_name()
+                                .map(|n| n.name)
+                                .unwrap_or("_".to_owned()),
+                            ty.type_name().map(|n| n.name).unwrap_or("_".to_owned()),
+                        ),
+                        position: position.clone(),
+                        level: Level::Warning,
+                    });
+                }
+            }
+            None => {
+                ty_var_env.insert(hint_name.clone(), Some(ty.clone()));
+                return Ok(());
+            }
+        }
     }
 
-    type_bindings
+    if hint_name.name == "List" && hint.args.len() == 1 {
+        match ty {
+            RuntimeType::List(elem_ty) => {
+                return unify_and_solve_hint(&hint.args[0], position, elem_ty, ty_var_env);
+            }
+            _ => {
+                // No solving to do.
+                return Ok(());
+            }
+        }
+    }
+    if hint_name.name == "Option" && hint.args.len() == 1 {
+        match ty {
+            RuntimeType::UserDefined { name, args, .. }
+                if name.name == "Option" && args.len() == 1 =>
+            {
+                return unify_and_solve_hint(&hint.args[0], position, &args[0], ty_var_env);
+            }
+            _ => {
+                // No solving to do.
+                return Ok(());
+            }
+        }
+    }
+
+    Ok(())
 }

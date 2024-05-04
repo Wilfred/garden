@@ -82,7 +82,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             self.env,
             &self.env.type_bindings(),
         )
-        .unwrap_or(RuntimeType::Top);
+        .unwrap_or_err_ty();
         self.bindings
             .set(method_info.receiver_sym.name.clone(), self_ty);
 
@@ -108,7 +108,7 @@ impl Visitor for TypeCheckVisitor<'_> {
         for param in &fun_info.params {
             let param_ty = match &param.hint {
                 Some(hint) => RuntimeType::from_hint(hint, self.env, &self.env.type_bindings())
-                    .unwrap_or(RuntimeType::Top),
+                    .unwrap_or_err_ty(),
                 None => RuntimeType::Top,
             };
             self.bindings.set(param.symbol.name.clone(), param_ty);
@@ -576,7 +576,7 @@ fn check_expr(
                             if field.sym.name == field_sym.name {
                                 let field_ty =
                                     RuntimeType::from_hint(&field.hint, env, &env.type_bindings())
-                                        .unwrap_or(RuntimeType::Top);
+                                        .unwrap_or_err_ty();
                                 return Some(field_ty);
                             }
                         }
@@ -605,8 +605,8 @@ fn check_expr(
             // hint.
             for param in &fun_info.params {
                 if let Some(hint) = &param.hint {
-                    let param_ty = RuntimeType::from_hint(hint, env, &env.type_bindings())
-                        .unwrap_or(RuntimeType::Top);
+                    let param_ty =
+                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
                     bindings.set(param.symbol.name.clone(), param_ty);
                 }
             }
@@ -619,17 +619,19 @@ fn check_expr(
             let mut param_tys = vec![];
             for param in &fun_info.params {
                 let param_ty = match &param.hint {
-                    Some(hint) => RuntimeType::from_hint(hint, env, &env.type_bindings())
-                        .unwrap_or(RuntimeType::Top),
+                    Some(hint) => {
+                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty()
+                    }
                     None => RuntimeType::Top,
                 };
                 param_tys.push(param_ty);
             }
 
             let return_ty = match &fun_info.return_hint {
-                Some(hint) => RuntimeType::from_hint(hint, env, &env.type_bindings())
-                    .unwrap_or(RuntimeType::Top),
-                None => body_ty.unwrap_or(RuntimeType::Top),
+                Some(hint) => {
+                    RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty()
+                }
+                None => body_ty.unwrap_or_err_ty(),
             };
 
             let fun_ty = RuntimeType::Fun {
@@ -701,8 +703,7 @@ fn subst_type_vars_in_fun_info_return_ty(
                     }
                 }
             } else {
-                RuntimeType::from_hint(return_hint, env, &env.type_bindings())
-                    .unwrap_or(RuntimeType::Top)
+                RuntimeType::from_hint(return_hint, env, &env.type_bindings()).unwrap_or_err_ty()
             };
 
             (diagnostics, Some(ty))
@@ -867,4 +868,26 @@ fn unify_and_solve_hint(
     }
 
     Ok(())
+}
+
+trait UnwrapOrErrTy {
+    fn unwrap_or_err_ty(&self) -> RuntimeType;
+}
+
+impl UnwrapOrErrTy for Result<RuntimeType, String> {
+    fn unwrap_or_err_ty(&self) -> RuntimeType {
+        match self {
+            Ok(ty) => ty.clone(),
+            Err(msg) => RuntimeType::Error(msg.clone()),
+        }
+    }
+}
+
+impl UnwrapOrErrTy for Option<RuntimeType> {
+    fn unwrap_or_err_ty(&self) -> RuntimeType {
+        match self {
+            Some(ty) => ty.clone(),
+            None => RuntimeType::Error("Got None".to_owned()),
+        }
+    }
 }

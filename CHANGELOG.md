@@ -13,6 +13,8 @@ Added `break;` inside loops. `continue` is now a reserved word.
 Type hints for built-in types are now checked for the correct arity
 (e.g. `List` or `String<Foo>`).
 
+Added a basic type checker.
+
 ## Stdlib
 
 Added methods `write_file()`, `String::trim_left()`,

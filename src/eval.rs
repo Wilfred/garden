@@ -1592,7 +1592,14 @@ fn eval_call(
                 type_bindings.insert(param_sym.name.clone(), RuntimeType::Top);
             }
 
-            check_param_types(env, receiver_value, params, arg_positions, arg_values)?;
+            check_param_types(
+                env,
+                receiver_value,
+                params,
+                arg_positions,
+                arg_values,
+                &stack_frame.bindings.type_bindings,
+            )?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];
             for expr in body.exprs.iter().rev() {
@@ -1735,10 +1742,11 @@ fn check_param_types(
     params: &[SymbolWithHint],
     arg_positions: &[Position],
     arg_values: &[Value],
+    type_bindings: &HashMap<TypeName, RuntimeType>,
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match RuntimeType::from_hint(param_hint, env, &env.type_bindings()) {
+            let param_ty = match RuntimeType::from_hint(param_hint, env, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err(ErrorInfo {

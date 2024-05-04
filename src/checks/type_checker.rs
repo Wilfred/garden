@@ -434,6 +434,13 @@ fn check_expr(
 
                     let mut ty_var_env = HashMap::default();
 
+                    for (param_ty, (arg_ty, _arg_pos)) in params.iter().zip(arg_tys.iter()) {
+                        let Some(arg_ty) = arg_ty else {
+                            continue;
+                        };
+                        unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                    }
+
                     let params = params
                         .iter()
                         .map(|p| subst_ty_vars(p, &ty_var_env))
@@ -750,17 +757,54 @@ fn subst_ty_vars(
     }
 }
 
-// fn unify_and_solve_ty(ty: &RuntimeType, ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>) {
-//     match ty {
-//         RuntimeType::Top => {},
-//         RuntimeType::String => todo!(),
-//         RuntimeType::Int => todo!(),
-//         RuntimeType::List(_) => todo!(),
-//         RuntimeType::Fun { type_params, params, return_ } => todo!(),
-//         RuntimeType::UserDefined { kind, name, args } => todo!(),
-//         RuntimeType::TypeParameter(_) => todo!(),
-//     }
-// }
+fn unify_and_solve_ty(
+    expected_ty: &RuntimeType,
+    actual_ty: &RuntimeType,
+    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+) {
+    match (expected_ty, actual_ty) {
+        (RuntimeType::TypeParameter(n), _) => {
+            ty_var_env.insert(n.clone(), Some(actual_ty.clone()));
+        }
+        (RuntimeType::List(expected_elem_ty), RuntimeType::List(actual_elem_ty)) => {
+            unify_and_solve_ty(expected_elem_ty, actual_elem_ty, ty_var_env)
+        }
+        (
+            RuntimeType::Fun {
+                params: expected_params,
+                return_: expected_return,
+                ..
+            },
+            RuntimeType::Fun {
+                params: actual_params,
+                return_: actual_return,
+                ..
+            },
+        ) => {
+            unify_and_solve_ty(expected_return, actual_return, ty_var_env);
+            for (expected_param, actual_param) in expected_params.iter().zip(actual_params.iter()) {
+                unify_and_solve_ty(expected_param, actual_param, ty_var_env);
+            }
+        }
+        (
+            RuntimeType::UserDefined {
+                kind: expected_kind,
+                name: expected_name,
+                args: expected_args,
+            },
+            RuntimeType::UserDefined {
+                kind: actual_kind,
+                name: actual_name,
+                args: actual_args,
+            },
+        ) if expected_kind == actual_kind && expected_name == actual_name => {
+            for (expected_arg, actual_arg) in expected_args.iter().zip(actual_args.iter()) {
+                unify_and_solve_ty(expected_arg, actual_arg, ty_var_env);
+            }
+        }
+        _ => {}
+    }
+}
 
 /// If `hint` is `Option<T>` and `ty` is the type representation of
 /// `Option<Int>`, insert `T = Int` into `ty_var_env`.

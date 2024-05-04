@@ -1,4 +1,6 @@
-fun foo(): List<Int, Int, Int> {}
+fun foo(): List<Int, Int, Int> {
+    error("");
+}
 
 // args: check
 // expected exit status: 1
@@ -6,6 +8,6 @@ fun foo(): List<Int, Int, Int> {}
 // Error: List takes 1 type argument, but got 3 arguments.
 // 
 // --> src/check_test_files/type_arg_arity.gdn:1
-// fun foo(): List<Int, Int, Int> {}
+// fun foo(): List<Int, Int, Int> {
 //                           ^^^
 

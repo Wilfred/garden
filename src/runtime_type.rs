@@ -50,6 +50,10 @@ impl RuntimeType {
         }
     }
 
+    pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
+        RuntimeType::Error(msg.as_ref().to_owned())
+    }
+
     pub(crate) fn no_value() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,

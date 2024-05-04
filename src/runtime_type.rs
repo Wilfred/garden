@@ -1,4 +1,7 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+};
 
 use itertools::Itertools as _;
 
@@ -200,10 +203,22 @@ impl RuntimeType {
         env: &Env,
         type_bindings: &HashMap<TypeName, RuntimeType>,
     ) -> Result<Self, String> {
+        let bound_ty_params = fun_info
+            .type_params
+            .iter()
+            .map(|tp| &tp.name)
+            .collect::<HashSet<_>>();
+
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, env, type_bindings)?,
+                Some(hint) => {
+                    if bound_ty_params.contains(&hint.sym.name) {
+                        RuntimeType::TypeParameter(hint.sym.name.clone())
+                    } else {
+                        RuntimeType::from_hint(hint, env, type_bindings)?
+                    }
+                }
                 None => RuntimeType::Top,
             };
             param_types.push(type_);

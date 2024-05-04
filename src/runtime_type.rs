@@ -39,6 +39,7 @@ pub(crate) enum RuntimeType {
         args: Vec<RuntimeType>,
     },
     TypeParameter(TypeName),
+    Error,
 }
 
 impl RuntimeType {
@@ -240,7 +241,7 @@ impl RuntimeType {
 
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
-            RuntimeType::Top => None,
+            RuntimeType::Top | RuntimeType::Error => None,
             RuntimeType::String => Some(TypeName {
                 name: "String".to_owned(),
             }),
@@ -306,6 +307,7 @@ impl Display for RuntimeType {
             }
             RuntimeType::Top => write!(f, "_"),
             RuntimeType::TypeParameter(name) => write!(f, "{}", name.name),
+            RuntimeType::Error => write!(f, "__ERROR__"),
         }
     }
 }
@@ -314,6 +316,11 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
     match (lhs, rhs) {
         (_, RuntimeType::Top) => true,
         (_, _) if lhs.is_no_value() => true,
+        (RuntimeType::Error, _) => {
+            // Error is equivalent to NoValue: it's a bottom type that
+            // is a subtype of everything.
+            true
+        }
         (RuntimeType::Int, RuntimeType::Int) => true,
         (RuntimeType::Int, _) => false,
         (RuntimeType::String, RuntimeType::String) => true,

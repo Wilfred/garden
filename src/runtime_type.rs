@@ -116,7 +116,7 @@ impl RuntimeType {
                     BuiltinType::List => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
-                            None => RuntimeType::Top,
+                            None => RuntimeType::error("Missing type argument to List<>"),
                         };
 
                         Ok(RuntimeType::List(Box::new(elem_type)))
@@ -148,13 +148,13 @@ impl RuntimeType {
         match value {
             Value::Integer(_) => RuntimeType::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-                Self::from_fun_info(fun_info, env, type_bindings).unwrap_or(RuntimeType::Top)
+                Self::from_fun_info(fun_info, env, type_bindings).unwrap_or_err_ty()
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
                 Some(fun_info) => {
-                    Self::from_fun_info(fun_info, env, type_bindings).unwrap_or(RuntimeType::Top)
+                    Self::from_fun_info(fun_info, env, type_bindings).unwrap_or_err_ty()
                 }
-                None => RuntimeType::Top,
+                None => RuntimeType::error("No fun_info for built-in function"),
             },
             Value::String(_) => RuntimeType::String,
             Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
@@ -191,10 +191,7 @@ impl RuntimeType {
                     type_params,
                     // TODO: this is assuming the variant is exactly
                     // Foo(T), not e.g. Foo(Int) or Foo(Option(T)).
-                    params: vec![type_args_on_enum
-                        .first()
-                        .cloned()
-                        .unwrap_or(RuntimeType::Top)],
+                    params: vec![type_args_on_enum.first().cloned().unwrap_or_err_ty()],
                     return_: Box::new(RuntimeType::UserDefined {
                         kind: TypeDefKind::Enum,
                         name: type_name.clone(),

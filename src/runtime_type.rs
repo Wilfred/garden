@@ -39,6 +39,9 @@ pub(crate) enum RuntimeType {
         args: Vec<RuntimeType>,
     },
     TypeParameter(TypeName),
+    /// Represents a type checker error. The string is the internal
+    /// reason we had an error, intended for debugging the type
+    /// checker.
     Error(String),
 }
 

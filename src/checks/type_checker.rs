@@ -576,65 +576,72 @@ fn check_expr(
                 _ => RuntimeType::error("This type is not a struct"),
             }
         }
-        Expression_::FunLiteral(fun_info) => {
-            // Check the function body with the locals bound.
-            bindings.enter_block();
-
-            // Only bind and check locals that have an explicit type
-            // hint.
-            for param in &fun_info.params {
-                if let Some(hint) = &param.hint {
-                    let param_ty =
-                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
-                    bindings.set(param.symbol.name.clone(), param_ty);
-                }
-            }
-
-            let body_ty = check_block(&fun_info.body, env, bindings, warnings);
-
-            bindings.exit_block();
-
-            // Build the type representation of a function matching this lambda.
-            let mut param_tys = vec![];
-            for param in &fun_info.params {
-                let param_ty = match &param.hint {
-                    Some(hint) => {
-                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty()
-                    }
-                    None => RuntimeType::Top,
-                };
-                param_tys.push(param_ty);
-            }
-
-            let return_ty = match &fun_info.return_hint {
-                Some(hint) => {
-                    let return_ty =
-                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
-
-                    if !is_subtype(&body_ty, &return_ty) {
-                        warnings.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Expected to return `{}` but got `{}`.",
-                                return_ty.type_name_friendly(),
-                                body_ty.type_name_friendly()
-                            ),
-                            position: hint.position.clone(),
-                        });
-                    }
-
-                    return_ty
-                }
-                None => body_ty,
-            };
-
-            RuntimeType::Fun {
-                type_params: vec![],
-                params: param_tys,
-                return_: Box::new(return_ty),
-            }
-        }
+        Expression_::FunLiteral(fun_info) => check_fun_info(fun_info, env, bindings, warnings),
         Expression_::Block(block) => check_block(block, env, bindings, warnings),
+    }
+}
+
+fn check_fun_info(
+    fun_info: &FunInfo,
+    env: &mut Env,
+    bindings: &mut LocalBindings,
+    warnings: &mut Vec<Diagnostic>,
+) -> RuntimeType {
+    // Check the function body with the locals bound.
+    bindings.enter_block();
+
+    // Only bind and check locals that have an explicit type
+    // hint.
+    for param in &fun_info.params {
+        if let Some(hint) = &param.hint {
+            let param_ty =
+                RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            bindings.set(param.symbol.name.clone(), param_ty);
+        }
+    }
+
+    let body_ty = check_block(&fun_info.body, env, bindings, warnings);
+
+    bindings.exit_block();
+
+    // Build the type representation of a function matching this lambda.
+    let mut param_tys = vec![];
+    for param in &fun_info.params {
+        let param_ty = match &param.hint {
+            Some(hint) => {
+                RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty()
+            }
+            None => RuntimeType::Top,
+        };
+        param_tys.push(param_ty);
+    }
+
+    let return_ty = match &fun_info.return_hint {
+        Some(hint) => {
+            let return_ty =
+                RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+
+            if !is_subtype(&body_ty, &return_ty) {
+                warnings.push(Diagnostic {
+                    level: Level::Error,
+                    message: format!(
+                        "Expected to return `{}` but got `{}`.",
+                        return_ty.type_name_friendly(),
+                        body_ty.type_name_friendly()
+                    ),
+                    position: hint.position.clone(),
+                });
+            }
+
+            return_ty
+        }
+        None => body_ty,
+    };
+
+    RuntimeType::Fun {
+        type_params: vec![],
+        params: param_tys,
+        return_: Box::new(return_ty),
     }
 }
 

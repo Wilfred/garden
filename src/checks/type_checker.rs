@@ -621,7 +621,7 @@ fn check_fun_info(
             let return_ty =
                 RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
 
-            if !is_subtype(&body_ty, &return_ty) {
+            if !matches!(return_ty, RuntimeType::Error(_)) && !is_subtype(&body_ty, &return_ty) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
                     message: format!(

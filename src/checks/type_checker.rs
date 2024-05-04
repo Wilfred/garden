@@ -624,11 +624,7 @@ fn check_fun_info(
             if !matches!(return_ty, RuntimeType::Error(_)) && !is_subtype(&body_ty, &return_ty) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
-                    message: format!(
-                        "Expected to return `{}` but got `{}`.",
-                        return_ty.type_name_friendly(),
-                        body_ty.type_name_friendly()
-                    ),
+                    message: format!("Expected to return `{}` but got `{}`.", return_ty, body_ty),
                     position: hint.position.clone(),
                 });
             }
@@ -829,9 +825,7 @@ fn unify_and_solve_hint(
                     return Err(Diagnostic {
                         message: format!(
                             "Type is not compatible with `{}` is `{}` but got `{}`.",
-                            hint_name,
-                            bound_ty.type_name_friendly(),
-                            ty.type_name_friendly(),
+                            hint_name, bound_ty, ty,
                         ),
                         position: position.clone(),
                         level: Level::Warning,

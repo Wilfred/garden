@@ -265,12 +265,6 @@ impl RuntimeType {
             RuntimeType::TypeParameter(name) => Some(name.clone()),
         }
     }
-
-    /// A human-readable type name, useful for error messages but not
-    /// looking up type names in an environment.
-    pub(crate) fn type_name_friendly(&self) -> String {
-        self.type_name().map(|n| n.name).unwrap_or("_".to_owned())
-    }
 }
 
 impl Display for RuntimeType {

@@ -385,10 +385,6 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
                 return false;
             }
 
-            if lhs_args.len() != rhs_args.len() {
-                return false;
-            }
-
             // Garden values are currently exclusively immutable, so
             // we can assume that all user-defined types have
             // covariant arguments.

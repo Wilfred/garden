@@ -203,17 +203,19 @@ impl RuntimeType {
         env: &Env,
         type_bindings: &HashMap<TypeName, RuntimeType>,
     ) -> Result<Self, String> {
-        let bound_ty_params = fun_info
+        let type_params = fun_info
             .type_params
             .iter()
-            .map(|tp| &tp.name)
-            .collect::<HashSet<_>>();
+            .map(|tp| tp.name.clone())
+            .collect::<Vec<_>>();
+
+        let type_params_set = type_params.iter().collect::<HashSet<_>>();
 
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
                 Some(hint) => {
-                    if bound_ty_params.contains(&hint.sym.name) {
+                    if type_params_set.contains(&hint.sym.name) {
                         RuntimeType::TypeParameter(hint.sym.name.clone())
                     } else {
                         RuntimeType::from_hint(hint, env, type_bindings)?
@@ -230,7 +232,7 @@ impl RuntimeType {
         };
 
         Ok(RuntimeType::Fun {
-            type_params: vec![],
+            type_params,
             params: param_types,
             return_: Box::new(return_),
         })

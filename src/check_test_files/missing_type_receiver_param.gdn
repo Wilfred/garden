@@ -1,0 +1,13 @@
+fun<T> (self: List<NoSuchType>) foo() {
+    None;
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: No such type: NoSuchType
+// 
+// --> src/check_test_files/missing_type_receiver_param.gdn:1
+// fun<T> (self: List<NoSuchType>) foo() {
+//                    ^^^^^^^^^^
+

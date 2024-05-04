@@ -544,7 +544,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                RuntimeType::from_value(value, env),
+                RuntimeType::from_value(value, env, &env.type_bindings()),
             ),
             position: symbol.position.clone(),
         });
@@ -787,7 +787,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.to_string(),
-        RuntimeType::from_value(value, env),
+        RuntimeType::from_value(value, env, &env.type_bindings()),
         value.display(env)
     ))
 }
@@ -1030,7 +1030,7 @@ fn check_arity(
 
 /// Check that `value` has `expected` type.
 fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = RuntimeType::from_value(value, env);
+    let value_type = RuntimeType::from_value(value, env, &env.type_bindings());
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -1653,7 +1653,7 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &RuntimeType::from_value(&arg_values[0], env),
+                &RuntimeType::from_value(&arg_values[0], env, &stack_frame.bindings.type_bindings),
             )
             .unwrap_or(RuntimeType::no_value());
 
@@ -1925,7 +1925,11 @@ fn eval_builtin_method_call(
                     // type as the existing list items.
                     stack_frame.evalled_values.push(Value::List {
                         items: new_items,
-                        elem_type: RuntimeType::from_value(&arg_values[0], env),
+                        elem_type: RuntimeType::from_value(
+                            &arg_values[0],
+                            env,
+                            &stack_frame.bindings.type_bindings,
+                        ),
                     });
                 }
                 v => {
@@ -2439,7 +2443,11 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             );
                             // TODO: check that all elements are of a compatible type.
                             // [1, None] should be an error.
-                            element_type = RuntimeType::from_value(&element, env);
+                            element_type = RuntimeType::from_value(
+                                &element,
+                                env,
+                                &stack_frame.bindings.type_bindings,
+                            );
                             list_values.push(element);
                         }
 
@@ -2960,7 +2968,7 @@ fn eval_struct_value(
         if type_params.contains(&field_info.hint.sym.name) {
             type_arg_bindings.insert(
                 field_info.hint.sym.name.clone(),
-                RuntimeType::from_value(&field_value, env),
+                RuntimeType::from_value(&field_value, env, &env.type_bindings()),
             );
         }
 
@@ -3012,7 +3020,7 @@ fn eval_match_cases(
     else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            RuntimeType::from_value(&scrutinee_value, env),
+            RuntimeType::from_value(&scrutinee_value, env, &stack_frame.bindings.type_bindings),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

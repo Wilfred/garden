@@ -129,14 +129,20 @@ impl RuntimeType {
         }
     }
 
-    pub(crate) fn from_value(value: &Value, env: &Env) -> Self {
+    pub(crate) fn from_value(
+        value: &Value,
+        env: &Env,
+        type_bindings: &HashMap<TypeName, RuntimeType>,
+    ) -> Self {
         match value {
             Value::Integer(_) => RuntimeType::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-                Self::from_fun_info(fun_info, env).unwrap_or(RuntimeType::Top)
+                Self::from_fun_info(fun_info, env, type_bindings).unwrap_or(RuntimeType::Top)
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
-                Some(fun_info) => Self::from_fun_info(fun_info, env).unwrap_or(RuntimeType::Top),
+                Some(fun_info) => {
+                    Self::from_fun_info(fun_info, env, type_bindings).unwrap_or(RuntimeType::Top)
+                }
                 None => RuntimeType::Top,
             },
             Value::String(_) => RuntimeType::String,
@@ -189,11 +195,15 @@ impl RuntimeType {
         }
     }
 
-    pub(crate) fn from_fun_info(fun_info: &FunInfo, env: &Env) -> Result<Self, String> {
+    pub(crate) fn from_fun_info(
+        fun_info: &FunInfo,
+        env: &Env,
+        type_bindings: &HashMap<TypeName, RuntimeType>,
+    ) -> Result<Self, String> {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, env, &env.type_bindings())?,
+                Some(hint) => RuntimeType::from_hint(hint, env, type_bindings)?,
                 None => RuntimeType::Top,
             };
             param_types.push(type_);

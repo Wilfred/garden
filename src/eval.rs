@@ -1598,7 +1598,7 @@ fn eval_call(
                 params,
                 arg_positions,
                 arg_values,
-                &stack_frame.bindings.type_bindings,
+                &type_bindings,
             )?;
 
             let mut fun_subexprs: Vec<(bool, Expression)> = vec![];

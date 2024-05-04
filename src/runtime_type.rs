@@ -405,3 +405,25 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
         }
     }
 }
+
+pub(crate) trait UnwrapOrErrTy {
+    fn unwrap_or_err_ty(&self) -> RuntimeType;
+}
+
+impl UnwrapOrErrTy for Result<RuntimeType, String> {
+    fn unwrap_or_err_ty(&self) -> RuntimeType {
+        match self {
+            Ok(ty) => ty.clone(),
+            Err(msg) => RuntimeType::Error(msg.clone()),
+        }
+    }
+}
+
+impl UnwrapOrErrTy for Option<RuntimeType> {
+    fn unwrap_or_err_ty(&self) -> RuntimeType {
+        match self {
+            Some(ty) => ty.clone(),
+            None => RuntimeType::Error("Got None".to_owned()),
+        }
+    }
+}

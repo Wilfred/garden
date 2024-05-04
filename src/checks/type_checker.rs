@@ -8,7 +8,7 @@ use garden_lang_parser::position::Position;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
-use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
+use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
@@ -865,26 +865,4 @@ fn unify_and_solve_hint(
     }
 
     Ok(())
-}
-
-trait UnwrapOrErrTy {
-    fn unwrap_or_err_ty(&self) -> RuntimeType;
-}
-
-impl UnwrapOrErrTy for Result<RuntimeType, String> {
-    fn unwrap_or_err_ty(&self) -> RuntimeType {
-        match self {
-            Ok(ty) => ty.clone(),
-            Err(msg) => RuntimeType::Error(msg.clone()),
-        }
-    }
-}
-
-impl UnwrapOrErrTy for Option<RuntimeType> {
-    fn unwrap_or_err_ty(&self) -> RuntimeType {
-        match self {
-            Some(ty) => ty.clone(),
-            None => RuntimeType::Error("Got None".to_owned()),
-        }
-    }
 }

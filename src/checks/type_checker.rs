@@ -114,7 +114,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             self.bindings.set(param.symbol.name.clone(), param_ty);
         }
 
-        self.visit_fun_info_default(fun_info);
+        check_fun_info(fun_info, self.env, &mut self.bindings, &mut self.warnings);
 
         self.bindings.exit_block();
     }

@@ -608,7 +608,22 @@ fn check_expr(
 
             let return_ty = match &fun_info.return_hint {
                 Some(hint) => {
-                    RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty()
+                    let return_ty =
+                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+
+                    if !is_subtype(&body_ty, &return_ty) {
+                        warnings.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected to return `{}` but got `{}`.",
+                                return_ty.type_name_friendly(),
+                                body_ty.type_name_friendly()
+                            ),
+                            position: hint.position.clone(),
+                        });
+                    }
+
+                    return_ty
                 }
                 None => body_ty,
             };

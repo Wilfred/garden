@@ -1,0 +1,7 @@
+fun bad(): Bool {
+    let _f = fun(): Int { True; };
+    
+    "abc";
+}
+
+// args: check

@@ -716,7 +716,7 @@ fn subst_ty_vars(
     ty_var_env: &HashMap<TypeName, Option<RuntimeType>>,
 ) -> RuntimeType {
     match ty {
-        RuntimeType::Error | RuntimeType::Top | RuntimeType::String | RuntimeType::Int => {
+        RuntimeType::Error(_) | RuntimeType::Top | RuntimeType::String | RuntimeType::Int => {
             ty.clone()
         }
         RuntimeType::List(elem_ty) => {

@@ -432,6 +432,13 @@ fn check_expr(
                         });
                     }
 
+                    let mut ty_var_env = HashMap::default();
+
+                    let params = params
+                        .iter()
+                        .map(|p| subst_ty_vars(p, &ty_var_env))
+                        .collect::<Vec<_>>();
+
                     for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
                         let Some(arg_ty) = arg_ty else {
                             continue;
@@ -696,6 +703,64 @@ fn subst_type_vars_in_fun_info_return_ty(
         None => (diagnostics, None),
     }
 }
+
+fn subst_ty_vars(
+    ty: &RuntimeType,
+    ty_var_env: &HashMap<TypeName, Option<RuntimeType>>,
+) -> RuntimeType {
+    match ty {
+        RuntimeType::Top | RuntimeType::String | RuntimeType::Int => ty.clone(),
+        RuntimeType::List(elem_ty) => {
+            RuntimeType::List(Box::new(subst_ty_vars(elem_ty, ty_var_env)))
+        }
+        RuntimeType::Fun {
+            type_params,
+            params,
+            return_,
+        } => {
+            let params = params
+                .iter()
+                .map(|p| subst_ty_vars(p, ty_var_env))
+                .collect();
+            let return_ = subst_ty_vars(return_, ty_var_env);
+
+            RuntimeType::Fun {
+                type_params: type_params.clone(),
+                params,
+                return_: Box::new(return_),
+            }
+        }
+        RuntimeType::UserDefined { kind, name, args } => RuntimeType::UserDefined {
+            kind: kind.clone(),
+            name: name.clone(),
+            args: args
+                .iter()
+                .map(|arg| subst_ty_vars(arg, ty_var_env))
+                .collect(),
+        },
+        RuntimeType::TypeParameter(name) => {
+            match ty_var_env.get(name) {
+                Some(ty_var_val) => ty_var_val
+                    .as_ref()
+                    .cloned()
+                    .unwrap_or(RuntimeType::no_value()),
+                None => ty.clone(), // TODO: define an error type
+            }
+        }
+    }
+}
+
+// fn unify_and_solve_ty(ty: &RuntimeType, ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>) {
+//     match ty {
+//         RuntimeType::Top => {},
+//         RuntimeType::String => todo!(),
+//         RuntimeType::Int => todo!(),
+//         RuntimeType::List(_) => todo!(),
+//         RuntimeType::Fun { type_params, params, return_ } => todo!(),
+//         RuntimeType::UserDefined { kind, name, args } => todo!(),
+//         RuntimeType::TypeParameter(_) => todo!(),
+//     }
+// }
 
 /// If `hint` is `Option<T>` and `ty` is the type representation of
 /// `Option<Int>`, insert `T = Int` into `ty_var_env`.

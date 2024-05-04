@@ -243,6 +243,7 @@ impl Default for Env {
                     offset: 0,
                     src: "// __toplevel__".to_owned(),
                 },
+                type_bindings: HashMap::new(),
             }],
         };
 
@@ -300,6 +301,6 @@ impl Env {
             return HashMap::default();
         };
 
-        stack_frame.bindings.type_bindings.clone()
+        stack_frame.type_bindings.clone()
     }
 }

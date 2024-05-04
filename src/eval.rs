@@ -48,8 +48,6 @@ impl Default for BlockBindings {
 #[derive(Debug, Clone)]
 pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,
-    /// Types bound in this stack frame, due to generic parameters.
-    pub(crate) type_bindings: HashMap<TypeName, RuntimeType>,
 }
 
 impl Bindings {
@@ -62,15 +60,11 @@ impl Bindings {
         assert!(!self.block_bindings.is_empty());
     }
 
-    fn new_with(
-        outer_scope: HashMap<SymbolName, Value>,
-        type_bindings: HashMap<TypeName, RuntimeType>,
-    ) -> Self {
+    fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
         Self {
             block_bindings: vec![BlockBindings {
                 values: Rc::new(RefCell::new(outer_scope)),
             }],
-            type_bindings,
         }
     }
 
@@ -142,7 +136,6 @@ impl Default for Bindings {
     fn default() -> Self {
         Self {
             block_bindings: vec![BlockBindings::default()],
-            type_bindings: HashMap::new(),
         }
     }
 }
@@ -180,6 +173,8 @@ pub(crate) struct StackFrame {
     /// The position of the call site.
     pub(crate) caller_pos: Option<Position>,
     pub(crate) bindings: Bindings,
+    /// Types bound in this stack frame, due to generic parameters.
+    pub(crate) type_bindings: HashMap<TypeName, RuntimeType>,
     /// If we are entering a block with extra bindings that are only
     /// defined for the duration of the block, pass them here.
     ///
@@ -353,6 +348,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         enclosing_fun: None,
         caller_pos: None,
         bindings: Bindings::default(),
+        type_bindings: HashMap::new(),
         bindings_next_block: vec![],
         exprs_to_eval,
         evalled_values: vec![Value::unit()],
@@ -1561,8 +1557,8 @@ fn eval_call(
                 caller_pos: Some(position.clone()),
                 bindings: Bindings {
                     block_bindings: bindings,
-                    type_bindings,
                 },
+                type_bindings,
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
@@ -1619,7 +1615,8 @@ fn eval_call(
                 src: fi.src_string.clone(),
                 caller_pos: Some(receiver_pos.clone()),
                 enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
-                bindings: Bindings::new_with(fun_bindings, type_bindings),
+                bindings: Bindings::new_with(fun_bindings),
+                type_bindings,
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
@@ -1653,7 +1650,7 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &RuntimeType::from_value(&arg_values[0], env, &stack_frame.bindings.type_bindings),
+                &RuntimeType::from_value(&arg_values[0], env, &stack_frame.type_bindings),
             )
             .unwrap_or(RuntimeType::no_value());
 
@@ -1889,7 +1886,8 @@ fn eval_method_call(
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
         caller_pos: Some(receiver_pos.clone()),
-        bindings: Bindings::new_with(fun_bindings, type_bindings),
+        bindings: Bindings::new_with(fun_bindings),
+        type_bindings,
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
         evalled_values: vec![Value::unit()],
@@ -1928,7 +1926,7 @@ fn eval_builtin_method_call(
                         elem_type: RuntimeType::from_value(
                             &arg_values[0],
                             env,
-                            &stack_frame.bindings.type_bindings,
+                            &stack_frame.type_bindings,
                         ),
                     });
                 }
@@ -2443,11 +2441,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             );
                             // TODO: check that all elements are of a compatible type.
                             // [1, None] should be an error.
-                            element_type = RuntimeType::from_value(
-                                &element,
-                                env,
-                                &stack_frame.bindings.type_bindings,
-                            );
+                            element_type =
+                                RuntimeType::from_value(&element, env, &stack_frame.type_bindings);
                             list_values.push(element);
                         }
 
@@ -2801,7 +2796,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     let return_ty = match RuntimeType::from_hint(
                         return_hint,
                         env,
-                        &stack_frame.bindings.type_bindings,
+                        &stack_frame.type_bindings,
                     ) {
                         Ok(ty) => ty,
                         Err(e) => {
@@ -3020,7 +3015,7 @@ fn eval_match_cases(
     else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            RuntimeType::from_value(&scrutinee_value, env, &stack_frame.bindings.type_bindings),
+            RuntimeType::from_value(&scrutinee_value, env, &stack_frame.type_bindings),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

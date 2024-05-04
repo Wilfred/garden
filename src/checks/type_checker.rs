@@ -715,11 +715,8 @@ fn unify_and_solve_hint(
                         message: format!(
                             "Type is not compatible with `{}` is `{}` but got `{}`.",
                             hint_name,
-                            bound_ty
-                                .type_name()
-                                .map(|n| n.name)
-                                .unwrap_or("_".to_owned()),
-                            ty.type_name().map(|n| n.name).unwrap_or("_".to_owned()),
+                            bound_ty.type_name_friendly(),
+                            ty.type_name_friendly(),
                         ),
                         position: position.clone(),
                         level: Level::Warning,

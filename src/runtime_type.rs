@@ -319,6 +319,12 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
             // is a subtype of everything.
             true
         }
+        (_, RuntimeType::Error(_)) => {
+            // Also allow Error to be a supertype of everything,
+            // because we've already emitted a type error elsewhere
+            // and we don't want duplicate errors.
+            true
+        }
         (RuntimeType::Int, RuntimeType::Int) => true,
         (RuntimeType::Int, _) => false,
         (RuntimeType::String, RuntimeType::String) => true,

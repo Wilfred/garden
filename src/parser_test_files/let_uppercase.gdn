@@ -4,6 +4,7 @@ let A = 1;
 // expected stdout:
 // Let(
 //     Symbol"A",
+//     None,
 //     Expression(
 //         Position { ... },
 //         IntLiteral(

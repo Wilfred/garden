@@ -1,10 +1,16 @@
-let x = 1;
+let foo: Int = 1;
 
 // args: dump-ast
 // expected stdout:
 // Let(
-//     Symbol"x",
-//     None,
+//     Symbol"foo",
+//     Some(
+//         TypeHint {
+//             sym: TypeSymbol"Int",
+//             args: [],
+//             position: Position { ... },
+//         },
+//     ),
 //     Expression(
 //         Position { ... },
 //         IntLiteral(

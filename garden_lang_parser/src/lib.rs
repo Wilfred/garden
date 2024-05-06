@@ -1374,13 +1374,15 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
     let let_token = require_token(tokens, "let")?;
     let variable = parse_symbol(tokens)?;
 
+    let hint = parse_type_annotation_opt(tokens)?;
+
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(src, tokens)?;
     let _ = require_end_token(tokens, ";")?;
 
     Ok(Expression::new(
         let_token.position, // TODO: this should be a larger span.
-        Expression_::Let(variable, None, Box::new(expr)),
+        Expression_::Let(variable, hint, Box::new(expr)),
     ))
 }
 

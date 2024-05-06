@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use garden_lang_parser::{
     ast::{
         Block, Definition, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName,
-        ToplevelItem,
+        ToplevelItem, TypeHint,
     },
     position::Position,
 };
@@ -175,7 +175,7 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.check_symbol(var);
     }
 
-    fn visit_expr_let(&mut self, var: &Symbol, expr: &Expression) {
+    fn visit_expr_let(&mut self, var: &Symbol, _hint: Option<&TypeHint>, expr: &Expression) {
         self.visit_expr(expr);
         self.add_binding(var);
     }

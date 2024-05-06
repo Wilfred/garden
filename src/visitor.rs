@@ -117,7 +117,7 @@ pub(crate) trait Visitor {
                 self.visit_expr_assign(sym, expr);
             }
             Expression_::Let(sym, hint, expr) => {
-                self.visit_expr_let(sym, expr);
+                self.visit_expr_let(sym, hint.as_ref(), expr);
             }
             Expression_::Return(expr) => {
                 // TODO: custom method for this variant
@@ -203,7 +203,7 @@ pub(crate) trait Visitor {
 
     fn visit_expr_variable(&mut self, _: &Symbol) {}
 
-    fn visit_expr_let(&mut self, _: &Symbol, expr: &Expression) {
+    fn visit_expr_let(&mut self, _: &Symbol, _hint: Option<&TypeHint>, expr: &Expression) {
         self.visit_expr(expr);
     }
 

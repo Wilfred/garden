@@ -5,6 +5,9 @@
 #![warn(clippy::dbg_macro)]
 // Garden is too much of a prototype for this to be an issue.
 #![allow(clippy::too_many_arguments)]
+// Occurs in WIP code, and it's too obvious to be worth linting
+// against.
+#![allow(clippy::needless_if)]
 
 mod checks;
 mod cli_session;

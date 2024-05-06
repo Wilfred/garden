@@ -23,7 +23,7 @@ use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
-    SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem, TypeName, TypeSymbol,
+    SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -753,7 +753,11 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
 }
 
 /// Bind `variable` in the current local environment.
-fn eval_let(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
+fn eval_let(
+    stack_frame: &mut StackFrame,
+    variable: &Symbol,
+    hint: &Option<TypeHint>,
+) -> Result<(), ErrorInfo> {
     let var_name = &variable.name;
     if stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
@@ -2407,7 +2411,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_let(&mut stack_frame, &variable)
+                        }) = eval_let(&mut stack_frame, &variable, &hint)
                         {
                             restore_stack_frame(
                                 env,

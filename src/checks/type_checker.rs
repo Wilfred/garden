@@ -263,9 +263,30 @@ fn check_expr(
         Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),
         Expression_::Let(sym, hint, expr) => {
             let expr_ty = check_expr(expr, env, bindings, warnings);
-            bindings.set(sym.name.clone(), expr_ty.clone());
 
-            expr_ty
+            let ty = match hint {
+                Some(hint) => {
+                    let hint_ty =
+                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+
+                    if !is_subtype(&expr_ty, &hint_ty) {
+                        warnings.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected `{}` for this let expression, but got `{}`.",
+                                hint_ty, expr_ty
+                            ),
+                            position: hint.position.clone(),
+                        });
+                    }
+
+                    hint_ty
+                }
+                None => expr_ty,
+            };
+
+            bindings.set(sym.name.clone(), ty.clone());
+            ty
         }
         Expression_::Return(expr) => {
             if let Some(expr) = expr {

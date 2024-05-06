@@ -1380,7 +1380,7 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
 
     Ok(Expression::new(
         let_token.position, // TODO: this should be a larger span.
-        Expression_::Let(variable, Box::new(expr)),
+        Expression_::Let(variable, None, Box::new(expr)),
     ))
 }
 

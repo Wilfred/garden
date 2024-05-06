@@ -203,8 +203,9 @@ pub enum Expression_ {
     Assign(Symbol, Box<Expression>),
     /// ```garden
     /// let x = y;
+    /// let x: T = y;
     /// ```
-    Let(Symbol, Box<Expression>),
+    Let(Symbol, Option<TypeHint>, Box<Expression>),
     /// ```garden
     /// return x;
     /// return;

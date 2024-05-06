@@ -116,7 +116,7 @@ pub(crate) trait Visitor {
             Expression_::Assign(sym, expr) => {
                 self.visit_expr_assign(sym, expr);
             }
-            Expression_::Let(sym, expr) => {
+            Expression_::Let(sym, hint, expr) => {
                 self.visit_expr_let(sym, expr);
             }
             Expression_::Return(expr) => {

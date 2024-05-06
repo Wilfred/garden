@@ -2401,7 +2401,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         stack_frame.exprs_to_eval.push((false, *expr.clone()));
                     }
                 }
-                Expression_::Let(variable, expr) => {
+                Expression_::Let(variable, hint, expr) => {
                     if done_children {
                         if let Err(ErrorInfo {
                             message,
@@ -3172,6 +3172,7 @@ mod tests {
                     },
                     name: SymbolName("foo".into()),
                 },
+                None,
                 Box::new(Expression::new(
                     Position {
                         start_offset: 0,

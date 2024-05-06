@@ -261,7 +261,7 @@ fn check_expr(
         }
         Expression_::Break => RuntimeType::unit(),
         Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),
-        Expression_::Let(sym, expr) => {
+        Expression_::Let(sym, hint, expr) => {
             let expr_ty = check_expr(expr, env, bindings, warnings);
             bindings.set(sym.name.clone(), expr_ty.clone());
 

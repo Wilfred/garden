@@ -220,7 +220,7 @@ fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {
-    let mut src = first_line.to_string();
+    let mut src = first_line.to_owned();
 
     loop {
         match parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src) {

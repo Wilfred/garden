@@ -3100,7 +3100,7 @@ fn eval_match_cases(
         }
     }
 
-    let msg = ErrorMessage("Non-exhaustive match expression".to_string());
+    let msg = ErrorMessage("Non-exhaustive match expression".to_owned());
     Err(EvalError::ResumableError(scrutinee_pos.clone(), msg))
 }
 

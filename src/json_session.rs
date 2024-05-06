@@ -156,7 +156,7 @@ fn handle_eval_request(
                 kind: ResponseKind::Evaluate,
                 value: Err(ResponseError {
                     position: None,
-                    message: "Interrupted".to_string(),
+                    message: "Interrupted".to_owned(),
                     stack: None,
                 }),
                 warnings: vec![],
@@ -218,7 +218,7 @@ fn handle_request(
                     },
                     Err(EvalAction::Abort) => Response {
                         kind: ResponseKind::RunCommand,
-                        value: Ok("Aborted".to_string()),
+                        value: Ok("Aborted".to_owned()),
                         warnings: vec![],
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
@@ -364,7 +364,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
             kind: ResponseKind::Evaluate,
             value: Err(ResponseError {
                 position: None,
-                message: "Interrupted".to_string(),
+                message: "Interrupted".to_owned(),
                 stack: None,
             }),
             warnings: vec![],

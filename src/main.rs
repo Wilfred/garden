@@ -3,6 +3,7 @@
 #![allow(suspicious_double_ref_op)]
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
+#![warn(clippy::str_to_string)]
 // Garden is too much of a prototype for this to be an issue.
 #![allow(clippy::too_many_arguments)]
 // Occurs in WIP code, and it's too obvious to be worth linting

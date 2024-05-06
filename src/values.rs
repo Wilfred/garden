@@ -176,7 +176,7 @@ impl Value {
         match self {
             Value::Integer(i) => format!("{}", i),
             Value::Fun { name_sym, .. } => format!("(function: {})", name_sym.name),
-            Value::Closure(..) => "(closure)".to_string(),
+            Value::Closure(..) => "(closure)".to_owned(),
             Value::BuiltinFunction(kind, _) => format!("(function: {})", kind),
             Value::String(s) => escape_string_literal(s),
             Value::List { items, .. } => {

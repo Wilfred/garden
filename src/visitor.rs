@@ -203,7 +203,11 @@ pub(crate) trait Visitor {
 
     fn visit_expr_variable(&mut self, _: &Symbol) {}
 
-    fn visit_expr_let(&mut self, _: &Symbol, _hint: Option<&TypeHint>, expr: &Expression) {
+    fn visit_expr_let(&mut self, _: &Symbol, hint: Option<&TypeHint>, expr: &Expression) {
+        if let Some(hint) = hint {
+            self.visit_type_hint(hint);
+        }
+
         self.visit_expr(expr);
     }
 

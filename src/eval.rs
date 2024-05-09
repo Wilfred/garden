@@ -797,11 +797,10 @@ fn eval_let(
         };
     }
 
-    if var_name.is_underscore() {
-        return Ok(());
+    if !var_name.is_underscore() {
+        stack_frame.bindings.add_new(var_name, expr_value.clone());
     }
 
-    stack_frame.bindings.add_new(var_name, expr_value.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
 }

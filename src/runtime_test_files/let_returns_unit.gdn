@@ -1,0 +1,10 @@
+fun foo(): Unit {
+    // This function should still return Unit.
+    let _ = 1;
+}
+
+fun main(_args: List<String>): Unit {
+    foo();
+}
+
+// args: run

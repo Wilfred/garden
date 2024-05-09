@@ -285,8 +285,9 @@ fn check_expr(
                 None => expr_ty,
             };
 
-            bindings.set(sym.name.clone(), ty.clone());
-            ty
+            bindings.set(sym.name.clone(), ty);
+
+            RuntimeType::unit()
         }
         Expression_::Return(expr) => {
             if let Some(expr) = expr {

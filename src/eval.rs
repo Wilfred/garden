@@ -798,10 +798,21 @@ fn eval_let(
     }
 
     if !var_name.is_underscore() {
-        stack_frame.bindings.add_new(var_name, expr_value.clone());
+        stack_frame.bindings.add_new(var_name, expr_value);
     }
 
-    stack_frame.evalled_values.push(expr_value);
+    // `let x = 1` should always evaluate to Unit. This is slightly
+    // annoying when incrementally writing a block, but makes it
+    // easier when incrementally writing a function.
+    //
+    // ```
+    // fun foo(): Unit {
+    //     let just_added_this_var = 1;
+    // }
+    // ```
+    //
+    // It's annoying if the type checker complains here.
+    stack_frame.evalled_values.push(Value::unit());
     Ok(())
 }
 

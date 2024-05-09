@@ -8,6 +8,8 @@
 
 Added `break;` inside loops. `continue` is now a reserved word.
 
+`let x = y;` now evaluates to `Unit` rather than `y`.
+
 ## Checks
 
 Type hints for built-in types are now checked for the correct arity

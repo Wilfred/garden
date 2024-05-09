@@ -1,0 +1,7 @@
+fun main(_args: List<String>): Unit {
+    let x: String = "foo";
+    print(x);
+}
+
+// args: run
+// expected stdout: foo

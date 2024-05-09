@@ -754,6 +754,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
 
 /// Bind `variable` in the current local environment.
 fn eval_let(
+    env: &Env,
     stack_frame: &mut StackFrame,
     variable: &Symbol,
     hint: &Option<TypeHint>,
@@ -770,14 +771,36 @@ fn eval_let(
         });
     }
 
-    if var_name.is_underscore() {
-        return Ok(());
-    }
-
     let expr_value = stack_frame
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
+
+    if let Some(hint) = hint {
+        let expected_ty = match RuntimeType::from_hint(hint, env, &env.type_bindings()) {
+            Ok(ty) => ty,
+            Err(e) => {
+                return Err(ErrorInfo {
+                    error_position: hint.position.clone(),
+                    message: ErrorMessage(format!("Unbound type in hint: {}", e)),
+                    restore_values: vec![],
+                });
+            }
+        };
+
+        if let Err(msg) = check_type(&expr_value, &expected_ty, env) {
+            return Err(ErrorInfo {
+                error_position: hint.position.clone(),
+                message: ErrorMessage(format!("Incorrect type for variable: {}", msg.0)),
+                restore_values: vec![expr_value],
+            });
+        };
+    }
+
+    if var_name.is_underscore() {
+        return Ok(());
+    }
+
     stack_frame.bindings.add_new(var_name, expr_value.clone());
     stack_frame.evalled_values.push(expr_value);
     Ok(())
@@ -2411,7 +2434,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_let(&mut stack_frame, &variable, &hint)
+                        }) = eval_let(env, &mut stack_frame, &variable, &hint)
                         {
                             restore_stack_frame(
                                 env,

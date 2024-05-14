@@ -301,7 +301,22 @@ fn check_expr(
         }
         Expression_::Return(expr) => {
             if let Some(expr) = expr {
-                check_expr(expr, env, bindings, warnings, expected_return_ty)
+                let ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
+
+                if let Some(expected_return_ty) = expected_return_ty {
+                    if !is_subtype(&ty, expected_return_ty) {
+                        warnings.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected this function to return `{}`, but got `{}`.",
+                                expected_return_ty, ty
+                            ),
+                            position: expr.0.clone(),
+                        });
+                    }
+                }
+
+                ty
             } else {
                 RuntimeType::unit()
             }

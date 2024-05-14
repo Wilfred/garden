@@ -123,7 +123,13 @@ impl Visitor for TypeCheckVisitor<'_> {
         assign_expr_ids(block);
 
         // check_block recurses, so don't recurse in the visitor
-        check_block(block, self.env, &mut self.bindings, &mut self.warnings);
+        check_block(
+            block,
+            self.env,
+            &mut self.bindings,
+            &mut self.warnings,
+            None,
+        );
     }
 }
 
@@ -153,12 +159,13 @@ fn check_block(
     env: &mut Env,
     bindings: &mut LocalBindings,
     warnings: &mut Vec<Diagnostic>,
+    expected_return_ty: Option<&RuntimeType>,
 ) -> RuntimeType {
     bindings.enter_block();
 
     let mut ty = RuntimeType::unit();
     for expr in &block.exprs {
-        ty = check_expr(expr, env, bindings, warnings);
+        ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
     }
 
     bindings.exit_block();
@@ -170,14 +177,15 @@ fn check_expr(
     env: &mut Env,
     bindings: &mut LocalBindings,
     warnings: &mut Vec<Diagnostic>,
+    expected_return_ty: Option<&RuntimeType>,
 ) -> RuntimeType {
     match &expr.1 {
         Expression_::Match(scrutinee, cases) => {
-            let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings);
+            let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings, expected_return_ty);
             let scrutinee_ty_name = scrutinee_ty.type_name();
 
             for (pattern, case_expr) in cases {
-                check_expr(case_expr, env, bindings, warnings);
+                check_expr(case_expr, env, bindings, warnings, expected_return_ty);
 
                 // Matching `_` works for any type.
                 if pattern.symbol.name.is_underscore() {
@@ -222,7 +230,7 @@ fn check_expr(
             RuntimeType::Error("TODO: return types from match expressions".to_owned())
         }
         Expression_::If(cond_expr, then_block, else_block) => {
-            let cond_ty = check_expr(cond_expr, env, bindings, warnings);
+            let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
             if !is_subtype(&cond_ty, &RuntimeType::bool()) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
@@ -234,16 +242,16 @@ fn check_expr(
                 });
             }
 
-            let then_ty = check_block(then_block, env, bindings, warnings);
+            let then_ty = check_block(then_block, env, bindings, warnings, expected_return_ty);
 
             // TODO: check if `then_block` and `else_block` are the same type.
             if let Some(else_block) = else_block {
-                check_block(else_block, env, bindings, warnings);
+                check_block(else_block, env, bindings, warnings, expected_return_ty);
             }
             then_ty
         }
         Expression_::While(cond_expr, body) => {
-            let cond_ty = check_expr(cond_expr, env, bindings, warnings);
+            let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
             if !is_subtype(&cond_ty, &RuntimeType::bool()) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
@@ -255,14 +263,16 @@ fn check_expr(
                 });
             }
 
-            check_block(body, env, bindings, warnings);
+            check_block(body, env, bindings, warnings, expected_return_ty);
 
             RuntimeType::unit()
         }
         Expression_::Break => RuntimeType::unit(),
-        Expression_::Assign(_sym, expr) => check_expr(expr, env, bindings, warnings),
+        Expression_::Assign(_sym, expr) => {
+            check_expr(expr, env, bindings, warnings, expected_return_ty)
+        }
         Expression_::Let(sym, hint, expr) => {
-            let expr_ty = check_expr(expr, env, bindings, warnings);
+            let expr_ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
 
             let ty = match hint {
                 Some(hint) => {
@@ -291,7 +301,7 @@ fn check_expr(
         }
         Expression_::Return(expr) => {
             if let Some(expr) = expr {
-                check_expr(expr, env, bindings, warnings)
+                check_expr(expr, env, bindings, warnings, expected_return_ty)
             } else {
                 RuntimeType::unit()
             }
@@ -302,7 +312,7 @@ fn check_expr(
             let mut elem_ty = RuntimeType::no_value();
 
             for item in items {
-                let item_ty = check_expr(item, env, bindings, warnings);
+                let item_ty = check_expr(item, env, bindings, warnings, expected_return_ty);
                 // TODO: unify the types of all elements in the
                 // list, rather than letting the last win.
                 elem_ty = item_ty;
@@ -312,7 +322,7 @@ fn check_expr(
         }
         Expression_::StructLiteral(name_sym, fields) => {
             for (_, expr) in fields {
-                check_expr(expr, env, bindings, warnings);
+                check_expr(expr, env, bindings, warnings, expected_return_ty);
             }
 
             if let Some(TypeDef::Struct(_)) = env.get_type_def(&name_sym.name) {
@@ -326,8 +336,8 @@ fn check_expr(
             }
         }
         Expression_::BinaryOperator(lhs, op, rhs) => {
-            let lhs_ty = check_expr(lhs, env, bindings, warnings);
-            let rhs_ty = check_expr(rhs, env, bindings, warnings);
+            let lhs_ty = check_expr(lhs, env, bindings, warnings, expected_return_ty);
+            let rhs_ty = check_expr(rhs, env, bindings, warnings, expected_return_ty);
 
             match op {
                 BinaryOperatorKind::Add
@@ -413,10 +423,15 @@ fn check_expr(
             }
         }
         Expression_::Call(recv, args) => {
-            let recv_ty = check_expr(recv, env, bindings, warnings);
+            let recv_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
             let arg_tys = args
                 .iter()
-                .map(|arg| (check_expr(arg, env, bindings, warnings), arg.0.clone()))
+                .map(|arg| {
+                    (
+                        check_expr(arg, env, bindings, warnings, expected_return_ty),
+                        arg.0.clone(),
+                    )
+                })
                 .collect::<Vec<_>>();
 
             match recv_ty {
@@ -476,10 +491,15 @@ fn check_expr(
         Expression_::MethodCall(recv, sym, args) => {
             let arg_tys: Vec<(RuntimeType, Position)> = args
                 .iter()
-                .map(|arg| (check_expr(arg, env, bindings, warnings), arg.0.clone()))
+                .map(|arg| {
+                    (
+                        check_expr(arg, env, bindings, warnings, expected_return_ty),
+                        arg.0.clone(),
+                    )
+                })
                 .collect::<Vec<_>>();
 
-            let receiver_ty = check_expr(recv, env, bindings, warnings);
+            let receiver_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
             let Some(receiver_ty_name) = receiver_ty.type_name() else {
                 return RuntimeType::error("No type name for this method receiver");
             };
@@ -560,7 +580,7 @@ fn check_expr(
             }
         }
         Expression_::DotAccess(recv, field_sym) => {
-            let recv_ty = check_expr(recv, env, bindings, warnings);
+            let recv_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
             let Some(recv_ty_name) = recv_ty.type_name() else {
                 return RuntimeType::error("No type name found this receiver");
             };
@@ -599,7 +619,9 @@ fn check_expr(
             }
         }
         Expression_::FunLiteral(fun_info) => check_fun_info(fun_info, env, bindings, warnings),
-        Expression_::Block(block) => check_block(block, env, bindings, warnings),
+        Expression_::Block(block) => {
+            check_block(block, env, bindings, warnings, expected_return_ty)
+        }
     }
 }
 
@@ -622,7 +644,21 @@ fn check_fun_info(
         }
     }
 
-    let body_ty = check_block(&fun_info.body, env, bindings, warnings);
+    let expected_return_ty = match &fun_info.return_hint {
+        Some(hint) => {
+            let ty = RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            Some(ty)
+        }
+        None => None,
+    };
+
+    let body_ty = check_block(
+        &fun_info.body,
+        env,
+        bindings,
+        warnings,
+        expected_return_ty.as_ref(),
+    );
 
     bindings.exit_block();
 

@@ -277,7 +277,7 @@ dependencies = [
  "assert_cmd",
  "clap",
  "ctrlc",
- "garden_lang_parser",
+ "garden-lang-parser",
  "goldentests",
  "humantime",
  "itertools",
@@ -295,7 +295,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "garden_lang_parser"
+name = "garden-lang-parser"
 version = "0.14.0"
 dependencies = [
  "lazy_static",
@@ -307,10 +307,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "garden_lang_web"
+name = "garden-lang-web"
 version = "0.14.0"
 dependencies = [
- "garden_lang_parser",
+ "garden-lang-parser",
  "wasm-bindgen",
 ]
 

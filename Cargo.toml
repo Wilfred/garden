@@ -1,5 +1,5 @@
 [workspace]
-members = ["garden_lang_parser", "garden_lang_web"]
+members = ["garden-lang-parser", "garden-lang-web"]
 
 
 [workspace.package]
@@ -41,7 +41,7 @@ serde_json = "1.0.48"
 strsim = "0.10.0"
 strum = "0.24.1"
 strum_macros = "0.24.1"
-garden_lang_parser = { path = "garden_lang_parser" }
+garden-lang-parser = { path = "garden-lang-parser" }
 
 [[bin]]
 name = "garden"

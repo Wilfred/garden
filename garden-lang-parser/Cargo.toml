@@ -1,5 +1,5 @@
 [package]
-name = "garden_lang_parser"
+name = "garden-lang-parser"
 edition = "2021"
 version = "0.14.0"
 license.workspace = true

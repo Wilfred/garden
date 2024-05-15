@@ -1,5 +1,5 @@
 [package]
-name = "garden_lang_web"
+name = "garden-lang-web"
 edition = "2021"
 license.workspace = true
 description.workspace = true
@@ -12,4 +12,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.89"
-garden_lang_parser = { path = "../garden_lang_parser" }
+garden-lang-parser = { path = "../garden-lang-parser" }

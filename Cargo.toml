@@ -41,7 +41,7 @@ serde_json = "1.0.48"
 strsim = "0.10.0"
 strum = "0.24.1"
 strum_macros = "0.24.1"
-garden-lang-parser = { path = "garden-lang-parser" }
+garden-lang-parser = { version = "0.14.0", path = "garden-lang-parser" }
 
 [[bin]]
 name = "garden"

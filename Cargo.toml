@@ -6,7 +6,7 @@ members = ["garden_lang_parser", "garden_lang_web"]
 description = "A live programming language."
 license = "MIT"
 repository = "https://github.com/Wilfred/garden"
-version = "0.13.0"
+version = "0.14.0"
 authors = ["Wilfred Hughes <me@wilfred.me.uk>"]
 
 [package]

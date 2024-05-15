@@ -20,7 +20,9 @@ version.workspace = true
 authors.workspace = true
 repository.workspace = true
 include = [
-        "/src/",
+        "/src/**/*.rs",
+        "/src/prelude.gdn",
+        "/src/builtins.gdn",
         "/LICENSE",
         "/README.md",
 ]

@@ -6,6 +6,11 @@ license.workspace = true
 description.workspace = true
 authors.workspace = true
 repository.workspace = true
+include = [
+        "/src/",
+        "../LICENSE",
+        "../README.md",
+]
 
 [dependencies]
 lazy_static = "1.4.0"

@@ -19,6 +19,11 @@ description.workspace = true
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
+include = [
+        "/src/",
+        "/LICENSE",
+        "/README.md",
+]
 
 [dependencies]
 clap = { version = "4.1.11", features = ["derive"] }

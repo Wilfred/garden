@@ -733,6 +733,7 @@ fn subst_type_vars_in_meth_return_ty(
     };
 
     if let Err(diagnostic) = unify_and_solve_hint(
+        env,
         &method_info.receiver_hint,
         receiver_pos,
         receiver_ty,
@@ -756,7 +757,9 @@ fn subst_type_vars_in_fun_info_return_ty(
 
     for ((arg_ty, arg_pos), param) in arg_tys.iter().zip(&fun_info.params) {
         if let Some(param_hint) = &param.hint {
-            if let Err(diagnostic) = unify_and_solve_hint(param_hint, arg_pos, arg_ty, ty_var_env) {
+            if let Err(diagnostic) =
+                unify_and_solve_hint(env, param_hint, arg_pos, arg_ty, ty_var_env)
+            {
                 diagnostics.push(diagnostic);
             }
         }
@@ -884,6 +887,7 @@ fn unify_and_solve_ty(
 /// If `hint` is `Option<T>` and `ty` is the type representation of
 /// `Option<Int>`, insert `T = Int` into `ty_var_env`.
 fn unify_and_solve_hint(
+    env: &Env,
     hint: &TypeHint,
     position: &Position,
     ty: &RuntimeType,
@@ -915,7 +919,7 @@ fn unify_and_solve_hint(
     if hint_name.name == "List" && hint.args.len() == 1 {
         match ty {
             RuntimeType::List(elem_ty) => {
-                return unify_and_solve_hint(&hint.args[0], position, elem_ty, ty_var_env);
+                return unify_and_solve_hint(env, &hint.args[0], position, elem_ty, ty_var_env);
             }
             _ => {
                 // No solving to do.
@@ -928,7 +932,7 @@ fn unify_and_solve_hint(
             RuntimeType::UserDefined { name, args, .. }
                 if name.name == "Option" && args.len() == 1 =>
             {
-                return unify_and_solve_hint(&hint.args[0], position, &args[0], ty_var_env);
+                return unify_and_solve_hint(env, &hint.args[0], position, &args[0], ty_var_env);
             }
             _ => {
                 // No solving to do.
@@ -942,8 +946,8 @@ fn unify_and_solve_hint(
             RuntimeType::UserDefined { name, args, .. }
                 if name.name == "Result" && args.len() == 2 =>
             {
-                unify_and_solve_hint(&hint.args[0], position, &args[0], ty_var_env)?;
-                return unify_and_solve_hint(&hint.args[1], position, &args[1], ty_var_env);
+                unify_and_solve_hint(env, &hint.args[0], position, &args[0], ty_var_env)?;
+                return unify_and_solve_hint(env, &hint.args[1], position, &args[1], ty_var_env);
             }
             _ => {
                 // No solving to do.

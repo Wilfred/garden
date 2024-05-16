@@ -451,13 +451,22 @@ fn check_expr(
 
             match recv_ty {
                 RuntimeType::Fun {
-                    params, return_, ..
+                    params,
+                    return_,
+                    name,
+                    ..
                 } => {
+                    let formatted_name = match name {
+                        Some(name) => format!("`{}`", name.name),
+                        None => "This function".to_owned(),
+                    };
+
                     if params.len() != args.len() {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
-                                "This function expects {} argument{}, but got {}.",
+                                "{} expects {} argument{}, but got {}.",
+                                formatted_name,
                                 params.len(),
                                 if params.len() == 1 { "" } else { "s" },
                                 args.len()

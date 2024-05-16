@@ -19,7 +19,7 @@ pub(crate) enum TypeDef {
 }
 
 impl TypeDef {
-    fn params(&self) -> Vec<TypeSymbol> {
+    pub(crate) fn params(&self) -> Vec<TypeSymbol> {
         match self {
             TypeDef::Builtin(built_in_type) => match built_in_type {
                 BuiltinType::Int => vec![],

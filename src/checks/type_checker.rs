@@ -927,32 +927,27 @@ fn unify_and_solve_hint(
             }
         }
     }
-    if hint_name.name == "Option" && hint.args.len() == 1 {
-        match ty {
-            RuntimeType::UserDefined { name, args, .. }
-                if name.name == "Option" && args.len() == 1 =>
-            {
-                return unify_and_solve_hint(env, &hint.args[0], position, &args[0], ty_var_env);
-            }
-            _ => {
-                // No solving to do.
-                return Ok(());
-            }
-        }
+
+    let Some(type_def) = env.get_type_def(hint_name) else {
+        // This hint isn't defined, and we check that elsewhere, so give up unifying.
+        return Ok(());
+    };
+
+    if hint.args.len() != type_def.params().len() {
+        // The hint has the wrong number of type arguments for this
+        // type, which is checked elsewhere, so give up unifying.
+        return Ok(());
     }
 
-    if hint_name.name == "Result" && hint.args.len() == 2 {
-        match ty {
-            RuntimeType::UserDefined { name, args, .. }
-                if name.name == "Result" && args.len() == 2 =>
-            {
-                unify_and_solve_hint(env, &hint.args[0], position, &args[0], ty_var_env)?;
-                return unify_and_solve_hint(env, &hint.args[1], position, &args[1], ty_var_env);
+    match ty {
+        RuntimeType::UserDefined { name, args, .. } if name.name == hint_name.name => {
+            // TODO: stop assuming that all types are covariant.
+            for (hint_arg, arg) in hint.args.iter().zip(args) {
+                unify_and_solve_hint(env, hint_arg, position, arg, ty_var_env)?;
             }
-            _ => {
-                // No solving to do.
-                return Ok(());
-            }
+        }
+        _ => {
+            // This value is unrelated to this hint, no solving to do.
         }
     }
 

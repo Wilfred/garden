@@ -166,6 +166,11 @@ test split_once {
     should_equal("abcbe".split_once("b"), Some(["a", "cbe"]));
 }
 
+// Find the first index of `needle` in `self`.
+//
+// ```
+// "abc".index_of("c"); // 2
+// ```
 fun (self: String) index_of(needle: String): Option<Int> {
     let i = 0;
     while ((i + needle.len()) <= self.len()) {

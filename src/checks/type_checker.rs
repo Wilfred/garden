@@ -937,5 +937,20 @@ fn unify_and_solve_hint(
         }
     }
 
+    if hint_name.name == "Result" && hint.args.len() == 2 {
+        match ty {
+            RuntimeType::UserDefined { name, args, .. }
+                if name.name == "Result" && args.len() == 2 =>
+            {
+                unify_and_solve_hint(&hint.args[0], position, &args[0], ty_var_env)?;
+                return unify_and_solve_hint(&hint.args[1], position, &args[1], ty_var_env);
+            }
+            _ => {
+                // No solving to do.
+                return Ok(());
+            }
+        }
+    }
+
     Ok(())
 }

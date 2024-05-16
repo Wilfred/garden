@@ -5,7 +5,7 @@ use std::{
 
 use itertools::Itertools as _;
 
-use garden_lang_parser::ast::{FunInfo, TypeHint, TypeName};
+use garden_lang_parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 
 use crate::{
     env::Env,
@@ -27,6 +27,9 @@ pub(crate) enum RuntimeType {
     Int,
     List(Box<RuntimeType>),
     Fun {
+        /// If this function has a defined name (i.e. not a closure),
+        /// the name used.
+        name: Option<Symbol>,
         /// E.g. if a function's return type depends on argument
         /// types, we need type_parameters.
         type_params: Vec<TypeName>,
@@ -197,6 +200,7 @@ impl RuntimeType {
                         name: type_name.clone(),
                         args: type_args_on_enum,
                     }),
+                    name: None,
                 }
             }
             Value::Struct { runtime_type, .. } => runtime_type.clone(),
@@ -240,6 +244,7 @@ impl RuntimeType {
             type_params,
             params: param_types,
             return_: Box::new(return_),
+            name: fun_info.name.clone(),
         })
     }
 
@@ -289,6 +294,7 @@ impl Display for RuntimeType {
                 params: args,
                 return_,
                 type_params,
+                ..
             } => {
                 let formatted_type_params = if type_params.is_empty() {
                     "".to_owned()

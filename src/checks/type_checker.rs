@@ -711,6 +711,7 @@ fn check_fun_info(
         type_params: vec![],
         params: param_tys,
         return_: Box::new(return_ty),
+        name: fun_info.name.clone(),
     }
 }
 
@@ -802,6 +803,7 @@ fn subst_ty_vars(
             type_params,
             params,
             return_,
+            name,
         } => {
             let params = params
                 .iter()
@@ -813,6 +815,7 @@ fn subst_ty_vars(
                 type_params: type_params.clone(),
                 params,
                 return_: Box::new(return_),
+                name: name.clone(),
             }
         }
         RuntimeType::UserDefined { kind, name, args } => RuntimeType::UserDefined {

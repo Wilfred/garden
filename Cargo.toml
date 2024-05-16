@@ -1,7 +1,6 @@
 [workspace]
 members = ["garden-lang-parser", "garden-lang-web"]
 
-
 [workspace.package]
 description = "A live programming language."
 license = "MIT"

@@ -1,7 +1,11 @@
-# 0.14 (unreleased)
+# 0.15 (unreleased)
 **Goal: WASM and website.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
+
+# 0.14 (released 16th May 2024)
+
+Fixing bugs with the GitHub actions for uploading releases to crates.io.
 
 # 0.13 (released 16th May 2024)
 **Goal: Implement generics.**

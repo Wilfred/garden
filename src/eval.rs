@@ -3151,7 +3151,10 @@ pub(crate) fn eval_exprs(
         exprs_to_eval.push((false, expr.clone()));
     }
 
-    let top_stack = env.stack.last_mut().unwrap();
+    let top_stack = env
+        .stack
+        .last_mut()
+        .expect("Stack should always be non-empty.");
     // TODO: do this setup outside of this function.
     top_stack.exprs_to_eval = exprs_to_eval;
 

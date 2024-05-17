@@ -280,11 +280,13 @@ fn format_fun_info(
         res.push_str("\n\n");
     }
 
-    res.push_str(&format_signature(fun_info, name_sym, recv_hint));
-
     if let Some(name_sym) = &fun_info.name {
-        res.push_str(&format!("\n\n{}", name_sym.position.as_ide_string()));
+        res.push_str(&format!(
+            "// Defined in {}\n",
+            name_sym.position.as_ide_string()
+        ));
     }
+    res.push_str(&format_signature(fun_info, name_sym, recv_hint));
 
     res
 }

@@ -135,7 +135,7 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
                             println!("{:#?}", d.2);
                         }
                         garden_lang_parser::ast::ToplevelItem::Expr(e) => {
-                            println!("{:#?}", e.0 .1);
+                            println!("{:#?}", e.0.expr_);
                         }
                     }
                 }

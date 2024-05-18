@@ -145,12 +145,12 @@ struct AssignExprIds {
 
 impl Visitor for AssignExprIds {
     fn visit_expr(&mut self, expr: &Expression) {
-        expr.2
+        expr.id
             .set(self.next_id)
             .expect("Expressions should not have IDs yet.");
         self.next_id += 1;
 
-        self.visit_expr_(&expr.1)
+        self.visit_expr_(&expr.expr_)
     }
 }
 
@@ -179,7 +179,7 @@ fn check_expr(
     warnings: &mut Vec<Diagnostic>,
     expected_return_ty: Option<&RuntimeType>,
 ) -> RuntimeType {
-    match &expr.1 {
+    match &expr.expr_ {
         Expression_::Match(scrutinee, cases) => {
             let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings, expected_return_ty);
             let scrutinee_ty_name = scrutinee_ty.type_name();
@@ -189,7 +189,7 @@ fn check_expr(
 
             if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
                 let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
-                check_match_exhaustive(env, &scrutinee.0, scrutinee_ty_name, &patterns, warnings);
+                check_match_exhaustive(env, &scrutinee.pos, scrutinee_ty_name, &patterns, warnings);
             }
 
             for (pattern, case_expr) in cases {
@@ -246,7 +246,7 @@ fn check_expr(
                         "Expected `Bool` inside an `if` condition, but got `{}`.",
                         cond_ty
                     ),
-                    position: cond_expr.0.clone(),
+                    position: cond_expr.pos.clone(),
                 });
             }
 
@@ -267,7 +267,7 @@ fn check_expr(
                         "Expected `Bool` inside an `while` condition, but got `{}`.",
                         cond_ty
                     ),
-                    position: cond_expr.0.clone(),
+                    position: cond_expr.pos.clone(),
                 });
             }
 
@@ -319,7 +319,7 @@ fn check_expr(
                                 "Expected this function to return `{}`, but got `{}`.",
                                 expected_return_ty, ty
                             ),
-                            position: expr.0.clone(),
+                            position: expr.pos.clone(),
                         });
                     }
                 }
@@ -371,14 +371,14 @@ fn check_expr(
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", lhs_ty),
-                            position: lhs.0.clone(),
+                            position: lhs.pos.clone(),
                         });
                     }
                     if !is_subtype(&rhs_ty, &RuntimeType::Int) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", rhs_ty),
-                            position: rhs.0.clone(),
+                            position: rhs.pos.clone(),
                         });
                     }
 
@@ -392,14 +392,14 @@ fn check_expr(
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", lhs_ty),
-                            position: lhs.0.clone(),
+                            position: lhs.pos.clone(),
                         });
                     }
                     if !is_subtype(&rhs_ty, &RuntimeType::Int) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", rhs_ty),
-                            position: rhs.0.clone(),
+                            position: rhs.pos.clone(),
                         });
                     }
 
@@ -409,7 +409,7 @@ fn check_expr(
                     if lhs_ty != rhs_ty {
                         warnings.push(Diagnostic { level: Level::Warning,
                                 message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
-                                position: rhs.0.clone(),
+                                position: rhs.pos.clone(),
                             });
                     }
 
@@ -420,14 +420,14 @@ fn check_expr(
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
-                            position: lhs.0.clone(),
+                            position: lhs.pos.clone(),
                         });
                     }
                     if !is_subtype(&rhs_ty, &RuntimeType::bool()) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
-                            position: rhs.0.clone(),
+                            position: rhs.pos.clone(),
                         });
                     }
 
@@ -452,7 +452,7 @@ fn check_expr(
                 .map(|arg| {
                     (
                         check_expr(arg, env, bindings, warnings, expected_return_ty),
-                        arg.0.clone(),
+                        arg.pos.clone(),
                     )
                 })
                 .collect::<Vec<_>>();
@@ -479,7 +479,7 @@ fn check_expr(
                                 if params.len() == 1 { "" } else { "s" },
                                 args.len()
                             ),
-                            position: recv.0.clone(),
+                            position: recv.pos.clone(),
                         });
                     }
 
@@ -513,7 +513,7 @@ fn check_expr(
                     warnings.push(Diagnostic {
                         level: Level::Error,
                         message: format!("Expected a function, but got a `{}`.", recv_ty),
-                        position: recv.0.clone(),
+                        position: recv.pos.clone(),
                     });
 
                     RuntimeType::Error("Calling something that isn't a function".to_owned())
@@ -526,7 +526,7 @@ fn check_expr(
                 .map(|arg| {
                     (
                         check_expr(arg, env, bindings, warnings, expected_return_ty),
-                        arg.0.clone(),
+                        arg.pos.clone(),
                     )
                 })
                 .collect::<Vec<_>>();
@@ -592,7 +592,7 @@ fn check_expr(
                     let (more_warnings, ret_ty) = subst_type_vars_in_meth_return_ty(
                         env,
                         method_info,
-                        &recv.0,
+                        &recv.pos,
                         &receiver_ty,
                         &arg_tys,
                         &mut ty_var_env,

@@ -559,7 +559,7 @@ fn is_builtin_stub(fun_info: &FunInfo) -> bool {
         return false;
     }
 
-    let expr_ = &exprs[0].1;
+    let expr_ = &exprs[0].expr_;
     match expr_ {
         Expression_::Variable(variable) => variable.name.0 == "__BUILTIN_IMPLEMENTATION",
         _ => false,
@@ -705,7 +705,7 @@ fn eval_while(
             // Evaluate the body.
             stack_frame.exprs_to_eval.push((
                 false,
-                Expression::new(expr.0, Expression_::Block(body.clone())),
+                Expression::new(expr.pos, Expression_::Block(body.clone())),
             ))
         } else {
             stack_frame.evalled_values.push(Value::unit());
@@ -1830,7 +1830,7 @@ fn eval_method_call(
                 .pop()
                 .expect("Popped an empty value for stack for method call arguments."),
         );
-        arg_positions.push(arg.0.clone());
+        arg_positions.push(arg.pos.clone());
     }
     let receiver_value = stack_frame
         .evalled_values
@@ -2302,8 +2302,14 @@ fn eval_builtin_method_call(
 
 pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.pop() {
-        if let Some((done_children, Expression(expr_position, expr_, _))) =
-            stack_frame.exprs_to_eval.pop()
+        if let Some((
+            done_children,
+            Expression {
+                pos: expr_position,
+                expr_,
+                id: _,
+            },
+        )) = stack_frame.exprs_to_eval.pop()
         {
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
@@ -2324,7 +2330,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             match expr_ {
                 Expression_::Match(scrutinee, cases) => {
                     if done_children {
-                        eval_match_cases(env, &mut stack_frame, &scrutinee.0, &cases)?;
+                        eval_match_cases(env, &mut stack_frame, &scrutinee.pos, &cases)?;
                     } else {
                         stack_frame
                             .exprs_to_eval
@@ -2342,7 +2348,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             env,
                             &mut stack_frame,
                             &expr_position,
-                            &condition.0,
+                            &condition.pos,
                             then_body,
                             else_body.as_ref(),
                         ) {
@@ -2370,7 +2376,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }) = eval_while(
                             env,
                             &mut stack_frame,
-                            &condition.0,
+                            &condition.pos,
                             Expression::new(expr_position.clone(), expr_copy.clone()),
                             body,
                         ) {
@@ -2572,8 +2578,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             env,
                             &mut stack_frame,
                             &expr_position,
-                            &lhs.0,
-                            &rhs.0,
+                            &lhs.pos,
+                            &rhs.pos,
                             op,
                         ) {
                             restore_stack_frame(
@@ -2630,7 +2636,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_boolean_binop(env, &mut stack_frame, &lhs.0, &rhs.0, op)
+                        }) = eval_boolean_binop(env, &mut stack_frame, &lhs.pos, &rhs.pos, op)
                         {
                             restore_stack_frame(
                                 env,
@@ -2666,7 +2672,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                     .pop()
                                     .expect("Popped an empty value for stack for call arguments"),
                             );
-                            arg_positions.push(arg.0.clone());
+                            arg_positions.push(arg.pos.clone());
                         }
                         let receiver_value = stack_frame
                             .evalled_values
@@ -2680,7 +2686,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             &arg_positions,
                             &arg_values,
                             &receiver_value,
-                            &receiver.0,
+                            &receiver.pos,
                             session,
                         ) {
                             Ok(Some(new_stack_frame)) => {
@@ -2723,7 +2729,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         match eval_method_call(
                             env,
                             &mut stack_frame,
-                            &receiver_expr.0,
+                            &receiver_expr.pos,
                             &meth_name,
                             &args,
                         ) {
@@ -2789,7 +2795,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_dot_access(env, &mut stack_frame, &sym, &recv.0)
+                        }) = eval_dot_access(env, &mut stack_frame, &sym, &recv.pos)
                         {
                             restore_stack_frame(
                                 env,
@@ -2878,7 +2884,7 @@ fn eval_break(stack_frame: &mut StackFrame) {
     // longer inside the innermost loop.
     while let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
         if matches!(
-            expr.1,
+            expr.expr_,
             Expression_::Block(Block {
                 is_loop_body: true,
                 ..
@@ -3120,7 +3126,7 @@ fn eval_match_cases(
                 }
             }
 
-            let case_expr_pos = &case_expr.0;
+            let case_expr_pos = &case_expr.pos;
             let case_block = Expression_::Block(Block {
                 open_brace: case_expr_pos.clone(),
                 exprs: vec![(**case_expr).clone()],

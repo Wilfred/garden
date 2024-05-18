@@ -196,8 +196,8 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
                 // is an ugly hack.
-                open_brace: if_expr.0.clone(),
-                close_brace: if_expr.0.clone(),
+                open_brace: if_expr.pos.clone(),
+                close_brace: if_expr.pos.clone(),
                 exprs: vec![if_expr],
                 is_loop_body: false,
             })
@@ -515,8 +515,10 @@ fn parse_simple_expression_with_trailing(
         match tokens.peek() {
             Some(token) if token.text == "(" => {
                 let arguments = parse_call_arguments(src, tokens)?;
-                expr =
-                    Expression::new(expr.0.clone(), Expression_::Call(Box::new(expr), arguments));
+                expr = Expression::new(
+                    expr.pos.clone(),
+                    Expression_::Call(Box::new(expr), arguments),
+                );
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
@@ -526,12 +528,12 @@ fn parse_simple_expression_with_trailing(
                     // TODO: just treat a method call as a call of a dot access.
                     let arguments = parse_call_arguments(src, tokens)?;
                     expr = Expression::new(
-                        expr.0.clone(),
+                        expr.pos.clone(),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
                     );
                 } else {
                     expr = Expression::new(
-                        expr.0.clone(),
+                        expr.pos.clone(),
                         Expression_::DotAccess(Box::new(expr), variable),
                     );
                 }
@@ -669,7 +671,7 @@ fn parse_simple_expression_or_binop(
 
             let rhs_expr = parse_simple_expression_with_trailing(src, tokens)?;
             expr = Expression::new(
-                expr.0.clone(),
+                expr.pos.clone(),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
             );
         }
@@ -1420,7 +1422,7 @@ fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelIt
                 return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
             };
 
-            if matches!(expr.1, Expression_::Block(_)) {
+            if matches!(expr.expr_, Expression_::Block(_)) {
                 // Also allow standalone blocks at the top level.
                 return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
             }

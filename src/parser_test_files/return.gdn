@@ -4,15 +4,15 @@ return x;
 // expected stdout:
 // Return(
 //     Some(
-//         Expression(
-//             Position { ... },
-//             Variable(
+//         Expression {
+//             pos: Position { ... },
+//             expr_: Variable(
 //                 Symbol"x",
 //             ),
-//             OnceCell(
+//             id: OnceCell(
 //                 <uninit>,
 //             ),
-//         ),
+//         },
 //     ),
 // )
 

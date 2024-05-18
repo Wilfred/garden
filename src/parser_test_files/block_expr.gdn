@@ -5,14 +5,14 @@ let x = 1;
 // Let(
 //     Symbol"x",
 //     None,
-//     Expression(
-//         Position { ... },
-//         IntLiteral(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: IntLiteral(
 //             1,
 //         ),
-//         OnceCell(
+//         id: OnceCell(
 //             <uninit>,
 //         ),
-//     ),
+//     },
 // )
 

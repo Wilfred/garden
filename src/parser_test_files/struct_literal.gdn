@@ -7,27 +7,27 @@ Foo { x: 1, y: 2 };
 //     [
 //         (
 //             Symbol"x",
-//             Expression(
-//                 Position { ... },
-//                 IntLiteral(
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: IntLiteral(
 //                     1,
 //                 ),
-//                 OnceCell(
+//                 id: OnceCell(
 //                     <uninit>,
 //                 ),
-//             ),
+//             },
 //         ),
 //         (
 //             Symbol"y",
-//             Expression(
-//                 Position { ... },
-//                 IntLiteral(
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: IntLiteral(
 //                     2,
 //                 ),
-//                 OnceCell(
+//                 id: OnceCell(
 //                     <uninit>,
 //                 ),
-//             ),
+//             },
 //         ),
 //     ],
 // )

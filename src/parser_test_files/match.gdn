@@ -3,15 +3,15 @@ match (1) {}
 // args: dump-ast
 // expected stdout:
 // Match(
-//     Expression(
-//         Position { ... },
-//         IntLiteral(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: IntLiteral(
 //             1,
 //         ),
-//         OnceCell(
+//         id: OnceCell(
 //             <uninit>,
 //         ),
-//     ),
+//     },
 //     [],
 // )
 

@@ -3,24 +3,24 @@ foo()();
 // args: dump-ast
 // expected stdout:
 // Call(
-//     Expression(
-//         Position { ... },
-//         Call(
-//             Expression(
-//                 Position { ... },
-//                 Variable(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Call(
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
 //                     Symbol"foo",
 //                 ),
-//                 OnceCell(
+//                 id: OnceCell(
 //                     <uninit>,
 //                 ),
-//             ),
+//             },
 //             [],
 //         ),
-//         OnceCell(
+//         id: OnceCell(
 //             <uninit>,
 //         ),
-//     ),
+//     },
 //     [],
 // )
 

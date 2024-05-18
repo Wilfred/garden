@@ -3,15 +3,15 @@ if (True) {}
 // args: dump-ast
 // expected stdout:
 // If(
-//     Expression(
-//         Position { ... },
-//         Variable(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
 //             Symbol"True",
 //         ),
-//         OnceCell(
+//         id: OnceCell(
 //             <uninit>,
 //         ),
-//     ),
+//     },
 //     Block {
 //         is_loop_body: false,
 //         open_brace: Position { ... },

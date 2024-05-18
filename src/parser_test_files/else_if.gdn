@@ -3,15 +3,15 @@ if (x) {} else if (y) {}
 // args: dump-ast
 // expected stdout:
 // If(
-//     Expression(
-//         Position { ... },
-//         Variable(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
 //             Symbol"x",
 //         ),
-//         OnceCell(
+//         id: OnceCell(
 //             <uninit>,
 //         ),
-//     ),
+//     },
 //     Block {
 //         is_loop_body: false,
 //         open_brace: Position { ... },
@@ -23,18 +23,18 @@ if (x) {} else if (y) {}
 //             is_loop_body: false,
 //             open_brace: Position { ... },
 //             exprs: [
-//                 Expression(
-//                     Position { ... },
-//                     If(
-//                         Expression(
-//                             Position { ... },
-//                             Variable(
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: If(
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Variable(
 //                                 Symbol"y",
 //                             ),
-//                             OnceCell(
+//                             id: OnceCell(
 //                                 <uninit>,
 //                             ),
-//                         ),
+//                         },
 //                         Block {
 //                             is_loop_body: false,
 //                             open_brace: Position { ... },
@@ -43,10 +43,10 @@ if (x) {} else if (y) {}
 //                         },
 //                         None,
 //                     ),
-//                     OnceCell(
+//                     id: OnceCell(
 //                         <uninit>,
 //                     ),
-//                 ),
+//                 },
 //             ],
 //             close_brace: Position { ... },
 //         },

@@ -98,7 +98,7 @@ pub(crate) trait Visitor {
     }
 
     fn visit_expr(&mut self, expr: &Expression) {
-        self.visit_expr_(&expr.1);
+        self.visit_expr_(&expr.expr_);
     }
 
     fn visit_expr_(&mut self, expr_: &Expression_) {

@@ -263,11 +263,19 @@ pub enum Expression_ {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Expression(pub Position, pub Expression_, pub OnceCell<usize>);
+pub struct Expression {
+    pub pos: Position,
+    pub expr_: Expression_,
+    pub id: OnceCell<usize>,
+}
 
 impl Expression {
     pub fn new(position: Position, expr_: Expression_) -> Self {
-        Self(position, expr_, OnceCell::new())
+        Self {
+            pos: position,
+            expr_,
+            id: OnceCell::new(),
+        }
     }
 }
 

@@ -11,14 +11,14 @@ let foo: Int = 1;
 //             position: Position { ... },
 //         },
 //     ),
-//     Expression(
-//         Position { ... },
-//         IntLiteral(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: IntLiteral(
 //             1,
 //         ),
-//         OnceCell(
+//         id: OnceCell(
 //             <uninit>,
 //         ),
-//     ),
+//     },
 // )
 

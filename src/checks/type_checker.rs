@@ -924,8 +924,10 @@ fn unify_and_solve_hint(
                 if !is_subtype(ty, bound_ty) {
                     return Err(Diagnostic {
                         message: format!(
-                            "Type is not compatible with `{}` is `{}` but got `{}`.",
-                            hint_name, bound_ty, ty,
+                            "`{}` has type `{}`, but got `{}`.",
+                            hint.as_src(),
+                            bound_ty,
+                            ty,
                         ),
                         position: position.clone(),
                         level: Level::Warning,

@@ -1,0 +1,18 @@
+fun foo(x: Option<Int>) {
+    let i = match (x) {
+        Some(v) => v,
+        None => 0,
+    };
+
+    i.foo();
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `Int` has no method `foo`.
+// 
+// --> src/check_test_files/type_error_method_after_match.gdn:7
+//     i.foo();
+//       ^^^
+

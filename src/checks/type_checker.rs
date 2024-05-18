@@ -184,8 +184,11 @@ fn check_expr(
             let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings, expected_return_ty);
             let scrutinee_ty_name = scrutinee_ty.type_name();
 
+            // TODO: Error when different case expressions have different types.
+            let mut case_ty = RuntimeType::unit();
+
             for (pattern, case_expr) in cases {
-                check_expr(case_expr, env, bindings, warnings, expected_return_ty);
+                case_ty = check_expr(case_expr, env, bindings, warnings, expected_return_ty);
 
                 // Matching `_` works for any type.
                 if pattern.symbol.name.is_underscore() {
@@ -227,7 +230,7 @@ fn check_expr(
                 }
             }
 
-            RuntimeType::Error("TODO: return types from match expressions".to_owned())
+            case_ty
         }
         Expression_::If(cond_expr, then_block, else_block) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);

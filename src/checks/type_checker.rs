@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, SymbolName,
-    ToplevelItem, TypeHint, TypeName,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, Pattern, SymbolName,
+    ToplevelItem, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 
@@ -186,6 +186,11 @@ fn check_expr(
 
             // TODO: Error when different case expressions have different types.
             let mut case_ty = RuntimeType::unit();
+
+            if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
+                let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
+                check_match_exhaustive(env, &scrutinee.0, scrutinee_ty_name, &patterns, warnings);
+            }
 
             for (pattern, case_expr) in cases {
                 case_ty = check_expr(case_expr, env, bindings, warnings, expected_return_ty);
@@ -967,4 +972,52 @@ fn unify_and_solve_hint(
     }
 
     Ok(())
+}
+
+fn check_match_exhaustive(
+    env: &Env,
+    scrutinee_pos: &Position,
+    type_name: &TypeName,
+    patterns: &[Pattern],
+    warnings: &mut Vec<Diagnostic>,
+) {
+    let Some(type_def) = env.get_type_def(type_name) else {
+        return;
+    };
+    let TypeDef::Enum(enum_info) = type_def else {
+        return;
+    };
+
+    for pattern in patterns {
+        if pattern.symbol.name.is_underscore() {
+            return;
+        }
+    }
+
+    let mut variants_remaining: HashMap<SymbolName, VariantInfo> = HashMap::new();
+    for variant in &enum_info.variants {
+        variants_remaining.insert(variant.name_sym.name.clone(), variant.clone());
+    }
+
+    for pattern in patterns {
+        // If any cases are _, this match is exhaustive.
+        if pattern.symbol.name.is_underscore() {
+            return;
+        }
+
+        variants_remaining.remove(&pattern.symbol.name);
+    }
+
+    let missing: Vec<_> = variants_remaining.keys().collect();
+
+    if let Some(missing_case) = missing.first() {
+        warnings.push(Diagnostic {
+            level: Level::Error,
+            message: format!(
+                "This match expression does not cover all the cases of `{}`. It's missing `{}`.",
+                type_name, missing_case
+            ),
+            position: scrutinee_pos.clone(),
+        });
+    }
 }

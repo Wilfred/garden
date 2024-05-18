@@ -1,0 +1,9 @@
+fun<T> takes_options(_x: Option<T>, _y: Option<T>) {}
+
+{
+    takes_options(None, None);
+    // takes_options(None, Some(123));
+    // takes_options(Some("foo"), Some(123));
+}
+
+// args: check

@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Display,
-};
+use std::{collections::HashMap, fmt::Display};
 
 use itertools::Itertools as _;
 
@@ -215,31 +212,30 @@ impl RuntimeType {
         env: &Env,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
+        let mut type_bindings = type_bindings.clone();
+
         let type_params = fun_info
             .type_params
             .iter()
             .map(|tp| tp.name.clone())
             .collect::<Vec<_>>();
 
-        let type_params_set = type_params.iter().collect::<HashSet<_>>();
+        // Update type variable environment.
+        for type_param in &type_params {
+            type_bindings.insert(type_param.clone(), None);
+        }
 
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => {
-                    if type_params_set.contains(&hint.sym.name) {
-                        RuntimeType::TypeParameter(hint.sym.name.clone())
-                    } else {
-                        RuntimeType::from_hint(hint, env, type_bindings)?
-                    }
-                }
+                Some(hint) => RuntimeType::from_hint(hint, env, &type_bindings)?,
                 None => RuntimeType::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_hint {
-            Some(hint) => Self::from_hint(hint, env, &env.type_bindings())?,
+            Some(hint) => Self::from_hint(hint, env, &type_bindings)?,
             None => RuntimeType::Top,
         };
 

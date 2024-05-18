@@ -8,7 +8,7 @@ use garden_lang_parser::position::Position;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
-use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind, UnwrapOrErrTy as _};
+use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
@@ -171,10 +171,6 @@ fn check_block(
     bindings.exit_block();
     ty
 }
-
-/// The current type variable environment. When new type variables are
-/// defined, they're added with a value of None.
-type TypeVarEnv = HashMap<TypeName, Option<RuntimeType>>;
 
 fn check_expr(
     expr: &Expression,

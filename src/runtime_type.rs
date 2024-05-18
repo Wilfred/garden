@@ -19,6 +19,10 @@ pub(crate) enum TypeDefKind {
     Struct,
 }
 
+/// The current type variable environment. When new type variables are
+/// defined, they're added with a value of None.
+pub(crate) type TypeVarEnv = HashMap<TypeName, Option<RuntimeType>>;
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum RuntimeType {
     /// The top type, which includes all values.

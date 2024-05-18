@@ -918,6 +918,9 @@ fn unify_and_solve_hint(
         // If the type named in this hint is a generic type, we're done.
         match ty_var_val {
             Some(bound_ty) => {
+                // We've already solved this type variable. Confirm
+                // that this occurrence of the type variable has the
+                // same type.
                 if !is_subtype(ty, bound_ty) {
                     return Err(Diagnostic {
                         message: format!(
@@ -930,6 +933,12 @@ fn unify_and_solve_hint(
                 }
             }
             None => {
+                // First occurrence of this type variable, assume it
+                // has the type we're seeing here.
+                //
+                // TODO: Accumulate constraints and solve later, so we
+                // can handle multiple occurrences where some are
+                // NoValue.
                 ty_var_env.insert(hint_name.clone(), Some(ty.clone()));
                 return Ok(());
             }

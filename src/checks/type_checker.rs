@@ -172,6 +172,10 @@ fn check_block(
     ty
 }
 
+/// The current type variable environment. When new type variables are
+/// defined, they're added with a value of None.
+type TypeVarEnv = HashMap<TypeName, Option<RuntimeType>>;
+
 fn check_expr(
     expr: &Expression,
     env: &mut Env,
@@ -584,7 +588,7 @@ fn check_expr(
                         }
                     }
 
-                    let mut ty_var_env: HashMap<TypeName, Option<RuntimeType>> = HashMap::default();
+                    let mut ty_var_env = TypeVarEnv::default();
                     for type_param in &fun_info.type_params {
                         ty_var_env.insert(type_param.name.clone(), None);
                     }
@@ -740,7 +744,7 @@ fn subst_type_vars_in_meth_return_ty(
     receiver_pos: &Position,
     receiver_ty: &RuntimeType,
     arg_tys: &[(RuntimeType, Position)],
-    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+    ty_var_env: &mut TypeVarEnv,
 ) -> (Vec<Diagnostic>, RuntimeType) {
     let mut diagnostics = vec![];
     let Some(fun_info) = method_info.fun_info() else {
@@ -769,7 +773,7 @@ fn subst_type_vars_in_fun_info_return_ty(
     env: &Env,
     fun_info: &FunInfo,
     arg_tys: &[(RuntimeType, Position)],
-    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+    ty_var_env: &mut TypeVarEnv,
 ) -> (Vec<Diagnostic>, RuntimeType) {
     let mut diagnostics = vec![];
 
@@ -805,10 +809,7 @@ fn subst_type_vars_in_fun_info_return_ty(
     }
 }
 
-fn subst_ty_vars(
-    ty: &RuntimeType,
-    ty_var_env: &HashMap<TypeName, Option<RuntimeType>>,
-) -> RuntimeType {
+fn subst_ty_vars(ty: &RuntimeType, ty_var_env: &TypeVarEnv) -> RuntimeType {
     match ty {
         RuntimeType::Error(_) | RuntimeType::Top | RuntimeType::String | RuntimeType::Int => {
             ty.clone()
@@ -858,7 +859,7 @@ fn subst_ty_vars(
 fn unify_and_solve_ty(
     expected_ty: &RuntimeType,
     actual_ty: &RuntimeType,
-    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+    ty_var_env: &mut TypeVarEnv,
 ) {
     match (expected_ty, actual_ty) {
         (RuntimeType::TypeParameter(n), _) => {
@@ -911,7 +912,7 @@ fn unify_and_solve_hint(
     hint: &TypeHint,
     position: &Position,
     ty: &RuntimeType,
-    ty_var_env: &mut HashMap<TypeName, Option<RuntimeType>>,
+    ty_var_env: &mut TypeVarEnv,
 ) -> Result<(), Diagnostic> {
     let hint_name = &hint.sym.name;
     if let Some(ty_var_val) = ty_var_env.get(hint_name) {

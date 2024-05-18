@@ -101,7 +101,7 @@ impl RuntimeType {
     pub(crate) fn from_hint(
         hint: &TypeHint,
         env: &Env,
-        type_bindings: &HashMap<TypeName, RuntimeType>,
+        type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let name = &hint.sym.name;
 
@@ -111,8 +111,11 @@ impl RuntimeType {
             .map(|hint_arg| RuntimeType::from_hint(hint_arg, env, type_bindings))
             .collect::<Result<Vec<_>, _>>()?;
 
-        if let Some(runtime_type) = type_bindings.get(name) {
-            return Ok(runtime_type.clone());
+        if let Some(type_var_value) = type_bindings.get(name) {
+            return match type_var_value {
+                Some(runtime_type) => Ok(runtime_type.clone()),
+                None => Ok(RuntimeType::TypeParameter(name.clone())),
+            };
         }
 
         match env.get_type_def(name) {
@@ -147,11 +150,7 @@ impl RuntimeType {
         }
     }
 
-    pub(crate) fn from_value(
-        value: &Value,
-        env: &Env,
-        type_bindings: &HashMap<TypeName, RuntimeType>,
-    ) -> Self {
+    pub(crate) fn from_value(value: &Value, env: &Env, type_bindings: &TypeVarEnv) -> Self {
         match value {
             Value::Integer(_) => RuntimeType::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
@@ -214,7 +213,7 @@ impl RuntimeType {
     pub(crate) fn from_fun_info(
         fun_info: &FunInfo,
         env: &Env,
-        type_bindings: &HashMap<TypeName, RuntimeType>,
+        type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let type_params = fun_info
             .type_params

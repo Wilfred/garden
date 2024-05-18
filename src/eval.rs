@@ -18,7 +18,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind};
+use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind, TypeVarEnv};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
@@ -174,7 +174,7 @@ pub(crate) struct StackFrame {
     pub(crate) caller_pos: Option<Position>,
     pub(crate) bindings: Bindings,
     /// Types bound in this stack frame, due to generic parameters.
-    pub(crate) type_bindings: HashMap<TypeName, RuntimeType>,
+    pub(crate) type_bindings: TypeVarEnv,
     /// If we are entering a block with extra bindings that are only
     /// defined for the duration of the block, pass them here.
     ///
@@ -1580,10 +1580,10 @@ fn eval_call(
                 }
             }
 
-            let mut type_bindings = HashMap::new();
+            let mut type_bindings = TypeVarEnv::new();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
+                type_bindings.insert(type_param.name.clone(), Some(RuntimeType::Top));
             }
 
             bindings.push(BlockBindings {
@@ -1619,10 +1619,10 @@ fn eval_call(
                 arg_values,
             )?;
 
-            let mut type_bindings = HashMap::new();
+            let mut type_bindings = TypeVarEnv::new();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), RuntimeType::Top);
+                type_bindings.insert(param_sym.name.clone(), Some(RuntimeType::Top));
             }
 
             check_param_types(
@@ -1776,7 +1776,7 @@ fn check_param_types(
     params: &[SymbolWithHint],
     arg_positions: &[Position],
     arg_values: &[Value],
-    type_bindings: &HashMap<TypeName, RuntimeType>,
+    type_bindings: &TypeVarEnv,
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
@@ -1912,10 +1912,10 @@ fn eval_method_call(
     }
     fun_bindings.insert(receiver_method.receiver_sym.name.clone(), receiver_value);
 
-    let mut type_bindings = HashMap::new();
+    let mut type_bindings = TypeVarEnv::new();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), RuntimeType::Top);
+        type_bindings.insert(type_param.name.clone(), Some(RuntimeType::Top));
     }
 
     Ok(Some(StackFrame {

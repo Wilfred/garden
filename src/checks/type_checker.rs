@@ -507,7 +507,7 @@ fn check_expr(
                         }
                     }
 
-                    *return_
+                    subst_ty_vars(&return_, &ty_var_env)
                 }
                 _ => {
                     warnings.push(Diagnostic {

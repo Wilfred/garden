@@ -91,9 +91,15 @@ evaluate, and display the result."
     (overlay-put overlay 'face 'highlight)
     (run-with-timer 3.0 nil 'delete-overlay overlay)))
 
+(defgroup garden nil
+  "A Garden major mode."
+  :group 'languages)
+
 (defcustom garden-indent-offset 4
   "Indentation amount (in spaces) for Garden files."
-  :safe #'integerp)
+  :type 'integer
+  :safe #'integerp
+  :group 'garden)
 
 (defvar garden-log-json t
   "If non-nil, write raw JSON responses from Garden to the buffer *garden-json*.")

@@ -17,8 +17,8 @@ use strsim::normalized_levenshtein;
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
+use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv};
 use crate::json_session::{Response, ResponseKind};
-use crate::runtime_type::{is_subtype, Type, TypeDefKind, TypeVarEnv};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{

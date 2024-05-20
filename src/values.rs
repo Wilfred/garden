@@ -4,8 +4,8 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::BlockBindings;
-use crate::runtime_type::Type;
-use crate::runtime_type::TypeDefKind;
+use crate::garden_type::Type;
+use crate::garden_type::TypeDefKind;
 use crate::types::TypeDef;
 use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 

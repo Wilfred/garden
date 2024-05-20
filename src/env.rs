@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 use strum::IntoEnumIterator;
 
 use crate::eval::EnclosingSymbol;
-use crate::runtime_type::TypeVarEnv;
+use crate::garden_type::TypeVarEnv;
 use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
     eval::{eval_toplevel_defs, Bindings, StackFrame},

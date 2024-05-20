@@ -106,7 +106,7 @@ impl Type {
         let args = hint
             .args
             .iter()
-            .map(|hint_arg| Type::from_hint(hint_arg, env, type_bindings))
+            .map(|hint_arg| Self::from_hint(hint_arg, env, type_bindings))
             .collect::<Result<Vec<_>, _>>()?;
 
         if let Some(type_var_value) = type_bindings.get(name) {
@@ -124,7 +124,7 @@ impl Type {
                     BuiltinType::List => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
-                            None => Type::error("Missing type argument to List<>"),
+                            None => Self::error("Missing type argument to List<>"),
                         };
 
                         Ok(Type::List(Box::new(elem_type)))
@@ -158,7 +158,7 @@ impl Type {
                 Some(fun_info) => {
                     Self::from_fun_info(fun_info, env, type_bindings).unwrap_or_err_ty()
                 }
-                None => Type::error("No fun_info for built-in function"),
+                None => Self::error("No fun_info for built-in function"),
             },
             Value::String(_) => Type::String,
             Value::List { elem_type, .. } => Type::List(Box::new(elem_type.clone())),
@@ -229,7 +229,7 @@ impl Type {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => Type::from_hint(hint, env, &type_bindings)?,
+                Some(hint) => Self::from_hint(hint, env, &type_bindings)?,
                 None => Type::Top,
             };
             param_types.push(type_);
@@ -421,7 +421,7 @@ impl UnwrapOrErrTy for Result<Type, String> {
     fn unwrap_or_err_ty(&self) -> Type {
         match self {
             Ok(ty) => ty.clone(),
-            Err(msg) => Type::Error(msg.clone()),
+            Err(msg) => Type::error(msg),
         }
     }
 }
@@ -430,7 +430,7 @@ impl UnwrapOrErrTy for Option<Type> {
     fn unwrap_or_err_ty(&self) -> Type {
         match self {
             Some(ty) => ty.clone(),
-            None => Type::Error("Got None".to_owned()),
+            None => Type::error("Got None"),
         }
     }
 }

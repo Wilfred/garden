@@ -18,15 +18,15 @@ pub(crate) enum TypeDefKind {
 
 /// The current type variable environment. When new type variables are
 /// defined, they're added with a value of None.
-pub(crate) type TypeVarEnv = HashMap<TypeName, Option<RuntimeType>>;
+pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum RuntimeType {
+pub(crate) enum Type {
     /// The top type, which includes all values.
     Top,
     String,
     Int,
-    List(Box<RuntimeType>),
+    List(Box<Type>),
     Fun {
         /// If this function has a defined name (i.e. not a closure),
         /// the name used.
@@ -34,14 +34,15 @@ pub(crate) enum RuntimeType {
         /// E.g. if a function's return type depends on argument
         /// types, we need type_parameters.
         type_params: Vec<TypeName>,
-        params: Vec<RuntimeType>,
-        return_: Box<RuntimeType>,
+        params: Vec<Type>,
+        return_: Box<Type>,
     },
     UserDefined {
         kind: TypeDefKind,
         name: TypeName,
-        args: Vec<RuntimeType>,
+        args: Vec<Type>,
     },
+    #[allow(clippy::enum_variant_names)]
     TypeParameter(TypeName),
     /// Represents a type checker error. The string is the internal
     /// reason we had an error, intended for debugging the type
@@ -49,16 +50,16 @@ pub(crate) enum RuntimeType {
     Error(String),
 }
 
-impl RuntimeType {
+impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            RuntimeType::UserDefined { name, .. } => name.name == "NoValue",
+            Type::UserDefined { name, .. } => name.name == "NoValue",
             _ => false,
         }
     }
 
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
-        RuntimeType::Error(msg.as_ref().to_owned())
+        Type::Error(msg.as_ref().to_owned())
     }
 
     pub(crate) fn no_value() -> Self {
@@ -105,39 +106,39 @@ impl RuntimeType {
         let args = hint
             .args
             .iter()
-            .map(|hint_arg| RuntimeType::from_hint(hint_arg, env, type_bindings))
+            .map(|hint_arg| Type::from_hint(hint_arg, env, type_bindings))
             .collect::<Result<Vec<_>, _>>()?;
 
         if let Some(type_var_value) = type_bindings.get(name) {
             return match type_var_value {
                 Some(runtime_type) => Ok(runtime_type.clone()),
-                None => Ok(RuntimeType::TypeParameter(name.clone())),
+                None => Ok(Type::TypeParameter(name.clone())),
             };
         }
 
         match env.get_type_def(name) {
             Some(type_) => match type_ {
                 TypeDef::Builtin(builtin_type) => match builtin_type {
-                    BuiltinType::Int => Ok(RuntimeType::Int),
-                    BuiltinType::String => Ok(RuntimeType::String),
+                    BuiltinType::Int => Ok(Type::Int),
+                    BuiltinType::String => Ok(Type::String),
                     BuiltinType::List => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
-                            None => RuntimeType::error("Missing type argument to List<>"),
+                            None => Type::error("Missing type argument to List<>"),
                         };
 
-                        Ok(RuntimeType::List(Box::new(elem_type)))
+                        Ok(Type::List(Box::new(elem_type)))
                     }
                     BuiltinType::Fun => {
                         unreachable!("Currently no userland syntax for function types")
                     }
                 },
-                TypeDef::Enum(_) => Ok(RuntimeType::UserDefined {
+                TypeDef::Enum(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Enum,
                     name: name.clone(),
                     args,
                 }),
-                TypeDef::Struct(_) => Ok(RuntimeType::UserDefined {
+                TypeDef::Struct(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Struct,
                     name: name.clone(),
                     args,
@@ -149,7 +150,7 @@ impl RuntimeType {
 
     pub(crate) fn from_value(value: &Value, env: &Env, type_bindings: &TypeVarEnv) -> Self {
         match value {
-            Value::Integer(_) => RuntimeType::Int,
+            Value::Integer(_) => Type::Int,
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
                 Self::from_fun_info(fun_info, env, type_bindings).unwrap_or_err_ty()
             }
@@ -157,10 +158,10 @@ impl RuntimeType {
                 Some(fun_info) => {
                     Self::from_fun_info(fun_info, env, type_bindings).unwrap_or_err_ty()
                 }
-                None => RuntimeType::error("No fun_info for built-in function"),
+                None => Type::error("No fun_info for built-in function"),
             },
-            Value::String(_) => RuntimeType::String,
-            Value::List { elem_type, .. } => RuntimeType::List(Box::new(elem_type.clone())),
+            Value::String(_) => Type::String,
+            Value::List { elem_type, .. } => Type::List(Box::new(elem_type.clone())),
             Value::Enum { runtime_type, .. } => runtime_type.clone(),
             Value::EnumConstructor { type_name, .. } => {
                 // TODO: store type information on EnumConstructor
@@ -179,10 +180,10 @@ impl RuntimeType {
                         .map(|tp| tp.name.clone())
                         .collect();
 
-                        let type_args_on_enum: Vec<RuntimeType> = type_params
+                        let type_args_on_enum: Vec<Type> = type_params
                             .clone()
                             .into_iter()
-                            .map(RuntimeType::TypeParameter)
+                            .map(Type::TypeParameter)
                             .collect::<Vec<_>>();
 
                         (type_params, type_args_on_enum)
@@ -190,12 +191,12 @@ impl RuntimeType {
                     None => (vec![], vec![]),
                 };
 
-                RuntimeType::Fun {
+                Type::Fun {
                     type_params,
                     // TODO: this is assuming the variant is exactly
                     // Foo(T), not e.g. Foo(Int) or Foo(Option(T)).
                     params: vec![type_args_on_enum.first().cloned().unwrap_or_err_ty()],
-                    return_: Box::new(RuntimeType::UserDefined {
+                    return_: Box::new(Type::UserDefined {
                         kind: TypeDefKind::Enum,
                         name: type_name.clone(),
                         args: type_args_on_enum,
@@ -228,18 +229,18 @@ impl RuntimeType {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, env, &type_bindings)?,
-                None => RuntimeType::Top,
+                Some(hint) => Type::from_hint(hint, env, &type_bindings)?,
+                None => Type::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_hint {
             Some(hint) => Self::from_hint(hint, env, &type_bindings)?,
-            None => RuntimeType::Top,
+            None => Type::Top,
         };
 
-        Ok(RuntimeType::Fun {
+        Ok(Type::Fun {
             type_params,
             params: param_types,
             return_: Box::new(return_),
@@ -249,29 +250,29 @@ impl RuntimeType {
 
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
-            RuntimeType::Top | RuntimeType::Error(_) => None,
-            RuntimeType::String => Some(TypeName {
+            Type::Top | Type::Error(_) => None,
+            Type::String => Some(TypeName {
                 name: "String".to_owned(),
             }),
-            RuntimeType::Int => Some(TypeName {
+            Type::Int => Some(TypeName {
                 name: "Int".to_owned(),
             }),
-            RuntimeType::List(_) => Some(TypeName {
+            Type::List(_) => Some(TypeName {
                 name: "List".to_owned(),
             }),
-            RuntimeType::Fun { .. } => Some(TypeName {
+            Type::Fun { .. } => Some(TypeName {
                 name: "Fun".to_owned(),
             }),
-            RuntimeType::UserDefined { kind: _, name, .. } => Some(name.clone()),
-            RuntimeType::TypeParameter(name) => Some(name.clone()),
+            Type::UserDefined { kind: _, name, .. } => Some(name.clone()),
+            Type::TypeParameter(name) => Some(name.clone()),
         }
     }
 }
 
-impl Display for RuntimeType {
+impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RuntimeType::UserDefined { name, args, .. } => {
+            Type::UserDefined { name, args, .. } => {
                 if args.is_empty() {
                     write!(f, "{}", name.name)
                 } else {
@@ -286,10 +287,10 @@ impl Display for RuntimeType {
                     )
                 }
             }
-            RuntimeType::String => write!(f, "String"),
-            RuntimeType::Int => write!(f, "Int"),
-            RuntimeType::List(elem_type) => write!(f, "List<{}>", elem_type),
-            RuntimeType::Fun {
+            Type::String => write!(f, "String"),
+            Type::Int => write!(f, "Int"),
+            Type::List(elem_type) => write!(f, "List<{}>", elem_type),
+            Type::Fun {
                 params: args,
                 return_,
                 type_params,
@@ -308,51 +309,49 @@ impl Display for RuntimeType {
                     formatted_type_params, formatted_args, return_
                 )
             }
-            RuntimeType::Top => write!(f, "_"),
-            RuntimeType::TypeParameter(name) => write!(f, "{}", name.name),
-            RuntimeType::Error(reason) => write!(f, "__ERROR({})", reason),
+            Type::Top => write!(f, "_"),
+            Type::TypeParameter(name) => write!(f, "{}", name.name),
+            Type::Error(reason) => write!(f, "__ERROR({})", reason),
         }
     }
 }
 
-pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
+pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
     match (lhs, rhs) {
-        (_, RuntimeType::Top) => true,
+        (_, Type::Top) => true,
         (_, _) if lhs.is_no_value() => true,
-        (RuntimeType::Error(_), _) => {
+        (Type::Error(_), _) => {
             // Error is equivalent to NoValue: it's a bottom type that
             // is a subtype of everything.
             true
         }
-        (_, RuntimeType::Error(_)) => {
+        (_, Type::Error(_)) => {
             // Also allow Error to be a supertype of everything,
             // because we've already emitted a type error elsewhere
             // and we don't want duplicate errors.
             true
         }
-        (RuntimeType::Int, RuntimeType::Int) => true,
-        (RuntimeType::Int, _) => false,
-        (RuntimeType::String, RuntimeType::String) => true,
-        (RuntimeType::String, _) => false,
+        (Type::Int, Type::Int) => true,
+        (Type::Int, _) => false,
+        (Type::String, Type::String) => true,
+        (Type::String, _) => false,
         // A type parameter is only a subtype of itself.
         // TODO: what if the parameters are in different scopes?
-        (RuntimeType::TypeParameter(lhs_name), RuntimeType::TypeParameter(rhs_name)) => {
-            lhs_name == rhs_name
-        }
-        (RuntimeType::TypeParameter(_), _) => false,
-        (RuntimeType::List(lhs_elem), RuntimeType::List(rhs_elem)) => {
+        (Type::TypeParameter(lhs_name), Type::TypeParameter(rhs_name)) => lhs_name == rhs_name,
+        (Type::TypeParameter(_), _) => false,
+        (Type::List(lhs_elem), Type::List(rhs_elem)) => {
             // List is covariant in its element.
             // List<NoValue> <: List<Int>
             is_subtype(lhs_elem, rhs_elem)
         }
-        (RuntimeType::List(_), _) => false,
+        (Type::List(_), _) => false,
         (
-            RuntimeType::Fun {
+            Type::Fun {
                 params: lhs_params,
                 return_: lhs_return,
                 ..
             },
-            RuntimeType::Fun {
+            Type::Fun {
                 params: rhs_params,
                 return_: rhs_return,
                 ..
@@ -374,14 +373,14 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
             // Fun<(), NoValue> <: Fun<(), Int>
             is_subtype(rhs_return, lhs_return)
         }
-        (RuntimeType::Fun { .. }, _) => false,
+        (Type::Fun { .. }, _) => false,
         (
-            RuntimeType::UserDefined {
+            Type::UserDefined {
                 kind: _,
                 name: lhs_name,
                 args: lhs_args,
             },
-            RuntimeType::UserDefined {
+            Type::UserDefined {
                 kind: _,
                 name: rhs_name,
                 args: rhs_args,
@@ -405,8 +404,8 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
 
             true
         }
-        (RuntimeType::UserDefined { .. }, _) => false,
-        (RuntimeType::Top, _) => {
+        (Type::UserDefined { .. }, _) => false,
+        (Type::Top, _) => {
             // Top is only a subtype of itself, but we've already
             // matched the case where RHS is Top.
             false
@@ -415,23 +414,23 @@ pub(crate) fn is_subtype(lhs: &RuntimeType, rhs: &RuntimeType) -> bool {
 }
 
 pub(crate) trait UnwrapOrErrTy {
-    fn unwrap_or_err_ty(&self) -> RuntimeType;
+    fn unwrap_or_err_ty(&self) -> Type;
 }
 
-impl UnwrapOrErrTy for Result<RuntimeType, String> {
-    fn unwrap_or_err_ty(&self) -> RuntimeType {
+impl UnwrapOrErrTy for Result<Type, String> {
+    fn unwrap_or_err_ty(&self) -> Type {
         match self {
             Ok(ty) => ty.clone(),
-            Err(msg) => RuntimeType::Error(msg.clone()),
+            Err(msg) => Type::Error(msg.clone()),
         }
     }
 }
 
-impl UnwrapOrErrTy for Option<RuntimeType> {
-    fn unwrap_or_err_ty(&self) -> RuntimeType {
+impl UnwrapOrErrTy for Option<Type> {
+    fn unwrap_or_err_ty(&self) -> Type {
         match self {
             Some(ty) => ty.clone(),
-            None => RuntimeType::Error("Got None".to_owned()),
+            None => Type::Error("Got None".to_owned()),
         }
     }
 }

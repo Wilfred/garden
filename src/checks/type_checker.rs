@@ -8,7 +8,7 @@ use garden_lang_parser::position::Position;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
-use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
+use crate::runtime_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
@@ -30,7 +30,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> 
 
 #[derive(Debug)]
 struct LocalBindings {
-    blocks: Vec<HashMap<SymbolName, RuntimeType>>,
+    blocks: Vec<HashMap<SymbolName, Type>>,
 }
 
 impl Default for LocalBindings {
@@ -50,7 +50,7 @@ impl LocalBindings {
         self.blocks.pop();
     }
 
-    fn get(&self, name: &SymbolName) -> Option<&RuntimeType> {
+    fn get(&self, name: &SymbolName) -> Option<&Type> {
         for block in self.blocks.iter().rev() {
             if let Some(ty) = block.get(name) {
                 return Some(ty);
@@ -60,7 +60,7 @@ impl LocalBindings {
         None
     }
 
-    fn set(&mut self, name: SymbolName, ty: RuntimeType) {
+    fn set(&mut self, name: SymbolName, ty: Type) {
         let block = self.blocks.last_mut().expect("Should be non-empty");
         block.insert(name, ty);
     }
@@ -77,7 +77,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let self_ty = RuntimeType::from_hint(
+        let self_ty = Type::from_hint(
             &method_info.receiver_hint,
             self.env,
             &self.env.type_bindings(),
@@ -107,9 +107,10 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         for param in &fun_info.params {
             let param_ty = match &param.hint {
-                Some(hint) => RuntimeType::from_hint(hint, self.env, &self.env.type_bindings())
-                    .unwrap_or_err_ty(),
-                None => RuntimeType::Top,
+                Some(hint) => {
+                    Type::from_hint(hint, self.env, &self.env.type_bindings()).unwrap_or_err_ty()
+                }
+                None => Type::Top,
             };
             self.bindings.set(param.symbol.name.clone(), param_ty);
         }
@@ -159,11 +160,11 @@ fn check_block(
     env: &mut Env,
     bindings: &mut LocalBindings,
     warnings: &mut Vec<Diagnostic>,
-    expected_return_ty: Option<&RuntimeType>,
-) -> RuntimeType {
+    expected_return_ty: Option<&Type>,
+) -> Type {
     bindings.enter_block();
 
-    let mut ty = RuntimeType::unit();
+    let mut ty = Type::unit();
     for expr in &block.exprs {
         ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
     }
@@ -177,15 +178,15 @@ fn check_expr(
     env: &mut Env,
     bindings: &mut LocalBindings,
     warnings: &mut Vec<Diagnostic>,
-    expected_return_ty: Option<&RuntimeType>,
-) -> RuntimeType {
+    expected_return_ty: Option<&Type>,
+) -> Type {
     match &expr.expr_ {
         Expression_::Match(scrutinee, cases) => {
             let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings, expected_return_ty);
             let scrutinee_ty_name = scrutinee_ty.type_name();
 
             // TODO: Error when different case expressions have different types.
-            let mut case_ty = RuntimeType::unit();
+            let mut case_ty = Type::unit();
 
             if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
                 let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
@@ -239,7 +240,7 @@ fn check_expr(
         }
         Expression_::If(cond_expr, then_block, else_block) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
-            if !is_subtype(&cond_ty, &RuntimeType::bool()) {
+            if !is_subtype(&cond_ty, &Type::bool()) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
                     message: format!(
@@ -260,7 +261,7 @@ fn check_expr(
         }
         Expression_::While(cond_expr, body) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
-            if !is_subtype(&cond_ty, &RuntimeType::bool()) {
+            if !is_subtype(&cond_ty, &Type::bool()) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
                     message: format!(
@@ -273,9 +274,9 @@ fn check_expr(
 
             check_block(body, env, bindings, warnings, expected_return_ty);
 
-            RuntimeType::unit()
+            Type::unit()
         }
-        Expression_::Break => RuntimeType::unit(),
+        Expression_::Break => Type::unit(),
         Expression_::Assign(_sym, expr) => {
             check_expr(expr, env, bindings, warnings, expected_return_ty)
         }
@@ -285,7 +286,7 @@ fn check_expr(
             let ty = match hint {
                 Some(hint) => {
                     let hint_ty =
-                        RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+                        Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
 
                     if !is_subtype(&expr_ty, &hint_ty) {
                         warnings.push(Diagnostic {
@@ -305,7 +306,7 @@ fn check_expr(
 
             bindings.set(sym.name.clone(), ty);
 
-            RuntimeType::unit()
+            Type::unit()
         }
         Expression_::Return(expr) => {
             if let Some(expr) = expr {
@@ -326,13 +327,13 @@ fn check_expr(
 
                 ty
             } else {
-                RuntimeType::unit()
+                Type::unit()
             }
         }
-        Expression_::IntLiteral(_) => RuntimeType::Int,
-        Expression_::StringLiteral(_) => RuntimeType::String,
+        Expression_::IntLiteral(_) => Type::Int,
+        Expression_::StringLiteral(_) => Type::String,
         Expression_::ListLiteral(items) => {
-            let mut elem_ty = RuntimeType::no_value();
+            let mut elem_ty = Type::no_value();
 
             for item in items {
                 let item_ty = check_expr(item, env, bindings, warnings, expected_return_ty);
@@ -341,7 +342,7 @@ fn check_expr(
                 elem_ty = item_ty;
             }
 
-            RuntimeType::List(Box::new(elem_ty))
+            Type::List(Box::new(elem_ty))
         }
         Expression_::StructLiteral(name_sym, fields) => {
             for (_, expr) in fields {
@@ -349,13 +350,13 @@ fn check_expr(
             }
 
             if let Some(TypeDef::Struct(_)) = env.get_type_def(&name_sym.name) {
-                RuntimeType::UserDefined {
+                Type::UserDefined {
                     kind: TypeDefKind::Struct,
                     name: name_sym.name.clone(),
                     args: vec![],
                 }
             } else {
-                RuntimeType::Error("Unbound struct name".to_owned())
+                Type::Error("Unbound struct name".to_owned())
             }
         }
         Expression_::BinaryOperator(lhs, op, rhs) => {
@@ -367,14 +368,14 @@ fn check_expr(
                 | BinaryOperatorKind::Subtract
                 | BinaryOperatorKind::Multiply
                 | BinaryOperatorKind::Divide => {
-                    if !is_subtype(&lhs_ty, &RuntimeType::Int) {
+                    if !is_subtype(&lhs_ty, &Type::Int) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                             position: lhs.pos.clone(),
                         });
                     }
-                    if !is_subtype(&rhs_ty, &RuntimeType::Int) {
+                    if !is_subtype(&rhs_ty, &Type::Int) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", rhs_ty),
@@ -382,20 +383,20 @@ fn check_expr(
                         });
                     }
 
-                    RuntimeType::Int
+                    Type::Int
                 }
                 BinaryOperatorKind::LessThan
                 | BinaryOperatorKind::LessThanOrEqual
                 | BinaryOperatorKind::GreaterThan
                 | BinaryOperatorKind::GreaterThanOrEqual => {
-                    if !is_subtype(&lhs_ty, &RuntimeType::Int) {
+                    if !is_subtype(&lhs_ty, &Type::Int) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                             position: lhs.pos.clone(),
                         });
                     }
-                    if !is_subtype(&rhs_ty, &RuntimeType::Int) {
+                    if !is_subtype(&rhs_ty, &Type::Int) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", rhs_ty),
@@ -403,7 +404,7 @@ fn check_expr(
                         });
                     }
 
-                    RuntimeType::bool()
+                    Type::bool()
                 }
                 BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
                     if lhs_ty != rhs_ty {
@@ -413,17 +414,17 @@ fn check_expr(
                             });
                     }
 
-                    RuntimeType::bool()
+                    Type::bool()
                 }
                 BinaryOperatorKind::And | BinaryOperatorKind::Or => {
-                    if !is_subtype(&lhs_ty, &RuntimeType::bool()) {
+                    if !is_subtype(&lhs_ty, &Type::bool()) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
                             position: lhs.pos.clone(),
                         });
                     }
-                    if !is_subtype(&rhs_ty, &RuntimeType::bool()) {
+                    if !is_subtype(&rhs_ty, &Type::bool()) {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
@@ -431,7 +432,7 @@ fn check_expr(
                         });
                     }
 
-                    RuntimeType::bool()
+                    Type::bool()
                 }
             }
         }
@@ -441,8 +442,8 @@ fn check_expr(
             }
 
             match env.file_scope.get(&sym.name) {
-                Some(value) => RuntimeType::from_value(value, env, &env.type_bindings()),
-                None => RuntimeType::Error("Unbound variable".to_owned()),
+                Some(value) => Type::from_value(value, env, &env.type_bindings()),
+                None => Type::Error("Unbound variable".to_owned()),
             }
         }
         Expression_::Call(recv, args) => {
@@ -458,7 +459,7 @@ fn check_expr(
                 .collect::<Vec<_>>();
 
             match recv_ty {
-                RuntimeType::Fun {
+                Type::Fun {
                     params,
                     return_,
                     name,
@@ -516,12 +517,12 @@ fn check_expr(
                         position: recv.pos.clone(),
                     });
 
-                    RuntimeType::Error("Calling something that isn't a function".to_owned())
+                    Type::Error("Calling something that isn't a function".to_owned())
                 }
             }
         }
         Expression_::MethodCall(recv, sym, args) => {
-            let arg_tys: Vec<(RuntimeType, Position)> = args
+            let arg_tys: Vec<(Type, Position)> = args
                 .iter()
                 .map(|arg| {
                     (
@@ -533,7 +534,7 @@ fn check_expr(
 
             let receiver_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
             let Some(receiver_ty_name) = receiver_ty.type_name() else {
-                return RuntimeType::error("No type name for this method receiver");
+                return Type::error("No type name for this method receiver");
             };
 
             let methods = env
@@ -545,7 +546,7 @@ fn check_expr(
             match methods.get(&sym.name) {
                 Some(method_info) => {
                     let Some(fun_info) = method_info.fun_info() else {
-                        return RuntimeType::error("This method has no fun_info");
+                        return Type::error("This method has no fun_info");
                     };
                     if fun_info.params.len() != args.len() {
                         warnings.push(Diagnostic {
@@ -566,8 +567,7 @@ fn check_expr(
                         let Some(param_hint) = &param.hint else {
                             continue;
                         };
-                        let Ok(param_ty) =
-                            RuntimeType::from_hint(param_hint, env, &env.type_bindings())
+                        let Ok(param_ty) = Type::from_hint(param_hint, env, &env.type_bindings())
                         else {
                             continue;
                         };
@@ -607,18 +607,18 @@ fn check_expr(
                         message: format!("`{}` has no method `{}`.", receiver_ty_name, sym.name),
                         position: sym.position.clone(),
                     });
-                    RuntimeType::error("No such method on this type")
+                    Type::error("No such method on this type")
                 }
             }
         }
         Expression_::DotAccess(recv, field_sym) => {
             let recv_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
             let Some(recv_ty_name) = recv_ty.type_name() else {
-                return RuntimeType::error("No type name found this receiver");
+                return Type::error("No type name found this receiver");
             };
 
             match recv_ty {
-                RuntimeType::UserDefined {
+                Type::UserDefined {
                     kind: TypeDefKind::Struct,
                     name,
                     ..
@@ -627,7 +627,7 @@ fn check_expr(
                         for field in &struct_info.fields {
                             if field.sym.name == field_sym.name {
                                 let field_ty =
-                                    RuntimeType::from_hint(&field.hint, env, &env.type_bindings())
+                                    Type::from_hint(&field.hint, env, &env.type_bindings())
                                         .unwrap_or_err_ty();
                                 return field_ty;
                             }
@@ -642,12 +642,12 @@ fn check_expr(
                             position: field_sym.position.clone(),
                         });
 
-                        RuntimeType::error("No struct field with this name")
+                        Type::error("No struct field with this name")
                     } else {
-                        RuntimeType::error("No struct with this name")
+                        Type::error("No struct with this name")
                     }
                 }
-                _ => RuntimeType::error("This type is not a struct"),
+                _ => Type::error("This type is not a struct"),
             }
         }
         Expression_::FunLiteral(fun_info) => check_fun_info(fun_info, env, bindings, warnings),
@@ -662,7 +662,7 @@ fn check_fun_info(
     env: &mut Env,
     bindings: &mut LocalBindings,
     warnings: &mut Vec<Diagnostic>,
-) -> RuntimeType {
+) -> Type {
     // Check the function body with the locals bound.
     bindings.enter_block();
 
@@ -670,15 +670,14 @@ fn check_fun_info(
     // hint.
     for param in &fun_info.params {
         if let Some(hint) = &param.hint {
-            let param_ty =
-                RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            let param_ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
             bindings.set(param.symbol.name.clone(), param_ty);
         }
     }
 
     let expected_return_ty = match &fun_info.return_hint {
         Some(hint) => {
-            let ty = RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            let ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
             Some(ty)
         }
         None => None,
@@ -698,18 +697,15 @@ fn check_fun_info(
     let mut param_tys = vec![];
     for param in &fun_info.params {
         let param_ty = match &param.hint {
-            Some(hint) => {
-                RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty()
-            }
-            None => RuntimeType::Top,
+            Some(hint) => Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty(),
+            None => Type::Top,
         };
         param_tys.push(param_ty);
     }
 
     let return_ty = match &fun_info.return_hint {
         Some(hint) => {
-            let return_ty =
-                RuntimeType::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            let return_ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
 
             if !is_subtype(&body_ty, &return_ty) {
                 warnings.push(Diagnostic {
@@ -724,7 +720,7 @@ fn check_fun_info(
         None => body_ty,
     };
 
-    RuntimeType::Fun {
+    Type::Fun {
         type_params: vec![],
         params: param_tys,
         return_: Box::new(return_ty),
@@ -738,16 +734,13 @@ fn subst_type_vars_in_meth_return_ty(
     env: &Env,
     method_info: &MethodInfo,
     receiver_pos: &Position,
-    receiver_ty: &RuntimeType,
-    arg_tys: &[(RuntimeType, Position)],
+    receiver_ty: &Type,
+    arg_tys: &[(Type, Position)],
     ty_var_env: &mut TypeVarEnv,
-) -> (Vec<Diagnostic>, RuntimeType) {
+) -> (Vec<Diagnostic>, Type) {
     let mut diagnostics = vec![];
     let Some(fun_info) = method_info.fun_info() else {
-        return (
-            diagnostics,
-            RuntimeType::error("This method has no fun_info"),
-        );
+        return (diagnostics, Type::error("This method has no fun_info"));
     };
 
     if let Err(diagnostic) = unify_and_solve_hint(
@@ -768,9 +761,9 @@ fn subst_type_vars_in_meth_return_ty(
 fn subst_type_vars_in_fun_info_return_ty(
     env: &Env,
     fun_info: &FunInfo,
-    arg_tys: &[(RuntimeType, Position)],
+    arg_tys: &[(Type, Position)],
     ty_var_env: &mut TypeVarEnv,
-) -> (Vec<Diagnostic>, RuntimeType) {
+) -> (Vec<Diagnostic>, Type) {
     let mut diagnostics = vec![];
 
     for ((arg_ty, arg_pos), param) in arg_tys.iter().zip(&fun_info.params) {
@@ -792,28 +785,24 @@ fn subst_type_vars_in_fun_info_return_ty(
                     None => {
                         // This type variable was never used, other
                         // than the return position. Solve to bottom.
-                        RuntimeType::no_value()
+                        Type::no_value()
                     }
                 }
             } else {
-                RuntimeType::from_hint(return_hint, env, &env.type_bindings()).unwrap_or_err_ty()
+                Type::from_hint(return_hint, env, &env.type_bindings()).unwrap_or_err_ty()
             };
 
             (diagnostics, ty)
         }
-        None => (diagnostics, RuntimeType::Top),
+        None => (diagnostics, Type::Top),
     }
 }
 
-fn subst_ty_vars(ty: &RuntimeType, ty_var_env: &TypeVarEnv) -> RuntimeType {
+fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
-        RuntimeType::Error(_) | RuntimeType::Top | RuntimeType::String | RuntimeType::Int => {
-            ty.clone()
-        }
-        RuntimeType::List(elem_ty) => {
-            RuntimeType::List(Box::new(subst_ty_vars(elem_ty, ty_var_env)))
-        }
-        RuntimeType::Fun {
+        Type::Error(_) | Type::Top | Type::String | Type::Int => ty.clone(),
+        Type::List(elem_ty) => Type::List(Box::new(subst_ty_vars(elem_ty, ty_var_env))),
+        Type::Fun {
             type_params,
             params,
             return_,
@@ -825,14 +814,14 @@ fn subst_ty_vars(ty: &RuntimeType, ty_var_env: &TypeVarEnv) -> RuntimeType {
                 .collect();
             let return_ = subst_ty_vars(return_, ty_var_env);
 
-            RuntimeType::Fun {
+            Type::Fun {
                 type_params: type_params.clone(),
                 params,
                 return_: Box::new(return_),
                 name: name.clone(),
             }
         }
-        RuntimeType::UserDefined { kind, name, args } => RuntimeType::UserDefined {
+        Type::UserDefined { kind, name, args } => Type::UserDefined {
             kind: kind.clone(),
             name: name.clone(),
             args: args
@@ -840,37 +829,30 @@ fn subst_ty_vars(ty: &RuntimeType, ty_var_env: &TypeVarEnv) -> RuntimeType {
                 .map(|arg| subst_ty_vars(arg, ty_var_env))
                 .collect(),
         },
-        RuntimeType::TypeParameter(name) => {
+        Type::TypeParameter(name) => {
             match ty_var_env.get(name) {
-                Some(ty_var_val) => ty_var_val
-                    .as_ref()
-                    .cloned()
-                    .unwrap_or(RuntimeType::no_value()),
+                Some(ty_var_val) => ty_var_val.as_ref().cloned().unwrap_or(Type::no_value()),
                 None => ty.clone(), // TODO: define an error type
             }
         }
     }
 }
 
-fn unify_and_solve_ty(
-    expected_ty: &RuntimeType,
-    actual_ty: &RuntimeType,
-    ty_var_env: &mut TypeVarEnv,
-) {
+fn unify_and_solve_ty(expected_ty: &Type, actual_ty: &Type, ty_var_env: &mut TypeVarEnv) {
     match (expected_ty, actual_ty) {
-        (RuntimeType::TypeParameter(n), _) => {
+        (Type::TypeParameter(n), _) => {
             ty_var_env.insert(n.clone(), Some(actual_ty.clone()));
         }
-        (RuntimeType::List(expected_elem_ty), RuntimeType::List(actual_elem_ty)) => {
+        (Type::List(expected_elem_ty), Type::List(actual_elem_ty)) => {
             unify_and_solve_ty(expected_elem_ty, actual_elem_ty, ty_var_env)
         }
         (
-            RuntimeType::Fun {
+            Type::Fun {
                 params: expected_params,
                 return_: expected_return,
                 ..
             },
-            RuntimeType::Fun {
+            Type::Fun {
                 params: actual_params,
                 return_: actual_return,
                 ..
@@ -882,12 +864,12 @@ fn unify_and_solve_ty(
             }
         }
         (
-            RuntimeType::UserDefined {
+            Type::UserDefined {
                 kind: expected_kind,
                 name: expected_name,
                 args: expected_args,
             },
-            RuntimeType::UserDefined {
+            Type::UserDefined {
                 kind: actual_kind,
                 name: actual_name,
                 args: actual_args,
@@ -907,7 +889,7 @@ fn unify_and_solve_hint(
     env: &Env,
     hint: &TypeHint,
     position: &Position,
-    ty: &RuntimeType,
+    ty: &Type,
     ty_var_env: &mut TypeVarEnv,
 ) -> Result<(), Diagnostic> {
     let hint_name = &hint.sym.name;
@@ -946,7 +928,7 @@ fn unify_and_solve_hint(
 
     if hint_name.name == "List" && hint.args.len() == 1 {
         match ty {
-            RuntimeType::List(elem_ty) => {
+            Type::List(elem_ty) => {
                 return unify_and_solve_hint(env, &hint.args[0], position, elem_ty, ty_var_env);
             }
             _ => {
@@ -968,7 +950,7 @@ fn unify_and_solve_hint(
     }
 
     match ty {
-        RuntimeType::UserDefined { name, args, .. } if name.name == hint_name.name => {
+        Type::UserDefined { name, args, .. } if name.name == hint_name.name => {
             // TODO: stop assuming that all types are covariant.
             for (hint_arg, arg) in hint.args.iter().zip(args) {
                 unify_and_solve_hint(env, hint_arg, position, arg, ty_var_env)?;

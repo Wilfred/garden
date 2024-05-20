@@ -4,7 +4,7 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::BlockBindings;
-use crate::runtime_type::RuntimeType;
+use crate::runtime_type::Type;
 use crate::runtime_type::TypeDefKind;
 use crate::types::TypeDef;
 use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
@@ -23,14 +23,11 @@ pub(crate) enum Value {
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
-    List {
-        items: Vec<Value>,
-        elem_type: RuntimeType,
-    },
+    List { items: Vec<Value>, elem_type: Type },
     /// A value in a user-defined enum.
     Enum {
         type_name: TypeName,
-        runtime_type: RuntimeType,
+        runtime_type: Type,
         variant_idx: usize,
         payload: Option<Box<Value>>,
     },
@@ -45,7 +42,7 @@ pub(crate) enum Value {
     Struct {
         type_name: TypeName,
         fields: Vec<(SymbolName, Value)>,
-        runtime_type: RuntimeType,
+        runtime_type: Type,
     },
 }
 
@@ -58,7 +55,7 @@ impl Value {
             type_name: TypeName {
                 name: "Unit".to_owned(),
             },
-            runtime_type: RuntimeType::unit(),
+            runtime_type: Type::unit(),
             variant_idx: 0,
             payload: None,
         }
@@ -71,14 +68,14 @@ impl Value {
             type_name: TypeName {
                 name: "Bool".to_owned(),
             },
-            runtime_type: RuntimeType::bool(),
+            runtime_type: Type::bool(),
             variant_idx: if b { 0 } else { 1 },
             payload: None,
         }
     }
 
     pub(crate) fn ok(v: Value, env: &Env) -> Self {
-        let value_type = RuntimeType::from_value(&v, env, &env.type_bindings());
+        let value_type = Type::from_value(&v, env, &env.type_bindings());
 
         // We can assume that Result is always defined because it's in the
         // prelude.
@@ -88,18 +85,18 @@ impl Value {
             },
             variant_idx: 0,
             payload: Some(Box::new(v)),
-            runtime_type: RuntimeType::UserDefined {
+            runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
                     name: "Result".to_owned(),
                 },
-                args: vec![value_type, RuntimeType::no_value()],
+                args: vec![value_type, Type::no_value()],
             },
         }
     }
 
     pub(crate) fn err(v: Value, env: &Env) -> Self {
-        let value_type = RuntimeType::from_value(&v, env, &env.type_bindings());
+        let value_type = Type::from_value(&v, env, &env.type_bindings());
 
         // We can assume that Result is always defined because it's in the
         // prelude.
@@ -107,12 +104,12 @@ impl Value {
             type_name: TypeName {
                 name: "Result".to_owned(),
             },
-            runtime_type: RuntimeType::UserDefined {
+            runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
                     name: "Result".to_owned(),
                 },
-                args: vec![RuntimeType::no_value(), value_type],
+                args: vec![Type::no_value(), value_type],
             },
             variant_idx: 1,
             payload: Some(Box::new(v)),

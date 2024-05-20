@@ -18,7 +18,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::json_session::{Response, ResponseKind};
-use crate::runtime_type::{is_subtype, RuntimeType, TypeDefKind, TypeVarEnv};
+use crate::runtime_type::{is_subtype, Type, TypeDefKind, TypeVarEnv};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
@@ -418,9 +418,9 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                             env,
                             &enum_info.name_sym.name,
                             variant_idx,
-                            &RuntimeType::Top,
+                            &Type::Top,
                         )
-                        .unwrap_or(RuntimeType::no_value());
+                        .unwrap_or(Type::no_value());
 
                         Value::Enum {
                             type_name: enum_info.name_sym.name.clone(),
@@ -540,7 +540,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                RuntimeType::from_value(value, env, &env.type_bindings()),
+                Type::from_value(value, env, &env.type_bindings()),
             ),
             position: symbol.position.clone(),
         });
@@ -777,7 +777,7 @@ fn eval_let(
         .expect("Popped an empty value stack for let value");
 
     if let Some(hint) = hint {
-        let expected_ty = match RuntimeType::from_hint(hint, env, &env.type_bindings()) {
+        let expected_ty = match Type::from_hint(hint, env, &env.type_bindings()) {
             Ok(ty) => ty,
             Err(e) => {
                 return Err(ErrorInfo {
@@ -820,7 +820,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.to_string(),
-        RuntimeType::from_value(value, env, &env.type_bindings()),
+        Type::from_value(value, env, &env.type_bindings()),
         value.display(env)
     ))
 }
@@ -1062,8 +1062,8 @@ fn check_arity(
 }
 
 /// Check that `value` has `expected` type.
-fn check_type(value: &Value, expected: &RuntimeType, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = RuntimeType::from_value(value, env, &env.type_bindings());
+fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
+    let value_type = Type::from_value(value, env, &env.type_bindings());
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -1400,7 +1400,7 @@ fn eval_builtin_call(
                     Value::ok(
                         Value::List {
                             items,
-                            elem_type: RuntimeType::string_list(),
+                            elem_type: Type::string_list(),
                         },
                         env,
                     )
@@ -1583,7 +1583,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::new();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), Some(RuntimeType::Top));
+                type_bindings.insert(type_param.name.clone(), Some(Type::Top));
             }
 
             bindings.push(BlockBindings {
@@ -1622,7 +1622,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::new();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(RuntimeType::Top));
+                type_bindings.insert(param_sym.name.clone(), Some(Type::Top));
             }
 
             check_param_types(
@@ -1687,9 +1687,9 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &RuntimeType::from_value(&arg_values[0], env, &stack_frame.type_bindings),
+                &Type::from_value(&arg_values[0], env, &stack_frame.type_bindings),
             )
-            .unwrap_or(RuntimeType::no_value());
+            .unwrap_or(Type::no_value());
 
             let value = Value::Enum {
                 type_name: type_name.clone(),
@@ -1729,8 +1729,8 @@ fn enum_value_runtime_type(
     env: &Env,
     type_name: &TypeName,
     variant_idx: usize,
-    payload_value_type: &RuntimeType,
-) -> Option<RuntimeType> {
+    payload_value_type: &Type,
+) -> Option<Type> {
     let TypeDef::Enum(enum_info) = env.get_type_def(type_name)? else {
         return None;
     };
@@ -1746,22 +1746,22 @@ fn enum_value_runtime_type(
                 if type_param.name == hint.sym.name {
                     args.push(payload_value_type.clone());
                 } else {
-                    args.push(RuntimeType::no_value());
+                    args.push(Type::no_value());
                 }
             }
 
-            Some(RuntimeType::UserDefined {
+            Some(Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: type_name.clone(),
                 args,
             })
         }
         None => {
-            let args = vec![RuntimeType::no_value(); enum_info.type_params.len()];
+            let args = vec![Type::no_value(); enum_info.type_params.len()];
 
             // This variant does not have a payload. Resolve all the
             // type parameters in this enum definition to NoValue.
-            Some(RuntimeType::UserDefined {
+            Some(Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: type_name.clone(),
                 args,
@@ -1780,7 +1780,7 @@ fn check_param_types(
 ) -> Result<(), ErrorInfo> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match RuntimeType::from_hint(param_hint, env, type_bindings) {
+            let param_ty = match Type::from_hint(param_hint, env, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err(ErrorInfo {
@@ -1915,7 +1915,7 @@ fn eval_method_call(
     let mut type_bindings = TypeVarEnv::new();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(RuntimeType::Top));
+        type_bindings.insert(type_param.name.clone(), Some(Type::Top));
     }
 
     Ok(Some(StackFrame {
@@ -1960,7 +1960,7 @@ fn eval_builtin_method_call(
                     // type as the existing list items.
                     stack_frame.evalled_values.push(Value::List {
                         items: new_items,
-                        elem_type: RuntimeType::from_value(
+                        elem_type: Type::from_value(
                             &arg_values[0],
                             env,
                             &stack_frame.type_bindings,
@@ -2476,7 +2476,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::ListLiteral(items) => {
                     if done_children {
                         let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
-                        let mut element_type = RuntimeType::no_value();
+                        let mut element_type = Type::no_value();
 
                         for _ in 0..items.len() {
                             let element = stack_frame.evalled_values.pop().expect(
@@ -2485,7 +2485,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             // TODO: check that all elements are of a compatible type.
                             // [1, None] should be an error.
                             element_type =
-                                RuntimeType::from_value(&element, env, &stack_frame.type_bindings);
+                                Type::from_value(&element, env, &stack_frame.type_bindings);
                             list_values.push(element);
                         }
 
@@ -2836,16 +2836,13 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();
 
-                    let return_ty = match RuntimeType::from_hint(
-                        return_hint,
-                        env,
-                        &stack_frame.type_bindings,
-                    ) {
-                        Ok(ty) => ty,
-                        Err(e) => {
-                            return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
-                        }
-                    };
+                    let return_ty =
+                        match Type::from_hint(return_hint, env, &stack_frame.type_bindings) {
+                            Ok(ty) => ty,
+                            Err(e) => {
+                                return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
+                            }
+                        };
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());
@@ -3006,7 +3003,7 @@ fn eval_struct_value(
         if type_params.contains(&field_info.hint.sym.name) {
             type_arg_bindings.insert(
                 field_info.hint.sym.name.clone(),
-                RuntimeType::from_value(&field_value, env, &env.type_bindings()),
+                Type::from_value(&field_value, env, &env.type_bindings()),
             );
         }
 
@@ -3019,11 +3016,11 @@ fn eval_struct_value(
         let param_value = type_arg_bindings
             .get(&type_param.name)
             .cloned()
-            .unwrap_or(RuntimeType::no_value());
+            .unwrap_or(Type::no_value());
         type_args.push(param_value);
     }
 
-    let runtime_type = RuntimeType::UserDefined {
+    let runtime_type = Type::UserDefined {
         kind: TypeDefKind::Struct,
         name: type_sym.name.clone(),
         args: type_args,
@@ -3058,7 +3055,7 @@ fn eval_match_cases(
     else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            RuntimeType::from_value(&scrutinee_value, env, &stack_frame.type_bindings),
+            Type::from_value(&scrutinee_value, env, &stack_frame.type_bindings),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
@@ -3298,7 +3295,7 @@ mod tests {
             value,
             Value::List {
                 items: vec![Value::Integer(3), Value::Integer(12)],
-                elem_type: RuntimeType::Int
+                elem_type: Type::Int
             }
         );
     }
@@ -3372,7 +3369,7 @@ mod tests {
             value,
             Value::List {
                 items: vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
-                elem_type: RuntimeType::Int
+                elem_type: Type::Int
             }
         );
     }

@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::eval_exprs;
-use crate::runtime_type::RuntimeType;
+use crate::runtime_type::Type;
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::Value;
 use crate::version::VERSION;
@@ -599,7 +599,7 @@ pub(crate) fn run_command<T: Write>(
                         write!(
                             buf,
                             "{}",
-                            RuntimeType::from_value(&value, env, &env.type_bindings())
+                            Type::from_value(&value, env, &env.type_bindings())
                         )
                         .unwrap();
                     }

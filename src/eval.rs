@@ -22,8 +22,9 @@ use crate::json_session::{Response, ResponseKind};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind, Pattern,
-    SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind,
+    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem,
+    TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -1819,11 +1820,11 @@ fn eval_method_call(
     stack_frame: &mut StackFrame,
     receiver_pos: &Position,
     meth_name: &Symbol,
-    args: &[Expression],
+    paren_args: &ParenthesizedArguments,
 ) -> Result<Option<StackFrame>, ErrorInfo> {
     let mut arg_values: Vec<Value> = vec![];
     let mut arg_positions: Vec<Position> = vec![];
-    for arg in args {
+    for arg in &paren_args.arguments {
         arg_values.push(
             stack_frame
                 .evalled_values
@@ -2661,11 +2662,11 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         fun_info,
                     ));
                 }
-                Expression_::Call(receiver, ref args) => {
+                Expression_::Call(receiver, paren_args) => {
                     if done_children {
                         let mut arg_values = vec![];
                         let mut arg_positions = vec![];
-                        for arg in args {
+                        for arg in &paren_args.arguments {
                             arg_values.push(
                                 stack_frame
                                     .evalled_values
@@ -2714,7 +2715,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             .exprs_to_eval
                             .push((true, Expression::new(expr_position, expr_copy)));
 
-                        for arg in args {
+                        for arg in &paren_args.arguments {
                             stack_frame.exprs_to_eval.push((false, arg.clone()));
                         }
                         // Push the receiver after arguments, so
@@ -2724,14 +2725,14 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         stack_frame.exprs_to_eval.push((false, *receiver.clone()));
                     }
                 }
-                Expression_::MethodCall(receiver_expr, meth_name, args) => {
+                Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
                     if done_children {
                         match eval_method_call(
                             env,
                             &mut stack_frame,
                             &receiver_expr.pos,
                             &meth_name,
-                            &args,
+                            &paren_args,
                         ) {
                             Ok(Some(new_stack_frame)) => {
                                 env.stack.push(stack_frame);
@@ -2758,7 +2759,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             .exprs_to_eval
                             .push((true, Expression::new(expr_position, expr_copy)));
 
-                        for arg in args {
+                        for arg in &paren_args.arguments {
                             stack_frame.exprs_to_eval.push((false, arg.clone()));
                         }
                         // Push the receiver after arguments, so

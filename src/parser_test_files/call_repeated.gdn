@@ -15,12 +15,16 @@ foo()();
 //                     <uninit>,
 //                 ),
 //             },
-//             [],
+//             ParenthesizedArguments {
+//                 arguments: [],
+//             },
 //         ),
 //         id: OnceCell(
 //             <uninit>,
 //         ),
 //     },
-//     [],
+//     ParenthesizedArguments {
+//         arguments: [],
+//     },
 // )
 

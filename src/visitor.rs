@@ -142,17 +142,17 @@ pub(crate) trait Visitor {
             Expression_::Variable(var) => {
                 self.visit_expr_variable(var);
             }
-            Expression_::Call(recv, args) => {
+            Expression_::Call(recv, paren_args) => {
                 // TODO: custom method for this variant
                 self.visit_expr(recv);
-                for arg in args {
+                for arg in &paren_args.arguments {
                     self.visit_expr(arg);
                 }
             }
-            Expression_::MethodCall(recv, _, args) => {
+            Expression_::MethodCall(recv, _, paren_args) => {
                 // TODO: custom method for this variant
                 self.visit_expr(recv);
-                for arg in args {
+                for arg in &paren_args.arguments {
                     self.visit_expr(arg);
                 }
             }

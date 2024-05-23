@@ -492,11 +492,11 @@ fn parse_comma_separated_exprs(
 fn parse_call_arguments(
     src: &str,
     tokens: &mut TokenStream,
-) -> Result<Vec<Expression>, ParseError> {
+) -> Result<ParenthesizedArguments, ParseError> {
     require_token(tokens, "(")?;
-    let args = parse_comma_separated_exprs(src, tokens, ")")?;
+    let arguments = parse_comma_separated_exprs(src, tokens, ")")?;
     require_token(tokens, ")")?;
-    Ok(args)
+    Ok(ParenthesizedArguments { arguments })
 }
 
 /// Parse an expression, and handle trailing syntax (function calls,

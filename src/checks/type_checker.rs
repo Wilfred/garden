@@ -446,9 +446,10 @@ fn check_expr(
                 None => Type::Error("Unbound variable".to_owned()),
             }
         }
-        Expression_::Call(recv, args) => {
+        Expression_::Call(recv, paren_args) => {
             let recv_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
-            let arg_tys = args
+            let arg_tys = paren_args
+                .arguments
                 .iter()
                 .map(|arg| {
                     (
@@ -470,7 +471,7 @@ fn check_expr(
                         None => "This function".to_owned(),
                     };
 
-                    if params.len() != args.len() {
+                    if params.len() != paren_args.arguments.len() {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
@@ -478,7 +479,7 @@ fn check_expr(
                                 formatted_name,
                                 params.len(),
                                 if params.len() == 1 { "" } else { "s" },
-                                args.len()
+                                paren_args.arguments.len()
                             ),
                             position: recv.pos.clone(),
                         });
@@ -521,8 +522,9 @@ fn check_expr(
                 }
             }
         }
-        Expression_::MethodCall(recv, sym, args) => {
-            let arg_tys: Vec<(Type, Position)> = args
+        Expression_::MethodCall(recv, sym, paren_args) => {
+            let arg_tys: Vec<(Type, Position)> = paren_args
+                .arguments
                 .iter()
                 .map(|arg| {
                     (
@@ -548,7 +550,7 @@ fn check_expr(
                     let Some(fun_info) = method_info.fun_info() else {
                         return Type::error("This method has no fun_info");
                     };
-                    if fun_info.params.len() != args.len() {
+                    if fun_info.params.len() != paren_args.arguments.len() {
                         warnings.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
@@ -557,7 +559,7 @@ fn check_expr(
                                 sym.name,
                                 fun_info.params.len(),
                                 if fun_info.params.len() == 1 { "" } else { "s" },
-                                args.len()
+                                paren_args.arguments.len()
                             ),
                             position: sym.position.clone(),
                         });

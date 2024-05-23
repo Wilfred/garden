@@ -175,6 +175,11 @@ pub struct Pattern {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct ParenthesizedArguments {
+    pub arguments: Vec<Expression>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expression_ {
     /// ```garden
     /// match (x) {
@@ -243,11 +248,11 @@ pub enum Expression_ {
     /// ```garden
     /// x();
     /// ```
-    Call(Box<Expression>, Vec<Expression>),
+    Call(Box<Expression>, ParenthesizedArguments),
     /// ```garden
     /// foo.bar(x, y)
     /// ```
-    MethodCall(Box<Expression>, Symbol, Vec<Expression>),
+    MethodCall(Box<Expression>, Symbol, ParenthesizedArguments),
     /// ```garden
     /// foo.bar
     /// ```

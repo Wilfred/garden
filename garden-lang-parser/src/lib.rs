@@ -521,7 +521,7 @@ fn parse_simple_expression_with_trailing(
             Some(token) if token.text == "(" => {
                 let arguments = parse_call_arguments(src, tokens)?;
                 expr = Expression::new(
-                    expr.pos.clone(),
+                    Position::merge(&expr.pos, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
                 );
             }
@@ -533,13 +533,12 @@ fn parse_simple_expression_with_trailing(
                     // TODO: just treat a method call as a call of a dot access.
                     let arguments = parse_call_arguments(src, tokens)?;
                     expr = Expression::new(
-                        // proper position here.
-                        expr.pos.clone(),
+                        Position::merge(&expr.pos, &arguments.close_paren),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
                     );
                 } else {
                     expr = Expression::new(
-                        expr.pos.clone(),
+                        Position::merge(&expr.pos, &variable.position),
                         Expression_::DotAccess(Box::new(expr), variable),
                     );
                 }

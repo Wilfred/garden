@@ -17,5 +17,5 @@ fun<T> takes_options(_x: Option<T>, _y: Option<T>) {}
 // 
 // --> src/check_test_files/type_error_solve_generics.gdn:10
 //     takes_options(Some("foo"), Some(123));
-//                   ^^^^
+//                   ^^^^^^^^^^^
 

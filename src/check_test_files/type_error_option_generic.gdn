@@ -10,5 +10,5 @@
 // 
 // --> src/check_test_files/type_error_option_generic.gdn:3
 //     value.or_exception() + 1;
-//     ^^^^^
+//     ^^^^^^^^^^^^^^^^^^^^
 

@@ -229,7 +229,7 @@ fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
     let body = parse_block(src, tokens, true)?;
 
     Ok(Expression::new(
-        while_token.position,
+        Position::merge(&while_token.position, &body.close_brace),
         Expression_::While(Box::new(condition), body),
     ))
 }
@@ -244,17 +244,17 @@ fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let return_token = require_token(tokens, "return")?;
 
     if peeked_symbol_is(tokens, ";") {
-        let _ = require_token(tokens, ";")?;
+        let semicolon = require_token(tokens, ";")?;
         return Ok(Expression::new(
-            return_token.position,
+            Position::merge(&return_token.position, &semicolon.position),
             Expression_::Return(None),
         ));
     }
 
     let expr = parse_inline_expression(src, tokens)?;
-    let _ = require_end_token(tokens, ";")?;
+    let semicolon = require_end_token(tokens, ";")?;
     Ok(Expression::new(
-        return_token.position,
+        Position::merge(&return_token.position, &semicolon.position),
         Expression_::Return(Some(Box::new(expr))),
     ))
 }
@@ -303,8 +303,11 @@ fn unescape_string(src: &str) -> String {
 fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     if let Some(token) = tokens.peek() {
         if token.text == "{" {
-            let exprs = parse_block(src, tokens, false)?;
-            return Ok(Expression::new(token.position, Expression_::Block(exprs)));
+            let block = parse_block(src, tokens, false)?;
+            return Ok(Expression::new(
+                Position::merge(&block.open_brace, &block.close_brace),
+                Expression_::Block(block),
+            ));
         }
 
         if token.text == "(" {
@@ -1390,10 +1393,10 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(src, tokens)?;
-    let _ = require_end_token(tokens, ";")?;
+    let semicolon = require_end_token(tokens, ";")?;
 
     Ok(Expression::new(
-        let_token.position, // TODO: this should be a larger span.
+        Position::merge(&let_token.position, &semicolon.position),
         Expression_::Let(variable, hint, Box::new(expr)),
     ))
 }
@@ -1403,10 +1406,10 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(src, tokens)?;
-    let _ = require_end_token(tokens, ";")?;
+    let semicolon = require_end_token(tokens, ";")?;
 
     Ok(Expression::new(
-        variable.position.clone(),
+        Position::merge(&variable.position, &semicolon.position),
         Expression_::Assign(variable, Box::new(expr)),
     ))
 }

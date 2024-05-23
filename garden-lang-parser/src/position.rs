@@ -46,12 +46,12 @@ impl Position {
 
     /// Return the merged position of `first` and `second`. Assumes
     /// that `second` occurs after `first`.
-    pub fn merge(first: Self, second: Self) -> Self {
+    pub fn merge(first: &Self, second: &Self) -> Self {
         Self {
             start_offset: first.start_offset,
             end_offset: second.end_offset,
             line_number: first.line_number,
-            path: first.path,
+            path: first.path.clone(),
         }
     }
 

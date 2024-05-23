@@ -143,7 +143,7 @@ fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression,
     let close_bracket = require_token(tokens, "]")?;
 
     Ok(Expression::new(
-        Position::merge(open_bracket.position, close_bracket.position),
+        Position::merge(&open_bracket.position, &close_bracket.position),
         Expression_::ListLiteral(items),
     ))
 }
@@ -392,7 +392,7 @@ fn parse_struct_literal(src: &str, tokens: &mut TokenStream) -> Result<Expressio
     let close_brace = require_token(tokens, "}")?;
 
     Ok(Expression::new(
-        Position::merge(open_brace.position, close_brace.position),
+        Position::merge(&open_brace.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
     ))
 }
@@ -994,7 +994,7 @@ fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     let (args, close_pos) = parse_type_arguments(tokens)?;
 
     let position = match close_pos {
-        Some(close_pos) => Position::merge(sym.position.clone(), close_pos),
+        Some(close_pos) => Position::merge(&sym.position, &close_pos),
         None => sym.position.clone(),
     };
 

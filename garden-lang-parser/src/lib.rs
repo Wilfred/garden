@@ -165,7 +165,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     };
 
     Ok(Expression::new(
-        fun_keyword.position,
+        Position::merge(&fun_keyword.position, &body.close_brace),
         Expression_::FunLiteral(FunInfo {
             src_string,
             params,
@@ -208,8 +208,13 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
         None
     };
 
+    let last_brace_pos = match &else_body {
+        Some(else_body) => &else_body.close_brace,
+        None => &then_body.close_brace,
+    };
+
     Ok(Expression::new(
-        if_token.position,
+        Position::merge(&if_token.position, last_brace_pos),
         Expression_::If(Box::new(condition), then_body, else_body),
     ))
 }
@@ -425,10 +430,10 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
         cases.push((pattern, Box::new(case_expr)));
     }
 
-    require_token(tokens, "}")?;
+    let close_paren = require_token(tokens, "}")?;
 
     Ok(Expression::new(
-        match_keyword.position,
+        Position::merge(&match_keyword.position, &close_paren.position),
         Expression_::Match(Box::new(scrutinee), cases),
     ))
 }
@@ -676,7 +681,7 @@ fn parse_simple_expression_or_binop(
 
             let rhs_expr = parse_simple_expression_with_trailing(src, tokens)?;
             expr = Expression::new(
-                expr.pos.clone(),
+                Position::merge(&expr.pos, &rhs_expr.pos),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
             );
         }

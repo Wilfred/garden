@@ -16,7 +16,9 @@ foo()();
 //                 ),
 //             },
 //             ParenthesizedArguments {
+//                 open_paren: Position { ... },
 //                 arguments: [],
+//                 close_paren: Position { ... },
 //             },
 //         ),
 //         id: OnceCell(
@@ -24,7 +26,9 @@ foo()();
 //         ),
 //     },
 //     ParenthesizedArguments {
+//         open_paren: Position { ... },
 //         arguments: [],
+//         close_paren: Position { ... },
 //     },
 // )
 

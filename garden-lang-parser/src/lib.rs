@@ -493,10 +493,15 @@ fn parse_call_arguments(
     src: &str,
     tokens: &mut TokenStream,
 ) -> Result<ParenthesizedArguments, ParseError> {
-    require_token(tokens, "(")?;
+    let open_paren_token = require_token(tokens, "(")?;
     let arguments = parse_comma_separated_exprs(src, tokens, ")")?;
-    require_token(tokens, ")")?;
-    Ok(ParenthesizedArguments { arguments })
+    let close_paren_token = require_token(tokens, ")")?;
+
+    Ok(ParenthesizedArguments {
+        arguments,
+        open_paren: open_paren_token.position,
+        close_paren: close_paren_token.position,
+    })
 }
 
 /// Parse an expression, and handle trailing syntax (function calls,
@@ -528,6 +533,7 @@ fn parse_simple_expression_with_trailing(
                     // TODO: just treat a method call as a call of a dot access.
                     let arguments = parse_call_arguments(src, tokens)?;
                     expr = Expression::new(
+                        // proper position here.
                         expr.pos.clone(),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
                     );

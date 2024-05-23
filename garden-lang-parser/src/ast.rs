@@ -176,7 +176,9 @@ pub struct Pattern {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParenthesizedArguments {
+    pub open_paren: Position,
     pub arguments: Vec<Expression>,
+    pub close_paren: Position,
 }
 
 #[derive(Debug, Clone, PartialEq)]

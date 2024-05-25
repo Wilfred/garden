@@ -573,7 +573,15 @@ If called with a prefix, stop the previous session."
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 
-  (setq font-lock-defaults '(garden-mode-font-lock-keywords)))
+  (setq font-lock-defaults '(garden-mode-font-lock-keywords))
+
+  (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
+
+(defun garden-mode-eldoc (_callback &rest _)
+  "Show information for the symbol at point."
+  (let ((sym (symbol-at-point)))
+    (when sym
+      (format "%S" sym))))
 
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))

@@ -202,6 +202,11 @@ fn check_expr(
                 }
 
                 let Some(value) = env.file_scope.get(&pattern.symbol.name) else {
+                    warnings.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!("No such type `{}`.", pattern.symbol.name),
+                        position: pattern.symbol.position.clone(),
+                    });
                     continue;
                 };
 

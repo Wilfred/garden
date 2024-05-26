@@ -17,12 +17,12 @@ use strsim::normalized_levenshtein;
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
-use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv};
+use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{Response, ResponseKind};
 use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, BuiltinMethodKind, FunInfo, MethodInfo, MethodKind,
+    BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
     ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem,
     TypeHint, TypeName, TypeSymbol,
 };
@@ -410,9 +410,15 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 // Add the values in the enum to the value environment.
                 for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
                     let enum_value = if variant_sym.payload_hint.is_some() {
+                        let runtime_type = enum_constructor_type(
+                            env,
+                            enum_info,
+                            variant_sym.payload_hint.as_ref().unwrap(),
+                        );
                         Value::EnumConstructor {
                             type_name: enum_info.name_sym.name.clone(),
                             variant_idx,
+                            runtime_type,
                         }
                     } else {
                         let runtime_type = enum_value_runtime_type(
@@ -1674,6 +1680,7 @@ fn eval_call(
         Value::EnumConstructor {
             type_name,
             variant_idx,
+            ..
         } => {
             check_arity(
                 &SymbolName(type_name.name.clone()),
@@ -1724,6 +1731,40 @@ fn eval_call(
     }
 
     Ok(None)
+}
+
+/// Given an enum constructor, e.g. `Some`, return the function type
+/// it represents (e.g. `T -> Option<T>` in this case).
+fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHint) -> Type {
+    let type_params = enum_info
+        .type_params
+        .iter()
+        .map(|sym| sym.name.clone())
+        .collect();
+
+    let enum_type_param_names: HashSet<&TypeName> =
+        enum_info.type_params.iter().map(|tp| &tp.name).collect();
+
+    let arg_ty = if enum_type_param_names.contains(&payload_hint.sym.name) {
+        // Enum variant payload is a generic type.
+        Type::TypeParameter(payload_hint.sym.name.clone())
+    } else {
+        // Enum variant payload is a concrete type.
+        Type::from_hint(payload_hint, env, &env.type_bindings()).unwrap_or_err_ty()
+    };
+
+    let return_ = Type::UserDefined {
+        kind: TypeDefKind::Enum,
+        name: enum_info.name_sym.name.clone(),
+        args: vec![arg_ty],
+    };
+
+    Type::Fun {
+        name: None,
+        type_params,
+        params: vec![],
+        return_: Box::new(return_),
+    }
 }
 
 fn enum_value_runtime_type(

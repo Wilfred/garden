@@ -35,6 +35,7 @@ pub(crate) enum Value {
     // variant, and returns an enum value.
     EnumConstructor {
         type_name: TypeName,
+        runtime_type: Type,
         variant_idx: usize,
     },
     /// A value with the type of a user-defined struct. Fields are
@@ -229,6 +230,7 @@ impl Value {
             Value::EnumConstructor {
                 type_name,
                 variant_idx,
+                ..
             } => {
                 let type_ = match env.get_type_def(type_name) {
                     Some(type_) => type_,

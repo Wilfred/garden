@@ -1,0 +1,13 @@
+fun foo(): Int {
+    Some;
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected to return `Int` but got `Fun(T)<(T), Option<T>>`.
+// 
+// --> src/check_test_files/type_error_using_enum_constructor.gdn:1
+// fun foo(): Int {
+//            ^^^
+

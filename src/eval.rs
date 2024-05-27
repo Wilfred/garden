@@ -1753,16 +1753,22 @@ fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHin
         Type::from_hint(payload_hint, env, &env.type_bindings()).unwrap_or_err_ty()
     };
 
+    let type_args: Vec<Type> = enum_info
+        .type_params
+        .iter()
+        .map(|tp| Type::TypeParameter(tp.name.clone()))
+        .collect();
+
     let return_ = Type::UserDefined {
         kind: TypeDefKind::Enum,
         name: enum_info.name_sym.name.clone(),
-        args: vec![arg_ty],
+        args: type_args,
     };
 
     Type::Fun {
         name: None,
         type_params,
-        params: vec![],
+        params: vec![arg_ty],
         return_: Box::new(return_),
     }
 }

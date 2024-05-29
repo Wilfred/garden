@@ -1,0 +1,17 @@
+fun<T> id(v: T): T {
+    v;
+}
+
+{
+    id(1).no_such_meth();
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `Int` has no method `no_such_meth`.
+// 
+// --> src/check_test_files/type_error_after_identity_fun.gdn:6
+//     id(1).no_such_meth();
+//           ^^^^^^^^^^^^
+

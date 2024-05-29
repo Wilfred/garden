@@ -2,7 +2,7 @@ fun foo(): List<Int> {
     [""]; // should error
 }
 
-fun main(args: List): Unit {
+fun main(args: List<String>): Unit {
     foo();
     return;
 }

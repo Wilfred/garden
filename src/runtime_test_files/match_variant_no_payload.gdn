@@ -1,0 +1,14 @@
+fun takes_opt(v: Option<Int>): Int {
+    match (v) {
+        Some(i) => i + 1,
+        None => 123,
+    }
+}
+
+fun main(_args: List<String>): Unit {
+    dbg(takes_opt(None));
+}
+
+// args: run
+// expected stdout: 123
+

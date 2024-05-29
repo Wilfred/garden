@@ -3138,21 +3138,28 @@ fn eval_match_cases(
             ));
         };
 
-        let Value::EnumConstructor {
-            type_name: pattern_type_name,
-            variant_idx: pattern_variant_idx,
-            ..
-        } = value
-        else {
-            // TODO: error messages should include examples of valid code.
-            let msg = ErrorMessage(format!(
-                "Patterns must be enum variants, got `{}`",
-                value.display(env)
-            ));
-            return Err(EvalError::ResumableError(
-                pattern.symbol.position.clone(),
-                msg,
-            ));
+        let (pattern_type_name, pattern_variant_idx) = match value {
+            Value::Enum {
+                type_name,
+                variant_idx,
+                ..
+            } => (type_name, variant_idx),
+            Value::EnumConstructor {
+                type_name,
+                variant_idx,
+                ..
+            } => (type_name, variant_idx),
+            _ => {
+                // TODO: error messages should include examples of valid code.
+                let msg = ErrorMessage(format!(
+                    "Patterns must be enum variants, got `{}`",
+                    value.display(env)
+                ));
+                return Err(EvalError::ResumableError(
+                    pattern.symbol.position.clone(),
+                    msg,
+                ));
+            }
         };
 
         if value_type_name == pattern_type_name && value_variant_idx == pattern_variant_idx {

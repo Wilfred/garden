@@ -1,0 +1,17 @@
+{
+    let value = Some("foo");
+    match (value) {
+        Some(v) => v + 1,
+        None => {}
+    }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Int`, but got `String`.
+// 
+// --> src/check_test_files/type_error_option_match.gdn:4
+//         Some(v) => v + 1,
+//                    ^
+

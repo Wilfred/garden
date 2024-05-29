@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, Pattern, SymbolName,
-    ToplevelItem, TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, Pattern, Symbol,
+    SymbolName, ToplevelItem, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 
@@ -173,6 +173,58 @@ fn check_block(
     ty
 }
 
+fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Type {
+    let Some(scrutinee_ty_name) = scrutinee_ty.type_name() else {
+        return Type::error(
+            "No type name for match scrutinee, we should have errored elsewhere already.",
+        );
+    };
+
+    let Some(type_def) = env.get_type_def(&scrutinee_ty_name) else {
+        return Type::error("No type definition found with this type name.");
+    };
+
+    let TypeDef::Enum(enum_info) = type_def else {
+        return Type::error("Matching on a type that isn't an enum.");
+    };
+
+    let mut relevant_variant = None;
+    for variant in &enum_info.variants {
+        if variant.name_sym.name == pattern_sym.name {
+            relevant_variant = Some(variant.clone());
+        }
+    }
+
+    let Some(variant) = relevant_variant else {
+        return Type::error(format!(
+            "No variant found in `{}` named `{}`.",
+            scrutinee_ty_name, pattern_sym.name
+        ));
+    };
+
+    let Some(payload_hint) = variant.payload_hint else {
+        return Type::error("This enum variant does not have a payload.");
+    };
+
+    // If this is a variant like `Some(T)`, find the value for this
+    // generic parameter.
+    let Type::UserDefined { args, .. } = scrutinee_ty else {
+        return Type::error("Match scrutinee value is not an enum.");
+    };
+
+    // If the payload is a generic type from the enum definition, use
+    // the value for that generic from the value.
+    for (type_def_param, value_type_param) in type_def.params().iter().zip(args) {
+        if payload_hint.sym.name == type_def_param.name {
+            return value_type_param.clone();
+        }
+    }
+
+    // The payload is not a generic type, so the type hint is
+    // referring to a defined type.
+    Type::from_hint(&payload_hint, env, &env.type_bindings()).unwrap_or_err_ty()
+}
+
 fn check_expr(
     expr: &Expression,
     env: &mut Env,
@@ -194,7 +246,20 @@ fn check_expr(
             }
 
             for (pattern, case_expr) in cases {
+                bindings.enter_block();
+
+                if let Some(payload_sym) = &pattern.argument {
+                    if !payload_sym.name.is_underscore() {
+                        bindings.set(
+                            payload_sym.name.clone(),
+                            enum_payload_type(env, &scrutinee_ty, &pattern.symbol),
+                        );
+                    }
+                }
+
                 case_ty = check_expr(case_expr, env, bindings, warnings, expected_return_ty);
+
+                bindings.exit_block();
 
                 // Matching `_` works for any type.
                 if pattern.symbol.name.is_underscore() {

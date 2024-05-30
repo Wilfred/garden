@@ -209,16 +209,14 @@ the user entering a value in the *garden* buffer."
     buf))
 
 (defun garden--report-error (response-err-value)
-  (let* ((msg (plist-get response-err-value :message))
-         (stack (plist-get response-err-value :stack))
+  (let* ((stack (plist-get response-err-value :stack))
          (buf (garden--error-buffer)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (delete-region (point-min) (point-max))
 
         (when stack
-          (insert (ansi-color-apply stack) "\n"))
-        (insert msg)))
+          (insert (ansi-color-apply stack) "\n"))))
     buf))
 
 (defvar garden--output ""

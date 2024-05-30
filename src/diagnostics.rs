@@ -69,14 +69,6 @@ pub(crate) fn format_error_with_stack(
     res
 }
 
-pub(crate) fn format_error(
-    message: &ErrorMessage,
-    position: &Position,
-    src_string: &SourceString,
-) -> String {
-    format_diagnostic(message, position, Level::Error, src_string)
-}
-
 fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,

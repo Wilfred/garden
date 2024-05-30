@@ -8,7 +8,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::diagnostics::{format_error, format_parse_error, Diagnostic, Level};
+use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
 use crate::types::TypeDef;
@@ -132,22 +132,15 @@ fn handle_eval_request(
                 }
             }
             Err(EvalError::ResumableError(position, e)) => {
-                // TODO: print the whole stack.
                 // TODO: use the original SourceString rather than reconstructing.
-                let stack = Some(format_error(
-                    &e,
-                    &position,
-                    &SourceString {
-                        src: req.input,
-                        offset: 0,
-                    },
-                ));
+                let stack = format_error_with_stack(&e, &position, &env.stack);
+
                 Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
                         position: Some(position),
                         message: format!("Error: {}", e.0),
-                        stack,
+                        stack: Some(stack),
                     }),
                     warnings: vec![],
                 }

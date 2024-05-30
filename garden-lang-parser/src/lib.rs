@@ -861,7 +861,7 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
         }
     } else {
         return Err(ParseError::Incomplete {
-            position: Position::todo(),
+            position: test_token.position,
             message: ErrorMessage("Unfinished test definition".to_owned()),
         });
     };

@@ -142,7 +142,7 @@ pub(crate) fn lex_between<'a>(
         }
 
         // Match integers before binary operators, so -1 is treated as
-        // a single integer literal, not the tokens - followed by 1.
+        // a single integer literal, not the token - followed by 1.
         if let Some(integer_match) = INTEGER_RE.find(s) {
             tokens.push(Token {
                 position: Position {

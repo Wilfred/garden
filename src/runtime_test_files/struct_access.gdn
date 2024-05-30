@@ -8,6 +8,7 @@ fun get_x(foo: Foo): Int {
 
 fun main(args: List<String>): Unit {
     dbg(get_x(Foo { x: 1 + 2 }));
+    Unit;
 }
 
 // args: run

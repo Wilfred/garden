@@ -29,11 +29,15 @@ enum Result<T, E> {
 
 // Write an arbitrary value to stdout, along with debugging metadata.
 //
+// Returns the input, so you can use `dbg` in larger expressions
+// `foo(dbg(bar()))`.
+//
 // ```
 // dbg([1, 2]);
 // ```
-fun<T> dbg(value: T): Unit {
+fun<T> dbg(value: T): T {
     println(string_repr(value));
+    value;
 }
 
 // Raise an error.

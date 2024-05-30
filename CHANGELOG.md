@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+## Stdlib
+
+`dbg` now returns its argument, so it can be added to subexpressions.
+
 ## Checks
 
 Type checker now solves generics on arbitrary user-defined types.

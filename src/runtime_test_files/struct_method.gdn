@@ -9,6 +9,7 @@ fun (self: Foo) get_x(): Int {
 fun main(args: List<String>): Unit {
     let f = Foo { x: 123 };
     dbg(f.get_x());
+    Unit;
 }
 
 // args: run

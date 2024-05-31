@@ -396,6 +396,10 @@ impl MethodInfo {
             MethodKind::UserDefinedMethod(fun_info) => Some(fun_info.clone()),
         }
     }
+
+    pub fn full_name(&self) -> String {
+        format!("{}::{}", self.receiver_hint.sym, self.name_sym.name)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

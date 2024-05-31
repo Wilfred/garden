@@ -393,7 +393,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                     }
                 }
 
-                new_syms.push(meth_info.name_sym.name.clone());
+                new_syms.push(SymbolName(meth_info.full_name()));
             }
             Definition_::Test(test) => {
                 if let Some(test_sym) = &test.name {

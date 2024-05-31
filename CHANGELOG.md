@@ -7,6 +7,8 @@
 
 `dbg` now returns its argument, so it can be added to subexpressions.
 
+Added `String::split`.
+
 ## Checks
 
 Type checker now solves generics on arbitrary user-defined types.

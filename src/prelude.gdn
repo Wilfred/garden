@@ -321,6 +321,41 @@ test strip_prefix {
     should_equal("abcdef".strip_prefix("xyz"), "abcdef");
 }
 
+// Split this string on occurrences of `needle`.
+//
+// ```
+// "a,b".split(","); // ["a", "b"]
+// "ab".split(","); // ["ab"]
+// "a,,b,".split(","); // ["a", "", "b", ""]
+// ```
+fun (self: String) split(needle: String): List<String> {
+    let s = self;
+
+    let parts: List<String> = [];
+    while (s != "") {
+        match (s.index_of(needle)) {
+            Some(i) => {
+                parts = parts.append(s.substring(0, i));
+                s = s.substring(i + needle.len(), s.len());
+            }
+            None => {
+                parts = parts.append(s);
+                break;
+            }
+        }
+
+    }
+    
+
+    parts;
+}
+
+test split {
+    should_equal("ab".split(","), ["ab"]);
+    should_equal("a,b".split(","), ["a", "b"]);
+    should_equal("a,,b".split(","), ["a", "", "b"]);
+}
+
 // List methods.
 
 // Get the first item in this list, if the list is non-empty.

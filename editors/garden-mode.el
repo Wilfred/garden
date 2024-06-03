@@ -381,7 +381,8 @@ the user entering a value in the *garden* buffer."
 
 (defun garden-abort-command ()
   (interactive)
-  (garden-send-input ":abort"))
+  (garden-send-input ":abort")
+  (message "Aborted"))
 
 (defun garden-doc-command ()
   (interactive)

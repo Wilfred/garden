@@ -323,10 +323,31 @@ fn check_expr(
 
             let then_ty = check_block(then_block, env, bindings, warnings, expected_return_ty);
 
-            // TODO: check if `then_block` and `else_block` are the same type.
-            if let Some(else_block) = else_block {
-                check_block(else_block, env, bindings, warnings, expected_return_ty);
+            match else_block {
+                Some(else_block) => {
+                    // TODO: check if `then_block` and `else_block` are the same type.
+                    check_block(else_block, env, bindings, warnings, expected_return_ty);
+                }
+                None => {
+                    if !is_subtype(&then_ty, &Type::unit()) {
+                        let position = match then_block.exprs.last() {
+                            Some(expr) => &expr.pos,
+                            None => &then_block.close_brace,
+                        }
+                        .clone();
+
+                        warnings.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "`if` expressions without `else` should have type `Unit`, but got `{}`.",
+                                then_ty
+                            ),
+                            position,
+                        });
+                    }
+                }
             }
+
             then_ty
         }
         Expression_::While(cond_expr, body) => {

@@ -422,7 +422,9 @@ fn check_expr(
                 }
             }
 
-            ty
+            // `return` terminates the current function, so we can't
+            // use this expression. Infer as bottom.
+            Type::no_value()
         }
         Expression_::IntLiteral(_) => Type::Int,
         Expression_::StringLiteral(_) => Type::String,

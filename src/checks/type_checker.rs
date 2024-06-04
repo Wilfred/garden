@@ -399,27 +399,30 @@ fn check_expr(
 
             Type::unit()
         }
-        Expression_::Return(expr) => {
-            if let Some(expr) = expr {
-                let ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
-
-                if let Some(expected_return_ty) = expected_return_ty {
-                    if !is_subtype(&ty, expected_return_ty) {
-                        warnings.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Expected this function to return `{}`, but got `{}`.",
-                                expected_return_ty, ty
-                            ),
-                            position: expr.pos.clone(),
-                        });
-                    }
-                }
-
-                ty
+        Expression_::Return(inner_expr) => {
+            let (ty, position) = if let Some(inner_expr) = inner_expr {
+                (
+                    check_expr(inner_expr, env, bindings, warnings, expected_return_ty),
+                    inner_expr.pos.clone(),
+                )
             } else {
-                Type::unit()
+                (Type::unit(), expr.pos.clone())
+            };
+
+            if let Some(expected_return_ty) = expected_return_ty {
+                if !is_subtype(&ty, expected_return_ty) {
+                    warnings.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "Expected this function to return `{}`, but got `{}`.",
+                            expected_return_ty, ty
+                        ),
+                        position,
+                    });
+                }
             }
+
+            ty
         }
         Expression_::IntLiteral(_) => Type::Int,
         Expression_::StringLiteral(_) => Type::String,

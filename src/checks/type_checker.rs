@@ -77,14 +77,19 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let self_ty = Type::from_hint(
-            &method_info.receiver_hint,
-            self.env,
-            &self.env.type_bindings(),
-        )
-        .unwrap_or_err_ty();
+        let mut type_bindings = self.env.type_bindings();
+        if let Some(fun_info) = method_info.fun_info() {
+            for type_param in &fun_info.type_params {
+                type_bindings.insert(type_param.name.clone(), None);
+            }
+        }
+
+        let self_ty = Type::from_hint(&method_info.receiver_hint, self.env, &type_bindings)
+            .unwrap_or_err_ty();
         self.bindings
             .set(method_info.receiver_sym.name.clone(), self_ty);
+
+        // TODO: generic variables are bound here.
 
         self.visit_method_info_default(method_info);
 

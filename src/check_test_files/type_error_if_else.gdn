@@ -1,0 +1,17 @@
+fun foo(b: Bool): Option<Int> {
+    if (b) {
+        None;
+    } else {
+        123;
+    }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `if` and `else` have incompatible types: `Option<NoValue>` and `Int`.
+// 
+// --> src/check_test_files/type_error_if_else.gdn:3
+//         None;
+//         ^^^^
+

@@ -323,32 +323,42 @@ fn check_expr(
 
             let then_ty = check_block(then_block, env, bindings, warnings, expected_return_ty);
 
-            match else_block {
+            let else_ty = match else_block {
                 Some(else_block) => {
-                    // TODO: check if `then_block` and `else_block` are the same type.
-                    check_block(else_block, env, bindings, warnings, expected_return_ty);
+                    check_block(else_block, env, bindings, warnings, expected_return_ty)
                 }
-                None => {
-                    if !is_subtype(&then_ty, &Type::unit()) {
-                        let position = match then_block.exprs.last() {
-                            Some(expr) => &expr.pos,
-                            None => &then_block.close_brace,
-                        }
-                        .clone();
+                None => Type::unit(),
+            };
 
-                        warnings.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "`if` expressions without `else` should have type `Unit`, but got `{}`.",
-                                then_ty
-                            ),
-                            position,
-                        });
-                    }
+            match unify(&then_ty, &else_ty) {
+                Some(ty) => ty,
+                None => {
+                    let message = if else_block.is_some() {
+                        format!(
+                            "`if` and `else` have incompatible types: `{}` and `{}`.",
+                            then_ty, else_ty
+                        )
+                    } else {
+                        format!(
+                            "`if` expressions without `else` should have type `Unit`, but got `{}`.",
+                            then_ty
+                        )
+                    };
+
+                    let position = match then_block.exprs.last() {
+                        Some(last_expr) => last_expr.pos.clone(),
+                        None => cond_expr.pos.clone(),
+                    };
+
+                    warnings.push(Diagnostic {
+                        level: Level::Error,
+                        message,
+                        position,
+                    });
+
+                    Type::error("Incompatible if blocks")
                 }
             }
-
-            then_ty
         }
         Expression_::While(cond_expr, body) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
@@ -1060,6 +1070,29 @@ fn unify_and_solve_hint(
     }
 
     Ok(())
+}
+
+/// If these two types are compatible, return the most general
+/// compatible type.
+///
+/// (Int, NoValue) -> Int
+/// (NoValue, Int) -> Int
+/// (List<Int>, List<NoValue>) -> List<Int>
+/// (In, String) -> return None
+fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
+    if ty_1.is_no_value() {
+        return Some(ty_2.clone());
+    }
+    if ty_2.is_no_value() {
+        return Some(ty_1.clone());
+    }
+    if ty_1 == ty_2 {
+        return Some(ty_1.clone());
+    }
+
+    // TODO: recursively unify, to handle e.g. List<String> with List<NoValue>.
+
+    None
 }
 
 fn check_match_exhaustive(

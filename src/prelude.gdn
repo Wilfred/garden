@@ -358,7 +358,7 @@ test split {
 
 // List methods.
 
-// Get the first item in this list, if the list is non-empty.
+// Get the first item in this list, if the list is not empty.
 fun<T> (self: List<T>) first(): Option<T> {
     if (self.is_empty()) {
         None;
@@ -370,6 +370,20 @@ fun<T> (self: List<T>) first(): Option<T> {
 test first {
     should_equal([].first(), None);
     should_equal([123].first(), Some(123));
+}
+
+// Get the last item in this list, if the list is not empty.
+fun<T> (self: List<T>) last(): Option<T> {
+    if (self.is_empty()) {
+        None;
+    } else {
+        Some(self.get(self.len() - 1));
+    }
+}
+
+test last {
+    should_equal([].last(), None);
+    should_equal([123].last(), Some(123));
 }
 
 // Return a copy of this list with the items where `f(item)` returns

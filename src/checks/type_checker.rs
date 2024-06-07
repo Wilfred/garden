@@ -1127,9 +1127,43 @@ fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
         return Some(ty_1.clone());
     }
 
-    // TODO: recursively unify, to handle e.g. List<String> with List<NoValue>.
+    match (ty_1, ty_2) {
+        (
+            Type::UserDefined {
+                kind: kind_1,
+                name: name_1,
+                args: args_1,
+            },
+            Type::UserDefined {
+                kind: kind_2,
+                name: name_2,
+                args: args_2,
+            },
+        ) => {
+            if kind_1 != kind_2 || name_1 != name_2 || args_1.len() != args_2.len() {
+                return None;
+            }
 
-    None
+            let mut unified_args = vec![];
+            for (arg_1, arg_2) in args_1.iter().zip(args_2) {
+                unified_args.push(unify(arg_1, arg_2)?);
+            }
+
+            Some(Type::UserDefined {
+                kind: kind_1.clone(),
+                name: name_1.clone(),
+                args: unified_args,
+            })
+        }
+        (Type::List(el_ty_1), Type::List(el_ty_2)) => {
+            Some(Type::List(Box::new(unify(el_ty_1, el_ty_2)?)))
+        }
+        _ => {
+            // TODO: functions are generic types and should be handled
+            // similar to lists.
+            None
+        }
+    }
 }
 
 fn check_match_exhaustive(

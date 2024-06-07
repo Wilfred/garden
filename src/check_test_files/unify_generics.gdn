@@ -1,0 +1,15 @@
+{
+    if (True) {
+        None;
+    } else {
+        Some(123);
+    }
+
+    if (False) {
+        [];
+    } else {
+        ["abc"];
+    }
+}
+
+// args: check

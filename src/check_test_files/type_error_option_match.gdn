@@ -2,7 +2,7 @@
     let value = Some("foo");
     match (value) {
         Some(v) => v + 1,
-        None => {}
+        None => error("")
     }
 }
 

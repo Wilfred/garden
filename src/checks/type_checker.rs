@@ -242,8 +242,7 @@ fn check_expr(
             let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings, expected_return_ty);
             let scrutinee_ty_name = scrutinee_ty.type_name();
 
-            // TODO: Error when different case expressions have different types.
-            let mut case_ty = Type::unit();
+            let mut case_tys = vec![];
 
             if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
                 let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
@@ -262,7 +261,13 @@ fn check_expr(
                     }
                 }
 
-                case_ty = check_expr(case_expr, env, bindings, warnings, expected_return_ty);
+                case_tys.push(check_expr(
+                    case_expr,
+                    env,
+                    bindings,
+                    warnings,
+                    expected_return_ty,
+                ));
 
                 bindings.exit_block();
 
@@ -311,7 +316,21 @@ fn check_expr(
                 }
             }
 
-            case_ty
+            match unify_all(&case_tys) {
+                Some(ty) => ty,
+                None => {
+                    let last_case = cases
+                        .last()
+                        .expect("Type errors should require at least one match case.");
+                    warnings.push(Diagnostic {
+                        level: Level::Error,
+                        message: "`match` cases have different types..".to_string(),
+                        position: last_case.1.pos.clone(),
+                    });
+
+                    Type::error("Cases had incompatible types.")
+                }
+            }
         }
         Expression_::If(cond_expr, then_block, else_block) => {
             let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
@@ -1075,6 +1094,19 @@ fn unify_and_solve_hint(
     }
 
     Ok(())
+}
+
+/// Unify all the types given, to a single type, if we can find a
+/// compatible type.
+fn unify_all(tys: &[Type]) -> Option<Type> {
+    let mut unified_ty = Type::no_value();
+
+    // Unify the types pairwise.
+    for ty in tys {
+        unified_ty = unify(&unified_ty, ty)?;
+    }
+
+    Some(unified_ty)
 }
 
 /// If these two types are compatible, return the most general

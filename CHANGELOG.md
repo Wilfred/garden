@@ -11,7 +11,9 @@ Added `String::split()` and `List::last()`.
 
 ## Checks
 
-Type checker now solves generics on arbitrary user-defined types.
+The type checker now solves generics on arbitrary user-defined types.
+
+The type checker also handles many more expressions correctly.
 
 # 0.14 (released 16th May 2024)
 

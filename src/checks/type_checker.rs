@@ -324,7 +324,7 @@ fn check_expr(
                         .expect("Type errors should require at least one match case.");
                     warnings.push(Diagnostic {
                         level: Level::Error,
-                        message: "`match` cases have different types..".to_string(),
+                        message: "`match` cases have different types..".to_owned(),
                         position: last_case.1.pos.clone(),
                     });
 

@@ -921,7 +921,7 @@ fn subst_type_vars_in_fun_info_return_ty(
                     }
                 }
             } else {
-                Type::from_hint(return_hint, env, &env.type_bindings()).unwrap_or_err_ty()
+                Type::from_hint(return_hint, env, ty_var_env).unwrap_or_err_ty()
             };
 
             (diagnostics, ty)

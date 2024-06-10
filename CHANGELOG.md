@@ -15,6 +15,10 @@ The type checker now solves generics on arbitrary user-defined types.
 
 The type checker also handles many more expressions correctly.
 
+## Build
+
+Garden now requires Rust 1.78 to build.
+
 # 0.14 (released 16th May 2024)
 
 Fixing bugs with the GitHub actions for uploading releases to crates.io.

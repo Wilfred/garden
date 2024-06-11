@@ -7,7 +7,7 @@ fun foo(parts: List<String>): String {
 // expected stdout:
 // Error: Expected to return `String` but got `Option<String>`.
 // 
-// --> src/check_test_files/type_error_return_option.gdn:1
-// fun foo(parts: List<String>): String {
-//                               ^^^^^^
+// --> src/check_test_files/type_error_return_option.gdn:2
+//     parts.first();
+//     ^^^^^^^^^^^^^
 

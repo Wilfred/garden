@@ -839,11 +839,16 @@ fn check_fun_info(
         Some(hint) => {
             let return_ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
 
+            let position = match fun_info.body.exprs.last() {
+                Some(expr) => expr.pos.clone(),
+                None => hint.position.clone(),
+            };
+
             if !is_subtype(&body_ty, &return_ty) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
                     message: format!("Expected to return `{}` but got `{}`.", return_ty, body_ty),
-                    position: hint.position.clone(),
+                    position,
                 });
             }
 

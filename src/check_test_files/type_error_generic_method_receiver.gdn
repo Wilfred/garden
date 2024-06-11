@@ -7,7 +7,7 @@ fun<T> (self: List<T>) foo(): String {
 // expected stdout:
 // Error: Expected to return `String` but got `T`.
 // 
-// --> src/check_test_files/type_error_generic_method_receiver.gdn:1
-// fun<T> (self: List<T>) foo(): String {
-//                               ^^^^^^
+// --> src/check_test_files/type_error_generic_method_receiver.gdn:2
+//     self.get(1);
+//     ^^^^^^^^^^^
 

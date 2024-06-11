@@ -11,10 +11,10 @@ fun bad(): Bool {
 // 
 // --> src/check_test_files/type_error_return_type.gdn:2
 //     let _f = fun(): Int { True; };
-//                     ^^^
+//                           ^^^^
 // Error: Expected to return `Bool` but got `String`.
 // 
-// --> src/check_test_files/type_error_return_type.gdn:1
-// fun bad(): Bool {
-//            ^^^^
+// --> src/check_test_files/type_error_return_type.gdn:4
+//     "abc";
+//     ^^^^^
 

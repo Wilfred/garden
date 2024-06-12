@@ -110,17 +110,26 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         self.bindings.enter_block();
 
+        let mut type_bindings = self.env.type_bindings();
+        for type_param in &fun_info.type_params {
+            type_bindings.insert(type_param.name.clone(), None);
+        }
+
         for param in &fun_info.params {
             let param_ty = match &param.hint {
-                Some(hint) => {
-                    Type::from_hint(hint, self.env, &self.env.type_bindings()).unwrap_or_err_ty()
-                }
+                Some(hint) => Type::from_hint(hint, self.env, &type_bindings).unwrap_or_err_ty(),
                 None => Type::Top,
             };
             self.bindings.set(param.symbol.name.clone(), param_ty);
         }
 
-        check_fun_info(fun_info, self.env, &mut self.bindings, &mut self.warnings);
+        check_fun_info(
+            fun_info,
+            self.env,
+            &mut self.bindings,
+            &type_bindings,
+            &mut self.warnings,
+        );
 
         self.bindings.exit_block();
     }
@@ -133,6 +142,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             block,
             self.env,
             &mut self.bindings,
+            &self.env.type_bindings(),
             &mut self.warnings,
             None,
         );
@@ -164,6 +174,7 @@ fn check_block(
     block: &Block,
     env: &mut Env,
     bindings: &mut LocalBindings,
+    type_bindings: &TypeVarEnv,
     warnings: &mut Vec<Diagnostic>,
     expected_return_ty: Option<&Type>,
 ) -> Type {
@@ -171,7 +182,14 @@ fn check_block(
 
     let mut ty = Type::unit();
     for expr in &block.exprs {
-        ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
+        ty = check_expr(
+            expr,
+            env,
+            bindings,
+            type_bindings,
+            warnings,
+            expected_return_ty,
+        );
     }
 
     bindings.exit_block();
@@ -234,12 +252,20 @@ fn check_expr(
     expr: &Expression,
     env: &mut Env,
     bindings: &mut LocalBindings,
+    type_bindings: &TypeVarEnv,
     warnings: &mut Vec<Diagnostic>,
     expected_return_ty: Option<&Type>,
 ) -> Type {
     match &expr.expr_ {
         Expression_::Match(scrutinee, cases) => {
-            let scrutinee_ty = check_expr(scrutinee, env, bindings, warnings, expected_return_ty);
+            let scrutinee_ty = check_expr(
+                scrutinee,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
             let scrutinee_ty_name = scrutinee_ty.type_name();
 
             let mut case_tys = vec![];
@@ -265,6 +291,7 @@ fn check_expr(
                     case_expr,
                     env,
                     bindings,
+                    type_bindings,
                     warnings,
                     expected_return_ty,
                 ));
@@ -333,7 +360,14 @@ fn check_expr(
             }
         }
         Expression_::If(cond_expr, then_block, else_block) => {
-            let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
+            let cond_ty = check_expr(
+                cond_expr,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
             if !is_subtype(&cond_ty, &Type::bool()) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
@@ -345,12 +379,24 @@ fn check_expr(
                 });
             }
 
-            let then_ty = check_block(then_block, env, bindings, warnings, expected_return_ty);
+            let then_ty = check_block(
+                then_block,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
 
             let else_ty = match else_block {
-                Some(else_block) => {
-                    check_block(else_block, env, bindings, warnings, expected_return_ty)
-                }
+                Some(else_block) => check_block(
+                    else_block,
+                    env,
+                    bindings,
+                    type_bindings,
+                    warnings,
+                    expected_return_ty,
+                ),
                 None => Type::unit(),
             };
 
@@ -385,7 +431,14 @@ fn check_expr(
             }
         }
         Expression_::While(cond_expr, body) => {
-            let cond_ty = check_expr(cond_expr, env, bindings, warnings, expected_return_ty);
+            let cond_ty = check_expr(
+                cond_expr,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
             if !is_subtype(&cond_ty, &Type::bool()) {
                 warnings.push(Diagnostic {
                     level: Level::Error,
@@ -397,21 +450,39 @@ fn check_expr(
                 });
             }
 
-            check_block(body, env, bindings, warnings, expected_return_ty);
+            check_block(
+                body,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
 
             Type::unit()
         }
         Expression_::Break => Type::unit(),
-        Expression_::Assign(_sym, expr) => {
-            check_expr(expr, env, bindings, warnings, expected_return_ty)
-        }
+        Expression_::Assign(_sym, expr) => check_expr(
+            expr,
+            env,
+            bindings,
+            type_bindings,
+            warnings,
+            expected_return_ty,
+        ),
         Expression_::Let(sym, hint, expr) => {
-            let expr_ty = check_expr(expr, env, bindings, warnings, expected_return_ty);
+            let expr_ty = check_expr(
+                expr,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
 
             let ty = match hint {
                 Some(hint) => {
-                    let hint_ty =
-                        Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+                    let hint_ty = Type::from_hint(hint, env, type_bindings).unwrap_or_err_ty();
 
                     if !is_subtype(&expr_ty, &hint_ty) {
                         warnings.push(Diagnostic {
@@ -436,7 +507,14 @@ fn check_expr(
         Expression_::Return(inner_expr) => {
             let (ty, position) = if let Some(inner_expr) = inner_expr {
                 (
-                    check_expr(inner_expr, env, bindings, warnings, expected_return_ty),
+                    check_expr(
+                        inner_expr,
+                        env,
+                        bindings,
+                        type_bindings,
+                        warnings,
+                        expected_return_ty,
+                    ),
                     inner_expr.pos.clone(),
                 )
             } else {
@@ -466,7 +544,14 @@ fn check_expr(
             let mut elem_ty = Type::no_value();
 
             for item in items {
-                let item_ty = check_expr(item, env, bindings, warnings, expected_return_ty);
+                let item_ty = check_expr(
+                    item,
+                    env,
+                    bindings,
+                    type_bindings,
+                    warnings,
+                    expected_return_ty,
+                );
                 // TODO: unify the types of all elements in the
                 // list, rather than letting the last win.
                 elem_ty = item_ty;
@@ -476,7 +561,14 @@ fn check_expr(
         }
         Expression_::StructLiteral(name_sym, fields) => {
             for (_, expr) in fields {
-                check_expr(expr, env, bindings, warnings, expected_return_ty);
+                check_expr(
+                    expr,
+                    env,
+                    bindings,
+                    type_bindings,
+                    warnings,
+                    expected_return_ty,
+                );
             }
 
             if let Some(TypeDef::Struct(_)) = env.get_type_def(&name_sym.name) {
@@ -490,8 +582,22 @@ fn check_expr(
             }
         }
         Expression_::BinaryOperator(lhs, op, rhs) => {
-            let lhs_ty = check_expr(lhs, env, bindings, warnings, expected_return_ty);
-            let rhs_ty = check_expr(rhs, env, bindings, warnings, expected_return_ty);
+            let lhs_ty = check_expr(
+                lhs,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
+            let rhs_ty = check_expr(
+                rhs,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
 
             match op {
                 BinaryOperatorKind::Add
@@ -572,18 +678,32 @@ fn check_expr(
             }
 
             match env.file_scope.get(&sym.name) {
-                Some(value) => Type::from_value(value, env, &env.type_bindings()),
+                Some(value) => Type::from_value(value, env, type_bindings),
                 None => Type::Error("Unbound variable".to_owned()),
             }
         }
         Expression_::Call(recv, paren_args) => {
-            let recv_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
+            let recv_ty = check_expr(
+                recv,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
             let arg_tys = paren_args
                 .arguments
                 .iter()
                 .map(|arg| {
                     (
-                        check_expr(arg, env, bindings, warnings, expected_return_ty),
+                        check_expr(
+                            arg,
+                            env,
+                            bindings,
+                            type_bindings,
+                            warnings,
+                            expected_return_ty,
+                        ),
                         arg.pos.clone(),
                     )
                 })
@@ -658,13 +778,27 @@ fn check_expr(
                 .iter()
                 .map(|arg| {
                     (
-                        check_expr(arg, env, bindings, warnings, expected_return_ty),
+                        check_expr(
+                            arg,
+                            env,
+                            bindings,
+                            type_bindings,
+                            warnings,
+                            expected_return_ty,
+                        ),
                         arg.pos.clone(),
                     )
                 })
                 .collect::<Vec<_>>();
 
-            let receiver_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
+            let receiver_ty = check_expr(
+                recv,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
             let Some(receiver_ty_name) = receiver_ty.type_name() else {
                 return Type::error("No type name for this method receiver");
             };
@@ -699,8 +833,7 @@ fn check_expr(
                         let Some(param_hint) = &param.hint else {
                             continue;
                         };
-                        let Ok(param_ty) = Type::from_hint(param_hint, env, &env.type_bindings())
-                        else {
+                        let Ok(param_ty) = Type::from_hint(param_hint, env, type_bindings) else {
                             continue;
                         };
 
@@ -744,7 +877,14 @@ fn check_expr(
             }
         }
         Expression_::DotAccess(recv, field_sym) => {
-            let recv_ty = check_expr(recv, env, bindings, warnings, expected_return_ty);
+            let recv_ty = check_expr(
+                recv,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
             let Some(recv_ty_name) = recv_ty.type_name() else {
                 return Type::error("No type name found this receiver");
             };
@@ -758,9 +898,8 @@ fn check_expr(
                     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&name) {
                         for field in &struct_info.fields {
                             if field.sym.name == field_sym.name {
-                                let field_ty =
-                                    Type::from_hint(&field.hint, env, &env.type_bindings())
-                                        .unwrap_or_err_ty();
+                                let field_ty = Type::from_hint(&field.hint, env, type_bindings)
+                                    .unwrap_or_err_ty();
                                 return field_ty;
                             }
                         }
@@ -782,10 +921,17 @@ fn check_expr(
                 _ => Type::error("This type is not a struct"),
             }
         }
-        Expression_::FunLiteral(fun_info) => check_fun_info(fun_info, env, bindings, warnings),
-        Expression_::Block(block) => {
-            check_block(block, env, bindings, warnings, expected_return_ty)
+        Expression_::FunLiteral(fun_info) => {
+            check_fun_info(fun_info, env, bindings, type_bindings, warnings)
         }
+        Expression_::Block(block) => check_block(
+            block,
+            env,
+            bindings,
+            type_bindings,
+            warnings,
+            expected_return_ty,
+        ),
     }
 }
 
@@ -793,6 +939,7 @@ fn check_fun_info(
     fun_info: &FunInfo,
     env: &mut Env,
     bindings: &mut LocalBindings,
+    type_bindings: &TypeVarEnv,
     warnings: &mut Vec<Diagnostic>,
 ) -> Type {
     // Check the function body with the locals bound.
@@ -802,14 +949,14 @@ fn check_fun_info(
     // hint.
     for param in &fun_info.params {
         if let Some(hint) = &param.hint {
-            let param_ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            let param_ty = Type::from_hint(hint, env, type_bindings).unwrap_or_err_ty();
             bindings.set(param.symbol.name.clone(), param_ty);
         }
     }
 
     let expected_return_ty = match &fun_info.return_hint {
         Some(hint) => {
-            let ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            let ty = Type::from_hint(hint, env, type_bindings).unwrap_or_err_ty();
             Some(ty)
         }
         None => None,
@@ -819,6 +966,7 @@ fn check_fun_info(
         &fun_info.body,
         env,
         bindings,
+        type_bindings,
         warnings,
         expected_return_ty.as_ref(),
     );
@@ -829,7 +977,7 @@ fn check_fun_info(
     let mut param_tys = vec![];
     for param in &fun_info.params {
         let param_ty = match &param.hint {
-            Some(hint) => Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty(),
+            Some(hint) => Type::from_hint(hint, env, type_bindings).unwrap_or_err_ty(),
             None => Type::Top,
         };
         param_tys.push(param_ty);
@@ -837,7 +985,7 @@ fn check_fun_info(
 
     let return_ty = match &fun_info.return_hint {
         Some(hint) => {
-            let return_ty = Type::from_hint(hint, env, &env.type_bindings()).unwrap_or_err_ty();
+            let return_ty = Type::from_hint(hint, env, type_bindings).unwrap_or_err_ty();
 
             let position = match fun_info.body.exprs.last() {
                 Some(expr) => expr.pos.clone(),

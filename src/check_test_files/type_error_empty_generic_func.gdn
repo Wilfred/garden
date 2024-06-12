@@ -1,0 +1,11 @@
+fun<T> empty_block(): List<T> {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected to return `List<T>` but got `Unit`.
+// 
+// --> src/check_test_files/type_error_empty_generic_func.gdn:1
+// fun<T> empty_block(): List<T> {}
+//                       ^^^^^^^
+

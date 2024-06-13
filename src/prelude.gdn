@@ -442,6 +442,7 @@ test contains {
 // ```
 fun<T, U> (self: List<T>) map(f): List<U> {
     // TODO: define a userland function type syntax.
+    // TODO: this errors at runtime if we annotate the type as List<U>.
     let items = [];
     let i = 0;
 

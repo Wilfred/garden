@@ -153,7 +153,7 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     let type_params = parse_type_params(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_hint = parse_type_annotation_opt(tokens)?;
+    let return_hint = parse_colon_and_hint_opt(tokens)?;
 
     let body = parse_block(src, tokens, false)?;
 
@@ -1013,15 +1013,15 @@ fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
 }
 
 /// Parse a colon and a type hint, e.g. `: Int`.
-fn parse_type_annotation(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
+fn parse_colon_and_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     require_token(tokens, ":")?;
     parse_type_hint(tokens)
 }
 
 /// Parse a type annotation, if present.
-fn parse_type_annotation_opt(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
+fn parse_colon_and_hint_opt(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
     if peeked_symbol_is(tokens, ":") {
-        let type_hint = parse_type_annotation(tokens)?;
+        let type_hint = parse_colon_and_hint(tokens)?;
         return Ok(Some(type_hint));
     }
 
@@ -1035,9 +1035,9 @@ fn parse_parameter(
     let param = parse_symbol(tokens)?;
 
     let hint = if require_type_hint {
-        Some(parse_type_annotation(tokens)?)
+        Some(parse_colon_and_hint(tokens)?)
     } else {
-        parse_type_annotation_opt(tokens)?
+        parse_colon_and_hint_opt(tokens)?
     };
 
     Ok(SymbolWithHint {
@@ -1119,7 +1119,7 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
             let sym = parse_symbol(tokens)?;
-            let hint = parse_type_annotation(tokens)?;
+            let hint = parse_colon_and_hint(tokens)?;
 
             fields.push(FieldInfo {
                 sym,
@@ -1269,7 +1269,7 @@ fn parse_method(
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_hint = parse_type_annotation_opt(tokens)?;
+    let return_hint = parse_colon_and_hint_opt(tokens)?;
 
     let body = parse_block(src, tokens, false)?;
 
@@ -1318,7 +1318,7 @@ fn parse_function(
     let name = parse_symbol(tokens)?;
 
     let params = parse_parameters(tokens)?;
-    let return_hint = parse_type_annotation_opt(tokens)?;
+    let return_hint = parse_colon_and_hint_opt(tokens)?;
 
     let body = parse_block(src, tokens, false)?;
 
@@ -1389,7 +1389,7 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
     let let_token = require_token(tokens, "let")?;
     let variable = parse_symbol(tokens)?;
 
-    let hint = parse_type_annotation_opt(tokens)?;
+    let hint = parse_colon_and_hint_opt(tokens)?;
 
     require_token(tokens, "=")?;
     let expr = parse_inline_expression(src, tokens)?;

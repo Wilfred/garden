@@ -996,6 +996,7 @@ fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseE
     Ok(params)
 }
 
+/// Parse a type hint, such as `String` or `List<Foo>`.
 fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     let sym = parse_type_symbol(tokens)?;
     let (args, close_pos) = parse_type_arguments(tokens)?;

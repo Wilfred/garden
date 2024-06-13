@@ -345,7 +345,7 @@ fun (self: String) split(needle: String): List<String> {
         }
 
     }
-    
+
 
     parts;
 }
@@ -432,6 +432,32 @@ fun<T> (self: List<T>) contains(item): Bool {
 
 test contains {
     should_equal([10, 11].contains(10), True);
+}
+
+// Call `f` on every item in this list, and return a list of the
+// results.
+//
+// ```
+// [1, 2].map(fun(x) { x + 1; }); // [2, 3]
+// ```
+fun<T, U> (self: List<T>) map(f): List<U> {
+    // TODO: define a userland function type syntax.
+    let items = [];
+    let i = 0;
+
+    while (i < self.len()) {
+        let new_item = f(self.get(i));
+        items = items.append(new_item);
+
+        i = i + 1;
+    }
+
+    items;
+}
+
+test list_map {
+    let incremented = [1, 2, 3].map(fun(x) { x + 1; });
+    should_equal(incremented, [2, 3, 4]);
 }
 
 // Option methods.

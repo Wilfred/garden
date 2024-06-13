@@ -105,7 +105,7 @@ fun<T> (self: List<T>) append(value: T): List<T> {
 }
 
 // Get the item in the list at the index specified.
-// Errors if the index is less than 0 or greater than length - 1.
+// Errors if the index is less than 0 or greater than `length - 1`.
 //
 // ```
 // [4, 5, 6].get(1); // 5

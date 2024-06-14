@@ -97,14 +97,17 @@ impl Visitor for TypeCheckVisitor<'_> {
     }
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
-        // Skip typechecking builtins and prelude to help print debugging.
-        if let Some(n) = &fun_info.name {
-            let path = n.position.path.clone();
-            if path.display().to_string().ends_with("prelude.gdn") {
-                return;
-            }
-            if path.display().to_string().ends_with("builtins.gdn") {
-                return;
+        // TODO: Make this on by default.
+        if std::env::var_os("GDN_CHECK").is_none() {
+            // Skip typechecking builtins and prelude to help print debugging.
+            if let Some(n) = &fun_info.name {
+                let path = n.position.path.clone();
+                if path.display().to_string().ends_with("prelude.gdn") {
+                    return;
+                }
+                if path.display().to_string().ends_with("builtins.gdn") {
+                    return;
+                }
             }
         }
 

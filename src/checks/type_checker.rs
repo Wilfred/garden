@@ -1229,6 +1229,25 @@ fn unify_and_solve_hint(
         }
     }
 
+    if hint_name.name == "Fun" && hint.args.len() == 2 {
+        if let Type::Fun {
+            params, return_, ..
+        } = ty
+        {
+            // TODO: define a syntax for functions with 0 or >1 arguments.
+            if params.len() != 1 {
+                return Ok(());
+            }
+
+            // Unify the parameter type.
+            unify_and_solve_hint(env, &hint.args[0], position, &params[0], ty_var_env)?;
+            // Unify the return type.
+            unify_and_solve_hint(env, &hint.args[1], position, return_, ty_var_env)?;
+        }
+
+        return Ok(());
+    }
+
     let Some(type_def) = env.get_type_def(hint_name) else {
         // This hint isn't defined, and we check that elsewhere, so give up unifying.
         return Ok(());

@@ -835,11 +835,16 @@ fn check_expr(
                         });
                     }
 
+                    let mut ty_var_env = TypeVarEnv::default();
+                    for type_param in &fun_info.type_params {
+                        ty_var_env.insert(type_param.name.clone(), None);
+                    }
+
                     for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
                         let Some(param_hint) = &param.hint else {
                             continue;
                         };
-                        let Ok(param_ty) = Type::from_hint(param_hint, env, type_bindings) else {
+                        let Ok(param_ty) = Type::from_hint(param_hint, env, &ty_var_env) else {
                             continue;
                         };
 
@@ -853,11 +858,6 @@ fn check_expr(
                                 position: arg_pos.clone(),
                             });
                         }
-                    }
-
-                    let mut ty_var_env = TypeVarEnv::default();
-                    for type_param in &fun_info.type_params {
-                        ty_var_env.insert(type_param.name.clone(), None);
                     }
 
                     let (more_warnings, ret_ty) = subst_type_vars_in_meth_return_ty(

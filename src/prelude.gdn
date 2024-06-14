@@ -388,7 +388,7 @@ test last {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-fun<T> (self: List<T>) filter(f): List<T> {
+fun<T> (self: List<T>) filter(f: Fun<T, Bool>): List<T> {
     let result = [];
 
     let i = 0;

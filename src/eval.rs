@@ -751,10 +751,9 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for let value");
-    stack_frame
-        .bindings
-        .set_existing(var_name, expr_value.clone());
-    stack_frame.evalled_values.push(expr_value);
+    stack_frame.bindings.set_existing(var_name, expr_value);
+
+    stack_frame.evalled_values.push(Value::unit());
 
     Ok(())
 }

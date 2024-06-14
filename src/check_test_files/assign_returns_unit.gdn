@@ -1,0 +1,6 @@
+fun main(_: List<String>): Unit {
+    let i = 0;
+    i = 2;
+}
+
+// args: check

@@ -465,14 +465,17 @@ fn check_expr(
             Type::unit()
         }
         Expression_::Break => Type::unit(),
-        Expression_::Assign(_sym, expr) => check_expr(
-            expr,
-            env,
-            bindings,
-            type_bindings,
-            warnings,
-            expected_return_ty,
-        ),
+        Expression_::Assign(_sym, expr) => {
+            check_expr(
+                expr,
+                env,
+                bindings,
+                type_bindings,
+                warnings,
+                expected_return_ty,
+            );
+            Type::unit()
+        }
         Expression_::Let(sym, hint, expr) => {
             let expr_ty = check_expr(
                 expr,

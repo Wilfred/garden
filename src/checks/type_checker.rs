@@ -1067,10 +1067,10 @@ fn subst_type_vars_in_fun_info_return_ty(
         }
     }
 
-    match &fun_info.return_hint {
+    let ret_ty = match &fun_info.return_hint {
         Some(return_hint) => {
             let hint_name = &return_hint.sym.name;
-            let ty = if let Some(ty_var_val) = ty_var_env.get(hint_name) {
+            if let Some(ty_var_val) = ty_var_env.get(hint_name) {
                 match ty_var_val {
                     Some(ty) => ty.clone(),
                     None => {
@@ -1081,12 +1081,12 @@ fn subst_type_vars_in_fun_info_return_ty(
                 }
             } else {
                 Type::from_hint(return_hint, env, ty_var_env).unwrap_or_err_ty()
-            };
-
-            (diagnostics, ty)
+            }
         }
-        None => (diagnostics, Type::Top),
-    }
+        None => Type::Top,
+    };
+
+    (diagnostics, ret_ty)
 }
 
 fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {

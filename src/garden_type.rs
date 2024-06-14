@@ -129,9 +129,18 @@ impl Type {
 
                         Ok(Type::List(Box::new(elem_type)))
                     }
-                    BuiltinType::Fun => {
-                        unreachable!("Currently no userland syntax for function types")
-                    }
+                    BuiltinType::Fun => match &args[..] {
+                        [input_ty, return_] => Ok(Type::Fun {
+                            name: None,
+                            type_params: vec![],
+                            params: vec![input_ty.clone()],
+                            return_: Box::new(return_.clone()),
+                        }),
+                        _ => Err(format!(
+                            "Fun<> takes two type arguments, but got {}",
+                            args.len()
+                        )),
+                    },
                 },
                 TypeDef::Enum(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Enum,

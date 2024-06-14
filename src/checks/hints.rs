@@ -101,10 +101,7 @@ impl Visitor for HintVisitor<'_> {
                         let num_expected = match b {
                             BuiltinType::Int => 0,
                             BuiltinType::String => 0,
-                            BuiltinType::Fun => {
-                                // TODO: define a syntax and arity for function types.
-                                0
-                            }
+                            BuiltinType::Fun => 2,
                             BuiltinType::List => 1,
                         };
                         if num_expected != type_hint.args.len() {

@@ -870,7 +870,7 @@ fn check_expr(
                     );
                     warnings.extend(more_warnings);
 
-                    ret_ty
+                    subst_ty_vars(&ret_ty, &ty_var_env)
                 }
                 None => {
                     warnings.push(Diagnostic {

@@ -1235,6 +1235,7 @@ fn unify_and_solve_hint(
         } = ty
         {
             // TODO: define a syntax for functions with 0 or >1 arguments.
+            // TODO: this stops us typechecking invalid arity on function values passed as arguments.
             if params.len() != 1 {
                 return Ok(());
             }

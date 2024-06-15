@@ -27,6 +27,8 @@ pub(crate) enum Type {
     String,
     Int,
     List(Box<Type>),
+    /// Tuples, e.g. `(Int, String)`.
+    Tuple(Vec<Type>),
     Fun {
         /// If this function has a defined name (i.e. not a closure),
         /// the name used.
@@ -229,6 +231,7 @@ impl Type {
             Type::List(_) => Some(TypeName {
                 name: "List".to_owned(),
             }),
+            Type::Tuple(_) => None,
             Type::Fun { .. } => Some(TypeName {
                 name: "Fun".to_owned(),
             }),
@@ -259,6 +262,11 @@ impl Display for Type {
             Type::String => write!(f, "String"),
             Type::Int => write!(f, "Int"),
             Type::List(elem_type) => write!(f, "List<{}>", elem_type),
+            Type::Tuple(elem_tys) => write!(
+                f,
+                "({})",
+                elem_tys.iter().map(|ty| format!("{ty}")).join(", ")
+            ),
             Type::Fun {
                 params: args,
                 return_,
@@ -303,6 +311,17 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
             is_subtype(lhs_elem, rhs_elem)
         }
         (Type::List(_), _) => false,
+        (Type::Tuple(lhs_elems), Type::Tuple(rhs_elems)) => {
+            if lhs_elems.len() == rhs_elems.len() {
+                lhs_elems
+                    .iter()
+                    .zip(rhs_elems.iter())
+                    .all(|(lhs_elem, rhs_elem)| is_subtype(lhs_elem, rhs_elem))
+            } else {
+                false
+            }
+        }
+        (Type::Tuple(_), _) => false,
         (
             Type::Fun {
                 params: lhs_params,

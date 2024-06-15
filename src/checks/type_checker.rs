@@ -1093,6 +1093,12 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
         Type::Error(_) | Type::Top | Type::String | Type::Int => ty.clone(),
         Type::List(elem_ty) => Type::List(Box::new(subst_ty_vars(elem_ty, ty_var_env))),
+        Type::Tuple(elem_tys) => Type::Tuple(
+            elem_tys
+                .iter()
+                .map(|ty| subst_ty_vars(ty, ty_var_env))
+                .collect(),
+        ),
         Type::Fun {
             type_params,
             params,

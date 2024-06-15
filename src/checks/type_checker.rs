@@ -1194,10 +1194,8 @@ fn unify_and_solve_hint(
                 if !is_subtype(ty, bound_ty) {
                     return Err(Diagnostic {
                         message: format!(
-                            "`{}` has type `{}`, but got `{}`.",
+                            "Expected `{bound_ty}` (because {} is {bound_ty}), but got `{ty}`.",
                             hint.as_src(),
-                            bound_ty,
-                            ty,
                         ),
                         position: position.clone(),
                         level: Level::Warning,

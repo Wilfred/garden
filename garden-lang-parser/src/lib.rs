@@ -760,6 +760,7 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
     Ok(variants)
 }
 
+/// Parse enum variant, e.g. `Some(T)`.
 fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError> {
     let name = parse_symbol(tokens)?;
 

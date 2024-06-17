@@ -131,6 +131,7 @@ impl Type {
 
                         Ok(Type::List(Box::new(elem_type)))
                     }
+                    BuiltinType::Tuple => Ok(Type::Tuple(args)),
                     BuiltinType::Fun => match &args[..] {
                         [input_ty, return_] => Ok(Type::Fun {
                             name: None,

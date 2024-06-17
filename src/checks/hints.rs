@@ -99,17 +99,21 @@ impl Visitor for HintVisitor<'_> {
                 match type_ {
                     TypeDef::Builtin(b) => {
                         let num_expected = match b {
-                            BuiltinType::Int => 0,
-                            BuiltinType::String => 0,
-                            BuiltinType::Fun => 2,
-                            BuiltinType::List => 1,
+                            BuiltinType::Int => Some(0),
+                            BuiltinType::String => Some(0),
+                            BuiltinType::Fun => Some(2),
+                            BuiltinType::List => Some(1),
+                            BuiltinType::Tuple => None,
                         };
-                        if num_expected != type_hint.args.len() {
-                            self.warnings.push(Diagnostic {
-                                level: Level::Error,
-                                message: format_type_arity_error(type_hint, num_expected),
-                                position: type_args_pos,
-                            });
+
+                        if let Some(num_expected) = num_expected {
+                            if num_expected != type_hint.args.len() {
+                                self.warnings.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format_type_arity_error(type_hint, num_expected),
+                                    position: type_args_pos,
+                                });
+                            }
                         }
                     }
                     TypeDef::Enum(enum_info) => {

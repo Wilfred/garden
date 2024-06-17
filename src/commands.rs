@@ -188,6 +188,7 @@ fn describe_type(type_: &TypeDef) -> String {
                 BuiltinType::String => "String",
                 BuiltinType::Fun => "Fun",
                 BuiltinType::List => "List",
+                BuiltinType::Tuple => "Tuple",
             };
             // TODO: Offer more comprehensive docs on built-in types.
             format!("{name} is a built-in type.")

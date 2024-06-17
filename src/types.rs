@@ -9,6 +9,7 @@ pub(crate) enum BuiltinType {
     String,
     Fun,
     List,
+    Tuple,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -38,6 +39,11 @@ impl TypeDef {
                     name: "T".into(),
                     position: Position::todo(),
                 }],
+                BuiltinType::Tuple => {
+                    // TODO: tuple can actually take an arbtitrary
+                    // number of arugments.
+                    vec![]
+                }
             },
             TypeDef::Enum(enum_info) => enum_info.type_params.clone(),
             TypeDef::Struct(struct_info) => struct_info.type_params.clone(),

@@ -222,6 +222,12 @@ impl Default for Env {
             TypeDef::Builtin(BuiltinType::List),
         );
         types.insert(
+            TypeName {
+                name: "Tuple".into(),
+            },
+            TypeDef::Builtin(BuiltinType::Tuple),
+        );
+        types.insert(
             TypeName { name: "Fun".into() },
             TypeDef::Builtin(BuiltinType::Fun),
         );

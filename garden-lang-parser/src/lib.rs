@@ -997,8 +997,53 @@ fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseE
     Ok(params)
 }
 
-/// Parse a type hint, such as `String` or `List<Foo>`.
+/// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
+/// syntactic sugar for `Tuple<Int, String, Unit>`.
+fn parse_tuple_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
+    let open_paren = require_token(tokens, "(")?;
+
+    let mut item_hints = vec![];
+    loop {
+        if peeked_symbol_is(tokens, ")") {
+            break;
+        }
+
+        item_hints.push(parse_type_hint(tokens)?);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            }
+        } else {
+            return Err(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `)` here, but got EOF".to_owned(),
+                ),
+            });
+        }
+    }
+
+    let close_paren = require_token(tokens, ")")?;
+
+    Ok(TypeHint {
+        sym: TypeSymbol {
+            name: TypeName {
+                name: "Tuple".to_owned(),
+            },
+            position: open_paren.position.clone(),
+        },
+        args: item_hints,
+        position: Position::merge(&open_paren.position, &close_paren.position),
+    })
+}
+
+/// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
 fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
+    if peeked_symbol_is(tokens, "(") {
+        return parse_tuple_type_hint(tokens);
+    }
+
     let sym = parse_type_symbol(tokens)?;
     let (args, close_pos) = parse_type_arguments(tokens)?;
 

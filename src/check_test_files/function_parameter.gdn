@@ -1,17 +1,5 @@
-// fun foo(f: Fun<(Int, Int), Int>): Int {
-//     f(1, 2);
-// }
-
-fun foo(f: Fun<Int, Int>): Int {
-    f(1);
+fun foo(f: Fun<(Int, Int), Int>): Int {
+    f(1, 2);
 }
 
 // args: check
-// expected exit status: 1
-// expected stdout:
-// Error: Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `Int`.
-// 
-// --> src/check_test_files/function_parameter.gdn:5
-// fun foo(f: Fun<Int, Int>): Int {
-//                ^^^
-

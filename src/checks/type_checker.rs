@@ -767,6 +767,11 @@ fn check_expr(
 
                     subst_ty_vars(&return_, &ty_var_env)
                 }
+                Type::Error(_) => {
+                    // If the receiver is an error, use that error
+                    // type for the return type of this call.
+                    recv_ty.clone()
+                }
                 _ => {
                     warnings.push(Diagnostic {
                         level: Level::Error,

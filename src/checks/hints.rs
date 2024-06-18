@@ -115,6 +115,17 @@ impl Visitor for HintVisitor<'_> {
                                 });
                             }
                         }
+
+                        if matches!(b, BuiltinType::Fun) {
+                            let first_arg = &type_hint.args[0];
+                            if first_arg.sym.name.name != "Tuple" {
+                                self.warnings.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!("Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `{}`.", first_arg.sym.name),
+                                    position: first_arg.position.clone(),
+                                });
+                            }
+                        }
                     }
                     TypeDef::Enum(enum_info) => {
                         if enum_info.type_params.len() != type_hint.args.len() {

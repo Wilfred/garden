@@ -7,3 +7,16 @@ fun foo(f: Fun<Int, Int>): Int {
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `Int`.
+// 
+// --> src/check_test_files/function_parameter.gdn:5
+// fun foo(f: Fun<Int, Int>): Int {
+//                ^^^
+// Error: Expected a function, but got a `__ERROR(The first argument to Fun<> must be a tuple, e.g. `Fun<(Int, Int), String>`.)`.
+// 
+// --> src/check_test_files/function_parameter.gdn:6
+//     f(1);
+//     ^
+

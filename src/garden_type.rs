@@ -133,12 +133,22 @@ impl Type {
                     }
                     BuiltinType::Tuple => Ok(Type::Tuple(args)),
                     BuiltinType::Fun => match &args[..] {
-                        [input_ty, return_] => Ok(Type::Fun {
-                            name: None,
-                            type_params: vec![],
-                            params: vec![input_ty.clone()],
-                            return_: Box::new(return_.clone()),
-                        }),
+                        [input_ty, return_] => {
+                            let params = match input_ty {
+                                Type::Tuple(items) => items.clone(),
+                                Type::Error(_) => vec![],
+                                _ => {
+                                    return Err("The first argument to Fun<> must be a tuple, e.g. `Fun<(Int, Int), String>`.".to_owned());
+                                }
+                            };
+
+                            Ok(Type::Fun {
+                                name: None,
+                                type_params: vec![],
+                                params,
+                                return_: Box::new(return_.clone()),
+                            })
+                        }
                         _ => Err(format!(
                             "Fun<> takes two type arguments, but got {}",
                             args.len()

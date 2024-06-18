@@ -388,7 +388,7 @@ test last {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-fun<T> (self: List<T>) filter(f: Fun<T, Bool>): List<T> {
+fun<T> (self: List<T>) filter(f: Fun<(T), Bool>): List<T> {
     let result = [];
 
     let i = 0;
@@ -440,7 +440,7 @@ test contains {
 // ```
 // [1, 2].map(fun(x) { x + 1; }); // [2, 3]
 // ```
-fun<T, U> (self: List<T>) map(f: Fun<T, U>): List<U> {
+fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
     // TODO: define a userland function type syntax.
     // TODO: this errors at runtime if we annotate the type as List<U>.
     let items = [];

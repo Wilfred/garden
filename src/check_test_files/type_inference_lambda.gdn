@@ -1,5 +1,6 @@
 {
-    should_equal([1, 2].filter(fun(_) { True; }), [1, 2]);
+    [1, 2].filter(fun(_) { True; });
+    [1, 2, 3].map(fun(x) { x + 1; });
 }
 
 // args: check

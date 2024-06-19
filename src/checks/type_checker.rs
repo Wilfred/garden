@@ -845,6 +845,16 @@ fn check_expr(
                         ty_var_env.insert(type_param.name.clone(), None);
                     }
 
+                    let (more_warnings, ret_ty) = subst_type_vars_in_meth_return_ty(
+                        env,
+                        method_info,
+                        &recv.pos,
+                        &receiver_ty,
+                        &arg_tys,
+                        &mut ty_var_env,
+                    );
+                    warnings.extend(more_warnings);
+
                     for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
                         let Some(param_hint) = &param.hint else {
                             continue;
@@ -864,16 +874,6 @@ fn check_expr(
                             });
                         }
                     }
-
-                    let (more_warnings, ret_ty) = subst_type_vars_in_meth_return_ty(
-                        env,
-                        method_info,
-                        &recv.pos,
-                        &receiver_ty,
-                        &arg_tys,
-                        &mut ty_var_env,
-                    );
-                    warnings.extend(more_warnings);
 
                     subst_ty_vars(&ret_ty, &ty_var_env)
                 }

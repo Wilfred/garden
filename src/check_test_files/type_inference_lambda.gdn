@@ -1,0 +1,5 @@
+{
+    should_equal([1, 2].filter(fun(_) { True; }), [1, 2]);
+}
+
+// args: check

@@ -1,11 +1,41 @@
-fun build_site() {
+fun file_name(path: String): String {
+    let parts = path.split("/");
+    parts.last().or_exception();
+}
+
+// A list of all the files in `website_dir` that are templates.
+//
+// Returns paths relative to the directory.
+fun template_files(website_dir: String): List<String> {
+    // TODO: a ? syntax.
+    let dir_files = list_directory(website_dir).or_error();
+    let tmpl_files = dir_files.filter(fun (p) {p.ends_with(".tmpl.html"); });
+    tmpl_files.map(file_name);
+}
+
+// Convert "foo.tmpl.html" to "foo.html".
+fun output_path(template_path: String): String {
+    template_path.strip_suffix(".tmpl.html").append(".html");
+}
+
+{
+    template_files("/home/wilfred/projects/garden/website");
+}
+
+fun build_site(): Unit {
     let website_dir = "/home/wilfred/projects/garden/website";
 
-    let tmpl_path = "/".join([website_dir, "template.html"]);
+    let base_tmpl_path = "/".join([website_dir, "template.html"]);
+    let tmpl_paths = template_files(website_dir);
 
-    let index_tmpl_path = "/".join([website_dir, "index.tmpl.html"]);
-    let dest_path = "/".join([website_dir, "index.html"]);
-    write_website_file(tmpl_path, index_tmpl_path, dest_path);
+    let i = 0;
+    while (i < tmpl_paths.len()) {
+        let tmpl_path = tmpl_paths.get(i);
+        let dest_path = output_path(tmpl_path);
+        write_website_file(base_tmpl_path, tmpl_path, dest_path);
+
+        i = i + 1;
+    }
 }
 
 fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {

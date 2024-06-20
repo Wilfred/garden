@@ -2196,7 +2196,7 @@ fn eval_builtin_method_call(
                             env,
                         ),
                         restore_values: saved_values,
-                        error_position: arg_positions[1].clone(),
+                        error_position: arg_positions[0].clone(),
                     });
                 }
             };

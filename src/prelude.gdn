@@ -100,6 +100,14 @@ test ends_with {
     should_equal("abc".ends_with("aabc"), False);
 }
 
+// Return this string with `s` appended at the end.
+fun (self: String) append(s: String): String {
+    "".join([self, s]);
+}
+
+test string_append {
+    should_equal("foo".append("bar"), "foobar");
+}
 
 // Split this string into a list of lines.
 fun (self: String) lines(): List<String> {

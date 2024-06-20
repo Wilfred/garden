@@ -7,7 +7,7 @@
 
 `dbg` now returns its argument, so it can be added to subexpressions.
 
-Added `String::split()`, `List::map` and `List::last()`.
+Added `String::split()`, `String::append`, `List::map` and `List::last()`.
 
 ## Checks
 

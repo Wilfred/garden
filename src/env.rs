@@ -90,7 +90,7 @@ impl Default for Env {
             },
         );
         string_methods.insert(
-            SymbolName("concat".to_owned()),
+            SymbolName("append".to_owned()),
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -108,9 +108,9 @@ impl Default for Env {
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
-                    name: SymbolName("concat".to_owned()),
+                    name: SymbolName("append".to_owned()),
                 },
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringConcat, None),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringAppend, None),
             },
         );
 

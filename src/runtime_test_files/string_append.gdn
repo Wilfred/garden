@@ -1,0 +1,7 @@
+fun main(_) {
+    dbg("foo".append("bar"));
+}
+
+// args: run
+// expected stdout: "foobar"
+

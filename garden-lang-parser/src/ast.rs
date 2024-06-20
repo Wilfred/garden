@@ -361,7 +361,7 @@ pub enum BuiltinMethodKind {
     ListAppend,
     ListGet,
     ListLen,
-    StringConcat,
+    StringAppend,
     StringLen,
     StringSubstring,
 }

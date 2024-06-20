@@ -100,15 +100,6 @@ test ends_with {
     should_equal("abc".ends_with("aabc"), False);
 }
 
-// Return this string with `s` appended at the end.
-fun (self: String) append(s: String): String {
-    "".join([self, s]);
-}
-
-test string_append {
-    should_equal("foo".append("bar"), "foobar");
-}
-
 // Split this string into a list of lines.
 fun (self: String) lines(): List<String> {
     let parts = [];
@@ -220,8 +211,8 @@ fun (self: String) join(items: List<String>): String {
     let res = items.get(0);
     let i = 1;
     while (i < items.len()) {
-        res = res.concat(self);
-        res = res.concat(items.get(i));
+        res = res.append(self);
+        res = res.append(items.get(i));
         i = i + 1;
     }
     res;

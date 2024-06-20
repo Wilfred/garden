@@ -2146,9 +2146,9 @@ fn eval_builtin_method_call(
                 }
             }
         }
-        BuiltinMethodKind::StringConcat => {
+        BuiltinMethodKind::StringAppend => {
             check_arity(
-                &SymbolName("String::concat".to_owned()),
+                &SymbolName("String::append".to_owned()),
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3478,15 +3478,6 @@ mod tests {
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::String("bc".into()));
-    }
-
-    #[test]
-    fn test_eval_string_concat() {
-        let exprs = parse_exprs_from_str("\"abc\".concat(\"def\");").unwrap();
-
-        let mut env = Env::default();
-        let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::String("abcdef".into()));
     }
 
     #[test]

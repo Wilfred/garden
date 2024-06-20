@@ -332,9 +332,7 @@ the user entering a value in the *garden* buffer."
 (defun garden--active-buffer ()
   "Get the *garden* buffer and ensure it has an active session."
   (unless (garden--session-active-p)
-    (if (yes-or-no-p "No Garden process is running. Start it?")
-        (garden--start)
-      (user-error "No Garden process available")))
+    (garden--start))
   (garden--buffer))
 
 (defun garden--encode (args)

@@ -5,12 +5,11 @@ fun file_name(path: String): String {
 
 // A list of all the files in `website_dir` that are templates.
 //
-// Returns paths relative to the directory.
+// Returns absolute paths.
 fun template_files(website_dir: String): List<String> {
     // TODO: a ? syntax.
     let dir_files = list_directory(website_dir).or_error();
-    let tmpl_files = dir_files.filter(fun (p) {p.ends_with(".tmpl.html"); });
-    tmpl_files.map(file_name);
+    dir_files.filter(fun (p) {p.ends_with(".tmpl.html"); });
 }
 
 // Convert "foo.tmpl.html" to "foo.html".

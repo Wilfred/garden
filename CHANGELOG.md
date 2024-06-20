@@ -3,6 +3,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+## Syntax
+
+There is now a syntax for function types. For example, `Fun<(Int,
+Int), Int>` is the type of the function `fun(x, y) { x + y; }`.
+
 ## Stdlib
 
 `dbg` now returns its argument, so it can be added to subexpressions.

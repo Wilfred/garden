@@ -97,8 +97,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     }
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
-        // TODO: Make this on by default.
-        if std::env::var_os("GDN_CHECK").is_none() {
+        if std::env::var_os("GDN_TRUST_PRELUDE").is_some() {
             // Skip typechecking builtins and prelude to help print debugging.
             if let Some(n) = &fun_info.name {
                 let path = n.position.path.clone();

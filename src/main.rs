@@ -150,14 +150,17 @@ fn show_type(src: &str, path: &Path, line: usize, column: usize) {
     }
 }
 
-fn find_item_at(items: &[ToplevelItem], _line: usize, _column: usize) {
+fn find_item_at(items: &[ToplevelItem], line: usize, _column: usize) {
     for item in items {
         let pos = match item {
             ToplevelItem::Def(d) => &d.1,
             ToplevelItem::Expr(e) => &e.0.pos,
         };
 
-        dbg!(item);
+        if pos.line_number > line || pos.end_line_number < line {
+            continue;
+        }
+
         dbg!(pos);
     }
 }

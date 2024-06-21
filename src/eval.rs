@@ -783,7 +783,7 @@ fn eval_let(
         .expect("Popped an empty value stack for let value");
 
     if let Some(hint) = hint {
-        let expected_ty = match Type::from_hint(hint, env, &env.type_bindings()) {
+        let expected_ty = match Type::from_hint(hint, env, &stack_frame.type_bindings) {
             Ok(ty) => ty,
             Err(e) => {
                 return Err(ErrorInfo {

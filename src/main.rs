@@ -39,7 +39,7 @@ use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Session};
 use crate::values::escape_string_literal;
-use garden_lang_parser::ast::SourceString;
+use garden_lang_parser::ast::{SourceString, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_item, parse_toplevel_items, ParseError};
 
@@ -140,13 +140,25 @@ fn main() {
     }
 }
 
-fn show_type(src: &str, path: &Path, line: usize, _column: usize) {
+fn show_type(src: &str, path: &Path, line: usize, column: usize) {
     let lines: Vec<_> = src.lines().collect();
     println!("{}", &lines[line - 1]);
 
     match parse_toplevel_items(path, src) {
-        Ok(items) => {}
+        Ok(items) => find_item_at(&items, line, column),
         Err(_) => eprintln!("Parse error."),
+    }
+}
+
+fn find_item_at(items: &[ToplevelItem], _line: usize, _column: usize) {
+    for item in items {
+        let pos = match item {
+            ToplevelItem::Def(d) => &d.1,
+            ToplevelItem::Expr(e) => &e.0.pos,
+        };
+
+        dbg!(item);
+        dbg!(pos);
     }
 }
 

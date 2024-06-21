@@ -102,7 +102,7 @@ test ends_with {
 
 // Split this string into a list of lines.
 fun (self: String) lines(): List<String> {
-    let parts = [];
+    let parts: List<String> = [];
 
     let line_start = 0;
     let i = 0;
@@ -413,7 +413,7 @@ fun<T> (self: List<T>) is_empty(): Bool {
 }
 
 // Does this list contain `item`?
-fun<T> (self: List<T>) contains(item): Bool {
+fun<T> (self: List<T>) contains(item: T): Bool {
     let i = 0;
     while (i < self.len()) {
         if (self.get(i) == item) {

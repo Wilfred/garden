@@ -23,6 +23,7 @@ impl std::fmt::Debug for Position {
                 .field("start_offset", &self.start_offset)
                 .field("end_offset", &self.end_offset)
                 .field("line_number", &self.line_number)
+                .field("end_line_number", &self.end_line_number)
                 .field("path", &self.path)
                 .finish()
         } else {

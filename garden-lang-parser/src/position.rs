@@ -11,6 +11,7 @@ pub struct Position {
     pub end_offset: usize,
     // TODO: Use LineNumber instead, finding a way to serialize it.
     pub line_number: usize,
+    pub end_line_number: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
 }
@@ -40,6 +41,7 @@ impl Position {
             start_offset: 0,
             end_offset: 0,
             line_number: 0,
+            end_line_number: 0,
             path: PathBuf::from("/position/todo"),
         }
     }
@@ -51,6 +53,7 @@ impl Position {
             start_offset: first.start_offset,
             end_offset: second.end_offset,
             line_number: first.line_number,
+            end_line_number: second.end_line_number,
             path: first.path.clone(),
         }
     }

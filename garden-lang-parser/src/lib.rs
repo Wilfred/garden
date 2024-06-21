@@ -817,8 +817,8 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
 }
 
 fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
-    let enum_token = require_token(tokens, "struct")?;
-    let doc_comment = parse_doc_comment(&enum_token);
+    let struct_token = require_token(tokens, "struct")?;
+    let doc_comment = parse_doc_comment(&struct_token);
     let name_sym = parse_type_symbol(tokens)?;
     let type_params = parse_type_params(tokens)?;
 
@@ -828,8 +828,8 @@ fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, P
 
     let close_brace = require_token(tokens, "}")?;
 
-    let mut start_offset = enum_token.position.start_offset;
-    if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
+    let mut start_offset = struct_token.position.start_offset;
+    if let Some((comment_pos, _)) = struct_token.preceding_comments.first() {
         start_offset = comment_pos.start_offset;
     }
     let end_offset = close_brace.position.end_offset;
@@ -839,7 +839,7 @@ fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, P
         src: src[start_offset..end_offset].to_owned(),
     };
 
-    let position = Position::merge(&enum_token.position, &close_brace.position);
+    let position = Position::merge(&struct_token.position, &close_brace.position);
 
     Ok(Definition(
         src_string.clone(),

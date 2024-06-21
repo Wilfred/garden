@@ -128,19 +128,25 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
-        Commands::ShowType { path, line, column } => {
-            let _ = column;
-            match std::fs::read(&path) {
-                Ok(src_bytes) => {
-                    let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                    let lines: Vec<_> = src.lines().collect();
-                    println!("{}", &lines[line - 1]);
-                }
-                Err(e) => {
-                    eprintln!("Error: Could not read file {}: {}", path.display(), e);
-                }
+        Commands::ShowType { path, line, column } => match std::fs::read(&path) {
+            Ok(src_bytes) => {
+                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                show_type(&src, &path, line, column);
             }
-        }
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+    }
+}
+
+fn show_type(src: &str, path: &Path, line: usize, _column: usize) {
+    let lines: Vec<_> = src.lines().collect();
+    println!("{}", &lines[line - 1]);
+
+    match parse_toplevel_items(path, src) {
+        Ok(items) => {}
+        Err(_) => eprintln!("Parse error."),
     }
 }
 

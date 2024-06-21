@@ -801,9 +801,11 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let position = Position::merge(&enum_token.position, &close_brace.position);
+
     Ok(Definition(
         src_string.clone(),
-        enum_token.position,
+        position,
         Definition_::Enum(EnumInfo {
             src_string,
             doc_comment,
@@ -837,9 +839,11 @@ fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, P
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let position = Position::merge(&enum_token.position, &close_brace.position);
+
     Ok(Definition(
         src_string.clone(),
-        enum_token.position,
+        position,
         Definition_::Struct(StructInfo {
             src_string,
             doc_comment,
@@ -880,9 +884,11 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let position = Position::merge(&test_token.position, &body.close_brace);
+
     Ok(Definition(
         src_string.clone(),
-        test_token.position,
+        position,
         Definition_::Test(TestInfo {
             src_string,
             doc_comment,
@@ -1325,6 +1331,7 @@ fn parse_method(
         start_offset = comment_pos.start_offset;
     }
     let end_offset = body.close_brace.end_offset;
+    let close_brace_pos = body.close_brace.clone();
 
     let src_string = SourceString {
         offset: start_offset,
@@ -1347,9 +1354,11 @@ fn parse_method(
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
+    let position = Position::merge(&fun_token.position, &close_brace_pos);
+
     Ok(Definition(
         src_string.clone(),
-        fun_token.position,
+        position,
         Definition_::Method(meth_info),
     ))
 }
@@ -1374,15 +1383,18 @@ fn parse_function(
         start_offset = comment_pos.start_offset;
     }
     let end_offset = body.close_brace.end_offset;
+    let close_brace_pos = body.close_brace.clone();
 
     let src_string = SourceString {
         offset: start_offset,
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let position = Position::merge(&fun_token.position, &close_brace_pos);
+
     Ok(Definition(
         src_string.clone(),
-        fun_token.position,
+        position,
         Definition_::Fun(
             name.clone(),
             FunInfo {

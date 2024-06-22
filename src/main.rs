@@ -39,7 +39,7 @@ use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Session};
 use crate::values::escape_string_literal;
-use garden_lang_parser::ast::{SourceString, ToplevelItem};
+use garden_lang_parser::ast::{Expression, Expression_, SourceString, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_item, parse_toplevel_items, ParseError};
 
@@ -171,10 +171,10 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
             Ok(items) => {
                 for item in items {
                     match item {
-                        garden_lang_parser::ast::ToplevelItem::Def(d) => {
+                        ToplevelItem::Def(d) => {
                             println!("{:#?}", d.2);
                         }
-                        garden_lang_parser::ast::ToplevelItem::Expr(e) => {
+                        ToplevelItem::Expr(e) => {
                             println!("{:#?}", e.0.expr_);
                         }
                     }

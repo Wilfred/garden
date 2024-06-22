@@ -157,7 +157,7 @@ fn find_item_at(items: &[ToplevelItem], line: usize, _column: usize) {
             ToplevelItem::Expr(e) => &e.0.pos,
         };
 
-        if pos.line_number > line || pos.end_line_number < line {
+        if !pos.contains(line, column) {
             continue;
         }
 

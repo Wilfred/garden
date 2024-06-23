@@ -20,14 +20,14 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> 
 
     let mut visitor = TypeCheckVisitor {
         env: &mut env,
-        warnings: vec![],
+        diagnostics: vec![],
         bindings: LocalBindings::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);
     }
 
-    visitor.warnings
+    visitor.diagnostics
 }
 
 #[derive(Debug)]
@@ -71,7 +71,7 @@ impl LocalBindings {
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
-    warnings: Vec<Diagnostic>,
+    diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
 }
 
@@ -132,7 +132,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             self.env,
             &mut self.bindings,
             &type_bindings,
-            &mut self.warnings,
+            &mut self.diagnostics,
         );
 
         self.bindings.exit_block();
@@ -147,7 +147,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             self.env,
             &mut self.bindings,
             &self.env.type_bindings(),
-            &mut self.warnings,
+            &mut self.diagnostics,
             None,
         );
     }
@@ -158,7 +158,7 @@ fn check_block(
     env: &mut Env,
     bindings: &mut LocalBindings,
     type_bindings: &TypeVarEnv,
-    warnings: &mut Vec<Diagnostic>,
+    diagnostics: &mut Vec<Diagnostic>,
     expected_return_ty: Option<&Type>,
 ) -> Type {
     bindings.enter_block();
@@ -170,7 +170,7 @@ fn check_block(
             env,
             bindings,
             type_bindings,
-            warnings,
+            diagnostics,
             expected_return_ty,
         );
     }
@@ -236,7 +236,7 @@ fn check_expr(
     env: &mut Env,
     bindings: &mut LocalBindings,
     type_bindings: &TypeVarEnv,
-    warnings: &mut Vec<Diagnostic>,
+    diagnostics: &mut Vec<Diagnostic>,
     expected_return_ty: Option<&Type>,
 ) -> Type {
     match &expr.expr_ {
@@ -246,7 +246,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             let scrutinee_ty_name = scrutinee_ty.type_name();
@@ -255,7 +255,13 @@ fn check_expr(
 
             if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
                 let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
-                check_match_exhaustive(env, &scrutinee.pos, scrutinee_ty_name, &patterns, warnings);
+                check_match_exhaustive(
+                    env,
+                    &scrutinee.pos,
+                    scrutinee_ty_name,
+                    &patterns,
+                    diagnostics,
+                );
             }
 
             for (pattern, case_expr) in cases {
@@ -275,7 +281,7 @@ fn check_expr(
                     env,
                     bindings,
                     type_bindings,
-                    warnings,
+                    diagnostics,
                     expected_return_ty,
                 ));
 
@@ -287,7 +293,7 @@ fn check_expr(
                 }
 
                 let Some(value) = env.file_scope.get(&pattern.symbol.name) else {
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message: format!("No such type `{}`.", pattern.symbol.name),
                         position: pattern.symbol.position.clone(),
@@ -299,7 +305,7 @@ fn check_expr(
                     Value::Enum { type_name, .. } => type_name,
                     Value::EnumConstructor { type_name, .. } => type_name,
                     _ => {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
                                 "Expected an enum variant here, but got `{}`.",
@@ -315,7 +321,7 @@ fn check_expr(
                     continue;
                 };
                 if pattern_type_name != scrutinee_ty_name {
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message: format!(
                             "This match case is for `{}`, but you're matching on a `{}`.",
@@ -332,7 +338,7 @@ fn check_expr(
                     let last_case = cases
                         .last()
                         .expect("Type errors should require at least one match case.");
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message: "`match` cases have different types..".to_owned(),
                         position: last_case.1.pos.clone(),
@@ -348,11 +354,11 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             if !is_subtype(&cond_ty, &Type::bool()) {
-                warnings.push(Diagnostic {
+                diagnostics.push(Diagnostic {
                     level: Level::Error,
                     message: format!(
                         "Expected `Bool` inside an `if` condition, but got `{}`.",
@@ -367,7 +373,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
 
@@ -377,7 +383,7 @@ fn check_expr(
                     env,
                     bindings,
                     type_bindings,
-                    warnings,
+                    diagnostics,
                     expected_return_ty,
                 ),
                 None => Type::unit(),
@@ -403,7 +409,7 @@ fn check_expr(
                         None => cond_expr.pos.clone(),
                     };
 
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message,
                         position,
@@ -419,11 +425,11 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             if !is_subtype(&cond_ty, &Type::bool()) {
-                warnings.push(Diagnostic {
+                diagnostics.push(Diagnostic {
                     level: Level::Error,
                     message: format!(
                         "Expected `Bool` inside an `while` condition, but got `{}`.",
@@ -438,7 +444,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
 
@@ -451,7 +457,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             Type::unit()
@@ -462,7 +468,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
 
@@ -471,7 +477,7 @@ fn check_expr(
                     let hint_ty = Type::from_hint(hint, env, type_bindings).unwrap_or_err_ty();
 
                     if !is_subtype(&expr_ty, &hint_ty) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
                                 "Expected `{}` for this let expression, but got `{}`.",
@@ -498,7 +504,7 @@ fn check_expr(
                         env,
                         bindings,
                         type_bindings,
-                        warnings,
+                        diagnostics,
                         expected_return_ty,
                     ),
                     inner_expr.pos.clone(),
@@ -509,7 +515,7 @@ fn check_expr(
 
             if let Some(expected_return_ty) = expected_return_ty {
                 if !is_subtype(&ty, expected_return_ty) {
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message: format!(
                             "Expected this function to return `{}`, but got `{}`.",
@@ -535,7 +541,7 @@ fn check_expr(
                     env,
                     bindings,
                     type_bindings,
-                    warnings,
+                    diagnostics,
                     expected_return_ty,
                 );
                 // TODO: unify the types of all elements in the
@@ -552,7 +558,7 @@ fn check_expr(
                     env,
                     bindings,
                     type_bindings,
-                    warnings,
+                    diagnostics,
                     expected_return_ty,
                 );
             }
@@ -573,7 +579,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             let rhs_ty = check_expr(
@@ -581,7 +587,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
 
@@ -591,14 +597,14 @@ fn check_expr(
                 | BinaryOperatorKind::Multiply
                 | BinaryOperatorKind::Divide => {
                     if !is_subtype(&lhs_ty, &Type::Int) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                             position: lhs.pos.clone(),
                         });
                     }
                     if !is_subtype(&rhs_ty, &Type::Int) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                             position: rhs.pos.clone(),
@@ -612,14 +618,14 @@ fn check_expr(
                 | BinaryOperatorKind::GreaterThan
                 | BinaryOperatorKind::GreaterThanOrEqual => {
                     if !is_subtype(&lhs_ty, &Type::Int) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", lhs_ty),
                             position: lhs.pos.clone(),
                         });
                     }
                     if !is_subtype(&rhs_ty, &Type::Int) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Int`, but got `{}`.", rhs_ty),
                             position: rhs.pos.clone(),
@@ -630,7 +636,7 @@ fn check_expr(
                 }
                 BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
                     if lhs_ty != rhs_ty {
-                        warnings.push(Diagnostic { level: Level::Warning,
+                        diagnostics.push(Diagnostic { level: Level::Warning,
                                 message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
                                 position: rhs.pos.clone(),
                             });
@@ -640,14 +646,14 @@ fn check_expr(
                 }
                 BinaryOperatorKind::And | BinaryOperatorKind::Or => {
                     if !is_subtype(&lhs_ty, &Type::bool()) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
                             position: lhs.pos.clone(),
                         });
                     }
                     if !is_subtype(&rhs_ty, &Type::bool()) {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
                             position: rhs.pos.clone(),
@@ -674,7 +680,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             let arg_tys = paren_args
@@ -687,7 +693,7 @@ fn check_expr(
                             env,
                             bindings,
                             type_bindings,
-                            warnings,
+                            diagnostics,
                             expected_return_ty,
                         ),
                         arg.pos.clone(),
@@ -708,7 +714,7 @@ fn check_expr(
                     };
 
                     if params.len() != paren_args.arguments.len() {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
                                 "{} expects {} argument{}, but got {}.",
@@ -734,7 +740,7 @@ fn check_expr(
 
                     for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
                         if !is_subtype(&arg_ty, param_ty) {
-                            warnings.push(Diagnostic {
+                            diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!(
                                     "Expected `{}` argument but got `{}`.",
@@ -753,7 +759,7 @@ fn check_expr(
                     recv_ty.clone()
                 }
                 _ => {
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message: format!("Expected a function, but got a `{}`.", recv_ty),
                         position: recv.pos.clone(),
@@ -774,7 +780,7 @@ fn check_expr(
                             env,
                             bindings,
                             type_bindings,
-                            warnings,
+                            diagnostics,
                             expected_return_ty,
                         ),
                         arg.pos.clone(),
@@ -787,7 +793,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             let Some(receiver_ty_name) = receiver_ty.type_name() else {
@@ -806,7 +812,7 @@ fn check_expr(
                         return Type::error("This method has no fun_info");
                     };
                     if fun_info.params.len() != paren_args.arguments.len() {
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
                                 "`{}::{}` requires {} argument{}, but got {}.",
@@ -825,7 +831,7 @@ fn check_expr(
                         ty_var_env.insert(type_param.name.clone(), None);
                     }
 
-                    let (more_warnings, ret_ty) = subst_type_vars_in_meth_return_ty(
+                    let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
                         env,
                         method_info,
                         &recv.pos,
@@ -833,7 +839,7 @@ fn check_expr(
                         &arg_tys,
                         &mut ty_var_env,
                     );
-                    warnings.extend(more_warnings);
+                    diagnostics.extend(more_diagnostics);
 
                     for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
                         let Some(param_hint) = &param.hint else {
@@ -844,7 +850,7 @@ fn check_expr(
                         };
 
                         if !is_subtype(arg_ty, &param_ty) {
-                            warnings.push(Diagnostic {
+                            diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!(
                                     "Expected `{}` argument but got `{}`.",
@@ -858,7 +864,7 @@ fn check_expr(
                     subst_ty_vars(&ret_ty, &ty_var_env)
                 }
                 None => {
-                    warnings.push(Diagnostic {
+                    diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message: format!("`{}` has no method `{}`.", receiver_ty_name, sym.name),
                         position: sym.position.clone(),
@@ -873,7 +879,7 @@ fn check_expr(
                 env,
                 bindings,
                 type_bindings,
-                warnings,
+                diagnostics,
                 expected_return_ty,
             );
             let Some(recv_ty_name) = recv_ty.type_name() else {
@@ -895,7 +901,7 @@ fn check_expr(
                             }
                         }
 
-                        warnings.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
                                 "Struct `{}` has no field `{}`.",
@@ -913,14 +919,14 @@ fn check_expr(
             }
         }
         Expression_::FunLiteral(fun_info) => {
-            check_fun_info(fun_info, env, bindings, type_bindings, warnings)
+            check_fun_info(fun_info, env, bindings, type_bindings, diagnostics)
         }
         Expression_::Block(block) => check_block(
             block,
             env,
             bindings,
             type_bindings,
-            warnings,
+            diagnostics,
             expected_return_ty,
         ),
     }
@@ -931,7 +937,7 @@ fn check_fun_info(
     env: &mut Env,
     bindings: &mut LocalBindings,
     type_bindings: &TypeVarEnv,
-    warnings: &mut Vec<Diagnostic>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) -> Type {
     // Check the function body with the locals bound.
     bindings.enter_block();
@@ -958,7 +964,7 @@ fn check_fun_info(
         env,
         bindings,
         type_bindings,
-        warnings,
+        diagnostics,
         expected_return_ty.as_ref(),
     );
 
@@ -984,7 +990,7 @@ fn check_fun_info(
             };
 
             if !is_subtype(&body_ty, &return_ty) {
-                warnings.push(Diagnostic {
+                diagnostics.push(Diagnostic {
                     level: Level::Error,
                     message: format!("Expected to return `{}` but got `{}`.", return_ty, body_ty),
                     position,
@@ -1339,7 +1345,7 @@ fn check_match_exhaustive(
     scrutinee_pos: &Position,
     type_name: &TypeName,
     patterns: &[Pattern],
-    warnings: &mut Vec<Diagnostic>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
     let Some(type_def) = env.get_type_def(type_name) else {
         return;
@@ -1371,7 +1377,7 @@ fn check_match_exhaustive(
     let missing: Vec<_> = variants_remaining.keys().collect();
 
     if let Some(missing_case) = missing.first() {
-        warnings.push(Diagnostic {
+        diagnostics.push(Diagnostic {
             level: Level::Error,
             message: format!(
                 "This match expression does not cover all the cases of `{}`. It's missing `{}`.",

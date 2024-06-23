@@ -32,7 +32,7 @@ pub fn show_type(src: &str, path: &Path, line: usize, column: usize) {
 
             let hovered_id = find_item_at(&items, line, column);
             if let Some(hovered_id) = hovered_id {
-                dbg!(&id_to_ty[&hovered_id]);
+                println!("{}", id_to_ty[&hovered_id]);
             }
         }
         Err(_) => eprintln!("Parse error."),

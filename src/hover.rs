@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{Expression, Expression_, ToplevelItem},
+    ast::{Definition_, Expression, Expression_, ToplevelItem},
     parse_toplevel_items,
 };
 
@@ -16,7 +16,9 @@ pub fn show_type(src: &str, path: &Path, line: usize, column: usize) {
 }
 
 fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) {
-    for item in items {
+    let mut containing_expr: Option<Expression> = None;
+
+    'found: for item in items {
         let pos = match item {
             ToplevelItem::Def(d) => &d.1,
             ToplevelItem::Expr(e) => &e.0.pos,
@@ -26,16 +28,35 @@ fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) {
             continue;
         }
 
-        dbg!(pos);
         match item {
             ToplevelItem::Def(d) => {
-                dbg!(d);
+                let exprs = match &d.2 {
+                    Definition_::Fun(_, fun_info) => fun_info.body.exprs.clone(),
+                    Definition_::Method(meth_info) => match meth_info.fun_info() {
+                        Some(fun_info) => fun_info.body.exprs.clone(),
+                        None => vec![],
+                    },
+                    Definition_::Test(test_info) => test_info.body.exprs.clone(),
+                    Definition_::Enum(_) | Definition_::Struct(_) => vec![],
+                };
+
+                for expr in exprs {
+                    if let Some(e) = find_expr_at(&expr, line, column) {
+                        containing_expr = Some(e);
+                        break 'found;
+                    }
+                }
             }
-            ToplevelItem::Expr(e) => {
-                dbg!(find_expr_at(&e.0, line, column));
+            ToplevelItem::Expr(toplevel_expr) => {
+                if let Some(e) = find_expr_at(&toplevel_expr.0, line, column) {
+                    containing_expr = Some(e);
+                    break 'found;
+                }
             }
         }
     }
+
+    dbg!(containing_expr);
 }
 
 fn find_expr_at(expr: &Expression, line: usize, column: usize) -> Option<Expression> {

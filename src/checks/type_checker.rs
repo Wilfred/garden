@@ -15,19 +15,23 @@ use crate::visitor::Visitor;
 
 use super::assign_ids::assign_expr_ids;
 
-pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_types(
+    items: &[ToplevelItem],
+    env: &Env,
+) -> (Vec<Diagnostic>, HashMap<usize, Type>) {
     let mut env = env.clone();
 
     let mut visitor = TypeCheckVisitor {
         env: &mut env,
         diagnostics: vec![],
         bindings: LocalBindings::default(),
+        id_to_ty: HashMap::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);
     }
 
-    visitor.diagnostics
+    (visitor.diagnostics, visitor.id_to_ty)
 }
 
 #[derive(Debug)]
@@ -73,6 +77,7 @@ struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
+    id_to_ty: HashMap<usize, Type>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
@@ -232,7 +237,13 @@ impl<'a> TypeCheckVisitor<'a> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
-        self.check_expr_(&expr.expr_, &expr.pos, type_bindings, expected_return_ty)
+        let ty = self.check_expr_(&expr.expr_, &expr.pos, type_bindings, expected_return_ty);
+
+        if let Some(id) = expr.id.get() {
+            self.id_to_ty.insert(*id, ty.clone());
+        }
+
+        ty
     }
 
     fn check_expr_(

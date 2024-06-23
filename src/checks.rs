@@ -44,7 +44,9 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     warnings.extend(check_free_variables(items, env));
     warnings.extend(check_struct_fields(items, env));
     warnings.extend(check_hints(items, env));
-    warnings.extend(check_types(items, env));
+
+    let (type_warnings, _) = check_types(items, env);
+    warnings.extend(type_warnings);
     warnings.extend(check_duplicates(items, env));
 
     warnings

@@ -69,11 +69,6 @@ impl Position {
         )
     }
 
-    // TODO: switch to using offsets.
-    pub fn contains(&self, line: usize, _column: usize) -> bool {
-        self.line_number <= line && line <= self.end_line_number
-    }
-
     pub fn contains_offset(&self, offset: usize) -> bool {
         self.start_offset <= offset && offset <= self.end_offset
     }

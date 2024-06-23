@@ -77,11 +77,7 @@ enum Commands {
         json: bool,
     },
     /// Show the type of the expression at the position given.
-    ShowType {
-        path: PathBuf,
-        line: usize,
-        column: usize,
-    },
+    ShowType { path: PathBuf, offset: usize },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
@@ -130,10 +126,10 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
-        Commands::ShowType { path, line, column } => match std::fs::read(&path) {
+        Commands::ShowType { path, offset } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                show_type(&src, &path, line, column);
+                show_type(&src, &path, offset);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

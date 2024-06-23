@@ -136,25 +136,27 @@ impl Visitor for TypeCheckVisitor<'_> {
         assign_expr_ids(block);
 
         // check_block recurses, so don't recurse in the visitor
-        check_block(block, self, &self.env.type_bindings(), None);
+        self.check_block(block, &self.env.type_bindings(), None);
     }
 }
 
-fn check_block(
-    block: &Block,
-    visitor: &mut TypeCheckVisitor,
-    type_bindings: &TypeVarEnv,
-    expected_return_ty: Option<&Type>,
-) -> Type {
-    visitor.bindings.enter_block();
+impl<'a> TypeCheckVisitor<'a> {
+    fn check_block(
+        &mut self,
+        block: &Block,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) -> Type {
+        self.bindings.enter_block();
 
-    let mut ty = Type::unit();
-    for expr in &block.exprs {
-        ty = check_expr(expr, visitor, type_bindings, expected_return_ty);
+        let mut ty = Type::unit();
+        for expr in &block.exprs {
+            ty = check_expr(expr, self, type_bindings, expected_return_ty);
+        }
+
+        self.bindings.exit_block();
+        ty
     }
-
-    visitor.bindings.exit_block();
-    ty
 }
 
 fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Type {
@@ -328,11 +330,11 @@ fn check_expr(
                 });
             }
 
-            let then_ty = check_block(then_block, visitor, type_bindings, expected_return_ty);
+            let then_ty = visitor.check_block(then_block, type_bindings, expected_return_ty);
 
             let else_ty = match else_block {
                 Some(else_block) => {
-                    check_block(else_block, visitor, type_bindings, expected_return_ty)
+                    visitor.check_block(else_block, type_bindings, expected_return_ty)
                 }
                 None => Type::unit(),
             };
@@ -380,7 +382,7 @@ fn check_expr(
                 });
             }
 
-            check_block(body, visitor, type_bindings, expected_return_ty);
+            visitor.check_block(body, type_bindings, expected_return_ty);
 
             Type::unit()
         }
@@ -773,7 +775,7 @@ fn check_expr(
             }
         }
         Expression_::FunLiteral(fun_info) => check_fun_info(fun_info, visitor, type_bindings),
-        Expression_::Block(block) => check_block(block, visitor, type_bindings, expected_return_ty),
+        Expression_::Block(block) => visitor.check_block(block, type_bindings, expected_return_ty),
     }
 }
 
@@ -802,12 +804,7 @@ fn check_fun_info(
         None => None,
     };
 
-    let body_ty = check_block(
-        &fun_info.body,
-        visitor,
-        type_bindings,
-        expected_return_ty.as_ref(),
-    );
+    let body_ty = visitor.check_block(&fun_info.body, type_bindings, expected_return_ty.as_ref());
 
     visitor.bindings.exit_block();
 

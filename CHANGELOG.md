@@ -3,6 +3,13 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
+## Tooling
+
+Added a command `garden show-type foo.gdn 123` that shows the type of
+the expression in file `foo.gdn` at offset 123.
+
+Configured Emacs mode to show hover information.
+
 ## Syntax
 
 There is now a syntax for function types. For example, `Fun<(Int,

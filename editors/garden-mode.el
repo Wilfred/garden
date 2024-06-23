@@ -574,11 +574,22 @@ If called with a prefix, stop the previous session."
 
   (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
 
-(defun garden-mode-eldoc (_callback &rest _)
+(defun garden-mode-eldoc (callback &rest _)
   "Show information for the symbol at point."
-  (let ((sym (symbol-at-point)))
-    (when sym
-      (format "%S" sym))))
+  (let ((output-buffer (generate-new-buffer "*async-shell-command*")))
+    (make-process
+     :name "garden-mode-hover-type"
+     :buffer output-buffer
+     :command (list garden-executable
+                    "show-type"
+                    (buffer-file-name)
+                    (format "%s" (1- (point))))
+     :sentinel (lambda (process event)
+                 (when (string= event "finished\n")
+                   (with-current-buffer (process-buffer process)
+                     (let ((result (buffer-string)))
+                       (kill-buffer (current-buffer))
+                       (funcall callback result))))))))
 
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))

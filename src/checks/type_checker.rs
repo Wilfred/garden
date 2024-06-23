@@ -127,7 +127,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             self.bindings.set(param.symbol.name.clone(), param_ty);
         }
 
-        check_fun_info(fun_info, self, &type_bindings);
+        self.check_fun_info(fun_info, &type_bindings);
 
         self.bindings.exit_block();
     }
@@ -156,6 +156,74 @@ impl<'a> TypeCheckVisitor<'a> {
 
         self.bindings.exit_block();
         ty
+    }
+
+    fn check_fun_info(&mut self, fun_info: &FunInfo, type_bindings: &TypeVarEnv) -> Type {
+        // Check the function body with the locals bound.
+        self.bindings.enter_block();
+
+        // Only bind and check locals that have an explicit type
+        // hint.
+        for param in &fun_info.params {
+            if let Some(hint) = &param.hint {
+                let param_ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+                self.bindings.set(param.symbol.name.clone(), param_ty);
+            }
+        }
+
+        let expected_return_ty = match &fun_info.return_hint {
+            Some(hint) => {
+                let ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+                Some(ty)
+            }
+            None => None,
+        };
+
+        let body_ty = self.check_block(&fun_info.body, type_bindings, expected_return_ty.as_ref());
+
+        self.bindings.exit_block();
+
+        // Build the type representation of a function matching this lambda.
+        let mut param_tys = vec![];
+        for param in &fun_info.params {
+            let param_ty = match &param.hint {
+                Some(hint) => Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty(),
+                None => Type::Top,
+            };
+            param_tys.push(param_ty);
+        }
+
+        let return_ty = match &fun_info.return_hint {
+            Some(hint) => {
+                let return_ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+
+                let position = match fun_info.body.exprs.last() {
+                    Some(expr) => expr.pos.clone(),
+                    None => hint.position.clone(),
+                };
+
+                if !is_subtype(&body_ty, &return_ty) {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "Expected to return `{}` but got `{}`.",
+                            return_ty, body_ty
+                        ),
+                        position,
+                    });
+                }
+
+                return_ty
+            }
+            None => body_ty,
+        };
+
+        Type::Fun {
+            type_params: vec![],
+            params: param_tys,
+            return_: Box::new(return_ty),
+            name: fun_info.name.clone(),
+        }
     }
 }
 
@@ -774,77 +842,8 @@ fn check_expr(
                 _ => Type::error("This type is not a struct"),
             }
         }
-        Expression_::FunLiteral(fun_info) => check_fun_info(fun_info, visitor, type_bindings),
+        Expression_::FunLiteral(fun_info) => visitor.check_fun_info(fun_info, type_bindings),
         Expression_::Block(block) => visitor.check_block(block, type_bindings, expected_return_ty),
-    }
-}
-
-fn check_fun_info(
-    fun_info: &FunInfo,
-    visitor: &mut TypeCheckVisitor,
-    type_bindings: &TypeVarEnv,
-) -> Type {
-    // Check the function body with the locals bound.
-    visitor.bindings.enter_block();
-
-    // Only bind and check locals that have an explicit type
-    // hint.
-    for param in &fun_info.params {
-        if let Some(hint) = &param.hint {
-            let param_ty = Type::from_hint(hint, visitor.env, type_bindings).unwrap_or_err_ty();
-            visitor.bindings.set(param.symbol.name.clone(), param_ty);
-        }
-    }
-
-    let expected_return_ty = match &fun_info.return_hint {
-        Some(hint) => {
-            let ty = Type::from_hint(hint, visitor.env, type_bindings).unwrap_or_err_ty();
-            Some(ty)
-        }
-        None => None,
-    };
-
-    let body_ty = visitor.check_block(&fun_info.body, type_bindings, expected_return_ty.as_ref());
-
-    visitor.bindings.exit_block();
-
-    // Build the type representation of a function matching this lambda.
-    let mut param_tys = vec![];
-    for param in &fun_info.params {
-        let param_ty = match &param.hint {
-            Some(hint) => Type::from_hint(hint, visitor.env, type_bindings).unwrap_or_err_ty(),
-            None => Type::Top,
-        };
-        param_tys.push(param_ty);
-    }
-
-    let return_ty = match &fun_info.return_hint {
-        Some(hint) => {
-            let return_ty = Type::from_hint(hint, visitor.env, type_bindings).unwrap_or_err_ty();
-
-            let position = match fun_info.body.exprs.last() {
-                Some(expr) => expr.pos.clone(),
-                None => hint.position.clone(),
-            };
-
-            if !is_subtype(&body_ty, &return_ty) {
-                visitor.diagnostics.push(Diagnostic {
-                    level: Level::Error,
-                    message: format!("Expected to return `{}` but got `{}`.", return_ty, body_ty),
-                    position,
-                });
-            }
-
-            return_ty
-        }
-        None => body_ty,
-    };
-
-    Type::Fun {
-        type_params: vec![],
-        params: param_tys,
-        return_: Box::new(return_ty),
-        name: fun_info.name.clone(),
     }
 }
 

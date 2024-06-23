@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{Block, Expression};
+use garden_lang_parser::ast::{Block, Expression, ToplevelItem};
 
 use crate::visitor::Visitor;
 
@@ -15,6 +15,13 @@ impl Visitor for AssignExprIds {
         self.next_id += 1;
 
         self.visit_expr_(&expr.expr_)
+    }
+}
+
+pub(crate) fn assign_toplevel_item_ids(items: &[ToplevelItem]) {
+    let mut visitor = AssignExprIds::default();
+    for item in items {
+        visitor.visit_toplevel_item(item);
     }
 }
 

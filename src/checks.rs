@@ -1,4 +1,4 @@
-mod assign_ids;
+pub mod assign_ids;
 mod duplicates;
 mod free_variables;
 mod hints;

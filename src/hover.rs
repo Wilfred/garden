@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::checks::assign_ids::assign_toplevel_item_ids;
 use garden_lang_parser::{
     ast::{Definition_, Expression, Expression_, ToplevelItem},
     parse_toplevel_items,
@@ -10,7 +11,10 @@ pub fn show_type(src: &str, path: &Path, line: usize, column: usize) {
     println!("{}", &lines[line - 1]);
 
     match parse_toplevel_items(path, src) {
-        Ok(items) => find_item_at(&items, line, column),
+        Ok(items) => {
+            assign_toplevel_item_ids(&items);
+            find_item_at(&items, line, column)
+        }
         Err(_) => eprintln!("Parse error."),
     }
 }

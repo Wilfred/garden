@@ -3,7 +3,7 @@ mod duplicates;
 mod free_variables;
 mod hints;
 mod struct_fields;
-mod type_checker;
+pub mod type_checker;
 
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;

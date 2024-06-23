@@ -1,6 +1,10 @@
 use std::path::Path;
 
-use crate::checks::assign_ids::assign_toplevel_item_ids;
+use crate::{
+    checks::{assign_ids::assign_toplevel_item_ids, type_checker::check_types},
+    env::Env,
+    eval::eval_defs,
+};
 use garden_lang_parser::{
     ast::{Definition_, Expression, Expression_, ToplevelItem},
     parse_toplevel_items,
@@ -12,14 +16,30 @@ pub fn show_type(src: &str, path: &Path, line: usize, column: usize) {
 
     match parse_toplevel_items(path, src) {
         Ok(items) => {
+            let mut env = Env::default();
+
+            let mut definitions = vec![];
+            for item in &items {
+                if let ToplevelItem::Def(def) = item {
+                    definitions.push(def.clone());
+                }
+            }
+
+            eval_defs(&definitions, &mut env);
+
             assign_toplevel_item_ids(&items);
-            find_item_at(&items, line, column)
+            let (_, id_to_ty) = check_types(&items, &env);
+
+            let hovered_id = find_item_at(&items, line, column);
+            if let Some(hovered_id) = hovered_id {
+                dbg!(&id_to_ty[&hovered_id]);
+            }
         }
         Err(_) => eprintln!("Parse error."),
     }
 }
 
-fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) {
+fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) -> Option<usize> {
     let mut containing_expr: Option<Expression> = None;
 
     'found: for item in items {
@@ -60,7 +80,8 @@ fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) {
         }
     }
 
-    dbg!(containing_expr);
+    dbg!(&containing_expr);
+    containing_expr.and_then(|e| e.id.get().copied())
 }
 
 fn find_expr_at(expr: &Expression, line: usize, column: usize) -> Option<Expression> {

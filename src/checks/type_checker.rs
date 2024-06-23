@@ -151,7 +151,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
         let mut ty = Type::unit();
         for expr in &block.exprs {
-            ty = check_expr(expr, self, type_bindings, expected_return_ty);
+            ty = self.check_expr(expr, type_bindings, expected_return_ty);
         }
 
         self.bindings.exit_block();
@@ -225,6 +225,572 @@ impl<'a> TypeCheckVisitor<'a> {
             name: fun_info.name.clone(),
         }
     }
+
+    fn check_expr(
+        &mut self,
+        expr: &Expression,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) -> Type {
+        match &expr.expr_ {
+            Expression_::Match(scrutinee, cases) => {
+                let scrutinee_ty = self.check_expr(scrutinee, type_bindings, expected_return_ty);
+                let scrutinee_ty_name = scrutinee_ty.type_name();
+
+                let mut case_tys = vec![];
+
+                if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
+                    let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
+                    check_match_exhaustive(
+                        self.env,
+                        &scrutinee.pos,
+                        scrutinee_ty_name,
+                        &patterns,
+                        &mut self.diagnostics,
+                    );
+                }
+
+                for (pattern, case_expr) in cases {
+                    self.bindings.enter_block();
+
+                    if let Some(payload_sym) = &pattern.argument {
+                        if !payload_sym.name.is_underscore() {
+                            self.bindings.set(
+                                payload_sym.name.clone(),
+                                enum_payload_type(self.env, &scrutinee_ty, &pattern.symbol),
+                            );
+                        }
+                    }
+
+                    case_tys.push(self.check_expr(case_expr, type_bindings, expected_return_ty));
+
+                    self.bindings.exit_block();
+
+                    // Matching `_` works for any type.
+                    if pattern.symbol.name.is_underscore() {
+                        continue;
+                    }
+
+                    let Some(value) = self.env.file_scope.get(&pattern.symbol.name) else {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!("No such type `{}`.", pattern.symbol.name),
+                            position: pattern.symbol.position.clone(),
+                        });
+                        continue;
+                    };
+
+                    let pattern_type_name = match value {
+                        Value::Enum { type_name, .. } => type_name,
+                        Value::EnumConstructor { type_name, .. } => type_name,
+                        _ => {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected an enum variant here, but got `{}`.",
+                                    value.display(self.env)
+                                ),
+                                position: pattern.symbol.position.clone(),
+                            });
+                            continue;
+                        }
+                    };
+
+                    let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
+                        continue;
+                    };
+                    if pattern_type_name != scrutinee_ty_name {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "This match case is for `{}`, but you're matching on a `{}`.",
+                                pattern_type_name, &scrutinee_ty_name,
+                            ),
+                            position: pattern.symbol.position.clone(),
+                        });
+                    }
+                }
+
+                match unify_all(&case_tys) {
+                    Some(ty) => ty,
+                    None => {
+                        let last_case = cases
+                            .last()
+                            .expect("Type errors should require at least one match case.");
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: "`match` cases have different types..".to_owned(),
+                            position: last_case.1.pos.clone(),
+                        });
+
+                        Type::error("Cases had incompatible types.")
+                    }
+                }
+            }
+            Expression_::If(cond_expr, then_block, else_block) => {
+                let cond_ty = self.check_expr(cond_expr, type_bindings, expected_return_ty);
+                if !is_subtype(&cond_ty, &Type::bool()) {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "Expected `Bool` inside an `if` condition, but got `{}`.",
+                            cond_ty
+                        ),
+                        position: cond_expr.pos.clone(),
+                    });
+                }
+
+                let then_ty = self.check_block(then_block, type_bindings, expected_return_ty);
+
+                let else_ty = match else_block {
+                    Some(else_block) => {
+                        self.check_block(else_block, type_bindings, expected_return_ty)
+                    }
+                    None => Type::unit(),
+                };
+
+                match unify(&then_ty, &else_ty) {
+                    Some(ty) => ty,
+                    None => {
+                        let message = if else_block.is_some() {
+                            format!(
+                                "`if` and `else` have incompatible types: `{}` and `{}`.",
+                                then_ty, else_ty
+                            )
+                        } else {
+                            format!(
+                            "`if` expressions without `else` should have type `Unit`, but got `{}`.",
+                            then_ty
+                        )
+                        };
+
+                        let position = match then_block.exprs.last() {
+                            Some(last_expr) => last_expr.pos.clone(),
+                            None => cond_expr.pos.clone(),
+                        };
+
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message,
+                            position,
+                        });
+
+                        Type::error("Incompatible if blocks")
+                    }
+                }
+            }
+            Expression_::While(cond_expr, body) => {
+                let cond_ty = self.check_expr(cond_expr, type_bindings, expected_return_ty);
+                if !is_subtype(&cond_ty, &Type::bool()) {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "Expected `Bool` inside an `while` condition, but got `{}`.",
+                            cond_ty
+                        ),
+                        position: cond_expr.pos.clone(),
+                    });
+                }
+
+                self.check_block(body, type_bindings, expected_return_ty);
+
+                Type::unit()
+            }
+            Expression_::Break => Type::unit(),
+            Expression_::Assign(_sym, expr) => {
+                self.check_expr(expr, type_bindings, expected_return_ty);
+                Type::unit()
+            }
+            Expression_::Let(sym, hint, expr) => {
+                let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
+
+                let ty = match hint {
+                    Some(hint) => {
+                        let hint_ty =
+                            Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+
+                        if !is_subtype(&expr_ty, &hint_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected `{}` for this let expression, but got `{}`.",
+                                    hint_ty, expr_ty
+                                ),
+                                position: hint.position.clone(),
+                            });
+                        }
+
+                        hint_ty
+                    }
+                    None => expr_ty,
+                };
+
+                self.bindings.set(sym.name.clone(), ty);
+
+                Type::unit()
+            }
+            Expression_::Return(inner_expr) => {
+                let (ty, position) = if let Some(inner_expr) = inner_expr {
+                    (
+                        self.check_expr(inner_expr, type_bindings, expected_return_ty),
+                        inner_expr.pos.clone(),
+                    )
+                } else {
+                    (Type::unit(), expr.pos.clone())
+                };
+
+                if let Some(expected_return_ty) = expected_return_ty {
+                    if !is_subtype(&ty, expected_return_ty) {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected this function to return `{}`, but got `{}`.",
+                                expected_return_ty, ty
+                            ),
+                            position,
+                        });
+                    }
+                }
+
+                // `return` terminates the current function, so we can't
+                // use this expression. Infer as bottom.
+                Type::no_value()
+            }
+            Expression_::IntLiteral(_) => Type::Int,
+            Expression_::StringLiteral(_) => Type::String,
+            Expression_::ListLiteral(items) => {
+                let mut elem_ty = Type::no_value();
+
+                for item in items {
+                    let item_ty = self.check_expr(item, type_bindings, expected_return_ty);
+                    // TODO: unify the types of all elements in the
+                    // list, rather than letting the last win.
+                    elem_ty = item_ty;
+                }
+
+                Type::List(Box::new(elem_ty))
+            }
+            Expression_::StructLiteral(name_sym, fields) => {
+                for (_, expr) in fields {
+                    self.check_expr(expr, type_bindings, expected_return_ty);
+                }
+
+                if let Some(TypeDef::Struct(_)) = self.env.get_type_def(&name_sym.name) {
+                    Type::UserDefined {
+                        kind: TypeDefKind::Struct,
+                        name: name_sym.name.clone(),
+                        args: vec![],
+                    }
+                } else {
+                    Type::Error("Unbound struct name".to_owned())
+                }
+            }
+            Expression_::BinaryOperator(lhs, op, rhs) => {
+                let lhs_ty = self.check_expr(lhs, type_bindings, expected_return_ty);
+                let rhs_ty = self.check_expr(rhs, type_bindings, expected_return_ty);
+
+                match op {
+                    BinaryOperatorKind::Add
+                    | BinaryOperatorKind::Subtract
+                    | BinaryOperatorKind::Multiply
+                    | BinaryOperatorKind::Divide => {
+                        if !is_subtype(&lhs_ty, &Type::Int) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `Int`, but got `{}`.", lhs_ty),
+                                position: lhs.pos.clone(),
+                            });
+                        }
+                        if !is_subtype(&rhs_ty, &Type::Int) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `Int`, but got `{}`.", rhs_ty),
+                                position: rhs.pos.clone(),
+                            });
+                        }
+
+                        Type::Int
+                    }
+                    BinaryOperatorKind::LessThan
+                    | BinaryOperatorKind::LessThanOrEqual
+                    | BinaryOperatorKind::GreaterThan
+                    | BinaryOperatorKind::GreaterThanOrEqual => {
+                        if !is_subtype(&lhs_ty, &Type::Int) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `Int`, but got `{}`.", lhs_ty),
+                                position: lhs.pos.clone(),
+                            });
+                        }
+                        if !is_subtype(&rhs_ty, &Type::Int) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `Int`, but got `{}`.", rhs_ty),
+                                position: rhs.pos.clone(),
+                            });
+                        }
+
+                        Type::bool()
+                    }
+                    BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
+                        if lhs_ty != rhs_ty {
+                            self.diagnostics.push(Diagnostic { level: Level::Warning,
+                                message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
+                                position: rhs.pos.clone(),
+                            });
+                        }
+
+                        Type::bool()
+                    }
+                    BinaryOperatorKind::And | BinaryOperatorKind::Or => {
+                        if !is_subtype(&lhs_ty, &Type::bool()) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
+                                position: lhs.pos.clone(),
+                            });
+                        }
+                        if !is_subtype(&rhs_ty, &Type::bool()) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
+                                position: rhs.pos.clone(),
+                            });
+                        }
+
+                        Type::bool()
+                    }
+                }
+            }
+            Expression_::Variable(sym) => {
+                if let Some(value_ty) = self.bindings.get(&sym.name) {
+                    return value_ty.clone();
+                }
+
+                match self.env.file_scope.get(&sym.name) {
+                    Some(value) => Type::from_value(value, self.env, type_bindings),
+                    None => Type::Error("Unbound variable".to_owned()),
+                }
+            }
+            Expression_::Call(recv, paren_args) => {
+                let recv_ty = self.check_expr(recv, type_bindings, expected_return_ty);
+                let arg_tys = paren_args
+                    .arguments
+                    .iter()
+                    .map(|arg| {
+                        (
+                            self.check_expr(arg, type_bindings, expected_return_ty),
+                            arg.pos.clone(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                match recv_ty {
+                    Type::Fun {
+                        params,
+                        return_,
+                        name,
+                        ..
+                    } => {
+                        let formatted_name = match name {
+                            Some(name) => format!("`{}`", name.name),
+                            None => "This function".to_owned(),
+                        };
+
+                        if params.len() != paren_args.arguments.len() {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "{} expects {} argument{}, but got {}.",
+                                    formatted_name,
+                                    params.len(),
+                                    if params.len() == 1 { "" } else { "s" },
+                                    paren_args.arguments.len()
+                                ),
+                                position: recv.pos.clone(),
+                            });
+                        }
+
+                        let mut ty_var_env = HashMap::default();
+
+                        for (param_ty, (arg_ty, _arg_pos)) in params.iter().zip(arg_tys.iter()) {
+                            unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                        }
+
+                        let params = params
+                            .iter()
+                            .map(|p| subst_ty_vars(p, &ty_var_env))
+                            .collect::<Vec<_>>();
+
+                        for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
+                            if !is_subtype(&arg_ty, param_ty) {
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!(
+                                        "Expected `{}` argument but got `{}`.",
+                                        param_ty, arg_ty
+                                    ),
+                                    position: arg_pos,
+                                });
+                            }
+                        }
+
+                        subst_ty_vars(&return_, &ty_var_env)
+                    }
+                    Type::Error(_) => {
+                        // If the receiver is an error, use that error
+                        // type for the return type of this call.
+                        recv_ty.clone()
+                    }
+                    _ => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!("Expected a function, but got a `{}`.", recv_ty),
+                            position: recv.pos.clone(),
+                        });
+
+                        Type::Error("Calling something that isn't a function".to_owned())
+                    }
+                }
+            }
+            Expression_::MethodCall(recv, sym, paren_args) => {
+                let arg_tys: Vec<(Type, Position)> = paren_args
+                    .arguments
+                    .iter()
+                    .map(|arg| {
+                        (
+                            self.check_expr(arg, type_bindings, expected_return_ty),
+                            arg.pos.clone(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                let receiver_ty = self.check_expr(recv, type_bindings, expected_return_ty);
+                let Some(receiver_ty_name) = receiver_ty.type_name() else {
+                    return Type::error("No type name for this method receiver");
+                };
+
+                let methods = self
+                    .env
+                    .methods
+                    .get(&receiver_ty_name)
+                    .cloned()
+                    .unwrap_or_default();
+
+                match methods.get(&sym.name) {
+                    Some(method_info) => {
+                        let Some(fun_info) = method_info.fun_info() else {
+                            return Type::error("This method has no fun_info");
+                        };
+                        if fun_info.params.len() != paren_args.arguments.len() {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "`{}::{}` requires {} argument{}, but got {}.",
+                                    receiver_ty_name,
+                                    sym.name,
+                                    fun_info.params.len(),
+                                    if fun_info.params.len() == 1 { "" } else { "s" },
+                                    paren_args.arguments.len()
+                                ),
+                                position: sym.position.clone(),
+                            });
+                        }
+
+                        let mut ty_var_env = TypeVarEnv::default();
+                        for type_param in &fun_info.type_params {
+                            ty_var_env.insert(type_param.name.clone(), None);
+                        }
+
+                        let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
+                            self.env,
+                            method_info,
+                            &recv.pos,
+                            &receiver_ty,
+                            &arg_tys,
+                            &mut ty_var_env,
+                        );
+                        self.diagnostics.extend(more_diagnostics);
+
+                        for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
+                            let Some(param_hint) = &param.hint else {
+                                continue;
+                            };
+                            let Ok(param_ty) = Type::from_hint(param_hint, self.env, &ty_var_env)
+                            else {
+                                continue;
+                            };
+
+                            if !is_subtype(arg_ty, &param_ty) {
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!(
+                                        "Expected `{}` argument but got `{}`.",
+                                        param_ty, arg_ty
+                                    ),
+                                    position: arg_pos.clone(),
+                                });
+                            }
+                        }
+
+                        subst_ty_vars(&ret_ty, &ty_var_env)
+                    }
+                    None => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "`{}` has no method `{}`.",
+                                receiver_ty_name, sym.name
+                            ),
+                            position: sym.position.clone(),
+                        });
+                        Type::error("No such method on this type")
+                    }
+                }
+            }
+            Expression_::DotAccess(recv, field_sym) => {
+                let recv_ty = self.check_expr(recv, type_bindings, expected_return_ty);
+                let Some(recv_ty_name) = recv_ty.type_name() else {
+                    return Type::error("No type name found this receiver");
+                };
+
+                match recv_ty {
+                    Type::UserDefined {
+                        kind: TypeDefKind::Struct,
+                        name,
+                        ..
+                    } => {
+                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name) {
+                            for field in &struct_info.fields {
+                                if field.sym.name == field_sym.name {
+                                    let field_ty =
+                                        Type::from_hint(&field.hint, self.env, type_bindings)
+                                            .unwrap_or_err_ty();
+                                    return field_ty;
+                                }
+                            }
+
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Struct `{}` has no field `{}`.",
+                                    recv_ty_name, field_sym.name
+                                ),
+                                position: field_sym.position.clone(),
+                            });
+
+                            Type::error("No struct field with this name")
+                        } else {
+                            Type::error("No struct with this name")
+                        }
+                    }
+                    _ => Type::error("This type is not a struct"),
+                }
+            }
+            Expression_::FunLiteral(fun_info) => self.check_fun_info(fun_info, type_bindings),
+            Expression_::Block(block) => self.check_block(block, type_bindings, expected_return_ty),
+        }
+    }
 }
 
 fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Type {
@@ -277,574 +843,6 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Ty
     // The payload is not a generic type, so the type hint is
     // referring to a defined type.
     Type::from_hint(&payload_hint, env, &env.type_bindings()).unwrap_or_err_ty()
-}
-
-fn check_expr(
-    expr: &Expression,
-    visitor: &mut TypeCheckVisitor,
-    type_bindings: &TypeVarEnv,
-    expected_return_ty: Option<&Type>,
-) -> Type {
-    match &expr.expr_ {
-        Expression_::Match(scrutinee, cases) => {
-            let scrutinee_ty = check_expr(scrutinee, visitor, type_bindings, expected_return_ty);
-            let scrutinee_ty_name = scrutinee_ty.type_name();
-
-            let mut case_tys = vec![];
-
-            if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
-                let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
-                check_match_exhaustive(
-                    visitor.env,
-                    &scrutinee.pos,
-                    scrutinee_ty_name,
-                    &patterns,
-                    &mut visitor.diagnostics,
-                );
-            }
-
-            for (pattern, case_expr) in cases {
-                visitor.bindings.enter_block();
-
-                if let Some(payload_sym) = &pattern.argument {
-                    if !payload_sym.name.is_underscore() {
-                        visitor.bindings.set(
-                            payload_sym.name.clone(),
-                            enum_payload_type(visitor.env, &scrutinee_ty, &pattern.symbol),
-                        );
-                    }
-                }
-
-                case_tys.push(check_expr(
-                    case_expr,
-                    visitor,
-                    type_bindings,
-                    expected_return_ty,
-                ));
-
-                visitor.bindings.exit_block();
-
-                // Matching `_` works for any type.
-                if pattern.symbol.name.is_underscore() {
-                    continue;
-                }
-
-                let Some(value) = visitor.env.file_scope.get(&pattern.symbol.name) else {
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message: format!("No such type `{}`.", pattern.symbol.name),
-                        position: pattern.symbol.position.clone(),
-                    });
-                    continue;
-                };
-
-                let pattern_type_name = match value {
-                    Value::Enum { type_name, .. } => type_name,
-                    Value::EnumConstructor { type_name, .. } => type_name,
-                    _ => {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Expected an enum variant here, but got `{}`.",
-                                value.display(visitor.env)
-                            ),
-                            position: pattern.symbol.position.clone(),
-                        });
-                        continue;
-                    }
-                };
-
-                let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
-                    continue;
-                };
-                if pattern_type_name != scrutinee_ty_name {
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message: format!(
-                            "This match case is for `{}`, but you're matching on a `{}`.",
-                            pattern_type_name, &scrutinee_ty_name,
-                        ),
-                        position: pattern.symbol.position.clone(),
-                    });
-                }
-            }
-
-            match unify_all(&case_tys) {
-                Some(ty) => ty,
-                None => {
-                    let last_case = cases
-                        .last()
-                        .expect("Type errors should require at least one match case.");
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message: "`match` cases have different types..".to_owned(),
-                        position: last_case.1.pos.clone(),
-                    });
-
-                    Type::error("Cases had incompatible types.")
-                }
-            }
-        }
-        Expression_::If(cond_expr, then_block, else_block) => {
-            let cond_ty = check_expr(cond_expr, visitor, type_bindings, expected_return_ty);
-            if !is_subtype(&cond_ty, &Type::bool()) {
-                visitor.diagnostics.push(Diagnostic {
-                    level: Level::Error,
-                    message: format!(
-                        "Expected `Bool` inside an `if` condition, but got `{}`.",
-                        cond_ty
-                    ),
-                    position: cond_expr.pos.clone(),
-                });
-            }
-
-            let then_ty = visitor.check_block(then_block, type_bindings, expected_return_ty);
-
-            let else_ty = match else_block {
-                Some(else_block) => {
-                    visitor.check_block(else_block, type_bindings, expected_return_ty)
-                }
-                None => Type::unit(),
-            };
-
-            match unify(&then_ty, &else_ty) {
-                Some(ty) => ty,
-                None => {
-                    let message = if else_block.is_some() {
-                        format!(
-                            "`if` and `else` have incompatible types: `{}` and `{}`.",
-                            then_ty, else_ty
-                        )
-                    } else {
-                        format!(
-                            "`if` expressions without `else` should have type `Unit`, but got `{}`.",
-                            then_ty
-                        )
-                    };
-
-                    let position = match then_block.exprs.last() {
-                        Some(last_expr) => last_expr.pos.clone(),
-                        None => cond_expr.pos.clone(),
-                    };
-
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message,
-                        position,
-                    });
-
-                    Type::error("Incompatible if blocks")
-                }
-            }
-        }
-        Expression_::While(cond_expr, body) => {
-            let cond_ty = check_expr(cond_expr, visitor, type_bindings, expected_return_ty);
-            if !is_subtype(&cond_ty, &Type::bool()) {
-                visitor.diagnostics.push(Diagnostic {
-                    level: Level::Error,
-                    message: format!(
-                        "Expected `Bool` inside an `while` condition, but got `{}`.",
-                        cond_ty
-                    ),
-                    position: cond_expr.pos.clone(),
-                });
-            }
-
-            visitor.check_block(body, type_bindings, expected_return_ty);
-
-            Type::unit()
-        }
-        Expression_::Break => Type::unit(),
-        Expression_::Assign(_sym, expr) => {
-            check_expr(expr, visitor, type_bindings, expected_return_ty);
-            Type::unit()
-        }
-        Expression_::Let(sym, hint, expr) => {
-            let expr_ty = check_expr(expr, visitor, type_bindings, expected_return_ty);
-
-            let ty = match hint {
-                Some(hint) => {
-                    let hint_ty =
-                        Type::from_hint(hint, visitor.env, type_bindings).unwrap_or_err_ty();
-
-                    if !is_subtype(&expr_ty, &hint_ty) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Expected `{}` for this let expression, but got `{}`.",
-                                hint_ty, expr_ty
-                            ),
-                            position: hint.position.clone(),
-                        });
-                    }
-
-                    hint_ty
-                }
-                None => expr_ty,
-            };
-
-            visitor.bindings.set(sym.name.clone(), ty);
-
-            Type::unit()
-        }
-        Expression_::Return(inner_expr) => {
-            let (ty, position) = if let Some(inner_expr) = inner_expr {
-                (
-                    check_expr(inner_expr, visitor, type_bindings, expected_return_ty),
-                    inner_expr.pos.clone(),
-                )
-            } else {
-                (Type::unit(), expr.pos.clone())
-            };
-
-            if let Some(expected_return_ty) = expected_return_ty {
-                if !is_subtype(&ty, expected_return_ty) {
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message: format!(
-                            "Expected this function to return `{}`, but got `{}`.",
-                            expected_return_ty, ty
-                        ),
-                        position,
-                    });
-                }
-            }
-
-            // `return` terminates the current function, so we can't
-            // use this expression. Infer as bottom.
-            Type::no_value()
-        }
-        Expression_::IntLiteral(_) => Type::Int,
-        Expression_::StringLiteral(_) => Type::String,
-        Expression_::ListLiteral(items) => {
-            let mut elem_ty = Type::no_value();
-
-            for item in items {
-                let item_ty = check_expr(item, visitor, type_bindings, expected_return_ty);
-                // TODO: unify the types of all elements in the
-                // list, rather than letting the last win.
-                elem_ty = item_ty;
-            }
-
-            Type::List(Box::new(elem_ty))
-        }
-        Expression_::StructLiteral(name_sym, fields) => {
-            for (_, expr) in fields {
-                check_expr(expr, visitor, type_bindings, expected_return_ty);
-            }
-
-            if let Some(TypeDef::Struct(_)) = visitor.env.get_type_def(&name_sym.name) {
-                Type::UserDefined {
-                    kind: TypeDefKind::Struct,
-                    name: name_sym.name.clone(),
-                    args: vec![],
-                }
-            } else {
-                Type::Error("Unbound struct name".to_owned())
-            }
-        }
-        Expression_::BinaryOperator(lhs, op, rhs) => {
-            let lhs_ty = check_expr(lhs, visitor, type_bindings, expected_return_ty);
-            let rhs_ty = check_expr(rhs, visitor, type_bindings, expected_return_ty);
-
-            match op {
-                BinaryOperatorKind::Add
-                | BinaryOperatorKind::Subtract
-                | BinaryOperatorKind::Multiply
-                | BinaryOperatorKind::Divide => {
-                    if !is_subtype(&lhs_ty, &Type::Int) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!("Expected `Int`, but got `{}`.", lhs_ty),
-                            position: lhs.pos.clone(),
-                        });
-                    }
-                    if !is_subtype(&rhs_ty, &Type::Int) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!("Expected `Int`, but got `{}`.", rhs_ty),
-                            position: rhs.pos.clone(),
-                        });
-                    }
-
-                    Type::Int
-                }
-                BinaryOperatorKind::LessThan
-                | BinaryOperatorKind::LessThanOrEqual
-                | BinaryOperatorKind::GreaterThan
-                | BinaryOperatorKind::GreaterThanOrEqual => {
-                    if !is_subtype(&lhs_ty, &Type::Int) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!("Expected `Int`, but got `{}`.", lhs_ty),
-                            position: lhs.pos.clone(),
-                        });
-                    }
-                    if !is_subtype(&rhs_ty, &Type::Int) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!("Expected `Int`, but got `{}`.", rhs_ty),
-                            position: rhs.pos.clone(),
-                        });
-                    }
-
-                    Type::bool()
-                }
-                BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
-                    if lhs_ty != rhs_ty {
-                        visitor.diagnostics.push(Diagnostic { level: Level::Warning,
-                                message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
-                                position: rhs.pos.clone(),
-                            });
-                    }
-
-                    Type::bool()
-                }
-                BinaryOperatorKind::And | BinaryOperatorKind::Or => {
-                    if !is_subtype(&lhs_ty, &Type::bool()) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
-                            position: lhs.pos.clone(),
-                        });
-                    }
-                    if !is_subtype(&rhs_ty, &Type::bool()) {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
-                            position: rhs.pos.clone(),
-                        });
-                    }
-
-                    Type::bool()
-                }
-            }
-        }
-        Expression_::Variable(sym) => {
-            if let Some(value_ty) = visitor.bindings.get(&sym.name) {
-                return value_ty.clone();
-            }
-
-            match visitor.env.file_scope.get(&sym.name) {
-                Some(value) => Type::from_value(value, visitor.env, type_bindings),
-                None => Type::Error("Unbound variable".to_owned()),
-            }
-        }
-        Expression_::Call(recv, paren_args) => {
-            let recv_ty = check_expr(recv, visitor, type_bindings, expected_return_ty);
-            let arg_tys = paren_args
-                .arguments
-                .iter()
-                .map(|arg| {
-                    (
-                        check_expr(arg, visitor, type_bindings, expected_return_ty),
-                        arg.pos.clone(),
-                    )
-                })
-                .collect::<Vec<_>>();
-
-            match recv_ty {
-                Type::Fun {
-                    params,
-                    return_,
-                    name,
-                    ..
-                } => {
-                    let formatted_name = match name {
-                        Some(name) => format!("`{}`", name.name),
-                        None => "This function".to_owned(),
-                    };
-
-                    if params.len() != paren_args.arguments.len() {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "{} expects {} argument{}, but got {}.",
-                                formatted_name,
-                                params.len(),
-                                if params.len() == 1 { "" } else { "s" },
-                                paren_args.arguments.len()
-                            ),
-                            position: recv.pos.clone(),
-                        });
-                    }
-
-                    let mut ty_var_env = HashMap::default();
-
-                    for (param_ty, (arg_ty, _arg_pos)) in params.iter().zip(arg_tys.iter()) {
-                        unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
-                    }
-
-                    let params = params
-                        .iter()
-                        .map(|p| subst_ty_vars(p, &ty_var_env))
-                        .collect::<Vec<_>>();
-
-                    for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
-                        if !is_subtype(&arg_ty, param_ty) {
-                            visitor.diagnostics.push(Diagnostic {
-                                level: Level::Error,
-                                message: format!(
-                                    "Expected `{}` argument but got `{}`.",
-                                    param_ty, arg_ty
-                                ),
-                                position: arg_pos,
-                            });
-                        }
-                    }
-
-                    subst_ty_vars(&return_, &ty_var_env)
-                }
-                Type::Error(_) => {
-                    // If the receiver is an error, use that error
-                    // type for the return type of this call.
-                    recv_ty.clone()
-                }
-                _ => {
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message: format!("Expected a function, but got a `{}`.", recv_ty),
-                        position: recv.pos.clone(),
-                    });
-
-                    Type::Error("Calling something that isn't a function".to_owned())
-                }
-            }
-        }
-        Expression_::MethodCall(recv, sym, paren_args) => {
-            let arg_tys: Vec<(Type, Position)> = paren_args
-                .arguments
-                .iter()
-                .map(|arg| {
-                    (
-                        check_expr(arg, visitor, type_bindings, expected_return_ty),
-                        arg.pos.clone(),
-                    )
-                })
-                .collect::<Vec<_>>();
-
-            let receiver_ty = check_expr(recv, visitor, type_bindings, expected_return_ty);
-            let Some(receiver_ty_name) = receiver_ty.type_name() else {
-                return Type::error("No type name for this method receiver");
-            };
-
-            let methods = visitor
-                .env
-                .methods
-                .get(&receiver_ty_name)
-                .cloned()
-                .unwrap_or_default();
-
-            match methods.get(&sym.name) {
-                Some(method_info) => {
-                    let Some(fun_info) = method_info.fun_info() else {
-                        return Type::error("This method has no fun_info");
-                    };
-                    if fun_info.params.len() != paren_args.arguments.len() {
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "`{}::{}` requires {} argument{}, but got {}.",
-                                receiver_ty_name,
-                                sym.name,
-                                fun_info.params.len(),
-                                if fun_info.params.len() == 1 { "" } else { "s" },
-                                paren_args.arguments.len()
-                            ),
-                            position: sym.position.clone(),
-                        });
-                    }
-
-                    let mut ty_var_env = TypeVarEnv::default();
-                    for type_param in &fun_info.type_params {
-                        ty_var_env.insert(type_param.name.clone(), None);
-                    }
-
-                    let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
-                        visitor.env,
-                        method_info,
-                        &recv.pos,
-                        &receiver_ty,
-                        &arg_tys,
-                        &mut ty_var_env,
-                    );
-                    visitor.diagnostics.extend(more_diagnostics);
-
-                    for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
-                        let Some(param_hint) = &param.hint else {
-                            continue;
-                        };
-                        let Ok(param_ty) = Type::from_hint(param_hint, visitor.env, &ty_var_env)
-                        else {
-                            continue;
-                        };
-
-                        if !is_subtype(arg_ty, &param_ty) {
-                            visitor.diagnostics.push(Diagnostic {
-                                level: Level::Error,
-                                message: format!(
-                                    "Expected `{}` argument but got `{}`.",
-                                    param_ty, arg_ty
-                                ),
-                                position: arg_pos.clone(),
-                            });
-                        }
-                    }
-
-                    subst_ty_vars(&ret_ty, &ty_var_env)
-                }
-                None => {
-                    visitor.diagnostics.push(Diagnostic {
-                        level: Level::Error,
-                        message: format!("`{}` has no method `{}`.", receiver_ty_name, sym.name),
-                        position: sym.position.clone(),
-                    });
-                    Type::error("No such method on this type")
-                }
-            }
-        }
-        Expression_::DotAccess(recv, field_sym) => {
-            let recv_ty = check_expr(recv, visitor, type_bindings, expected_return_ty);
-            let Some(recv_ty_name) = recv_ty.type_name() else {
-                return Type::error("No type name found this receiver");
-            };
-
-            match recv_ty {
-                Type::UserDefined {
-                    kind: TypeDefKind::Struct,
-                    name,
-                    ..
-                } => {
-                    if let Some(TypeDef::Struct(struct_info)) = visitor.env.get_type_def(&name) {
-                        for field in &struct_info.fields {
-                            if field.sym.name == field_sym.name {
-                                let field_ty =
-                                    Type::from_hint(&field.hint, visitor.env, type_bindings)
-                                        .unwrap_or_err_ty();
-                                return field_ty;
-                            }
-                        }
-
-                        visitor.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Struct `{}` has no field `{}`.",
-                                recv_ty_name, field_sym.name
-                            ),
-                            position: field_sym.position.clone(),
-                        });
-
-                        Type::error("No struct field with this name")
-                    } else {
-                        Type::error("No struct with this name")
-                    }
-                }
-                _ => Type::error("This type is not a struct"),
-            }
-        }
-        Expression_::FunLiteral(fun_info) => visitor.check_fun_info(fun_info, type_bindings),
-        Expression_::Block(block) => visitor.check_block(block, type_bindings, expected_return_ty),
-    }
 }
 
 /// Solve the type variables in this method, and return the resolved

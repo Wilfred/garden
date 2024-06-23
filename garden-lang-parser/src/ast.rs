@@ -269,11 +269,14 @@ pub enum Expression_ {
     Block(Block),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub struct ExpressionId(pub usize);
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
-    pub id: OnceCell<usize>,
+    pub id: OnceCell<ExpressionId>,
 }
 
 impl Expression {

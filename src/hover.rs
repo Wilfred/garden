@@ -6,7 +6,7 @@ use crate::{
     eval::eval_defs,
 };
 use garden_lang_parser::{
-    ast::{Definition_, Expression, Expression_, ToplevelItem},
+    ast::{Definition_, Expression, ExpressionId, Expression_, ToplevelItem},
     parse_toplevel_items,
 };
 
@@ -39,7 +39,7 @@ pub fn show_type(src: &str, path: &Path, line: usize, column: usize) {
     }
 }
 
-fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) -> Option<usize> {
+fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) -> Option<ExpressionId> {
     let mut containing_expr: Option<Expression> = None;
 
     'found: for item in items {
@@ -80,7 +80,6 @@ fn find_item_at(items: &[ToplevelItem], line: usize, column: usize) -> Option<us
         }
     }
 
-    dbg!(&containing_expr);
     containing_expr.and_then(|e| e.id.get().copied())
 }
 

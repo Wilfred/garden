@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{Block, Expression, ToplevelItem};
+use garden_lang_parser::ast::{Block, Expression, ExpressionId, ToplevelItem};
 
 use crate::visitor::Visitor;
 
@@ -10,7 +10,7 @@ struct AssignExprIds {
 impl Visitor for AssignExprIds {
     fn visit_expr(&mut self, expr: &Expression) {
         expr.id
-            .set(self.next_id)
+            .set(ExpressionId(self.next_id))
             .expect("Expressions should not have IDs yet.");
         self.next_id += 1;
 

@@ -232,7 +232,17 @@ impl<'a> TypeCheckVisitor<'a> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
-        match &expr.expr_ {
+        self.check_expr_(&expr.expr_, &expr.pos, type_bindings, expected_return_ty)
+    }
+
+    fn check_expr_(
+        &mut self,
+        expr_: &Expression_,
+        pos: &Position,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) -> Type {
+        match expr_ {
             Expression_::Match(scrutinee, cases) => {
                 let scrutinee_ty = self.check_expr(scrutinee, type_bindings, expected_return_ty);
                 let scrutinee_ty_name = scrutinee_ty.type_name();
@@ -436,7 +446,7 @@ impl<'a> TypeCheckVisitor<'a> {
                         inner_expr.pos.clone(),
                     )
                 } else {
-                    (Type::unit(), expr.pos.clone())
+                    (Type::unit(), pos.clone())
                 };
 
                 if let Some(expected_return_ty) = expected_return_ty {

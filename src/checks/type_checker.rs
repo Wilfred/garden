@@ -13,6 +13,8 @@ use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
 
+use super::assign_ids::assign_expr_ids;
+
 pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut env = env.clone();
 
@@ -148,27 +150,6 @@ impl Visitor for TypeCheckVisitor<'_> {
             &mut self.warnings,
             None,
         );
-    }
-}
-
-fn assign_expr_ids(block: &Block) {
-    let mut visitor = AssignExprIds::default();
-    visitor.visit_block(block);
-}
-
-#[derive(Debug, Default, Clone)]
-struct AssignExprIds {
-    next_id: usize,
-}
-
-impl Visitor for AssignExprIds {
-    fn visit_expr(&mut self, expr: &Expression) {
-        expr.id
-            .set(self.next_id)
-            .expect("Expressions should not have IDs yet.");
-        self.next_id += 1;
-
-        self.visit_expr_(&expr.expr_)
     }
 }
 

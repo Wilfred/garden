@@ -102,8 +102,8 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
                 last_src = src;
 
                 let summary = eval_toplevel_defs(&items, &mut env);
-                for warning in summary.warnings {
-                    println!("Warning: {}", warning.message);
+                for diagnostic in summary.diagnostics {
+                    println!("Warning: {}", diagnostic.message);
                 }
 
                 let mut exprs = vec![];

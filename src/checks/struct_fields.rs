@@ -8,7 +8,7 @@ use crate::{diagnostics::Diagnostic, env::Env, types::TypeDef};
 
 struct StructFieldVisitor<'a> {
     env: &'a Env,
-    warnings: Vec<Diagnostic>,
+    diagnostics: Vec<Diagnostic>,
 }
 
 impl Visitor for StructFieldVisitor<'_> {
@@ -34,7 +34,7 @@ impl Visitor for StructFieldVisitor<'_> {
 
         for (field_sym, _) in field_exprs {
             if seen_fields.contains(&field_sym.name) {
-                self.warnings.push(Diagnostic {
+                self.diagnostics.push(Diagnostic {
                     level: Level::Warning,
                     message: format!("Duplicate field `{}` in struct literal.", field_sym.name),
                     position: field_sym.position.clone(),
@@ -44,7 +44,7 @@ impl Visitor for StructFieldVisitor<'_> {
             seen_fields.insert(field_sym.name.clone());
 
             if !fields_by_name.contains_key(&field_sym.name) {
-                self.warnings.push(Diagnostic {
+                self.diagnostics.push(Diagnostic {
                     level: Level::Error,
                     message: format!(
                         "Struct `{}` has no field named `{}`",
@@ -57,7 +57,7 @@ impl Visitor for StructFieldVisitor<'_> {
 
         for field_info in struct_info.fields.iter() {
             if !seen_fields.contains(&field_info.sym.name) {
-                self.warnings.push(Diagnostic {
+                self.diagnostics.push(Diagnostic {
                     level: Level::Error,
                     message: format!("Missing field `{}` in struct literal.", field_info.sym.name,),
                     position: name_sym.position.clone(),
@@ -70,10 +70,10 @@ impl Visitor for StructFieldVisitor<'_> {
 pub(crate) fn check_struct_fields(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = StructFieldVisitor {
         env,
-        warnings: vec![],
+        diagnostics: vec![],
     };
     for item in items {
         visitor.visit_toplevel_item(item);
     }
-    visitor.warnings
+    visitor.diagnostics
 }

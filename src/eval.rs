@@ -236,7 +236,7 @@ pub(crate) enum EvalError {
 pub(crate) struct ToplevelEvalSummary {
     pub(crate) values: Vec<Value>,
     pub(crate) new_syms: Vec<SymbolName>,
-    pub(crate) warnings: Vec<Diagnostic>,
+    pub(crate) diagnostics: Vec<Diagnostic>,
     // TODO: Report the names of tests that passed/failed.
     pub(crate) tests_passed: usize,
     pub(crate) tests_failed: usize,
@@ -280,7 +280,7 @@ pub(crate) fn eval_all_toplevel_items(
     let mut summary = eval_defs(&defs, env);
 
     summary
-        .warnings
+        .diagnostics
         .extend(check_toplevel_items_in_env(items, env));
 
     let test_summary = eval_toplevel_tests(items, env, session)?;
@@ -331,7 +331,7 @@ pub(crate) fn eval_toplevel_tests(
     Ok(ToplevelEvalSummary {
         values: vec![],
         new_syms: vec![],
-        warnings: vec![],
+        diagnostics: vec![],
         tests_passed,
         tests_failed: 0,
     })
@@ -358,14 +358,14 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 }
 
 pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
-    let mut warnings: Vec<Diagnostic> = vec![];
+    let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
     for definition in definitions {
         match &definition.2 {
             Definition_::Fun(name_sym, fun_info) => {
                 if is_builtin_stub(fun_info) {
-                    update_builtin_fun_info(fun_info, env, &mut warnings);
+                    update_builtin_fun_info(fun_info, env, &mut diagnostics);
                 } else {
                     env.set_with_file_scope(
                         &name_sym.name,
@@ -381,7 +381,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
             Definition_::Method(meth_info) => {
                 if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
                     if is_builtin_stub(fun_info) {
-                        update_builtin_meth_info(meth_info, fun_info, env, &mut warnings);
+                        update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
                     } else {
                         // TODO: check that types in definitions are defined, and emit
                         // warnings otherwise.
@@ -462,7 +462,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
     ToplevelEvalSummary {
         values: vec![],
         new_syms,
-        warnings,
+        diagnostics,
         tests_passed: 0,
         tests_failed: 0,
     }
@@ -472,11 +472,11 @@ fn update_builtin_meth_info(
     meth_info: &MethodInfo,
     fun_info: &FunInfo,
     env: &mut Env,
-    warnings: &mut Vec<Diagnostic>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
     let type_name = &meth_info.receiver_hint.sym.name;
     let Some(type_methods) = env.methods.get_mut(type_name) else {
-        warnings.push(Diagnostic {
+        diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
@@ -488,7 +488,7 @@ fn update_builtin_meth_info(
     };
 
     let Some(curr_meth_info) = type_methods.get_mut(&meth_info.name_sym.name) else {
-        warnings.push(Diagnostic {
+        diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
@@ -500,7 +500,7 @@ fn update_builtin_meth_info(
     };
 
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
-        warnings.push(Diagnostic {
+        diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
                 // TODO: we need a better design principle around
@@ -524,13 +524,13 @@ fn update_builtin_meth_info(
     curr_meth_info.kind = MethodKind::BuiltinMethod(*kind, Some(fun_info.clone()));
 }
 
-fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec<Diagnostic>) {
+fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut Vec<Diagnostic>) {
     let Some(symbol) = &fun_info.name else {
         return;
     };
 
     let Some(value) = env.file_scope.get(&symbol.name) else {
-        warnings.push(Diagnostic {
+        diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub for a function {} that doesn't exist.",
@@ -542,7 +542,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, warnings: &mut Vec
     };
 
     let Value::BuiltinFunction(kind, _) = value else {
-        warnings.push(Diagnostic {
+        diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",

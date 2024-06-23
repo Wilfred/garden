@@ -17,7 +17,7 @@ struct DuplicatesVisitor {
     funs_seen: HashMap<SymbolName, Position>,
     methods_seen: HashMap<TypeName, HashMap<SymbolName, Position>>,
     types_seen: HashSet<TypeName>,
-    warnings: Vec<Diagnostic>,
+    diagnostics: Vec<Diagnostic>,
 }
 
 impl Visitor for DuplicatesVisitor {
@@ -25,7 +25,7 @@ impl Visitor for DuplicatesVisitor {
         match &def.2 {
             Definition_::Fun(sym, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
-                    self.warnings.push(Diagnostic {
+                    self.diagnostics.push(Diagnostic {
                         message: format!(
                             "The function `{}` is already defined in this file.",
                             sym.name
@@ -56,7 +56,7 @@ impl Visitor for DuplicatesVisitor {
                 }
 
                 if is_repeat {
-                    self.warnings.push(Diagnostic {
+                    self.diagnostics.push(Diagnostic {
                         message: format!(
                             "The method `{}::{}` is already defined in this file.",
                             type_name, meth_sym.name
@@ -70,7 +70,7 @@ impl Visitor for DuplicatesVisitor {
             Definition_::Enum(enum_info) => {
                 let name_sym = &enum_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
-                    self.warnings.push(Diagnostic {
+                    self.diagnostics.push(Diagnostic {
                         message: format!(
                             "The type `{}` is already defined in this file.",
                             &name_sym.name
@@ -85,7 +85,7 @@ impl Visitor for DuplicatesVisitor {
             Definition_::Struct(struct_info) => {
                 let name_sym = &struct_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
-                    self.warnings.push(Diagnostic {
+                    self.diagnostics.push(Diagnostic {
                         message: format!(
                             "The type `{}` is already defined in this file.",
                             &name_sym.name
@@ -105,7 +105,7 @@ impl Visitor for DuplicatesVisitor {
 
 pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagnostic> {
     let mut visitor = DuplicatesVisitor {
-        warnings: vec![],
+        diagnostics: vec![],
         funs_seen: HashMap::default(),
         methods_seen: HashMap::default(),
         types_seen: HashSet::default(),
@@ -113,5 +113,5 @@ pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagno
     for item in items {
         visitor.visit_toplevel_item(item);
     }
-    visitor.warnings
+    visitor.diagnostics
 }

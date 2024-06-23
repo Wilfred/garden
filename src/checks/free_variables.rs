@@ -16,7 +16,7 @@ pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Dia
     for item in items {
         visitor.visit_toplevel_item(item);
     }
-    visitor.warnings()
+    visitor.diagnostics()
 }
 
 #[derive(Debug, Clone)]
@@ -45,10 +45,10 @@ impl FreeVariableVisitor<'_> {
         }
     }
 
-    fn warnings(&self) -> Vec<Diagnostic> {
-        let mut warnings = vec![];
+    fn diagnostics(&self) -> Vec<Diagnostic> {
+        let mut diagnostics = vec![];
         for (free_sym, position) in &self.free {
-            warnings.push(Diagnostic {
+            diagnostics.push(Diagnostic {
                 level: Level::Error,
                 message: format!("Unbound symbol: {free_sym}"),
                 position: position.clone(),
@@ -56,14 +56,14 @@ impl FreeVariableVisitor<'_> {
         }
 
         for (name, position) in &self.unused {
-            warnings.push(Diagnostic {
+            diagnostics.push(Diagnostic {
                 level: Level::Warning,
                 message: format!("`{name}` is unused."),
                 position: position.clone(),
             });
         }
 
-        warnings
+        diagnostics
     }
 
     fn is_bound(&self, name: &SymbolName) -> bool {

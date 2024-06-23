@@ -32,7 +32,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Diagnostic> {
 
 /// Check toplevel items in this environment.
 pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
-    let mut warnings = vec![];
+    let mut diagnostics = vec![];
 
     let mut definitions: Vec<Definition> = vec![];
     for item in items {
@@ -41,13 +41,13 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
         }
     }
 
-    warnings.extend(check_free_variables(items, env));
-    warnings.extend(check_struct_fields(items, env));
-    warnings.extend(check_hints(items, env));
+    diagnostics.extend(check_free_variables(items, env));
+    diagnostics.extend(check_struct_fields(items, env));
+    diagnostics.extend(check_hints(items, env));
 
-    let (type_warnings, _) = check_types(items, env);
-    warnings.extend(type_warnings);
-    warnings.extend(check_duplicates(items, env));
+    let (type_diagnostics, _) = check_types(items, env);
+    diagnostics.extend(type_diagnostics);
+    diagnostics.extend(check_duplicates(items, env));
 
-    warnings
+    diagnostics
 }

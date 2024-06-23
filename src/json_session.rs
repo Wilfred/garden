@@ -128,7 +128,7 @@ fn handle_eval_request(
                 Response {
                     kind: ResponseKind::Evaluate,
                     value: Ok(value_summary),
-                    warnings: eval_summary.warnings,
+                    warnings: eval_summary.diagnostics,
                 }
             }
             Err(EvalError::ResumableError(position, e)) => {

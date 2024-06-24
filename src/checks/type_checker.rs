@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, ExpressionId, Expression_, FunInfo, MethodInfo, Pattern,
-    Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, Pattern, Symbol,
+    SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 
@@ -16,7 +16,7 @@ use crate::visitor::Visitor;
 pub(crate) fn check_types(
     items: &[ToplevelItem],
     env: &Env,
-) -> (Vec<Diagnostic>, HashMap<ExpressionId, Type>) {
+) -> (Vec<Diagnostic>, HashMap<SyntaxId, Type>) {
     let mut env = env.clone();
 
     let mut visitor = TypeCheckVisitor {
@@ -75,7 +75,7 @@ struct TypeCheckVisitor<'a> {
     env: &'a mut Env,
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
-    id_to_ty: HashMap<ExpressionId, Type>,
+    id_to_ty: HashMap<SyntaxId, Type>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {

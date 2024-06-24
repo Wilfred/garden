@@ -269,14 +269,16 @@ pub enum Expression_ {
     Block(Block),
 }
 
+/// A syntactic item that the IDE can interact with, such as an
+/// expression or a variable name.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
-pub struct ExpressionId(pub usize);
+pub struct SyntaxId(pub usize);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
-    pub id: OnceCell<ExpressionId>,
+    pub id: OnceCell<SyntaxId>,
 }
 
 impl Expression {

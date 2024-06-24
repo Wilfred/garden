@@ -1,16 +1,16 @@
-use garden_lang_parser::ast::{Expression, ExpressionId, ToplevelItem};
+use garden_lang_parser::ast::{Expression, SyntaxId, ToplevelItem};
 
 use crate::visitor::Visitor;
 
 #[derive(Debug, Default, Clone)]
-struct AssignExprIds {
+struct AssignSyntaxIds {
     next_id: usize,
 }
 
-impl Visitor for AssignExprIds {
+impl Visitor for AssignSyntaxIds {
     fn visit_expr(&mut self, expr: &Expression) {
         expr.id
-            .set(ExpressionId(self.next_id))
+            .set(SyntaxId(self.next_id))
             .expect("Expressions should not have IDs yet.");
         self.next_id += 1;
 
@@ -19,7 +19,7 @@ impl Visitor for AssignExprIds {
 }
 
 pub(crate) fn assign_toplevel_item_ids(items: &[ToplevelItem]) {
-    let mut visitor = AssignExprIds::default();
+    let mut visitor = AssignSyntaxIds::default();
     for item in items {
         visitor.visit_toplevel_item(item);
     }

@@ -576,7 +576,7 @@ If called with a prefix, stop the previous session."
 
 (defun garden-mode-eldoc (callback &rest _)
   "Show information for the symbol at point."
-  (let ((output-buffer (generate-new-buffer "*async-shell-command*")))
+  (let ((output-buffer (generate-new-buffer "*garden-hover-async*")))
     (make-process
      :name "garden-mode-hover-type"
      :buffer output-buffer

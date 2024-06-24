@@ -1,0 +1,8 @@
+fun file_name(path: String): String {
+    let parts = path.split("/");
+    parts.last().or_exception();
+}
+
+// args: show-type 55
+// expected stdout: String
+

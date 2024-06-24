@@ -582,8 +582,8 @@ If called with a prefix, stop the previous session."
      :buffer output-buffer
      :command (list garden-executable
                     "show-type"
-                    (buffer-file-name)
-                    (format "%s" (1- (point))))
+                    (format "%s" (1- (point)))
+                    (buffer-file-name))
      :sentinel (lambda (process event)
                  (when (string= event "finished\n")
                    (with-current-buffer (process-buffer process)

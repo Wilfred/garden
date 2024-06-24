@@ -77,7 +77,7 @@ enum Commands {
         json: bool,
     },
     /// Show the type of the expression at the position given.
-    ShowType { path: PathBuf, offset: usize },
+    ShowType { offset: usize, path: PathBuf },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },

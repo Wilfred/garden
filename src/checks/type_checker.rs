@@ -13,8 +13,6 @@ use crate::types::TypeDef;
 use crate::values::Value;
 use crate::visitor::Visitor;
 
-use super::assign_ids::assign_expr_ids;
-
 pub(crate) fn check_types(
     items: &[ToplevelItem],
     env: &Env,
@@ -138,8 +136,6 @@ impl Visitor for TypeCheckVisitor<'_> {
     }
 
     fn visit_block(&mut self, block: &Block) {
-        assign_expr_ids(block);
-
         // check_block recurses, so don't recurse in the visitor
         self.check_block(block, &self.env.type_bindings(), None);
     }

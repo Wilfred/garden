@@ -130,6 +130,7 @@ impl From<&str> for SymbolName {
 pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
+    pub id: OnceCell<SyntaxId>,
 }
 
 impl std::fmt::Debug for Symbol {

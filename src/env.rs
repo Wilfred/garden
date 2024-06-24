@@ -1,3 +1,4 @@
+use std::cell::OnceCell;
 use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
@@ -57,10 +58,12 @@ impl Default for Env {
                 receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
+                    id: OnceCell::new(),
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("len".to_owned()),
+                    id: OnceCell::new(),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
             },
@@ -81,10 +84,12 @@ impl Default for Env {
                 receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
+                    id: OnceCell::new(),
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("substring".to_owned()),
+                    id: OnceCell::new(),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
             },
@@ -105,10 +110,12 @@ impl Default for Env {
                 receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
+                    id: OnceCell::new(),
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("append".to_owned()),
+                    id: OnceCell::new(),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringAppend, None),
             },
@@ -138,10 +145,12 @@ impl Default for Env {
                 receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
+                    id: OnceCell::new(),
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("append".to_owned()),
+                    id: OnceCell::new(),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None),
             },
@@ -162,10 +171,12 @@ impl Default for Env {
                 receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
+                    id: OnceCell::new(),
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("len".to_owned()),
+                    id: OnceCell::new(),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None),
             },
@@ -186,10 +197,12 @@ impl Default for Env {
                 receiver_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("__irrelevant".to_owned()),
+                    id: OnceCell::new(),
                 },
                 name_sym: Symbol {
                     position: Position::todo(),
                     name: SymbolName("get".to_owned()),
+                    id: OnceCell::new(),
                 },
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None),
             },

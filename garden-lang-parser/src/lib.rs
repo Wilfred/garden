@@ -9,6 +9,7 @@ pub mod diagnostics;
 pub mod lex;
 pub mod position;
 
+use std::cell::OnceCell;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -1441,6 +1442,7 @@ fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
     Ok(Symbol {
         position: variable_token.position,
         name: SymbolName(variable_token.text.to_string()),
+        id: OnceCell::new(),
     })
 }
 

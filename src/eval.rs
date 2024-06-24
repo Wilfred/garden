@@ -1,7 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
@@ -2460,6 +2460,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                     Expression_::Variable(Symbol {
                                         position: expr_position,
                                         name: "Unit".into(),
+                                        id: OnceCell::new(),
                                     }),
                                 )
                             }
@@ -3270,6 +3271,7 @@ mod tests {
                         path: PathBuf::from("__test.gdn"),
                     },
                     name: SymbolName("foo".into()),
+                    id: OnceCell::new(),
                 },
                 None,
                 Box::new(Expression::new(
@@ -3303,6 +3305,7 @@ mod tests {
                     path: PathBuf::from("__test.gdn"),
                 },
                 name: SymbolName("foo".into()),
+                id: OnceCell::new(),
             }),
         )];
         eval_exprs(&exprs, &mut env).unwrap();

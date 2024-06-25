@@ -133,6 +133,16 @@ pub struct Symbol {
     pub id: OnceCell<SyntaxId>,
 }
 
+impl Symbol {
+    pub fn new<S: AsRef<str>>(position: Position, name: S) -> Self {
+        Self {
+            position,
+            name: SymbolName(name.as_ref().to_owned()),
+            id: OnceCell::new(),
+        }
+    }
+}
+
 impl std::fmt::Debug for Symbol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if std::env::var("VERBOSE").is_ok() {

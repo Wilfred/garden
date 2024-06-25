@@ -1,7 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
-use std::cell::{OnceCell, RefCell};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
@@ -2457,11 +2457,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                 // Evaluate `return;` as `return Unit;`.
                                 Expression::new(
                                     expr_position.clone(),
-                                    Expression_::Variable(Symbol {
-                                        position: expr_position,
-                                        name: "Unit".into(),
-                                        id: OnceCell::new(),
-                                    }),
+                                    Expression_::Variable(Symbol::new(expr_position, "Unit")),
                                 )
                             }
                         };
@@ -3262,17 +3258,16 @@ mod tests {
                 path: PathBuf::from("__test.gdn"),
             },
             Expression_::Let(
-                Symbol {
-                    position: Position {
+                Symbol::new(
+                    Position {
                         start_offset: 0,
                         end_offset: 0,
                         line_number: 0,
                         end_line_number: 0,
                         path: PathBuf::from("__test.gdn"),
                     },
-                    name: SymbolName("foo".into()),
-                    id: OnceCell::new(),
-                },
+                    "foo",
+                ),
                 None,
                 Box::new(Expression::new(
                     Position {
@@ -3296,17 +3291,16 @@ mod tests {
                 end_line_number: 0,
                 path: PathBuf::from("__test.gdn"),
             },
-            Expression_::Variable(Symbol {
-                position: Position {
+            Expression_::Variable(Symbol::new(
+                Position {
                     start_offset: 0,
                     end_offset: 0,
                     line_number: 0,
                     end_line_number: 0,
                     path: PathBuf::from("__test.gdn"),
                 },
-                name: SymbolName("foo".into()),
-                id: OnceCell::new(),
-            }),
+                "foo",
+            )),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
     }

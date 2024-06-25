@@ -201,9 +201,12 @@ pub(crate) trait Visitor {
         self.visit_block(body);
     }
 
-    fn visit_expr_variable(&mut self, _: &Symbol) {}
+    fn visit_expr_variable(&mut self, symbol: &Symbol) {
+        self.visit_symbol(symbol);
+    }
 
-    fn visit_expr_let(&mut self, _: &Symbol, hint: Option<&TypeHint>, expr: &Expression) {
+    fn visit_expr_let(&mut self, symbol: &Symbol, hint: Option<&TypeHint>, expr: &Expression) {
+        self.visit_symbol(symbol);
         if let Some(hint) = hint {
             self.visit_type_hint(hint);
         }
@@ -211,7 +214,10 @@ pub(crate) trait Visitor {
         self.visit_expr(expr);
     }
 
-    fn visit_expr_assign(&mut self, _: &Symbol, expr: &Expression) {
+    fn visit_expr_assign(&mut self, symbol: &Symbol, expr: &Expression) {
+        self.visit_symbol(symbol);
         self.visit_expr(expr);
     }
+
+    fn visit_symbol(&mut self, _: &Symbol) {}
 }

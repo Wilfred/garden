@@ -810,7 +810,11 @@ impl<'a> TypeCheckVisitor<'a> {
     }
 
     fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
-        self.bindings.set(symbol.name.clone(), ty);
+        self.bindings.set(symbol.name.clone(), ty.clone());
+
+        if let Some(id) = symbol.id.get() {
+            self.id_to_ty.insert(*id, ty);
+        }
     }
 }
 

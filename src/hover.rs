@@ -100,112 +100,112 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
     // If there's a inner expression that includes this position, return that.
     match &expr.expr_ {
         Expression_::Match(scrutinee_expr, cases) => {
-            if let Some(e) = find_expr_at(scrutinee_expr, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(scrutinee_expr, offset) {
+                return Some(id);
             }
             for (_, case_expr) in cases {
-                if let Some(e) = find_expr_at(case_expr, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(case_expr, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::If(cond_expr, then_block, else_block) => {
-            if let Some(e) = find_expr_at(cond_expr, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(cond_expr, offset) {
+                return Some(id);
             }
             for expr in &then_block.exprs {
-                if let Some(e) = find_expr_at(expr, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(expr, offset) {
+                    return Some(id);
                 }
             }
             if let Some(else_block) = else_block {
                 for expr in &else_block.exprs {
-                    if let Some(e) = find_expr_at(expr, offset) {
-                        return Some(e);
+                    if let Some(id) = find_expr_at(expr, offset) {
+                        return Some(id);
                     }
                 }
             }
         }
         Expression_::While(cond_expr, block) => {
-            if let Some(e) = find_expr_at(cond_expr, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(cond_expr, offset) {
+                return Some(id);
             }
             for expr in &block.exprs {
-                if let Some(e) = find_expr_at(expr, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(expr, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::Assign(symbol, expr) => {
-            if let Some(e) = find_symbol_at(symbol, offset) {
-                return Some(e);
+            if let Some(id) = find_symbol_at(symbol, offset) {
+                return Some(id);
             }
 
-            if let Some(e) = find_expr_at(expr, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(expr, offset) {
+                return Some(id);
             }
         }
         Expression_::Let(symbol, _, expr) => {
-            if let Some(e) = find_symbol_at(symbol, offset) {
-                return Some(e);
+            if let Some(id) = find_symbol_at(symbol, offset) {
+                return Some(id);
             }
 
             // TODO: support hover on the variable name in let expressions.
-            if let Some(e) = find_expr_at(expr, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(expr, offset) {
+                return Some(id);
             }
         }
         Expression_::Return(value) => {
             if let Some(value) = value {
-                if let Some(e) = find_expr_at(value, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(value, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::ListLiteral(items) => {
             for item in items {
-                if let Some(e) = find_expr_at(item, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(item, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::StructLiteral(_, fields) => {
             for (_, field_expr) in fields {
-                if let Some(e) = find_expr_at(field_expr, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(field_expr, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::BinaryOperator(lhs, _, rhs) => {
-            if let Some(e) = find_expr_at(lhs, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(lhs, offset) {
+                return Some(id);
             }
-            if let Some(e) = find_expr_at(rhs, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(rhs, offset) {
+                return Some(id);
             }
         }
         Expression_::Call(recv, args) | Expression_::MethodCall(recv, _, args) => {
-            if let Some(e) = find_expr_at(recv, offset) {
-                return Some(e);
+            if let Some(id) = find_expr_at(recv, offset) {
+                return Some(id);
             }
             for arg in &args.arguments {
-                if let Some(e) = find_expr_at(arg, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(arg, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::FunLiteral(fun_info) => {
             // TODO: support hover types on parameters too.
             for expr in &fun_info.body.exprs {
-                if let Some(e) = find_expr_at(expr, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(expr, offset) {
+                    return Some(id);
                 }
             }
         }
         Expression_::Block(block) => {
             for expr in &block.exprs {
-                if let Some(e) = find_expr_at(expr, offset) {
-                    return Some(e);
+                if let Some(id) = find_expr_at(expr, offset) {
+                    return Some(id);
                 }
             }
         }

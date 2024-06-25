@@ -127,7 +127,7 @@ impl Visitor for TypeCheckVisitor<'_> {
                 Some(hint) => Type::from_hint(hint, self.env, &type_bindings).unwrap_or_err_ty(),
                 None => Type::Top,
             };
-            self.bindings.set(param.symbol.name.clone(), param_ty);
+            self.set_binding(&param.symbol, param_ty);
         }
 
         self.check_fun_info(fun_info, &type_bindings);
@@ -168,7 +168,7 @@ impl<'a> TypeCheckVisitor<'a> {
         for param in &fun_info.params {
             if let Some(hint) = &param.hint {
                 let param_ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
-                self.bindings.set(param.symbol.name.clone(), param_ty);
+                self.set_binding(&param.symbol, param_ty);
             }
         }
 
@@ -272,8 +272,8 @@ impl<'a> TypeCheckVisitor<'a> {
 
                     if let Some(payload_sym) = &pattern.argument {
                         if !payload_sym.name.is_underscore() {
-                            self.bindings.set(
-                                payload_sym.name.clone(),
+                            self.set_binding(
+                                payload_sym,
                                 enum_payload_type(self.env, &scrutinee_ty, &pattern.symbol),
                             );
                         }
@@ -442,7 +442,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     None => expr_ty,
                 };
 
-                self.bindings.set(sym.name.clone(), ty);
+                self.set_binding(sym, ty);
 
                 Type::unit()
             }
@@ -807,6 +807,10 @@ impl<'a> TypeCheckVisitor<'a> {
             Expression_::FunLiteral(fun_info) => self.check_fun_info(fun_info, type_bindings),
             Expression_::Block(block) => self.check_block(block, type_bindings, expected_return_ty),
         }
+    }
+
+    fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
+        self.bindings.set(symbol.name.clone(), ty);
     }
 }
 

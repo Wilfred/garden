@@ -6,7 +6,7 @@ use crate::{
     eval::eval_defs,
 };
 use garden_lang_parser::{
-    ast::{Definition_, Expression, Expression_, SyntaxId, ToplevelItem},
+    ast::{Definition_, Expression, Expression_, Symbol, SyntaxId, ToplevelItem},
     parse_toplevel_items,
 };
 
@@ -80,6 +80,14 @@ fn find_item_at(items: &[ToplevelItem], offset: usize) -> Option<SyntaxId> {
     containing_id
 }
 
+fn find_symbol_at(symbol: &Symbol, offset: usize) -> Option<SyntaxId> {
+    if symbol.position.contains_offset(offset) {
+        Some(*symbol.id.get().expect("Symbol ID should be set"))
+    } else {
+        None
+    }
+}
+
 fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
     // Check `expr` includes this position.
     //
@@ -128,13 +136,20 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
                 }
             }
         }
-        Expression_::Assign(_var, expr) => {
-            // TODO: support hover on the variable name in let expressions.
+        Expression_::Assign(symbol, expr) => {
+            if let Some(e) = find_symbol_at(symbol, offset) {
+                return Some(e);
+            }
+
             if let Some(e) = find_expr_at(expr, offset) {
                 return Some(e);
             }
         }
-        Expression_::Let(_var, _, expr) => {
+        Expression_::Let(symbol, _, expr) => {
+            if let Some(e) = find_symbol_at(symbol, offset) {
+                return Some(e);
+            }
+
             // TODO: support hover on the variable name in let expressions.
             if let Some(e) = find_expr_at(expr, offset) {
                 return Some(e);

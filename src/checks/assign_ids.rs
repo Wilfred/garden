@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{Expression, SyntaxId, ToplevelItem};
+use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem};
 
 use crate::visitor::Visitor;
 
@@ -15,6 +15,14 @@ impl Visitor for AssignSyntaxIds {
         self.next_id += 1;
 
         self.visit_expr_(&expr.expr_)
+    }
+
+    fn visit_symbol(&mut self, symbol: &Symbol) {
+        symbol
+            .id
+            .set(SyntaxId(self.next_id))
+            .expect("Symbols should not have IDs yet.");
+        self.next_id += 1;
     }
 }
 

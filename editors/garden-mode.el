@@ -574,6 +574,22 @@ If called with a prefix, stop the previous session."
 
   (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
 
+(defun garden--syntax-highlight (str)
+  "Apply font-lock properties to a string STR of Garden code."
+  (let (result)
+    ;; Load all of STR in a garden-mode buffer, and use its
+    ;; highlighting.
+    (save-match-data
+      (with-temp-buffer
+        (insert str)
+        (delay-mode-hooks (garden-mode))
+        (if (fboundp 'font-lock-ensure)
+            (font-lock-ensure)
+          (with-no-warnings
+            (font-lock-fontify-buffer)))
+        (setq result (buffer-string))))
+    result))
+
 (defun garden-mode-eldoc (callback &rest _)
   "Show information for the symbol at point."
   (let ((output-buffer (generate-new-buffer "*garden-hover-async*")))
@@ -594,7 +610,8 @@ If called with a prefix, stop the previous session."
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
-                       (funcall callback result))))))))
+                       (funcall callback
+                                (garden--syntax-highlight result)))))))))
 
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))

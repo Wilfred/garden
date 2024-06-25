@@ -37,7 +37,7 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
 }
 
 fn find_item_at(items: &[ToplevelItem], offset: usize) -> Option<SyntaxId> {
-    let mut containing_expr: Option<Expression> = None;
+    let mut containing_id: Option<SyntaxId> = None;
 
     'found: for item in items {
         let pos = match item {
@@ -63,24 +63,24 @@ fn find_item_at(items: &[ToplevelItem], offset: usize) -> Option<SyntaxId> {
 
                 for expr in exprs {
                     if let Some(e) = find_expr_at(&expr, offset) {
-                        containing_expr = Some(e);
+                        containing_id = Some(e);
                         break 'found;
                     }
                 }
             }
             ToplevelItem::Expr(toplevel_expr) => {
                 if let Some(e) = find_expr_at(&toplevel_expr.0, offset) {
-                    containing_expr = Some(e);
+                    containing_id = Some(e);
                     break 'found;
                 }
             }
         }
     }
 
-    containing_expr.and_then(|e| e.id.get().copied())
+    containing_id
 }
 
-fn find_expr_at(expr: &Expression, offset: usize) -> Option<Expression> {
+fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
     // Check `expr` includes this position.
     //
     // If so, see if any children incude it, and include the innermost matching expr.
@@ -202,5 +202,5 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Option<Expression> {
         | Expression_::Break => {}
     };
 
-    Some(expr.clone())
+    Some(*expr.id.get().expect("ID should be set"))
 }

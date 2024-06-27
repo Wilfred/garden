@@ -24,6 +24,7 @@ pub(crate) fn check_types(
         diagnostics: vec![],
         bindings: LocalBindings::default(),
         id_to_ty: HashMap::default(),
+        id_to_doc_comment: HashMap::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -76,6 +77,7 @@ struct TypeCheckVisitor<'a> {
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
     id_to_ty: HashMap<SyntaxId, Type>,
+    id_to_doc_comment: HashMap<SyntaxId, String>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
@@ -585,7 +587,23 @@ impl<'a> TypeCheckVisitor<'a> {
                 }
 
                 match self.env.file_scope.get(&sym.name) {
-                    Some(value) => Type::from_value(value, self.env, type_bindings),
+                    Some(value) => {
+                        let fun_info = match value {
+                            Value::Fun { fun_info, .. } => Some(fun_info),
+                            Value::Closure(_, fun_info) => Some(fun_info),
+                            Value::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
+                            _ => None,
+                        };
+                        if let Some(fun_info) = fun_info {
+                            if let (Some(doc_comment), Some(sym_id)) =
+                                (&fun_info.doc_comment, sym.id.get())
+                            {
+                                self.id_to_doc_comment.insert(*sym_id, doc_comment.clone());
+                            }
+                        }
+
+                        Type::from_value(value, self.env, type_bindings)
+                    }
                     None => Type::Error("Unbound variable".to_owned()),
                 }
             }

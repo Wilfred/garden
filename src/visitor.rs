@@ -77,6 +77,8 @@ pub(crate) trait Visitor {
     // calling a 'super method'.
     fn visit_fun_info_default(&mut self, fun_info: &FunInfo) {
         for param in &fun_info.params {
+            self.visit_symbol(&param.symbol);
+
             if let Some(param_hint) = &param.hint {
                 self.visit_type_hint(param_hint);
             }

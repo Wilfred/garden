@@ -27,14 +27,19 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
             assign_toplevel_item_ids(&items);
             let (_, id_to_ty, id_to_doc_comment) = check_types(&items, &env);
 
-            let hovered_id = find_item_at(&items, offset);
-            if let Some(hovered_id) = hovered_id {
-                if let Some(doc_comment) = id_to_doc_comment.get(&hovered_id) {
-                    println!("{}", doc_comment);
-                }
+            let hovered_ids = find_item_at(&items, offset);
 
-                if let Some(ty) = id_to_ty.get(&hovered_id) {
+            for id in hovered_ids.iter().rev() {
+                if let Some(doc_comment) = id_to_doc_comment.get(id) {
+                    println!("{}", doc_comment);
+                    break;
+                }
+            }
+
+            for id in hovered_ids.iter().rev() {
+                if let Some(ty) = id_to_ty.get(id) {
                     println!("{}", ty);
+                    break;
                 }
             }
         }
@@ -42,8 +47,8 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
     }
 }
 
-fn find_item_at(items: &[ToplevelItem], offset: usize) -> Option<SyntaxId> {
-    let mut containing_id: Option<SyntaxId> = None;
+fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxId> {
+    let mut ids = vec![];
 
     'found: for item in items {
         let pos = match item {
@@ -68,22 +73,22 @@ fn find_item_at(items: &[ToplevelItem], offset: usize) -> Option<SyntaxId> {
                 };
 
                 for expr in exprs {
-                    if let Some(e) = find_expr_at(&expr, offset) {
-                        containing_id = Some(e);
+                    ids.extend(find_expr_at(&expr, offset));
+                    if !ids.is_empty() {
                         break 'found;
                     }
                 }
             }
             ToplevelItem::Expr(toplevel_expr) => {
-                if let Some(e) = find_expr_at(&toplevel_expr.0, offset) {
-                    containing_id = Some(e);
+                ids.extend(find_expr_at(&toplevel_expr.0, offset));
+                if !ids.is_empty() {
                     break 'found;
                 }
             }
         }
     }
 
-    containing_id
+    ids
 }
 
 fn find_symbol_at(symbol: &Symbol, offset: usize) -> Option<SyntaxId> {
@@ -94,130 +99,150 @@ fn find_symbol_at(symbol: &Symbol, offset: usize) -> Option<SyntaxId> {
     }
 }
 
-fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
+fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
     // Check `expr` includes this position.
     //
     // If so, see if any children incude it, and include the innermost matching expr.
     let pos = &expr.pos;
     if !pos.contains_offset(offset) {
-        return None;
+        return vec![];
     }
 
     // If there's a inner expression that includes this position, return that.
     match &expr.expr_ {
         Expression_::Match(scrutinee_expr, cases) => {
-            if let Some(id) = find_expr_at(scrutinee_expr, offset) {
-                return Some(id);
+            let ids = find_expr_at(scrutinee_expr, offset);
+            if !ids.is_empty() {
+                return ids;
             }
+
             for (_, case_expr) in cases {
-                if let Some(id) = find_expr_at(case_expr, offset) {
-                    return Some(id);
+                let ids = find_expr_at(case_expr, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::If(cond_expr, then_block, else_block) => {
-            if let Some(id) = find_expr_at(cond_expr, offset) {
-                return Some(id);
+            let ids = find_expr_at(cond_expr, offset);
+            if !ids.is_empty() {
+                return ids;
             }
             for expr in &then_block.exprs {
-                if let Some(id) = find_expr_at(expr, offset) {
-                    return Some(id);
+                let ids = find_expr_at(expr, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
             if let Some(else_block) = else_block {
                 for expr in &else_block.exprs {
-                    if let Some(id) = find_expr_at(expr, offset) {
-                        return Some(id);
+                    let ids = find_expr_at(expr, offset);
+                    if !ids.is_empty() {
+                        return ids;
                     }
                 }
             }
         }
         Expression_::While(cond_expr, block) => {
-            if let Some(id) = find_expr_at(cond_expr, offset) {
-                return Some(id);
+            let ids = find_expr_at(cond_expr, offset);
+            if !ids.is_empty() {
+                return ids;
             }
             for expr in &block.exprs {
-                if let Some(id) = find_expr_at(expr, offset) {
-                    return Some(id);
+                let ids = find_expr_at(expr, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::Assign(symbol, expr) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
-                return Some(id);
+                return vec![id];
             }
 
-            if let Some(id) = find_expr_at(expr, offset) {
-                return Some(id);
+            let ids = find_expr_at(expr, offset);
+            if !ids.is_empty() {
+                return ids;
             }
         }
         Expression_::Let(symbol, _, expr) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
-                return Some(id);
+                return vec![id];
             }
 
             // TODO: support hover on the variable name in let expressions.
-            if let Some(id) = find_expr_at(expr, offset) {
-                return Some(id);
+            let ids = find_expr_at(expr, offset);
+            if !ids.is_empty() {
+                return ids;
             }
         }
         Expression_::Return(value) => {
             if let Some(value) = value {
-                if let Some(id) = find_expr_at(value, offset) {
-                    return Some(id);
+                let ids = find_expr_at(value, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::ListLiteral(items) => {
             for item in items {
-                if let Some(id) = find_expr_at(item, offset) {
-                    return Some(id);
+                let ids = find_expr_at(item, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::StructLiteral(_, fields) => {
             for (_, field_expr) in fields {
-                if let Some(id) = find_expr_at(field_expr, offset) {
-                    return Some(id);
+                let ids = find_expr_at(field_expr, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::BinaryOperator(lhs, _, rhs) => {
-            if let Some(id) = find_expr_at(lhs, offset) {
-                return Some(id);
+            let ids = find_expr_at(lhs, offset);
+            if !ids.is_empty() {
+                return ids;
             }
-            if let Some(id) = find_expr_at(rhs, offset) {
-                return Some(id);
+            let ids = find_expr_at(rhs, offset);
+            if !ids.is_empty() {
+                return ids;
             }
         }
         Expression_::Call(recv, args) | Expression_::MethodCall(recv, _, args) => {
-            if let Some(id) = find_expr_at(recv, offset) {
-                return Some(id);
+            let ids = find_expr_at(recv, offset);
+            if !ids.is_empty() {
+                return ids;
             }
+
             for arg in &args.arguments {
-                if let Some(id) = find_expr_at(arg, offset) {
-                    return Some(id);
+                let ids = find_expr_at(arg, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::FunLiteral(fun_info) => {
             // TODO: support hover types on parameters too.
             for expr in &fun_info.body.exprs {
-                if let Some(id) = find_expr_at(expr, offset) {
-                    return Some(id);
+                let ids = find_expr_at(expr, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::Block(block) => {
             for expr in &block.exprs {
-                if let Some(id) = find_expr_at(expr, offset) {
-                    return Some(id);
+                let ids = find_expr_at(expr, offset);
+                if !ids.is_empty() {
+                    return ids;
                 }
             }
         }
         Expression_::Variable(symbol) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
-                return Some(id);
+                return vec![id];
             }
         }
         // These expression cases have no inner expression.
@@ -227,5 +252,5 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
         | Expression_::Break => {}
     };
 
-    Some(*expr.id.get().expect("ID should be set"))
+    vec![*expr.id.get().expect("ID should be set")]
 }

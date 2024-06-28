@@ -108,6 +108,8 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
         return vec![];
     }
 
+    let mut expr_ids = vec![*expr.id.get().expect("ID should be set")];
+
     // If there's a inner expression that includes this position, return that.
     match &expr.expr_ {
         Expression_::Match(scrutinee_expr, cases) => {
@@ -157,7 +159,8 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
         }
         Expression_::Assign(symbol, expr) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
-                return vec![id];
+                expr_ids.push(id);
+                return expr_ids;
             }
 
             let ids = find_expr_at(expr, offset);
@@ -167,7 +170,8 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
         }
         Expression_::Let(symbol, _, expr) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
-                return vec![id];
+                expr_ids.push(id);
+                return expr_ids;
             }
 
             // TODO: support hover on the variable name in let expressions.

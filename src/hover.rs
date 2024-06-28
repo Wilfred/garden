@@ -113,140 +113,86 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
     // If there's a inner expression that includes this position, return that.
     match &expr.expr_ {
         Expression_::Match(scrutinee_expr, cases) => {
-            let ids = find_expr_at(scrutinee_expr, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(scrutinee_expr, offset));
 
             for (_, case_expr) in cases {
-                let ids = find_expr_at(case_expr, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(case_expr, offset));
             }
         }
         Expression_::If(cond_expr, then_block, else_block) => {
-            let ids = find_expr_at(cond_expr, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(cond_expr, offset));
+
             for expr in &then_block.exprs {
-                let ids = find_expr_at(expr, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(expr, offset));
             }
             if let Some(else_block) = else_block {
                 for expr in &else_block.exprs {
-                    let ids = find_expr_at(expr, offset);
-                    if !ids.is_empty() {
-                        return ids;
-                    }
+                    expr_ids.extend(find_expr_at(expr, offset));
                 }
             }
         }
         Expression_::While(cond_expr, block) => {
-            let ids = find_expr_at(cond_expr, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(cond_expr, offset));
+
             for expr in &block.exprs {
-                let ids = find_expr_at(expr, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(expr, offset));
             }
         }
         Expression_::Assign(symbol, expr) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
                 expr_ids.push(id);
-                return expr_ids;
             }
 
-            let ids = find_expr_at(expr, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(expr, offset));
         }
         Expression_::Let(symbol, _, expr) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
                 expr_ids.push(id);
-                return expr_ids;
             }
 
             // TODO: support hover on the variable name in let expressions.
-            let ids = find_expr_at(expr, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(expr, offset));
         }
         Expression_::Return(value) => {
             if let Some(value) = value {
-                let ids = find_expr_at(value, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(value, offset));
             }
         }
         Expression_::ListLiteral(items) => {
             for item in items {
-                let ids = find_expr_at(item, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(item, offset));
             }
         }
         Expression_::StructLiteral(_, fields) => {
             for (_, field_expr) in fields {
-                let ids = find_expr_at(field_expr, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(field_expr, offset));
             }
         }
         Expression_::BinaryOperator(lhs, _, rhs) => {
-            let ids = find_expr_at(lhs, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
-            let ids = find_expr_at(rhs, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(lhs, offset));
+            expr_ids.extend(find_expr_at(rhs, offset));
         }
         Expression_::Call(recv, args) | Expression_::MethodCall(recv, _, args) => {
-            let ids = find_expr_at(recv, offset);
-            if !ids.is_empty() {
-                return ids;
-            }
+            expr_ids.extend(find_expr_at(recv, offset));
 
             for arg in &args.arguments {
-                let ids = find_expr_at(arg, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(arg, offset));
             }
         }
         Expression_::FunLiteral(fun_info) => {
             // TODO: support hover types on parameters too.
             for expr in &fun_info.body.exprs {
-                let ids = find_expr_at(expr, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(expr, offset));
             }
         }
         Expression_::Block(block) => {
             for expr in &block.exprs {
-                let ids = find_expr_at(expr, offset);
-                if !ids.is_empty() {
-                    return ids;
-                }
+                expr_ids.extend(find_expr_at(expr, offset));
             }
         }
         Expression_::Variable(symbol) => {
             if let Some(id) = find_symbol_at(symbol, offset) {
-                return vec![id];
+                expr_ids.push(id);
             }
         }
         // These expression cases have no inner expression.
@@ -256,5 +202,5 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
         | Expression_::Break => {}
     };
 
-    vec![*expr.id.get().expect("ID should be set")]
+    expr_ids
 }

@@ -9,4 +9,5 @@ fun foo() {
 // ```
 // error("Computer is melting!");
 // ```
+// Fun<(String), NoValue>
 

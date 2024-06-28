@@ -4,3 +4,5 @@ fun file_name(path: String): String {
 }
 
 // args: show-type 55
+// expected stdout: String
+

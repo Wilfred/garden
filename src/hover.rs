@@ -25,11 +25,17 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
             eval_defs(&definitions, &mut env);
 
             assign_toplevel_item_ids(&items);
-            let (_, id_to_ty) = check_types(&items, &env);
+            let (_, id_to_ty, id_to_doc_comment) = check_types(&items, &env);
 
             let hovered_id = find_item_at(&items, offset);
             if let Some(hovered_id) = hovered_id {
-                println!("{}", id_to_ty[&hovered_id]);
+                if let Some(doc_comment) = id_to_doc_comment.get(&hovered_id) {
+                    println!("{}", doc_comment);
+                }
+
+                if let Some(ty) = id_to_ty.get(&hovered_id) {
+                    println!("{}", ty);
+                }
             }
         }
         Err(_) => eprintln!("Parse error."),
@@ -209,10 +215,14 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Option<SyntaxId> {
                 }
             }
         }
+        Expression_::Variable(symbol) => {
+            if let Some(id) = find_symbol_at(symbol, offset) {
+                return Some(id);
+            }
+        }
         // These expression cases have no inner expression.
         Expression_::IntLiteral(_)
         | Expression_::StringLiteral(_)
-        | Expression_::Variable(_)
         | Expression_::DotAccess(_, _)
         | Expression_::Break => {}
     };

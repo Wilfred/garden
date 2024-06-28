@@ -1,0 +1,12 @@
+fun foo() {
+    error("");
+}
+
+// args: show-type 20
+// expected stdout:
+// Stop the program immediately, and report the error message given.
+// 
+// ```
+// error("Computer is melting!");
+// ```
+

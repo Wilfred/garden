@@ -45,7 +45,7 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
 
-    let (type_diagnostics, _) = check_types(items, env);
+    let (type_diagnostics, _, _) = check_types(items, env);
     diagnostics.extend(type_diagnostics);
     diagnostics.extend(check_duplicates(items, env));
 

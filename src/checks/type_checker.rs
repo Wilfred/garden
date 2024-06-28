@@ -16,7 +16,11 @@ use crate::visitor::Visitor;
 pub(crate) fn check_types(
     items: &[ToplevelItem],
     env: &Env,
-) -> (Vec<Diagnostic>, HashMap<SyntaxId, Type>) {
+) -> (
+    Vec<Diagnostic>,
+    HashMap<SyntaxId, Type>,
+    HashMap<SyntaxId, String>,
+) {
     let mut env = env.clone();
 
     let mut visitor = TypeCheckVisitor {
@@ -30,7 +34,11 @@ pub(crate) fn check_types(
         visitor.visit_toplevel_item(item);
     }
 
-    (visitor.diagnostics, visitor.id_to_ty)
+    (
+        visitor.diagnostics,
+        visitor.id_to_ty,
+        visitor.id_to_doc_comment,
+    )
 }
 
 #[derive(Debug)]

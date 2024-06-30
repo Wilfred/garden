@@ -574,6 +574,14 @@ If called with a prefix, stop the previous session."
 
   (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
 
+(defun garden--buf-as-tmp-file ()
+  "Write the contents of the current buffer to a temporary file, and return its path."
+  (let* ((src (buffer-string))
+         (temp-file (make-temp-file "garden-hover-")))
+    (with-temp-file temp-file
+      (insert src))
+    temp-file))
+
 (defun garden--syntax-highlight (str)
   "Apply font-lock properties to a string STR of Garden code."
   (let (result)
@@ -592,24 +600,27 @@ If called with a prefix, stop the previous session."
 
 (defun garden-mode-eldoc (callback &rest _)
   "Show information for the symbol at point."
-  (let ((output-buffer (generate-new-buffer "*garden-hover-async*")))
+  (let ((tmp-file-of-src (garden--buf-as-tmp-file))
+        (output-buffer (generate-new-buffer "*garden-hover-async*")))
     (make-process
      :name "garden-mode-hover-type"
      :buffer output-buffer
      :command (list garden-executable
                     "show-type"
                     (format "%s" (1- (point)))
-                    (buffer-file-name))
+                    tmp-file-of-src)
      :sentinel (lambda (process event)
                  (when (string= event "exited abnormally with code 101\n")
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
+                       (delete-file tmp-file-of-src)
                        (error "Hover crashed: %s" result))))
                  (when (string= event "finished\n")
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
+                       (delete-file tmp-file-of-src)
                        (funcall callback
                                 (garden--syntax-highlight result)))))))))
 

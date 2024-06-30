@@ -76,7 +76,7 @@ fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxId> {
                 Definition_::Enum(_) | Definition_::Struct(_) => {}
             },
             ToplevelItem::Expr(toplevel_expr) => {
-                ids.extend(find_expr_at(&toplevel_expr.0, offset));
+                ids.extend(find_ids_expr(&toplevel_expr.0, offset));
                 if !ids.is_empty() {
                     break 'found;
                 }
@@ -99,7 +99,7 @@ fn find_ids_exprs(exprs: &[Expression], offset: usize) -> Vec<SyntaxId> {
     let mut ids = vec![];
 
     for expr in exprs {
-        ids.extend(find_expr_at(expr, offset));
+        ids.extend(find_ids_expr(expr, offset));
         if !ids.is_empty() {
             break;
         }
@@ -108,7 +108,7 @@ fn find_ids_exprs(exprs: &[Expression], offset: usize) -> Vec<SyntaxId> {
     ids
 }
 
-fn find_symbol_at(symbol: &Symbol, offset: usize) -> Option<SyntaxId> {
+fn find_id_symbol(symbol: &Symbol, offset: usize) -> Option<SyntaxId> {
     if symbol.position.contains_offset(offset) {
         Some(*symbol.id.get().expect("Symbol ID should be set"))
     } else {
@@ -116,7 +116,7 @@ fn find_symbol_at(symbol: &Symbol, offset: usize) -> Option<SyntaxId> {
     }
 }
 
-fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
+fn find_ids_expr(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
     // Check `expr` includes this position.
     //
     // If so, see if any children incude it, and include the innermost matching expr.
@@ -130,14 +130,14 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
     // If there's a inner expression that includes this position, return that.
     match &expr.expr_ {
         Expression_::Match(scrutinee_expr, cases) => {
-            expr_ids.extend(find_expr_at(scrutinee_expr, offset));
+            expr_ids.extend(find_ids_expr(scrutinee_expr, offset));
 
             for (_, case_expr) in cases {
-                expr_ids.extend(find_expr_at(case_expr, offset));
+                expr_ids.extend(find_ids_expr(case_expr, offset));
             }
         }
         Expression_::If(cond_expr, then_block, else_block) => {
-            expr_ids.extend(find_expr_at(cond_expr, offset));
+            expr_ids.extend(find_ids_expr(cond_expr, offset));
 
             expr_ids.extend(find_ids_exprs(&then_block.exprs, offset));
             if let Some(else_block) = else_block {
@@ -145,28 +145,28 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
             }
         }
         Expression_::While(cond_expr, block) => {
-            expr_ids.extend(find_expr_at(cond_expr, offset));
+            expr_ids.extend(find_ids_expr(cond_expr, offset));
 
             expr_ids.extend(find_ids_exprs(&block.exprs, offset));
         }
         Expression_::Assign(symbol, expr) => {
-            if let Some(id) = find_symbol_at(symbol, offset) {
+            if let Some(id) = find_id_symbol(symbol, offset) {
                 expr_ids.push(id);
             }
 
-            expr_ids.extend(find_expr_at(expr, offset));
+            expr_ids.extend(find_ids_expr(expr, offset));
         }
         Expression_::Let(symbol, _, expr) => {
-            if let Some(id) = find_symbol_at(symbol, offset) {
+            if let Some(id) = find_id_symbol(symbol, offset) {
                 expr_ids.push(id);
             }
 
             // TODO: support hover on the variable name in let expressions.
-            expr_ids.extend(find_expr_at(expr, offset));
+            expr_ids.extend(find_ids_expr(expr, offset));
         }
         Expression_::Return(value) => {
             if let Some(value) = value {
-                expr_ids.extend(find_expr_at(value, offset));
+                expr_ids.extend(find_ids_expr(value, offset));
             }
         }
         Expression_::ListLiteral(items) => {
@@ -174,15 +174,15 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
         }
         Expression_::StructLiteral(_, fields) => {
             for (_, field_expr) in fields {
-                expr_ids.extend(find_expr_at(field_expr, offset));
+                expr_ids.extend(find_ids_expr(field_expr, offset));
             }
         }
         Expression_::BinaryOperator(lhs, _, rhs) => {
-            expr_ids.extend(find_expr_at(lhs, offset));
-            expr_ids.extend(find_expr_at(rhs, offset));
+            expr_ids.extend(find_ids_expr(lhs, offset));
+            expr_ids.extend(find_ids_expr(rhs, offset));
         }
         Expression_::Call(recv, args) | Expression_::MethodCall(recv, _, args) => {
-            expr_ids.extend(find_expr_at(recv, offset));
+            expr_ids.extend(find_ids_expr(recv, offset));
 
             expr_ids.extend(find_ids_exprs(&args.arguments, offset));
         }
@@ -194,7 +194,7 @@ fn find_expr_at(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
             expr_ids.extend(find_ids_exprs(&block.exprs, offset));
         }
         Expression_::Variable(symbol) => {
-            if let Some(id) = find_symbol_at(symbol, offset) {
+            if let Some(id) = find_id_symbol(symbol, offset) {
                 expr_ids.push(id);
             }
         }

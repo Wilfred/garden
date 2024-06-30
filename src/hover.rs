@@ -90,6 +90,10 @@ fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxId> {
 fn find_ids_fun_info(fun_info: &FunInfo, offset: usize) -> Vec<SyntaxId> {
     let mut ids = vec![];
 
+    for param in &fun_info.params {
+        ids.extend(find_id_symbol(&param.symbol, offset));
+    }
+
     ids.extend(find_ids_exprs(&fun_info.body.exprs, offset));
 
     ids
@@ -161,7 +165,6 @@ fn find_ids_expr(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
                 expr_ids.push(id);
             }
 
-            // TODO: support hover on the variable name in let expressions.
             expr_ids.extend(find_ids_expr(expr, offset));
         }
         Expression_::Return(value) => {
@@ -187,7 +190,6 @@ fn find_ids_expr(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
             expr_ids.extend(find_ids_exprs(&args.arguments, offset));
         }
         Expression_::FunLiteral(fun_info) => {
-            // TODO: support hover types on parameters too.
             expr_ids.extend(find_ids_fun_info(fun_info, offset));
         }
         Expression_::Block(block) => {

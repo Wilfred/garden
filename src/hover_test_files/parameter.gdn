@@ -1,0 +1,7 @@
+fun foo(path: String) {
+    let xy = 123;
+}
+
+// args: show-type 10
+// expected stdout: String
+

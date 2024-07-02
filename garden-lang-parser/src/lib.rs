@@ -85,6 +85,14 @@ fn require_token<'a>(
     require_token_inner(tokens, expected, false)
 }
 
+fn require_token_chill<'a>(
+    tokens: &mut TokenStream<'a>,
+    diagnostics: &mut Vec<ParseError>,
+    expected: &str,
+) -> Token<'a> {
+    todo!()
+}
+
 fn require_end_token<'a>(
     tokens: &mut TokenStream<'a>,
     expected: &str,
@@ -440,6 +448,40 @@ fn parse_struct_literal_fields(
     Ok(fields)
 }
 
+fn parse_struct_literal_fields_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<(Symbol, Expression)> {
+    let mut fields = vec![];
+    loop {
+        if peeked_symbol_is(tokens, "}") {
+            break;
+        }
+
+        let sym = parse_symbol_chill(tokens, diagnostics);
+        require_token_chill(tokens, diagnostics, ":");
+        let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+        fields.push((sym, expr));
+
+        let Some(token) = tokens.peek() else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
+                ),
+            });
+            break;
+        };
+
+        if token.text == "," {
+            tokens.pop();
+        }
+    }
+
+    fields
+}
+
 fn parse_struct_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let name = parse_type_symbol(tokens)?;
     let open_brace = require_token(tokens, "{")?;
@@ -451,6 +493,23 @@ fn parse_struct_literal(src: &str, tokens: &mut TokenStream) -> Result<Expressio
         Position::merge(&open_brace.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
     ))
+}
+
+fn parse_struct_literal_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let name = parse_type_symbol_chill(tokens, diagnostics);
+    let open_brace = require_token_chill(tokens, diagnostics, "{");
+    let fields = parse_struct_literal_fields_chill(src, tokens, diagnostics);
+
+    let close_brace = require_token_chill(tokens, diagnostics, "}");
+
+    Expression::new(
+        Position::merge(&open_brace.position, &close_brace.position),
+        Expression_::StructLiteral(name, fields),
+    )
 }
 
 fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
@@ -637,6 +696,14 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// ```
 fn parse_inline_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     parse_general_expression(src, tokens, true)
+}
+
+fn parse_inline_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    todo!()
 }
 
 /// Parse a block member expression. This is an expression that can
@@ -952,6 +1019,17 @@ fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError>
         name: TypeName { name: name.name.0 },
         position: name.position,
     })
+}
+
+fn parse_type_symbol_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeSymbol {
+    let name = parse_symbol_chill(tokens, diagnostics);
+    TypeSymbol {
+        name: TypeName { name: name.name.0 },
+        position: name.position,
+    }
 }
 
 /// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.

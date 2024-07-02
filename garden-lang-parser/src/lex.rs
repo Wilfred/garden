@@ -24,6 +24,7 @@ pub(crate) struct Token<'a> {
 #[derive(Debug, Clone)]
 pub(crate) struct TokenStream<'a> {
     tokens: Vec<Token<'a>>,
+    /// The index of our current position in the underlying vec.
     pub(crate) idx: usize,
 }
 

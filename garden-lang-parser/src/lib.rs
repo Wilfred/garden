@@ -140,12 +140,38 @@ fn parse_integer(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     }
 }
 
+fn parse_integer_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Expression {
+    let token = require_a_token_chill(tokens, diagnostics, "integer literal");
+    if INTEGER_RE.is_match(token.text) {
+        let i: i64 = token.text.parse().unwrap();
+        Expression::new(token.position, Expression_::IntLiteral(i))
+    } else {
+        diagnostics.push(ParseError::Invalid {
+            position: token.position.clone(),
+            message: ErrorMessage(format!("Not a valid integer literal: {}", token.text)),
+            additional: vec![],
+        });
+
+        // Choose an arbitrary value that's hopefully unlikely to
+        // occur in real code.
+        Expression::new(token.position, Expression_::IntLiteral(11223344))
+    }
+}
+
 fn parse_variable_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
     Ok(Expression::new(
         variable.position.clone(),
         Expression_::Variable(variable),
     ))
+}
+
+fn parse_variable_expression_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let variable = parse_symbol_chill(tokens, diagnostics);
+    Expression::new(variable.position.clone(), Expression_::Variable(variable))
 }
 
 fn parse_parenthesis_expression(
@@ -1465,6 +1491,36 @@ fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
         name: SymbolName(variable_token.text.to_string()),
         id: OnceCell::new(),
     })
+}
+
+fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
+    let variable_token = require_a_token_chill(tokens, diagnostics, "variable name");
+    if !SYMBOL_RE.is_match(variable_token.text) {
+        diagnostics.push(ParseError::Invalid {
+            position: variable_token.position.clone(),
+            message: ErrorMessage(format!("Invalid name: '{}'", variable_token.text)),
+            additional: vec![],
+        });
+    }
+
+    for reserved in RESERVED_WORDS {
+        if variable_token.text == *reserved {
+            diagnostics.push(ParseError::Invalid {
+                position: variable_token.position.clone(),
+                message: ErrorMessage(format!(
+                    "'{}' is a reserved word that cannot be used as a name",
+                    variable_token.text
+                )),
+                additional: vec![],
+            });
+        }
+    }
+
+    Symbol {
+        position: variable_token.position,
+        name: SymbolName(variable_token.text.to_string()),
+        id: OnceCell::new(),
+    }
 }
 
 fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {

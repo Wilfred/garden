@@ -240,6 +240,18 @@ fn parse_parenthesis_expression(
     Ok(expr)
 }
 
+fn parse_parenthesis_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    require_token_chill(tokens, diagnostics, "(");
+    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+    require_token_chill(tokens, diagnostics, ")");
+
+    expr
+}
+
 fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let open_bracket = require_token(tokens, "[")?;
     let items = parse_comma_separated_exprs(src, tokens, "]")?;
@@ -847,11 +859,40 @@ fn parse_inline_expression_chill(
 /// if (a) { b; } else { c; }
 /// while (z) { foo(); }
 /// ```
+fn parse_block_member_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    parse_general_expression_chill(src, tokens, diagnostics, false)
+}
+
+/// Parse a block member expression. This is an expression that can
+/// occur at the top level of braces, such as a let expression.
+///
+/// Examples:
+///
+/// ```garden
+/// foo();
+/// let x = y + 1;
+/// if (a) { b; } else { c; }
+/// while (z) { foo(); }
+/// ```
 fn parse_block_member_expression(
     src: &str,
     tokens: &mut TokenStream,
 ) -> Result<Expression, ParseError> {
     parse_general_expression(src, tokens, false)
+}
+
+/// Parse an inline or block member expression.
+fn parse_general_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+    is_inline: bool,
+) -> Expression {
+    todo!()
 }
 
 /// Parse an inline or block member expression.
@@ -1546,7 +1587,33 @@ fn parse_block_chill(
     diagnostics: &mut Vec<ParseError>,
     is_loop_body: bool,
 ) -> Block {
-    todo!()
+    let open_brace = require_token_chill(tokens, diagnostics, "{");
+
+    let mut exprs = vec![];
+    loop {
+        if let Some(token) = tokens.peek() {
+            if token.text == "}" {
+                break;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
+            });
+            break;
+        }
+
+        let expr = parse_block_member_expression_chill(src, tokens, diagnostics);
+        exprs.push(expr);
+    }
+
+    let close_brace = require_token_chill(tokens, diagnostics, "}");
+    Block {
+        open_brace: open_brace.position,
+        exprs,
+        close_brace: close_brace.position,
+        is_loop_body,
+    }
 }
 
 fn parse_block(

@@ -234,6 +234,40 @@ fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     ))
 }
 
+fn parse_lambda_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let fun_keyword = require_token_chill(tokens, diagnostics, "fun");
+    let type_params = parse_type_params_chill(tokens, diagnostics);
+
+    let params = parse_parameters_chill(tokens, diagnostics);
+    let return_hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+
+    let body = parse_block_chill(src, tokens, diagnostics, false);
+
+    let start_offset = fun_keyword.position.start_offset;
+    let end_offset = body.close_brace.end_offset;
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    Expression::new(
+        Position::merge(&fun_keyword.position, &body.close_brace),
+        Expression_::FunLiteral(FunInfo {
+            src_string,
+            params,
+            body,
+            doc_comment: None,
+            name: None,
+            type_params,
+            return_hint,
+        }),
+    )
+}
+
 fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let if_token = require_token(tokens, "if")?;
 
@@ -1129,6 +1163,58 @@ fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseE
     Ok(params)
 }
 
+/// Parse type parameters for this definition, e.g. `<T, E>`.
+fn parse_type_params_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<TypeSymbol> {
+    if !peeked_symbol_is(tokens, "<") {
+        return vec![];
+    }
+
+    require_token_chill(tokens, diagnostics, "<");
+
+    let mut params = vec![];
+    loop {
+        if peeked_symbol_is(tokens, ">") {
+            break;
+        }
+
+        let arg = parse_type_symbol_chill(tokens, diagnostics);
+        params.push(arg);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == ">" {
+                break;
+            } else {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `>` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+                break;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
+                ),
+            });
+            break;
+        }
+    }
+
+    require_token_chill(tokens, diagnostics, ">");
+
+    params
+}
+
 /// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
 /// syntactic sugar for `Tuple<Int, String, Unit>`.
 fn parse_tuple_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
@@ -1197,6 +1283,13 @@ fn parse_colon_and_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError
     parse_type_hint(tokens)
 }
 
+fn parse_colon_and_hint_opt_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Option<TypeHint> {
+    todo!()
+}
+
 /// Parse a type annotation, if present.
 fn parse_colon_and_hint_opt(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
     if peeked_symbol_is(tokens, ":") {
@@ -1223,6 +1316,13 @@ fn parse_parameter(
         symbol: param,
         hint,
     })
+}
+
+fn parse_parameters_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<SymbolWithHint> {
+    todo!()
 }
 
 fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithHint>, ParseError> {
@@ -1342,6 +1442,15 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
     // TODO: error on duplicate fields
 
     Ok(fields)
+}
+
+fn parse_block_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+    is_loop_body: bool,
+) -> Block {
+    todo!()
 }
 
 fn parse_block(

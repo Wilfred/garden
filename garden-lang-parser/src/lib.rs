@@ -57,6 +57,27 @@ fn require_a_token<'a>(
     }
 }
 
+fn require_a_token_chill<'a>(
+    tokens: &mut TokenStream<'a>,
+    diagnostics: &mut Vec<ParseError>,
+    token_description: &str,
+) -> Token<'a> {
+    match tokens.pop() {
+        Some(token) => token,
+        None => {
+            diagnostics.push(ParseError::Incomplete {
+                message: ErrorMessage(format!("Expected {}, got EOF", token_description)),
+                position: Position::todo(),
+            });
+
+            // TODO: this is arbitrarily choosing the previous token,
+            // which is a horrible hack. It would be better to have a
+            // way of generating placeholder tokens.
+            tokens.prev().expect("TODO: handle empty token streams")
+        }
+    }
+}
+
 fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     expected: &str,

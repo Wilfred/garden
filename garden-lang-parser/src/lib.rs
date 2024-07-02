@@ -90,7 +90,7 @@ fn require_token_chill<'a>(
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
 ) -> Token<'a> {
-    todo!()
+    require_token_inner_chill(tokens, diagnostics, expected, false)
 }
 
 fn require_end_token<'a>(
@@ -98,6 +98,14 @@ fn require_end_token<'a>(
     expected: &str,
 ) -> Result<Token<'a>, ParseError> {
     require_token_inner(tokens, expected, true)
+}
+
+fn require_end_token_chill<'a>(
+    tokens: &mut TokenStream<'a>,
+    diagnostics: &mut Vec<ParseError>,
+    expected: &str,
+) -> Token<'a> {
+    require_token_inner_chill(tokens, diagnostics, expected, true)
 }
 
 fn require_token_inner<'a>(
@@ -131,6 +139,45 @@ fn require_token_inner<'a>(
             message: ErrorMessage(format!("Expected `{}`, got EOF", expected)),
             position: Position::todo(),
         }),
+    }
+}
+
+fn require_token_inner_chill<'a>(
+    tokens: &mut TokenStream<'a>,
+    diagnostics: &mut Vec<ParseError>,
+    expected: &str,
+    highlight_prev_token: bool,
+) -> Token<'a> {
+    // TODO: If we have an open delimiter, we want the incorrect
+    // current token. If we've forgotten a terminator like ; we want
+    // the previous token.
+    let prev_token = tokens.prev();
+
+    match tokens.pop() {
+        Some(token) => {
+            if token.text != expected {
+                let position = match prev_token {
+                    Some(prev_token) if highlight_prev_token => prev_token.position.clone(),
+                    _ => token.position.clone(),
+                };
+
+                diagnostics.push(ParseError::Invalid {
+                    position,
+                    message: ErrorMessage(format!("Expected `{}`, got `{}`", expected, token.text)),
+                    additional: vec![],
+                });
+            }
+
+            token
+        }
+        None => {
+            diagnostics.push(ParseError::Incomplete {
+                message: ErrorMessage(format!("Expected `{}`, got EOF", expected)),
+                position: Position::todo(),
+            });
+
+            tokens.prev().expect("TODO: handle empty file properly")
+        }
     }
 }
 
@@ -202,6 +249,21 @@ fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression,
         Position::merge(&open_bracket.position, &close_bracket.position),
         Expression_::ListLiteral(items),
     ))
+}
+
+fn parse_list_literal_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let open_bracket = require_token_chill(tokens, diagnostics, "[");
+    let items = parse_comma_separated_exprs_chill(src, tokens, diagnostics, "]");
+    let close_bracket = require_token_chill(tokens, diagnostics, "]");
+
+    Expression::new(
+        Position::merge(&open_bracket.position, &close_bracket.position),
+        Expression_::ListLiteral(items),
+    )
 }
 
 fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
@@ -636,6 +698,40 @@ fn parse_comma_separated_exprs(
     }
 
     Ok(items)
+}
+
+fn parse_comma_separated_exprs_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+    terminator: &str,
+) -> Vec<Expression> {
+    let mut items = vec![];
+    loop {
+        if peeked_symbol_is(tokens, terminator) {
+            break;
+        }
+
+        let arg = parse_inline_expression_chill(src, tokens, diagnostics);
+        items.push(arg);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(format!(
+                    "Invalid syntax: Expected `,` or `{}` here, but got EOF",
+                    terminator
+                )),
+            });
+            break;
+        }
+    }
+
+    items
 }
 
 fn parse_call_arguments(

@@ -423,6 +423,29 @@ fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     ))
 }
 
+fn parse_return_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let return_token = require_token_chill(tokens, diagnostics, "return");
+
+    if peeked_symbol_is(tokens, ";") {
+        let semicolon = require_token_chill(tokens, diagnostics, ";");
+        return Expression::new(
+            Position::merge(&return_token.position, &semicolon.position),
+            Expression_::Return(None),
+        );
+    }
+
+    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+    let semicolon = require_end_token_chill(tokens, diagnostics, ";");
+    Expression::new(
+        Position::merge(&return_token.position, &semicolon.position),
+        Expression_::Return(Some(Box::new(expr))),
+    )
+}
+
 fn unescape_string(src: &str) -> String {
     // Trim doublequotes.
     let s = &src[1..src.len() - 1];
@@ -1956,6 +1979,26 @@ fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expressio
     ))
 }
 
+fn parse_let_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let let_token = require_token_chill(tokens, diagnostics, "let");
+    let variable = parse_symbol_chill(tokens, diagnostics);
+
+    let hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+
+    require_token_chill(tokens, diagnostics, "=");
+    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+    let semicolon = require_end_token_chill(tokens, diagnostics, ";");
+
+    Expression::new(
+        Position::merge(&let_token.position, &semicolon.position),
+        Expression_::Let(variable, hint, Box::new(expr)),
+    )
+}
+
 fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let variable = parse_symbol(tokens)?;
 
@@ -1967,6 +2010,23 @@ fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
         Position::merge(&variable.position, &semicolon.position),
         Expression_::Assign(variable, Box::new(expr)),
     ))
+}
+
+fn parse_assign_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let variable = parse_symbol_chill(tokens, diagnostics);
+
+    require_token_chill(tokens, diagnostics, "=");
+    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+    let semicolon = require_end_token_chill(tokens, diagnostics, ";");
+
+    Expression::new(
+        Position::merge(&variable.position, &semicolon.position),
+        Expression_::Assign(variable, Box::new(expr)),
+    )
 }
 
 fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelItem, ParseError> {

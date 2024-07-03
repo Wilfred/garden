@@ -204,7 +204,8 @@ fn find_ids_expr(expr: &Expression, offset: usize) -> Vec<SyntaxId> {
         Expression_::IntLiteral(_)
         | Expression_::StringLiteral(_)
         | Expression_::DotAccess(_, _)
-        | Expression_::Break => {}
+        | Expression_::Break
+        | Expression_::Invalid => {}
     };
 
     expr_ids

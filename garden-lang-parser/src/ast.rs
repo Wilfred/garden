@@ -278,6 +278,9 @@ pub enum Expression_ {
     /// { x; y; }
     /// ```
     Block(Block),
+    /// We had a parse error in this position, so there's no
+    /// expression.
+    Invalid,
 }
 
 /// A syntactic item that the IDE can interact with, such as an

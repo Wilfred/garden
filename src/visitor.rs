@@ -174,6 +174,9 @@ pub(crate) trait Visitor {
                 // TODO: custom method for this variant
                 self.visit_expr(recv);
             }
+            Expression_::Invalid => {
+                // TODO: custom method for this variant
+            }
         }
     }
 

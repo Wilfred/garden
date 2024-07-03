@@ -2859,6 +2859,18 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::Break => {
                     eval_break(&mut stack_frame);
                 }
+                Expression_::Invalid => {
+                    restore_stack_frame(
+                        env,
+                        stack_frame,
+                        (
+                            done_children,
+                            Expression::new(expr_position.clone(), expr_copy),
+                        ),
+                        &[],
+                    );
+                    return Err(EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())));
+                }
             }
         }
 

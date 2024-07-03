@@ -524,6 +524,73 @@ fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expres
     })
 }
 
+fn parse_simple_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    if let Some(token) = tokens.peek() {
+        if token.text == "{" {
+            let block = parse_block_chill(src, tokens, diagnostics, false);
+            return Expression::new(
+                Position::merge(&block.open_brace, &block.close_brace),
+                Expression_::Block(block),
+            );
+        }
+
+        if token.text == "(" {
+            return parse_parenthesis_expression_chill(src, tokens, diagnostics);
+        }
+
+        if token.text == "[" {
+            return parse_list_literal_chill(src, tokens, diagnostics);
+        }
+
+        if token.text == "fun" {
+            return parse_lambda_expression_chill(src, tokens, diagnostics);
+        }
+
+        if SYMBOL_RE.is_match(token.text) {
+            if let Some((_, token)) = tokens.peek_two() {
+                if token.text == "{" {
+                    return parse_struct_literal_chill(src, tokens, diagnostics);
+                }
+            }
+
+            return parse_variable_expression_chill(tokens, diagnostics);
+        }
+
+        if token.text.starts_with('\"') {
+            tokens.pop();
+            return Expression::new(
+                token.position,
+                Expression_::StringLiteral(unescape_string(token.text)),
+            );
+        }
+
+        if INTEGER_RE.is_match(token.text) {
+            return parse_integer_chill(tokens, diagnostics);
+        }
+
+        diagnostics.push(ParseError::Invalid {
+            position: token.position.clone(),
+            message: ErrorMessage(format!(
+                "Expected an expression, got: {} (offset {})",
+                token.text, token.position.start_offset
+            )),
+            additional: vec![],
+        });
+        return Expression::new(token.position, Expression_::Invalid);
+    }
+
+    diagnostics.push(ParseError::Incomplete {
+        message: ErrorMessage("Expected an expression".to_owned()),
+        position: Position::todo(),
+    });
+
+    Expression::new(Position::todo(), Expression_::Invalid)
+}
+
 fn parse_struct_literal_fields(
     src: &str,
     tokens: &mut TokenStream,

@@ -383,6 +383,51 @@ fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression
     ))
 }
 
+fn parse_if_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let if_token = require_token_chill(tokens, diagnostics, "if");
+
+    require_token_chill(tokens, diagnostics, "(");
+    let condition = parse_inline_expression_chill(src, tokens, diagnostics);
+    require_token_chill(tokens, diagnostics, ")");
+
+    let then_body = parse_block_chill(src, tokens, diagnostics, false);
+
+    let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
+        tokens.pop();
+
+        if peeked_symbol_is(tokens, "if") {
+            let if_expr = parse_if_expression_chill(src, tokens, diagnostics);
+            Some(Block {
+                // TODO: when there is a chain of if/else if
+                // expressions, the open brace isn't meaningful. This
+                // is an ugly hack.
+                open_brace: if_expr.pos.clone(),
+                close_brace: if_expr.pos.clone(),
+                exprs: vec![if_expr],
+                is_loop_body: false,
+            })
+        } else {
+            Some(parse_block_chill(src, tokens, diagnostics, false))
+        }
+    } else {
+        None
+    };
+
+    let last_brace_pos = match &else_body {
+        Some(else_body) => &else_body.close_brace,
+        None => &then_body.close_brace,
+    };
+
+    Expression::new(
+        Position::merge(&if_token.position, last_brace_pos),
+        Expression_::If(Box::new(condition), then_body, else_body),
+    )
+}
+
 fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let while_token = require_token(tokens, "while")?;
 
@@ -398,10 +443,38 @@ fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
     ))
 }
 
+fn parse_while_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let while_token = require_token_chill(tokens, diagnostics, "while");
+
+    require_token_chill(tokens, diagnostics, "(");
+    let condition = parse_inline_expression_chill(src, tokens, diagnostics);
+    require_token_chill(tokens, diagnostics, ")");
+
+    let body = parse_block_chill(src, tokens, diagnostics, true);
+
+    Expression::new(
+        Position::merge(&while_token.position, &body.close_brace),
+        Expression_::While(Box::new(condition), body),
+    )
+}
+
 fn parse_break_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let break_token = require_token(tokens, "break")?;
     let _ = require_end_token(tokens, ";")?;
     Ok(Expression::new(break_token.position, Expression_::Break))
+}
+
+fn parse_break_expression_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let break_token = require_token_chill(tokens, diagnostics, "break");
+    let _ = require_end_token_chill(tokens, diagnostics, ";");
+    Expression::new(break_token.position, Expression_::Break)
 }
 
 fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
@@ -746,6 +819,47 @@ fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Express
     ))
 }
 
+fn parse_match_expression_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let match_keyword = require_token_chill(tokens, diagnostics, "match");
+
+    require_token_chill(tokens, diagnostics, "(");
+    let scrutinee = parse_inline_expression_chill(src, tokens, diagnostics);
+    require_token_chill(tokens, diagnostics, ")");
+
+    require_token_chill(tokens, diagnostics, "{");
+
+    let mut cases = vec![];
+    loop {
+        let Some(token) = tokens.peek() else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
+            });
+            break;
+        };
+
+        if token.text == "}" {
+            break;
+        }
+
+        let pattern = parse_pattern_chill(tokens, diagnostics);
+        require_token_chill(tokens, diagnostics, "=>");
+        let case_expr = parse_case_expr_chill(src, tokens, diagnostics);
+        cases.push((pattern, Box::new(case_expr)));
+    }
+
+    let close_paren = require_token_chill(tokens, diagnostics, "}");
+
+    Expression::new(
+        Position::merge(&match_keyword.position, &close_paren.position),
+        Expression_::Match(Box::new(scrutinee), cases),
+    )
+}
+
 fn parse_case_expr(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
     let case_expr = parse_inline_expression(src, tokens)?;
     if peeked_symbol_is(tokens, ",") {
@@ -753,6 +867,19 @@ fn parse_case_expr(src: &str, tokens: &mut TokenStream) -> Result<Expression, Pa
     }
 
     Ok(case_expr)
+}
+
+fn parse_case_expr_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let case_expr = parse_inline_expression_chill(src, tokens, diagnostics);
+    if peeked_symbol_is(tokens, ",") {
+        tokens.pop().unwrap();
+    }
+
+    case_expr
 }
 
 fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
@@ -768,6 +895,21 @@ fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
     };
 
     Ok(Pattern { symbol, argument })
+}
+
+fn parse_pattern_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Pattern {
+    let symbol = parse_symbol_chill(tokens, diagnostics);
+
+    let argument = if peeked_symbol_is(tokens, "(") {
+        require_token_chill(tokens, diagnostics, "(");
+        let arg = parse_symbol_chill(tokens, diagnostics);
+        require_token_chill(tokens, diagnostics, ")");
+        Some(arg)
+    } else {
+        None
+    };
+
+    Pattern { symbol, argument }
 }
 
 fn parse_comma_separated_exprs(
@@ -935,7 +1077,7 @@ fn parse_inline_expression_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    todo!()
+    parse_general_expression_chill(src, tokens, diagnostics, true)
 }
 
 /// Parse a block member expression. This is an expression that can

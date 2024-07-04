@@ -1845,11 +1845,91 @@ fn parse_parameter(
     })
 }
 
+fn parse_parameter_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+    require_type_hint: bool,
+) -> SymbolWithHint {
+    let param = parse_symbol_chill(tokens, diagnostics);
+
+    let hint = if require_type_hint {
+        Some(parse_colon_and_hint_chill(tokens, diagnostics))
+    } else {
+        parse_colon_and_hint_opt_chill(tokens, diagnostics)
+    };
+
+    SymbolWithHint {
+        symbol: param,
+        hint,
+    }
+}
+
 fn parse_parameters_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<SymbolWithHint> {
-    todo!()
+    require_token_chill(tokens, diagnostics, "(");
+
+    let mut params = vec![];
+    loop {
+        if peeked_symbol_is(tokens, ")") {
+            break;
+        }
+
+        let param = parse_parameter_chill(tokens, diagnostics, false);
+        params.push(param);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == ")" {
+                break;
+            } else {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `)` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+                break;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
+                ),
+            });
+            break;
+        }
+    }
+
+    require_token_chill(tokens, diagnostics, ")");
+
+    // Emit error if there are duplicate parameters.
+    // TODO: allow parsing to return an AST even if errors are present.
+    let mut seen = HashSet::new();
+    for param in &params {
+        let param_name = &param.symbol.name.0;
+        if param.symbol.name.is_underscore() {
+            continue;
+        }
+
+        if seen.contains(param_name) {
+            diagnostics.push(ParseError::Invalid {
+                position: param.symbol.position.clone(),
+                message: ErrorMessage(format!("Duplicate parameter: `{}`", param_name)),
+                // TODO: report the position of the previous parameter too.
+                additional: vec![],
+            });
+        } else {
+            seen.insert(param_name.clone());
+        }
+    }
+
+    params
 }
 
 fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithHint>, ParseError> {

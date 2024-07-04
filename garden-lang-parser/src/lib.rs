@@ -1379,6 +1379,14 @@ fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, P
     })
 }
 
+fn parse_definition_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Definition {
+    todo!()
+}
+
 fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, ParseError> {
     let mut variants = vec![];
     loop {
@@ -2623,6 +2631,25 @@ fn parse_toplevel_item_from_tokens(
     }
 
     parse_toplevel_expr(src, tokens)
+}
+
+fn parse_toplevel_item_from_tokens_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> ToplevelItem {
+    if let Some(token) = tokens.peek() {
+        if token.text == "fun"
+            || token.text == "test"
+            || token.text == "enum"
+            || token.text == "struct"
+        {
+            let def = parse_definition_chill(src, tokens, diagnostics);
+            return ToplevelItem::Def(def);
+        }
+    }
+
+    parse_toplevel_expr_chill(src, tokens, diagnostics)
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {

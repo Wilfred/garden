@@ -2547,8 +2547,31 @@ fn parse_function_or_method_chill(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
-) -> Definition {
-    todo!()
+) -> Option<Definition> {
+    let fun_token = require_token_chill(tokens, diagnostics, "fun");
+    let type_params = parse_type_params_chill(tokens, diagnostics);
+
+    // We can distinguish between functions and methods based on the
+    // token after the type parameters.
+    //
+    // ```
+    // fun<T> i_am_a_fun() {}
+    // fun<T> (self: String) i_am_a_method() {}
+    // ```
+    match tokens.peek() {
+        Some(token) => Some(if token.text == "(" {
+            parse_method_chill(src, tokens, diagnostics, fun_token, type_params)
+        } else {
+            parse_function_chill(src, tokens, diagnostics, fun_token, type_params)
+        }),
+        None => {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage("Unfinished function or method definition.".to_owned()),
+            });
+            None
+        }
+    }
 }
 
 fn parse_method(
@@ -2617,6 +2640,79 @@ fn parse_method(
     ))
 }
 
+fn parse_method_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+    fun_token: Token,
+    type_params: Vec<TypeSymbol>,
+) -> Definition {
+    let doc_comment = parse_doc_comment(&fun_token);
+
+    require_token_chill(tokens, diagnostics, "(");
+    let receiver_param = parse_parameter_chill(tokens, diagnostics, true);
+    let receiver_sym = receiver_param.symbol.clone();
+    let receiver_hint = match receiver_param.hint {
+        Some(type_name) => type_name,
+        None => {
+            diagnostics.push(ParseError::Incomplete {
+                position: receiver_param.symbol.position.clone(),
+                message: ErrorMessage("This `self` argument requires a type.".to_owned()),
+            });
+            TypeHint {
+                sym: TypeSymbol {
+                    name: TypeName {
+                        name: "__MISSING_TYPE".to_owned(),
+                    },
+                    position: receiver_sym.position.clone(),
+                },
+                args: vec![],
+                position: receiver_sym.position.clone(),
+            }
+        }
+    };
+    require_token_chill(tokens, diagnostics, ")");
+
+    let name = parse_symbol_chill(tokens, diagnostics);
+
+    let params = parse_parameters_chill(tokens, diagnostics);
+    let return_hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+
+    let body = parse_block_chill(src, tokens, diagnostics, false);
+
+    let mut start_offset = fun_token.position.start_offset;
+    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = body.close_brace.end_offset;
+    let close_brace_pos = body.close_brace.clone();
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    let fun_info = FunInfo {
+        src_string: src_string.clone(),
+        doc_comment,
+        name: Some(name.clone()),
+        type_params,
+        params,
+        body,
+        return_hint,
+    };
+    let meth_info = MethodInfo {
+        receiver_hint,
+        receiver_sym,
+        name_sym: name,
+        kind: MethodKind::UserDefinedMethod(fun_info),
+    };
+
+    let position = Position::merge(&fun_token.position, &close_brace_pos);
+
+    Definition(src_string.clone(), position, Definition_::Method(meth_info))
+}
+
 fn parse_function(
     src: &str,
     tokens: &mut TokenStream,
@@ -2662,6 +2758,54 @@ fn parse_function(
             },
         ),
     ))
+}
+
+fn parse_function_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+    fun_token: Token,
+    type_params: Vec<TypeSymbol>,
+) -> Definition {
+    let doc_comment = parse_doc_comment(&fun_token);
+
+    let name = parse_symbol_chill(tokens, diagnostics);
+
+    let params = parse_parameters_chill(tokens, diagnostics);
+    let return_hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+
+    let body = parse_block_chill(src, tokens, diagnostics, false);
+
+    let mut start_offset = fun_token.position.start_offset;
+    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = body.close_brace.end_offset;
+    let close_brace_pos = body.close_brace.clone();
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    let position = Position::merge(&fun_token.position, &close_brace_pos);
+
+    Definition(
+        src_string.clone(),
+        position,
+        Definition_::Fun(
+            name.clone(),
+            FunInfo {
+                src_string,
+                doc_comment,
+                name: Some(name),
+                type_params,
+                params,
+                body,
+                return_hint,
+            },
+        ),
+    )
 }
 
 const RESERVED_WORDS: &[&str] = &[

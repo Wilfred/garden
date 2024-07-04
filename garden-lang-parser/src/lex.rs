@@ -29,6 +29,13 @@ pub(crate) struct TokenStream<'a> {
 }
 
 impl<'a> TokenStream<'a> {
+    pub(crate) fn empty() -> Self {
+        Self {
+            tokens: vec![],
+            idx: 0,
+        }
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.tokens.get(self.idx).is_none()
     }

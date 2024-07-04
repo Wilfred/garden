@@ -1524,11 +1524,10 @@ fn parse_variant_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
         require_token_chill(tokens, diagnostics, ")");
     }
 
-    let variant = VariantInfo {
+    VariantInfo {
         name_sym: name,
         payload_hint,
-    };
-    variant
+    }
 }
 
 fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {

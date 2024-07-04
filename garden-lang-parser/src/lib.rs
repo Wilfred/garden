@@ -3123,21 +3123,38 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, 
 }
 
 pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
-    let items = parse_toplevel_items(path, src)?;
-    Ok(items[0].clone())
+    let (items, diagnostics) = parse_toplevel_items_(path, src);
+
+    if let Some(error) = diagnostics.into_iter().next() {
+        Err(error)
+    } else {
+        Ok(items[0].clone())
+    }
 }
 
 pub fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
-    let mut tokens = lex(path, src)?;
-
-    let mut diagnostics = vec![];
-    let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
+    let (items, diagnostics) = parse_toplevel_items_(path, src);
 
     if let Some(error) = diagnostics.into_iter().next() {
         Err(error)
     } else {
         Ok(items)
     }
+}
+
+// TODO: make this the external API, not a Result as in parse_toplevel_items.
+fn parse_toplevel_items_(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+    let mut diagnostics = vec![];
+    let mut tokens = match lex(path, src) {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            diagnostics.push(e);
+            TokenStream::empty()
+        }
+    };
+
+    let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
+    (items, diagnostics)
 }
 
 pub fn parse_toplevel_items_from_span(

@@ -1624,6 +1624,59 @@ fn parse_type_arguments(
     Ok((args, Some(close_pos)))
 }
 
+/// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
+fn parse_type_arguments_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> (Vec<TypeHint>, Option<Position>) {
+    if !peeked_symbol_is(tokens, "<") {
+        return (vec![], None);
+    }
+
+    require_token_chill(tokens, diagnostics, "<");
+
+    let mut args = vec![];
+    let close_pos = loop {
+        if let Some(token) = tokens.peek() {
+            if token.text == ">" {
+                break token.position;
+            }
+        }
+        let arg = parse_type_hint_chill(tokens, diagnostics);
+        args.push(arg);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == ">" {
+                break token.position;
+            } else {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position.clone(),
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `>` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+                break token.position;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
+                ),
+            });
+            break Position::todo();
+        }
+    };
+
+    require_token_chill(tokens, diagnostics, ">");
+
+    (args, Some(close_pos))
+}
+
 /// Parse type parameters for this definition, e.g. `<T, E>`.
 fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseError> {
     if !peeked_symbol_is(tokens, "<") {
@@ -1764,9 +1817,70 @@ fn parse_tuple_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseErro
     })
 }
 
+/// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
+/// syntactic sugar for `Tuple<Int, String, Unit>`.
+fn parse_tuple_type_hint_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeHint {
+    let open_paren = require_token_chill(tokens, diagnostics, "(");
+
+    let mut item_hints = vec![];
+    loop {
+        if peeked_symbol_is(tokens, ")") {
+            break;
+        }
+
+        item_hints.push(parse_type_hint_chill(tokens, diagnostics));
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `)` here, but got EOF".to_owned(),
+                ),
+            });
+            break;
+        }
+    }
+
+    let close_paren = require_token_chill(tokens, diagnostics, ")");
+
+    TypeHint {
+        sym: TypeSymbol {
+            name: TypeName {
+                name: "Tuple".to_owned(),
+            },
+            position: open_paren.position.clone(),
+        },
+        args: item_hints,
+        position: Position::merge(&open_paren.position, &close_paren.position),
+    }
+}
+
 /// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
 fn parse_type_hint_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
-    todo!()
+    if peeked_symbol_is(tokens, "(") {
+        return parse_tuple_type_hint_chill(tokens, diagnostics);
+    }
+
+    let sym = parse_type_symbol_chill(tokens, diagnostics);
+    let (args, close_pos) = parse_type_arguments_chill(tokens, diagnostics);
+
+    let position = match close_pos {
+        Some(close_pos) => Position::merge(&sym.position, &close_pos),
+        None => sym.position.clone(),
+    };
+
+    TypeHint {
+        sym,
+        args,
+        position,
+    }
 }
 
 /// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.

@@ -12,6 +12,7 @@ pub mod position;
 use std::cell::OnceCell;
 use std::collections::HashSet;
 use std::path::Path;
+use std::path::PathBuf;
 
 use ast::FieldInfo;
 use ast::StructInfo;
@@ -2718,8 +2719,6 @@ pub fn parse_toplevel_items_from_span(
 }
 
 pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
-    use std::path::PathBuf;
-
     let mut tokens = lex(&PathBuf::from("__test.gdn"), src)?;
 
     let mut res = vec![];
@@ -2731,8 +2730,6 @@ pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
 }
 
 pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
-    use std::path::PathBuf;
-
     let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), src)?;
 
     let mut defs = vec![];
@@ -2750,8 +2747,6 @@ pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use super::*;
 
     #[test]

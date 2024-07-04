@@ -993,6 +993,22 @@ fn parse_call_arguments(
     })
 }
 
+fn parse_call_arguments_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> ParenthesizedArguments {
+    let open_paren_token = require_token_chill(tokens, diagnostics, "(");
+    let arguments = parse_comma_separated_exprs_chill(src, tokens, diagnostics, ")");
+    let close_paren_token = require_token_chill(tokens, diagnostics, ")");
+
+    ParenthesizedArguments {
+        arguments,
+        open_paren: open_paren_token.position,
+        close_paren: close_paren_token.position,
+    }
+}
+
 /// Parse an expression, and handle trailing syntax (function calls,
 /// method calls) if present.
 ///
@@ -1037,6 +1053,53 @@ fn parse_simple_expression_with_trailing(
     }
 
     Ok(expr)
+}
+
+/// Parse an expression, and handle trailing syntax (function calls,
+/// method calls) if present.
+///
+/// We handle trailing syntax separately from
+/// `parse_simple_expression`, to avoid infinite recursion. This is
+/// essentially left-recursion from a grammar perspective.
+fn parse_simple_expression_with_trailing_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let mut expr = parse_simple_expression_chill(src, tokens, diagnostics);
+
+    loop {
+        match tokens.peek() {
+            Some(token) if token.text == "(" => {
+                let arguments = parse_call_arguments_chill(src, tokens, diagnostics);
+                expr = Expression::new(
+                    Position::merge(&expr.pos, &arguments.close_paren),
+                    Expression_::Call(Box::new(expr), arguments),
+                );
+            }
+            Some(token) if token.text == "." => {
+                tokens.pop();
+                let variable = parse_symbol_chill(tokens, diagnostics);
+
+                if peeked_symbol_is(tokens, "(") {
+                    // TODO: just treat a method call as a call of a dot access.
+                    let arguments = parse_call_arguments_chill(src, tokens, diagnostics);
+                    expr = Expression::new(
+                        Position::merge(&expr.pos, &arguments.close_paren),
+                        Expression_::MethodCall(Box::new(expr), variable, arguments),
+                    );
+                } else {
+                    expr = Expression::new(
+                        Position::merge(&expr.pos, &variable.position),
+                        Expression_::DotAccess(Box::new(expr), variable),
+                    );
+                }
+            }
+            _ => break,
+        }
+    }
+
+    expr
 }
 
 fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
@@ -1124,7 +1187,50 @@ fn parse_general_expression_chill(
     diagnostics: &mut Vec<ParseError>,
     is_inline: bool,
 ) -> Expression {
-    todo!()
+    if !is_inline {
+        // TODO: Matching on tokens will prevent us from doing more
+        // complex assignments like `foo.bar = 1;`.
+        if let Some((_, token)) = tokens.peek_two() {
+            if token.text == "=" {
+                return parse_assign_expression_chill(src, tokens, diagnostics);
+            }
+        }
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "let" {
+                return parse_let_expression_chill(src, tokens, diagnostics);
+            }
+            if token.text == "return" {
+                return parse_return_expression_chill(src, tokens, diagnostics);
+            }
+            if token.text == "while" {
+                return parse_while_expression_chill(src, tokens, diagnostics);
+            }
+            if token.text == "break" {
+                return parse_break_expression_chill(tokens, diagnostics);
+            }
+        }
+    }
+
+    if let Some(token) = tokens.peek() {
+        // `if` can occur as both an inline expression and a standalone
+        // expression.
+        if token.text == "if" {
+            return parse_if_expression_chill(src, tokens, diagnostics);
+        }
+
+        // Likewise match.
+        if token.text == "match" {
+            return parse_match_expression_chill(src, tokens, diagnostics);
+        }
+    }
+
+    let expr = parse_simple_expression_or_binop_chill(src, tokens, diagnostics);
+    if !is_inline {
+        let _ = require_end_token_chill(tokens, diagnostics, ";");
+    }
+
+    expr
 }
 
 /// Parse an inline or block member expression.
@@ -1209,6 +1315,39 @@ fn parse_simple_expression_or_binop(
     }
 
     Ok(expr)
+}
+
+/// In Garden, an expression can only contain a single binary
+/// operation, so `x + y + z` isn't legal. Users must use parentheses,
+/// e.g. `(x + y) + z`.
+///
+/// This ensures that every subexpression has trailing syntax that we
+/// can use to show intermediate values computed during evaluation.
+///
+/// To ensure binary operations aren't combined, we have a separate
+/// parser function that allows exactly one binary operation. This
+/// also has the nice side effect of not requiring precedence logic in
+/// the parser.
+fn parse_simple_expression_or_binop_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let mut expr = parse_simple_expression_with_trailing_chill(src, tokens, diagnostics);
+
+    if let Some(token) = tokens.peek() {
+        if let Some(op) = token_as_binary_op(token) {
+            tokens.pop();
+
+            let rhs_expr = parse_simple_expression_with_trailing_chill(src, tokens, diagnostics);
+            expr = Expression::new(
+                Position::merge(&expr.pos, &rhs_expr.pos),
+                Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
+            );
+        }
+    }
+
+    expr
 }
 
 fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {

@@ -1563,6 +1563,55 @@ fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseEr
     ))
 }
 
+fn parse_test_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Definition {
+    let test_token = require_token_chill(tokens, diagnostics, "test");
+    let doc_comment = parse_doc_comment(&test_token);
+
+    let name = if let Some(token) = tokens.peek() {
+        if token.text == "{" {
+            None
+        } else {
+            Some(parse_symbol_chill(tokens, diagnostics))
+        }
+    } else {
+        diagnostics.push(ParseError::Incomplete {
+            position: test_token.position.clone(),
+            message: ErrorMessage("Unfinished test definition".to_owned()),
+        });
+        None
+    };
+
+    let body = parse_block_chill(src, tokens, diagnostics, false);
+
+    let mut start_offset = test_token.position.start_offset;
+    if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = body.close_brace.end_offset;
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    let position = Position::merge(&test_token.position, &body.close_brace);
+
+    Definition(
+        src_string.clone(),
+        position,
+        Definition_::Test(TestInfo {
+            src_string,
+            doc_comment,
+            name,
+            body,
+        }),
+    )
+}
+
 fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError> {
     let name = parse_symbol(tokens)?;
     Ok(TypeSymbol {
@@ -2285,6 +2334,14 @@ fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Defin
             message: ErrorMessage("Unfinished function or method definition.".to_owned()),
         }),
     }
+}
+
+fn parse_function_or_method_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Definition {
+    todo!()
 }
 
 fn parse_method(

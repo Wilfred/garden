@@ -1765,6 +1765,11 @@ fn parse_tuple_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseErro
 }
 
 /// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
+fn parse_type_hint_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+    todo!()
+}
+
+/// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
 fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
     if peeked_symbol_is(tokens, "(") {
         return parse_tuple_type_hint(tokens);
@@ -1791,11 +1796,25 @@ fn parse_colon_and_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError
     parse_type_hint(tokens)
 }
 
+/// Parse a colon and a type hint, e.g. `: Int`.
+fn parse_colon_and_hint_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeHint {
+    require_token_chill(tokens, diagnostics, ":");
+    parse_type_hint_chill(tokens, diagnostics)
+}
+
 fn parse_colon_and_hint_opt_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<TypeHint> {
-    todo!()
+    if peeked_symbol_is(tokens, ":") {
+        let type_hint = parse_colon_and_hint_chill(tokens, diagnostics);
+        return Some(type_hint);
+    }
+
+    None
 }
 
 /// Parse a type annotation, if present.

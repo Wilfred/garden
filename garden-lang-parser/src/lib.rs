@@ -1622,6 +1622,48 @@ fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, P
     ))
 }
 
+fn parse_struct_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Definition {
+    let struct_token = require_token_chill(tokens, diagnostics, "struct");
+    let doc_comment = parse_doc_comment(&struct_token);
+    let name_sym = parse_type_symbol_chill(tokens, diagnostics);
+    let type_params = parse_type_params_chill(tokens, diagnostics);
+
+    let _open_brace = require_token_chill(tokens, diagnostics, "{");
+
+    let fields = parse_struct_fields_chill(tokens, diagnostics);
+
+    let close_brace = require_token_chill(tokens, diagnostics, "}");
+
+    let mut start_offset = struct_token.position.start_offset;
+    if let Some((comment_pos, _)) = struct_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = close_brace.position.end_offset;
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    let position = Position::merge(&struct_token.position, &close_brace.position);
+
+    Definition(
+        src_string.clone(),
+        position,
+        Definition_::Struct(StructInfo {
+            src_string,
+            doc_comment,
+            name_sym,
+            type_params,
+            fields,
+        }),
+    )
+}
+
 fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
     let test_token = require_token(tokens, "test")?;
     let doc_comment = parse_doc_comment(&test_token);
@@ -2323,6 +2365,68 @@ fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, Parse
     // TODO: error on duplicate fields
 
     Ok(fields)
+}
+
+fn parse_struct_fields_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<FieldInfo> {
+    let mut fields = vec![];
+    loop {
+        if peeked_symbol_is(tokens, "}") {
+            break;
+        }
+
+        if let Some(token) = tokens.peek() {
+            let doc_comment = parse_doc_comment(&token);
+            let sym = parse_symbol_chill(tokens, diagnostics);
+            let hint = parse_colon_and_hint_chill(tokens, diagnostics);
+
+            fields.push(FieldInfo {
+                sym,
+                hint,
+                doc_comment,
+            });
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected a struct field name here like `foo: String`, but got EOF".to_string(),
+                ),
+            });
+            break;
+        }
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == "}" {
+                break;
+            } else {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+                break;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `}}` here, but got EOF".to_string(),
+                ),
+            });
+            break;
+        }
+    }
+
+    // TODO: error on duplicate fields
+
+    fields
 }
 
 fn parse_block_chill(

@@ -3104,8 +3104,22 @@ fn parse_toplevel_item_from_tokens_chill(
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
-    let mut tokens = lex(path, src)?;
-    parse_inline_expression(src, &mut tokens)
+    let mut diagnostics = vec![];
+
+    let mut tokens = match lex(path, src) {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            diagnostics.push(e);
+            TokenStream::empty()
+        }
+    };
+
+    let expr = parse_inline_expression_chill(src, &mut tokens, &mut diagnostics);
+    if let Some(error) = diagnostics.into_iter().next() {
+        Err(error)
+    } else {
+        Ok(expr)
+    }
 }
 
 pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {

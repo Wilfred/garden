@@ -1383,8 +1383,35 @@ fn parse_definition_chill(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
-) -> Definition {
-    todo!()
+) -> Option<Definition> {
+    if let Some(token) = tokens.peek() {
+        if token.text == "fun" {
+            return parse_function_or_method_chill(src, tokens, diagnostics);
+        }
+        if token.text == "test" {
+            return Some(parse_test_chill(src, tokens, diagnostics));
+        }
+        if token.text == "enum" {
+            return Some(parse_enum_chill(src, tokens, diagnostics));
+        }
+        if token.text == "struct" {
+            return Some(parse_struct_chill(src, tokens, diagnostics));
+        }
+
+        // TODO: Include the token in the error message.
+        diagnostics.push(ParseError::Invalid {
+            position: token.position,
+            message: ErrorMessage("Expected a definition".to_string()),
+            additional: vec![],
+        });
+        return None;
+    }
+
+    diagnostics.push(ParseError::Incomplete {
+        position: Position::todo(),
+        message: ErrorMessage("Unfinished definition".to_owned()),
+    });
+    None
 }
 
 fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, ParseError> {
@@ -3045,19 +3072,18 @@ fn parse_toplevel_item_from_tokens_chill(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
-) -> ToplevelItem {
+) -> Option<ToplevelItem> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun"
             || token.text == "test"
             || token.text == "enum"
             || token.text == "struct"
         {
-            let def = parse_definition_chill(src, tokens, diagnostics);
-            return ToplevelItem::Def(def);
+            return parse_definition_chill(src, tokens, diagnostics).map(ToplevelItem::Def);
         }
     }
 
-    parse_toplevel_expr_chill(src, tokens, diagnostics)
+    Some(parse_toplevel_expr_chill(src, tokens, diagnostics))
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {

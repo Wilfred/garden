@@ -1425,6 +1425,49 @@ fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, Par
     Ok(variants)
 }
 
+fn parse_enum_body_chill(
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<VariantInfo> {
+    let mut variants = vec![];
+    loop {
+        if peeked_symbol_is(tokens, "}") {
+            break;
+        }
+
+        let variant = parse_variant_chill(tokens, diagnostics);
+        variants.push(variant);
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text == "}" {
+                break;
+            } else {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position,
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
+                        token.text
+                    )),
+                    additional: vec![],
+                });
+                break;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: Position::todo(),
+                message: ErrorMessage(
+                    "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
+                ),
+            });
+            break;
+        }
+    }
+
+    variants
+}
+
 /// Parse enum variant, e.g. `Some(T)`.
 fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError> {
     let name = parse_symbol(tokens)?;
@@ -1441,6 +1484,24 @@ fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError
         payload_hint,
     };
     Ok(variant)
+}
+
+/// Parse enum variant, e.g. `Some(T)`.
+fn parse_variant_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> VariantInfo {
+    let name = parse_symbol_chill(tokens, diagnostics);
+
+    let mut payload_hint = None;
+    if peeked_symbol_is(tokens, "(") {
+        tokens.pop();
+        payload_hint = Some(parse_type_hint_chill(tokens, diagnostics));
+        require_token_chill(tokens, diagnostics, ")");
+    }
+
+    let variant = VariantInfo {
+        name_sym: name,
+        payload_hint,
+    };
+    variant
 }
 
 fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
@@ -1479,6 +1540,48 @@ fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, Par
             variants,
         }),
     ))
+}
+
+fn parse_enum_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Definition {
+    let enum_token = require_token_chill(tokens, diagnostics, "enum");
+    let doc_comment = parse_doc_comment(&enum_token);
+    let name_sym = parse_type_symbol_chill(tokens, diagnostics);
+    let type_params = parse_type_params_chill(tokens, diagnostics);
+
+    let _open_brace = require_token_chill(tokens, diagnostics, "{");
+
+    let variants = parse_enum_body_chill(tokens, diagnostics);
+
+    let close_brace = require_token_chill(tokens, diagnostics, "}");
+
+    let mut start_offset = enum_token.position.start_offset;
+    if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
+        start_offset = comment_pos.start_offset;
+    }
+    let end_offset = close_brace.position.end_offset;
+
+    let src_string = SourceString {
+        offset: start_offset,
+        src: src[start_offset..end_offset].to_owned(),
+    };
+
+    let position = Position::merge(&enum_token.position, &close_brace.position);
+
+    Definition(
+        src_string.clone(),
+        position,
+        Definition_::Enum(EnumInfo {
+            src_string,
+            doc_comment,
+            name_sym,
+            type_params,
+            variants,
+        }),
+    )
 }
 
 fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {

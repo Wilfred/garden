@@ -3050,6 +3050,24 @@ fn parse_toplevel_items_from_tokens(
     Ok(items)
 }
 
+fn parse_toplevel_items_from_tokens_chill(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<ToplevelItem> {
+    let mut items: Vec<ToplevelItem> = vec![];
+
+    while !tokens.is_empty() {
+        match parse_toplevel_item_from_tokens_chill(src, tokens, diagnostics) {
+            Some(item) => {
+                items.push(item);
+            }
+            None => break,
+        }
+    }
+    items
+}
+
 fn parse_toplevel_item_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
@@ -3098,7 +3116,15 @@ pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, Parse
 
 pub fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
     let mut tokens = lex(path, src)?;
-    parse_toplevel_items_from_tokens(src, &mut tokens)
+
+    let mut diagnostics = vec![];
+    let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
+
+    if let Some(error) = diagnostics.into_iter().next() {
+        Err(error)
+    } else {
+        Ok(items)
+    }
 }
 
 pub fn parse_toplevel_items_from_span(

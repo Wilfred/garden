@@ -3163,8 +3163,21 @@ pub fn parse_toplevel_items_from_span(
     offset: usize,
     end_offset: usize,
 ) -> Result<Vec<ToplevelItem>, ParseError> {
-    let mut tokens = lex_between(path, src, offset, end_offset)?;
-    parse_toplevel_items_from_tokens(src, &mut tokens)
+    let mut diagnostics = vec![];
+    let mut tokens = match lex_between(path, src, offset, end_offset) {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            diagnostics.push(e);
+            TokenStream::empty()
+        }
+    };
+
+    let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
+    if let Some(error) = diagnostics.into_iter().next() {
+        Err(error)
+    } else {
+        Ok(items)
+    }
 }
 
 pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {

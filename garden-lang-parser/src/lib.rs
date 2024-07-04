@@ -2719,14 +2719,32 @@ pub fn parse_toplevel_items_from_span(
 }
 
 pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
-    let mut tokens = lex(&PathBuf::from("__test.gdn"), src)?;
+    let mut diagnostics = vec![];
+    let mut tokens = match lex(&PathBuf::from("__test.gdn"), src) {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            diagnostics.push(e);
+            TokenStream::empty()
+        }
+    };
 
     let mut res = vec![];
     while !tokens.is_empty() {
-        res.push(parse_block_member_expression(src, &mut tokens)?);
+        let prev_tokens_idx = tokens.idx;
+        let expr = parse_block_member_expression_chill(src, &mut tokens, &mut diagnostics);
+        res.push(expr);
+
+        if tokens.idx == prev_tokens_idx {
+            // Parser isn't making any more progress, so stop.
+            break;
+        }
     }
 
-    Ok(res)
+    if let Some(error) = diagnostics.into_iter().next() {
+        Err(error)
+    } else {
+        Ok(res)
+    }
 }
 
 pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {

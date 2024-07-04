@@ -1350,35 +1350,6 @@ fn parse_simple_expression_or_binop_chill(
     expr
 }
 
-fn parse_definition(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    if let Some(token) = tokens.peek() {
-        if token.text == "fun" {
-            return parse_function_or_method(src, tokens);
-        }
-        if token.text == "test" {
-            return parse_test(src, tokens);
-        }
-        if token.text == "enum" {
-            return parse_enum(src, tokens);
-        }
-        if token.text == "struct" {
-            return parse_struct(src, tokens);
-        }
-
-        // TODO: Include the token in the error message.
-        return Err(ParseError::Invalid {
-            position: token.position,
-            message: ErrorMessage("Expected a definition".to_string()),
-            additional: vec![],
-        });
-    }
-
-    Err(ParseError::Incomplete {
-        position: Position::todo(),
-        message: ErrorMessage("Unfinished definition".to_owned()),
-    })
-}
-
 fn parse_definition_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -1412,44 +1383,6 @@ fn parse_definition_chill(
         message: ErrorMessage("Unfinished definition".to_owned()),
     });
     None
-}
-
-fn parse_enum_body(tokens: &mut TokenStream<'_>) -> Result<Vec<VariantInfo>, ParseError> {
-    let mut variants = vec![];
-    loop {
-        if peeked_symbol_is(tokens, "}") {
-            break;
-        }
-
-        let variant = parse_variant(tokens)?;
-        variants.push(variant);
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            } else if token.text == "}" {
-                break;
-            } else {
-                return Err(ParseError::Invalid {
-                    position: token.position,
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
-                        token.text
-                    )),
-                    additional: vec![],
-                });
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
-                ),
-            });
-        }
-    }
-
-    Ok(variants)
 }
 
 fn parse_enum_body_chill(
@@ -1496,24 +1429,6 @@ fn parse_enum_body_chill(
 }
 
 /// Parse enum variant, e.g. `Some(T)`.
-fn parse_variant(tokens: &mut TokenStream<'_>) -> Result<VariantInfo, ParseError> {
-    let name = parse_symbol(tokens)?;
-
-    let mut payload_hint = None;
-    if peeked_symbol_is(tokens, "(") {
-        tokens.pop();
-        payload_hint = Some(parse_type_hint(tokens)?);
-        require_token(tokens, ")")?;
-    }
-
-    let variant = VariantInfo {
-        name_sym: name,
-        payload_hint,
-    };
-    Ok(variant)
-}
-
-/// Parse enum variant, e.g. `Some(T)`.
 fn parse_variant_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> VariantInfo {
     let name = parse_symbol_chill(tokens, diagnostics);
 
@@ -1528,44 +1443,6 @@ fn parse_variant_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
         name_sym: name,
         payload_hint,
     }
-}
-
-fn parse_enum(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
-    let enum_token = require_token(tokens, "enum")?;
-    let doc_comment = parse_doc_comment(&enum_token);
-    let name_sym = parse_type_symbol(tokens)?;
-    let type_params = parse_type_params(tokens)?;
-
-    let _open_brace = require_token(tokens, "{")?;
-
-    let variants = parse_enum_body(tokens)?;
-
-    let close_brace = require_token(tokens, "}")?;
-
-    let mut start_offset = enum_token.position.start_offset;
-    if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = close_brace.position.end_offset;
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
-    let position = Position::merge(&enum_token.position, &close_brace.position);
-
-    Ok(Definition(
-        src_string.clone(),
-        position,
-        Definition_::Enum(EnumInfo {
-            src_string,
-            doc_comment,
-            name_sym,
-            type_params,
-            variants,
-        }),
-    ))
 }
 
 fn parse_enum_chill(
@@ -1610,44 +1487,6 @@ fn parse_enum_chill(
     )
 }
 
-fn parse_struct(src: &str, tokens: &mut TokenStream<'_>) -> Result<Definition, ParseError> {
-    let struct_token = require_token(tokens, "struct")?;
-    let doc_comment = parse_doc_comment(&struct_token);
-    let name_sym = parse_type_symbol(tokens)?;
-    let type_params = parse_type_params(tokens)?;
-
-    let _open_brace = require_token(tokens, "{")?;
-
-    let fields = parse_struct_fields(tokens)?;
-
-    let close_brace = require_token(tokens, "}")?;
-
-    let mut start_offset = struct_token.position.start_offset;
-    if let Some((comment_pos, _)) = struct_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = close_brace.position.end_offset;
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
-    let position = Position::merge(&struct_token.position, &close_brace.position);
-
-    Ok(Definition(
-        src_string.clone(),
-        position,
-        Definition_::Struct(StructInfo {
-            src_string,
-            doc_comment,
-            name_sym,
-            type_params,
-            fields,
-        }),
-    ))
-}
-
 fn parse_struct_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -1688,50 +1527,6 @@ fn parse_struct_chill(
             fields,
         }),
     )
-}
-
-fn parse_test(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    let test_token = require_token(tokens, "test")?;
-    let doc_comment = parse_doc_comment(&test_token);
-
-    let name = if let Some(token) = tokens.peek() {
-        if token.text == "{" {
-            None
-        } else {
-            Some(parse_symbol(tokens)?)
-        }
-    } else {
-        return Err(ParseError::Incomplete {
-            position: test_token.position,
-            message: ErrorMessage("Unfinished test definition".to_owned()),
-        });
-    };
-
-    let body = parse_block(src, tokens, false)?;
-
-    let mut start_offset = test_token.position.start_offset;
-    if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = body.close_brace.end_offset;
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
-    let position = Position::merge(&test_token.position, &body.close_brace);
-
-    Ok(Definition(
-        src_string.clone(),
-        position,
-        Definition_::Test(TestInfo {
-            src_string,
-            doc_comment,
-            name,
-            body,
-        }),
-    ))
 }
 
 fn parse_test_chill(
@@ -2337,62 +2132,6 @@ fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithHint>, Par
     Ok(params)
 }
 
-fn parse_struct_fields(tokens: &mut TokenStream) -> Result<Vec<FieldInfo>, ParseError> {
-    let mut fields = vec![];
-    loop {
-        if peeked_symbol_is(tokens, "}") {
-            break;
-        }
-
-        if let Some(token) = tokens.peek() {
-            let doc_comment = parse_doc_comment(&token);
-            let sym = parse_symbol(tokens)?;
-            let hint = parse_colon_and_hint(tokens)?;
-
-            fields.push(FieldInfo {
-                sym,
-                hint,
-                doc_comment,
-            });
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected a struct field name here like `foo: String`, but got EOF".to_string(),
-                ),
-            });
-        }
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            } else if token.text == "}" {
-                break;
-            } else {
-                return Err(ParseError::Invalid {
-                    position: token.position,
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
-                        token.text
-                    )),
-                    additional: vec![],
-                });
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `}}` here, but got EOF".to_string(),
-                ),
-            });
-        }
-    }
-
-    // TODO: error on duplicate fields
-
-    Ok(fields)
-}
-
 fn parse_struct_fields_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -2543,32 +2282,6 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
     None
 }
 
-fn parse_function_or_method(src: &str, tokens: &mut TokenStream) -> Result<Definition, ParseError> {
-    let fun_token = require_token(tokens, "fun")?;
-    let type_params = parse_type_params(tokens)?;
-
-    // We can distinguish between functions and methods based on the
-    // token after the type parameters.
-    //
-    // ```
-    // fun<T> i_am_a_fun() {}
-    // fun<T> (self: String) i_am_a_method() {}
-    // ```
-    match tokens.peek() {
-        Some(token) => {
-            if token.text == "(" {
-                parse_method(src, tokens, fun_token, type_params)
-            } else {
-                parse_function(src, tokens, fun_token, type_params)
-            }
-        }
-        None => Err(ParseError::Incomplete {
-            position: Position::todo(),
-            message: ErrorMessage("Unfinished function or method definition.".to_owned()),
-        }),
-    }
-}
-
 fn parse_function_or_method_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -2598,72 +2311,6 @@ fn parse_function_or_method_chill(
             None
         }
     }
-}
-
-fn parse_method(
-    src: &str,
-    tokens: &mut TokenStream,
-    fun_token: Token,
-    type_params: Vec<TypeSymbol>,
-) -> Result<Definition, ParseError> {
-    let doc_comment = parse_doc_comment(&fun_token);
-
-    require_token(tokens, "(")?;
-    let receiver_param = parse_parameter(tokens, true)?;
-    let receiver_sym = receiver_param.symbol.clone();
-    let receiver_hint = match receiver_param.hint {
-        Some(type_name) => type_name,
-        None => {
-            return Err(ParseError::Incomplete {
-                position: receiver_param.symbol.position.clone(),
-                message: ErrorMessage("This `self` argument requires a type.".to_owned()),
-            });
-        }
-    };
-    require_token(tokens, ")")?;
-
-    let name = parse_symbol(tokens)?;
-
-    let params = parse_parameters(tokens)?;
-    let return_hint = parse_colon_and_hint_opt(tokens)?;
-
-    let body = parse_block(src, tokens, false)?;
-
-    let mut start_offset = fun_token.position.start_offset;
-    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = body.close_brace.end_offset;
-    let close_brace_pos = body.close_brace.clone();
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
-    let fun_info = FunInfo {
-        src_string: src_string.clone(),
-        doc_comment,
-        name: Some(name.clone()),
-        type_params,
-        params,
-        body,
-        return_hint,
-    };
-    let meth_info = MethodInfo {
-        receiver_hint,
-        receiver_sym,
-        name_sym: name,
-        kind: MethodKind::UserDefinedMethod(fun_info),
-    };
-
-    let position = Position::merge(&fun_token.position, &close_brace_pos);
-
-    Ok(Definition(
-        src_string.clone(),
-        position,
-        Definition_::Method(meth_info),
-    ))
 }
 
 fn parse_method_chill(
@@ -2737,53 +2384,6 @@ fn parse_method_chill(
     let position = Position::merge(&fun_token.position, &close_brace_pos);
 
     Definition(src_string.clone(), position, Definition_::Method(meth_info))
-}
-
-fn parse_function(
-    src: &str,
-    tokens: &mut TokenStream,
-    fun_token: Token,
-    type_params: Vec<TypeSymbol>,
-) -> Result<Definition, ParseError> {
-    let doc_comment = parse_doc_comment(&fun_token);
-
-    let name = parse_symbol(tokens)?;
-
-    let params = parse_parameters(tokens)?;
-    let return_hint = parse_colon_and_hint_opt(tokens)?;
-
-    let body = parse_block(src, tokens, false)?;
-
-    let mut start_offset = fun_token.position.start_offset;
-    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = body.close_brace.end_offset;
-    let close_brace_pos = body.close_brace.clone();
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
-    let position = Position::merge(&fun_token.position, &close_brace_pos);
-
-    Ok(Definition(
-        src_string.clone(),
-        position,
-        Definition_::Fun(
-            name.clone(),
-            FunInfo {
-                src_string,
-                doc_comment,
-                name: Some(name),
-                type_params,
-                params,
-                body,
-                return_hint,
-            },
-        ),
-    ))
 }
 
 fn parse_function_chill(
@@ -2965,38 +2565,6 @@ fn parse_assign_expression_chill(
     )
 }
 
-fn parse_toplevel_expr(src: &str, tokens: &mut TokenStream) -> Result<ToplevelItem, ParseError> {
-    let initial_token_idx = tokens.idx;
-
-    // Always allow a semicolon-terminated expression at the top level.
-    let block_expr_err = match parse_block_member_expression(src, tokens) {
-        Ok(expr) => {
-            return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
-        }
-        Err(e) => e,
-    };
-
-    tokens.idx = initial_token_idx;
-    match parse_inline_expression(src, tokens) {
-        Ok(expr) => {
-            if tokens.is_empty() {
-                // Try parsing again as an inline expression, but only if this
-                // consumes the rest of the token stream. This ensures that `1 2`
-                // does not parse but `1; 2` does.
-                return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
-            };
-
-            if matches!(expr.expr_, Expression_::Block(_)) {
-                // Also allow standalone blocks at the top level.
-                return Ok(ToplevelItem::Expr(ToplevelExpression(expr)));
-            }
-
-            Err(block_expr_err)
-        }
-        _ => Err(block_expr_err),
-    }
-}
-
 fn parse_toplevel_expr_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -3036,19 +2604,6 @@ fn parse_toplevel_expr_chill(
     ToplevelItem::Expr(ToplevelExpression(block_expr))
 }
 
-fn parse_toplevel_items_from_tokens(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<Vec<ToplevelItem>, ParseError> {
-    let mut items: Vec<ToplevelItem> = vec![];
-
-    while !tokens.is_empty() {
-        let item = parse_toplevel_item_from_tokens(src, tokens)?;
-        items.push(item);
-    }
-    Ok(items)
-}
-
 fn parse_toplevel_items_from_tokens_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -3065,24 +2620,6 @@ fn parse_toplevel_items_from_tokens_chill(
         }
     }
     items
-}
-
-fn parse_toplevel_item_from_tokens(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<ToplevelItem, ParseError> {
-    if let Some(token) = tokens.peek() {
-        if token.text == "fun"
-            || token.text == "test"
-            || token.text == "enum"
-            || token.text == "struct"
-        {
-            let def = parse_definition(src, tokens)?;
-            return Ok(ToplevelItem::Def(def));
-        }
-    }
-
-    parse_toplevel_expr(src, tokens)
 }
 
 fn parse_toplevel_item_from_tokens_chill(

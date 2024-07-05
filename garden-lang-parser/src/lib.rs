@@ -93,7 +93,6 @@ fn require_token_inner_chill<'a>(
     // the previous token.
     let prev_token = tokens.prev();
 
-    let tokens_idx = tokens.idx;
     match tokens.pop() {
         Some(token) => {
             if token.text != expected {
@@ -111,7 +110,7 @@ fn require_token_inner_chill<'a>(
                 // Undo the pop. We saw an unexpected token, so it
                 // might be e.g. a close brace so we shouldn't just
                 // discard it.
-                tokens.idx = tokens_idx;
+                tokens.unpop();
             }
 
             token

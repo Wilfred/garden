@@ -50,6 +50,11 @@ impl<'a> TokenStream<'a> {
         }
     }
 
+    pub(crate) fn unpop(&mut self) {
+        assert!(self.idx > 0);
+        self.idx -= 1;
+    }
+
     pub(crate) fn peek(&self) -> Option<Token<'a>> {
         self.tokens.get(self.idx).cloned()
     }

@@ -666,7 +666,8 @@ If called with a prefix, stop the previous session."
 
 (flycheck-define-checker garden
   "A Garden syntax checker."
-  :command ("garden" "check" "--json" source)
+  ;; TODO: respect `garden-executable'.
+  :command ("/home/wilfred/projects/garden/target/debug/garden" "check" "--json" source)
   :error-parser garden-flycheck--parse
   :modes (garden-mode))
 

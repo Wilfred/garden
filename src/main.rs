@@ -142,41 +142,39 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
     match String::from_utf8(src_bytes) {
         Ok(src) => {
             let (items, errors) = parse_toplevel_items(path, &src);
-            if errors.is_empty() {
-                for item in items {
-                    match item {
-                        ToplevelItem::Def(d) => {
-                            println!("{:#?}", d.2);
-                        }
-                        ToplevelItem::Expr(e) => {
-                            println!("{:#?}", e.0.expr_);
-                        }
+            for error in errors.into_iter() {
+                match error {
+                    ParseError::Invalid {
+                        position,
+                        message: e,
+                        additional: _,
+                    } => {
+                        eprintln!(
+                            "{}",
+                            &format_parse_error(
+                                &ErrorMessage(format!("Parse error: {}", e.0)),
+                                &position,
+                                Level::Error,
+                                &SourceString {
+                                    src: src.clone(),
+                                    offset: 0
+                                }
+                            )
+                        );
+                    }
+                    ParseError::Incomplete { message: e, .. } => {
+                        eprintln!("Parse error (incomplete input): {}", e.0);
                     }
                 }
-            } else {
-                for error in errors.into_iter() {
-                    match error {
-                        ParseError::Invalid {
-                            position,
-                            message: e,
-                            additional: _,
-                        } => {
-                            eprintln!(
-                                "{}",
-                                &format_parse_error(
-                                    &ErrorMessage(format!("Parse error: {}", e.0)),
-                                    &position,
-                                    Level::Error,
-                                    &SourceString {
-                                        src: src.clone(),
-                                        offset: 0
-                                    }
-                                )
-                            );
-                        }
-                        ParseError::Incomplete { message: e, .. } => {
-                            eprintln!("Parse error (incomplete input): {}", e.0);
-                        }
+            }
+
+            for item in items {
+                match item {
+                    ToplevelItem::Def(d) => {
+                        println!("{:#?}", d.2);
+                    }
+                    ToplevelItem::Expr(e) => {
+                        println!("{:#?}", e.0.expr_);
                     }
                 }
             }

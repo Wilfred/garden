@@ -1,6 +1,37 @@
 fun foo() { 1 }
 
 // args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name: Some(
+//             Symbol"foo",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             is_loop_body: false,
+//             open_brace: Position { ... },
+//             exprs: [
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: IntLiteral(
+//                         1,
+//                     ),
+//                     id: OnceCell(
+//                         <uninit>,
+//                     ),
+//                 },
+//             ],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+
 // expected stderr:
 // Error: Parse error: Expected `;`, got `}`
 // 

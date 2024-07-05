@@ -4,80 +4,160 @@ fun foo<T>(value: T): Unit {
 }
 
 // args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "This should be `fun<T> foo()`. Ideally we'd show a better parse\nerror message here, but parsing should at least terminate.",
+//         ),
+//         name: Some(
+//             Symbol"foo",
+//         ),
+//         type_params: [],
+//         params: [
+//             SymbolWithHint {
+//                 symbol: Symbol"__placeholder",
+//                 hint: None,
+//             },
+//         ],
+//         return_hint: None,
+//         body: Block {
+//             is_loop_body: false,
+//             open_brace: Position { ... },
+//             exprs: [
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: BinaryOperator(
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Invalid,
+//                             id: OnceCell(
+//                                 <uninit>,
+//                             ),
+//                         },
+//                         LessThan,
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Variable(
+//                                 Symbol"T",
+//                             ),
+//                             id: OnceCell(
+//                                 <uninit>,
+//                             ),
+//                         },
+//                     ),
+//                     id: OnceCell(
+//                         <uninit>,
+//                     ),
+//                 },
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: BinaryOperator(
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Invalid,
+//                             id: OnceCell(
+//                                 <uninit>,
+//                             ),
+//                         },
+//                         GreaterThan,
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Variable(
+//                                 Symbol"value",
+//                             ),
+//                             id: OnceCell(
+//                                 <uninit>,
+//                             ),
+//                         },
+//                     ),
+//                     id: OnceCell(
+//                         <uninit>,
+//                     ),
+//                 },
+//             ],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+// Invalid
+
 // expected stderr:
 // Error: Parse error: Expected `(`, got `<`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
 // Error: Parse error: Invalid name: '<'
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
 // Error: Parse error: Invalid syntax: Expected `,` or `)` here, but got `<`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
 // Error: Parse error: Expected `)`, got `<`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
 // Error: Parse error: Expected `{`, got `<`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
-// Error: Parse error: Expected an expression, got: < (offset 7)
+// Error: Parse error: Expected an expression, got: < (offset 136)
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
 // Error: Parse error: Expected `;`, got `>`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //         ^
-// Error: Parse error: Expected an expression, got: > (offset 9)
+// Error: Parse error: Expected an expression, got: > (offset 138)
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //          ^
 // Error: Parse error: Expected `)`, got `:`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //                 ^
 // Error: Parse error: Expected `;`, got `:`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //            ^^^^^
-// Error: Parse error: Expected an expression, got: : (offset 16)
+// Error: Parse error: Expected an expression, got: : (offset 145)
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //                 ^
 // Error: Parse error: Expected `;`, got `:`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //            ^^^^^
 // Error: Parse error: Expected `}`, got `:`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //                 ^
-// Error: Parse error: Expected an expression, got: : (offset 16)
+// Error: Parse error: Expected an expression, got: : (offset 145)
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //                 ^
 // Error: Parse error: Expected `;`, got `:`
 // 
-// --> src/parser_test_files/bad_generics.gdn:1
+// --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //            ^^^^^
 

@@ -1,6 +1,21 @@
 let a b
 
 // args: dump-ast
+// expected stdout:
+// Let(
+//     Symbol"a",
+//     None,
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"b",
+//         ),
+//         id: OnceCell(
+//             <uninit>,
+//         ),
+//     },
+// )
+
 // expected stderr:
 // Error: Parse error: Expected `=`, got `b`
 // 

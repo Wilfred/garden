@@ -1,6 +1,14 @@
 1 2;
 
 // args: dump-ast
+// expected stdout:
+// IntLiteral(
+//     1,
+// )
+// IntLiteral(
+//     2,
+// )
+
 // expected stderr:
 // Error: Parse error: Expected `;`, got `2`
 // 

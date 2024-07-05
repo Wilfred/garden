@@ -1,6 +1,27 @@
 struct { x: Int }
 
 // args: dump-ast
+// expected stdout:
+// Struct(
+//     StructInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: TypeSymbol"__placeholder",
+//         type_params: [],
+//         fields: [
+//             FieldInfo {
+//                 sym: Symbol"x",
+//                 hint: TypeHint {
+//                     sym: TypeSymbol"Int",
+//                     args: [],
+//                     position: Position { ... },
+//                 },
+//                 doc_comment: None,
+//             },
+//         ],
+//     },
+// )
+
 // expected stderr:
 // Error: Parse error: Invalid name: '{'
 // 

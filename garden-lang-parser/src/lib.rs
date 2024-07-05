@@ -1569,6 +1569,14 @@ const RESERVED_WORDS: &[&str] = &[
     "continue",
 ];
 
+fn placeholder_symbol(position: Position) -> Symbol {
+    Symbol {
+        position,
+        name: SymbolName("__placeholder".to_string()),
+        id: OnceCell::new(),
+    }
+}
+
 fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
     let variable_token = require_a_token_chill(tokens, diagnostics, "variable name");
     if !SYMBOL_RE.is_match(variable_token.text) {
@@ -1577,6 +1585,8 @@ fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError
             message: ErrorMessage(format!("Invalid name: '{}'", variable_token.text)),
             additional: vec![],
         });
+        tokens.unpop();
+        return placeholder_symbol(variable_token.position);
     }
 
     for reserved in RESERVED_WORDS {
@@ -1589,6 +1599,8 @@ fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError
                 )),
                 additional: vec![],
             });
+            tokens.unpop();
+            return placeholder_symbol(variable_token.position);
         }
     }
 

@@ -14,6 +14,7 @@ mod checks;
 mod cli_session;
 mod colors;
 mod commands;
+mod completions;
 mod diagnostics;
 mod env;
 mod eval;
@@ -78,6 +79,8 @@ enum Commands {
     },
     /// Show the type of the expression at the position given.
     ShowType { offset: usize, path: PathBuf },
+    /// Show possible completions at the position given.
+    Complete { offset: usize, path: PathBuf },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
@@ -130,6 +133,15 @@ fn main() {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
                 show_type(&src, &path, offset);
+            }
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+        Commands::Complete { offset, path } => match std::fs::read(&path) {
+            Ok(src_bytes) => {
+                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                completions::complete(&src, &path, offset);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

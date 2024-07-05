@@ -575,17 +575,20 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                match parse_toplevel_items(&PathBuf::from("__interactive__"), src) {
-                    Ok(items) => {
-                        for (i, item) in items.iter().enumerate() {
-                            write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()
-                        }
+                let (items, errors) = parse_toplevel_items(&PathBuf::from("__interactive__"), src);
+                if errors.is_empty() {
+                    for (i, item) in items.iter().enumerate() {
+                        write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()
                     }
-                    Err(ParseError::Incomplete { message: e, .. })
-                    | Err(ParseError::Invalid { message: e, .. }) => {
-                        write!(buf, "{}: {}", "Error".bright_red(), e.0).unwrap();
+                } else {
+                    for error in errors {
+                        let msg = match error {
+                            ParseError::Invalid { message, .. } => message,
+                            ParseError::Incomplete { message, .. } => message,
+                        };
+                        write!(buf, "{}: {}", "Error".bright_red(), msg.0).unwrap();
                     }
-                };
+                }
             } else {
                 write!(buf, ":parse requires a code snippet, e.g. `:parse 1 + 2`").unwrap();
             }

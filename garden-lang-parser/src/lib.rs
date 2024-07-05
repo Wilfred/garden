@@ -1722,7 +1722,7 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<Pa
 }
 
 pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
-    let (items, diagnostics) = parse_toplevel_items_(path, src);
+    let (items, diagnostics) = parse_toplevel_items(path, src);
 
     if let Some(error) = diagnostics.into_iter().next() {
         Err(error)
@@ -1731,18 +1731,7 @@ pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, Parse
     }
 }
 
-pub fn parse_toplevel_items(path: &Path, src: &str) -> Result<Vec<ToplevelItem>, ParseError> {
-    let (items, diagnostics) = parse_toplevel_items_(path, src);
-
-    if let Some(error) = diagnostics.into_iter().next() {
-        Err(error)
-    } else {
-        Ok(items)
-    }
-}
-
-// TODO: make this the external API, not a Result as in parse_toplevel_items.
-fn parse_toplevel_items_(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
     let mut tokens = match lex(path, src) {
         Ok(tokens) => tokens,
@@ -1808,8 +1797,8 @@ pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
     }
 }
 
-pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
-    let items = parse_toplevel_items(&PathBuf::from("__test.gdn"), src)?;
+pub fn parse_defs_from_str(src: &str) -> (Vec<Definition>, Vec<ParseError>) {
+    let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src);
 
     let mut defs = vec![];
     for item in items {
@@ -1821,7 +1810,7 @@ pub fn parse_defs_from_str(src: &str) -> Result<Vec<Definition>, ParseError> {
         }
     }
 
-    Ok(defs)
+    (defs, errors)
 }
 
 #[cfg(test)]
@@ -1830,16 +1819,19 @@ mod tests {
 
     #[test]
     fn test_incomplete_expression() {
-        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "1 + ").is_err());
+        let (_, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), "1 + ");
+        assert!(!errors.is_empty())
     }
 
     #[test]
     fn test_repeated_param() {
-        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(x, x) {}").is_err());
+        let (_, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(x, x) {} ");
+        assert!(!errors.is_empty())
     }
 
     #[test]
     fn test_repeated_param_underscore() {
-        assert!(parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(_, _) {}").is_ok());
+        let (_, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(_, _) {} ");
+        assert!(errors.is_empty())
     }
 }

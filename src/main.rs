@@ -140,8 +140,9 @@ fn main() {
 
 fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
     match String::from_utf8(src_bytes) {
-        Ok(src) => match parse_toplevel_items(path, &src) {
-            Ok(items) => {
+        Ok(src) => {
+            let (items, errors) = parse_toplevel_items(path, &src);
+            if errors.is_empty() {
                 for item in items {
                     match item {
                         ToplevelItem::Def(d) => {
@@ -152,26 +153,34 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
                         }
                     }
                 }
+            } else {
+                for error in errors.into_iter() {
+                    match error {
+                        ParseError::Invalid {
+                            position,
+                            message: e,
+                            additional: _,
+                        } => {
+                            eprintln!(
+                                "{}",
+                                &format_parse_error(
+                                    &ErrorMessage(format!("Parse error: {}", e.0)),
+                                    &position,
+                                    Level::Error,
+                                    &SourceString {
+                                        src: src.clone(),
+                                        offset: 0
+                                    }
+                                )
+                            );
+                        }
+                        ParseError::Incomplete { message: e, .. } => {
+                            eprintln!("Parse error (incomplete input): {}", e.0);
+                        }
+                    }
+                }
             }
-            Err(ParseError::Invalid {
-                position,
-                message: e,
-                additional: _,
-            }) => {
-                eprintln!(
-                    "{}",
-                    &format_parse_error(
-                        &ErrorMessage(format!("Parse error: {}", e.0)),
-                        &position,
-                        Level::Error,
-                        &SourceString { src, offset: 0 }
-                    )
-                );
-            }
-            Err(ParseError::Incomplete { message: e, .. }) => {
-                eprintln!("Parse error (incomplete input): {}", e.0);
-            }
-        },
+        }
         Err(e) => {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
@@ -183,8 +192,9 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
     let mut succeeded = false;
 
     match String::from_utf8(src_bytes) {
-        Ok(src) => match parse_toplevel_items(path, &src) {
-            Ok(items) => {
+        Ok(src) => {
+            let (items, errors) = parse_toplevel_items(path, &src);
+            if errors.is_empty() {
                 let mut env = Env::default();
                 let mut session = Session {
                     interrupted,
@@ -210,26 +220,34 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                         eprintln!("Interrupted");
                     }
                 }
+            } else {
+                for error in errors.into_iter() {
+                    match error {
+                        ParseError::Invalid {
+                            position,
+                            message: e,
+                            additional: _,
+                        } => {
+                            eprintln!(
+                                "{}",
+                                &format_parse_error(
+                                    &ErrorMessage(format!("Parse error: {}", e.0)),
+                                    &position,
+                                    Level::Error,
+                                    &SourceString {
+                                        src: src.clone(),
+                                        offset: 0
+                                    }
+                                )
+                            );
+                        }
+                        ParseError::Incomplete { message: e, .. } => {
+                            eprintln!("Parse error (incomplete input): {}", e.0);
+                        }
+                    }
+                }
             }
-            Err(ParseError::Invalid {
-                position,
-                message: e,
-                additional: _,
-            }) => {
-                eprintln!(
-                    "{}",
-                    &format_parse_error(
-                        &ErrorMessage(format!("Parse error: {}", e.0)),
-                        &position,
-                        Level::Error,
-                        &SourceString { src, offset: 0 }
-                    )
-                );
-            }
-            Err(ParseError::Incomplete { message: e, .. }) => {
-                eprintln!("Parse error (incomplete input): {}", e.0);
-            }
-        },
+        }
         Err(e) => {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
@@ -242,8 +260,9 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
 
 fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
-        Ok(src) => match parse_toplevel_items(path, &src) {
-            Ok(items) => {
+        Ok(src) => {
+            let (items, errors) = parse_toplevel_items(path, &src);
+            if errors.is_empty() {
                 let mut env = Env::default();
                 let mut session = Session {
                     interrupted,
@@ -266,26 +285,32 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                         eprintln!("Interrupted");
                     }
                 }
+            } else {
+                for error in errors.into_iter() {
+                    match error {
+                        ParseError::Invalid {
+                            position,
+                            message: e,
+                            additional: _,
+                        } => eprintln!(
+                            "{}",
+                            &format_parse_error(
+                                &ErrorMessage(format!("Parse error: {}", e.0)),
+                                &position,
+                                Level::Error,
+                                &SourceString {
+                                    src: src.clone(),
+                                    offset: 0
+                                }
+                            )
+                        ),
+                        ParseError::Incomplete { message: e, .. } => {
+                            eprintln!("Parse error (incomplete input): {}", e.0)
+                        }
+                    }
+                }
             }
-            Err(ParseError::Invalid {
-                position,
-                message: e,
-                additional: _,
-            }) => {
-                eprintln!(
-                    "{}",
-                    &format_parse_error(
-                        &ErrorMessage(format!("Parse error: {}", e.0)),
-                        &position,
-                        Level::Error,
-                        &SourceString { src, offset: 0 }
-                    )
-                );
-            }
-            Err(ParseError::Incomplete { message: e, .. }) => {
-                eprintln!("Parse error (incomplete input): {}", e.0);
-            }
-        },
+        }
         Err(e) => {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }

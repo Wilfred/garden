@@ -32,40 +32,37 @@ struct CheckDiagnostic {
 pub(crate) fn check(path: &Path, src: &str, json: bool) {
     let mut diagnostics = vec![];
 
-    let items = match parse_toplevel_items(path, src) {
-        Ok(items) => items,
-        Err(e) => {
-            match e {
-                ParseError::Invalid {
-                    position, message, ..
-                } => {
-                    // Expose line numbers as 1-indexed.
-                    diagnostics.push(CheckDiagnostic {
-                        position: position.clone(),
-                        line_number: position.line_number + 1,
-                        message,
-                        start_offset: position.start_offset,
-                        end_offset: position.end_offset,
-                        severity: Severity::Error,
-                    });
-                }
-                ParseError::Incomplete {
-                    message, position, ..
-                } => {
-                    // TODO: last line would be better?
-                    diagnostics.push(CheckDiagnostic {
-                        position: position.clone(),
-                        line_number: 1,
-                        message,
-                        start_offset: position.start_offset,
-                        end_offset: position.end_offset,
-                        severity: Severity::Error,
-                    });
-                }
-            };
-            vec![]
-        }
-    };
+    let (items, errors) = parse_toplevel_items(path, src);
+    for e in errors.into_iter() {
+        match e {
+            ParseError::Invalid {
+                position, message, ..
+            } => {
+                // Expose line numbers as 1-indexed.
+                diagnostics.push(CheckDiagnostic {
+                    position: position.clone(),
+                    line_number: position.line_number + 1,
+                    message,
+                    start_offset: position.start_offset,
+                    end_offset: position.end_offset,
+                    severity: Severity::Error,
+                });
+            }
+            ParseError::Incomplete {
+                message, position, ..
+            } => {
+                // TODO: last line would be better?
+                diagnostics.push(CheckDiagnostic {
+                    position: position.clone(),
+                    line_number: 1,
+                    message,
+                    start_offset: position.start_offset,
+                    end_offset: position.end_offset,
+                    severity: Severity::Error,
+                });
+            }
+        };
+    }
 
     for Diagnostic {
         message,

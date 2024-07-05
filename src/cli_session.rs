@@ -223,8 +223,11 @@ fn read_multiline_syntax(
     let mut src = first_line.to_owned();
 
     loop {
-        match parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src) {
-            Ok(items) => {
+        let (items, errors) = parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src);
+
+        // TODO: return all errors.
+        match errors.into_iter().next() {
+            None => {
                 if items.is_empty() && !src.trim().is_empty() {
                     // If we didn't parse anything, but the text isn't
                     // just whitespace, it's probably a comment that
@@ -240,16 +243,14 @@ fn read_multiline_syntax(
                     return Ok((src, items));
                 }
             }
-            Err(e @ ParseError::Incomplete { .. }) => match rl.readline(&prompt_symbol(false)) {
+            Some(e @ ParseError::Incomplete { .. }) => match rl.readline(&prompt_symbol(false)) {
                 Ok(input) => {
                     src.push('\n');
                     src.push_str(&input);
                 }
                 Err(_) => return Err(e),
             },
-            Err(e @ ParseError::Invalid { .. }) => {
-                return Err(e);
-            }
+            Some(e @ ParseError::Invalid { .. }) => return Err(e),
         }
     }
 }

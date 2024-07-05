@@ -428,9 +428,15 @@ fn parse_struct_literal_fields_chill(
             break;
         }
 
+        let start_idx = tokens.idx;
         let sym = parse_symbol_chill(tokens, diagnostics);
         require_token_chill(tokens, diagnostics, ":");
         let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
+
         fields.push((sym, expr));
 
         let Some(token) = tokens.peek() else {
@@ -495,9 +501,15 @@ fn parse_match_expression_chill(
             break;
         }
 
+        let start_idx = tokens.idx;
         let pattern = parse_pattern_chill(tokens, diagnostics);
         require_token_chill(tokens, diagnostics, "=>");
         let case_expr = parse_case_expr_chill(src, tokens, diagnostics);
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
+
         cases.push((pattern, Box::new(case_expr)));
     }
 
@@ -549,8 +561,13 @@ fn parse_comma_separated_exprs_chill(
             break;
         }
 
+        let start_idx = tokens.idx;
         let arg = parse_inline_expression_chill(src, tokens, diagnostics);
         items.push(arg);
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
@@ -601,6 +618,7 @@ fn parse_simple_expression_with_trailing_chill(
     let mut expr = parse_simple_expression_chill(src, tokens, diagnostics);
 
     loop {
+        let start_idx = tokens.idx;
         match tokens.peek() {
             Some(token) if token.text == "(" => {
                 let arguments = parse_call_arguments_chill(src, tokens, diagnostics);
@@ -629,6 +647,10 @@ fn parse_simple_expression_with_trailing_chill(
             }
             _ => break,
         }
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
     }
 
     expr
@@ -1379,10 +1401,17 @@ fn parse_block_chill(
             break;
         }
 
+        let start_idx = tokens.idx;
         let expr = parse_block_member_expression_chill(src, tokens, diagnostics);
         match &expr.expr_ {
             Expression_::Invalid => break,
-            _ => exprs.push(expr),
+            _ => {
+                exprs.push(expr);
+                assert!(
+                    tokens.idx > start_idx,
+                    "The parser should always make forward progress."
+                );
+            }
         }
     }
 
@@ -1698,9 +1727,14 @@ fn parse_toplevel_items_from_tokens_chill(
     let mut items: Vec<ToplevelItem> = vec![];
 
     while !tokens.is_empty() {
+        let start_idx = tokens.idx;
         match parse_toplevel_item_from_tokens_chill(src, tokens, diagnostics) {
             Some(item) => {
                 items.push(item);
+                assert!(
+                    tokens.idx > start_idx,
+                    "The parser should always make forward progress."
+                );
             }
             None => break,
         }

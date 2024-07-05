@@ -93,6 +93,7 @@ fn require_token_inner_chill<'a>(
     // the previous token.
     let prev_token = tokens.prev();
 
+    let tokens_idx = tokens.idx;
     match tokens.pop() {
         Some(token) => {
             if token.text != expected {
@@ -106,6 +107,11 @@ fn require_token_inner_chill<'a>(
                     message: ErrorMessage(format!("Expected `{}`, got `{}`", expected, token.text)),
                     additional: vec![],
                 });
+
+                // Undo the pop. We saw an unexpected token, so it
+                // might be e.g. a close brace so we shouldn't just
+                // discard it.
+                tokens.idx = tokens_idx;
             }
 
             token

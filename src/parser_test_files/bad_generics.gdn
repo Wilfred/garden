@@ -1,0 +1,83 @@
+// This should be `fun<T> foo()`. Ideally we'd show a better parse
+// error message here, but parsing should at least terminate.
+fun foo<T>(value: T): Unit {
+}
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Expected `(`, got `<`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//        ^
+// Error: Parse error: Invalid name: '<'
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//        ^
+// Error: Parse error: Invalid syntax: Expected `,` or `)` here, but got `<`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//        ^
+// Error: Parse error: Expected `)`, got `<`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//        ^
+// Error: Parse error: Expected `{`, got `<`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//        ^
+// Error: Parse error: Expected an expression, got: < (offset 7)
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//        ^
+// Error: Parse error: Expected `;`, got `>`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//         ^
+// Error: Parse error: Expected an expression, got: > (offset 9)
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//          ^
+// Error: Parse error: Expected `)`, got `:`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//                 ^
+// Error: Parse error: Expected `;`, got `:`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//            ^^^^^
+// Error: Parse error: Expected an expression, got: : (offset 16)
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//                 ^
+// Error: Parse error: Expected `;`, got `:`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//            ^^^^^
+// Error: Parse error: Expected `}`, got `:`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//                 ^
+// Error: Parse error: Expected an expression, got: : (offset 16)
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//                 ^
+// Error: Parse error: Expected `;`, got `:`
+// 
+// --> src/parser_test_files/bad_generics.gdn:1
+// fun foo<T>(value: T): Unit {
+//            ^^^^^
+

@@ -1730,10 +1730,22 @@ fn parse_toplevel_items_from_tokens_chill(
         let start_idx = tokens.idx;
         match parse_toplevel_item_from_tokens_chill(src, tokens, diagnostics) {
             Some(item) => {
+                let was_invalid = matches!(
+                    item,
+                    ToplevelItem::Expr(ToplevelExpression(Expression {
+                        expr_: Expression_::Invalid,
+                        ..
+                    }))
+                );
+
                 items.push(item);
+                if was_invalid {
+                    break;
+                }
+
                 assert!(
                     tokens.idx > start_idx,
-                    "The parser should always make forward progress."
+                    "The parser should always make forward progress, looking"
                 );
             }
             None => break,

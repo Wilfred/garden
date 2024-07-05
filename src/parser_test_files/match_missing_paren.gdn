@@ -9,4 +9,16 @@ fun foo() {
 // --> src/parser_test_files/match_missing_paren.gdn:2
 //     match x {}
 //           ^
+// Error: Parse error: Expected `)`, got `}`
+// 
+// --> src/parser_test_files/match_missing_paren.gdn:3
+// }
+// ^
+// Error: Parse error: Expected `{`, got `}`
+// 
+// --> src/parser_test_files/match_missing_paren.gdn:3
+// }
+// ^
+// Parse error (incomplete input): Invalid syntax: Expected `}` here, but got EOF
+// Parse error (incomplete input): Expected `}`, got EOF
 

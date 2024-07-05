@@ -110,7 +110,7 @@ fun foo<T>(value: T): Unit {
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //        ^
-// Error: Parse error: Expected an expression, got: < (offset 136)
+// Error: Parse error: Expected an expression, got: `<`.
 // 
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
@@ -120,7 +120,7 @@ fun foo<T>(value: T): Unit {
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //         ^
-// Error: Parse error: Expected an expression, got: > (offset 138)
+// Error: Parse error: Expected an expression, got: `>`.
 // 
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
@@ -135,7 +135,7 @@ fun foo<T>(value: T): Unit {
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //            ^^^^^
-// Error: Parse error: Expected an expression, got: : (offset 145)
+// Error: Parse error: Expected an expression, got: `:`.
 // 
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
@@ -150,7 +150,7 @@ fun foo<T>(value: T): Unit {
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {
 //                 ^
-// Error: Parse error: Expected an expression, got: : (offset 145)
+// Error: Parse error: Expected an expression, got: `:`.
 // 
 // --> src/parser_test_files/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {

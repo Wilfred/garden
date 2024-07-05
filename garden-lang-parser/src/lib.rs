@@ -400,17 +400,14 @@ fn parse_simple_expression_chill(
 
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
-            message: ErrorMessage(format!(
-                "Expected an expression, got: {} (offset {})",
-                token.text, token.position.start_offset
-            )),
+            message: ErrorMessage(format!("Expected an expression, got: `{}`.", token.text)),
             additional: vec![],
         });
         return Expression::new(token.position, Expression_::Invalid);
     }
 
     diagnostics.push(ParseError::Incomplete {
-        message: ErrorMessage("Expected an expression".to_owned()),
+        message: ErrorMessage("Expected an expression.".to_owned()),
         position: Position::todo(),
     });
 

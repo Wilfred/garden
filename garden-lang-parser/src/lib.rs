@@ -1380,7 +1380,10 @@ fn parse_block_chill(
         }
 
         let expr = parse_block_member_expression_chill(src, tokens, diagnostics);
-        exprs.push(expr);
+        match &expr.expr_ {
+            Expression_::Invalid => break,
+            _ => exprs.push(expr),
+        }
     }
 
     let close_brace = require_token_chill(tokens, diagnostics, "}");

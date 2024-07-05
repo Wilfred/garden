@@ -45,19 +45,6 @@ fn peeked_symbol_is(tokens: &TokenStream, token: &str) -> bool {
     tokens.peek().map(|t| t.text == token).unwrap_or(false)
 }
 
-fn require_a_token<'a>(
-    tokens: &mut TokenStream<'a>,
-    token_description: &str,
-) -> Result<Token<'a>, ParseError> {
-    match tokens.pop() {
-        Some(token) => Ok(token),
-        None => Err(ParseError::Incomplete {
-            message: ErrorMessage(format!("Expected {}, got EOF", token_description)),
-            position: Position::todo(),
-        }),
-    }
-}
-
 fn require_a_token_chill<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
@@ -79,13 +66,6 @@ fn require_a_token_chill<'a>(
     }
 }
 
-fn require_token<'a>(
-    tokens: &mut TokenStream<'a>,
-    expected: &str,
-) -> Result<Token<'a>, ParseError> {
-    require_token_inner(tokens, expected, false)
-}
-
 fn require_token_chill<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
@@ -94,53 +74,12 @@ fn require_token_chill<'a>(
     require_token_inner_chill(tokens, diagnostics, expected, false)
 }
 
-fn require_end_token<'a>(
-    tokens: &mut TokenStream<'a>,
-    expected: &str,
-) -> Result<Token<'a>, ParseError> {
-    require_token_inner(tokens, expected, true)
-}
-
 fn require_end_token_chill<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
 ) -> Token<'a> {
     require_token_inner_chill(tokens, diagnostics, expected, true)
-}
-
-fn require_token_inner<'a>(
-    tokens: &mut TokenStream<'a>,
-    expected: &str,
-    highlight_prev_token: bool,
-) -> Result<Token<'a>, ParseError> {
-    // TODO: If we have an open delimiter, we want the incorrect
-    // current token. If we've forgotten a terminator like ; we want
-    // the previous token.
-    let prev_token = tokens.prev();
-
-    match tokens.pop() {
-        Some(token) => {
-            if token.text == expected {
-                Ok(token)
-            } else {
-                let position = match prev_token {
-                    Some(prev_token) if highlight_prev_token => prev_token.position,
-                    _ => token.position,
-                };
-
-                Err(ParseError::Invalid {
-                    position,
-                    message: ErrorMessage(format!("Expected `{}`, got `{}`", expected, token.text)),
-                    additional: vec![],
-                })
-            }
-        }
-        None => Err(ParseError::Incomplete {
-            message: ErrorMessage(format!("Expected `{}`, got EOF", expected)),
-            position: Position::todo(),
-        }),
-    }
 }
 
 fn require_token_inner_chill<'a>(
@@ -182,20 +121,6 @@ fn require_token_inner_chill<'a>(
     }
 }
 
-fn parse_integer(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let token = require_a_token(tokens, "integer literal")?;
-    if INTEGER_RE.is_match(token.text) {
-        let i: i64 = token.text.parse().unwrap();
-        Ok(Expression::new(token.position, Expression_::IntLiteral(i)))
-    } else {
-        Err(ParseError::Invalid {
-            position: token.position,
-            message: ErrorMessage(format!("Not a valid integer literal: {}", token.text)),
-            additional: vec![],
-        })
-    }
-}
-
 fn parse_integer_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Expression {
     let token = require_a_token_chill(tokens, diagnostics, "integer literal");
     if INTEGER_RE.is_match(token.text) {
@@ -214,31 +139,12 @@ fn parse_integer_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
     }
 }
 
-fn parse_variable_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let variable = parse_symbol(tokens)?;
-    Ok(Expression::new(
-        variable.position.clone(),
-        Expression_::Variable(variable),
-    ))
-}
-
 fn parse_variable_expression_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol_chill(tokens, diagnostics);
     Expression::new(variable.position.clone(), Expression_::Variable(variable))
-}
-
-fn parse_parenthesis_expression(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<Expression, ParseError> {
-    require_token(tokens, "(")?;
-    let expr = parse_inline_expression(src, tokens)?;
-    require_token(tokens, ")")?;
-
-    Ok(expr)
 }
 
 fn parse_parenthesis_expression_chill(
@@ -251,17 +157,6 @@ fn parse_parenthesis_expression_chill(
     require_token_chill(tokens, diagnostics, ")");
 
     expr
-}
-
-fn parse_list_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let open_bracket = require_token(tokens, "[")?;
-    let items = parse_comma_separated_exprs(src, tokens, "]")?;
-    let close_bracket = require_token(tokens, "]")?;
-
-    Ok(Expression::new(
-        Position::merge(&open_bracket.position, &close_bracket.position),
-        Expression_::ListLiteral(items),
-    ))
 }
 
 fn parse_list_literal_chill(
@@ -277,36 +172,6 @@ fn parse_list_literal_chill(
         Position::merge(&open_bracket.position, &close_bracket.position),
         Expression_::ListLiteral(items),
     )
-}
-
-fn parse_lambda_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let fun_keyword = require_token(tokens, "fun")?;
-    let type_params = parse_type_params(tokens)?;
-
-    let params = parse_parameters(tokens)?;
-    let return_hint = parse_colon_and_hint_opt(tokens)?;
-
-    let body = parse_block(src, tokens, false)?;
-
-    let start_offset = fun_keyword.position.start_offset;
-    let end_offset = body.close_brace.end_offset;
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
-    Ok(Expression::new(
-        Position::merge(&fun_keyword.position, &body.close_brace),
-        Expression_::FunLiteral(FunInfo {
-            src_string,
-            params,
-            body,
-            doc_comment: None,
-            name: None,
-            type_params,
-            return_hint,
-        }),
-    ))
 }
 
 fn parse_lambda_expression_chill(
@@ -341,47 +206,6 @@ fn parse_lambda_expression_chill(
             return_hint,
         }),
     )
-}
-
-fn parse_if_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let if_token = require_token(tokens, "if")?;
-
-    require_token(tokens, "(")?;
-    let condition = parse_inline_expression(src, tokens)?;
-    require_token(tokens, ")")?;
-
-    let then_body = parse_block(src, tokens, false)?;
-
-    let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
-        tokens.pop();
-
-        if peeked_symbol_is(tokens, "if") {
-            let if_expr = parse_if_expression(src, tokens)?;
-            Some(Block {
-                // TODO: when there is a chain of if/else if
-                // expressions, the open brace isn't meaningful. This
-                // is an ugly hack.
-                open_brace: if_expr.pos.clone(),
-                close_brace: if_expr.pos.clone(),
-                exprs: vec![if_expr],
-                is_loop_body: false,
-            })
-        } else {
-            Some(parse_block(src, tokens, false)?)
-        }
-    } else {
-        None
-    };
-
-    let last_brace_pos = match &else_body {
-        Some(else_body) => &else_body.close_brace,
-        None => &then_body.close_brace,
-    };
-
-    Ok(Expression::new(
-        Position::merge(&if_token.position, last_brace_pos),
-        Expression_::If(Box::new(condition), then_body, else_body),
-    ))
 }
 
 fn parse_if_expression_chill(
@@ -429,21 +253,6 @@ fn parse_if_expression_chill(
     )
 }
 
-fn parse_while_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let while_token = require_token(tokens, "while")?;
-
-    require_token(tokens, "(")?;
-    let condition = parse_inline_expression(src, tokens)?;
-    require_token(tokens, ")")?;
-
-    let body = parse_block(src, tokens, true)?;
-
-    Ok(Expression::new(
-        Position::merge(&while_token.position, &body.close_brace),
-        Expression_::While(Box::new(condition), body),
-    ))
-}
-
 fn parse_while_expression_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -463,12 +272,6 @@ fn parse_while_expression_chill(
     )
 }
 
-fn parse_break_expression(tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let break_token = require_token(tokens, "break")?;
-    let _ = require_end_token(tokens, ";")?;
-    Ok(Expression::new(break_token.position, Expression_::Break))
-}
-
 fn parse_break_expression_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -476,25 +279,6 @@ fn parse_break_expression_chill(
     let break_token = require_token_chill(tokens, diagnostics, "break");
     let _ = require_end_token_chill(tokens, diagnostics, ";");
     Expression::new(break_token.position, Expression_::Break)
-}
-
-fn parse_return_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let return_token = require_token(tokens, "return")?;
-
-    if peeked_symbol_is(tokens, ";") {
-        let semicolon = require_token(tokens, ";")?;
-        return Ok(Expression::new(
-            Position::merge(&return_token.position, &semicolon.position),
-            Expression_::Return(None),
-        ));
-    }
-
-    let expr = parse_inline_expression(src, tokens)?;
-    let semicolon = require_end_token(tokens, ";")?;
-    Ok(Expression::new(
-        Position::merge(&return_token.position, &semicolon.position),
-        Expression_::Return(Some(Box::new(expr))),
-    ))
 }
 
 fn parse_return_expression_chill(
@@ -559,66 +343,6 @@ fn unescape_string(src: &str) -> String {
     }
 
     res
-}
-
-fn parse_simple_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    if let Some(token) = tokens.peek() {
-        if token.text == "{" {
-            let block = parse_block(src, tokens, false)?;
-            return Ok(Expression::new(
-                Position::merge(&block.open_brace, &block.close_brace),
-                Expression_::Block(block),
-            ));
-        }
-
-        if token.text == "(" {
-            return parse_parenthesis_expression(src, tokens);
-        }
-
-        if token.text == "[" {
-            return parse_list_literal(src, tokens);
-        }
-
-        if token.text == "fun" {
-            return parse_lambda_expression(src, tokens);
-        }
-
-        if SYMBOL_RE.is_match(token.text) {
-            if let Some((_, token)) = tokens.peek_two() {
-                if token.text == "{" {
-                    return parse_struct_literal(src, tokens);
-                }
-            }
-
-            return parse_variable_expression(tokens);
-        }
-
-        if token.text.starts_with('\"') {
-            tokens.pop();
-            return Ok(Expression::new(
-                token.position,
-                Expression_::StringLiteral(unescape_string(token.text)),
-            ));
-        }
-
-        if INTEGER_RE.is_match(token.text) {
-            return parse_integer(tokens);
-        }
-
-        return Err(ParseError::Invalid {
-            position: token.position.clone(),
-            message: ErrorMessage(format!(
-                "Expected an expression, got: {} (offset {})",
-                token.text, token.position.start_offset
-            )),
-            additional: vec![],
-        });
-    }
-
-    Err(ParseError::Incomplete {
-        message: ErrorMessage("Expected an expression".to_owned()),
-        position: Position::todo(),
-    })
 }
 
 fn parse_simple_expression_chill(
@@ -688,38 +412,6 @@ fn parse_simple_expression_chill(
     Expression::new(Position::todo(), Expression_::Invalid)
 }
 
-fn parse_struct_literal_fields(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<Vec<(Symbol, Expression)>, ParseError> {
-    let mut fields = vec![];
-    loop {
-        if peeked_symbol_is(tokens, "}") {
-            break;
-        }
-
-        let sym = parse_symbol(tokens)?;
-        require_token(tokens, ":")?;
-        let expr = parse_inline_expression(src, tokens)?;
-        fields.push((sym, expr));
-
-        let Some(token) = tokens.peek() else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
-                ),
-            });
-        };
-
-        if token.text == "," {
-            tokens.pop();
-        }
-    }
-
-    Ok(fields)
-}
-
 fn parse_struct_literal_fields_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -754,19 +446,6 @@ fn parse_struct_literal_fields_chill(
     fields
 }
 
-fn parse_struct_literal(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let name = parse_type_symbol(tokens)?;
-    let open_brace = require_token(tokens, "{")?;
-    let fields = parse_struct_literal_fields(src, tokens)?;
-
-    let close_brace = require_token(tokens, "}")?;
-
-    Ok(Expression::new(
-        Position::merge(&open_brace.position, &close_brace.position),
-        Expression_::StructLiteral(name, fields),
-    ))
-}
-
 fn parse_struct_literal_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -782,42 +461,6 @@ fn parse_struct_literal_chill(
         Position::merge(&open_brace.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
     )
-}
-
-fn parse_match_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let match_keyword = require_token(tokens, "match")?;
-
-    require_token(tokens, "(")?;
-    let scrutinee = parse_inline_expression(src, tokens)?;
-    require_token(tokens, ")")?;
-
-    require_token(tokens, "{")?;
-
-    let mut cases = vec![];
-    loop {
-        let Some(token) = tokens.peek() else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
-            });
-        };
-
-        if token.text == "}" {
-            break;
-        }
-
-        let pattern = parse_pattern(tokens)?;
-        require_token(tokens, "=>")?;
-        let case_expr = parse_case_expr(src, tokens)?;
-        cases.push((pattern, Box::new(case_expr)));
-    }
-
-    let close_paren = require_token(tokens, "}")?;
-
-    Ok(Expression::new(
-        Position::merge(&match_keyword.position, &close_paren.position),
-        Expression_::Match(Box::new(scrutinee), cases),
-    ))
 }
 
 fn parse_match_expression_chill(
@@ -861,15 +504,6 @@ fn parse_match_expression_chill(
     )
 }
 
-fn parse_case_expr(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let case_expr = parse_inline_expression(src, tokens)?;
-    if peeked_symbol_is(tokens, ",") {
-        tokens.pop().unwrap();
-    }
-
-    Ok(case_expr)
-}
-
 fn parse_case_expr_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -881,21 +515,6 @@ fn parse_case_expr_chill(
     }
 
     case_expr
-}
-
-fn parse_pattern(tokens: &mut TokenStream) -> Result<Pattern, ParseError> {
-    let symbol = parse_symbol(tokens)?;
-
-    let argument = if peeked_symbol_is(tokens, "(") {
-        require_token(tokens, "(")?;
-        let arg = parse_symbol(tokens)?;
-        require_token(tokens, ")")?;
-        Some(arg)
-    } else {
-        None
-    };
-
-    Ok(Pattern { symbol, argument })
 }
 
 fn parse_pattern_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Pattern {
@@ -911,38 +530,6 @@ fn parse_pattern_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
     };
 
     Pattern { symbol, argument }
-}
-
-fn parse_comma_separated_exprs(
-    src: &str,
-    tokens: &mut TokenStream,
-    terminator: &str,
-) -> Result<Vec<Expression>, ParseError> {
-    let mut items = vec![];
-    loop {
-        if peeked_symbol_is(tokens, terminator) {
-            break;
-        }
-
-        let arg = parse_inline_expression(src, tokens)?;
-        items.push(arg);
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(format!(
-                    "Invalid syntax: Expected `,` or `{}` here, but got EOF",
-                    terminator
-                )),
-            });
-        }
-    }
-
-    Ok(items)
 }
 
 fn parse_comma_separated_exprs_chill(
@@ -979,21 +566,6 @@ fn parse_comma_separated_exprs_chill(
     items
 }
 
-fn parse_call_arguments(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<ParenthesizedArguments, ParseError> {
-    let open_paren_token = require_token(tokens, "(")?;
-    let arguments = parse_comma_separated_exprs(src, tokens, ")")?;
-    let close_paren_token = require_token(tokens, ")")?;
-
-    Ok(ParenthesizedArguments {
-        arguments,
-        open_paren: open_paren_token.position,
-        close_paren: close_paren_token.position,
-    })
-}
-
 fn parse_call_arguments_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -1008,52 +580,6 @@ fn parse_call_arguments_chill(
         open_paren: open_paren_token.position,
         close_paren: close_paren_token.position,
     }
-}
-
-/// Parse an expression, and handle trailing syntax (function calls,
-/// method calls) if present.
-///
-/// We handle trailing syntax separately from
-/// `parse_simple_expression`, to avoid infinite recursion. This is
-/// essentially left-recursion from a grammar perspective.
-fn parse_simple_expression_with_trailing(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<Expression, ParseError> {
-    let mut expr = parse_simple_expression(src, tokens)?;
-
-    loop {
-        match tokens.peek() {
-            Some(token) if token.text == "(" => {
-                let arguments = parse_call_arguments(src, tokens)?;
-                expr = Expression::new(
-                    Position::merge(&expr.pos, &arguments.close_paren),
-                    Expression_::Call(Box::new(expr), arguments),
-                );
-            }
-            Some(token) if token.text == "." => {
-                tokens.pop();
-                let variable = parse_symbol(tokens)?;
-
-                if peeked_symbol_is(tokens, "(") {
-                    // TODO: just treat a method call as a call of a dot access.
-                    let arguments = parse_call_arguments(src, tokens)?;
-                    expr = Expression::new(
-                        Position::merge(&expr.pos, &arguments.close_paren),
-                        Expression_::MethodCall(Box::new(expr), variable, arguments),
-                    );
-                } else {
-                    expr = Expression::new(
-                        Position::merge(&expr.pos, &variable.position),
-                        Expression_::DotAccess(Box::new(expr), variable),
-                    );
-                }
-            }
-            _ => break,
-        }
-    }
-
-    Ok(expr)
 }
 
 /// Parse an expression, and handle trailing syntax (function calls,
@@ -1132,10 +658,6 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// if (a) { b } else { c }
 /// while (z) { foo(); }
 /// ```
-fn parse_inline_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    parse_general_expression(src, tokens, true)
-}
-
 fn parse_inline_expression_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -1161,24 +683,6 @@ fn parse_block_member_expression_chill(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     parse_general_expression_chill(src, tokens, diagnostics, false)
-}
-
-/// Parse a block member expression. This is an expression that can
-/// occur at the top level of braces, such as a let expression.
-///
-/// Examples:
-///
-/// ```garden
-/// foo();
-/// let x = y + 1;
-/// if (a) { b; } else { c; }
-/// while (z) { foo(); }
-/// ```
-fn parse_block_member_expression(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<Expression, ParseError> {
-    parse_general_expression(src, tokens, false)
 }
 
 /// Parse an inline or block member expression.
@@ -1232,90 +736,6 @@ fn parse_general_expression_chill(
     }
 
     expr
-}
-
-/// Parse an inline or block member expression.
-fn parse_general_expression(
-    src: &str,
-    tokens: &mut TokenStream,
-    is_inline: bool,
-) -> Result<Expression, ParseError> {
-    if !is_inline {
-        // TODO: Matching on tokens will prevent us from doing more
-        // complex assignments like `foo.bar = 1;`.
-        if let Some((_, token)) = tokens.peek_two() {
-            if token.text == "=" {
-                return parse_assign_expression(src, tokens);
-            }
-        }
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "let" {
-                return parse_let_expression(src, tokens);
-            }
-            if token.text == "return" {
-                return parse_return_expression(src, tokens);
-            }
-            if token.text == "while" {
-                return parse_while_expression(src, tokens);
-            }
-            if token.text == "break" {
-                return parse_break_expression(tokens);
-            }
-        }
-    }
-
-    if let Some(token) = tokens.peek() {
-        // `if` can occur as both an inline expression and a standalone
-        // expression.
-        if token.text == "if" {
-            return parse_if_expression(src, tokens);
-        }
-
-        // Likewise match.
-        if token.text == "match" {
-            return parse_match_expression(src, tokens);
-        }
-    }
-
-    let expr = parse_simple_expression_or_binop(src, tokens)?;
-    if !is_inline {
-        let _ = require_end_token(tokens, ";")?;
-    }
-
-    Ok(expr)
-}
-
-/// In Garden, an expression can only contain a single binary
-/// operation, so `x + y + z` isn't legal. Users must use parentheses,
-/// e.g. `(x + y) + z`.
-///
-/// This ensures that every subexpression has trailing syntax that we
-/// can use to show intermediate values computed during evaluation.
-///
-/// To ensure binary operations aren't combined, we have a separate
-/// parser function that allows exactly one binary operation. This
-/// also has the nice side effect of not requiring precedence logic in
-/// the parser.
-fn parse_simple_expression_or_binop(
-    src: &str,
-    tokens: &mut TokenStream,
-) -> Result<Expression, ParseError> {
-    let mut expr = parse_simple_expression_with_trailing(src, tokens)?;
-
-    if let Some(token) = tokens.peek() {
-        if let Some(op) = token_as_binary_op(token) {
-            tokens.pop();
-
-            let rhs_expr = parse_simple_expression_with_trailing(src, tokens)?;
-            expr = Expression::new(
-                Position::merge(&expr.pos, &rhs_expr.pos),
-                Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
-            );
-        }
-    }
-
-    Ok(expr)
 }
 
 /// In Garden, an expression can only contain a single binary
@@ -1579,14 +999,6 @@ fn parse_test_chill(
     )
 }
 
-fn parse_type_symbol(tokens: &mut TokenStream) -> Result<TypeSymbol, ParseError> {
-    let name = parse_symbol(tokens)?;
-    Ok(TypeSymbol {
-        name: TypeName { name: name.name.0 },
-        position: name.position,
-    })
-}
-
 fn parse_type_symbol_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1596,56 +1008,6 @@ fn parse_type_symbol_chill(
         name: TypeName { name: name.name.0 },
         position: name.position,
     }
-}
-
-/// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
-fn parse_type_arguments(
-    tokens: &mut TokenStream,
-) -> Result<(Vec<TypeHint>, Option<Position>), ParseError> {
-    if !peeked_symbol_is(tokens, "<") {
-        return Ok((vec![], None));
-    }
-
-    require_token(tokens, "<")?;
-
-    let mut args = vec![];
-    let close_pos = loop {
-        if let Some(token) = tokens.peek() {
-            if token.text == ">" {
-                break token.position;
-            }
-        }
-        let arg = parse_type_hint(tokens)?;
-        args.push(arg);
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            } else if token.text == ">" {
-                break token.position;
-            } else {
-                return Err(ParseError::Invalid {
-                    position: token.position,
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `>` here, but got `{}`",
-                        token.text
-                    )),
-                    additional: vec![],
-                });
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
-                ),
-            });
-        }
-    };
-
-    require_token(tokens, ">")?;
-
-    Ok((args, Some(close_pos)))
 }
 
 /// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
@@ -1702,53 +1064,6 @@ fn parse_type_arguments_chill(
 }
 
 /// Parse type parameters for this definition, e.g. `<T, E>`.
-fn parse_type_params(tokens: &mut TokenStream) -> Result<Vec<TypeSymbol>, ParseError> {
-    if !peeked_symbol_is(tokens, "<") {
-        return Ok(vec![]);
-    }
-
-    require_token(tokens, "<")?;
-
-    let mut params = vec![];
-    loop {
-        if peeked_symbol_is(tokens, ">") {
-            break;
-        }
-
-        let arg = parse_type_symbol(tokens)?;
-        params.push(arg);
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            } else if token.text == ">" {
-                break;
-            } else {
-                return Err(ParseError::Invalid {
-                    position: token.position,
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `>` here, but got `{}`",
-                        token.text
-                    )),
-                    additional: vec![],
-                });
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
-                ),
-            });
-        }
-    }
-
-    require_token(tokens, ">")?;
-
-    Ok(params)
-}
-
-/// Parse type parameters for this definition, e.g. `<T, E>`.
 fn parse_type_params_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1798,47 +1113,6 @@ fn parse_type_params_chill(
     require_token_chill(tokens, diagnostics, ">");
 
     params
-}
-
-/// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
-/// syntactic sugar for `Tuple<Int, String, Unit>`.
-fn parse_tuple_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
-    let open_paren = require_token(tokens, "(")?;
-
-    let mut item_hints = vec![];
-    loop {
-        if peeked_symbol_is(tokens, ")") {
-            break;
-        }
-
-        item_hints.push(parse_type_hint(tokens)?);
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `)` here, but got EOF".to_owned(),
-                ),
-            });
-        }
-    }
-
-    let close_paren = require_token(tokens, ")")?;
-
-    Ok(TypeHint {
-        sym: TypeSymbol {
-            name: TypeName {
-                name: "Tuple".to_owned(),
-            },
-            position: open_paren.position.clone(),
-        },
-        args: item_hints,
-        position: Position::merge(&open_paren.position, &close_paren.position),
-    })
 }
 
 /// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
@@ -1907,33 +1181,6 @@ fn parse_type_hint_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseEr
     }
 }
 
-/// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
-fn parse_type_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
-    if peeked_symbol_is(tokens, "(") {
-        return parse_tuple_type_hint(tokens);
-    }
-
-    let sym = parse_type_symbol(tokens)?;
-    let (args, close_pos) = parse_type_arguments(tokens)?;
-
-    let position = match close_pos {
-        Some(close_pos) => Position::merge(&sym.position, &close_pos),
-        None => sym.position.clone(),
-    };
-
-    Ok(TypeHint {
-        sym,
-        args,
-        position,
-    })
-}
-
-/// Parse a colon and a type hint, e.g. `: Int`.
-fn parse_colon_and_hint(tokens: &mut TokenStream) -> Result<TypeHint, ParseError> {
-    require_token(tokens, ":")?;
-    parse_type_hint(tokens)
-}
-
 /// Parse a colon and a type hint, e.g. `: Int`.
 fn parse_colon_and_hint_chill(
     tokens: &mut TokenStream,
@@ -1943,6 +1190,7 @@ fn parse_colon_and_hint_chill(
     parse_type_hint_chill(tokens, diagnostics)
 }
 
+/// Parse a type annotation, if present.
 fn parse_colon_and_hint_opt_chill(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1953,34 +1201,6 @@ fn parse_colon_and_hint_opt_chill(
     }
 
     None
-}
-
-/// Parse a type annotation, if present.
-fn parse_colon_and_hint_opt(tokens: &mut TokenStream) -> Result<Option<TypeHint>, ParseError> {
-    if peeked_symbol_is(tokens, ":") {
-        let type_hint = parse_colon_and_hint(tokens)?;
-        return Ok(Some(type_hint));
-    }
-
-    Ok(None)
-}
-
-fn parse_parameter(
-    tokens: &mut TokenStream,
-    require_type_hint: bool,
-) -> Result<SymbolWithHint, ParseError> {
-    let param = parse_symbol(tokens)?;
-
-    let hint = if require_type_hint {
-        Some(parse_colon_and_hint(tokens)?)
-    } else {
-        parse_colon_and_hint_opt(tokens)?
-    };
-
-    Ok(SymbolWithHint {
-        symbol: param,
-        hint,
-    })
 }
 
 fn parse_parameter_chill(
@@ -2068,69 +1288,6 @@ fn parse_parameters_chill(
     }
 
     params
-}
-
-fn parse_parameters(tokens: &mut TokenStream) -> Result<Vec<SymbolWithHint>, ParseError> {
-    require_token(tokens, "(")?;
-
-    let mut params = vec![];
-    loop {
-        if peeked_symbol_is(tokens, ")") {
-            break;
-        }
-
-        let param = parse_parameter(tokens, false)?;
-        params.push(param);
-
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            } else if token.text == ")" {
-                break;
-            } else {
-                return Err(ParseError::Invalid {
-                    position: token.position,
-                    message: ErrorMessage(format!(
-                        "Invalid syntax: Expected `,` or `)` here, but got `{}`",
-                        token.text
-                    )),
-                    additional: vec![],
-                });
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage(
-                    "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
-                ),
-            });
-        }
-    }
-
-    require_token(tokens, ")")?;
-
-    // Emit error if there are duplicate parameters.
-    // TODO: allow parsing to return an AST even if errors are present.
-    let mut seen = HashSet::new();
-    for param in &params {
-        let param_name = &param.symbol.name.0;
-        if param.symbol.name.is_underscore() {
-            continue;
-        }
-
-        if seen.contains(param_name) {
-            return Err(ParseError::Invalid {
-                position: param.symbol.position.clone(),
-                message: ErrorMessage(format!("Duplicate parameter: `{}`", param_name)),
-                // TODO: report the position of the previous parameter too.
-                additional: vec![],
-            });
-        } else {
-            seen.insert(param_name.clone());
-        }
-    }
-
-    Ok(params)
 }
 
 fn parse_struct_fields_chill(
@@ -2228,39 +1385,6 @@ fn parse_block_chill(
         close_brace: close_brace.position,
         is_loop_body,
     }
-}
-
-fn parse_block(
-    src: &str,
-    tokens: &mut TokenStream,
-    is_loop_body: bool,
-) -> Result<Block, ParseError> {
-    let open_brace = require_token(tokens, "{")?;
-
-    let mut exprs = vec![];
-    loop {
-        if let Some(token) = tokens.peek() {
-            if token.text == "}" {
-                break;
-            }
-        } else {
-            return Err(ParseError::Incomplete {
-                position: Position::todo(),
-                message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
-            });
-        }
-
-        let expr = parse_block_member_expression(src, tokens)?;
-        exprs.push(expr);
-    }
-
-    let close_brace = require_token(tokens, "}")?;
-    Ok(Block {
-        open_brace: open_brace.position,
-        exprs,
-        close_brace: close_brace.position,
-        is_loop_body,
-    })
 }
 
 fn join_comments(comments: &[(Position, &str)]) -> String {
@@ -2440,36 +1564,6 @@ const RESERVED_WORDS: &[&str] = &[
     "continue",
 ];
 
-fn parse_symbol(tokens: &mut TokenStream) -> Result<Symbol, ParseError> {
-    let variable_token = require_a_token(tokens, "variable name")?;
-    if !SYMBOL_RE.is_match(variable_token.text) {
-        return Err(ParseError::Invalid {
-            position: variable_token.position,
-            message: ErrorMessage(format!("Invalid name: '{}'", variable_token.text)),
-            additional: vec![],
-        });
-    }
-
-    for reserved in RESERVED_WORDS {
-        if variable_token.text == *reserved {
-            return Err(ParseError::Invalid {
-                position: variable_token.position,
-                message: ErrorMessage(format!(
-                    "'{}' is a reserved word that cannot be used as a name",
-                    variable_token.text
-                )),
-                additional: vec![],
-            });
-        }
-    }
-
-    Ok(Symbol {
-        position: variable_token.position,
-        name: SymbolName(variable_token.text.to_string()),
-        id: OnceCell::new(),
-    })
-}
-
 fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
     let variable_token = require_a_token_chill(tokens, diagnostics, "variable name");
     if !SYMBOL_RE.is_match(variable_token.text) {
@@ -2500,22 +1594,6 @@ fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError
     }
 }
 
-fn parse_let_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let let_token = require_token(tokens, "let")?;
-    let variable = parse_symbol(tokens)?;
-
-    let hint = parse_colon_and_hint_opt(tokens)?;
-
-    require_token(tokens, "=")?;
-    let expr = parse_inline_expression(src, tokens)?;
-    let semicolon = require_end_token(tokens, ";")?;
-
-    Ok(Expression::new(
-        Position::merge(&let_token.position, &semicolon.position),
-        Expression_::Let(variable, hint, Box::new(expr)),
-    ))
-}
-
 fn parse_let_expression_chill(
     src: &str,
     tokens: &mut TokenStream,
@@ -2534,19 +1612,6 @@ fn parse_let_expression_chill(
         Position::merge(&let_token.position, &semicolon.position),
         Expression_::Let(variable, hint, Box::new(expr)),
     )
-}
-
-fn parse_assign_expression(src: &str, tokens: &mut TokenStream) -> Result<Expression, ParseError> {
-    let variable = parse_symbol(tokens)?;
-
-    require_token(tokens, "=")?;
-    let expr = parse_inline_expression(src, tokens)?;
-    let semicolon = require_end_token(tokens, ";")?;
-
-    Ok(Expression::new(
-        Position::merge(&variable.position, &semicolon.position),
-        Expression_::Assign(variable, Box::new(expr)),
-    ))
 }
 
 fn parse_assign_expression_chill(

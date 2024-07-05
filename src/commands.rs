@@ -115,12 +115,14 @@ impl Command {
             ":quit" => Ok(Command::Quit),
             ":replace" => {
                 // TODO: find a better name for this.
-                match parse_inline_expr_from_str(
+                let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
-                ) {
-                    Ok(expr) => Ok(Command::Replace(Some(expr))),
-                    Err(_) => Ok(Command::Replace(None)),
+                );
+                if errors.is_empty() {
+                    Ok(Command::Replace(Some(expr)))
+                } else {
+                    Ok(Command::Replace(None))
                 }
             }
             ":resume" => Ok(Command::Resume),
@@ -131,12 +133,14 @@ impl Command {
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
             ":type" => {
-                match parse_inline_expr_from_str(
+                let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
-                ) {
-                    Ok(expr) => Ok(Command::Type(Some(expr))),
-                    Err(_) => Ok(Command::Type(None)),
+                );
+                if errors.is_empty() {
+                    Ok(Command::Type(Some(expr)))
+                } else {
+                    Ok(Command::Type(None))
                 }
             }
             ":types" => Ok(Command::Types),

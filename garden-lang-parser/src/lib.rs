@@ -1706,7 +1706,7 @@ fn parse_toplevel_item_from_tokens_chill(
     Some(parse_toplevel_expr_chill(src, tokens, diagnostics))
 }
 
-pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, ParseError> {
+pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
     let mut tokens = match lex(path, src) {
@@ -1718,11 +1718,7 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> Result<Expression, 
     };
 
     let expr = parse_inline_expression_chill(src, &mut tokens, &mut diagnostics);
-    if let Some(error) = diagnostics.into_iter().next() {
-        Err(error)
-    } else {
-        Ok(expr)
-    }
+    (expr, diagnostics)
 }
 
 pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {

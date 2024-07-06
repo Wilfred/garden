@@ -24,6 +24,7 @@ mod eval;
 mod garden_type;
 mod hover;
 mod json_session;
+mod pos_to_id;
 mod prompt;
 mod syntax_check;
 mod types;

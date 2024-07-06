@@ -1,6 +1,9 @@
 // Looks like a false positive from rust 1.71.
 // TODO: File an issue.
 #![allow(suspicious_double_ref_op)]
+// This tends to trigger on larger tuples of simple types, and naming
+// them would probably be worse for readability.
+#![allow(clippy::type_complexity)]
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
 #![warn(clippy::str_to_string)]

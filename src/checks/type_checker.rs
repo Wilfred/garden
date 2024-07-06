@@ -29,6 +29,7 @@ pub(crate) fn check_types(
         bindings: LocalBindings::default(),
         id_to_ty: HashMap::default(),
         id_to_doc_comment: HashMap::default(),
+        id_to_pos: HashMap::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -86,6 +87,7 @@ struct TypeCheckVisitor<'a> {
     bindings: LocalBindings,
     id_to_ty: HashMap<SyntaxId, Type>,
     id_to_doc_comment: HashMap<SyntaxId, String>,
+    id_to_pos: HashMap<SyntaxId, Position>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
@@ -589,7 +591,11 @@ impl<'a> TypeCheckVisitor<'a> {
                 }
             }
             Expression_::Variable(sym) => {
-                if let Some((value_ty, _pos)) = self.bindings.get(&sym.name) {
+                if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
+                    if let Some(sym_id) = sym.id.get() {
+                        self.id_to_pos.insert(*sym_id, position.clone());
+                    }
+
                     return value_ty.clone();
                 }
 
@@ -602,6 +608,12 @@ impl<'a> TypeCheckVisitor<'a> {
                             _ => None,
                         };
                         if let Some(fun_info) = fun_info {
+                            if let Some(fun_sym) = &fun_info.name {
+                                if let Some(sym_id) = sym.id.get() {
+                                    self.id_to_pos.insert(*sym_id, fun_sym.position.clone());
+                                }
+                            }
+
                             if let (Some(doc_comment), Some(sym_id)) =
                                 (&fun_info.doc_comment, sym.id.get())
                             {

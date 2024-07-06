@@ -20,6 +20,7 @@ pub(crate) fn check_types(
     Vec<Diagnostic>,
     HashMap<SyntaxId, Type>,
     HashMap<SyntaxId, String>,
+    HashMap<SyntaxId, Position>,
 ) {
     let mut env = env.clone();
 
@@ -39,6 +40,7 @@ pub(crate) fn check_types(
         visitor.diagnostics,
         visitor.id_to_ty,
         visitor.id_to_doc_comment,
+        visitor.id_to_pos,
     )
 }
 

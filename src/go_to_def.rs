@@ -30,10 +30,10 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
 
     for id in ids_at_query_pos.iter().rev() {
         if let Some(pos) = id_to_pos.get(id) {
-            println!("{:?}", pos);
+            println!("{}", serde_json::to_string(pos).unwrap());
             return;
         }
     }
 
-    println!("(no definition found)");
+    println!("null");
 }

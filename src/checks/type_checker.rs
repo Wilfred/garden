@@ -43,7 +43,7 @@ pub(crate) fn check_types(
 
 #[derive(Debug)]
 struct LocalBindings {
-    blocks: Vec<HashMap<SymbolName, Type>>,
+    blocks: Vec<HashMap<SymbolName, (Type, Position)>>,
 }
 
 impl Default for LocalBindings {
@@ -63,19 +63,19 @@ impl LocalBindings {
         self.blocks.pop();
     }
 
-    fn get(&self, name: &SymbolName) -> Option<&Type> {
+    fn get(&self, name: &SymbolName) -> Option<&(Type, Position)> {
         for block in self.blocks.iter().rev() {
-            if let Some(ty) = block.get(name) {
-                return Some(ty);
+            if let Some(ty_and_pos) = block.get(name) {
+                return Some(ty_and_pos);
             }
         }
 
         None
     }
 
-    fn set(&mut self, name: SymbolName, ty: Type) {
+    fn set(&mut self, symbol: &Symbol, ty: Type) {
         let block = self.blocks.last_mut().expect("Should be non-empty");
-        block.insert(name, ty);
+        block.insert(symbol.name.clone(), (ty, symbol.position.clone()));
     }
 }
 
@@ -101,8 +101,7 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         let self_ty = Type::from_hint(&method_info.receiver_hint, self.env, &type_bindings)
             .unwrap_or_err_ty();
-        self.bindings
-            .set(method_info.receiver_sym.name.clone(), self_ty);
+        self.bindings.set(&method_info.receiver_sym, self_ty);
 
         // TODO: generic variables are bound here.
 
@@ -590,7 +589,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 }
             }
             Expression_::Variable(sym) => {
-                if let Some(value_ty) = self.bindings.get(&sym.name) {
+                if let Some((value_ty, _pos)) = self.bindings.get(&sym.name) {
                     return value_ty.clone();
                 }
 
@@ -841,7 +840,7 @@ impl<'a> TypeCheckVisitor<'a> {
     }
 
     fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
-        self.bindings.set(symbol.name.clone(), ty.clone());
+        self.bindings.set(symbol, ty.clone());
 
         if let Some(id) = symbol.id.get() {
             self.id_to_ty.insert(*id, ty);

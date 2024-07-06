@@ -122,8 +122,8 @@ impl From<&str> for SymbolName {
     }
 }
 
-/// A symbol representing a value, such as a local variable or a
-/// function name.
+/// A symbol representing a value, such as a local variable, a
+/// function name or a method name.
 ///
 /// See also `TypeSymbol`.
 #[derive(Clone, PartialEq)]

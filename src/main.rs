@@ -22,6 +22,7 @@ mod diagnostics;
 mod env;
 mod eval;
 mod garden_type;
+mod go_to_def;
 mod hover;
 mod json_session;
 mod pos_to_id;
@@ -38,6 +39,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
+use go_to_def::print_pos;
 use hover::show_type;
 use owo_colors::OwoColorize as _;
 
@@ -83,6 +85,9 @@ enum Commands {
     },
     /// Show the type of the expression at the position given.
     ShowType { offset: usize, path: PathBuf },
+    /// Show the definition position of the value at the position
+    /// given.
+    DefinitionPosition { offset: usize, path: PathBuf },
     /// Show possible completions at the position given.
     Complete { offset: usize, path: PathBuf },
     /// Parse the Garden program at the path specified and print the
@@ -137,6 +142,15 @@ fn main() {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
                 show_type(&src, &path, offset);
+            }
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+        Commands::DefinitionPosition { path, offset } => match std::fs::read(&path) {
+            Ok(src_bytes) => {
+                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                print_pos(&src, &path, offset);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

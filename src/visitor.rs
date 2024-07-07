@@ -91,7 +91,12 @@ pub(crate) trait Visitor {
         self.visit_block(&fun_info.body);
     }
 
-    fn visit_type_hint(&mut self, _type_hint: &TypeHint) {}
+    fn visit_type_hint(&mut self, type_hint: &TypeHint) {
+        self.visit_type_symbol(&type_hint.sym);
+        for arg in &type_hint.args {
+            self.visit_type_hint(arg);
+        }
+    }
 
     fn visit_block(&mut self, block: &Block) {
         for expr in &block.exprs {
@@ -180,7 +185,12 @@ pub(crate) trait Visitor {
         }
     }
 
-    fn visit_expr_struct_literal(&mut self, _: &TypeSymbol, field_exprs: &[(Symbol, Expression)]) {
+    fn visit_expr_struct_literal(
+        &mut self,
+        type_symbol: &TypeSymbol,
+        field_exprs: &[(Symbol, Expression)],
+    ) {
+        self.visit_type_symbol(type_symbol);
         for (_, expr) in field_exprs {
             self.visit_expr(expr);
         }
@@ -225,4 +235,6 @@ pub(crate) trait Visitor {
     }
 
     fn visit_symbol(&mut self, _: &Symbol) {}
+
+    fn visit_type_symbol(&mut self, _: &TypeSymbol) {}
 }

@@ -151,8 +151,8 @@ pub(crate) trait Visitor {
                     self.visit_expr(arg);
                 }
             }
-            Expression_::MethodCall(recv, _, paren_args) => {
-                // TODO: custom method for this variant
+            Expression_::MethodCall(recv, meth_name, paren_args) => {
+                self.visit_symbol(meth_name);
                 self.visit_expr(recv);
                 for arg in &paren_args.arguments {
                     self.visit_expr(arg);

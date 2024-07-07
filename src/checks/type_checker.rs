@@ -508,7 +508,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 if let Some(TypeDef::Struct(_)) = self.env.get_type_def(&name_sym.name) {
                     Type::UserDefined {
                         kind: TypeDefKind::Struct,
-                        name: name_sym.name.clone(),
+                        name: name_sym.clone(),
                         args: vec![],
                     }
                 } else {
@@ -823,7 +823,9 @@ impl<'a> TypeCheckVisitor<'a> {
                         name,
                         ..
                     } => {
-                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name) {
+                        if let Some(TypeDef::Struct(struct_info)) =
+                            self.env.get_type_def(&name.name)
+                        {
                             for field in &struct_info.fields {
                                 if field.sym.name == field_sym.name {
                                     let field_ty =
@@ -1073,7 +1075,7 @@ fn unify_and_solve_ty(expected_ty: &Type, actual_ty: &Type, ty_var_env: &mut Typ
                 name: actual_name,
                 args: actual_args,
             },
-        ) if expected_kind == actual_kind && expected_name == actual_name => {
+        ) if expected_kind == actual_kind && expected_name.name == actual_name.name => {
             for (expected_arg, actual_arg) in expected_args.iter().zip(actual_args.iter()) {
                 unify_and_solve_ty(expected_arg, actual_arg, ty_var_env);
             }
@@ -1167,7 +1169,7 @@ fn unify_and_solve_hint(
     }
 
     match ty {
-        Type::UserDefined { name, args, .. } if name.name == hint_name.name => {
+        Type::UserDefined { name, args, .. } if name.name.name == hint_name.name => {
             // TODO: stop assuming that all types are covariant.
             for (hint_arg, arg) in hint.args.iter().zip(args) {
                 unify_and_solve_hint(env, hint_arg, position, arg, ty_var_env)?;
@@ -1227,7 +1229,7 @@ fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
                 args: args_2,
             },
         ) => {
-            if kind_1 != kind_2 || name_1 != name_2 || args_1.len() != args_2.len() {
+            if kind_1 != kind_2 || name_1.name != name_2.name || args_1.len() != args_2.len() {
                 return None;
             }
 

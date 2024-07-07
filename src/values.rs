@@ -1,5 +1,8 @@
+use std::cell::OnceCell;
 use std::fmt::Display;
 
+use garden_lang_parser::ast::TypeSymbol;
+use garden_lang_parser::position::Position;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
@@ -88,8 +91,12 @@ impl Value {
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name: TypeName {
-                    name: "Result".to_owned(),
+                name: TypeSymbol {
+                    name: TypeName {
+                        name: "Result".to_owned(),
+                    },
+                    position: Position::todo(),
+                    id: OnceCell::new(),
                 },
                 args: vec![value_type, Type::no_value()],
             },
@@ -107,8 +114,12 @@ impl Value {
             },
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name: TypeName {
-                    name: "Result".to_owned(),
+                name: TypeSymbol {
+                    name: TypeName {
+                        name: "Result".to_owned(),
+                    },
+                    position: Position::todo(),
+                    id: OnceCell::new(),
                 },
                 args: vec![Type::no_value(), value_type],
             },

@@ -1760,7 +1760,7 @@ fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHin
 
     let return_ = Type::UserDefined {
         kind: TypeDefKind::Enum,
-        name: enum_info.name_sym.name.clone(),
+        name: enum_info.name_sym.clone(),
         args: type_args,
     };
 
@@ -1799,7 +1799,7 @@ fn enum_value_runtime_type(
 
             Some(Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name: type_name.clone(),
+                name: enum_info.name_sym.clone(),
                 args,
             })
         }
@@ -1810,7 +1810,7 @@ fn enum_value_runtime_type(
             // type parameters in this enum definition to NoValue.
             Some(Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name: type_name.clone(),
+                name: enum_info.name_sym.clone(),
                 args,
             })
         }
@@ -3078,7 +3078,7 @@ fn eval_struct_value(
 
     let runtime_type = Type::UserDefined {
         kind: TypeDefKind::Struct,
-        name: type_sym.name.clone(),
+        name: type_sym.clone(),
         args: type_args,
     };
 

@@ -1,8 +1,11 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{cell::OnceCell, collections::HashMap, fmt::Display};
 
 use itertools::Itertools as _;
 
-use garden_lang_parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
+use garden_lang_parser::{
+    ast::{FunInfo, Symbol, TypeHint, TypeName, TypeSymbol},
+    position::Position,
+};
 
 use crate::{
     env::Env,
@@ -41,7 +44,7 @@ pub(crate) enum Type {
     },
     UserDefined {
         kind: TypeDefKind,
-        name: TypeName,
+        name: TypeSymbol,
         args: Vec<Type>,
     },
     #[allow(clippy::enum_variant_names)]
@@ -55,7 +58,7 @@ pub(crate) enum Type {
 impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            Type::UserDefined { name, .. } => name.name == "NoValue",
+            Type::UserDefined { name, .. } => name.name.name == "NoValue",
             _ => false,
         }
     }
@@ -67,8 +70,12 @@ impl Type {
     pub(crate) fn no_value() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name: TypeName {
-                name: "NoValue".to_owned(),
+            name: TypeSymbol {
+                name: TypeName {
+                    name: "NoValue".to_owned(),
+                },
+                position: Position::todo(),
+                id: OnceCell::new(),
             },
             args: vec![],
         }
@@ -77,8 +84,12 @@ impl Type {
     pub(crate) fn unit() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name: TypeName {
-                name: "Unit".to_owned(),
+            name: TypeSymbol {
+                name: TypeName {
+                    name: "Unit".to_owned(),
+                },
+                position: Position::todo(),
+                id: OnceCell::new(),
             },
             args: vec![],
         }
@@ -87,8 +98,12 @@ impl Type {
     pub(crate) fn bool() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name: TypeName {
-                name: "Bool".to_owned(),
+            name: TypeSymbol {
+                name: TypeName {
+                    name: "Bool".to_owned(),
+                },
+                position: Position::todo(),
+                id: OnceCell::new(),
             },
             args: vec![],
         }
@@ -157,12 +172,12 @@ impl Type {
                 },
                 TypeDef::Enum(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Enum,
-                    name: name.clone(),
+                    name: hint.sym.clone(),
                     args,
                 }),
                 TypeDef::Struct(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Struct,
-                    name: name.clone(),
+                    name: hint.sym.clone(),
                     args,
                 }),
             },
@@ -246,7 +261,7 @@ impl Type {
             Type::Fun { .. } => Some(TypeName {
                 name: "Fun".to_owned(),
             }),
-            Type::UserDefined { kind: _, name, .. } => Some(name.clone()),
+            Type::UserDefined { kind: _, name, .. } => Some(name.name.clone()),
             Type::TypeParameter(name) => Some(name.clone()),
         }
     }
@@ -376,7 +391,7 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
         ) => {
             // Values in Garden are nominally typed, so we only need
             // to compare type names.
-            if lhs_name != rhs_name {
+            if lhs_name.name != rhs_name.name {
                 return false;
             }
 

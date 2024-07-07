@@ -125,7 +125,7 @@ impl From<&str> for SymbolName {
 /// A symbol representing a value, such as a local variable, a
 /// function name or a method name.
 ///
-/// See also `TypeSymbol`.
+/// See also [`TypeSymbol`].
 #[derive(Clone, PartialEq)]
 pub struct Symbol {
     pub position: Position,

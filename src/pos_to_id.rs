@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem};
+use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeSymbol};
 
 use crate::visitor::Visitor;
 
@@ -36,6 +36,12 @@ impl Visitor for IdFinder {
     fn visit_symbol(&mut self, symbol: &Symbol) {
         if symbol.position.contains_offset(self.offset) {
             self.found_ids.push(*symbol.id.get().unwrap());
+        }
+    }
+
+    fn visit_type_symbol(&mut self, type_symbol: &TypeSymbol) {
+        if type_symbol.position.contains_offset(self.offset) {
+            self.found_ids.push(*type_symbol.id.get().unwrap());
         }
     }
 }

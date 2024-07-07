@@ -735,6 +735,13 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 match methods.get(&sym.name) {
                     Some(method_info) => {
+                        if let Some(meth_sym_at_call_id) = sym.id.get() {
+                            self.id_to_pos.insert(
+                                *meth_sym_at_call_id,
+                                method_info.name_sym.position.clone(),
+                            );
+                        }
+
                         let Some(fun_info) = method_info.fun_info() else {
                             return Type::error("This method has no fun_info");
                         };

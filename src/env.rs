@@ -1,3 +1,4 @@
+use std::cell::OnceCell;
 use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
@@ -51,6 +52,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "String".into(),
                         },
+                        id: OnceCell::new(),
                     },
                     position: Position::todo(),
                 },
@@ -69,6 +71,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "String".into(),
                         },
+                        id: OnceCell::new(),
                     },
                     position: Position::todo(),
                 },
@@ -87,6 +90,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "String".into(),
                         },
+                        id: OnceCell::new(),
                     },
                     position: Position::todo(),
                 },
@@ -114,6 +118,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "List".into(),
                         },
+                        id: OnceCell::new(),
                     },
                     position: Position::todo(),
                 },
@@ -132,6 +137,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "List".into(),
                         },
+                        id: OnceCell::new(),
                     },
                     position: Position::todo(),
                 },
@@ -150,6 +156,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "List".into(),
                         },
+                        id: OnceCell::new(),
                     },
                     position: Position::todo(),
                 },

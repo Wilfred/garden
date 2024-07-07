@@ -1031,6 +1031,7 @@ fn parse_type_symbol_chill(
     TypeSymbol {
         name: TypeName { name: name.name.0 },
         position: name.position,
+        id: OnceCell::new(),
     }
 }
 
@@ -1178,6 +1179,7 @@ fn parse_tuple_type_hint_chill(
                 name: "Tuple".to_owned(),
             },
             position: open_paren.position.clone(),
+            id: OnceCell::new(),
         },
         args: item_hints,
         position: Position::merge(&open_paren.position, &close_paren.position),
@@ -1497,6 +1499,7 @@ fn parse_method_chill(
                         name: "__MISSING_TYPE".to_owned(),
                     },
                     position: receiver_sym.position.clone(),
+                    id: OnceCell::new(),
                 },
                 args: vec![],
                 position: receiver_sym.position.clone(),

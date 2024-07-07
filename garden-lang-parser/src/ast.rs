@@ -53,6 +53,7 @@ impl From<&str> for TypeName {
 pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
+    pub id: OnceCell<SyntaxId>,
 }
 
 impl std::fmt::Debug for TypeSymbol {

@@ -1,6 +1,4 @@
-use garden_lang_parser::ast::{
-    Definition_, Expression, Expression_, FunInfo, Symbol, SyntaxId, ToplevelItem,
-};
+use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem};
 
 use crate::visitor::Visitor;
 

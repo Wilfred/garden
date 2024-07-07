@@ -8,7 +8,7 @@ use crate::{
     eval::eval_defs,
 };
 
-pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
+pub(crate) fn complete(src: &str, path: &Path, _offset: usize) {
     let (items, _errors) = parse_toplevel_items(path, src);
 
     let mut env = Env::default();

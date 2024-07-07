@@ -44,7 +44,7 @@ pub(crate) enum Type {
     },
     UserDefined {
         kind: TypeDefKind,
-        name: TypeSymbol,
+        name_sym: TypeSymbol,
         args: Vec<Type>,
     },
     #[allow(clippy::enum_variant_names)]
@@ -58,7 +58,7 @@ pub(crate) enum Type {
 impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            Type::UserDefined { name, .. } => name.name.name == "NoValue",
+            Type::UserDefined { name_sym, .. } => name_sym.name.name == "NoValue",
             _ => false,
         }
     }
@@ -70,7 +70,7 @@ impl Type {
     pub(crate) fn no_value() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name: TypeSymbol {
+            name_sym: TypeSymbol {
                 name: TypeName {
                     name: "NoValue".to_owned(),
                 },
@@ -84,7 +84,7 @@ impl Type {
     pub(crate) fn unit() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name: TypeSymbol {
+            name_sym: TypeSymbol {
                 name: TypeName {
                     name: "Unit".to_owned(),
                 },
@@ -98,7 +98,7 @@ impl Type {
     pub(crate) fn bool() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name: TypeSymbol {
+            name_sym: TypeSymbol {
                 name: TypeName {
                     name: "Bool".to_owned(),
                 },
@@ -172,12 +172,12 @@ impl Type {
                 },
                 TypeDef::Enum(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Enum,
-                    name: hint.sym.clone(),
+                    name_sym: hint.sym.clone(),
                     args,
                 }),
                 TypeDef::Struct(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Struct,
-                    name: hint.sym.clone(),
+                    name_sym: hint.sym.clone(),
                     args,
                 }),
             },
@@ -261,7 +261,9 @@ impl Type {
             Type::Fun { .. } => Some(TypeName {
                 name: "Fun".to_owned(),
             }),
-            Type::UserDefined { kind: _, name, .. } => Some(name.name.clone()),
+            Type::UserDefined {
+                kind: _, name_sym, ..
+            } => Some(name_sym.name.clone()),
             Type::TypeParameter(name) => Some(name.clone()),
         }
     }
@@ -270,14 +272,14 @@ impl Type {
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Type::UserDefined { name, args, .. } => {
+            Type::UserDefined { name_sym, args, .. } => {
                 if args.is_empty() {
-                    write!(f, "{}", name.name)
+                    write!(f, "{}", name_sym.name)
                 } else {
                     write!(
                         f,
                         "{}<{}>",
-                        name.name,
+                        name_sym.name,
                         args.iter()
                             .map(|arg| format!("{}", arg))
                             .collect::<Vec<_>>()
@@ -380,18 +382,18 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
         (
             Type::UserDefined {
                 kind: _,
-                name: lhs_name,
+                name_sym: lhs_name_sym,
                 args: lhs_args,
             },
             Type::UserDefined {
                 kind: _,
-                name: rhs_name,
+                name_sym: rhs_name_sym,
                 args: rhs_args,
             },
         ) => {
             // Values in Garden are nominally typed, so we only need
             // to compare type names.
-            if lhs_name.name != rhs_name.name {
+            if lhs_name_sym.name != rhs_name_sym.name {
                 return false;
             }
 

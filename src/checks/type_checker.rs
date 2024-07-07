@@ -508,7 +508,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 if let Some(TypeDef::Struct(_)) = self.env.get_type_def(&name_sym.name) {
                     Type::UserDefined {
                         kind: TypeDefKind::Struct,
-                        name: name_sym.clone(),
+                        name_sym: name_sym.clone(),
                         args: vec![],
                     }
                 } else {
@@ -820,11 +820,11 @@ impl<'a> TypeCheckVisitor<'a> {
                 match recv_ty {
                     Type::UserDefined {
                         kind: TypeDefKind::Struct,
-                        name,
+                        name_sym,
                         ..
                     } => {
                         if let Some(TypeDef::Struct(struct_info)) =
-                            self.env.get_type_def(&name.name)
+                            self.env.get_type_def(&name_sym.name)
                         {
                             for field in &struct_info.fields {
                                 if field.sym.name == field_sym.name {
@@ -1022,9 +1022,13 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
                 name: name.clone(),
             }
         }
-        Type::UserDefined { kind, name, args } => Type::UserDefined {
+        Type::UserDefined {
+            kind,
+            name_sym,
+            args,
+        } => Type::UserDefined {
             kind: kind.clone(),
-            name: name.clone(),
+            name_sym: name_sym.clone(),
             args: args
                 .iter()
                 .map(|arg| subst_ty_vars(arg, ty_var_env))
@@ -1067,12 +1071,12 @@ fn unify_and_solve_ty(expected_ty: &Type, actual_ty: &Type, ty_var_env: &mut Typ
         (
             Type::UserDefined {
                 kind: expected_kind,
-                name: expected_name,
+                name_sym: expected_name,
                 args: expected_args,
             },
             Type::UserDefined {
                 kind: actual_kind,
-                name: actual_name,
+                name_sym: actual_name,
                 args: actual_args,
             },
         ) if expected_kind == actual_kind && expected_name.name == actual_name.name => {
@@ -1169,7 +1173,7 @@ fn unify_and_solve_hint(
     }
 
     match ty {
-        Type::UserDefined { name, args, .. } if name.name.name == hint_name.name => {
+        Type::UserDefined { name_sym, args, .. } if name_sym.name.name == hint_name.name => {
             // TODO: stop assuming that all types are covariant.
             for (hint_arg, arg) in hint.args.iter().zip(args) {
                 unify_and_solve_hint(env, hint_arg, position, arg, ty_var_env)?;
@@ -1220,16 +1224,19 @@ fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
         (
             Type::UserDefined {
                 kind: kind_1,
-                name: name_1,
+                name_sym: name_sym_1,
                 args: args_1,
             },
             Type::UserDefined {
                 kind: kind_2,
-                name: name_2,
+                name_sym: name_sym_2,
                 args: args_2,
             },
         ) => {
-            if kind_1 != kind_2 || name_1.name != name_2.name || args_1.len() != args_2.len() {
+            if kind_1 != kind_2
+                || name_sym_1.name != name_sym_2.name
+                || args_1.len() != args_2.len()
+            {
                 return None;
             }
 
@@ -1240,7 +1247,7 @@ fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
 
             Some(Type::UserDefined {
                 kind: kind_1.clone(),
-                name: name_1.clone(),
+                name_sym: name_sym_1.clone(),
                 args: unified_args,
             })
         }

@@ -91,7 +91,7 @@ impl Value {
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name: TypeSymbol {
+                name_sym: TypeSymbol {
                     name: TypeName {
                         name: "Result".to_owned(),
                     },
@@ -114,7 +114,7 @@ impl Value {
             },
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name: TypeSymbol {
+                name_sym: TypeSymbol {
                     name: TypeName {
                         name: "Result".to_owned(),
                     },

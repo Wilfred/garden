@@ -23,7 +23,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     eval_defs(&definitions, &mut env);
 
     assign_toplevel_item_ids(&items);
-    let (_, id_to_ty, id_to_doc_comment, _) = check_types(&items, &env);
+    let (_, _, _, _) = check_types(&items, &env);
 
     todo!()
 }

@@ -49,11 +49,19 @@ impl From<&str> for TypeName {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
     pub id: OnceCell<SyntaxId>,
+}
+
+/// Only consider the name when comparing type symbols. This is
+/// important when the runtime checks values have the same type.
+impl PartialEq for TypeSymbol {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
 }
 
 impl std::fmt::Debug for TypeSymbol {

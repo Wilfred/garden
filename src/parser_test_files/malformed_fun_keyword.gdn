@@ -1,0 +1,69 @@
+// We don't really care how this parses, but it shouldn't crash the parser.
+ffun foo(_: Bool) {
+}
+
+// args: dump-ast
+// expected stdout:
+// Variable(
+//     Symbol"ffun",
+// )
+// Call(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"foo",
+//         ),
+//         id: OnceCell(
+//             <uninit>,
+//         ),
+//     },
+//     ParenthesizedArguments {
+//         open_paren: Position { ... },
+//         arguments: [
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
+//                     Symbol"_",
+//                 ),
+//                 id: OnceCell(
+//                     <uninit>,
+//                 ),
+//             },
+//         ],
+//         close_paren: Position { ... },
+//     },
+// )
+// Invalid
+
+// expected stderr:
+// Error: Parse error: Expected `;`, got `foo`
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+// ^^^^
+// Error: Parse error: Expected an expression, got: `:`.
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+// Error: Parse error: Expected `)`, got `:`
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+// Error: Parse error: Expected `;`, got `:`
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//          ^
+// Error: Parse error: Expected an expression, got: `:`.
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+// Error: Parse error: Expected `;`, got `:`
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//          ^
+

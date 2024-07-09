@@ -560,6 +560,10 @@ fn parse_comma_separated_exprs_chill(
 
         let start_idx = tokens.idx;
         let arg = parse_inline_expression_chill(src, tokens, diagnostics);
+        if matches!(arg.expr_, Expression_::Invalid) {
+            break;
+        }
+
         items.push(arg);
         assert!(
             tokens.idx > start_idx,

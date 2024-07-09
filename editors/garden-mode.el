@@ -296,20 +296,24 @@ the user entering a value in the *garden* buffer."
     ;; No newline so far, we haven't seen the whole JSON line yet.
     (setq garden--output output)))
 
+(defun garden--visit-path (file-name)
+  "Open or switch to the buffer named FILE-NAME."
+  (if (s-starts-with-p "/" file-name)
+      (find-file file-name)
+    ;; For prelude and builtins, we don't have a fully qualified
+    ;; path. Switch to the current prelude.gdn or builtins.gdn,
+    ;; if open.
+    (let ((target-buf (--find (string= (buffer-name it) file-name) (buffer-list))))
+      (when target-buf
+        (switch-to-buffer target-buf)))))
+
 (defun garden--visit (file-and-line-num)
   "Visit a position expressed in the format \"/path/foo.gdn:123\"."
   (let* ((parts (s-split ":" file-and-line-num ))
          (file-name (car parts))
          (line-num (string-to-number (cl-second parts))))
     (with-current-buffer
-        (if (s-starts-with-p "/" file-name)
-            (find-file file-name)
-          ;; For prelude and builtins, we don't have a fully qualified
-          ;; path. Switch to the current prelude.gdn or builtins.gdn,
-          ;; if open.
-          (let ((target-buf (--find (string= (buffer-name it) file-name) (buffer-list))))
-            (when target-buf
-              (switch-to-buffer target-buf))))
+        (garden--visit-path file-name)
       (goto-char (point-min))
       (forward-line (1- line-num)))))
 
@@ -541,7 +545,7 @@ If called with a prefix, stop the previous session."
 
 (defvar garden-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "M-.") #'garden-go-to-def)
+    (define-key map (kbd "M-.") #'garden-definition)
 
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
@@ -577,7 +581,7 @@ If called with a prefix, stop the previous session."
 (defun garden--buf-as-tmp-file ()
   "Write the contents of the current buffer to a temporary file, and return its path."
   (let* ((src (buffer-string))
-         (temp-file (make-temp-file "garden-hover-")))
+         (temp-file (make-temp-file "garden-")))
     (with-temp-file temp-file
       (insert src))
     temp-file))
@@ -623,6 +627,41 @@ If called with a prefix, stop the previous session."
                        (delete-file tmp-file-of-src)
                        (funcall callback
                                 (garden--syntax-highlight result)))))))))
+
+(defun garden--go-to-position (pos-json)
+  "Parse POS-JSON as a buffer and position, and go to that location."
+  (let* ((info (json-parse-string (s-trim pos-json) :object-type 'plist :null-object nil))
+         (path (plist-get info :path))
+         (start-offset (plist-get info :start_offset))
+         (_end-offset (plist-get info :end_offset)))
+    (garden--visit-path path)
+    (goto-char (1+ start-offset))))
+
+(defun garden-definition ()
+  "Go to the definition of the thing at point."
+  (interactive)
+  (let ((tmp-file-of-src (garden--buf-as-tmp-file))
+        (output-buffer (generate-new-buffer "*garden-definition-async*")))
+    (make-process
+     :name "garden-mode-definition"
+     :buffer output-buffer
+     :command (list garden-executable
+                    "definition-position"
+                    (format "%s" (1- (point)))
+                    tmp-file-of-src)
+     :sentinel (lambda (process event)
+                 (when (string= event "exited abnormally with code 101\n")
+                   (with-current-buffer (process-buffer process)
+                     (let ((result (buffer-string)))
+                       (kill-buffer (current-buffer))
+                       (delete-file tmp-file-of-src)
+                       (error "Go-to-def crashed: %s" result))))
+                 (when (string= event "finished\n")
+                   (with-current-buffer (process-buffer process)
+                     (let ((result (buffer-string)))
+                       (kill-buffer (current-buffer))
+                       (delete-file tmp-file-of-src)
+                       (garden--go-to-position result))))))))
 
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))

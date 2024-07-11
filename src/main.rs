@@ -12,6 +12,8 @@
 // Occurs in WIP code, and it's too obvious to be worth linting
 // against.
 #![allow(clippy::needless_if)]
+// Occurs in WIP code when you plan to match on more cases later on.
+#![allow(clippy::single_match)]
 
 mod checks;
 mod cli_session;

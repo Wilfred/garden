@@ -25,6 +25,15 @@ pub(crate) fn find_receiver_of_id(items: &[ToplevelItem], id: SyntaxId) -> Optio
     visitor.receiver
 }
 
+pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Expression> {
+    let mut visitor = ExprOfIdFinder { id, expr: None };
+    for item in items {
+        visitor.visit_toplevel_item(item);
+    }
+
+    visitor.expr
+}
+
 /// Stores a vec of all the expressions whose expression includes
 /// `offset`.
 #[derive(Debug, Default, Clone)]
@@ -70,6 +79,23 @@ impl Visitor for ReceiverOfIdFinder {
                 self.receiver = Some(*recv.id.get().expect("ID should be set"));
                 return;
             }
+        }
+
+        self.visit_expr_(&expr.expr_);
+    }
+}
+
+#[derive(Debug, Clone)]
+struct ExprOfIdFinder {
+    id: SyntaxId,
+    expr: Option<Expression>,
+}
+
+impl Visitor for ExprOfIdFinder {
+    fn visit_expr(&mut self, expr: &Expression) {
+        if expr.id.get() == Some(&self.id) {
+            self.expr = Some(expr.clone());
+            return;
         }
 
         self.visit_expr_(&expr.expr_);

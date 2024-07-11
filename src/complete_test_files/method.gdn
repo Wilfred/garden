@@ -1,0 +1,22 @@
+fun file_name(s: String) {
+    s.
+}
+
+// args: complete 33
+// expected stdout:
+// append
+// contains
+// ends_with
+// index_of
+// join
+// len
+// lines
+// split
+// split_once
+// starts_with
+// strip_prefix
+// strip_suffix
+// substring
+// trim_left
+// trim_right
+

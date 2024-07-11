@@ -245,6 +245,8 @@ impl Type {
         })
     }
 
+    /// The name of this type. If a type isn't user-denotable, return
+    /// None.
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
             Type::Top | Type::Error(_) => None,

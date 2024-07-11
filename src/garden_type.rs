@@ -44,6 +44,8 @@ pub(crate) enum Type {
     },
     UserDefined {
         kind: TypeDefKind,
+        /// The symbol where this type was mentioned, not where it was
+        /// defined.
         name_sym: TypeSymbol,
         args: Vec<Type>,
     },

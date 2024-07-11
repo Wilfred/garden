@@ -10,7 +10,7 @@ use crate::{
     env::Env,
     eval::eval_defs,
     garden_type::Type,
-    pos_to_id::{find_expr_of_id, find_item_at, find_receiver_of_id},
+    pos_to_id::{find_expr_of_id, find_item_at},
 };
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {

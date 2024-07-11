@@ -1,6 +1,4 @@
-use garden_lang_parser::ast::{
-    Expression, Expression_, Symbol, SyntaxId, ToplevelItem, TypeSymbol,
-};
+use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeSymbol};
 
 use crate::visitor::Visitor;
 
@@ -14,15 +12,6 @@ pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxI
     }
 
     visitor.found_ids
-}
-
-pub(crate) fn find_receiver_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<SyntaxId> {
-    let mut visitor = ReceiverOfIdFinder { id, receiver: None };
-    for item in items {
-        visitor.visit_toplevel_item(item);
-    }
-
-    visitor.receiver
 }
 
 pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Expression> {
@@ -63,25 +52,6 @@ impl Visitor for IdFinder {
         if type_symbol.position.contains_offset(self.offset) {
             self.found_ids.push(*type_symbol.id.get().unwrap());
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct ReceiverOfIdFinder {
-    id: SyntaxId,
-    receiver: Option<SyntaxId>,
-}
-
-impl Visitor for ReceiverOfIdFinder {
-    fn visit_expr(&mut self, expr: &Expression) {
-        if let Expression_::DotAccess(recv, field_name) = &expr.expr_ {
-            if field_name.id.get() == Some(&self.id) {
-                self.receiver = Some(*recv.id.get().expect("ID should be set"));
-                return;
-            }
-        }
-
-        self.visit_expr_(&expr.expr_);
     }
 }
 

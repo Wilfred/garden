@@ -657,6 +657,7 @@ If called with a prefix, stop the previous session."
                        (delete-file tmp-file-of-src)
                        (error "Go-to-def crashed: %s" result))))
                  (when (string= event "finished\n")
+                   (xref-push-marker-stack)
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))

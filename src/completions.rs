@@ -4,6 +4,7 @@ use garden_lang_parser::{
     ast::{Expression_, ToplevelItem},
     parse_toplevel_items,
 };
+use serde::Serialize;
 
 use crate::{
     checks::{assign_ids::assign_toplevel_item_ids, type_checker::check_types},
@@ -46,6 +47,11 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     }
 }
 
+#[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+struct CompletionItem {
+    name: String,
+}
+
 fn print_methods(env: &Env, recv_ty: &Type) {
     let Some(type_name) = recv_ty.type_name() else {
         return;
@@ -55,14 +61,16 @@ fn print_methods(env: &Env, recv_ty: &Type) {
         return;
     };
 
-    let mut method_names = vec![];
+    let mut items = vec![];
 
     for method_name in methods.keys() {
-        method_names.push(&method_name.0);
+        items.push(CompletionItem {
+            name: method_name.0.clone(),
+        });
     }
 
-    method_names.sort();
-    for method_name in method_names {
-        println!("{method_name}");
+    items.sort();
+    for item in items {
+        println!("{}", serde_json::to_string(&item).unwrap());
     }
 }

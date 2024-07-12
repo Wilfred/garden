@@ -4,19 +4,19 @@ fun file_name(s: String) {
 
 // args: complete 33
 // expected stdout:
-// append
-// contains
-// ends_with
-// index_of
-// join
-// len
-// lines
-// split
-// split_once
-// starts_with
-// strip_prefix
-// strip_suffix
-// substring
-// trim_left
-// trim_right
+// {"name":"append"}
+// {"name":"contains"}
+// {"name":"ends_with"}
+// {"name":"index_of"}
+// {"name":"join"}
+// {"name":"len"}
+// {"name":"lines"}
+// {"name":"split"}
+// {"name":"split_once"}
+// {"name":"starts_with"}
+// {"name":"strip_prefix"}
+// {"name":"strip_suffix"}
+// {"name":"substring"}
+// {"name":"trim_left"}
+// {"name":"trim_right"}
 

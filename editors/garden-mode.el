@@ -576,6 +576,7 @@ If called with a prefix, stop the previous session."
 
   (setq font-lock-defaults '(garden-mode-font-lock-keywords))
 
+  (add-hook 'completion-at-point-functions #'garden--completion-at-point nil t)
   (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
 
 (defun garden--buf-as-tmp-file ()
@@ -602,15 +603,15 @@ If called with a prefix, stop the previous session."
         (setq result (buffer-string))))
     result))
 
-(defun garden-mode-eldoc (callback &rest _)
-  "Show information for the symbol at point."
+(defun garden--async-command (command-name callback)
+  "Run CLI command COMMAND with the position of point, and call CALLBACK with the result."
   (let ((tmp-file-of-src (garden--buf-as-tmp-file))
-        (output-buffer (generate-new-buffer "*garden-hover-async*")))
+        (output-buffer (generate-new-buffer (format "*garden-%s-async*" command-name))))
     (make-process
-     :name "garden-mode-hover-type"
+     :name (format "garden-mode-%s" command-name)
      :buffer output-buffer
      :command (list garden-executable
-                    "show-type"
+                    command-name
                     (format "%s" (1- (point)))
                     tmp-file-of-src)
      :sentinel (lambda (process event)
@@ -619,14 +620,20 @@ If called with a prefix, stop the previous session."
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
                        (delete-file tmp-file-of-src)
-                       (error "Hover crashed: %s" result))))
+                       (error "Garden `%s` crashed: %s" command-name result))))
                  (when (string= event "finished\n")
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
                        (delete-file tmp-file-of-src)
-                       (funcall callback
-                                (garden--syntax-highlight result)))))))))
+                       (funcall callback result))))))))
+
+(defun garden-mode-eldoc (callback &rest _)
+  "Show information for the symbol at point."
+  (garden--async-command
+   "show-type"
+   (lambda (result)
+     (funcall callback (garden--syntax-highlight result)))))
 
 (defun garden--go-to-position (pos-json)
   "Parse POS-JSON as a buffer and position, and go to that location."

@@ -172,6 +172,27 @@ impl<'a> TypeCheckVisitor<'a> {
         ty
     }
 
+    /// Update `id_to_pos` for the type hint of this parameter.
+    fn save_param_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
+        match &param_ty {
+            Type::UserDefined { name_sym, .. } => {
+                if let Some(type_def) = self.env.get_type_def(&name_sym.name) {
+                    let def_name_sym = match type_def {
+                        TypeDef::Builtin(_) => None,
+                        TypeDef::Enum(enum_info) => Some(&enum_info.name_sym),
+                        TypeDef::Struct(struct_info) => Some(&struct_info.name_sym),
+                    };
+
+                    if let Some(name_sym) = def_name_sym {
+                        let hint_id = hint.sym.id.get().unwrap();
+                        self.id_to_pos.insert(*hint_id, name_sym.position.clone());
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn check_fun_info(&mut self, fun_info: &FunInfo, type_bindings: &TypeVarEnv) -> Type {
         // Check the function body with the locals bound.
         self.bindings.enter_block();
@@ -181,6 +202,8 @@ impl<'a> TypeCheckVisitor<'a> {
         for param in &fun_info.params {
             if let Some(hint) = &param.hint {
                 let param_ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+                self.save_param_ty_id(hint, &param_ty);
+
                 self.set_binding(&param.symbol, param_ty);
             }
         }

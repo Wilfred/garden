@@ -1,0 +1,7 @@
+fun foo(): Unit {
+}
+
+// args: definition-position 13
+// expected stdout:
+// {"start_offset":280,"end_offset":284,"line_number":11,"end_line_number":11,"path":"prelude.gdn"}
+

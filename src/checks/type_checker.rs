@@ -172,8 +172,8 @@ impl<'a> TypeCheckVisitor<'a> {
         ty
     }
 
-    /// Update `id_to_pos` for the type hint of this parameter.
-    fn save_param_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
+    /// Update `id_to_pos` for this type hint.
+    fn save_hint_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
         match &param_ty {
             Type::UserDefined { name_sym, .. } => {
                 if let Some(type_def) = self.env.get_type_def(&name_sym.name) {
@@ -202,7 +202,7 @@ impl<'a> TypeCheckVisitor<'a> {
         for param in &fun_info.params {
             if let Some(hint) = &param.hint {
                 let param_ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
-                self.save_param_ty_id(hint, &param_ty);
+                self.save_hint_ty_id(hint, &param_ty);
 
                 self.set_binding(&param.symbol, param_ty);
             }
@@ -211,6 +211,7 @@ impl<'a> TypeCheckVisitor<'a> {
         let expected_return_ty = match &fun_info.return_hint {
             Some(hint) => {
                 let ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+                self.save_hint_ty_id(hint, &ty);
                 Some(ty)
             }
             None => None,

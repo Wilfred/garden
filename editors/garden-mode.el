@@ -670,25 +670,28 @@ If called with a prefix, stop the previous session."
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.gdn\\'" . garden-mode))
 
+(defun garden--jsonl-parse (str)
+  "Parse lines of JSON from STR."
+  (->> str
+       (s-trim)
+       (s-lines)
+       (--remove (s-blank-p it))
+       (--map (json-parse-string it :object-type 'plist :null-object nil))))
+
 (defun garden-flycheck--parse (json-output _checker _buffer)
   "Parse JSON output from garden check."
   ;; (garden--log-json-to-buf json-output)
-  (let (errors)
-    (dolist (line (s-lines (s-trim json-output)))
-      (unless (s-blank-p line)
-        (let* ((error-info (json-parse-string line :object-type 'plist :null-object nil))
-               (message (plist-get error-info :message))
-               (start-offset (plist-get error-info :start_offset))
-               (end-offset (plist-get error-info :end_offset))
-               (severity (plist-get error-info :severity)))
-          (push
-           (flycheck-error-new-at-pos
-            (1+ start-offset)
-            (if (string= severity "warning") 'warning 'error)
-            message
-            :end-pos (1+ end-offset))
-           errors))))
-    errors))
+  (--map
+   (let* ((message (plist-get it :message))
+          (start-offset (plist-get it :start_offset))
+          (end-offset (plist-get it :end_offset))
+          (severity (plist-get it :severity)))
+     (flycheck-error-new-at-pos
+      (1+ start-offset)
+      (if (string= severity "warning") 'warning 'error)
+      message
+      :end-pos (1+ end-offset)))
+   (garden--jsonl-parse json-output)))
 
 (flycheck-define-checker garden
   "A Garden syntax checker."

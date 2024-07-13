@@ -149,3 +149,12 @@ fun (self: String) len(): Int {
 fun (self: String) substring(from_index: Int, to_index: Int): String {
     __BUILTIN_IMPLEMENTATION;
 }
+
+// Return a new string with this suffix appended.
+//
+// ```
+// "ab".append("cd"); // "abcd"
+// ```
+fun (self: String) append(suffix: String): String {
+    __BUILTIN_IMPLEMENTATION;
+}

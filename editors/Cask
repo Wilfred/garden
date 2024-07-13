@@ -1,5 +1,7 @@
 (source melpa)
 
+(package-file "garden-mode.el")
+
 (development
  (depends-on "ert-runner")
  (depends-on "undercover")

@@ -418,10 +418,10 @@ pub struct MethodInfo {
 }
 
 impl MethodInfo {
-    pub fn fun_info(&self) -> Option<FunInfo> {
+    pub fn fun_info(&self) -> Option<&FunInfo> {
         match &self.kind {
-            MethodKind::BuiltinMethod(_, fun_info) => fun_info.clone(),
-            MethodKind::UserDefinedMethod(fun_info) => Some(fun_info.clone()),
+            MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
+            MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
         }
     }
 

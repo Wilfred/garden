@@ -641,11 +641,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             name: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
-                Ok(if let Some(fun_info) = method_info.fun_info() {
-                    Some(fun_info.src_string.clone())
-                } else {
-                    None
-                })
+                Ok(method_info
+                    .fun_info()
+                    .map(|fun_info| fun_info.src_string.clone()))
             } else {
                 Err(format!("No method named `{method_name}` on `{type_name}`."))
             }

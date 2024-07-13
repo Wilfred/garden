@@ -971,7 +971,7 @@ fn subst_type_vars_in_meth_return_ty(
         diagnostics.push(diagnostic);
     }
 
-    subst_type_vars_in_fun_info_return_ty(env, &fun_info, arg_tys, ty_var_env)
+    subst_type_vars_in_fun_info_return_ty(env, fun_info, arg_tys, ty_var_env)
 }
 
 /// Solve the type variables in this function, and return the resolved

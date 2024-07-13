@@ -20,6 +20,7 @@
 (require 'ansi-color)
 (require 'comint)
 (require 'xref)
+(require 'flycheck)
 
 (defvar garden-executable
   "/home/wilfred/projects/garden/target/debug/garden")
@@ -560,6 +561,21 @@ If called with a prefix, stop the previous session."
   "Add a keybinding for toggling the garden session from any buffer."
   (interactive)
   (global-set-key (kbd "C-c C-z") #'garden-toggle-session))
+
+(defun garden--completion-at-point ()
+  "Offer method names for the expression at point."
+  (let ((done nil)
+        (result nil))
+    (garden--async-command
+     "complete"
+     (lambda (s) (setq done t) (setq result s)))
+    (while (not done)
+      (sit-for 0.1))
+    (let ((items (garden--jsonl-parse result)))
+      (list
+       (point)
+       (point)
+       (--map (plist-get it :name) items)))))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

@@ -647,29 +647,8 @@ If called with a prefix, stop the previous session."
 (defun garden-definition ()
   "Go to the definition of the thing at point."
   (interactive)
-  (let ((tmp-file-of-src (garden--buf-as-tmp-file))
-        (output-buffer (generate-new-buffer "*garden-definition-async*")))
-    (make-process
-     :name "garden-mode-definition"
-     :buffer output-buffer
-     :command (list garden-executable
-                    "definition-position"
-                    (format "%s" (1- (point)))
-                    tmp-file-of-src)
-     :sentinel (lambda (process event)
-                 (when (string= event "exited abnormally with code 101\n")
-                   (with-current-buffer (process-buffer process)
-                     (let ((result (buffer-string)))
-                       (kill-buffer (current-buffer))
-                       (delete-file tmp-file-of-src)
-                       (error "Go-to-def crashed: %s" result))))
-                 (when (string= event "finished\n")
-                   (xref-push-marker-stack)
-                   (with-current-buffer (process-buffer process)
-                     (let ((result (buffer-string)))
-                       (kill-buffer (current-buffer))
-                       (delete-file tmp-file-of-src)
-                       (garden--go-to-position result))))))))
+  (xref-push-marker-stack)
+  (garden--async-command "definition-position" #'garden--go-to-position))
 
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))

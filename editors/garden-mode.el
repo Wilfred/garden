@@ -566,16 +566,17 @@ If called with a prefix, stop the previous session."
   "Offer method names for the expression at point."
   (let ((done nil)
         (result nil))
-    (garden--async-command
-     "complete"
-     (lambda (s) (setq done t) (setq result s)))
-    (while (not done)
-      (sit-for 0.1))
-    (let ((items (garden--jsonl-parse result)))
-      (list
-       (point)
-       (point)
-       (--map (plist-get it :name) items)))))
+    (when (looking-back (rx ".") 1)
+      (garden--async-command
+       "complete"
+       (lambda (s) (setq done t) (setq result s)))
+      (while (not done)
+        (sit-for 0.1))
+      (let ((items (garden--jsonl-parse result)))
+        (list
+         (point)
+         (point)
+         (--map (plist-get it :name) items))))))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

@@ -30,7 +30,7 @@ Int), Int>` is the type of the function `fun(x, y) { x + y; }`.
 
 `dbg` now returns its argument, so it can be added to subexpressions.
 
-Added `String::split()`, `List::map` and `List::last()`.
+Added `String::split`, `List::map` and `List::last`.
 
 Renamed `String::concat` to `String::append`.
 

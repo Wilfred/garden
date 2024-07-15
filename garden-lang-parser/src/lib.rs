@@ -1857,22 +1857,6 @@ pub fn parse_exprs_from_str(src: &str) -> Result<Vec<Expression>, ParseError> {
     }
 }
 
-pub fn parse_defs_from_str(src: &str) -> (Vec<Definition>, Vec<ParseError>) {
-    let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src);
-
-    let mut defs = vec![];
-    for item in items {
-        match item {
-            ToplevelItem::Def(def) => {
-                defs.push(def.clone());
-            }
-            ToplevelItem::Expr(_) => unreachable!(),
-        }
-    }
-
-    (defs, errors)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

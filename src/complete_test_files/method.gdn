@@ -4,19 +4,19 @@ fun file_name(s: String) {
 
 // args: complete 33
 // expected stdout:
-// {"name":"append"}
-// {"name":"contains"}
-// {"name":"ends_with"}
-// {"name":"index_of"}
-// {"name":"join"}
-// {"name":"len"}
-// {"name":"lines"}
-// {"name":"split"}
-// {"name":"split_once"}
-// {"name":"starts_with"}
-// {"name":"strip_prefix"}
-// {"name":"strip_suffix"}
-// {"name":"substring"}
-// {"name":"trim_left"}
-// {"name":"trim_right"}
+// {"name":"append","suffix":"(String): String"}
+// {"name":"contains","suffix":"(String): Bool"}
+// {"name":"ends_with","suffix":"(String): Bool"}
+// {"name":"index_of","suffix":"(String): Option<Int>"}
+// {"name":"join","suffix":"(List<String>): String"}
+// {"name":"len","suffix":"(): Int"}
+// {"name":"lines","suffix":"(): List<String>"}
+// {"name":"split","suffix":"(String): List<String>"}
+// {"name":"split_once","suffix":"(String): Option<List<String>>"}
+// {"name":"starts_with","suffix":"(String): Bool"}
+// {"name":"strip_prefix","suffix":"(String): String"}
+// {"name":"strip_suffix","suffix":"(String): String"}
+// {"name":"substring","suffix":"(Int, Int): String"}
+// {"name":"trim_left","suffix":"(): String"}
+// {"name":"trim_right","suffix":"(): String"}
 

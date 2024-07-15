@@ -50,6 +50,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 struct CompletionItem {
     name: String,
+    suffix: String,
 }
 
 fn print_methods(env: &Env, recv_ty: &Type) {
@@ -63,9 +64,28 @@ fn print_methods(env: &Env, recv_ty: &Type) {
 
     let mut items = vec![];
 
-    for method_name in methods.keys() {
+    for (method_name, meth_info) in methods.iter() {
+        let Some(fun_info) = meth_info.fun_info() else {
+            continue;
+        };
+
+        let params = &fun_info
+            .params
+            .iter()
+            .map(|param| match &param.hint {
+                Some(hint) => hint.as_src(),
+                None => "_".to_owned(),
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        let return_hint = match &fun_info.return_hint {
+            Some(hint) => format!(": {}", hint.as_src()),
+            None => "".to_owned(),
+        };
+
         items.push(CompletionItem {
             name: method_name.0.clone(),
+            suffix: format!("({}){}", params, return_hint),
         });
     }
 

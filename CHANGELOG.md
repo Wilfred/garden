@@ -1,7 +1,10 @@
-# 0.15 (unreleased)
+# 0.16 (unreleased)
 **Goal: WASM and website.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
+
+# 0.15 (unreleased)
+**Goal: Basic IDE features.**
 
 ## Tooling
 

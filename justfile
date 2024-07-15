@@ -21,3 +21,7 @@ wasm:
 
 web:
     cd website && python -m http.server
+
+publish:
+    cd garden-lang-parser && cargo publish
+    cargo publish

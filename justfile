@@ -2,7 +2,7 @@ default:
     @just --list
 
 watch:
-    cargo watch -x build
+    REGENERATE=y cargo watch -x b -x t
 
 release:
     #!/bin/bash

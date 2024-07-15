@@ -1791,16 +1791,6 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<Pa
     (expr, diagnostics)
 }
 
-pub fn parse_toplevel_item(path: &Path, src: &str) -> Result<ToplevelItem, ParseError> {
-    let (items, diagnostics) = parse_toplevel_items(path, src);
-
-    if let Some(error) = diagnostics.into_iter().next() {
-        Err(error)
-    } else {
-        Ok(items[0].clone())
-    }
-}
-
 pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
     let mut tokens = match lex(path, src) {

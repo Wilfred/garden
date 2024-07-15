@@ -52,7 +52,7 @@ use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Sessio
 use crate::values::escape_string_literal;
 use garden_lang_parser::ast::{SourceString, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::{parse_toplevel_item, parse_toplevel_items, ParseError};
+use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 #[derive(Debug, Parser)]
 #[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]
@@ -304,9 +304,11 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                 eval_toplevel_defs(&items, &mut env);
 
                 let call_src = call_to_main_src(arguments);
-                let call_exprs =
-                    vec![parse_toplevel_item(&PathBuf::from("__main_fun__"), &call_src).unwrap()];
-                match eval_all_toplevel_items(&call_exprs, &mut env, &mut session) {
+                let (call_expr_items, parse_errors) =
+                    parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src);
+                assert!(parse_errors.is_empty());
+
+                match eval_all_toplevel_items(&call_expr_items, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, msg)) => {
                         eprintln!("{}", &format_error_with_stack(&msg, &position, &env.stack));

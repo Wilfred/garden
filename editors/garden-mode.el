@@ -576,7 +576,12 @@ If called with a prefix, stop the previous session."
         (list
          (point)
          (point)
-         (--map (plist-get it :name) items))))))
+         (--map (plist-get it :name) items)
+         :annotation-function
+         (lambda (k)
+           (format " %s(): Foo"
+                   (cl-second
+                    (--first (string= (plist-get it :name) k) items)))))))))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

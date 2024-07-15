@@ -3,7 +3,7 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Evaluate functions up to the cursor.**
 
-# 0.15 (unreleased)
+# 0.15 (released 15th July 2024)
 **Goal: Basic IDE features.**
 
 ## Tooling

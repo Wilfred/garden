@@ -407,7 +407,8 @@ the user entering a value in the *garden* buffer."
   ;; Otherwise, Emacs will truncate long lines sent to the Garden
   ;; process, which means we cannot send Garden files larger than 4096
   ;; bytes.
-  (let ((process-connection-type nil))
+  (let ((process-connection-type nil)
+        (process-environment (cons "RUST_BACKTRACE=1" process-environment)))
     ;; TODO: redirect stderr elsewhere
     (make-process :name name :buffer buffer :command (cons program program-args))))
 

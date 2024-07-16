@@ -1829,6 +1829,8 @@ pub fn parse_toplevel_items_from_span(
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
 
     #[test]

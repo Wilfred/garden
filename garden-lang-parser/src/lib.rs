@@ -1809,7 +1809,7 @@ pub fn parse_toplevel_items_from_span(
     src: &str,
     offset: usize,
     end_offset: usize,
-) -> Result<Vec<ToplevelItem>, ParseError> {
+) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
     let mut tokens = match lex_between(path, src, offset, end_offset) {
         Ok(tokens) => tokens,
@@ -1820,11 +1820,7 @@ pub fn parse_toplevel_items_from_span(
     };
 
     let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
-    if let Some(error) = diagnostics.into_iter().next() {
-        Err(error)
-    } else {
-        Ok(items)
-    }
+    (items, diagnostics)
 }
 
 #[cfg(test)]

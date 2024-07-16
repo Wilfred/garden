@@ -86,14 +86,52 @@ fn handle_eval_request(
 ) -> Response {
     complete_src.push_str(&req.input);
 
-    match parse_toplevel_items_from_span(
+    let (items, mut errors) = parse_toplevel_items_from_span(
         &req.path
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         &req.input,
         req.offset.unwrap_or(0),
         req.end_offset.unwrap_or(req.input.len()),
-    ) {
-        Ok(items) => match eval_all_toplevel_items(&items, env, session) {
+    );
+
+    // TODO: eval requests should return all parse errors.
+    match errors.pop() {
+        Some(e) => match e {
+            ParseError::Invalid {
+                position,
+                message,
+                additional: _,
+            } => {
+                let stack = Some(format_parse_error(
+                    &message,
+                    &position,
+                    Level::Error,
+                    &SourceString {
+                        src: req.input,
+                        offset: 0,
+                    },
+                ));
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: Some(position),
+                        message: message.0,
+                        stack,
+                    }),
+                    warnings: vec![],
+                }
+            }
+            ParseError::Incomplete { message, .. } => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(ResponseError {
+                    position: None,
+                    message: message.0,
+                    stack: None,
+                }),
+                warnings: vec![],
+            },
+        },
+        None => match eval_all_toplevel_items(&items, env, session) {
             Ok(eval_summary) => {
                 let definition_summary = if eval_summary.new_syms.len() == 1 {
                     format!("Loaded {}", eval_summary.new_syms[0].0)
@@ -150,41 +188,6 @@ fn handle_eval_request(
                 value: Err(ResponseError {
                     position: None,
                     message: "Interrupted".to_owned(),
-                    stack: None,
-                }),
-                warnings: vec![],
-            },
-        },
-        Err(e) => match e {
-            ParseError::Invalid {
-                position,
-                message,
-                additional: _,
-            } => {
-                let stack = Some(format_parse_error(
-                    &message,
-                    &position,
-                    Level::Error,
-                    &SourceString {
-                        src: req.input,
-                        offset: 0,
-                    },
-                ));
-                Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
-                        position: Some(position),
-                        message: message.0,
-                        stack,
-                    }),
-                    warnings: vec![],
-                }
-            }
-            ParseError::Incomplete { message, .. } => Response {
-                kind: ResponseKind::Evaluate,
-                value: Err(ResponseError {
-                    position: None,
-                    message: message.0,
                     stack: None,
                 }),
                 warnings: vec![],

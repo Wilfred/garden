@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
+use garden_lang_parser::visitor::Visitor;
 
 use crate::{
     diagnostics::{Diagnostic, Level},
     env::Env,
     types::{BuiltinType, TypeDef},
-    visitor::Visitor,
 };
 
 pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {

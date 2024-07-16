@@ -8,9 +8,9 @@ use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{Definition, Definition_, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
+use garden_lang_parser::visitor::Visitor;
 
 use crate::diagnostics::Level;
-use crate::visitor::Visitor;
 use crate::{diagnostics::Diagnostic, env::Env};
 
 struct DuplicatesVisitor {

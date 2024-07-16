@@ -5,13 +5,13 @@ use garden_lang_parser::ast::{
     SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
+use garden_lang_parser::visitor::Visitor;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
 use crate::values::Value;
-use crate::visitor::Visitor;
 
 pub(crate) fn check_types(
     items: &[ToplevelItem],

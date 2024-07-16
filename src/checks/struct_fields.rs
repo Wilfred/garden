@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
+use garden_lang_parser::visitor::Visitor;
 
 use crate::diagnostics::Level;
-use crate::visitor::Visitor;
 use crate::{diagnostics::Diagnostic, env::Env, types::TypeDef};
 
 struct StructFieldVisitor<'a> {

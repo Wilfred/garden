@@ -1,6 +1,5 @@
 use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeSymbol};
-
-use crate::visitor::Visitor;
+use garden_lang_parser::visitor::Visitor;
 
 #[derive(Debug, Default, Clone)]
 struct AssignSyntaxIds {

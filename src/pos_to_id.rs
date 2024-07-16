@@ -1,6 +1,6 @@
 use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeSymbol};
 
-use crate::visitor::Visitor;
+use garden_lang_parser::visitor::Visitor;
 
 pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxId> {
     let mut visitor = IdFinder {

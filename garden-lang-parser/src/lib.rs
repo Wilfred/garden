@@ -8,6 +8,7 @@ pub mod ast;
 pub mod diagnostics;
 pub mod lex;
 pub mod position;
+pub mod visitor;
 
 use std::cell::OnceCell;
 use std::collections::HashSet;

@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{
+use crate::{
     Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
     Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
@@ -8,7 +8,7 @@ use garden_lang_parser::ast::{
 /// Unlike pattern matching, a visitor makes it easy to recurse but
 /// hook in to specific variants. For example, looking for
 /// occurrences of string literals anywhere in a function body.
-pub(crate) trait Visitor {
+pub trait Visitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match item {
             ToplevelItem::Def(def) => self.visit_def(def),

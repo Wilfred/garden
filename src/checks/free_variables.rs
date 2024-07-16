@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
         Block, Definition, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName,
@@ -8,8 +9,8 @@ use garden_lang_parser::{
     position::Position,
 };
 
+use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
-use crate::{diagnostics::Level, visitor::Visitor};
 
 pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = FreeVariableVisitor::new(env);

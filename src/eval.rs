@@ -224,6 +224,11 @@ pub(crate) struct Session<'a> {
     pub(crate) has_attached_stdout: bool,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
+    /// The highest value of an expression position that we want to
+    /// evaluate to.
+    ///
+    /// Useful for 'evaluate up to cursor'.
+    pub(crate) eval_pos_limit: Option<Position>,
 }
 
 #[derive(Debug)]
@@ -2369,6 +2374,23 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 return Err(EvalError::Interrupted);
             }
 
+            if let Some(pos_limit) = &session.eval_pos_limit {
+                if expr_position.end_offset > pos_limit.end_offset {
+                    let v = match stack_frame.evalled_values.last() {
+                        Some(value) => value.clone(),
+                        None => {
+                            // TODO: this should probably be an Err() case.
+                            Value::String(
+                                "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
+                            )
+                        }
+                    };
+
+                    env.pop_to_toplevel();
+                    return Ok(v);
+                }
+            }
+
             let expr_copy = expr_.clone();
 
             if session.trace_exprs {
@@ -3275,6 +3297,7 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
+            eval_pos_limit: None,
         };
 
         super::eval_exprs(exprs, env, &mut session)
@@ -3755,6 +3778,7 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
+            eval_pos_limit: None,
         };
 
         let mut env = Env::default();

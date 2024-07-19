@@ -88,6 +88,7 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
         has_attached_stdout: true,
         start_time: Instant::now(),
         trace_exprs: false,
+        eval_pos_limit: None,
     };
 
     let mut rl = new_editor();

@@ -230,6 +230,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                     has_attached_stdout: true,
                     start_time: Instant::now(),
                     trace_exprs: false,
+                    eval_pos_limit: None,
                 };
 
                 eval_toplevel_defs(&items, &mut env);
@@ -298,6 +299,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     has_attached_stdout: true,
                     start_time: Instant::now(),
                     trace_exprs: false,
+                    eval_pos_limit: None,
                 };
 
                 eval_toplevel_defs(&items, &mut env);

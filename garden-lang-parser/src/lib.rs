@@ -45,7 +45,7 @@ fn peeked_symbol_is(tokens: &TokenStream, token: &str) -> bool {
     tokens.peek().map(|t| t.text == token).unwrap_or(false)
 }
 
-fn require_a_token_chill<'a>(
+fn require_a_token<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
     token_description: &str,
@@ -66,23 +66,23 @@ fn require_a_token_chill<'a>(
     }
 }
 
-fn require_token_chill<'a>(
+fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
 ) -> Token<'a> {
-    require_token_inner_chill(tokens, diagnostics, expected, false)
+    require_token_inner(tokens, diagnostics, expected, false)
 }
 
-fn require_end_token_chill<'a>(
+fn require_end_token<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
 ) -> Token<'a> {
-    require_token_inner_chill(tokens, diagnostics, expected, true)
+    require_token_inner(tokens, diagnostics, expected, true)
 }
 
-fn require_token_inner_chill<'a>(
+fn require_token_inner<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
@@ -126,8 +126,8 @@ fn require_token_inner_chill<'a>(
     }
 }
 
-fn parse_integer_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Expression {
-    let token = require_a_token_chill(tokens, diagnostics, "integer literal");
+fn parse_integer(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Expression {
+    let token = require_a_token(tokens, diagnostics, "integer literal");
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
         Expression::new(token.position, Expression_::IntLiteral(i))
@@ -144,34 +144,34 @@ fn parse_integer_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
     }
 }
 
-fn parse_variable_expression_chill(
+fn parse_variable_expression(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol_chill(tokens, diagnostics);
+    let variable = parse_symbol(tokens, diagnostics);
     Expression::new(variable.position.clone(), Expression_::Variable(variable))
 }
 
-fn parse_parenthesis_expression_chill(
+fn parse_parenthesis_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    require_token_chill(tokens, diagnostics, "(");
-    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
-    require_token_chill(tokens, diagnostics, ")");
+    require_token(tokens, diagnostics, "(");
+    let expr = parse_inline_expression(src, tokens, diagnostics);
+    require_token(tokens, diagnostics, ")");
 
     expr
 }
 
-fn parse_list_literal_chill(
+fn parse_list_literal(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let open_bracket = require_token_chill(tokens, diagnostics, "[");
-    let items = parse_comma_separated_exprs_chill(src, tokens, diagnostics, "]");
-    let close_bracket = require_token_chill(tokens, diagnostics, "]");
+    let open_bracket = require_token(tokens, diagnostics, "[");
+    let items = parse_comma_separated_exprs(src, tokens, diagnostics, "]");
+    let close_bracket = require_token(tokens, diagnostics, "]");
 
     Expression::new(
         Position::merge(&open_bracket.position, &close_bracket.position),
@@ -179,18 +179,18 @@ fn parse_list_literal_chill(
     )
 }
 
-fn parse_lambda_expression_chill(
+fn parse_lambda_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let fun_keyword = require_token_chill(tokens, diagnostics, "fun");
-    let type_params = parse_type_params_chill(tokens, diagnostics);
+    let fun_keyword = require_token(tokens, diagnostics, "fun");
+    let type_params = parse_type_params(tokens, diagnostics);
 
-    let params = parse_parameters_chill(tokens, diagnostics);
-    let return_hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+    let params = parse_parameters(tokens, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    let body = parse_block_chill(src, tokens, diagnostics, false);
+    let body = parse_block(src, tokens, diagnostics, false);
 
     let start_offset = fun_keyword.position.start_offset;
     let end_offset = body.close_brace.end_offset;
@@ -213,24 +213,24 @@ fn parse_lambda_expression_chill(
     )
 }
 
-fn parse_if_expression_chill(
+fn parse_if_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let if_token = require_token_chill(tokens, diagnostics, "if");
+    let if_token = require_token(tokens, diagnostics, "if");
 
-    require_token_chill(tokens, diagnostics, "(");
-    let condition = parse_inline_expression_chill(src, tokens, diagnostics);
-    require_token_chill(tokens, diagnostics, ")");
+    require_token(tokens, diagnostics, "(");
+    let condition = parse_inline_expression(src, tokens, diagnostics);
+    require_token(tokens, diagnostics, ")");
 
-    let then_body = parse_block_chill(src, tokens, diagnostics, false);
+    let then_body = parse_block(src, tokens, diagnostics, false);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
 
         if peeked_symbol_is(tokens, "if") {
-            let if_expr = parse_if_expression_chill(src, tokens, diagnostics);
+            let if_expr = parse_if_expression(src, tokens, diagnostics);
             Some(Block {
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
@@ -241,7 +241,7 @@ fn parse_if_expression_chill(
                 is_loop_body: false,
             })
         } else {
-            Some(parse_block_chill(src, tokens, diagnostics, false))
+            Some(parse_block(src, tokens, diagnostics, false))
         }
     } else {
         None
@@ -258,18 +258,18 @@ fn parse_if_expression_chill(
     )
 }
 
-fn parse_while_expression_chill(
+fn parse_while_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let while_token = require_token_chill(tokens, diagnostics, "while");
+    let while_token = require_token(tokens, diagnostics, "while");
 
-    require_token_chill(tokens, diagnostics, "(");
-    let condition = parse_inline_expression_chill(src, tokens, diagnostics);
-    require_token_chill(tokens, diagnostics, ")");
+    require_token(tokens, diagnostics, "(");
+    let condition = parse_inline_expression(src, tokens, diagnostics);
+    require_token(tokens, diagnostics, ")");
 
-    let body = parse_block_chill(src, tokens, diagnostics, true);
+    let body = parse_block(src, tokens, diagnostics, true);
 
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
@@ -277,32 +277,32 @@ fn parse_while_expression_chill(
     )
 }
 
-fn parse_break_expression_chill(
+fn parse_break_expression(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let break_token = require_token_chill(tokens, diagnostics, "break");
-    let _ = require_end_token_chill(tokens, diagnostics, ";");
+    let break_token = require_token(tokens, diagnostics, "break");
+    let _ = require_end_token(tokens, diagnostics, ";");
     Expression::new(break_token.position, Expression_::Break)
 }
 
-fn parse_return_expression_chill(
+fn parse_return_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let return_token = require_token_chill(tokens, diagnostics, "return");
+    let return_token = require_token(tokens, diagnostics, "return");
 
     if peeked_symbol_is(tokens, ";") {
-        let semicolon = require_token_chill(tokens, diagnostics, ";");
+        let semicolon = require_token(tokens, diagnostics, ";");
         return Expression::new(
             Position::merge(&return_token.position, &semicolon.position),
             Expression_::Return(None),
         );
     }
 
-    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
-    let semicolon = require_end_token_chill(tokens, diagnostics, ";");
+    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let semicolon = require_end_token(tokens, diagnostics, ";");
     Expression::new(
         Position::merge(&return_token.position, &semicolon.position),
         Expression_::Return(Some(Box::new(expr))),
@@ -350,14 +350,14 @@ fn unescape_string(src: &str) -> String {
     res
 }
 
-fn parse_simple_expression_chill(
+fn parse_simple_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     if let Some(token) = tokens.peek() {
         if token.text == "{" {
-            let block = parse_block_chill(src, tokens, diagnostics, false);
+            let block = parse_block(src, tokens, diagnostics, false);
             return Expression::new(
                 Position::merge(&block.open_brace, &block.close_brace),
                 Expression_::Block(block),
@@ -365,25 +365,25 @@ fn parse_simple_expression_chill(
         }
 
         if token.text == "(" {
-            return parse_parenthesis_expression_chill(src, tokens, diagnostics);
+            return parse_parenthesis_expression(src, tokens, diagnostics);
         }
 
         if token.text == "[" {
-            return parse_list_literal_chill(src, tokens, diagnostics);
+            return parse_list_literal(src, tokens, diagnostics);
         }
 
         if token.text == "fun" {
-            return parse_lambda_expression_chill(src, tokens, diagnostics);
+            return parse_lambda_expression(src, tokens, diagnostics);
         }
 
         if SYMBOL_RE.is_match(token.text) {
             if let Some((_, token)) = tokens.peek_two() {
                 if token.text == "{" {
-                    return parse_struct_literal_chill(src, tokens, diagnostics);
+                    return parse_struct_literal(src, tokens, diagnostics);
                 }
             }
 
-            return parse_variable_expression_chill(tokens, diagnostics);
+            return parse_variable_expression(tokens, diagnostics);
         }
 
         if token.text.starts_with('\"') {
@@ -395,7 +395,7 @@ fn parse_simple_expression_chill(
         }
 
         if INTEGER_RE.is_match(token.text) {
-            return parse_integer_chill(tokens, diagnostics);
+            return parse_integer(tokens, diagnostics);
         }
 
         diagnostics.push(ParseError::Invalid {
@@ -414,7 +414,7 @@ fn parse_simple_expression_chill(
     Expression::new(Position::todo(), Expression_::Invalid)
 }
 
-fn parse_struct_literal_fields_chill(
+fn parse_struct_literal_fields(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -426,9 +426,9 @@ fn parse_struct_literal_fields_chill(
         }
 
         let start_idx = tokens.idx;
-        let sym = parse_symbol_chill(tokens, diagnostics);
-        require_token_chill(tokens, diagnostics, ":");
-        let expr = parse_inline_expression_chill(src, tokens, diagnostics);
+        let sym = parse_symbol(tokens, diagnostics);
+        require_token(tokens, diagnostics, ":");
+        let expr = parse_inline_expression(src, tokens, diagnostics);
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
@@ -454,16 +454,16 @@ fn parse_struct_literal_fields_chill(
     fields
 }
 
-fn parse_struct_literal_chill(
+fn parse_struct_literal(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let name = parse_type_symbol_chill(tokens, diagnostics);
-    let open_brace = require_token_chill(tokens, diagnostics, "{");
-    let fields = parse_struct_literal_fields_chill(src, tokens, diagnostics);
+    let name = parse_type_symbol(tokens, diagnostics);
+    let open_brace = require_token(tokens, diagnostics, "{");
+    let fields = parse_struct_literal_fields(src, tokens, diagnostics);
 
-    let close_brace = require_token_chill(tokens, diagnostics, "}");
+    let close_brace = require_token(tokens, diagnostics, "}");
 
     Expression::new(
         Position::merge(&open_brace.position, &close_brace.position),
@@ -471,18 +471,18 @@ fn parse_struct_literal_chill(
     )
 }
 
-fn parse_match_expression_chill(
+fn parse_match_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let match_keyword = require_token_chill(tokens, diagnostics, "match");
+    let match_keyword = require_token(tokens, diagnostics, "match");
 
-    require_token_chill(tokens, diagnostics, "(");
-    let scrutinee = parse_inline_expression_chill(src, tokens, diagnostics);
-    require_token_chill(tokens, diagnostics, ")");
+    require_token(tokens, diagnostics, "(");
+    let scrutinee = parse_inline_expression(src, tokens, diagnostics);
+    require_token(tokens, diagnostics, ")");
 
-    require_token_chill(tokens, diagnostics, "{");
+    require_token(tokens, diagnostics, "{");
 
     let mut cases = vec![];
     loop {
@@ -499,9 +499,9 @@ fn parse_match_expression_chill(
         }
 
         let start_idx = tokens.idx;
-        let pattern = parse_pattern_chill(tokens, diagnostics);
-        require_token_chill(tokens, diagnostics, "=>");
-        let case_expr = parse_case_expr_chill(src, tokens, diagnostics);
+        let pattern = parse_pattern(tokens, diagnostics);
+        require_token(tokens, diagnostics, "=>");
+        let case_expr = parse_case_expr(src, tokens, diagnostics);
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
@@ -510,7 +510,7 @@ fn parse_match_expression_chill(
         cases.push((pattern, Box::new(case_expr)));
     }
 
-    let close_paren = require_token_chill(tokens, diagnostics, "}");
+    let close_paren = require_token(tokens, diagnostics, "}");
 
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
@@ -518,12 +518,12 @@ fn parse_match_expression_chill(
     )
 }
 
-fn parse_case_expr_chill(
+fn parse_case_expr(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let case_expr = parse_inline_expression_chill(src, tokens, diagnostics);
+    let case_expr = parse_inline_expression(src, tokens, diagnostics);
     if peeked_symbol_is(tokens, ",") {
         tokens.pop().unwrap();
     }
@@ -531,13 +531,13 @@ fn parse_case_expr_chill(
     case_expr
 }
 
-fn parse_pattern_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Pattern {
-    let symbol = parse_symbol_chill(tokens, diagnostics);
+fn parse_pattern(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Pattern {
+    let symbol = parse_symbol(tokens, diagnostics);
 
     let argument = if peeked_symbol_is(tokens, "(") {
-        require_token_chill(tokens, diagnostics, "(");
-        let arg = parse_symbol_chill(tokens, diagnostics);
-        require_token_chill(tokens, diagnostics, ")");
+        require_token(tokens, diagnostics, "(");
+        let arg = parse_symbol(tokens, diagnostics);
+        require_token(tokens, diagnostics, ")");
         Some(arg)
     } else {
         None
@@ -546,7 +546,7 @@ fn parse_pattern_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
     Pattern { symbol, argument }
 }
 
-fn parse_comma_separated_exprs_chill(
+fn parse_comma_separated_exprs(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -559,7 +559,7 @@ fn parse_comma_separated_exprs_chill(
         }
 
         let start_idx = tokens.idx;
-        let arg = parse_inline_expression_chill(src, tokens, diagnostics);
+        let arg = parse_inline_expression(src, tokens, diagnostics);
         if matches!(arg.expr_, Expression_::Invalid) {
             break;
         }
@@ -589,14 +589,14 @@ fn parse_comma_separated_exprs_chill(
     items
 }
 
-fn parse_call_arguments_chill(
+fn parse_call_arguments(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> ParenthesizedArguments {
-    let open_paren_token = require_token_chill(tokens, diagnostics, "(");
-    let arguments = parse_comma_separated_exprs_chill(src, tokens, diagnostics, ")");
-    let close_paren_token = require_token_chill(tokens, diagnostics, ")");
+    let open_paren_token = require_token(tokens, diagnostics, "(");
+    let arguments = parse_comma_separated_exprs(src, tokens, diagnostics, ")");
+    let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {
         arguments,
@@ -611,18 +611,18 @@ fn parse_call_arguments_chill(
 /// We handle trailing syntax separately from
 /// `parse_simple_expression`, to avoid infinite recursion. This is
 /// essentially left-recursion from a grammar perspective.
-fn parse_simple_expression_with_trailing_chill(
+fn parse_simple_expression_with_trailing(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression_chill(src, tokens, diagnostics);
+    let mut expr = parse_simple_expression(src, tokens, diagnostics);
 
     loop {
         let start_idx = tokens.idx;
         match tokens.peek() {
             Some(token) if token.text == "(" => {
-                let arguments = parse_call_arguments_chill(src, tokens, diagnostics);
+                let arguments = parse_call_arguments(src, tokens, diagnostics);
                 expr = Expression::new(
                     Position::merge(&expr.pos, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
@@ -630,11 +630,11 @@ fn parse_simple_expression_with_trailing_chill(
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
-                let variable = parse_symbol_chill(tokens, diagnostics);
+                let variable = parse_symbol(tokens, diagnostics);
 
                 if peeked_symbol_is(tokens, "(") {
                     // TODO: just treat a method call as a call of a dot access.
-                    let arguments = parse_call_arguments_chill(src, tokens, diagnostics);
+                    let arguments = parse_call_arguments(src, tokens, diagnostics);
                     expr = Expression::new(
                         Position::merge(&expr.pos, &arguments.close_paren),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
@@ -686,12 +686,12 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// if (a) { b } else { c }
 /// while (z) { foo(); }
 /// ```
-fn parse_inline_expression_chill(
+fn parse_inline_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    parse_general_expression_chill(src, tokens, diagnostics, true)
+    parse_general_expression(src, tokens, diagnostics, true)
 }
 
 /// Parse a block member expression. This is an expression that can
@@ -705,16 +705,16 @@ fn parse_inline_expression_chill(
 /// if (a) { b; } else { c; }
 /// while (z) { foo(); }
 /// ```
-fn parse_block_member_expression_chill(
+fn parse_block_member_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    parse_general_expression_chill(src, tokens, diagnostics, false)
+    parse_general_expression(src, tokens, diagnostics, false)
 }
 
 /// Parse an inline or block member expression.
-fn parse_general_expression_chill(
+fn parse_general_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -725,22 +725,22 @@ fn parse_general_expression_chill(
         // complex assignments like `foo.bar = 1;`.
         if let Some((_, token)) = tokens.peek_two() {
             if token.text == "=" {
-                return parse_assign_expression_chill(src, tokens, diagnostics);
+                return parse_assign_expression(src, tokens, diagnostics);
             }
         }
 
         if let Some(token) = tokens.peek() {
             if token.text == "let" {
-                return parse_let_expression_chill(src, tokens, diagnostics);
+                return parse_let_expression(src, tokens, diagnostics);
             }
             if token.text == "return" {
-                return parse_return_expression_chill(src, tokens, diagnostics);
+                return parse_return_expression(src, tokens, diagnostics);
             }
             if token.text == "while" {
-                return parse_while_expression_chill(src, tokens, diagnostics);
+                return parse_while_expression(src, tokens, diagnostics);
             }
             if token.text == "break" {
-                return parse_break_expression_chill(tokens, diagnostics);
+                return parse_break_expression(tokens, diagnostics);
             }
         }
     }
@@ -749,18 +749,18 @@ fn parse_general_expression_chill(
         // `if` can occur as both an inline expression and a standalone
         // expression.
         if token.text == "if" {
-            return parse_if_expression_chill(src, tokens, diagnostics);
+            return parse_if_expression(src, tokens, diagnostics);
         }
 
         // Likewise match.
         if token.text == "match" {
-            return parse_match_expression_chill(src, tokens, diagnostics);
+            return parse_match_expression(src, tokens, diagnostics);
         }
     }
 
-    let expr = parse_simple_expression_or_binop_chill(src, tokens, diagnostics);
+    let expr = parse_simple_expression_or_binop(src, tokens, diagnostics);
     if !is_inline {
-        let _ = require_end_token_chill(tokens, diagnostics, ";");
+        let _ = require_end_token(tokens, diagnostics, ";");
     }
 
     expr
@@ -777,18 +777,18 @@ fn parse_general_expression_chill(
 /// parser function that allows exactly one binary operation. This
 /// also has the nice side effect of not requiring precedence logic in
 /// the parser.
-fn parse_simple_expression_or_binop_chill(
+fn parse_simple_expression_or_binop(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression_with_trailing_chill(src, tokens, diagnostics);
+    let mut expr = parse_simple_expression_with_trailing(src, tokens, diagnostics);
 
     if let Some(token) = tokens.peek() {
         if let Some(op) = token_as_binary_op(token) {
             tokens.pop();
 
-            let rhs_expr = parse_simple_expression_with_trailing_chill(src, tokens, diagnostics);
+            let rhs_expr = parse_simple_expression_with_trailing(src, tokens, diagnostics);
             expr = Expression::new(
                 Position::merge(&expr.pos, &rhs_expr.pos),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
@@ -799,23 +799,23 @@ fn parse_simple_expression_or_binop_chill(
     expr
 }
 
-fn parse_definition_chill(
+fn parse_definition(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun" {
-            return parse_function_or_method_chill(src, tokens, diagnostics);
+            return parse_function_or_method(src, tokens, diagnostics);
         }
         if token.text == "test" {
-            return Some(parse_test_chill(src, tokens, diagnostics));
+            return Some(parse_test(src, tokens, diagnostics));
         }
         if token.text == "enum" {
-            return Some(parse_enum_chill(src, tokens, diagnostics));
+            return Some(parse_enum(src, tokens, diagnostics));
         }
         if token.text == "struct" {
-            return Some(parse_struct_chill(src, tokens, diagnostics));
+            return Some(parse_struct(src, tokens, diagnostics));
         }
 
         // TODO: Include the token in the error message.
@@ -834,7 +834,7 @@ fn parse_definition_chill(
     None
 }
 
-fn parse_enum_body_chill(
+fn parse_enum_body(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<VariantInfo> {
@@ -844,7 +844,7 @@ fn parse_enum_body_chill(
             break;
         }
 
-        let variant = parse_variant_chill(tokens, diagnostics);
+        let variant = parse_variant(tokens, diagnostics);
         variants.push(variant);
 
         if let Some(token) = tokens.peek() {
@@ -878,14 +878,14 @@ fn parse_enum_body_chill(
 }
 
 /// Parse enum variant, e.g. `Some(T)`.
-fn parse_variant_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> VariantInfo {
-    let name = parse_symbol_chill(tokens, diagnostics);
+fn parse_variant(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> VariantInfo {
+    let name = parse_symbol(tokens, diagnostics);
 
     let mut payload_hint = None;
     if peeked_symbol_is(tokens, "(") {
         tokens.pop();
-        payload_hint = Some(parse_type_hint_chill(tokens, diagnostics));
-        require_token_chill(tokens, diagnostics, ")");
+        payload_hint = Some(parse_type_hint(tokens, diagnostics));
+        require_token(tokens, diagnostics, ")");
     }
 
     VariantInfo {
@@ -894,21 +894,21 @@ fn parse_variant_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseErro
     }
 }
 
-fn parse_enum_chill(
+fn parse_enum(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
-    let enum_token = require_token_chill(tokens, diagnostics, "enum");
+    let enum_token = require_token(tokens, diagnostics, "enum");
     let doc_comment = parse_doc_comment(&enum_token);
-    let name_sym = parse_type_symbol_chill(tokens, diagnostics);
-    let type_params = parse_type_params_chill(tokens, diagnostics);
+    let name_sym = parse_type_symbol(tokens, diagnostics);
+    let type_params = parse_type_params(tokens, diagnostics);
 
-    let _open_brace = require_token_chill(tokens, diagnostics, "{");
+    let _open_brace = require_token(tokens, diagnostics, "{");
 
-    let variants = parse_enum_body_chill(tokens, diagnostics);
+    let variants = parse_enum_body(tokens, diagnostics);
 
-    let close_brace = require_token_chill(tokens, diagnostics, "}");
+    let close_brace = require_token(tokens, diagnostics, "}");
 
     let mut start_offset = enum_token.position.start_offset;
     if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
@@ -936,21 +936,21 @@ fn parse_enum_chill(
     )
 }
 
-fn parse_struct_chill(
+fn parse_struct(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
-    let struct_token = require_token_chill(tokens, diagnostics, "struct");
+    let struct_token = require_token(tokens, diagnostics, "struct");
     let doc_comment = parse_doc_comment(&struct_token);
-    let name_sym = parse_type_symbol_chill(tokens, diagnostics);
-    let type_params = parse_type_params_chill(tokens, diagnostics);
+    let name_sym = parse_type_symbol(tokens, diagnostics);
+    let type_params = parse_type_params(tokens, diagnostics);
 
-    let _open_brace = require_token_chill(tokens, diagnostics, "{");
+    let _open_brace = require_token(tokens, diagnostics, "{");
 
-    let fields = parse_struct_fields_chill(tokens, diagnostics);
+    let fields = parse_struct_fields(tokens, diagnostics);
 
-    let close_brace = require_token_chill(tokens, diagnostics, "}");
+    let close_brace = require_token(tokens, diagnostics, "}");
 
     let mut start_offset = struct_token.position.start_offset;
     if let Some((comment_pos, _)) = struct_token.preceding_comments.first() {
@@ -978,19 +978,19 @@ fn parse_struct_chill(
     )
 }
 
-fn parse_test_chill(
+fn parse_test(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
-    let test_token = require_token_chill(tokens, diagnostics, "test");
+    let test_token = require_token(tokens, diagnostics, "test");
     let doc_comment = parse_doc_comment(&test_token);
 
     let name = if let Some(token) = tokens.peek() {
         if token.text == "{" {
             None
         } else {
-            Some(parse_symbol_chill(tokens, diagnostics))
+            Some(parse_symbol(tokens, diagnostics))
         }
     } else {
         diagnostics.push(ParseError::Incomplete {
@@ -1000,7 +1000,7 @@ fn parse_test_chill(
         None
     };
 
-    let body = parse_block_chill(src, tokens, diagnostics, false);
+    let body = parse_block(src, tokens, diagnostics, false);
 
     let mut start_offset = test_token.position.start_offset;
     if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
@@ -1027,11 +1027,8 @@ fn parse_test_chill(
     )
 }
 
-fn parse_type_symbol_chill(
-    tokens: &mut TokenStream,
-    diagnostics: &mut Vec<ParseError>,
-) -> TypeSymbol {
-    let name = parse_symbol_chill(tokens, diagnostics);
+fn parse_type_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeSymbol {
+    let name = parse_symbol(tokens, diagnostics);
     TypeSymbol {
         name: TypeName { name: name.name.0 },
         position: name.position,
@@ -1040,7 +1037,7 @@ fn parse_type_symbol_chill(
 }
 
 /// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
-fn parse_type_arguments_chill(
+fn parse_type_arguments(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> (Vec<TypeHint>, Option<Position>) {
@@ -1048,7 +1045,7 @@ fn parse_type_arguments_chill(
         return (vec![], None);
     }
 
-    require_token_chill(tokens, diagnostics, "<");
+    require_token(tokens, diagnostics, "<");
 
     let mut args = vec![];
     let close_pos = loop {
@@ -1057,7 +1054,7 @@ fn parse_type_arguments_chill(
                 break token.position;
             }
         }
-        let arg = parse_type_hint_chill(tokens, diagnostics);
+        let arg = parse_type_hint(tokens, diagnostics);
         args.push(arg);
 
         if let Some(token) = tokens.peek() {
@@ -1087,13 +1084,13 @@ fn parse_type_arguments_chill(
         }
     };
 
-    require_token_chill(tokens, diagnostics, ">");
+    require_token(tokens, diagnostics, ">");
 
     (args, Some(close_pos))
 }
 
 /// Parse type parameters for this definition, e.g. `<T, E>`.
-fn parse_type_params_chill(
+fn parse_type_params(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<TypeSymbol> {
@@ -1101,7 +1098,7 @@ fn parse_type_params_chill(
         return vec![];
     }
 
-    require_token_chill(tokens, diagnostics, "<");
+    require_token(tokens, diagnostics, "<");
 
     let mut params = vec![];
     loop {
@@ -1109,7 +1106,7 @@ fn parse_type_params_chill(
             break;
         }
 
-        let arg = parse_type_symbol_chill(tokens, diagnostics);
+        let arg = parse_type_symbol(tokens, diagnostics);
         params.push(arg);
 
         if let Some(token) = tokens.peek() {
@@ -1139,18 +1136,15 @@ fn parse_type_params_chill(
         }
     }
 
-    require_token_chill(tokens, diagnostics, ">");
+    require_token(tokens, diagnostics, ">");
 
     params
 }
 
 /// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
 /// syntactic sugar for `Tuple<Int, String, Unit>`.
-fn parse_tuple_type_hint_chill(
-    tokens: &mut TokenStream,
-    diagnostics: &mut Vec<ParseError>,
-) -> TypeHint {
-    let open_paren = require_token_chill(tokens, diagnostics, "(");
+fn parse_tuple_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+    let open_paren = require_token(tokens, diagnostics, "(");
 
     let mut item_hints = vec![];
     loop {
@@ -1158,7 +1152,7 @@ fn parse_tuple_type_hint_chill(
             break;
         }
 
-        item_hints.push(parse_type_hint_chill(tokens, diagnostics));
+        item_hints.push(parse_type_hint(tokens, diagnostics));
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
@@ -1175,7 +1169,7 @@ fn parse_tuple_type_hint_chill(
         }
     }
 
-    let close_paren = require_token_chill(tokens, diagnostics, ")");
+    let close_paren = require_token(tokens, diagnostics, ")");
 
     TypeHint {
         sym: TypeSymbol {
@@ -1191,13 +1185,13 @@ fn parse_tuple_type_hint_chill(
 }
 
 /// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
-fn parse_type_hint_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+fn parse_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
     if peeked_symbol_is(tokens, "(") {
-        return parse_tuple_type_hint_chill(tokens, diagnostics);
+        return parse_tuple_type_hint(tokens, diagnostics);
     }
 
-    let sym = parse_type_symbol_chill(tokens, diagnostics);
-    let (args, close_pos) = parse_type_arguments_chill(tokens, diagnostics);
+    let sym = parse_type_symbol(tokens, diagnostics);
+    let (args, close_pos) = parse_type_arguments(tokens, diagnostics);
 
     let position = match close_pos {
         Some(close_pos) => Position::merge(&sym.position, &close_pos),
@@ -1212,38 +1206,35 @@ fn parse_type_hint_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseEr
 }
 
 /// Parse a colon and a type hint, e.g. `: Int`.
-fn parse_colon_and_hint_chill(
-    tokens: &mut TokenStream,
-    diagnostics: &mut Vec<ParseError>,
-) -> TypeHint {
-    require_token_chill(tokens, diagnostics, ":");
-    parse_type_hint_chill(tokens, diagnostics)
+fn parse_colon_and(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+    require_token(tokens, diagnostics, ":");
+    parse_type_hint(tokens, diagnostics)
 }
 
 /// Parse a type annotation, if present.
-fn parse_colon_and_hint_opt_chill(
+fn parse_colon_and_hint_opt(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<TypeHint> {
     if peeked_symbol_is(tokens, ":") {
-        let type_hint = parse_colon_and_hint_chill(tokens, diagnostics);
+        let type_hint = parse_colon_and(tokens, diagnostics);
         return Some(type_hint);
     }
 
     None
 }
 
-fn parse_parameter_chill(
+fn parse_parameter(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
     require_type_hint: bool,
 ) -> SymbolWithHint {
-    let param = parse_symbol_chill(tokens, diagnostics);
+    let param = parse_symbol(tokens, diagnostics);
 
     let hint = if require_type_hint {
-        Some(parse_colon_and_hint_chill(tokens, diagnostics))
+        Some(parse_colon_and(tokens, diagnostics))
     } else {
-        parse_colon_and_hint_opt_chill(tokens, diagnostics)
+        parse_colon_and_hint_opt(tokens, diagnostics)
     };
 
     SymbolWithHint {
@@ -1252,11 +1243,11 @@ fn parse_parameter_chill(
     }
 }
 
-fn parse_parameters_chill(
+fn parse_parameters(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<SymbolWithHint> {
-    require_token_chill(tokens, diagnostics, "(");
+    require_token(tokens, diagnostics, "(");
 
     let mut params = vec![];
     loop {
@@ -1264,7 +1255,7 @@ fn parse_parameters_chill(
             break;
         }
 
-        let param = parse_parameter_chill(tokens, diagnostics, false);
+        let param = parse_parameter(tokens, diagnostics, false);
         params.push(param);
 
         if let Some(token) = tokens.peek() {
@@ -1294,7 +1285,7 @@ fn parse_parameters_chill(
         }
     }
 
-    require_token_chill(tokens, diagnostics, ")");
+    require_token(tokens, diagnostics, ")");
 
     // Emit error if there are duplicate parameters.
     // TODO: allow parsing to return an AST even if errors are present.
@@ -1320,7 +1311,7 @@ fn parse_parameters_chill(
     params
 }
 
-fn parse_struct_fields_chill(
+fn parse_struct_fields(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<FieldInfo> {
@@ -1332,8 +1323,8 @@ fn parse_struct_fields_chill(
 
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
-            let sym = parse_symbol_chill(tokens, diagnostics);
-            let hint = parse_colon_and_hint_chill(tokens, diagnostics);
+            let sym = parse_symbol(tokens, diagnostics);
+            let hint = parse_colon_and(tokens, diagnostics);
 
             fields.push(FieldInfo {
                 sym,
@@ -1382,13 +1373,13 @@ fn parse_struct_fields_chill(
     fields
 }
 
-fn parse_block_chill(
+fn parse_block(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
     is_loop_body: bool,
 ) -> Block {
-    let open_brace = require_token_chill(tokens, diagnostics, "{");
+    let open_brace = require_token(tokens, diagnostics, "{");
 
     let mut exprs = vec![];
     loop {
@@ -1405,7 +1396,7 @@ fn parse_block_chill(
         }
 
         let start_idx = tokens.idx;
-        let expr = parse_block_member_expression_chill(src, tokens, diagnostics);
+        let expr = parse_block_member_expression(src, tokens, diagnostics);
         match &expr.expr_ {
             Expression_::Invalid => break,
             _ => {
@@ -1418,7 +1409,7 @@ fn parse_block_chill(
         }
     }
 
-    let close_brace = require_token_chill(tokens, diagnostics, "}");
+    let close_brace = require_token(tokens, diagnostics, "}");
     Block {
         open_brace: open_brace.position,
         exprs,
@@ -1447,13 +1438,13 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
     None
 }
 
-fn parse_function_or_method_chill(
+fn parse_function_or_method(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
-    let fun_token = require_token_chill(tokens, diagnostics, "fun");
-    let type_params = parse_type_params_chill(tokens, diagnostics);
+    let fun_token = require_token(tokens, diagnostics, "fun");
+    let type_params = parse_type_params(tokens, diagnostics);
 
     // We can distinguish between functions and methods based on the
     // token after the type parameters.
@@ -1464,9 +1455,9 @@ fn parse_function_or_method_chill(
     // ```
     match tokens.peek() {
         Some(token) => Some(if token.text == "(" {
-            parse_method_chill(src, tokens, diagnostics, fun_token, type_params)
+            parse_method(src, tokens, diagnostics, fun_token, type_params)
         } else {
-            parse_function_chill(src, tokens, diagnostics, fun_token, type_params)
+            parse_function(src, tokens, diagnostics, fun_token, type_params)
         }),
         None => {
             diagnostics.push(ParseError::Incomplete {
@@ -1478,7 +1469,7 @@ fn parse_function_or_method_chill(
     }
 }
 
-fn parse_method_chill(
+fn parse_method(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1487,8 +1478,8 @@ fn parse_method_chill(
 ) -> Definition {
     let doc_comment = parse_doc_comment(&fun_token);
 
-    require_token_chill(tokens, diagnostics, "(");
-    let receiver_param = parse_parameter_chill(tokens, diagnostics, true);
+    require_token(tokens, diagnostics, "(");
+    let receiver_param = parse_parameter(tokens, diagnostics, true);
     let receiver_sym = receiver_param.symbol.clone();
     let receiver_hint = match receiver_param.hint {
         Some(type_name) => type_name,
@@ -1510,14 +1501,14 @@ fn parse_method_chill(
             }
         }
     };
-    require_token_chill(tokens, diagnostics, ")");
+    require_token(tokens, diagnostics, ")");
 
-    let name = parse_symbol_chill(tokens, diagnostics);
+    let name = parse_symbol(tokens, diagnostics);
 
-    let params = parse_parameters_chill(tokens, diagnostics);
-    let return_hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+    let params = parse_parameters(tokens, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    let body = parse_block_chill(src, tokens, diagnostics, false);
+    let body = parse_block(src, tokens, diagnostics, false);
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
@@ -1552,7 +1543,7 @@ fn parse_method_chill(
     Definition(src_string.clone(), position, Definition_::Method(meth_info))
 }
 
-fn parse_function_chill(
+fn parse_function(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1561,12 +1552,12 @@ fn parse_function_chill(
 ) -> Definition {
     let doc_comment = parse_doc_comment(&fun_token);
 
-    let name = parse_symbol_chill(tokens, diagnostics);
+    let name = parse_symbol(tokens, diagnostics);
 
-    let params = parse_parameters_chill(tokens, diagnostics);
-    let return_hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+    let params = parse_parameters(tokens, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    let body = parse_block_chill(src, tokens, diagnostics, false);
+    let body = parse_block(src, tokens, diagnostics, false);
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
@@ -1613,8 +1604,8 @@ fn placeholder_symbol(position: Position) -> Symbol {
     }
 }
 
-fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
-    let variable_token = require_a_token_chill(tokens, diagnostics, "variable name");
+fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
+    let variable_token = require_a_token(tokens, diagnostics, "variable name");
     if !SYMBOL_RE.is_match(variable_token.text) {
         diagnostics.push(ParseError::Invalid {
             position: variable_token.position.clone(),
@@ -1647,19 +1638,19 @@ fn parse_symbol_chill(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError
     }
 }
 
-fn parse_let_expression_chill(
+fn parse_let_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let let_token = require_token_chill(tokens, diagnostics, "let");
-    let variable = parse_symbol_chill(tokens, diagnostics);
+    let let_token = require_token(tokens, diagnostics, "let");
+    let variable = parse_symbol(tokens, diagnostics);
 
-    let hint = parse_colon_and_hint_opt_chill(tokens, diagnostics);
+    let hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    require_token_chill(tokens, diagnostics, "=");
-    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
-    let semicolon = require_end_token_chill(tokens, diagnostics, ";");
+    require_token(tokens, diagnostics, "=");
+    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let semicolon = require_end_token(tokens, diagnostics, ";");
 
     Expression::new(
         Position::merge(&let_token.position, &semicolon.position),
@@ -1667,16 +1658,16 @@ fn parse_let_expression_chill(
     )
 }
 
-fn parse_assign_expression_chill(
+fn parse_assign_expression(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol_chill(tokens, diagnostics);
+    let variable = parse_symbol(tokens, diagnostics);
 
-    require_token_chill(tokens, diagnostics, "=");
-    let expr = parse_inline_expression_chill(src, tokens, diagnostics);
-    let semicolon = require_end_token_chill(tokens, diagnostics, ";");
+    require_token(tokens, diagnostics, "=");
+    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let semicolon = require_end_token(tokens, diagnostics, ";");
 
     Expression::new(
         Position::merge(&variable.position, &semicolon.position),
@@ -1684,7 +1675,7 @@ fn parse_assign_expression_chill(
     )
 }
 
-fn parse_toplevel_expr_chill(
+fn parse_toplevel_expr(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1693,7 +1684,7 @@ fn parse_toplevel_expr_chill(
 
     // Always allow a semicolon-terminated expression at the top level.
     let mut block_diagnostics = vec![];
-    let block_expr = parse_block_member_expression_chill(src, tokens, &mut block_diagnostics);
+    let block_expr = parse_block_member_expression(src, tokens, &mut block_diagnostics);
     if block_diagnostics.is_empty() {
         return ToplevelItem::Expr(ToplevelExpression(block_expr));
     }
@@ -1706,7 +1697,7 @@ fn parse_toplevel_expr_chill(
     // consumes the rest of the token stream. This ensures that `1 2`
     // does not parse but `1; 2` does.
     let mut inline_diagnostics = vec![];
-    let expr = parse_inline_expression_chill(src, tokens, &mut inline_diagnostics);
+    let expr = parse_inline_expression(src, tokens, &mut inline_diagnostics);
     if tokens.is_empty() {
         // Consumed the whole stream.
         return ToplevelItem::Expr(ToplevelExpression(expr));
@@ -1723,7 +1714,7 @@ fn parse_toplevel_expr_chill(
     ToplevelItem::Expr(ToplevelExpression(block_expr))
 }
 
-fn parse_toplevel_items_from_tokens_chill(
+fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1732,7 +1723,7 @@ fn parse_toplevel_items_from_tokens_chill(
 
     while !tokens.is_empty() {
         let start_idx = tokens.idx;
-        match parse_toplevel_item_from_tokens_chill(src, tokens, diagnostics) {
+        match parse_toplevel_item_from_tokens(src, tokens, diagnostics) {
             Some(item) => {
                 let was_invalid = matches!(
                     item,
@@ -1758,7 +1749,7 @@ fn parse_toplevel_items_from_tokens_chill(
     items
 }
 
-fn parse_toplevel_item_from_tokens_chill(
+fn parse_toplevel_item_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
@@ -1769,11 +1760,11 @@ fn parse_toplevel_item_from_tokens_chill(
             || token.text == "enum"
             || token.text == "struct"
         {
-            return parse_definition_chill(src, tokens, diagnostics).map(ToplevelItem::Def);
+            return parse_definition(src, tokens, diagnostics).map(ToplevelItem::Def);
         }
     }
 
-    Some(parse_toplevel_expr_chill(src, tokens, diagnostics))
+    Some(parse_toplevel_expr(src, tokens, diagnostics))
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<ParseError>) {
@@ -1787,7 +1778,7 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<Pa
         }
     };
 
-    let expr = parse_inline_expression_chill(src, &mut tokens, &mut diagnostics);
+    let expr = parse_inline_expression(src, &mut tokens, &mut diagnostics);
     (expr, diagnostics)
 }
 
@@ -1801,7 +1792,7 @@ pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<P
         }
     };
 
-    let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
+    let items = parse_toplevel_items_from_tokens(src, &mut tokens, &mut diagnostics);
     (items, diagnostics)
 }
 
@@ -1820,7 +1811,7 @@ pub fn parse_toplevel_items_from_span(
         }
     };
 
-    let items = parse_toplevel_items_from_tokens_chill(src, &mut tokens, &mut diagnostics);
+    let items = parse_toplevel_items_from_tokens(src, &mut tokens, &mut diagnostics);
     (items, diagnostics)
 }
 

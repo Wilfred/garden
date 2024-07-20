@@ -23,8 +23,8 @@ use crate::types::TypeDef;
 use crate::values::{type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
-    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, TestInfo, ToplevelItem,
-    TypeHint, TypeName, TypeSymbol,
+    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId, TestInfo,
+    ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -229,11 +229,11 @@ pub(crate) struct Session<'a> {
     pub(crate) has_attached_stdout: bool,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
-    /// The highest value of an expression position that we want to
-    /// evaluate to.
+    /// Stop after evaluating the expression with this ID, if we reach
+    /// it.
     ///
     /// Useful for 'evaluate up to cursor'.
-    pub(crate) eval_pos_limit: Option<Position>,
+    pub(crate) stop_at_expr_id: Option<SyntaxId>,
 }
 
 #[derive(Debug)]
@@ -2364,7 +2364,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             Expression {
                 pos: expr_position,
                 expr_,
-                id: _,
+                id: expr_id,
             },
         )) = stack_frame.exprs_to_eval.pop()
         {
@@ -2377,23 +2377,6 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     &[],
                 );
                 return Err(EvalError::Interrupted);
-            }
-
-            if let Some(pos_limit) = &session.eval_pos_limit {
-                if expr_position.end_offset > pos_limit.end_offset {
-                    let v = match stack_frame.evalled_values.last() {
-                        Some(value) => value.clone(),
-                        None => {
-                            // TODO: this should probably be an Err() case.
-                            Value::String(
-                                "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
-                            )
-                        }
-                    };
-
-                    env.pop_to_toplevel();
-                    return Ok(v);
-                }
             }
 
             let expr_copy = expr_.clone();
@@ -2899,6 +2882,27 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     return Err(EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())));
                 }
             }
+
+            // If we've just finished evaluating the expression that
+            // we were requested to stop at, return that value
+            // immediately.
+            if done_children
+                && session.stop_at_expr_id.is_some()
+                && session.stop_at_expr_id.as_ref() == expr_id.get()
+            {
+                let v = match stack_frame.evalled_values.last() {
+                    Some(value) => value.clone(),
+                    None => {
+                        // TODO: this should probably be an Err() case.
+                        Value::String(
+                            "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
+                        )
+                    }
+                };
+
+                env.pop_to_toplevel();
+                return Ok(v);
+            }
         }
 
         if stack_frame.exprs_to_eval.is_empty() {
@@ -3302,7 +3306,7 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
-            eval_pos_limit: None,
+            stop_at_expr_id: None,
         };
 
         super::eval_exprs(exprs, env, &mut session)
@@ -3783,7 +3787,7 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
-            eval_pos_limit: None,
+            stop_at_expr_id: None,
         };
 
         let mut env = Env::default();

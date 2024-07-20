@@ -385,7 +385,7 @@ pub(crate) fn json_session(interrupted: &Arc<AtomicBool>) {
         start_time: Instant::now(),
         trace_exprs: false,
         // TODO: set this position limit from the request.
-        eval_pos_limit: None,
+        stop_at_expr_id: None,
     };
 
     loop {

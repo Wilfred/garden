@@ -186,6 +186,11 @@ pub(crate) struct StackFrame {
     ///
     /// We want `y` to be bound, but only in the block.
     pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
+    /// A stack of expressions to evaluate. The boolean represents
+    /// whether we have evaluated all the subexpressions yet.
+    ///
+    /// True: Pop evalled_values and evaluate the expression.
+    /// False: Push subexpressions to exprs_to_eval.
     pub(crate) exprs_to_eval: Vec<(bool, Expression)>,
     pub(crate) evalled_values: Vec<Value>,
 }

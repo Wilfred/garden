@@ -378,6 +378,20 @@ the user entering a value in the *garden* buffer."
   (let ((sym-name (symbol-name (symbol-at-point))))
     (garden--find-def sym-name)))
 
+(defun garden--send-eval-up-to ()
+  (interactive)
+  (let* ((buf (garden--active-buffer))
+         ;; Zero-based offset.
+         (offset (1- (point)))
+         (end-offset (1+ start-offset))
+         (args `((method . "eval_up_to_id")
+                 (path . ,(buffer-file-name))
+                 ;; Irrelevant, but annoyingly required for JSON decode.
+                 (input . "")
+                 (offset . ,offset)
+                 (end_offset . ,offset))))
+    (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
+
 (defun garden-help-command ()
   (interactive)
   (garden-send-input ":help"))

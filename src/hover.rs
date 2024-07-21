@@ -10,6 +10,7 @@ use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
 
 pub fn show_type(src: &str, path: &Path, offset: usize) {
     let (items, _errors) = parse_toplevel_items(path, src);
+    assign_toplevel_item_ids(&items);
 
     let mut env = Env::default();
 
@@ -22,7 +23,6 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
 
     eval_defs(&definitions, &mut env);
 
-    assign_toplevel_item_ids(&items);
     let (_, id_to_ty, id_to_doc_comment, _) = check_types(&items, &env);
 
     let hovered_ids = find_item_at(&items, offset);

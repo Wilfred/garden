@@ -8,6 +8,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+use crate::checks::assign_ids::assign_toplevel_item_ids;
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
@@ -26,6 +27,7 @@ use garden_lang_parser::{parse_toplevel_items_from_span, ParseError};
 enum Method {
     Run,
     FindDefinition,
+    EvalUpToId,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -196,6 +198,64 @@ fn handle_eval_request(
     }
 }
 
+fn handle_eval_up_to_id_request(req: Request, _env: &mut Env, _session: &mut Session) -> Response {
+    let (items, mut errors) = parse_toplevel_items_from_span(
+        &req.path
+            .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
+        &req.input,
+        req.offset.unwrap_or(0),
+        req.end_offset.unwrap_or(req.input.len()),
+    );
+    assign_toplevel_item_ids(&items);
+
+    if let Some(e) = errors.pop() {
+        match e {
+            ParseError::Invalid {
+                position,
+                message,
+                additional: _,
+            } => {
+                let stack = Some(format_parse_error(
+                    &message,
+                    &position,
+                    Level::Error,
+                    &SourceString {
+                        src: req.input,
+                        offset: 0,
+                    },
+                ));
+                return Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: Some(position),
+                        message: message.0,
+                        stack,
+                    }),
+                    warnings: vec![],
+                };
+            }
+            ParseError::Incomplete { message, .. } => {
+                return Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: message.0,
+                        stack: None,
+                    }),
+                    warnings: vec![],
+                };
+            }
+        }
+    }
+
+    let offset = req
+        .offset
+        .expect("TODO: send 'bad request' if user doesn't provide an offset for this request.");
+    dbg!(offset);
+
+    todo!()
+}
+
 fn handle_request(
     req: Request,
     env: &mut Env,
@@ -276,6 +336,7 @@ fn handle_request(
             }
         },
         Method::FindDefinition => handle_find_def_request(req, env),
+        Method::EvalUpToId => handle_eval_up_to_id_request(req, env, session),
     }
 }
 

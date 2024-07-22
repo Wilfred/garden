@@ -1796,6 +1796,8 @@ pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<P
     (items, diagnostics)
 }
 
+/// Parse all the toplevel items in `src` between `offset` and
+/// `end_offset`.
 pub fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,

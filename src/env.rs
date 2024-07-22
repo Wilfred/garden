@@ -23,6 +23,7 @@ pub(crate) struct Env {
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
     types: HashMap<TypeName, TypeDef>,
+    pub(crate) prev_call_args: HashMap<SymbolName, Vec<Value>>,
     // TODO: should this be stored separately?
     pub(crate) stack: Vec<StackFrame>,
 }
@@ -208,6 +209,7 @@ impl Default for Env {
             methods,
             tests: HashMap::new(),
             types,
+            prev_call_args: HashMap::new(),
             stack: vec![StackFrame {
                 caller_pos: None,
                 bindings: Bindings::default(),

@@ -31,15 +31,28 @@ enum Method {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Request {
-    method: Method,
-    input: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    path: Option<PathBuf>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    offset: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    end_offset: Option<usize>,
+#[serde(tag = "method", rename_all = "snake_case")]
+enum Request {
+    Run {
+        input: String,
+        // TODO: distinguish methods 'running in REPL' from 'running a snippet
+        // in a file', so we don't need these optional fields.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        path: Option<PathBuf>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        offset: Option<usize>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        end_offset: Option<usize>,
+    },
+    FindDefinition {
+        name: String,
+    },
+    EvalUpToId {
+        path: Option<PathBuf>,
+        input: String,
+        offset: usize,
+        end_offset: usize,
+    },
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -70,8 +83,7 @@ pub(crate) struct Response {
 }
 
 pub(crate) fn sample_request_as_json() -> String {
-    serde_json::to_string(&Request {
-        method: Method::Run,
+    serde_json::to_string(&Request::Run {
         input: "1 + 2".into(),
         path: Some(PathBuf::from("/foo/bar.gdn")),
         offset: Some(100),
@@ -81,19 +93,23 @@ pub(crate) fn sample_request_as_json() -> String {
 }
 
 fn handle_eval_request(
-    req: Request,
+    path: Option<&PathBuf>,
+    input: &str,
+    offset: Option<usize>,
+    end_offset: Option<usize>,
     env: &mut Env,
     session: &mut Session,
     complete_src: &mut String,
 ) -> Response {
-    complete_src.push_str(&req.input);
+    complete_src.push_str(input);
 
     let (items, mut errors) = parse_toplevel_items_from_span(
-        &req.path
+        &path
+            .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-        &req.input,
-        req.offset.unwrap_or(0),
-        req.end_offset.unwrap_or(req.input.len()),
+        input,
+        offset.unwrap_or(0),
+        end_offset.unwrap_or(input.len()),
     );
 
     // TODO: eval requests should return all parse errors.
@@ -109,7 +125,7 @@ fn handle_eval_request(
                     &position,
                     Level::Error,
                     &SourceString {
-                        src: req.input,
+                        src: input.to_owned(),
                         offset: 0,
                     },
                 ));
@@ -198,13 +214,21 @@ fn handle_eval_request(
     }
 }
 
-fn handle_eval_up_to_id_request(req: Request, _env: &mut Env, _session: &mut Session) -> Response {
+fn handle_eval_up_to_id_request(
+    path: Option<&PathBuf>,
+    input: &str,
+    offset: usize,
+    end_offset: usize,
+    _env: &mut Env,
+    _session: &mut Session,
+) -> Response {
     let (items, mut errors) = parse_toplevel_items_from_span(
-        &req.path
+        &path
+            .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-        &req.input,
-        req.offset.unwrap_or(0),
-        req.end_offset.unwrap_or(req.input.len()),
+        input,
+        offset,
+        end_offset,
     );
     assign_toplevel_item_ids(&items);
 
@@ -220,7 +244,7 @@ fn handle_eval_up_to_id_request(req: Request, _env: &mut Env, _session: &mut Ses
                     &position,
                     Level::Error,
                     &SourceString {
-                        src: req.input,
+                        src: input.to_owned(),
                         offset: 0,
                     },
                 ));
@@ -248,9 +272,6 @@ fn handle_eval_up_to_id_request(req: Request, _env: &mut Env, _session: &mut Ses
         }
     }
 
-    let offset = req
-        .offset
-        .expect("TODO: send 'bad request' if user doesn't provide an offset for this request.");
     dbg!(offset);
 
     todo!()
@@ -262,8 +283,13 @@ fn handle_request(
     session: &mut Session,
     complete_src: &mut String,
 ) -> Response {
-    match req.method {
-        Method::Run => match Command::from_string(&req.input) {
+    match req {
+        Request::Run {
+            path,
+            input,
+            offset,
+            end_offset,
+        } => match Command::from_string(&input) {
             Ok(command) => {
                 let mut out_buf: Vec<u8> = vec![];
                 match run_command(&mut out_buf, &command, env, session) {
@@ -331,12 +357,23 @@ fn handle_request(
                     warnings: vec![],
                 }
             }
-            Err(CommandParseError::NotCommandSyntax) => {
-                handle_eval_request(req, env, session, complete_src)
-            }
+            Err(CommandParseError::NotCommandSyntax) => handle_eval_request(
+                path.as_ref(),
+                &input,
+                offset,
+                end_offset,
+                env,
+                session,
+                complete_src,
+            ),
         },
-        Method::FindDefinition => handle_find_def_request(req, env),
-        Method::EvalUpToId => handle_eval_up_to_id_request(req, env, session),
+        Request::FindDefinition { name } => handle_find_def_request(&name, env),
+        Request::EvalUpToId {
+            path,
+            input,
+            offset,
+            end_offset,
+        } => handle_eval_up_to_id_request(path.as_ref(), &input, offset, end_offset, env, session),
     }
 }
 
@@ -382,9 +419,7 @@ fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
     Ok(name.position.clone())
 }
 
-fn handle_find_def_request(req: Request, env: &mut Env) -> Response {
-    let name = &req.input;
-
+fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
     let value = match position_of_name(name, env) {
         Ok(pos) => Ok(pos.as_ide_string()),
         Err(message) => Err(ResponseError {

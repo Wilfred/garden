@@ -18,9 +18,9 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName, TypeName};
+use garden_lang_parser::ast::{SourceString, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
-use garden_lang_parser::{parse_toplevel_items_from_span, ParseError};
+use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -220,15 +220,15 @@ fn handle_eval_up_to_id_request(
     _env: &mut Env,
     _session: &mut Session,
 ) -> Response {
-    let (items, mut errors) = parse_toplevel_items_from_span(
+    let (items, mut errors) = parse_toplevel_items(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         src,
-        offset,
-        src.len(),
     );
     assign_toplevel_item_ids(&items);
+
+    toplevel_item_containing_offset(&items, offset);
 
     if let Some(e) = errors.pop() {
         match e {
@@ -270,9 +270,25 @@ fn handle_eval_up_to_id_request(
         }
     }
 
-    dbg!(offset);
+    let item = toplevel_item_containing_offset(&items, offset);
+    dbg!(item);
 
     todo!()
+}
+
+fn toplevel_item_containing_offset(items: &[ToplevelItem], offset: usize) -> Option<&ToplevelItem> {
+    for item in items {
+        let pos = match item {
+            ToplevelItem::Def(def) => &def.1,
+            ToplevelItem::Expr(expr) => &expr.0.pos,
+        };
+
+        if pos.contains_offset(offset) {
+            return Some(item);
+        }
+    }
+
+    None
 }
 
 fn handle_request(

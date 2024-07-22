@@ -383,13 +383,10 @@ the user entering a value in the *garden* buffer."
   (let* ((buf (garden--active-buffer))
          ;; Zero-based offset.
          (offset (1- (point)))
-         (end-offset (1+ start-offset))
          (args `((method . "eval_up_to_id")
                  (path . ,(buffer-file-name))
-                 ;; Irrelevant, but annoyingly required for JSON decode.
-                 (input . "")
-                 (offset . ,offset)
-                 (end_offset . ,offset))))
+                 (src . ,(buffer-string))
+                 (offset . ,offset))))
     (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
 
 (defun garden-help-command ()

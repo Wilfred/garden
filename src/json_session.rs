@@ -49,9 +49,8 @@ enum Request {
     },
     EvalUpToId {
         path: Option<PathBuf>,
-        input: String,
+        src: String,
         offset: usize,
-        end_offset: usize,
     },
 }
 
@@ -216,9 +215,8 @@ fn handle_eval_request(
 
 fn handle_eval_up_to_id_request(
     path: Option<&PathBuf>,
-    input: &str,
+    src: &str,
     offset: usize,
-    end_offset: usize,
     _env: &mut Env,
     _session: &mut Session,
 ) -> Response {
@@ -226,9 +224,9 @@ fn handle_eval_up_to_id_request(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-        input,
+        src,
         offset,
-        end_offset,
+        src.len(),
     );
     assign_toplevel_item_ids(&items);
 
@@ -244,7 +242,7 @@ fn handle_eval_up_to_id_request(
                     &position,
                     Level::Error,
                     &SourceString {
-                        src: input.to_owned(),
+                        src: src.to_owned(),
                         offset: 0,
                     },
                 ));
@@ -368,12 +366,9 @@ fn handle_request(
             ),
         },
         Request::FindDefinition { name } => handle_find_def_request(&name, env),
-        Request::EvalUpToId {
-            path,
-            input,
-            offset,
-            end_offset,
-        } => handle_eval_up_to_id_request(path.as_ref(), &input, offset, end_offset, env, session),
+        Request::EvalUpToId { path, src, offset } => {
+            handle_eval_up_to_id_request(path.as_ref(), &src, offset, env, session)
+        }
     }
 }
 

@@ -217,8 +217,8 @@ fn handle_eval_up_to_id_request(
     path: Option<&PathBuf>,
     src: &str,
     offset: usize,
-    _env: &mut Env,
-    _session: &mut Session,
+    env: &mut Env,
+    session: &mut Session,
 ) -> Response {
     let (items, mut errors) = parse_toplevel_items(
         &path
@@ -273,7 +273,19 @@ fn handle_eval_up_to_id_request(
     let item = toplevel_item_containing_offset(&items, offset);
     dbg!(item);
 
-    todo!()
+    let Some(item) = item else {
+        todo!("Error report on no match found");
+    };
+
+    match item {
+        ToplevelItem::Def(_) => todo!(),
+        ToplevelItem::Expr(expr) => {
+            // TODO: only eval up to ID.
+            let res = eval_all_toplevel_items(&[], env, session);
+            dbg!(res);
+            todo!();
+        }
+    }
 }
 
 fn toplevel_item_containing_offset(items: &[ToplevelItem], offset: usize) -> Option<&ToplevelItem> {

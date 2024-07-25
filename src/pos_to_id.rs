@@ -2,6 +2,8 @@ use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeSy
 
 use garden_lang_parser::visitor::Visitor;
 
+/// All the items (expressions, symbols) whose position includes
+/// `offset`, outermost first.
 pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxId> {
     let mut visitor = IdFinder {
         offset,
@@ -14,6 +16,8 @@ pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxI
     visitor.found_ids
 }
 
+/// Find the expression whose ID is `id`. May return `None` if the ID
+/// belongs to a symbol rather than an expressions.
 pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Expression> {
     let mut visitor = ExprOfIdFinder { id, expr: None };
     for item in items {

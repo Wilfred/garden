@@ -295,14 +295,27 @@ fn handle_eval_up_to_id_request(
 
     match item {
         ToplevelItem::Def(_) => todo!(),
-        ToplevelItem::Expr(expr) => {
+        ToplevelItem::Expr(_) => {
             session.stop_at_expr_id = Some(expr_id);
 
-            let res = eval_all_toplevel_items(&[], env, session);
-            dbg!(res);
-
+            let res = eval_all_toplevel_items(&[item.clone()], env, session);
             session.stop_at_expr_id = None;
-            todo!();
+
+            match res {
+                Ok(eval_summary) => {
+                    let value_summary = match eval_summary.values.last() {
+                        Some(value) => value.display(env),
+                        None => format!("{:?}", eval_summary),
+                    };
+
+                    Response {
+                        kind: ResponseKind::Evaluate,
+                        value: Ok(value_summary),
+                        warnings: eval_summary.diagnostics,
+                    }
+                }
+                Err(_) => todo!("error during eval"),
+            }
         }
     }
 }

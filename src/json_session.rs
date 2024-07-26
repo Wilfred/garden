@@ -113,8 +113,8 @@ fn handle_eval_request(
     );
 
     // TODO: eval requests should return all parse errors.
-    match errors.pop() {
-        Some(e) => match e {
+    if let Some(e) = errors.pop() {
+        match e {
             ParseError::Invalid {
                 position,
                 message,
@@ -129,7 +129,7 @@ fn handle_eval_request(
                         offset: 0,
                     },
                 ));
-                Response {
+                return Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
                         position: Some(position),
@@ -137,79 +137,82 @@ fn handle_eval_request(
                         stack,
                     }),
                     warnings: vec![],
-                }
+                };
             }
-            ParseError::Incomplete { message, .. } => Response {
-                kind: ResponseKind::Evaluate,
-                value: Err(ResponseError {
-                    position: None,
-                    message: message.0,
-                    stack: None,
-                }),
-                warnings: vec![],
-            },
-        },
-        None => match eval_all_toplevel_items(&items, env, session) {
-            Ok(eval_summary) => {
-                let definition_summary = if eval_summary.new_syms.len() == 1 {
-                    format!("Loaded {}", eval_summary.new_syms[0].0)
-                } else {
-                    format!("Loaded {} definitions", eval_summary.new_syms.len())
-                };
-
-                let total_tests = eval_summary.tests_passed + eval_summary.tests_failed;
-                let definition_summary = if total_tests == 0 {
-                    definition_summary
-                } else {
-                    format!(
-                        "{definition_summary}, ran {total_tests} {}",
-                        if total_tests == 1 { "test" } else { "tests" }
-                    )
-                };
-
-                let value_summary = if let Some(last_value) = eval_summary.values.last() {
-                    if eval_summary.new_syms.is_empty() {
-                        last_value.display(env)
-                    } else {
-                        format!(
-                            "{}, and evaluated {}",
-                            definition_summary,
-                            last_value.display(env)
-                        )
-                    }
-                } else {
-                    format!("{}.", definition_summary)
-                };
-
-                Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Ok(value_summary),
-                    warnings: eval_summary.diagnostics,
-                }
-            }
-            Err(EvalError::ResumableError(position, e)) => {
-                // TODO: use the original SourceString rather than reconstructing.
-                let stack = format_error_with_stack(&e, &position, &env.stack);
-
-                Response {
+            ParseError::Incomplete { message, .. } => {
+                return Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
-                        position: Some(position),
-                        message: format!("Error: {}", e.0),
-                        stack: Some(stack),
+                        position: None,
+                        message: message.0,
+                        stack: None,
                     }),
                     warnings: vec![],
-                }
+                };
             }
-            Err(EvalError::Interrupted) => Response {
+        }
+    }
+
+    match eval_all_toplevel_items(&items, env, session) {
+        Ok(eval_summary) => {
+            let definition_summary = if eval_summary.new_syms.len() == 1 {
+                format!("Loaded {}", eval_summary.new_syms[0].0)
+            } else {
+                format!("Loaded {} definitions", eval_summary.new_syms.len())
+            };
+
+            let total_tests = eval_summary.tests_passed + eval_summary.tests_failed;
+            let definition_summary = if total_tests == 0 {
+                definition_summary
+            } else {
+                format!(
+                    "{definition_summary}, ran {total_tests} {}",
+                    if total_tests == 1 { "test" } else { "tests" }
+                )
+            };
+
+            let value_summary = if let Some(last_value) = eval_summary.values.last() {
+                if eval_summary.new_syms.is_empty() {
+                    last_value.display(env)
+                } else {
+                    format!(
+                        "{}, and evaluated {}",
+                        definition_summary,
+                        last_value.display(env)
+                    )
+                }
+            } else {
+                format!("{}.", definition_summary)
+            };
+
+            Response {
+                kind: ResponseKind::Evaluate,
+                value: Ok(value_summary),
+                warnings: eval_summary.diagnostics,
+            }
+        }
+        Err(EvalError::ResumableError(position, e)) => {
+            // TODO: use the original SourceString rather than reconstructing.
+            let stack = format_error_with_stack(&e, &position, &env.stack);
+
+            Response {
                 kind: ResponseKind::Evaluate,
                 value: Err(ResponseError {
-                    position: None,
-                    message: "Interrupted".to_owned(),
-                    stack: None,
+                    position: Some(position),
+                    message: format!("Error: {}", e.0),
+                    stack: Some(stack),
                 }),
                 warnings: vec![],
-            },
+            }
+        }
+        Err(EvalError::Interrupted) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(ResponseError {
+                position: None,
+                message: "Interrupted".to_owned(),
+                stack: None,
+            }),
+            warnings: vec![],
         },
     }
 }

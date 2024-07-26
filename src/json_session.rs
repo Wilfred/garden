@@ -562,7 +562,8 @@ pub(crate) fn json_session(interrupted: &Arc<AtomicBool>) {
                             buf_str,
                         ),
                         stack: None,
-                    }),warnings: vec![],
+                    }),
+                    warnings: vec![],
                 },
             };
             let serialized = serde_json::to_string(&response).unwrap();

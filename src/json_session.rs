@@ -275,7 +275,7 @@ fn handle_eval_up_to_id_request(
     }
 
     let mut expr_id: Option<SyntaxId> = None;
-    for id in find_item_at(&items, offset) {
+    for id in find_item_at(&items, offset).into_iter().rev() {
         // TODO: this is iterating items twice, which will be slower.
         if find_expr_of_id(&items, id).is_some() {
             expr_id = Some(id);

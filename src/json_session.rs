@@ -12,13 +12,14 @@ use crate::checks::assign_ids::assign_toplevel_item_ids;
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
+use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName, ToplevelItem, TypeName};
+use garden_lang_parser::ast::{SourceString, SymbolName, SyntaxId, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -270,8 +271,20 @@ fn handle_eval_up_to_id_request(
         }
     }
 
+    let mut expr_id: Option<SyntaxId> = None;
+    for id in find_item_at(&items, offset) {
+        // TODO: this is iterating items twice, which will be slower.
+        if find_expr_of_id(&items, id).is_some() {
+            expr_id = Some(id);
+            break;
+        }
+    }
+
+    let Some(expr_id) = expr_id else {
+        todo!("Error report on no match found");
+    };
+
     let item = toplevel_item_containing_offset(&items, offset);
-    dbg!(item);
 
     let Some(item) = item else {
         todo!("Error report on no match found");
@@ -280,9 +293,12 @@ fn handle_eval_up_to_id_request(
     match item {
         ToplevelItem::Def(_) => todo!(),
         ToplevelItem::Expr(expr) => {
-            // TODO: only eval up to ID.
+            session.stop_at_expr_id = Some(expr_id);
+
             let res = eval_all_toplevel_items(&[], env, session);
             dbg!(res);
+
+            session.stop_at_expr_id = None;
             todo!();
         }
     }

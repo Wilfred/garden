@@ -312,6 +312,17 @@ impl Expression {
             id: OnceCell::new(),
         }
     }
+
+    pub fn new_with_id(position: Position, expr_: Expression_, id: SyntaxId) -> Self {
+        let id_cell = OnceCell::new();
+        id_cell.set(id).unwrap();
+
+        Self {
+            pos: position,
+            expr_,
+            id: id_cell,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

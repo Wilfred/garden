@@ -2362,23 +2362,14 @@ fn eval_builtin_method_call(
 
 pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.pop() {
-        if let Some((
-            done_children,
-            Expression {
-                pos: expr_position,
-                expr_,
-                id: expr_id,
-            },
-        )) = stack_frame.exprs_to_eval.pop()
-        {
+        if let Some((done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
+            let expr_position = outer_expr.pos.clone();
+            let expr_ = &outer_expr.expr_;
+            let expr_id = outer_expr.id.clone();
+
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
-                restore_stack_frame(
-                    env,
-                    stack_frame,
-                    (done_children, Expression::new(expr_position, expr_)),
-                    &[],
-                );
+                restore_stack_frame(env, stack_frame, (done_children, outer_expr), &[]);
                 return Err(EvalError::Interrupted);
             }
 
@@ -2390,11 +2381,9 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             match expr_ {
                 Expression_::Match(scrutinee, cases) => {
                     if done_children {
-                        eval_match_cases(env, &mut stack_frame, &scrutinee.pos, &cases)?;
+                        eval_match_cases(env, &mut stack_frame, &scrutinee.pos, cases)?;
                     } else {
-                        stack_frame
-                            .exprs_to_eval
-                            .push((true, Expression::new(expr_position, expr_copy)));
+                        stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
                         stack_frame.exprs_to_eval.push((false, *scrutinee.clone()));
                     }
                 }
@@ -2484,7 +2473,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_assign(&mut stack_frame, &variable)
+                        }) = eval_assign(&mut stack_frame, variable)
                         {
                             restore_stack_frame(
                                 env,
@@ -2507,7 +2496,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_let(env, &mut stack_frame, &variable, &hint)
+                        }) = eval_let(env, &mut stack_frame, variable, hint)
                         {
                             restore_stack_frame(
                                 env,
@@ -2525,10 +2514,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     }
                 }
                 Expression_::IntLiteral(i) => {
-                    stack_frame.evalled_values.push(Value::Integer(i));
+                    stack_frame.evalled_values.push(Value::Integer(*i));
                 }
                 Expression_::StringLiteral(s) => {
-                    stack_frame.evalled_values.push(Value::String(s));
+                    stack_frame.evalled_values.push(Value::String(s.clone()));
                 }
                 Expression_::ListLiteral(items) => {
                     if done_children {
@@ -2566,7 +2555,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_struct_value(env, &mut stack_frame, type_sym, &field_exprs)
+                        }) =
+                            eval_struct_value(env, &mut stack_frame, type_sym.clone(), field_exprs)
                         {
                             restore_stack_frame(
                                 env,
@@ -2637,7 +2627,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             &expr_position,
                             &lhs.pos,
                             &rhs.pos,
-                            op,
+                            *op,
                         ) {
                             restore_stack_frame(
                                 env,
@@ -2665,7 +2655,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_equality_binop(&mut stack_frame, op)
+                        }) = eval_equality_binop(&mut stack_frame, *op)
                         {
                             restore_stack_frame(
                                 env,
@@ -2693,7 +2683,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_boolean_binop(env, &mut stack_frame, &lhs.pos, &rhs.pos, op)
+                        }) = eval_boolean_binop(env, &mut stack_frame, &lhs.pos, &rhs.pos, *op)
                         {
                             restore_stack_frame(
                                 env,
@@ -2715,7 +2705,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::FunLiteral(fun_info) => {
                     stack_frame.evalled_values.push(Value::Closure(
                         stack_frame.bindings.block_bindings.clone(),
-                        fun_info,
+                        fun_info.clone(),
                     ));
                 }
                 Expression_::Call(receiver, paren_args) => {
@@ -2787,8 +2777,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             env,
                             &mut stack_frame,
                             &receiver_expr.pos,
-                            &meth_name,
-                            &paren_args,
+                            meth_name,
+                            paren_args,
                         ) {
                             Ok(Some(new_stack_frame)) => {
                                 env.stack.push(stack_frame);
@@ -2852,7 +2842,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_dot_access(env, &mut stack_frame, &sym, &recv.pos)
+                        }) = eval_dot_access(env, &mut stack_frame, sym, &recv.pos)
                         {
                             restore_stack_frame(
                                 env,

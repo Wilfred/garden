@@ -247,6 +247,10 @@ impl Default for Env {
 
 impl Env {
     pub(crate) fn pop_to_toplevel(&mut self) {
+        if self.stack.is_empty() {
+            return;
+        }
+
         self.stack.truncate(1);
         self.stack[0].evalled_values.truncate(1);
         self.stack[0].bindings.block_bindings.truncate(1);

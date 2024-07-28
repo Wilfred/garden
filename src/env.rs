@@ -39,6 +39,18 @@ impl Default for Stack {
     }
 }
 
+impl Stack {
+    pub(crate) fn pop_to_toplevel(&mut self) {
+        if self.0.is_empty() {
+            return;
+        }
+
+        self.0.truncate(1);
+        self.0[0].evalled_values.truncate(1);
+        self.0[0].bindings.block_bindings.truncate(1);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
@@ -255,16 +267,6 @@ impl Default for Env {
 }
 
 impl Env {
-    pub(crate) fn pop_to_toplevel(&mut self) {
-        if self.stack.0.is_empty() {
-            return;
-        }
-
-        self.stack.0.truncate(1);
-        self.stack.0[0].evalled_values.truncate(1);
-        self.stack.0[0].bindings.block_bindings.truncate(1);
-    }
-
     pub(crate) fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }

@@ -595,7 +595,7 @@ pub(crate) fn run_command<T: Write>(
             }
         }
         Command::Abort => {
-            env.pop_to_toplevel();
+            env.stack.pop_to_toplevel();
             return Err(EvalAction::Abort);
         }
         Command::Quit => {

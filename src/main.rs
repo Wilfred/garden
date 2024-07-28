@@ -244,7 +244,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
                         succeeded = true;
                     }
                     Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack));
+                        eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");
@@ -312,7 +312,10 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                 match eval_all_toplevel_items(&call_expr_items, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, msg)) => {
-                        eprintln!("{}", &format_error_with_stack(&msg, &position, &env.stack));
+                        eprintln!(
+                            "{}",
+                            &format_error_with_stack(&msg, &position, &env.stack.0)
+                        );
                     }
                     Err(EvalError::Interrupted) => {
                         eprintln!("Interrupted");

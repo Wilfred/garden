@@ -120,6 +120,7 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
 
                 let stack_frame = env
                     .stack
+                    .0
                     .last_mut()
                     .expect("Should always have the toplevel stack frame");
 
@@ -140,7 +141,7 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
                 // Continue to eval_env below.
             }
             Err(ReadError::NeedsEval(EvalAction::Replace(expr))) => {
-                let stack_frame = env.stack.last_mut().unwrap();
+                let stack_frame = env.stack.0.last_mut().unwrap();
 
                 stack_frame.evalled_values.pop();
                 stack_frame.exprs_to_eval.push((false, expr));
@@ -148,7 +149,7 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
                 // TODO: Prevent :replace when we've not just halted.
             }
             Err(ReadError::NeedsEval(EvalAction::Skip)) => {
-                let stack_frame = env.stack.last_mut().unwrap();
+                let stack_frame = env.stack.0.last_mut().unwrap();
 
                 stack_frame
                     .exprs_to_eval
@@ -184,7 +185,10 @@ pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
                 let _ = last_src; // should use this.
-                println!("{}", &format_error_with_stack(&msg, &position, &env.stack));
+                println!(
+                    "{}",
+                    &format_error_with_stack(&msg, &position, &env.stack.0)
+                );
                 is_stopped = true;
             }
             Err(EvalError::Interrupted) => {

@@ -18,6 +18,28 @@ use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
 
 #[derive(Debug, Clone)]
+pub(crate) struct Stack(pub(crate) Vec<StackFrame>);
+
+impl Default for Stack {
+    fn default() -> Self {
+        Self(vec![StackFrame {
+            caller_pos: None,
+            bindings: Bindings::default(),
+            bindings_next_block: vec![],
+            exprs_to_eval: vec![],
+            evalled_values: vec![Value::unit()],
+            enclosing_fun: None,
+            enclosing_name: EnclosingSymbol::Toplevel,
+            src: SourceString {
+                offset: 0,
+                src: "// __toplevel__".to_owned(),
+            },
+            type_bindings: HashMap::new(),
+        }])
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
@@ -25,7 +47,7 @@ pub(crate) struct Env {
     types: HashMap<TypeName, TypeDef>,
     pub(crate) prev_call_args: HashMap<SymbolName, Vec<Value>>,
     // TODO: should this be stored separately?
-    pub(crate) stack: Vec<StackFrame>,
+    pub(crate) stack: Stack,
 }
 
 impl Default for Env {
@@ -210,20 +232,7 @@ impl Default for Env {
             tests: HashMap::new(),
             types,
             prev_call_args: HashMap::new(),
-            stack: vec![StackFrame {
-                caller_pos: None,
-                bindings: Bindings::default(),
-                bindings_next_block: vec![],
-                exprs_to_eval: vec![],
-                evalled_values: vec![Value::unit()],
-                enclosing_fun: None,
-                enclosing_name: EnclosingSymbol::Toplevel,
-                src: SourceString {
-                    offset: 0,
-                    src: "// __toplevel__".to_owned(),
-                },
-                type_bindings: HashMap::new(),
-            }],
+            stack: Stack::default(),
         };
 
         let prelude_src = include_str!("prelude.gdn");
@@ -247,13 +256,13 @@ impl Default for Env {
 
 impl Env {
     pub(crate) fn pop_to_toplevel(&mut self) {
-        if self.stack.is_empty() {
+        if self.stack.0.is_empty() {
             return;
         }
 
-        self.stack.truncate(1);
-        self.stack[0].evalled_values.truncate(1);
-        self.stack[0].bindings.block_bindings.truncate(1);
+        self.stack.0.truncate(1);
+        self.stack.0[0].evalled_values.truncate(1);
+        self.stack.0[0].bindings.block_bindings.truncate(1);
     }
 
     pub(crate) fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
@@ -285,7 +294,7 @@ impl Env {
     }
 
     pub(crate) fn type_bindings(&self) -> TypeVarEnv {
-        let Some(stack_frame) = self.stack.last() else {
+        let Some(stack_frame) = self.stack.0.last() else {
             return HashMap::default();
         };
 

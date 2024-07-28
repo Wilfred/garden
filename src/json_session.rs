@@ -193,7 +193,7 @@ fn handle_eval_request(
         }
         Err(EvalError::ResumableError(position, e)) => {
             // TODO: use the original SourceString rather than reconstructing.
-            let stack = format_error_with_stack(&e, &position, &env.stack);
+            let stack = format_error_with_stack(&e, &position, &env.stack.0);
 
             Response {
                 kind: ResponseKind::Evaluate,
@@ -381,7 +381,7 @@ fn handle_request(
                         }
                     }
                     Err(EvalAction::Replace(expr)) => {
-                        let stack_frame = env.stack.last_mut().unwrap();
+                        let stack_frame = env.stack.0.last_mut().unwrap();
 
                         stack_frame.evalled_values.pop();
                         stack_frame.exprs_to_eval.push((false, expr));
@@ -389,7 +389,7 @@ fn handle_request(
                         eval_to_response(env, session)
                     }
                     Err(EvalAction::Skip) => {
-                        let stack_frame = env.stack.last_mut().unwrap();
+                        let stack_frame = env.stack.0.last_mut().unwrap();
 
                         stack_frame
                             .exprs_to_eval

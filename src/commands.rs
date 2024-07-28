@@ -482,6 +482,7 @@ pub(crate) fn run_command<T: Write>(
             if let Some(name) = name {
                 let stack_frame = env
                     .stack
+                    .0
                     .last_mut()
                     .expect("Should always have at least one frame");
                 if stack_frame.bindings.has(&SymbolName(name.clone())) {
@@ -524,21 +525,21 @@ pub(crate) fn run_command<T: Write>(
             }
         }
         Command::FrameStatements => {
-            if let Some(stack_frame) = env.stack.last() {
+            if let Some(stack_frame) = env.stack.0.last() {
                 for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
                     writeln!(buf, "{:#?}", expr.expr_).unwrap();
                 }
             }
         }
         Command::FrameValues => {
-            if let Some(stack_frame) = env.stack.last() {
+            if let Some(stack_frame) = env.stack.0.last() {
                 for value in stack_frame.evalled_values.iter().rev() {
                     writeln!(buf, "{}", value.display(env)).unwrap();
                 }
             }
         }
         Command::Locals => {
-            if let Some(stack_frame) = env.stack.last() {
+            if let Some(stack_frame) = env.stack.0.last() {
                 for (i, (var_name, value)) in stack_frame.bindings.all().iter().enumerate() {
                     write!(
                         buf,
@@ -754,7 +755,7 @@ fn command_help(command: Command) -> &'static str {
 }
 
 pub(crate) fn print_stack<T: Write>(buf: &mut T, env: &Env) {
-    for (i, stack_frame) in env.stack.iter().rev().enumerate() {
+    for (i, stack_frame) in env.stack.0.iter().rev().enumerate() {
         let name = &stack_frame.enclosing_name;
         write!(buf, "{}In {}", if i == 0 { "" } else { "\n" }, name).unwrap();
     }

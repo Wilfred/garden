@@ -333,7 +333,7 @@ pub(crate) fn eval_toplevel_tests(
     for test in test_defs {
         push_test_stackframe(test, env);
         eval_env(env, session)?;
-        env.stack.pop();
+        env.stack.0.pop();
 
         tests_passed += 1;
     }
@@ -364,7 +364,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         exprs_to_eval,
         evalled_values: vec![Value::unit()],
     };
-    env.stack.push(stack_frame);
+    env.stack.0.push(stack_frame);
 }
 
 pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
@@ -624,7 +624,7 @@ fn restore_stack_frame(
 
     stack_frame.exprs_to_eval.push(expr_to_eval);
 
-    env.stack.push(stack_frame);
+    env.stack.0.push(stack_frame);
 }
 
 /// Information about an error during evaluation.
@@ -2361,7 +2361,7 @@ fn eval_builtin_method_call(
 }
 
 pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
-    while let Some(mut stack_frame) = env.stack.pop() {
+    while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
             let expr_id = outer_expr.id.clone();
@@ -2719,8 +2719,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             session,
                         ) {
                             Ok(Some(new_stack_frame)) => {
-                                env.stack.push(stack_frame);
-                                env.stack.push(new_stack_frame);
+                                env.stack.0.push(stack_frame);
+                                env.stack.0.push(new_stack_frame);
                                 continue;
                             }
                             Ok(None) => {}
@@ -2761,8 +2761,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             paren_args,
                         ) {
                             Ok(Some(new_stack_frame)) => {
-                                env.stack.push(stack_frame);
-                                env.stack.push(new_stack_frame);
+                                env.stack.0.push(stack_frame);
+                                env.stack.0.push(new_stack_frame);
                                 continue;
                             }
                             Ok(None) => {}
@@ -2872,9 +2872,9 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 
         if stack_frame.exprs_to_eval.is_empty() {
             // No more statements in this stack frame.
-            if env.stack.is_empty() {
+            if env.stack.0.is_empty() {
                 // Don't pop the outer scope: that's for the top level environment.
-                env.stack.push(stack_frame);
+                env.stack.0.push(stack_frame);
                 break;
             }
 
@@ -2898,7 +2898,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
                         stack_frame.evalled_values.push(return_value.clone());
-                        env.stack.push(stack_frame);
+                        env.stack.0.push(stack_frame);
 
                         return Err(EvalError::ResumableError(err_pos, msg));
                     }
@@ -2909,18 +2909,20 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             // call should be used in the previous stack
             // frame.
             env.stack
+                .0
                 .last_mut()
                 .unwrap()
                 .evalled_values
                 .push(return_value);
         } else {
             // Keep going on this stack frame.
-            env.stack.push(stack_frame);
+            env.stack.0.push(stack_frame);
         }
     }
 
     Ok(env
         .stack
+        .0
         .last_mut()
         .expect("toplevel stack frame should exist")
         .evalled_values
@@ -3215,6 +3217,7 @@ pub(crate) fn eval_exprs(
 
     let top_stack = env
         .stack
+        .0
         .last_mut()
         .expect("Stack should always be non-empty.");
     // TODO: do this setup outside of this function.

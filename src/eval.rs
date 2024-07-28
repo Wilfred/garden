@@ -2362,7 +2362,7 @@ fn eval_builtin_method_call(
 
 pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.pop() {
-        if let Some((done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
+        if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
             let expr_id = outer_expr.id.clone();
 
@@ -2502,9 +2502,11 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     }
                 }
                 Expression_::IntLiteral(i) => {
+                    done_children = true;
                     stack_frame.evalled_values.push(Value::Integer(*i));
                 }
                 Expression_::StringLiteral(s) => {
+                    done_children = true;
                     stack_frame.evalled_values.push(Value::String(s.clone()));
                 }
                 Expression_::ListLiteral(items) => {
@@ -2563,6 +2565,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 }
                 Expression_::Variable(name_sym) => {
                     if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
+                        done_children = true;
                         stack_frame.evalled_values.push(value);
                     } else {
                         let suggestion = match most_similar_var(&name_sym.name, &stack_frame, env) {
@@ -2681,6 +2684,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     }
                 }
                 Expression_::FunLiteral(fun_info) => {
+                    done_children = true;
                     stack_frame.evalled_values.push(Value::Closure(
                         stack_frame.bindings.block_bindings.clone(),
                         fun_info.clone(),
@@ -2830,6 +2834,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     }
                 }
                 Expression_::Break => {
+                    done_children = true;
                     eval_break(&mut stack_frame);
                 }
                 Expression_::Invalid => {
@@ -2841,6 +2846,11 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             // If we've just finished evaluating the expression that
             // we were requested to stop at, return that value
             // immediately.
+            //
+            // For nested expressions, we want to stop when the
+            // evaluation is fully done. For evaluations that don't
+            // recurse (e.g. variable lookup), we set done_children in
+            // the match above.
             if done_children
                 && session.stop_at_expr_id.is_some()
                 && session.stop_at_expr_id.as_ref() == expr_id.get()

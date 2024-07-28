@@ -49,6 +49,14 @@ impl Stack {
         self.0[0].evalled_values.truncate(1);
         self.0[0].bindings.block_bindings.truncate(1);
     }
+
+    pub(crate) fn type_bindings(&self) -> TypeVarEnv {
+        let Some(stack_frame) = self.0.last() else {
+            return HashMap::default();
+        };
+
+        stack_frame.type_bindings.clone()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -293,13 +301,5 @@ impl Env {
 
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name, type_);
-    }
-
-    pub(crate) fn type_bindings(&self) -> TypeVarEnv {
-        let Some(stack_frame) = self.stack.0.last() else {
-            return HashMap::default();
-        };
-
-        stack_frame.type_bindings.clone()
     }
 }

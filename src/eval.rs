@@ -557,7 +557,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
             message: format!(
                 "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
                 symbol.name,
-                Type::from_value(value, env, &env.type_bindings()),
+                Type::from_value(value, env, &env.stack.type_bindings()),
             ),
             position: symbol.position.clone(),
         });
@@ -836,7 +836,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     ErrorMessage(format!(
         "Expected {}, but got {}: {}",
         expected.to_string(),
-        Type::from_value(value, env, &env.type_bindings()),
+        Type::from_value(value, env, &env.stack.type_bindings()),
         value.display(env)
     ))
 }
@@ -1079,7 +1079,7 @@ fn check_arity(
 
 /// Check that `value` has `expected` type.
 fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = Type::from_value(value, env, &env.type_bindings());
+    let value_type = Type::from_value(value, env, &env.stack.type_bindings());
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -1762,7 +1762,7 @@ fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHin
         Type::TypeParameter(payload_hint.sym.name.clone())
     } else {
         // Enum variant payload is a concrete type.
-        Type::from_hint(payload_hint, env, &env.type_bindings()).unwrap_or_err_ty()
+        Type::from_hint(payload_hint, env, &env.stack.type_bindings()).unwrap_or_err_ty()
     };
 
     let type_args: Vec<Type> = enum_info
@@ -3057,7 +3057,7 @@ fn eval_struct_value(
         if type_params.contains(&field_info.hint.sym.name) {
             type_arg_bindings.insert(
                 field_info.hint.sym.name.clone(),
-                Type::from_value(&field_value, env, &env.type_bindings()),
+                Type::from_value(&field_value, env, &env.stack.type_bindings()),
             );
         }
 

@@ -96,7 +96,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let mut type_bindings = self.env.type_bindings();
+        let mut type_bindings = self.env.stack.type_bindings();
         if let Some(fun_info) = method_info.fun_info() {
             for type_param in &fun_info.type_params {
                 type_bindings.insert(type_param.name.clone(), None);
@@ -130,7 +130,7 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         self.bindings.enter_block();
 
-        let mut type_bindings = self.env.type_bindings();
+        let mut type_bindings = self.env.stack.type_bindings();
         for type_param in &fun_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);
         }
@@ -150,7 +150,7 @@ impl Visitor for TypeCheckVisitor<'_> {
 
     fn visit_block(&mut self, block: &Block) {
         // check_block recurses, so don't recurse in the visitor
-        self.check_block(block, &self.env.type_bindings(), None);
+        self.check_block(block, &self.env.stack.type_bindings(), None);
     }
 }
 
@@ -944,7 +944,7 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Ty
 
     // The payload is not a generic type, so the type hint is
     // referring to a defined type.
-    Type::from_hint(&payload_hint, env, &env.type_bindings()).unwrap_or_err_ty()
+    Type::from_hint(&payload_hint, env, &env.stack.type_bindings()).unwrap_or_err_ty()
 }
 
 /// Solve the type variables in this method, and return the resolved

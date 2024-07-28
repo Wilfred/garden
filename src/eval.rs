@@ -2865,7 +2865,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     }
                 };
 
-                env.pop_to_toplevel();
+                // TODO: this shouldn't crash.
+                // env.pop_to_toplevel();
                 return Ok(v);
             }
         }

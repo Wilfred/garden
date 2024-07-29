@@ -47,8 +47,7 @@ use owo_colors::OwoColorize as _;
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
-use crate::eval::{eval_all_toplevel_items, eval_toplevel_defs, EvalError, Session};
-use crate::values::escape_string_literal;
+use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
 use garden_lang_parser::ast::{SourceString, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
@@ -304,12 +303,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
 
                 eval_toplevel_defs(&items, &mut env);
 
-                let call_src = call_to_main_src(arguments);
-                let (call_expr_items, parse_errors) =
-                    parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src);
-                assert!(parse_errors.is_empty());
-
-                match eval_all_toplevel_items(&call_expr_items, &mut env, &mut session) {
+                match eval_call_main(arguments, &mut env, &mut session) {
                     Ok(_) => {}
                     Err(EvalError::ResumableError(position, msg)) => {
                         eprintln!(
@@ -351,11 +345,6 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
     }
-}
-
-fn call_to_main_src(cli_args: &[String]) -> String {
-    let arg_literals: Vec<_> = cli_args.iter().map(|s| escape_string_literal(s)).collect();
-    format!("main([{}]);", arg_literals.join(", "))
 }
 
 #[cfg(test)]

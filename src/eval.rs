@@ -11,6 +11,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::parse_toplevel_items;
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
@@ -20,7 +21,7 @@ use crate::env::Env;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{Response, ResponseKind};
 use crate::types::TypeDef;
-use crate::values::{type_representation, BuiltinFunctionKind, Value};
+use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
     ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId, TestInfo,
@@ -345,6 +346,27 @@ pub(crate) fn eval_toplevel_tests(
         tests_passed,
         tests_failed: 0,
     })
+}
+
+fn call_to_main_src(cli_args: &[String]) -> String {
+    let arg_literals: Vec<_> = cli_args.iter().map(|s| escape_string_literal(s)).collect();
+    format!("main([{}]);", arg_literals.join(", "))
+}
+
+/// Evaluate a call to the user's main() function.
+pub(crate) fn eval_call_main(
+    cli_args: &[String],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<ToplevelEvalSummary, EvalError> {
+    let call_src = call_to_main_src(cli_args);
+    let (call_expr_items, parse_errors) =
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src);
+    assert!(
+        parse_errors.is_empty(),
+        "Internally constructed main() invocation should always be valid syntax."
+    );
+    eval_all_toplevel_items(&call_expr_items, env, session)
 }
 
 pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {

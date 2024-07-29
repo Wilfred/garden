@@ -19,7 +19,9 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName, SyntaxId, ToplevelItem, TypeName};
+use garden_lang_parser::ast::{
+    Definition_, SourceString, SymbolName, SyntaxId, ToplevelItem, TypeName,
+};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -294,7 +296,17 @@ fn handle_eval_up_to_id_request(
     };
 
     match item {
-        ToplevelItem::Def(_) => todo!(),
+        ToplevelItem::Def(def) => match &def.2 {
+            Definition_::Fun(_, fun_info) => {
+                todo!("call function with same values as previous call (per Env)")
+            }
+            Definition_::Method(_) => todo!(),
+            Definition_::Test(_) => todo!(),
+            Definition_::Enum(_) | Definition_::Struct(_) => {
+                // nothing to do
+                todo!("return null in some form")
+            }
+        },
         ToplevelItem::Expr(_) => {
             session.stop_at_expr_id = Some(expr_id);
 

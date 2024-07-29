@@ -297,7 +297,11 @@ fn handle_eval_up_to_id_request(
 
     match item {
         ToplevelItem::Def(def) => match &def.2 {
-            Definition_::Fun(_, fun_info) => {
+            Definition_::Fun(name_sym, fun_info) => {
+                let Some(call_args) = env.prev_call_args.get(&name_sym.name) else {
+                    todo!()
+                };
+
                 todo!("call function with same values as previous call (per Env)")
             }
             Definition_::Method(_) => todo!(),

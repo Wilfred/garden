@@ -1,7 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
@@ -367,6 +367,53 @@ pub(crate) fn eval_call_main(
         "Internally constructed main() invocation should always be valid syntax."
     );
     eval_all_toplevel_items(&call_expr_items, env, session)
+}
+
+/// Helper for starting evaluation with a function call. Used when
+/// running 'eval up to ID' in a function body.
+pub(crate) fn eval_toplevel_call(
+    name: &SymbolName,
+    args: &[Value],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<Value, EvalError> {
+    let stack_frame = env
+        .stack
+        .0
+        .last_mut()
+        .expect("Stack should always be non-empty");
+
+    // TODO: return an Err() rather than kludging a string and letting
+    // eval_env() return a type error.
+    let recv_value = env.file_scope.get(name).cloned().unwrap_or_else(|| {
+        Value::String("ERROR: Tried to call a function that isn't defined".to_owned())
+    });
+    stack_frame.evalled_values.push(recv_value);
+
+    for value in args.iter().rev() {
+        stack_frame.evalled_values.push(value.clone());
+    }
+
+    let recv_expr = Expression {
+        pos: Position::todo(),
+        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0)),
+        id: OnceCell::new(),
+    };
+
+    let paren_args = ParenthesizedArguments {
+        open_paren: Position::todo(),
+        arguments: vec![Expression::invalid(); args.len()],
+        close_paren: Position::todo(),
+    };
+
+    let call_expr = Expression {
+        pos: Position::todo(),
+        expr_: Expression_::Call(Box::new(recv_expr), paren_args),
+        id: OnceCell::new(),
+    };
+    stack_frame.exprs_to_eval.push((true, call_expr));
+
+    eval_env(env, session)
 }
 
 pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {

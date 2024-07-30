@@ -320,6 +320,15 @@ impl Expression {
             id: id.clone(),
         }
     }
+
+    /// Helper for creating Invalid expressions.
+    pub fn invalid() -> Self {
+        Self {
+            pos: Position::todo(),
+            expr_: Expression_::Invalid,
+            id: OnceCell::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

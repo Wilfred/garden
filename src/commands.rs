@@ -46,12 +46,10 @@ pub(crate) enum Command {
 }
 
 /// Split out the command name and the arguments (if any).
-fn parse_command(s: &str) -> (&str, Option<String>) {
+fn parse_command(s: &str) -> (&str, Option<&str>) {
     let s = s.trim();
     if let Some((name, args)) = s.split_once(' ') {
-        // Deliberately return an owned String because it simplifies
-        // the callers.
-        (name, Some(args.to_owned()))
+        (name, Some(args))
     } else {
         (s, None)
     }
@@ -99,6 +97,7 @@ impl Command {
     // TODO: from_string(":search") should produce an error.
     pub(crate) fn from_string(s: &str) -> Result<Self, CommandParseError> {
         let (command_name, args) = parse_command(s);
+        let args = args.map(|s| s.to_owned());
 
         match command_name.to_lowercase().as_str() {
             ":abort" => Ok(Command::Abort),

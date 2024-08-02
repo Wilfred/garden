@@ -28,7 +28,7 @@ pub(crate) enum Command {
     Forget(Option<String>),
     FrameValues,
     FrameStatements,
-    Methods,
+    Methods(Option<String>),
     Parse(Option<String>),
     Quit,
     Replace(Option<ast::Expression>),
@@ -73,7 +73,7 @@ impl Display for Command {
             Command::Functions => ":funs",
             Command::Help(_) => ":help",
             Command::Locals => ":locals",
-            Command::Methods => ":methods",
+            Command::Methods(_) => ":methods",
             Command::Parse(_) => ":parse",
             Command::Quit => ":quit",
             Command::Replace(_) => ":replace",
@@ -109,7 +109,7 @@ impl Command {
             ":funs" => Ok(Command::Functions),
             ":help" => Ok(Command::Help(args)),
             ":locals" => Ok(Command::Locals),
-            ":methods" => Ok(Command::Methods),
+            ":methods" => Ok(Command::Methods(args)),
             ":parse" => Ok(Command::Parse(args)),
             ":quit" => Ok(Command::Quit),
             ":replace" => {
@@ -370,7 +370,9 @@ pub(crate) fn run_command<T: Write>(
                 }
             }
         }
-        Command::Methods => {
+        Command::Methods(text) => {
+            let text = text.clone().unwrap_or_default();
+
             let mut type_names: Vec<_> = env.methods.keys().collect();
             type_names.sort_by_key(|typename| format!("{typename}"));
 
@@ -381,12 +383,15 @@ pub(crate) fn run_command<T: Write>(
                 method_names.sort_by_key(|meth| &meth.name_sym.name.0);
 
                 for method_name in method_names {
-                    if !is_first {
-                        writeln!(buf).unwrap();
-                    }
-                    write!(buf, "{}::{}", type_name, &method_name.name_sym.name).unwrap();
+                    let name = format!("{}::{}", type_name, &method_name.name_sym.name);
 
-                    is_first = false;
+                    if name.contains(&text) {
+                        if !is_first {
+                            writeln!(buf).unwrap();
+                        }
+                        write!(buf, "{}", name).unwrap();
+                        is_first = false;
+                    }
                 }
             }
         }
@@ -735,7 +740,7 @@ fn command_help(command: Command) -> &'static str {
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
-        Command::Methods => "The :methods command displays all the methods currently defined.\n\nExample:\n\n:methods",
+        Command::Methods(_) => "The :methods command displays all the methods currently defined. If given an argument, limits to names containing that substring.\n\nExample:\n\n:methods\n:method Str",
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
         Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
         Command::Replace(_) => "The :replace command discards the top value in the value stack and replaces it with the expression provided.\n\nExample:\n\n:replace 123",
@@ -777,10 +782,7 @@ mod tests {
 
     #[test]
     fn test_parse_command_with_args() {
-        assert_eq!(
-            parse_command(":foo bar baz"),
-            (":foo", Some("bar baz".to_owned()))
-        );
+        assert_eq!(parse_command(":foo bar baz"), (":foo", Some("bar baz")));
     }
 
     #[test]

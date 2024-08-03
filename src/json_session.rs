@@ -336,7 +336,10 @@ fn handle_eval_up_to_id_request(
     }
 }
 
-fn toplevel_item_containing_offset(items: &[ToplevelItem], offset: usize) -> Option<&ToplevelItem> {
+pub(crate) fn toplevel_item_containing_offset(
+    items: &[ToplevelItem],
+    offset: usize,
+) -> Option<&ToplevelItem> {
     for item in items {
         let pos = match item {
             ToplevelItem::Def(def) => &def.1,

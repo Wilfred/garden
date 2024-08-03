@@ -39,16 +39,20 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
+use checks::assign_ids::assign_toplevel_item_ids;
 use clap::{Parser, Subcommand};
+use eval::eval_all_toplevel_items;
 use go_to_def::print_pos;
 use hover::show_type;
+use json_session::toplevel_item_containing_offset;
 use owo_colors::OwoColorize as _;
+use pos_to_id::{find_expr_of_id, find_item_at};
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
-use garden_lang_parser::ast::{SourceString, ToplevelItem};
+use garden_lang_parser::ast::{Definition_, SourceString, SyntaxId, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -77,6 +81,9 @@ enum Commands {
     },
     /// Run all the tests in the Garden program at the path specified.
     Test { path: PathBuf },
+    /// Eval the program, then eval up to the position specified and
+    /// print the result.
+    TestEvalUpTo { offset: usize, path: PathBuf },
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
@@ -132,6 +139,15 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
+        Commands::TestEvalUpTo { offset, path } => match std::fs::read(&path) {
+            Ok(src_bytes) => {
+                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                test_eval_up_to(&src, &path, offset, &interrupted);
+            }
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
         Commands::DumpAst { path } => match std::fs::read(&path) {
             Ok(src_bytes) => dump_ast(src_bytes, &path),
             Err(e) => {
@@ -165,6 +181,104 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
+    }
+}
+
+fn test_eval_up_to(src: &str, path: &PathBuf, offset: usize, interrupted: &Arc<AtomicBool>) {
+    let mut env = Env::default();
+    let mut session = Session {
+        interrupted,
+        has_attached_stdout: true,
+        start_time: Instant::now(),
+        trace_exprs: false,
+        stop_at_expr_id: None,
+    };
+
+    // TODO: this is copy-pasted from json_session.rs
+    let (items, mut errors) = parse_toplevel_items(&path, src);
+    assign_toplevel_item_ids(&items);
+
+    toplevel_item_containing_offset(&items, offset);
+
+    if let Some(e) = errors.pop() {
+        match e {
+            ParseError::Invalid {
+                position,
+                message,
+                additional: _,
+            } => {
+                let stack = Some(format_parse_error(
+                    &message,
+                    &position,
+                    Level::Error,
+                    &SourceString {
+                        src: src.to_owned(),
+                        offset: 0,
+                    },
+                ));
+                eprintln!("Error: {}", message.0);
+                return;
+            }
+            ParseError::Incomplete { message, .. } => {
+                eprintln!("Error: {}", message.0);
+                return;
+            }
+        }
+    }
+
+    let mut expr_id: Option<SyntaxId> = None;
+    for id in find_item_at(&items, offset).into_iter().rev() {
+        // TODO: this is iterating items twice, which will be slower.
+        if find_expr_of_id(&items, id).is_some() {
+            expr_id = Some(id);
+            break;
+        }
+    }
+
+    let Some(expr_id) = expr_id else {
+        todo!("Error report on no match found");
+    };
+
+    let item = toplevel_item_containing_offset(&items, offset);
+
+    let Some(item) = item else {
+        todo!("Error report on no match found");
+    };
+
+    match item {
+        ToplevelItem::Def(def) => match &def.2 {
+            Definition_::Fun(name_sym, fun_info) => {
+                let Some(call_args) = env.prev_call_args.get(&name_sym.name) else {
+                    todo!()
+                };
+
+                todo!("call function with same values as previous call (per Env)")
+            }
+            Definition_::Method(_) => todo!(),
+            Definition_::Test(_) => todo!(),
+            Definition_::Enum(_) | Definition_::Struct(_) => {
+                // nothing to do
+                todo!("return null in some form")
+            }
+        },
+        ToplevelItem::Expr(_) => {
+            session.stop_at_expr_id = Some(expr_id);
+
+            let res = eval_all_toplevel_items(&[item.clone()], &mut env, &mut session);
+            session.stop_at_expr_id = None;
+
+            match res {
+                Ok(eval_summary) => {
+                    let value_summary = match eval_summary.values.last() {
+                        Some(value) => value.display(&env),
+                        None => format!("{:?}", eval_summary),
+                    };
+
+                    println!("{}", value_summary);
+                }
+                Err(_) => todo!("error during eval"),
+            }
+        }
     }
 }
 
@@ -385,6 +499,14 @@ mod tests {
     #[test]
     fn test_completion() -> TestResult<()> {
         let mut config = TestConfig::new("target/debug/garden", "src/complete_test_files", "// ")?;
+        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
+        config.run_tests()
+    }
+
+    #[test]
+    fn test_eval_up_to() -> TestResult<()> {
+        let mut config =
+            TestConfig::new("target/debug/garden", "src/eval_up_to_test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
     }

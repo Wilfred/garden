@@ -1,0 +1,13 @@
+f{
+    let xx = 99;
+    let yy = xx + 1;
+    yy + 10;
+}
+
+// args: dump-ast
+// expected stdout:
+// StructLiteral(
+//     TypeSymbol"f",
+//     [],
+// )
+

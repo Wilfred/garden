@@ -429,10 +429,25 @@ fn parse_struct_literal_fields(
         let sym = parse_symbol(tokens, diagnostics);
         require_token(tokens, diagnostics, ":");
         let expr = parse_inline_expression(src, tokens, diagnostics);
-        assert!(
-            tokens.idx > start_idx,
-            "The parser should always make forward progress."
-        );
+
+        if tokens.idx == start_idx {
+            // We haven't made forward progress, the syntax must be
+            // very broken. Give up on this struct, consuming until
+            // the closing brace.
+            loop {
+                match tokens.peek() {
+                    Some(t) => {
+                        if t.text == "}" {
+                            break;
+                        } else {
+                            tokens.pop();
+                        }
+                    }
+                    None => break,
+                }
+            }
+            break;
+        }
 
         fields.push((sym, expr));
 

@@ -184,6 +184,7 @@ fn main() {
     }
 }
 
+/// Evaluate a garden file, then run eval-up-to and print the result.
 fn test_eval_up_to(src: &str, path: &PathBuf, offset: usize, interrupted: &Arc<AtomicBool>) {
     let mut env = Env::default();
     let mut session = Session {

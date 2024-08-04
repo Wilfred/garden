@@ -1,0 +1,9 @@
+fun foo () {
+    let aa = 1;
+    let bb = aa + 2;
+    bb * 2;
+}
+
+// args: test-eval-up-to 56
+// expected stdout: 3
+

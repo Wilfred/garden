@@ -41,7 +41,7 @@ use std::time::Instant;
 
 use checks::assign_ids::assign_toplevel_item_ids;
 use clap::{Parser, Subcommand};
-use eval::eval_all_toplevel_items;
+use eval::{eval_all_toplevel_items, eval_toplevel_call};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::toplevel_item_containing_offset;
@@ -185,7 +185,7 @@ fn main() {
 }
 
 /// Evaluate a garden file, then run eval-up-to and print the result.
-fn test_eval_up_to(src: &str, path: &PathBuf, offset: usize, interrupted: &Arc<AtomicBool>) {
+fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<AtomicBool>) {
     let mut env = Env::default();
     let mut session = Session {
         interrupted,
@@ -196,7 +196,7 @@ fn test_eval_up_to(src: &str, path: &PathBuf, offset: usize, interrupted: &Arc<A
     };
 
     // TODO: this is copy-pasted from json_session.rs
-    let (items, mut errors) = parse_toplevel_items(&path, src);
+    let (items, mut errors) = parse_toplevel_items(path, src);
     assign_toplevel_item_ids(&items);
 
     toplevel_item_containing_offset(&items, offset);
@@ -249,11 +249,23 @@ fn test_eval_up_to(src: &str, path: &PathBuf, offset: usize, interrupted: &Arc<A
     match item {
         ToplevelItem::Def(def) => match &def.2 {
             Definition_::Fun(name_sym, fun_info) => {
-                let Some(call_args) = env.prev_call_args.get(&name_sym.name) else {
-                    todo!()
+                eval_toplevel_defs(&items, &mut env);
+                let args = match env.prev_call_args.get(&name_sym.name) {
+                    _ if fun_info.params.is_empty() => vec![],
+                    Some(prev_args) => prev_args.clone(),
+                    None => todo!("Complain that we can't call this function"),
                 };
 
-                todo!("call function with same values as previous call (per Env)")
+                session.stop_at_expr_id = Some(expr_id);
+                let res = eval_toplevel_call(&name_sym.name, &args, &mut env, &mut session);
+                session.stop_at_expr_id = None;
+
+                match res {
+                    Ok(value) => {
+                        println!("{}", value.display(&env));
+                    }
+                    Err(_) => todo!("error during eval"),
+                }
             }
             Definition_::Method(_) => todo!(),
             Definition_::Test(_) => todo!(),

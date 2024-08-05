@@ -199,8 +199,6 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
     let (items, mut errors) = parse_toplevel_items(path, src);
     assign_toplevel_item_ids(&items);
 
-    toplevel_item_containing_offset(&items, offset);
-
     if let Some(e) = errors.pop() {
         match e {
             ParseError::Invalid {

@@ -2040,6 +2040,17 @@ fn eval_method_call(
         .expect("Popped an empty value stack for method call receiver.");
 
     let receiver_type_name = type_representation(&receiver_value);
+
+    let prev_meth_calls_for_ty = env
+        .prev_method_call_args
+        .entry(receiver_type_name.clone())
+        .or_default();
+
+    prev_meth_calls_for_ty.insert(
+        meth_name.name.clone(),
+        (receiver_value.clone(), arg_values.clone()),
+    );
+
     let receiver_method = match env.methods.get(&receiver_type_name) {
         Some(receiver_methods) => {
             if let Some(method) = receiver_methods.get(&meth_name.name) {

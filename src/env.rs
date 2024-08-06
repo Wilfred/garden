@@ -65,7 +65,12 @@ pub(crate) struct Env {
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
     types: HashMap<TypeName, TypeDef>,
+    /// The arguments used the last time each function was
+    /// called. Used for eval-up-to.
     pub(crate) prev_call_args: HashMap<SymbolName, Vec<Value>>,
+    /// The receiver and arguments used the last time each method was
+    /// called. Used for eval-up-to.
+    pub(crate) prev_method_call_args: HashMap<TypeName, HashMap<SymbolName, (Value, Vec<Value>)>>,
     // TODO: should this be stored separately?
     pub(crate) stack: Stack,
 }
@@ -252,6 +257,7 @@ impl Default for Env {
             tests: HashMap::new(),
             types,
             prev_call_args: HashMap::new(),
+            prev_method_call_args: HashMap::new(),
             stack: Stack::default(),
         };
 

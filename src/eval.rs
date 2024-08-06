@@ -19,7 +19,8 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
-use crate::json_session::{Response, ResponseKind};
+use crate::json_session::{toplevel_item_containing_offset, Response, ResponseKind};
+use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
@@ -367,6 +368,67 @@ pub(crate) fn eval_call_main(
         "Internally constructed main() invocation should always be valid syntax."
     );
     eval_all_toplevel_items(&call_expr_items, env, session)
+}
+
+/// Try to evaluate items up to the syntax ID specified.
+///
+/// Returns None if we couldn't find anything to evaluate (not an error).
+pub(crate) fn eval_up_to(
+    env: &mut Env,
+    session: &mut Session,
+    items: &[ToplevelItem],
+    offset: usize,
+) -> Option<Result<Value, EvalError>> {
+    let mut expr_id: Option<SyntaxId> = None;
+    for id in find_item_at(items, offset).into_iter().rev() {
+        // TODO: this is iterating items twice, which will be slower.
+        if find_expr_of_id(items, id).is_some() {
+            expr_id = Some(id);
+            break;
+        }
+    }
+    let expr_id = expr_id?;
+
+    let item = toplevel_item_containing_offset(items, offset)?;
+
+    match item {
+        ToplevelItem::Def(def) => match &def.2 {
+            Definition_::Fun(name_sym, fun_info) => {
+                eval_toplevel_defs(items, env);
+                let args = match env.prev_call_args.get(&name_sym.name) {
+                    _ if fun_info.params.is_empty() => vec![],
+                    Some(prev_args) => prev_args.clone(),
+                    None => todo!("Complain that we can't call this function"),
+                };
+
+                session.stop_at_expr_id = Some(expr_id);
+                let res = eval_toplevel_call(&name_sym.name, &args, env, session);
+                session.stop_at_expr_id = None;
+
+                Some(res)
+            }
+            Definition_::Method(_) => todo!(),
+            Definition_::Test(_) => todo!(),
+            Definition_::Enum(_) | Definition_::Struct(_) => {
+                // nothing to do
+                None
+            }
+        },
+        ToplevelItem::Expr(_) => {
+            session.stop_at_expr_id = Some(expr_id);
+
+            let res = eval_all_toplevel_items(&[item.clone()], env, session);
+            session.stop_at_expr_id = None;
+
+            match res {
+                Ok(mut eval_summary) => {
+                    let value = eval_summary.values.pop()?;
+                    Some(Ok(value))
+                }
+                Err(e) => Some(Err(e)),
+            }
+        }
+    }
 }
 
 /// Helper for starting evaluation with a function call. Used when

@@ -41,18 +41,16 @@ use std::time::Instant;
 
 use checks::assign_ids::assign_toplevel_item_ids;
 use clap::{Parser, Subcommand};
-use eval::{eval_all_toplevel_items, eval_toplevel_call};
+use eval::eval_up_to;
 use go_to_def::print_pos;
 use hover::show_type;
-use json_session::toplevel_item_containing_offset;
 use owo_colors::OwoColorize as _;
-use pos_to_id::{find_expr_of_id, find_item_at};
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
-use garden_lang_parser::ast::{Definition_, SourceString, SyntaxId, ToplevelItem};
+use garden_lang_parser::ast::{SourceString, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -195,7 +193,6 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
         stop_at_expr_id: None,
     };
 
-    // TODO: this is copy-pasted from json_session.rs
     let (items, mut errors) = parse_toplevel_items(path, src);
     assign_toplevel_item_ids(&items);
 
@@ -225,71 +222,15 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
         }
     }
 
-    let mut expr_id: Option<SyntaxId> = None;
-    for id in find_item_at(&items, offset).into_iter().rev() {
-        // TODO: this is iterating items twice, which will be slower.
-        if find_expr_of_id(&items, id).is_some() {
-            expr_id = Some(id);
-            break;
-        }
-    }
-
-    let Some(expr_id) = expr_id else {
-        todo!("Error report on no match found");
-    };
-
-    let item = toplevel_item_containing_offset(&items, offset);
-
-    let Some(item) = item else {
-        todo!("Error report on no match found");
-    };
-
-    match item {
-        ToplevelItem::Def(def) => match &def.2 {
-            Definition_::Fun(name_sym, fun_info) => {
-                eval_toplevel_defs(&items, &mut env);
-                let args = match env.prev_call_args.get(&name_sym.name) {
-                    _ if fun_info.params.is_empty() => vec![],
-                    Some(prev_args) => prev_args.clone(),
-                    None => todo!("Complain that we can't call this function"),
-                };
-
-                session.stop_at_expr_id = Some(expr_id);
-                let res = eval_toplevel_call(&name_sym.name, &args, &mut env, &mut session);
-                session.stop_at_expr_id = None;
-
-                match res {
-                    Ok(value) => {
-                        println!("{}", value.display(&env));
-                    }
-                    Err(_) => todo!("error during eval"),
-                }
-            }
-            Definition_::Method(_) => todo!(),
-            Definition_::Test(_) => todo!(),
-            Definition_::Enum(_) | Definition_::Struct(_) => {
-                // nothing to do
-                todo!("return null in some form")
-            }
+    match eval_up_to(&mut env, &mut session, &items, offset) {
+        Some(eval_res) => match eval_res {
+            Ok(v) => println!("{}", v.display(&env)),
+            Err(e) => match e {
+                EvalError::Interrupted => eprintln!("Interrupted."),
+                EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
+            },
         },
-        ToplevelItem::Expr(_) => {
-            session.stop_at_expr_id = Some(expr_id);
-
-            let res = eval_all_toplevel_items(&[item.clone()], &mut env, &mut session);
-            session.stop_at_expr_id = None;
-
-            match res {
-                Ok(eval_summary) => {
-                    let value_summary = match eval_summary.values.last() {
-                        Some(value) => value.display(&env),
-                        None => format!("{:?}", eval_summary),
-                    };
-
-                    println!("{}", value_summary);
-                }
-                Err(_) => todo!("error during eval"),
-            }
-        }
+        None => eprintln!("Could not find anything to execute"),
     }
 }
 

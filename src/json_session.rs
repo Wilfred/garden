@@ -11,17 +11,14 @@ use serde::{Deserialize, Serialize};
 use crate::checks::assign_ids::assign_toplevel_item_ids;
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
-use crate::eval::{eval_all_toplevel_items, eval_env, push_test_stackframe};
-use crate::pos_to_id::{find_expr_of_id, find_item_at};
+use crate::eval::{eval_all_toplevel_items, eval_env, eval_up_to, push_test_stackframe};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{
-    Definition_, SourceString, SymbolName, SyntaxId, ToplevelItem, TypeName,
-};
+use garden_lang_parser::ast::{SourceString, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -274,63 +271,35 @@ fn handle_eval_up_to_id_request(
         }
     }
 
-    let mut expr_id: Option<SyntaxId> = None;
-    for id in find_item_at(&items, offset).into_iter().rev() {
-        // TODO: this is iterating items twice, which will be slower.
-        if find_expr_of_id(&items, id).is_some() {
-            expr_id = Some(id);
-            break;
-        }
-    }
-
-    let Some(expr_id) = expr_id else {
-        todo!("Error report on no match found");
-    };
-
-    let item = toplevel_item_containing_offset(&items, offset);
-
-    let Some(item) = item else {
-        todo!("Error report on no match found");
-    };
-
-    match item {
-        ToplevelItem::Def(def) => match &def.2 {
-            Definition_::Fun(name_sym, fun_info) => {
-                let Some(call_args) = env.prev_call_args.get(&name_sym.name) else {
-                    todo!()
-                };
-
-                todo!("call function with same values as previous call (per Env)")
-            }
-            Definition_::Method(_) => todo!(),
-            Definition_::Test(_) => todo!(),
-            Definition_::Enum(_) | Definition_::Struct(_) => {
-                // nothing to do
-                todo!("return null in some form")
-            }
+    match eval_up_to(env, session, &items, offset) {
+        Some(eval_res) => match eval_res {
+            Ok(v) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Ok(v.display(env)),
+                warnings: vec![],
+            },
+            Err(e) => match e {
+                EvalError::Interrupted => Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: "Interrupted.".to_owned(),
+                        stack: None,
+                    }),
+                    warnings: vec![],
+                },
+                EvalError::ResumableError(_, message) => Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: message.0,
+                        stack: None,
+                    }),
+                    warnings: vec![],
+                },
+            },
         },
-        ToplevelItem::Expr(_) => {
-            session.stop_at_expr_id = Some(expr_id);
-
-            let res = eval_all_toplevel_items(&[item.clone()], env, session);
-            session.stop_at_expr_id = None;
-
-            match res {
-                Ok(eval_summary) => {
-                    let value_summary = match eval_summary.values.last() {
-                        Some(value) => value.display(env),
-                        None => format!("{:?}", eval_summary),
-                    };
-
-                    Response {
-                        kind: ResponseKind::Evaluate,
-                        value: Ok(value_summary),
-                        warnings: eval_summary.diagnostics,
-                    }
-                }
-                Err(_) => todo!("error during eval"),
-            }
-        }
+        None => todo!("return null in some form"),
     }
 }
 

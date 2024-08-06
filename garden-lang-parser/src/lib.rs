@@ -434,16 +434,11 @@ fn parse_struct_literal_fields(
             // We haven't made forward progress, the syntax must be
             // very broken. Give up on this struct, consuming until
             // the closing brace.
-            loop {
-                match tokens.peek() {
-                    Some(t) => {
-                        if t.text == "}" {
-                            break;
-                        } else {
-                            tokens.pop();
-                        }
-                    }
-                    None => break,
+            while let Some(t) = tokens.peek() {
+                if t.text == "}" {
+                    break;
+                } else {
+                    tokens.pop();
                 }
             }
             break;

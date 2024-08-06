@@ -398,7 +398,10 @@ pub(crate) fn eval_up_to(
                 let args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
-                    None => todo!("Complain that we can't call this function"),
+                    None => {
+                        // We don't have any known values that we can use, give up.
+                        return None;
+                    }
                 };
 
                 session.stop_at_expr_id = Some(expr_id);

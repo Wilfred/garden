@@ -4,6 +4,8 @@
     bb * 2;
 }
 
+fun main(_) {}
+
 // args: test-eval-up-to 45
 // expected stdout: 3
 

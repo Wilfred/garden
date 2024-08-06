@@ -222,6 +222,15 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
         }
     }
 
+    eval_toplevel_defs(&items, &mut env);
+    if let Err(e) = eval_call_main(&[], &mut env, &mut session) {
+        match e {
+            EvalError::Interrupted => eprintln!("Interrupted."),
+            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
+        }
+        return;
+    }
+
     match eval_up_to(&mut env, &mut session, &items, offset) {
         Some(eval_res) => match eval_res {
             Ok(v) => println!("{}", v.display(&env)),

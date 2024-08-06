@@ -4,6 +4,8 @@ test foo {
     bb * 2;
 }
 
+fun main(_) {}
+
 // args: test-eval-up-to 54
-// expected stderr: Could not find anything to execute
+// expected stdout: 3
 

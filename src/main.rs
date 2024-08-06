@@ -203,7 +203,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
                 message,
                 additional: _,
             } => {
-                let stack = Some(format_parse_error(
+                let formatted_error = format_parse_error(
                     &message,
                     &position,
                     Level::Error,
@@ -211,8 +211,8 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
                         src: src.to_owned(),
                         offset: 0,
                     },
-                ));
-                eprintln!("Error: {}", message.0);
+                );
+                eprintln!("Error: {}", formatted_error);
                 return;
             }
             ParseError::Incomplete { message, .. } => {

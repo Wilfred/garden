@@ -79,8 +79,10 @@ enum Commands {
     },
     /// Run all the tests in the Garden program at the path specified.
     Test { path: PathBuf },
-    /// Eval the program, then eval up to the position specified and
-    /// print the result.
+    /// Run the program specified, calling its main() function, then
+    /// run eval-up-to at the position specified and print the result.
+    ///
+    /// Used for testing the eval-up-to feature.
     TestEvalUpTo { offset: usize, path: PathBuf },
     /// Check the Garden program at the path specified for issues.
     Check {

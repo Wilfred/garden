@@ -408,7 +408,15 @@ pub(crate) fn eval_up_to(
                 Some(res)
             }
             Definition_::Method(_) => todo!(),
-            Definition_::Test(_) => todo!(),
+            Definition_::Test(test) => {
+                session.stop_at_expr_id = Some(expr_id);
+
+                push_test_stackframe(test, env);
+                let res = eval_env(env, session);
+                session.stop_at_expr_id = None;
+
+                Some(res)
+            }
             Definition_::Enum(_) | Definition_::Struct(_) => {
                 // nothing to do
                 None

@@ -1,0 +1,16 @@
+struct WrappedNum {
+    value: Int,
+}
+
+fun (self: WrappedNum) increment(): Int {
+    self.value + 1;
+}
+
+fun main(_) {
+    let wn = WrappedNum { value: 10 };
+    wn.increment();
+}
+
+// args: test-eval-up-to 94
+// expected stdout: 10
+

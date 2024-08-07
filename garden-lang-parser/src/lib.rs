@@ -1606,7 +1606,7 @@ const RESERVED_WORDS: &[&str] = &[
     "continue",
 ];
 
-fn placeholder_symbol(position: Position) -> Symbol {
+pub fn placeholder_symbol(position: Position) -> Symbol {
     Symbol {
         position,
         name: SymbolName("__placeholder".to_string()),

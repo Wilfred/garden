@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::parse_toplevel_items;
+use garden_lang_parser::{parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
 use strsim::normalized_levenshtein;
 
@@ -410,7 +410,24 @@ pub(crate) fn eval_up_to(
 
                 Some(res)
             }
-            Definition_::Method(_) => todo!(),
+            Definition_::Method(method_info) => {
+                let type_name = &method_info.receiver_hint.sym.name;
+
+                let prev_calls_for_type = env.prev_method_call_args.get(type_name)?.clone();
+                let (prev_recv, prev_args) = prev_calls_for_type.get(&method_info.name_sym.name)?;
+
+                session.stop_at_expr_id = Some(expr_id);
+                let res = eval_toplevel_method_call(
+                    prev_recv,
+                    &method_info.name_sym.name,
+                    prev_args,
+                    env,
+                    session,
+                );
+                session.stop_at_expr_id = None;
+
+                Some(res)
+            }
             Definition_::Test(test) => {
                 session.stop_at_expr_id = Some(expr_id);
 
@@ -482,6 +499,56 @@ pub(crate) fn eval_toplevel_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
+        id: OnceCell::new(),
+    };
+    stack_frame.exprs_to_eval.push((true, call_expr));
+
+    eval_env(env, session)
+}
+
+/// Helper for starting evaluation with a method call. Used for
+/// eval-up-to when the cursor is inside a method body.
+pub(crate) fn eval_toplevel_method_call(
+    recv_value: &Value,
+    meth_name: &SymbolName,
+    args: &[Value],
+    env: &mut Env,
+    session: &mut Session,
+) -> Result<Value, EvalError> {
+    let stack_frame = env
+        .stack
+        .0
+        .last_mut()
+        .expect("Stack should always be non-empty");
+
+    stack_frame.evalled_values.push(recv_value.clone());
+    for value in args.iter().rev() {
+        stack_frame.evalled_values.push(value.clone());
+    }
+
+    // Just create a placeholder symbol for the receiver. Since we
+    // don't evaluate children, it doesn't matter.
+    let recv_expr = Expression {
+        pos: Position::todo(),
+        expr_: Expression_::Variable(placeholder_symbol(Position::todo())),
+        id: OnceCell::new(),
+    };
+
+    let meth_sym = Symbol {
+        position: Position::todo(),
+        name: meth_name.clone(),
+        id: OnceCell::new(),
+    };
+
+    let paren_args = ParenthesizedArguments {
+        open_paren: Position::todo(),
+        arguments: vec![Expression::invalid(); args.len()],
+        close_paren: Position::todo(),
+    };
+
+    let call_expr = Expression {
+        pos: Position::todo(),
+        expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
         id: OnceCell::new(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));

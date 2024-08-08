@@ -378,7 +378,9 @@ the user entering a value in the *garden* buffer."
   (let ((sym-name (symbol-name (symbol-at-point))))
     (garden--find-def sym-name)))
 
-(defun garden--send-eval-up-to ()
+(defun garden-eval-up-to ()
+  "Evaluate the definition containing point, but stop at the expression
+enclosing point and print the result."
   (interactive)
   (let* ((buf (garden--active-buffer))
          ;; Zero-based offset.

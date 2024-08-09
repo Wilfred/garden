@@ -307,21 +307,26 @@ pub struct Expression {
 }
 
 impl Expression {
-    pub fn new(position: Position, expr_: Expression_) -> Self {
+    pub fn new(position: Position, expr_: Expression_, id2: SyntaxId) -> Self {
         Self {
             pos: position,
             expr_,
             id: OnceCell::new(),
-            id2: SyntaxId(0),
+            id2,
         }
     }
 
-    pub fn new_with_id(position: Position, expr_: Expression_, id: &OnceCell<SyntaxId>) -> Self {
+    pub fn new_with_id(
+        position: Position,
+        expr_: Expression_,
+        id: &OnceCell<SyntaxId>,
+        id2: SyntaxId,
+    ) -> Self {
         Self {
             pos: position,
             expr_,
             id: id.clone(),
-            id2: SyntaxId(0),
+            id2,
         }
     }
 

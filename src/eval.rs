@@ -871,14 +871,22 @@ fn eval_if(
         if b {
             stack_frame.exprs_to_eval.push((
                 false,
-                Expression::new(position.clone(), Expression_::Block(then_body.clone())),
+                Expression::new(
+                    position.clone(),
+                    Expression_::Block(then_body.clone()),
+                    SyntaxId(0),
+                ),
             ));
         } else {
             match else_body {
                 Some(else_body) => {
                     stack_frame.exprs_to_eval.push((
                         false,
-                        Expression::new(position.clone(), Expression_::Block(else_body.clone())),
+                        Expression::new(
+                            position.clone(),
+                            Expression_::Block(else_body.clone()),
+                            SyntaxId(0),
+                        ),
                     ));
                 }
                 None => {
@@ -938,7 +946,7 @@ fn eval_while(
             // Evaluate the body.
             stack_frame.exprs_to_eval.push((
                 false,
-                Expression::new(expr.pos, Expression_::Block(body.clone())),
+                Expression::new(expr.pos, Expression_::Block(body.clone()), SyntaxId(0)),
             ))
         } else {
             stack_frame.evalled_values.push(Value::unit());
@@ -2681,6 +2689,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                     expr_position.clone(),
                                     Expression_::Variable(Symbol::new(expr_position, "Unit")),
                                     &expr_id,
+                                    SyntaxId(0),
                                 )
                             }
                         };
@@ -3432,9 +3441,10 @@ fn eval_match_cases(
 
             stack_frame.bindings_next_block = bindings;
 
-            stack_frame
-                .exprs_to_eval
-                .push((false, Expression::new(case_expr_pos.clone(), case_block)));
+            stack_frame.exprs_to_eval.push((
+                false,
+                Expression::new(case_expr_pos.clone(), case_block, SyntaxId(0)),
+            ));
             return Ok(());
         }
     }
@@ -3560,8 +3570,10 @@ mod tests {
                         path: PathBuf::from("__test.gdn"),
                     },
                     Expression_::IntLiteral(123),
+                    SyntaxId(0),
                 )),
             ),
+            SyntaxId(0),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
 
@@ -3583,6 +3595,7 @@ mod tests {
                 },
                 "foo",
             )),
+            SyntaxId(0),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
     }

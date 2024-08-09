@@ -130,7 +130,7 @@ fn parse_integer(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) ->
     let token = require_a_token(tokens, diagnostics, "integer literal");
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
-        Expression::new(token.position, Expression_::IntLiteral(i))
+        Expression::new(token.position, Expression_::IntLiteral(i), SyntaxId(0))
     } else {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
@@ -140,7 +140,11 @@ fn parse_integer(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) ->
 
         // Choose an arbitrary value that's hopefully unlikely to
         // occur in real code.
-        Expression::new(token.position, Expression_::IntLiteral(11223344))
+        Expression::new(
+            token.position,
+            Expression_::IntLiteral(11223344),
+            SyntaxId(0),
+        )
     }
 }
 
@@ -149,7 +153,11 @@ fn parse_variable_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, diagnostics);
-    Expression::new(variable.position.clone(), Expression_::Variable(variable))
+    Expression::new(
+        variable.position.clone(),
+        Expression_::Variable(variable),
+        SyntaxId(0),
+    )
 }
 
 fn parse_parenthesis_expression(
@@ -176,6 +184,7 @@ fn parse_list_literal(
     Expression::new(
         Position::merge(&open_bracket.position, &close_bracket.position),
         Expression_::ListLiteral(items),
+        SyntaxId(0),
     )
 }
 
@@ -210,6 +219,7 @@ fn parse_lambda_expression(
             type_params,
             return_hint,
         }),
+        SyntaxId(0),
     )
 }
 
@@ -255,6 +265,7 @@ fn parse_if_expression(
     Expression::new(
         Position::merge(&if_token.position, last_brace_pos),
         Expression_::If(Box::new(condition), then_body, else_body),
+        SyntaxId(0),
     )
 }
 
@@ -274,6 +285,7 @@ fn parse_while_expression(
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
         Expression_::While(Box::new(condition), body),
+        SyntaxId(0),
     )
 }
 
@@ -283,7 +295,7 @@ fn parse_break_expression(
 ) -> Expression {
     let break_token = require_token(tokens, diagnostics, "break");
     let _ = require_end_token(tokens, diagnostics, ";");
-    Expression::new(break_token.position, Expression_::Break)
+    Expression::new(break_token.position, Expression_::Break, SyntaxId(0))
 }
 
 fn parse_return_expression(
@@ -298,6 +310,7 @@ fn parse_return_expression(
         return Expression::new(
             Position::merge(&return_token.position, &semicolon.position),
             Expression_::Return(None),
+            SyntaxId(0),
         );
     }
 
@@ -306,6 +319,7 @@ fn parse_return_expression(
     Expression::new(
         Position::merge(&return_token.position, &semicolon.position),
         Expression_::Return(Some(Box::new(expr))),
+        SyntaxId(0),
     )
 }
 
@@ -361,6 +375,7 @@ fn parse_simple_expression(
             return Expression::new(
                 Position::merge(&block.open_brace, &block.close_brace),
                 Expression_::Block(block),
+                SyntaxId(0),
             );
         }
 
@@ -391,6 +406,7 @@ fn parse_simple_expression(
             return Expression::new(
                 token.position,
                 Expression_::StringLiteral(unescape_string(token.text)),
+                SyntaxId(0),
             );
         }
 
@@ -403,7 +419,7 @@ fn parse_simple_expression(
             message: ErrorMessage(format!("Expected an expression, got: `{}`.", token.text)),
             additional: vec![],
         });
-        return Expression::new(token.position, Expression_::Invalid);
+        return Expression::new(token.position, Expression_::Invalid, SyntaxId(0));
     }
 
     diagnostics.push(ParseError::Incomplete {
@@ -411,7 +427,7 @@ fn parse_simple_expression(
         position: Position::todo(),
     });
 
-    Expression::new(Position::todo(), Expression_::Invalid)
+    Expression::new(Position::todo(), Expression_::Invalid, SyntaxId(0))
 }
 
 fn parse_struct_literal_fields(
@@ -478,6 +494,7 @@ fn parse_struct_literal(
     Expression::new(
         Position::merge(&open_brace.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
+        SyntaxId(0),
     )
 }
 
@@ -525,6 +542,7 @@ fn parse_match_expression(
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
         Expression_::Match(Box::new(scrutinee), cases),
+        SyntaxId(0),
     )
 }
 
@@ -636,6 +654,7 @@ fn parse_simple_expression_with_trailing(
                 expr = Expression::new(
                     Position::merge(&expr.pos, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
+                    SyntaxId(0),
                 );
             }
             Some(token) if token.text == "." => {
@@ -648,11 +667,13 @@ fn parse_simple_expression_with_trailing(
                     expr = Expression::new(
                         Position::merge(&expr.pos, &arguments.close_paren),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
+                        SyntaxId(0),
                     );
                 } else {
                     expr = Expression::new(
                         Position::merge(&expr.pos, &variable.position),
                         Expression_::DotAccess(Box::new(expr), variable),
+                        SyntaxId(0),
                     );
                 }
             }
@@ -802,6 +823,7 @@ fn parse_simple_expression_or_binop(
             expr = Expression::new(
                 Position::merge(&expr.pos, &rhs_expr.pos),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
+                SyntaxId(0),
             );
         }
     }
@@ -1665,6 +1687,7 @@ fn parse_let_expression(
     Expression::new(
         Position::merge(&let_token.position, &semicolon.position),
         Expression_::Let(variable, hint, Box::new(expr)),
+        SyntaxId(0),
     )
 }
 
@@ -1682,6 +1705,7 @@ fn parse_assign_expression(
     Expression::new(
         Position::merge(&variable.position, &semicolon.position),
         Expression_::Assign(variable, Box::new(expr)),
+        SyntaxId(0),
     )
 }
 

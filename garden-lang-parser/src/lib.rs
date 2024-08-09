@@ -862,7 +862,7 @@ fn parse_definition(
 ) -> Option<Definition> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun" {
-            return parse_function_or_method(src, tokens, diagnostics);
+            return parse_function_or_method(src, tokens, next_id2, diagnostics);
         }
         if token.text == "test" {
             return Some(parse_test(src, tokens, next_id2, diagnostics));
@@ -1499,6 +1499,7 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
 fn parse_function_or_method(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     let fun_token = require_token(tokens, diagnostics, "fun");
@@ -1513,23 +1514,9 @@ fn parse_function_or_method(
     // ```
     match tokens.peek() {
         Some(token) => Some(if token.text == "(" {
-            parse_method(
-                src,
-                tokens,
-                &mut SyntaxId(0),
-                diagnostics,
-                fun_token,
-                type_params,
-            )
+            parse_method(src, tokens, next_id2, diagnostics, fun_token, type_params)
         } else {
-            parse_function(
-                src,
-                tokens,
-                &mut SyntaxId(0),
-                diagnostics,
-                fun_token,
-                type_params,
-            )
+            parse_function(src, tokens, next_id2, diagnostics, fun_token, type_params)
         }),
         None => {
             diagnostics.push(ParseError::Incomplete {
@@ -1796,13 +1783,14 @@ fn parse_toplevel_expr(
 fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<ToplevelItem> {
     let mut items: Vec<ToplevelItem> = vec![];
 
     while !tokens.is_empty() {
         let start_idx = tokens.idx;
-        match parse_toplevel_item_from_tokens(src, tokens, diagnostics) {
+        match parse_toplevel_item_from_tokens(src, tokens, next_id2, diagnostics) {
             Some(item) => {
                 let was_invalid = matches!(
                     item,
@@ -1831,6 +1819,7 @@ fn parse_toplevel_items_from_tokens(
 fn parse_toplevel_item_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     if let Some(token) = tokens.peek() {
@@ -1839,17 +1828,11 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "enum"
             || token.text == "struct"
         {
-            return parse_definition(src, tokens, &mut SyntaxId(0), diagnostics)
-                .map(ToplevelItem::Def);
+            return parse_definition(src, tokens, next_id2, diagnostics).map(ToplevelItem::Def);
         }
     }
 
-    Some(parse_toplevel_expr(
-        src,
-        tokens,
-        &mut SyntaxId(0),
-        diagnostics,
-    ))
+    Some(parse_toplevel_expr(src, tokens, next_id2, diagnostics))
 }
 
 pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<ParseError>) {
@@ -1863,7 +1846,8 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<Pa
         }
     };
 
-    let expr = parse_inline_expression(src, &mut tokens, &mut SyntaxId(0), &mut diagnostics);
+    let next_id2 = &mut SyntaxId(0);
+    let expr = parse_inline_expression(src, &mut tokens, next_id2, &mut diagnostics);
     (expr, diagnostics)
 }
 
@@ -1877,7 +1861,8 @@ pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<P
         }
     };
 
-    let items = parse_toplevel_items_from_tokens(src, &mut tokens, &mut diagnostics);
+    let next_id2 = &mut SyntaxId(0);
+    let items = parse_toplevel_items_from_tokens(src, &mut tokens, next_id2, &mut diagnostics);
     (items, diagnostics)
 }
 

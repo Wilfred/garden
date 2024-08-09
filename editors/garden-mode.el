@@ -571,10 +571,16 @@ If called with a prefix, stop the previous session."
     map)
   "Keymap for `garden-mode'.")
 
+(defun garden-show-raw-json ()
+  "Switch to *garden-json* buffer."
+  (interactive)
+  (pop-to-buffer (get-buffer-create "*garden-json*")))
+
 (defun garden-enable-globally ()
   "Add a keybinding for toggling the garden session from any buffer."
   (interactive)
-  (global-set-key (kbd "C-c C-z") #'garden-toggle-session))
+  (global-set-key (kbd "C-c C-z") #'garden-toggle-session)
+  (global-set-key (kbd "C-c C-j") #'garden-show-raw-json))
 
 (defun garden--completion-at-point ()
   "Offer method names for the expression at point."

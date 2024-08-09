@@ -10,7 +10,9 @@
 //                 1,
 //             ),
 //             id: OnceCell(
-//                 <uninit>,
+//                 SyntaxId(
+//                     1,
+//                 ),
 //             ),
 //         },
 //         Expression {
@@ -19,7 +21,9 @@
 //                 2,
 //             ),
 //             id: OnceCell(
-//                 <uninit>,
+//                 SyntaxId(
+//                     2,
+//                 ),
 //             ),
 //         },
 //     ],

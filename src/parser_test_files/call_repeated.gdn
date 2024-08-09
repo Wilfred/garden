@@ -12,7 +12,9 @@ foo()();
 //                     Symbol"foo",
 //                 ),
 //                 id: OnceCell(
-//                     <uninit>,
+//                     SyntaxId(
+//                         2,
+//                     ),
 //                 ),
 //             },
 //             ParenthesizedArguments {
@@ -22,7 +24,9 @@ foo()();
 //             },
 //         ),
 //         id: OnceCell(
-//             <uninit>,
+//             SyntaxId(
+//                 1,
+//             ),
 //         ),
 //     },
 //     ParenthesizedArguments {

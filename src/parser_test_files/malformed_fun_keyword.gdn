@@ -14,7 +14,9 @@ ffun foo(_: Bool) {
 //             Symbol"foo",
 //         ),
 //         id: OnceCell(
-//             <uninit>,
+//             SyntaxId(
+//                 3,
+//             ),
 //         ),
 //     },
 //     ParenthesizedArguments {
@@ -26,7 +28,9 @@ ffun foo(_: Bool) {
 //                     Symbol"_",
 //                 ),
 //                 id: OnceCell(
-//                     <uninit>,
+//                     SyntaxId(
+//                         5,
+//                     ),
 //                 ),
 //             },
 //         ],

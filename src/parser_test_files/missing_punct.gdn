@@ -11,7 +11,9 @@ let a b
 //             Symbol"b",
 //         ),
 //         id: OnceCell(
-//             <uninit>,
+//             SyntaxId(
+//                 2,
+//             ),
 //         ),
 //     },
 // )

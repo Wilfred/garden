@@ -34,7 +34,9 @@ fun foo<T>(value: T): Unit {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
 //                             id: OnceCell(
-//                                 <uninit>,
+//                                 SyntaxId(
+//                                     2,
+//                                 ),
 //                             ),
 //                         },
 //                         LessThan,
@@ -44,12 +46,16 @@ fun foo<T>(value: T): Unit {
 //                                 Symbol"T",
 //                             ),
 //                             id: OnceCell(
-//                                 <uninit>,
+//                                 SyntaxId(
+//                                     3,
+//                                 ),
 //                             ),
 //                         },
 //                     ),
 //                     id: OnceCell(
-//                         <uninit>,
+//                         SyntaxId(
+//                             1,
+//                         ),
 //                     ),
 //                 },
 //                 Expression {
@@ -59,7 +65,9 @@ fun foo<T>(value: T): Unit {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
 //                             id: OnceCell(
-//                                 <uninit>,
+//                                 SyntaxId(
+//                                     6,
+//                                 ),
 //                             ),
 //                         },
 //                         GreaterThan,
@@ -69,12 +77,16 @@ fun foo<T>(value: T): Unit {
 //                                 Symbol"value",
 //                             ),
 //                             id: OnceCell(
-//                                 <uninit>,
+//                                 SyntaxId(
+//                                     7,
+//                                 ),
 //                             ),
 //                         },
 //                     ),
 //                     id: OnceCell(
-//                         <uninit>,
+//                         SyntaxId(
+//                             5,
+//                         ),
 //                     ),
 //                 },
 //             ],

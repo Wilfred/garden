@@ -39,13 +39,17 @@ fun foo(s: String) {
 //                                 Symbol"s",
 //                             ),
 //                             id: OnceCell(
-//                                 <uninit>,
+//                                 SyntaxId(
+//                                     3,
+//                                 ),
 //                             ),
 //                         },
 //                         Symbol"__placeholder",
 //                     ),
 //                     id: OnceCell(
-//                         <uninit>,
+//                         SyntaxId(
+//                             2,
+//                         ),
 //                     ),
 //                 },
 //             ],

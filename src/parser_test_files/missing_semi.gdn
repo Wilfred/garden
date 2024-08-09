@@ -23,7 +23,9 @@ fun foo() { 1 }
 //                         1,
 //                     ),
 //                     id: OnceCell(
-//                         <uninit>,
+//                         SyntaxId(
+//                             0,
+//                         ),
 //                     ),
 //                 },
 //             ],

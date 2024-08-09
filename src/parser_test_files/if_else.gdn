@@ -9,7 +9,9 @@ if (True) {} else {}
 //             Symbol"True",
 //         ),
 //         id: OnceCell(
-//             <uninit>,
+//             SyntaxId(
+//                 1,
+//             ),
 //         ),
 //     },
 //     Block {

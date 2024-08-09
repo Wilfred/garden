@@ -1763,11 +1763,10 @@ fn eval_builtin_call(
 fn eval_call(
     env: &mut Env,
     stack_frame: &mut StackFrame,
-    position: &Position,
+    caller_expr: &Expression,
     arg_positions: &[Position],
     arg_values: &[Value],
     receiver_value: &Value,
-    receiver_pos: &Position,
     session: &Session,
 ) -> Result<Option<StackFrame>, ErrorInfo> {
     match &receiver_value {
@@ -1788,7 +1787,7 @@ fn eval_call(
                         arg_values.len()
                     )),
                     restore_values: saved_values,
-                    error_position: receiver_pos.clone(),
+                    error_position: caller_expr.pos.clone(),
                 });
             }
 
@@ -1816,7 +1815,7 @@ fn eval_call(
             });
 
             return Ok(Some(StackFrame {
-                caller_pos: Some(position.clone()),
+                caller_pos: Some(caller_expr.pos.clone()),
                 bindings: Bindings {
                     block_bindings: bindings,
                 },
@@ -1838,7 +1837,7 @@ fn eval_call(
             check_arity(
                 &name_sym.name,
                 receiver_value,
-                receiver_pos,
+                &caller_expr.pos,
                 params.len(),
                 arg_positions,
                 arg_values,
@@ -1878,7 +1877,7 @@ fn eval_call(
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
-                caller_pos: Some(receiver_pos.clone()),
+                caller_pos: Some(caller_expr.pos.clone()),
                 enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 type_bindings,
@@ -1891,11 +1890,11 @@ fn eval_call(
             env,
             *kind,
             receiver_value,
-            receiver_pos,
+            &caller_expr.pos,
             arg_positions,
             arg_values,
             stack_frame,
-            position,
+            &caller_expr.pos,
             session,
         )?,
         Value::EnumConstructor {
@@ -1906,7 +1905,7 @@ fn eval_call(
             check_arity(
                 &SymbolName(type_name.name.clone()),
                 receiver_value,
-                receiver_pos,
+                &caller_expr.pos,
                 1,
                 arg_positions,
                 arg_values,
@@ -1938,7 +1937,7 @@ fn eval_call(
             saved_values.push(receiver_value.clone());
 
             return Err(ErrorInfo {
-                error_position: receiver_pos.clone(),
+                error_position: caller_expr.pos.clone(),
                 message: format_type_error(
                     &TypeName {
                         name: "Function".into(),
@@ -2086,7 +2085,7 @@ fn check_param_types(
 fn eval_method_call(
     env: &mut Env,
     stack_frame: &mut StackFrame,
-    receiver_pos: &Position,
+    caller_expr: &Expression,
     meth_name: &Symbol,
     paren_args: &ParenthesizedArguments,
 ) -> Result<Option<StackFrame>, ErrorInfo> {
@@ -2158,7 +2157,7 @@ fn eval_method_call(
                 env,
                 *kind,
                 &receiver_value,
-                receiver_pos,
+                &caller_expr.pos,
                 &arg_positions,
                 &arg_values,
                 stack_frame,
@@ -2177,7 +2176,7 @@ fn eval_method_call(
     check_arity(
         &meth_name.name,
         &receiver_value,
-        receiver_pos,
+        &caller_expr.pos,
         fun_info.params.len(),
         &arg_positions,
         &arg_values,
@@ -2202,7 +2201,7 @@ fn eval_method_call(
         enclosing_fun: Some(fun_info.clone()),
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
-        caller_pos: Some(receiver_pos.clone()),
+        caller_pos: Some(caller_expr.pos.clone()),
         bindings: Bindings::new_with(fun_bindings),
         type_bindings,
         bindings_next_block: vec![],
@@ -2931,11 +2930,10 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         match eval_call(
                             env,
                             &mut stack_frame,
-                            &expr_position,
+                            &outer_expr,
                             &arg_positions,
                             &arg_values,
                             &receiver_value,
-                            &receiver.pos,
                             session,
                         ) {
                             Ok(Some(new_stack_frame)) => {
@@ -2976,7 +2974,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         match eval_method_call(
                             env,
                             &mut stack_frame,
-                            &receiver_expr.pos,
+                            &outer_expr,
                             meth_name,
                             paren_args,
                         ) {

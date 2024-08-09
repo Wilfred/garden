@@ -3129,6 +3129,16 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 }
             }
 
+            // We've just finished evaluating a call and we were
+            // requested to stop at this call expression and return
+            // that result.
+            if stack_frame.caller_expr_id.is_some()
+                && session.stop_at_expr_id == stack_frame.caller_expr_id
+            {
+                env.stack.pop_to_toplevel();
+                return Ok(return_value);
+            }
+
             // The final evaluation result of the function
             // call should be used in the previous stack
             // frame.

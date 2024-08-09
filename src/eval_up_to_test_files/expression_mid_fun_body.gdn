@@ -1,0 +1,12 @@
+fun foo(aa: String): String {
+    let lines = aa.lines();
+    "world";
+}
+
+fun main(_) {
+    foo("hello");
+}
+
+// args: test-eval-up-to 53
+// expected stdout: ["hello"]
+

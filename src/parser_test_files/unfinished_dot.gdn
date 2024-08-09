@@ -43,6 +43,9 @@ fun foo(s: String) {
 //                                     3,
 //                                 ),
 //                             ),
+//                             id2: SyntaxId(
+//                                 0,
+//                             ),
 //                         },
 //                         Symbol"__placeholder",
 //                     ),
@@ -50,6 +53,9 @@ fun foo(s: String) {
 //                         SyntaxId(
 //                             2,
 //                         ),
+//                     ),
+//                     id2: SyntaxId(
+//                         0,
 //                     ),
 //                 },
 //             ],

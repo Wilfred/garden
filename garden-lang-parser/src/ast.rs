@@ -303,6 +303,7 @@ pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
     pub id: OnceCell<SyntaxId>,
+    pub id2: SyntaxId,
 }
 
 impl Expression {
@@ -311,6 +312,7 @@ impl Expression {
             pos: position,
             expr_,
             id: OnceCell::new(),
+            id2: SyntaxId(0),
         }
     }
 
@@ -319,6 +321,7 @@ impl Expression {
             pos: position,
             expr_,
             id: id.clone(),
+            id2: SyntaxId(0),
         }
     }
 
@@ -328,6 +331,7 @@ impl Expression {
             pos: Position::todo(),
             expr_: Expression_::Invalid,
             id: OnceCell::new(),
+            id2: SyntaxId(0),
         }
     }
 }

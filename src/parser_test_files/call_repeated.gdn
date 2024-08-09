@@ -16,6 +16,9 @@ foo()();
 //                         2,
 //                     ),
 //                 ),
+//                 id2: SyntaxId(
+//                     0,
+//                 ),
 //             },
 //             ParenthesizedArguments {
 //                 open_paren: Position { ... },
@@ -27,6 +30,9 @@ foo()();
 //             SyntaxId(
 //                 1,
 //             ),
+//         ),
+//         id2: SyntaxId(
+//             0,
 //         ),
 //     },
 //     ParenthesizedArguments {

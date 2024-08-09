@@ -13,6 +13,9 @@ if (x) {} else if (y) {}
 //                 1,
 //             ),
 //         ),
+//         id2: SyntaxId(
+//             0,
+//         ),
 //     },
 //     Block {
 //         is_loop_body: false,
@@ -38,6 +41,9 @@ if (x) {} else if (y) {}
 //                                     4,
 //                                 ),
 //                             ),
+//                             id2: SyntaxId(
+//                                 0,
+//                             ),
 //                         },
 //                         Block {
 //                             is_loop_body: false,
@@ -51,6 +57,9 @@ if (x) {} else if (y) {}
 //                         SyntaxId(
 //                             3,
 //                         ),
+//                     ),
+//                     id2: SyntaxId(
+//                         0,
 //                     ),
 //                 },
 //             ],

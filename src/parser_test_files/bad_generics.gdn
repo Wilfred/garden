@@ -38,6 +38,9 @@ fun foo<T>(value: T): Unit {
 //                                     2,
 //                                 ),
 //                             ),
+//                             id2: SyntaxId(
+//                                 0,
+//                             ),
 //                         },
 //                         LessThan,
 //                         Expression {
@@ -50,12 +53,18 @@ fun foo<T>(value: T): Unit {
 //                                     3,
 //                                 ),
 //                             ),
+//                             id2: SyntaxId(
+//                                 0,
+//                             ),
 //                         },
 //                     ),
 //                     id: OnceCell(
 //                         SyntaxId(
 //                             1,
 //                         ),
+//                     ),
+//                     id2: SyntaxId(
+//                         0,
 //                     ),
 //                 },
 //                 Expression {
@@ -69,6 +78,9 @@ fun foo<T>(value: T): Unit {
 //                                     6,
 //                                 ),
 //                             ),
+//                             id2: SyntaxId(
+//                                 0,
+//                             ),
 //                         },
 //                         GreaterThan,
 //                         Expression {
@@ -81,12 +93,18 @@ fun foo<T>(value: T): Unit {
 //                                     7,
 //                                 ),
 //                             ),
+//                             id2: SyntaxId(
+//                                 0,
+//                             ),
 //                         },
 //                     ),
 //                     id: OnceCell(
 //                         SyntaxId(
 //                             5,
 //                         ),
+//                     ),
+//                     id2: SyntaxId(
+//                         0,
 //                     ),
 //                 },
 //             ],

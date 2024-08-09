@@ -18,6 +18,9 @@ ffun foo(_: Bool) {
 //                 3,
 //             ),
 //         ),
+//         id2: SyntaxId(
+//             0,
+//         ),
 //     },
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },
@@ -31,6 +34,9 @@ ffun foo(_: Bool) {
 //                     SyntaxId(
 //                         5,
 //                     ),
+//                 ),
+//                 id2: SyntaxId(
+//                     0,
 //                 ),
 //             },
 //         ],

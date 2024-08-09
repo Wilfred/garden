@@ -14,6 +14,9 @@
 //                     1,
 //                 ),
 //             ),
+//             id2: SyntaxId(
+//                 0,
+//             ),
 //         },
 //         Expression {
 //             pos: Position { ... },
@@ -24,6 +27,9 @@
 //                 SyntaxId(
 //                     2,
 //                 ),
+//             ),
+//             id2: SyntaxId(
+//                 0,
 //             ),
 //         },
 //     ],

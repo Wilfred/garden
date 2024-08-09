@@ -13,6 +13,9 @@ if (True) {} else {}
 //                 1,
 //             ),
 //         ),
+//         id2: SyntaxId(
+//             0,
+//         ),
 //     },
 //     Block {
 //         is_loop_body: false,

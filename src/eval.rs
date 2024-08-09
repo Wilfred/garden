@@ -490,6 +490,7 @@ pub(crate) fn eval_toplevel_call(
         pos: Position::todo(),
         expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0)),
         id: OnceCell::new(),
+        id2: SyntaxId(0),
     };
 
     let paren_args = ParenthesizedArguments {
@@ -502,6 +503,7 @@ pub(crate) fn eval_toplevel_call(
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
         id: OnceCell::new(),
+        id2: SyntaxId(0),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
 
@@ -534,6 +536,7 @@ pub(crate) fn eval_toplevel_method_call(
         pos: Position::todo(),
         expr_: Expression_::Variable(placeholder_symbol(Position::todo())),
         id: OnceCell::new(),
+        id2: SyntaxId(0),
     };
 
     let meth_sym = Symbol {
@@ -552,6 +555,7 @@ pub(crate) fn eval_toplevel_method_call(
         pos: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
         id: OnceCell::new(),
+        id2: SyntaxId(0),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
 

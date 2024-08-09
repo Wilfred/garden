@@ -76,6 +76,10 @@ pub trait Visitor {
     // a separate method because Rust does not have a notion of
     // calling a 'super method'.
     fn visit_fun_info_default(&mut self, fun_info: &FunInfo) {
+        for type_param in &fun_info.type_params {
+            self.visit_type_symbol(type_param);
+        }
+
         for param in &fun_info.params {
             self.visit_symbol(&param.symbol);
 

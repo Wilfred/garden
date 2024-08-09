@@ -337,12 +337,12 @@ impl Expression {
     }
 
     /// Helper for creating Invalid expressions.
-    pub fn invalid() -> Self {
+    pub fn invalid(id2: SyntaxId) -> Self {
         Self {
             pos: Position::todo(),
             expr_: Expression_::Invalid,
             id: OnceCell::new(),
-            id2: SyntaxId(0),
+            id2,
         }
     }
 }

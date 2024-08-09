@@ -1883,7 +1883,8 @@ pub fn parse_toplevel_items_from_span(
         }
     };
 
-    let items = parse_toplevel_items_from_tokens(src, &mut tokens, &mut diagnostics);
+    let next_id2 = &mut SyntaxId(0);
+    let items = parse_toplevel_items_from_tokens(src, &mut tokens, next_id2, &mut diagnostics);
     (items, diagnostics)
 }
 

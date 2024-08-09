@@ -495,7 +495,7 @@ pub(crate) fn eval_toplevel_call(
 
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(); args.len()],
+        arguments: vec![Expression::invalid(SyntaxId(0)); args.len()],
         close_paren: Position::todo(),
     };
 
@@ -547,7 +547,7 @@ pub(crate) fn eval_toplevel_method_call(
 
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(); args.len()],
+        arguments: vec![Expression::invalid(SyntaxId(0)); args.len()],
         close_paren: Position::todo(),
     };
 

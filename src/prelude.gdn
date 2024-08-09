@@ -437,8 +437,6 @@ test contains {
 // [1, 2].map(fun(x) { x + 1; }); // [2, 3]
 // ```
 fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
-    // TODO: define a userland function type syntax.
-    // TODO: this errors at runtime if we annotate the type as List<U>.
     let items: List<U> = [];
     let i = 0;
 

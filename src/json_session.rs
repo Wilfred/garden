@@ -110,6 +110,8 @@ fn handle_eval_request(
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),
     );
+    // TODO: this should happen during parsing, so we can't forget it.
+    assign_toplevel_item_ids(&items);
 
     // TODO: eval requests should return all parse errors.
     if let Some(e) = errors.pop() {

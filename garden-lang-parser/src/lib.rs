@@ -180,10 +180,11 @@ fn parse_parenthesis_expression(
 fn parse_list_literal(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
-    let items = parse_comma_separated_exprs(src, tokens, diagnostics, "]");
+    let items = parse_comma_separated_exprs(src, tokens, next_id2, diagnostics, "]");
     let close_bracket = require_token(tokens, diagnostics, "]");
 
     Expression::new(
@@ -393,7 +394,7 @@ fn parse_simple_expression(
         }
 
         if token.text == "[" {
-            return parse_list_literal(src, tokens, diagnostics);
+            return parse_list_literal(src, tokens, next_id2, diagnostics);
         }
 
         if token.text == "fun" {
@@ -512,12 +513,13 @@ fn parse_struct_literal(
 fn parse_match_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let match_keyword = require_token(tokens, diagnostics, "match");
 
     require_token(tokens, diagnostics, "(");
-    let scrutinee = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
+    let scrutinee = parse_inline_expression(src, tokens, next_id2, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     require_token(tokens, diagnostics, "{");
@@ -539,7 +541,7 @@ fn parse_match_expression(
         let start_idx = tokens.idx;
         let pattern = parse_pattern(tokens, diagnostics);
         require_token(tokens, diagnostics, "=>");
-        let case_expr = parse_case_expr(src, tokens, diagnostics);
+        let case_expr = parse_case_expr(src, tokens, next_id2, diagnostics);
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
@@ -560,9 +562,10 @@ fn parse_match_expression(
 fn parse_case_expr(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let case_expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
+    let case_expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
     if peeked_symbol_is(tokens, ",") {
         tokens.pop().unwrap();
     }
@@ -588,6 +591,7 @@ fn parse_pattern(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) ->
 fn parse_comma_separated_exprs(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
     terminator: &str,
 ) -> Vec<Expression> {
@@ -598,7 +602,7 @@ fn parse_comma_separated_exprs(
         }
 
         let start_idx = tokens.idx;
-        let arg = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
+        let arg = parse_inline_expression(src, tokens, next_id2, diagnostics);
         if matches!(arg.expr_, Expression_::Invalid) {
             break;
         }
@@ -631,10 +635,11 @@ fn parse_comma_separated_exprs(
 fn parse_call_arguments(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> ParenthesizedArguments {
     let open_paren_token = require_token(tokens, diagnostics, "(");
-    let arguments = parse_comma_separated_exprs(src, tokens, diagnostics, ")");
+    let arguments = parse_comma_separated_exprs(src, tokens, next_id2, diagnostics, ")");
     let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {
@@ -662,7 +667,7 @@ fn parse_simple_expression_with_trailing(
         let start_idx = tokens.idx;
         match tokens.peek() {
             Some(token) if token.text == "(" => {
-                let arguments = parse_call_arguments(src, tokens, diagnostics);
+                let arguments = parse_call_arguments(src, tokens, next_id2, diagnostics);
                 expr = Expression::new(
                     Position::merge(&expr.pos, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
@@ -675,7 +680,7 @@ fn parse_simple_expression_with_trailing(
 
                 if peeked_symbol_is(tokens, "(") {
                     // TODO: just treat a method call as a call of a dot access.
-                    let arguments = parse_call_arguments(src, tokens, diagnostics);
+                    let arguments = parse_call_arguments(src, tokens, next_id2, diagnostics);
                     expr = Expression::new(
                         Position::merge(&expr.pos, &arguments.close_paren),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
@@ -799,7 +804,7 @@ fn parse_general_expression(
 
         // Likewise match.
         if token.text == "match" {
-            return parse_match_expression(src, tokens, diagnostics);
+            return parse_match_expression(src, tokens, next_id2, diagnostics);
         }
     }
 

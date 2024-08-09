@@ -54,7 +54,7 @@ fun foo<T>(value: T): Unit {
 //                                 ),
 //                             ),
 //                             id2: SyntaxId(
-//                                 0,
+//                                 1,
 //                             ),
 //                         },
 //                     ),
@@ -79,7 +79,7 @@ fun foo<T>(value: T): Unit {
 //                                 ),
 //                             ),
 //                             id2: SyntaxId(
-//                                 0,
+//                                 2,
 //                             ),
 //                         },
 //                         GreaterThan,
@@ -94,7 +94,7 @@ fun foo<T>(value: T): Unit {
 //                                 ),
 //                             ),
 //                             id2: SyntaxId(
-//                                 0,
+//                                 3,
 //                             ),
 //                         },
 //                     ),

@@ -154,13 +154,18 @@ fn parse_integer(
 
 fn parse_variable_expression(
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, diagnostics);
+
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         variable.position.clone(),
         Expression_::Variable(variable),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -187,10 +192,13 @@ fn parse_list_literal(
     let items = parse_comma_separated_exprs(src, tokens, next_id2, diagnostics, "]");
     let close_bracket = require_token(tokens, diagnostics, "]");
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&open_bracket.position, &close_bracket.position),
         Expression_::ListLiteral(items),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -215,6 +223,9 @@ fn parse_lambda_expression(
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&fun_keyword.position, &body.close_brace),
         Expression_::FunLiteral(FunInfo {
@@ -226,7 +237,7 @@ fn parse_lambda_expression(
             type_params,
             return_hint,
         }),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -270,10 +281,13 @@ fn parse_if_expression(
         None => &then_body.close_brace,
     };
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&if_token.position, last_brace_pos),
         Expression_::If(Box::new(condition), then_body, else_body),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -291,20 +305,28 @@ fn parse_while_expression(
 
     let body = parse_block(src, tokens, next_id2, diagnostics, true);
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
         Expression_::While(Box::new(condition), body),
-        SyntaxId(0),
+        id2,
     )
 }
 
 fn parse_break_expression(
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let break_token = require_token(tokens, diagnostics, "break");
     let _ = require_end_token(tokens, diagnostics, ";");
-    Expression::new(break_token.position, Expression_::Break, SyntaxId(0))
+
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
+    Expression::new(break_token.position, Expression_::Break, id2)
 }
 
 fn parse_return_expression(
@@ -317,19 +339,27 @@ fn parse_return_expression(
 
     if peeked_symbol_is(tokens, ";") {
         let semicolon = require_token(tokens, diagnostics, ";");
+
+        let id2 = *next_id2;
+        *next_id2 = next_id2.increment();
+
         return Expression::new(
             Position::merge(&return_token.position, &semicolon.position),
             Expression_::Return(None),
-            SyntaxId(0),
+            id2,
         );
     }
 
     let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
+
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&return_token.position, &semicolon.position),
         Expression_::Return(Some(Box::new(expr))),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -383,10 +413,14 @@ fn parse_simple_expression(
     if let Some(token) = tokens.peek() {
         if token.text == "{" {
             let block = parse_block(src, tokens, next_id2, diagnostics, false);
+
+            let id2 = *next_id2;
+            *next_id2 = next_id2.increment();
+
             return Expression::new(
                 Position::merge(&block.open_brace, &block.close_brace),
                 Expression_::Block(block),
-                SyntaxId(0),
+                id2,
             );
         }
 
@@ -409,15 +443,19 @@ fn parse_simple_expression(
                 }
             }
 
-            return parse_variable_expression(tokens, diagnostics);
+            return parse_variable_expression(tokens, next_id2, diagnostics);
         }
 
         if token.text.starts_with('\"') {
             tokens.pop();
+
+            let id2 = *next_id2;
+            *next_id2 = next_id2.increment();
+
             return Expression::new(
                 token.position,
                 Expression_::StringLiteral(unescape_string(token.text)),
-                SyntaxId(0),
+                id2,
             );
         }
 
@@ -430,7 +468,11 @@ fn parse_simple_expression(
             message: ErrorMessage(format!("Expected an expression, got: `{}`.", token.text)),
             additional: vec![],
         });
-        return Expression::new(token.position, Expression_::Invalid, SyntaxId(0));
+
+        let id2 = *next_id2;
+        *next_id2 = next_id2.increment();
+
+        return Expression::new(token.position, Expression_::Invalid, id2);
     }
 
     diagnostics.push(ParseError::Incomplete {
@@ -438,7 +480,10 @@ fn parse_simple_expression(
         position: Position::todo(),
     });
 
-    Expression::new(Position::todo(), Expression_::Invalid, SyntaxId(0))
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
+    Expression::new(Position::todo(), Expression_::Invalid, id2)
 }
 
 fn parse_struct_literal_fields(
@@ -504,10 +549,13 @@ fn parse_struct_literal(
 
     let close_brace = require_token(tokens, diagnostics, "}");
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&open_brace.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -553,10 +601,13 @@ fn parse_match_expression(
 
     let close_paren = require_token(tokens, diagnostics, "}");
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
         Expression_::Match(Box::new(scrutinee), cases),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -792,7 +843,7 @@ fn parse_general_expression(
                 return parse_while_expression(src, tokens, next_id2, diagnostics);
             }
             if token.text == "break" {
-                return parse_break_expression(tokens, diagnostics);
+                return parse_break_expression(tokens, next_id2, diagnostics);
             }
         }
     }

@@ -167,10 +167,11 @@ fn parse_variable_expression(
 fn parse_parenthesis_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     require_token(tokens, diagnostics, "(");
-    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     expr
@@ -230,12 +231,13 @@ fn parse_lambda_expression(
 fn parse_if_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
 
     require_token(tokens, diagnostics, "(");
-    let condition = parse_inline_expression(src, tokens, diagnostics);
+    let condition = parse_inline_expression(src, tokens, next_id2, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     let then_body = parse_block(src, tokens, diagnostics, false);
@@ -244,7 +246,7 @@ fn parse_if_expression(
         tokens.pop();
 
         if peeked_symbol_is(tokens, "if") {
-            let if_expr = parse_if_expression(src, tokens, diagnostics);
+            let if_expr = parse_if_expression(src, tokens, next_id2, diagnostics);
             Some(Block {
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
@@ -281,7 +283,7 @@ fn parse_while_expression(
     let while_token = require_token(tokens, diagnostics, "while");
 
     require_token(tokens, diagnostics, "(");
-    let condition = parse_inline_expression(src, tokens, diagnostics);
+    let condition = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
     require_token(tokens, diagnostics, ")");
 
     let body = parse_block(src, tokens, diagnostics, true);
@@ -318,7 +320,7 @@ fn parse_return_expression(
         );
     }
 
-    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
     Expression::new(
         Position::merge(&return_token.position, &semicolon.position),
@@ -385,7 +387,7 @@ fn parse_simple_expression(
         }
 
         if token.text == "(" {
-            return parse_parenthesis_expression(src, tokens, diagnostics);
+            return parse_parenthesis_expression(src, tokens, next_id2, diagnostics);
         }
 
         if token.text == "[" {
@@ -449,7 +451,7 @@ fn parse_struct_literal_fields(
         let start_idx = tokens.idx;
         let sym = parse_symbol(tokens, diagnostics);
         require_token(tokens, diagnostics, ":");
-        let expr = parse_inline_expression(src, tokens, diagnostics);
+        let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
 
         if tokens.idx == start_idx {
             // We haven't made forward progress, the syntax must be
@@ -511,7 +513,7 @@ fn parse_match_expression(
     let match_keyword = require_token(tokens, diagnostics, "match");
 
     require_token(tokens, diagnostics, "(");
-    let scrutinee = parse_inline_expression(src, tokens, diagnostics);
+    let scrutinee = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
     require_token(tokens, diagnostics, ")");
 
     require_token(tokens, diagnostics, "{");
@@ -556,7 +558,7 @@ fn parse_case_expr(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let case_expr = parse_inline_expression(src, tokens, diagnostics);
+    let case_expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
     if peeked_symbol_is(tokens, ",") {
         tokens.pop().unwrap();
     }
@@ -592,7 +594,7 @@ fn parse_comma_separated_exprs(
         }
 
         let start_idx = tokens.idx;
-        let arg = parse_inline_expression(src, tokens, diagnostics);
+        let arg = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
         if matches!(arg.expr_, Expression_::Invalid) {
             break;
         }
@@ -726,9 +728,10 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 fn parse_inline_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    parse_general_expression(src, tokens, diagnostics, true)
+    parse_general_expression(src, tokens, next_id2, diagnostics, true)
 }
 
 /// Parse a block member expression. This is an expression that can
@@ -747,13 +750,14 @@ fn parse_block_member_expression(
     tokens: &mut TokenStream,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    parse_general_expression(src, tokens, diagnostics, false)
+    parse_general_expression(src, tokens, &mut SyntaxId(0), diagnostics, false)
 }
 
 /// Parse an inline or block member expression.
 fn parse_general_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
     is_inline: bool,
 ) -> Expression {
@@ -786,7 +790,7 @@ fn parse_general_expression(
         // `if` can occur as both an inline expression and a standalone
         // expression.
         if token.text == "if" {
-            return parse_if_expression(src, tokens, diagnostics);
+            return parse_if_expression(src, tokens, next_id2, diagnostics);
         }
 
         // Likewise match.
@@ -795,7 +799,7 @@ fn parse_general_expression(
         }
     }
 
-    let expr = parse_simple_expression_or_binop(src, tokens, &mut SyntaxId(0), diagnostics);
+    let expr = parse_simple_expression_or_binop(src, tokens, next_id2, diagnostics);
     if !is_inline {
         let _ = require_end_token(tokens, diagnostics, ";");
     }
@@ -1689,7 +1693,7 @@ fn parse_let_expression(
     let hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
 
     Expression::new(
@@ -1707,7 +1711,7 @@ fn parse_assign_expression(
     let variable = parse_symbol(tokens, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_inline_expression(src, tokens, diagnostics);
+    let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
 
     Expression::new(
@@ -1739,7 +1743,7 @@ fn parse_toplevel_expr(
     // consumes the rest of the token stream. This ensures that `1 2`
     // does not parse but `1; 2` does.
     let mut inline_diagnostics = vec![];
-    let expr = parse_inline_expression(src, tokens, &mut inline_diagnostics);
+    let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), &mut inline_diagnostics);
     if tokens.is_empty() {
         // Consumed the whole stream.
         return ToplevelItem::Expr(ToplevelExpression(expr));
@@ -1820,7 +1824,7 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<Pa
         }
     };
 
-    let expr = parse_inline_expression(src, &mut tokens, &mut diagnostics);
+    let expr = parse_inline_expression(src, &mut tokens, &mut SyntaxId(0), &mut diagnostics);
     (expr, diagnostics)
 }
 

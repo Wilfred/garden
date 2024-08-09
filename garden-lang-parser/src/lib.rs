@@ -126,11 +126,19 @@ fn require_token_inner<'a>(
     }
 }
 
-fn parse_integer(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Expression {
+fn parse_integer(
+    tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
     let token = require_a_token(tokens, diagnostics, "integer literal");
+
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
-        Expression::new(token.position, Expression_::IntLiteral(i), SyntaxId(0))
+        Expression::new(token.position, Expression_::IntLiteral(i), id2)
     } else {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
@@ -140,11 +148,7 @@ fn parse_integer(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) ->
 
         // Choose an arbitrary value that's hopefully unlikely to
         // occur in real code.
-        Expression::new(
-            token.position,
-            Expression_::IntLiteral(11223344),
-            SyntaxId(0),
-        )
+        Expression::new(token.position, Expression_::IntLiteral(11223344), id2)
     }
 }
 
@@ -367,6 +371,7 @@ fn unescape_string(src: &str) -> String {
 fn parse_simple_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     if let Some(token) = tokens.peek() {
@@ -411,7 +416,7 @@ fn parse_simple_expression(
         }
 
         if INTEGER_RE.is_match(token.text) {
-            return parse_integer(tokens, diagnostics);
+            return parse_integer(tokens, next_id2, diagnostics);
         }
 
         diagnostics.push(ParseError::Invalid {
@@ -642,9 +647,10 @@ fn parse_call_arguments(
 fn parse_simple_expression_with_trailing(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression(src, tokens, diagnostics);
+    let mut expr = parse_simple_expression(src, tokens, next_id2, diagnostics);
 
     loop {
         let start_idx = tokens.idx;
@@ -789,7 +795,7 @@ fn parse_general_expression(
         }
     }
 
-    let expr = parse_simple_expression_or_binop(src, tokens, diagnostics);
+    let expr = parse_simple_expression_or_binop(src, tokens, &mut SyntaxId(0), diagnostics);
     if !is_inline {
         let _ = require_end_token(tokens, diagnostics, ";");
     }
@@ -811,15 +817,17 @@ fn parse_general_expression(
 fn parse_simple_expression_or_binop(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression_with_trailing(src, tokens, diagnostics);
+    let mut expr = parse_simple_expression_with_trailing(src, tokens, next_id2, diagnostics);
 
     if let Some(token) = tokens.peek() {
         if let Some(op) = token_as_binary_op(token) {
             tokens.pop();
 
-            let rhs_expr = parse_simple_expression_with_trailing(src, tokens, diagnostics);
+            let rhs_expr =
+                parse_simple_expression_with_trailing(src, tokens, next_id2, diagnostics);
             expr = Expression::new(
                 Position::merge(&expr.pos, &rhs_expr.pos),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),

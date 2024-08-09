@@ -298,6 +298,12 @@ pub enum Expression_ {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub struct SyntaxId(pub usize);
 
+impl SyntaxId {
+    pub(crate) fn increment(&self) -> Self {
+        SyntaxId(self.0 + 1)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Expression {
     pub pos: Position,

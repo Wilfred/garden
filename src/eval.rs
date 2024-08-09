@@ -175,6 +175,8 @@ pub(crate) struct StackFrame {
     pub(crate) enclosing_fun: Option<FunInfo>,
     /// The position of the call site.
     pub(crate) caller_pos: Option<Position>,
+    /// The ID of the call site expression.
+    pub(crate) caller_expr_id: Option<SyntaxId>,
     pub(crate) bindings: Bindings,
     /// Types bound in this stack frame, due to generic parameters.
     pub(crate) type_bindings: TypeVarEnv,
@@ -567,6 +569,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         enclosing_name: EnclosingSymbol::Test(test.name.clone()),
         enclosing_fun: None,
         caller_pos: None,
+        caller_expr_id: None,
         bindings: Bindings::default(),
         type_bindings: HashMap::new(),
         bindings_next_block: vec![],
@@ -1816,6 +1819,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 caller_pos: Some(caller_expr.pos.clone()),
+                caller_expr_id: caller_expr.id.get().copied(),
                 bindings: Bindings {
                     block_bindings: bindings,
                 },
@@ -1878,6 +1882,7 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(caller_expr.pos.clone()),
+                caller_expr_id: caller_expr.id.get().copied(),
                 enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 type_bindings,
@@ -2202,6 +2207,7 @@ fn eval_method_call(
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
         caller_pos: Some(caller_expr.pos.clone()),
+        caller_expr_id: caller_expr.id.get().copied(),
         bindings: Bindings::new_with(fun_bindings),
         type_bindings,
         bindings_next_block: vec![],

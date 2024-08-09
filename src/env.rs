@@ -24,6 +24,7 @@ impl Default for Stack {
     fn default() -> Self {
         Self(vec![StackFrame {
             caller_pos: None,
+            caller_expr_id: None,
             bindings: Bindings::default(),
             bindings_next_block: vec![],
             exprs_to_eval: vec![],

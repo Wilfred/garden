@@ -278,12 +278,13 @@ fn parse_if_expression(
 fn parse_while_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let while_token = require_token(tokens, diagnostics, "while");
 
     require_token(tokens, diagnostics, "(");
-    let condition = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
+    let condition = parse_inline_expression(src, tokens, next_id2, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     let body = parse_block(src, tokens, diagnostics, true);
@@ -307,6 +308,7 @@ fn parse_break_expression(
 fn parse_return_expression(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
@@ -320,7 +322,7 @@ fn parse_return_expression(
         );
     }
 
-    let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
+    let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
     Expression::new(
         Position::merge(&return_token.position, &semicolon.position),
@@ -401,7 +403,7 @@ fn parse_simple_expression(
         if SYMBOL_RE.is_match(token.text) {
             if let Some((_, token)) = tokens.peek_two() {
                 if token.text == "{" {
-                    return parse_struct_literal(src, tokens, diagnostics);
+                    return parse_struct_literal(src, tokens, next_id2, diagnostics);
                 }
             }
 
@@ -440,6 +442,7 @@ fn parse_simple_expression(
 fn parse_struct_literal_fields(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<(Symbol, Expression)> {
     let mut fields = vec![];
@@ -451,7 +454,7 @@ fn parse_struct_literal_fields(
         let start_idx = tokens.idx;
         let sym = parse_symbol(tokens, diagnostics);
         require_token(tokens, diagnostics, ":");
-        let expr = parse_inline_expression(src, tokens, &mut SyntaxId(0), diagnostics);
+        let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
 
         if tokens.idx == start_idx {
             // We haven't made forward progress, the syntax must be
@@ -490,11 +493,12 @@ fn parse_struct_literal_fields(
 fn parse_struct_literal(
     src: &str,
     tokens: &mut TokenStream,
+    next_id2: &mut SyntaxId,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let name = parse_type_symbol(tokens, diagnostics);
     let open_brace = require_token(tokens, diagnostics, "{");
-    let fields = parse_struct_literal_fields(src, tokens, diagnostics);
+    let fields = parse_struct_literal_fields(src, tokens, next_id2, diagnostics);
 
     let close_brace = require_token(tokens, diagnostics, "}");
 
@@ -775,10 +779,10 @@ fn parse_general_expression(
                 return parse_let_expression(src, tokens, diagnostics);
             }
             if token.text == "return" {
-                return parse_return_expression(src, tokens, diagnostics);
+                return parse_return_expression(src, tokens, next_id2, diagnostics);
             }
             if token.text == "while" {
-                return parse_while_expression(src, tokens, diagnostics);
+                return parse_while_expression(src, tokens, next_id2, diagnostics);
             }
             if token.text == "break" {
                 return parse_break_expression(tokens, diagnostics);

@@ -1,4 +1,4 @@
-fun foo(): Unit {}
+fun<T> foo(): Unit {}
 
 // args: dump-ast
 // expected stdout:
@@ -10,7 +10,9 @@ fun foo(): Unit {}
 //         name: Some(
 //             Symbol"foo",
 //         ),
-//         type_params: [],
+//         type_params: [
+//             TypeSymbol"T",
+//         ],
 //         params: [],
 //         return_hint: Some(
 //             TypeHint {

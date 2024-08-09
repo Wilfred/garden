@@ -249,6 +249,8 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
     match String::from_utf8(src_bytes) {
         Ok(src) => {
             let (items, errors) = parse_toplevel_items(path, &src);
+            assign_toplevel_item_ids(&items);
+
             for error in errors.into_iter() {
                 match error {
                     ParseError::Invalid {

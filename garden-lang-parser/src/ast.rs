@@ -141,7 +141,6 @@ impl From<&str> for SymbolName {
 pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
-    pub id: OnceCell<SyntaxId>,
     pub id2: SyntaxId,
 }
 
@@ -150,7 +149,6 @@ impl Symbol {
         Self {
             position,
             name: SymbolName(name.as_ref().to_owned()),
-            id: OnceCell::new(),
             id2,
         }
     }
@@ -162,7 +160,6 @@ impl std::fmt::Debug for Symbol {
             f.debug_struct("Symbol")
                 .field("name", &self.name)
                 .field("position", &self.position)
-                .field("id", &self.id)
                 .field("id2", &self.id2)
                 .finish()
         } else {

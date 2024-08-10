@@ -162,6 +162,8 @@ impl std::fmt::Debug for Symbol {
             f.debug_struct("Symbol")
                 .field("name", &self.name)
                 .field("position", &self.position)
+                .field("id", &self.id)
+                .field("id2", &self.id2)
                 .finish()
         } else {
             write!(f, "Symbol\"{}\"", self.name.0)

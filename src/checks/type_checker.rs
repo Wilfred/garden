@@ -84,7 +84,7 @@ impl LocalBindings {
 
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
-    env: &'a mut Env,
+    env: &'a Env,
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
     id_to_ty: HashMap<SyntaxId, Type>,

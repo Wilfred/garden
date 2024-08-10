@@ -182,8 +182,8 @@ impl<'a> TypeCheckVisitor<'a> {
                     };
 
                     if let Some(name_sym) = def_name_sym {
-                        let hint_id = hint.sym.id.get().unwrap();
-                        self.id_to_pos.insert(*hint_id, name_sym.position.clone());
+                        let hint_id = hint.sym.id2;
+                        self.id_to_pos.insert(hint_id, name_sym.position.clone());
                     }
                 }
             }
@@ -269,10 +269,7 @@ impl<'a> TypeCheckVisitor<'a> {
         expected_return_ty: Option<&Type>,
     ) -> Type {
         let ty = self.check_expr_(&expr.expr_, &expr.pos, type_bindings, expected_return_ty);
-
-        if let Some(id) = expr.id.get() {
-            self.id_to_ty.insert(*id, ty.clone());
-        }
+        self.id_to_ty.insert(expr.id2, ty.clone());
 
         ty
     }
@@ -616,10 +613,7 @@ impl<'a> TypeCheckVisitor<'a> {
             }
             Expression_::Variable(sym) => {
                 if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
-                    if let Some(sym_id) = sym.id.get() {
-                        self.id_to_pos.insert(*sym_id, position.clone());
-                    }
-
+                    self.id_to_pos.insert(sym.id2, position.clone());
                     return value_ty.clone();
                 }
 
@@ -633,15 +627,11 @@ impl<'a> TypeCheckVisitor<'a> {
                         };
                         if let Some(fun_info) = fun_info {
                             if let Some(fun_sym) = &fun_info.name {
-                                if let Some(sym_id) = sym.id.get() {
-                                    self.id_to_pos.insert(*sym_id, fun_sym.position.clone());
-                                }
+                                self.id_to_pos.insert(sym.id2, fun_sym.position.clone());
                             }
 
-                            if let (Some(doc_comment), Some(sym_id)) =
-                                (&fun_info.doc_comment, sym.id.get())
-                            {
-                                self.id_to_doc_comment.insert(*sym_id, doc_comment.clone());
+                            if let Some(doc_comment) = &fun_info.doc_comment {
+                                self.id_to_doc_comment.insert(sym.id2, doc_comment.clone());
                             }
                         }
 
@@ -757,12 +747,8 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 match methods.get(&sym.name) {
                     Some(method_info) => {
-                        if let Some(meth_sym_at_call_id) = sym.id.get() {
-                            self.id_to_pos.insert(
-                                *meth_sym_at_call_id,
-                                method_info.name_sym.position.clone(),
-                            );
-                        }
+                        self.id_to_pos
+                            .insert(sym.id2, method_info.name_sym.position.clone());
 
                         let Some(fun_info) = method_info.fun_info() else {
                             return Type::error("This method has no fun_info");
@@ -886,10 +872,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
     fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
         self.bindings.set(symbol, ty.clone());
-
-        if let Some(id) = symbol.id.get() {
-            self.id_to_ty.insert(*id, ty);
-        }
+        self.id_to_ty.insert(symbol.id2, ty);
     }
 }
 

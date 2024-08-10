@@ -1836,7 +1836,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 caller_pos: Some(caller_expr.pos.clone()),
-                caller_expr_id: caller_expr.id.get().copied(),
+                caller_expr_id: Some(caller_expr.id2),
                 bindings: Bindings {
                     block_bindings: bindings,
                 },
@@ -1899,7 +1899,7 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(caller_expr.pos.clone()),
-                caller_expr_id: caller_expr.id.get().copied(),
+                caller_expr_id: Some(caller_expr.id2),
                 enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 type_bindings,
@@ -2224,7 +2224,7 @@ fn eval_method_call(
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
         caller_pos: Some(caller_expr.pos.clone()),
-        caller_expr_id: caller_expr.id.get().copied(),
+        caller_expr_id: Some(caller_expr.id2),
         bindings: Bindings::new_with(fun_bindings),
         type_bindings,
         bindings_next_block: vec![],
@@ -3100,7 +3100,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             // the match above.
             if done_children
                 && session.stop_at_expr_id.is_some()
-                && session.stop_at_expr_id.as_ref() == expr_id.get()
+                && session.stop_at_expr_id.as_ref() == Some(&expr_id2)
             {
                 let v = match stack_frame.evalled_values.last() {
                     Some(value) => value.clone(),

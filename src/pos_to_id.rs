@@ -42,19 +42,19 @@ impl Visitor for IdFinder {
             return;
         }
 
-        self.found_ids.push(*expr.id.get().unwrap());
+        self.found_ids.push(expr.id2);
         self.visit_expr_(&expr.expr_)
     }
 
     fn visit_symbol(&mut self, symbol: &Symbol) {
         if symbol.position.contains_offset(self.offset) {
-            self.found_ids.push(*symbol.id.get().unwrap());
+            self.found_ids.push(symbol.id2);
         }
     }
 
     fn visit_type_symbol(&mut self, type_symbol: &TypeSymbol) {
         if type_symbol.position.contains_offset(self.offset) {
-            self.found_ids.push(*type_symbol.id.get().unwrap());
+            self.found_ids.push(type_symbol.id2);
         }
     }
 }
@@ -67,7 +67,7 @@ struct ExprOfIdFinder {
 
 impl Visitor for ExprOfIdFinder {
     fn visit_expr(&mut self, expr: &Expression) {
-        if expr.id.get() == Some(&self.id) {
+        if expr.id2 == self.id {
             self.expr = Some(expr.clone());
             return;
         }

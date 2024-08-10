@@ -18,7 +18,7 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName, ToplevelItem, TypeName};
+use garden_lang_parser::ast::{SourceString, SymbolName, SyntaxId, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -102,11 +102,13 @@ fn handle_eval_request(
 ) -> Response {
     complete_src.push_str(input);
 
+    let mut next_id2 = SyntaxId(0);
     let (items, mut errors) = parse_toplevel_items_from_span(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         input,
+        &mut next_id2,
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),
     );
@@ -225,11 +227,13 @@ fn handle_eval_up_to_id_request(
     env: &mut Env,
     session: &mut Session,
 ) -> Response {
+    let mut next_id2 = SyntaxId(0);
     let (items, mut errors) = parse_toplevel_items(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         src,
+        &mut next_id2,
     );
     assign_toplevel_item_ids(&items);
 

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{Expression_, ToplevelItem},
+    ast::{Expression_, SyntaxId, ToplevelItem},
     parse_toplevel_items,
 };
 use serde::Serialize;
@@ -15,7 +15,8 @@ use crate::{
 };
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
-    let (items, _errors) = parse_toplevel_items(path, src);
+    let mut next_id2 = SyntaxId(0);
+    let (items, _errors) = parse_toplevel_items(path, src, &mut next_id2);
 
     let mut env = Env::default();
 

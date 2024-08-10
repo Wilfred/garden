@@ -362,9 +362,11 @@ pub(crate) fn eval_call_main(
     env: &mut Env,
     session: &mut Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
+    let mut next_id2 = SyntaxId(0);
+
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
-        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src);
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut next_id2);
     assert!(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."
@@ -3482,7 +3484,9 @@ mod tests {
     use garden_lang_parser::position::Position;
 
     fn parse_defs_from_str(src: &str) -> Vec<Definition> {
-        let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src);
+        let mut next_id2 = SyntaxId(0);
+        let (items, errors) =
+            parse_toplevel_items(&PathBuf::from("__test.gdn"), src, &mut next_id2);
         assert!(errors.is_empty());
 
         let mut defs = vec![];
@@ -3499,7 +3503,9 @@ mod tests {
     }
 
     fn parse_exprs_from_str(src: &str) -> Vec<Expression> {
-        let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src);
+        let mut next_id2 = SyntaxId(0);
+        let (items, errors) =
+            parse_toplevel_items(&PathBuf::from("__test.gdn"), src, &mut next_id2);
         assert!(errors.is_empty());
 
         let mut exprs = vec![];
@@ -4011,7 +4017,8 @@ mod tests {
 
         let mut env = Env::default();
 
-        let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}");
+        let mut next_id2 = SyntaxId(0);
+        let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut next_id2);
         assert!(errors.is_empty());
         let eval_result = eval_all_toplevel_items(&defs, &mut env, &mut session);
         assert!(eval_result.is_ok());

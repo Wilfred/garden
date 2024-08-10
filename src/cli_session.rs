@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::{eval_env, eval_toplevel_defs, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use garden_lang_parser::ast::ToplevelItem;
+use garden_lang_parser::ast::{SyntaxId, ToplevelItem};
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;
@@ -226,9 +226,15 @@ fn read_multiline_syntax(
     rl: &mut Editor<()>,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_owned();
+    // TODO: this shouldn't start at 0 each time.
+    let mut next_id2 = SyntaxId(0);
 
     loop {
-        let (items, errors) = parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src);
+        let (items, errors) = parse_toplevel_items(
+            &PathBuf::from("__interactive_session__"),
+            &src,
+            &mut next_id2,
+        );
 
         // TODO: return all errors.
         match errors.into_iter().next() {

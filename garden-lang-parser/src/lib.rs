@@ -1946,6 +1946,7 @@ pub fn parse_toplevel_items(
 pub fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
+    next_id2: &mut SyntaxId,
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
@@ -1958,7 +1959,6 @@ pub fn parse_toplevel_items_from_span(
         }
     };
 
-    let next_id2 = &mut SyntaxId(0);
     let items = parse_toplevel_items_from_tokens(src, &mut tokens, next_id2, &mut diagnostics);
     (items, diagnostics)
 }

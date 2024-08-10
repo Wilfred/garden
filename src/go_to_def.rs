@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
+use garden_lang_parser::{
+    ast::{SyntaxId, ToplevelItem},
+    parse_toplevel_items,
+};
 
 use crate::{
     checks::{assign_ids::assign_toplevel_item_ids, type_checker::check_types},
@@ -10,7 +13,8 @@ use crate::{
 };
 
 pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
-    let (items, _errors) = parse_toplevel_items(path, src);
+    let mut next_id2 = SyntaxId(0);
+    let (items, _errors) = parse_toplevel_items(path, src, &mut next_id2);
 
     let mut env = Env::default();
 

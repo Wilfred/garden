@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{Expression_, SyntaxIdGenerator, ToplevelItem},
+    ast::{Expression_, ToplevelItem},
     parse_toplevel_items,
 };
 use serde::Serialize;

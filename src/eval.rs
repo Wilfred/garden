@@ -25,8 +25,8 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
-    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId,
-    SyntaxIdGenerator, TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId, TestInfo,
+    ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -534,15 +534,16 @@ pub(crate) fn eval_toplevel_method_call(
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
         pos: Position::todo(),
-        expr_: Expression_::Variable(placeholder_symbol(Position::todo())),
+        expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
         id: OnceCell::new(),
-        id2: SyntaxId(0),
+        id2: env.id_gen.next(),
     };
 
     let meth_sym = Symbol {
         position: Position::todo(),
         name: meth_name.clone(),
         id: OnceCell::new(),
+        id2: env.id_gen.next(),
     };
 
     let paren_args = ParenthesizedArguments {
@@ -3478,6 +3479,7 @@ pub(crate) fn eval_exprs(
 mod tests {
     use std::path::PathBuf;
 
+    use garden_lang_parser::ast::SyntaxIdGenerator;
     use garden_lang_parser::parse_toplevel_items;
     use garden_lang_parser::position::Position;
 

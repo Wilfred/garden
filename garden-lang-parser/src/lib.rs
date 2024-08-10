@@ -204,10 +204,10 @@ fn parse_lambda_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let fun_keyword = require_token(tokens, diagnostics, "fun");
-    let type_params = parse_type_params(tokens, diagnostics);
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
-    let params = parse_parameters(tokens, diagnostics);
-    let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
+    let params = parse_parameters(tokens, id_gen, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
@@ -508,7 +508,7 @@ fn parse_struct_literal(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let name = parse_type_symbol(tokens, diagnostics);
+    let name = parse_type_symbol(tokens, id_gen, diagnostics);
     let open_brace = require_token(tokens, diagnostics, "{");
     let fields = parse_struct_literal_fields(src, tokens, id_gen, diagnostics);
 
@@ -880,10 +880,10 @@ fn parse_definition(
             return Some(parse_test(src, tokens, id_gen, diagnostics));
         }
         if token.text == "enum" {
-            return Some(parse_enum(src, tokens, diagnostics));
+            return Some(parse_enum(src, tokens, id_gen, diagnostics));
         }
         if token.text == "struct" {
-            return Some(parse_struct(src, tokens, diagnostics));
+            return Some(parse_struct(src, tokens, id_gen, diagnostics));
         }
 
         // TODO: Include the token in the error message.
@@ -904,6 +904,7 @@ fn parse_definition(
 
 fn parse_enum_body(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<VariantInfo> {
     let mut variants = vec![];
@@ -912,7 +913,7 @@ fn parse_enum_body(
             break;
         }
 
-        let variant = parse_variant(tokens, diagnostics);
+        let variant = parse_variant(tokens, id_gen, diagnostics);
         variants.push(variant);
 
         if let Some(token) = tokens.peek() {
@@ -946,13 +947,17 @@ fn parse_enum_body(
 }
 
 /// Parse enum variant, e.g. `Some(T)`.
-fn parse_variant(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> VariantInfo {
+fn parse_variant(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> VariantInfo {
     let name = parse_symbol(tokens, diagnostics);
 
     let mut payload_hint = None;
     if peeked_symbol_is(tokens, "(") {
         tokens.pop();
-        payload_hint = Some(parse_type_hint(tokens, diagnostics));
+        payload_hint = Some(parse_type_hint(tokens, id_gen, diagnostics));
         require_token(tokens, diagnostics, ")");
     }
 
@@ -965,16 +970,17 @@ fn parse_variant(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) ->
 fn parse_enum(
     src: &str,
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
     let enum_token = require_token(tokens, diagnostics, "enum");
     let doc_comment = parse_doc_comment(&enum_token);
-    let name_sym = parse_type_symbol(tokens, diagnostics);
-    let type_params = parse_type_params(tokens, diagnostics);
+    let name_sym = parse_type_symbol(tokens, id_gen, diagnostics);
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
     let _open_brace = require_token(tokens, diagnostics, "{");
 
-    let variants = parse_enum_body(tokens, diagnostics);
+    let variants = parse_enum_body(tokens, id_gen, diagnostics);
 
     let close_brace = require_token(tokens, diagnostics, "}");
 
@@ -1007,16 +1013,17 @@ fn parse_enum(
 fn parse_struct(
     src: &str,
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
     let struct_token = require_token(tokens, diagnostics, "struct");
     let doc_comment = parse_doc_comment(&struct_token);
-    let name_sym = parse_type_symbol(tokens, diagnostics);
-    let type_params = parse_type_params(tokens, diagnostics);
+    let name_sym = parse_type_symbol(tokens, id_gen, diagnostics);
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
     let _open_brace = require_token(tokens, diagnostics, "{");
 
-    let fields = parse_struct_fields(tokens, diagnostics);
+    let fields = parse_struct_fields(tokens, id_gen, diagnostics);
 
     let close_brace = require_token(tokens, diagnostics, "}");
 
@@ -1096,7 +1103,11 @@ fn parse_test(
     )
 }
 
-fn parse_type_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeSymbol {
+fn parse_type_symbol(
+    tokens: &mut TokenStream,
+    _id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeSymbol {
     let name = parse_symbol(tokens, diagnostics);
     TypeSymbol {
         name: TypeName { name: name.name.0 },
@@ -1108,6 +1119,7 @@ fn parse_type_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>
 /// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
 fn parse_type_arguments(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> (Vec<TypeHint>, Option<Position>) {
     if !peeked_symbol_is(tokens, "<") {
@@ -1123,7 +1135,7 @@ fn parse_type_arguments(
                 break token.position;
             }
         }
-        let arg = parse_type_hint(tokens, diagnostics);
+        let arg = parse_type_hint(tokens, id_gen, diagnostics);
         args.push(arg);
 
         if let Some(token) = tokens.peek() {
@@ -1161,6 +1173,7 @@ fn parse_type_arguments(
 /// Parse type parameters for this definition, e.g. `<T, E>`.
 fn parse_type_params(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<TypeSymbol> {
     if !peeked_symbol_is(tokens, "<") {
@@ -1175,7 +1188,7 @@ fn parse_type_params(
             break;
         }
 
-        let arg = parse_type_symbol(tokens, diagnostics);
+        let arg = parse_type_symbol(tokens, id_gen, diagnostics);
         params.push(arg);
 
         if let Some(token) = tokens.peek() {
@@ -1212,7 +1225,11 @@ fn parse_type_params(
 
 /// Parse a tuple type hint, e.g. `(Int, String, Unit)`. Treat it as
 /// syntactic sugar for `Tuple<Int, String, Unit>`.
-fn parse_tuple_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+fn parse_tuple_type_hint(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeHint {
     let open_paren = require_token(tokens, diagnostics, "(");
 
     let mut item_hints = vec![];
@@ -1221,7 +1238,7 @@ fn parse_tuple_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseEr
             break;
         }
 
-        item_hints.push(parse_type_hint(tokens, diagnostics));
+        item_hints.push(parse_type_hint(tokens, id_gen, diagnostics));
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
@@ -1254,13 +1271,17 @@ fn parse_tuple_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseEr
 }
 
 /// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
-fn parse_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+fn parse_type_hint(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeHint {
     if peeked_symbol_is(tokens, "(") {
-        return parse_tuple_type_hint(tokens, diagnostics);
+        return parse_tuple_type_hint(tokens, id_gen, diagnostics);
     }
 
-    let sym = parse_type_symbol(tokens, diagnostics);
-    let (args, close_pos) = parse_type_arguments(tokens, diagnostics);
+    let sym = parse_type_symbol(tokens, id_gen, diagnostics);
+    let (args, close_pos) = parse_type_arguments(tokens, id_gen, diagnostics);
 
     let position = match close_pos {
         Some(close_pos) => Position::merge(&sym.position, &close_pos),
@@ -1275,18 +1296,23 @@ fn parse_type_hint(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) 
 }
 
 /// Parse a colon and a type hint, e.g. `: Int`.
-fn parse_colon_and(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> TypeHint {
+fn parse_colon_and(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> TypeHint {
     require_token(tokens, diagnostics, ":");
-    parse_type_hint(tokens, diagnostics)
+    parse_type_hint(tokens, id_gen, diagnostics)
 }
 
 /// Parse a type annotation, if present.
 fn parse_colon_and_hint_opt(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<TypeHint> {
     if peeked_symbol_is(tokens, ":") {
-        let type_hint = parse_colon_and(tokens, diagnostics);
+        let type_hint = parse_colon_and(tokens, id_gen, diagnostics);
         return Some(type_hint);
     }
 
@@ -1295,15 +1321,16 @@ fn parse_colon_and_hint_opt(
 
 fn parse_parameter(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     require_type_hint: bool,
 ) -> SymbolWithHint {
     let param = parse_symbol(tokens, diagnostics);
 
     let hint = if require_type_hint {
-        Some(parse_colon_and(tokens, diagnostics))
+        Some(parse_colon_and(tokens, id_gen, diagnostics))
     } else {
-        parse_colon_and_hint_opt(tokens, diagnostics)
+        parse_colon_and_hint_opt(tokens, id_gen, diagnostics)
     };
 
     SymbolWithHint {
@@ -1314,6 +1341,7 @@ fn parse_parameter(
 
 fn parse_parameters(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<SymbolWithHint> {
     require_token(tokens, diagnostics, "(");
@@ -1324,7 +1352,7 @@ fn parse_parameters(
             break;
         }
 
-        let param = parse_parameter(tokens, diagnostics, false);
+        let param = parse_parameter(tokens, id_gen, diagnostics, false);
         params.push(param);
 
         if let Some(token) = tokens.peek() {
@@ -1382,6 +1410,7 @@ fn parse_parameters(
 
 fn parse_struct_fields(
     tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<FieldInfo> {
     let mut fields = vec![];
@@ -1393,7 +1422,7 @@ fn parse_struct_fields(
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
             let sym = parse_symbol(tokens, diagnostics);
-            let hint = parse_colon_and(tokens, diagnostics);
+            let hint = parse_colon_and(tokens, id_gen, diagnostics);
 
             fields.push(FieldInfo {
                 sym,
@@ -1515,7 +1544,7 @@ fn parse_function_or_method(
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     let fun_token = require_token(tokens, diagnostics, "fun");
-    let type_params = parse_type_params(tokens, diagnostics);
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
     // We can distinguish between functions and methods based on the
     // token after the type parameters.
@@ -1551,7 +1580,7 @@ fn parse_method(
     let doc_comment = parse_doc_comment(&fun_token);
 
     require_token(tokens, diagnostics, "(");
-    let receiver_param = parse_parameter(tokens, diagnostics, true);
+    let receiver_param = parse_parameter(tokens, id_gen, diagnostics, true);
     let receiver_sym = receiver_param.symbol.clone();
     let receiver_hint = match receiver_param.hint {
         Some(type_name) => type_name,
@@ -1577,8 +1606,8 @@ fn parse_method(
 
     let name = parse_symbol(tokens, diagnostics);
 
-    let params = parse_parameters(tokens, diagnostics);
-    let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
+    let params = parse_parameters(tokens, id_gen, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
@@ -1627,8 +1656,8 @@ fn parse_function(
 
     let name = parse_symbol(tokens, diagnostics);
 
-    let params = parse_parameters(tokens, diagnostics);
-    let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
+    let params = parse_parameters(tokens, id_gen, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
@@ -1669,15 +1698,18 @@ const RESERVED_WORDS: &[&str] = &[
     "continue",
 ];
 
-pub fn placeholder_symbol(position: Position) -> Symbol {
+pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
     Symbol {
         position,
         name: SymbolName("__placeholder".to_string()),
         id: OnceCell::new(),
+        id2: id_gen.next(),
     }
 }
 
 fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
+    let mut id_gen = SyntaxIdGenerator::default();
+
     let variable_token = require_a_token(tokens, diagnostics, "variable name");
     if !SYMBOL_RE.is_match(variable_token.text) {
         diagnostics.push(ParseError::Invalid {
@@ -1686,7 +1718,7 @@ fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> 
             additional: vec![],
         });
         tokens.unpop();
-        return placeholder_symbol(variable_token.position);
+        return placeholder_symbol(variable_token.position, &mut id_gen);
     }
 
     for reserved in RESERVED_WORDS {
@@ -1700,7 +1732,7 @@ fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> 
                 additional: vec![],
             });
             tokens.unpop();
-            return placeholder_symbol(variable_token.position);
+            return placeholder_symbol(variable_token.position, &mut id_gen);
         }
     }
 
@@ -1708,6 +1740,7 @@ fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> 
         position: variable_token.position,
         name: SymbolName(variable_token.text.to_string()),
         id: OnceCell::new(),
+        id2: id_gen.next(),
     }
 }
 
@@ -1720,7 +1753,7 @@ fn parse_let_expression(
     let let_token = require_token(tokens, diagnostics, "let");
     let variable = parse_symbol(tokens, diagnostics);
 
-    let hint = parse_colon_and_hint_opt(tokens, diagnostics);
+    let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     require_token(tokens, diagnostics, "=");
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);

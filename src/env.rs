@@ -79,6 +79,8 @@ pub(crate) struct Env {
 
 impl Default for Env {
     fn default() -> Self {
+        let mut id_gen = SyntaxIdGenerator::default();
+
         let mut file_scope = HashMap::new();
 
         // Insert all the built-in functions.
@@ -252,8 +254,6 @@ impl Default for Env {
             TypeName { name: "Fun".into() },
             TypeDef::Builtin(BuiltinType::Fun),
         );
-
-        let mut id_gen = SyntaxIdGenerator::default();
 
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) =

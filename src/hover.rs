@@ -6,10 +6,7 @@ use crate::{
     eval::eval_defs,
     pos_to_id::find_item_at,
 };
-use garden_lang_parser::{
-    ast::{SyntaxIdGenerator, ToplevelItem},
-    parse_toplevel_items,
-};
+use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
 
 pub fn show_type(src: &str, path: &Path, offset: usize) {
     let mut env = Env::default();

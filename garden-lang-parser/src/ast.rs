@@ -141,6 +141,7 @@ pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
     pub id: OnceCell<SyntaxId>,
+    pub id2: SyntaxId,
 }
 
 impl Symbol {
@@ -149,6 +150,7 @@ impl Symbol {
             position,
             name: SymbolName(name.as_ref().to_owned()),
             id: OnceCell::new(),
+            id2: SyntaxId(0),
         }
     }
 }

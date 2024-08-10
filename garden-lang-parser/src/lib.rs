@@ -720,29 +720,37 @@ fn parse_simple_expression_with_trailing(
         match tokens.peek() {
             Some(token) if token.text == "(" => {
                 let arguments = parse_call_arguments(src, tokens, next_id2, diagnostics);
+
+                let id2 = *next_id2;
+                *next_id2 = next_id2.increment();
+
                 expr = Expression::new(
                     Position::merge(&expr.pos, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
-                    SyntaxId(0),
+                    id2,
                 );
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
                 let variable = parse_symbol(tokens, diagnostics);
 
+                let id2 = *next_id2;
+                *next_id2 = next_id2.increment();
+
                 if peeked_symbol_is(tokens, "(") {
                     // TODO: just treat a method call as a call of a dot access.
                     let arguments = parse_call_arguments(src, tokens, next_id2, diagnostics);
+
                     expr = Expression::new(
                         Position::merge(&expr.pos, &arguments.close_paren),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
-                        SyntaxId(0),
+                        id2,
                     );
                 } else {
                     expr = Expression::new(
                         Position::merge(&expr.pos, &variable.position),
                         Expression_::DotAccess(Box::new(expr), variable),
-                        SyntaxId(0),
+                        id2,
                     );
                 }
             }
@@ -894,10 +902,14 @@ fn parse_simple_expression_or_binop(
 
             let rhs_expr =
                 parse_simple_expression_with_trailing(src, tokens, next_id2, diagnostics);
+
+            let id2 = *next_id2;
+            *next_id2 = next_id2.increment();
+
             expr = Expression::new(
                 Position::merge(&expr.pos, &rhs_expr.pos),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
-                SyntaxId(0),
+                id2,
             );
         }
     }
@@ -1765,10 +1777,13 @@ fn parse_let_expression(
     let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&let_token.position, &semicolon.position),
         Expression_::Let(variable, hint, Box::new(expr)),
-        SyntaxId(0),
+        id2,
     )
 }
 
@@ -1784,10 +1799,13 @@ fn parse_assign_expression(
     let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
 
+    let id2 = *next_id2;
+    *next_id2 = next_id2.increment();
+
     Expression::new(
         Position::merge(&variable.position, &semicolon.position),
         Expression_::Assign(variable, Box::new(expr)),
-        SyntaxId(0),
+        id2,
     )
 }
 

@@ -32,7 +32,7 @@ foo()();
 //             ),
 //         ),
 //         id2: SyntaxId(
-//             0,
+//             1,
 //         ),
 //     },
 //     ParenthesizedArguments {

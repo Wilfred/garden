@@ -1,7 +1,7 @@
 use std::cell::OnceCell;
 
 use garden_lang_parser::{
-    ast::{EnumInfo, StructInfo, TypeSymbol},
+    ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol},
     position::Position,
 };
 
@@ -32,17 +32,20 @@ impl TypeDef {
                         name: "Args".into(),
                         position: Position::todo(),
                         id: OnceCell::new(),
+                        id2: SyntaxId(0),
                     },
                     TypeSymbol {
                         name: "Ret".into(),
                         position: Position::todo(),
                         id: OnceCell::new(),
+                        id2: SyntaxId(0),
                     },
                 ],
                 BuiltinType::List => vec![TypeSymbol {
                     name: "T".into(),
                     position: Position::todo(),
                     id: OnceCell::new(),
+                    id2: SyntaxId(0),
                 }],
                 BuiltinType::Tuple => {
                     // TODO: tuple can actually take an arbtitrary

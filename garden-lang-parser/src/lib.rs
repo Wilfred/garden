@@ -1105,7 +1105,7 @@ fn parse_test(
 
 fn parse_type_symbol(
     tokens: &mut TokenStream,
-    _id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeSymbol {
     let name = parse_symbol(tokens, diagnostics);
@@ -1113,6 +1113,7 @@ fn parse_type_symbol(
         name: TypeName { name: name.name.0 },
         position: name.position,
         id: OnceCell::new(),
+        id2: id_gen.next(),
     }
 }
 
@@ -1264,6 +1265,7 @@ fn parse_tuple_type_hint(
             },
             position: open_paren.position.clone(),
             id: OnceCell::new(),
+            id2: id_gen.next(),
         },
         args: item_hints,
         position: Position::merge(&open_paren.position, &close_paren.position),
@@ -1596,6 +1598,7 @@ fn parse_method(
                     },
                     position: receiver_sym.position.clone(),
                     id: OnceCell::new(),
+                    id2: id_gen.next(),
                 },
                 args: vec![],
                 position: receiver_sym.position.clone(),

@@ -3,7 +3,7 @@ use std::{cell::OnceCell, collections::HashMap, fmt::Display};
 use itertools::Itertools as _;
 
 use garden_lang_parser::{
-    ast::{FunInfo, Symbol, TypeHint, TypeName, TypeSymbol},
+    ast::{FunInfo, Symbol, SyntaxId, TypeHint, TypeName, TypeSymbol},
     position::Position,
 };
 
@@ -78,6 +78,7 @@ impl Type {
                 },
                 position: Position::todo(),
                 id: OnceCell::new(),
+                id2: SyntaxId(0),
             },
             args: vec![],
         }
@@ -92,6 +93,7 @@ impl Type {
                 },
                 position: Position::todo(),
                 id: OnceCell::new(),
+                id2: SyntaxId(0),
             },
             args: vec![],
         }
@@ -106,6 +108,7 @@ impl Type {
                 },
                 position: Position::todo(),
                 id: OnceCell::new(),
+                id2: SyntaxId(0),
             },
             args: vec![],
         }

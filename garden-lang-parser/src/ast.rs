@@ -54,6 +54,7 @@ pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
     pub id: OnceCell<SyntaxId>,
+    pub id2: SyntaxId,
 }
 
 /// Only consider the name when comparing type symbols. This is

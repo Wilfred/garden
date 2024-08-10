@@ -1,6 +1,7 @@
 use std::cell::OnceCell;
 use std::fmt::Display;
 
+use garden_lang_parser::ast::SyntaxId;
 use garden_lang_parser::ast::TypeSymbol;
 use garden_lang_parser::position::Position;
 use strum_macros::EnumIter;
@@ -97,6 +98,7 @@ impl Value {
                     },
                     position: Position::todo(),
                     id: OnceCell::new(),
+                    id2: SyntaxId(0),
                 },
                 args: vec![value_type, Type::no_value()],
             },
@@ -120,6 +122,7 @@ impl Value {
                     },
                     position: Position::todo(),
                     id: OnceCell::new(),
+                    id2: SyntaxId(0),
                 },
                 args: vec![Type::no_value(), value_type],
             },

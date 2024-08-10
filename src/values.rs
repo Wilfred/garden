@@ -1,4 +1,3 @@
-use std::cell::OnceCell;
 use std::fmt::Display;
 
 use garden_lang_parser::ast::SyntaxId;
@@ -97,7 +96,6 @@ impl Value {
                         name: "Result".to_owned(),
                     },
                     position: Position::todo(),
-                    id: OnceCell::new(),
                     id2: SyntaxId(0),
                 },
                 args: vec![value_type, Type::no_value()],
@@ -121,7 +119,6 @@ impl Value {
                         name: "Result".to_owned(),
                     },
                     position: Position::todo(),
-                    id: OnceCell::new(),
                     id2: SyntaxId(0),
                 },
                 args: vec![Type::no_value(), value_type],

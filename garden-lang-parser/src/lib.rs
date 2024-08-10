@@ -10,7 +10,6 @@ pub mod lex;
 pub mod position;
 pub mod visitor;
 
-use std::cell::OnceCell;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -1116,7 +1115,6 @@ fn parse_type_symbol(
     TypeSymbol {
         name: TypeName { name: name.name.0 },
         position: name.position,
-        id: OnceCell::new(),
         id2: id_gen.next(),
     }
 }
@@ -1268,7 +1266,6 @@ fn parse_tuple_type_hint(
                 name: "Tuple".to_owned(),
             },
             position: open_paren.position.clone(),
-            id: OnceCell::new(),
             id2: id_gen.next(),
         },
         args: item_hints,
@@ -1601,7 +1598,6 @@ fn parse_method(
                         name: "__MISSING_TYPE".to_owned(),
                     },
                     position: receiver_sym.position.clone(),
-                    id: OnceCell::new(),
                     id2: id_gen.next(),
                 },
                 args: vec![],

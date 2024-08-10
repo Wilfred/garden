@@ -53,7 +53,6 @@ impl From<&str> for TypeName {
 pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
-    pub id: OnceCell<SyntaxId>,
     pub id2: SyntaxId,
 }
 
@@ -71,7 +70,6 @@ impl std::fmt::Debug for TypeSymbol {
             f.debug_struct("TypeSymbol")
                 .field("name", &self.name)
                 .field("position", &self.position)
-                .field("id", &self.id)
                 .field("id2", &self.id2)
                 .finish()
         } else {

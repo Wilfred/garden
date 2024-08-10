@@ -1,4 +1,4 @@
-use std::{cell::OnceCell, collections::HashMap, fmt::Display};
+use std::{collections::HashMap, fmt::Display};
 
 use itertools::Itertools as _;
 
@@ -77,7 +77,6 @@ impl Type {
                     name: "NoValue".to_owned(),
                 },
                 position: Position::todo(),
-                id: OnceCell::new(),
                 id2: SyntaxId(0),
             },
             args: vec![],
@@ -92,7 +91,6 @@ impl Type {
                     name: "Unit".to_owned(),
                 },
                 position: Position::todo(),
-                id: OnceCell::new(),
                 id2: SyntaxId(0),
             },
             args: vec![],
@@ -107,7 +105,6 @@ impl Type {
                     name: "Bool".to_owned(),
                 },
                 position: Position::todo(),
-                id: OnceCell::new(),
                 id2: SyntaxId(0),
             },
             args: vec![],

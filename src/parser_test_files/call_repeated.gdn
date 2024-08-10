@@ -17,7 +17,7 @@ foo()();
 //                     ),
 //                 ),
 //                 id2: SyntaxId(
-//                     0,
+//                     1,
 //                 ),
 //             },
 //             ParenthesizedArguments {
@@ -32,7 +32,7 @@ foo()();
 //             ),
 //         ),
 //         id2: SyntaxId(
-//             1,
+//             2,
 //         ),
 //     },
 //     ParenthesizedArguments {

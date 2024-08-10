@@ -158,7 +158,7 @@ fn parse_variable_expression(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol(tokens, diagnostics);
+    let variable = parse_symbol(tokens, id_gen, diagnostics);
 
     Expression::new(
         variable.position.clone(),
@@ -464,7 +464,7 @@ fn parse_struct_literal_fields(
         }
 
         let start_idx = tokens.idx;
-        let sym = parse_symbol(tokens, diagnostics);
+        let sym = parse_symbol(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, ":");
         let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
 
@@ -550,7 +550,7 @@ fn parse_match_expression(
         }
 
         let start_idx = tokens.idx;
-        let pattern = parse_pattern(tokens, diagnostics);
+        let pattern = parse_pattern(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, "=>");
         let case_expr = parse_case_expr(src, tokens, id_gen, diagnostics);
         assert!(
@@ -584,12 +584,16 @@ fn parse_case_expr(
     case_expr
 }
 
-fn parse_pattern(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Pattern {
-    let symbol = parse_symbol(tokens, diagnostics);
+fn parse_pattern(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Pattern {
+    let symbol = parse_symbol(tokens, id_gen, diagnostics);
 
     let argument = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
-        let arg = parse_symbol(tokens, diagnostics);
+        let arg = parse_symbol(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, ")");
         Some(arg)
     } else {
@@ -688,7 +692,7 @@ fn parse_simple_expression_with_trailing(
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
-                let variable = parse_symbol(tokens, diagnostics);
+                let variable = parse_symbol(tokens, id_gen, diagnostics);
 
                 if peeked_symbol_is(tokens, "(") {
                     // TODO: just treat a method call as a call of a dot access.
@@ -952,7 +956,7 @@ fn parse_variant(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> VariantInfo {
-    let name = parse_symbol(tokens, diagnostics);
+    let name = parse_symbol(tokens, id_gen, diagnostics);
 
     let mut payload_hint = None;
     if peeked_symbol_is(tokens, "(") {
@@ -1066,7 +1070,7 @@ fn parse_test(
         if token.text == "{" {
             None
         } else {
-            Some(parse_symbol(tokens, diagnostics))
+            Some(parse_symbol(tokens, id_gen, diagnostics))
         }
     } else {
         diagnostics.push(ParseError::Incomplete {
@@ -1108,7 +1112,7 @@ fn parse_type_symbol(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeSymbol {
-    let name = parse_symbol(tokens, diagnostics);
+    let name = parse_symbol(tokens, id_gen, diagnostics);
     TypeSymbol {
         name: TypeName { name: name.name.0 },
         position: name.position,
@@ -1327,7 +1331,7 @@ fn parse_parameter(
     diagnostics: &mut Vec<ParseError>,
     require_type_hint: bool,
 ) -> SymbolWithHint {
-    let param = parse_symbol(tokens, diagnostics);
+    let param = parse_symbol(tokens, id_gen, diagnostics);
 
     let hint = if require_type_hint {
         Some(parse_colon_and(tokens, id_gen, diagnostics))
@@ -1423,7 +1427,7 @@ fn parse_struct_fields(
 
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
-            let sym = parse_symbol(tokens, diagnostics);
+            let sym = parse_symbol(tokens, id_gen, diagnostics);
             let hint = parse_colon_and(tokens, id_gen, diagnostics);
 
             fields.push(FieldInfo {
@@ -1607,7 +1611,7 @@ fn parse_method(
     };
     require_token(tokens, diagnostics, ")");
 
-    let name = parse_symbol(tokens, diagnostics);
+    let name = parse_symbol(tokens, id_gen, diagnostics);
 
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
@@ -1657,7 +1661,7 @@ fn parse_function(
 ) -> Definition {
     let doc_comment = parse_doc_comment(&fun_token);
 
-    let name = parse_symbol(tokens, diagnostics);
+    let name = parse_symbol(tokens, id_gen, diagnostics);
 
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
@@ -1710,9 +1714,11 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) ->
     }
 }
 
-fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> Symbol {
-    let mut id_gen = SyntaxIdGenerator::default();
-
+fn parse_symbol(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Symbol {
     let variable_token = require_a_token(tokens, diagnostics, "variable name");
     if !SYMBOL_RE.is_match(variable_token.text) {
         diagnostics.push(ParseError::Invalid {
@@ -1721,7 +1727,7 @@ fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> 
             additional: vec![],
         });
         tokens.unpop();
-        return placeholder_symbol(variable_token.position, &mut id_gen);
+        return placeholder_symbol(variable_token.position, id_gen);
     }
 
     for reserved in RESERVED_WORDS {
@@ -1735,7 +1741,7 @@ fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> 
                 additional: vec![],
             });
             tokens.unpop();
-            return placeholder_symbol(variable_token.position, &mut id_gen);
+            return placeholder_symbol(variable_token.position, id_gen);
         }
     }
 
@@ -1754,7 +1760,7 @@ fn parse_let_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let let_token = require_token(tokens, diagnostics, "let");
-    let variable = parse_symbol(tokens, diagnostics);
+    let variable = parse_symbol(tokens, id_gen, diagnostics);
 
     let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
@@ -1775,7 +1781,7 @@ fn parse_assign_expression(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol(tokens, diagnostics);
+    let variable = parse_symbol(tokens, id_gen, diagnostics);
 
     require_token(tokens, diagnostics, "=");
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);

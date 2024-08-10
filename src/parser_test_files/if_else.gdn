@@ -14,7 +14,7 @@ if (True) {} else {}
 //             ),
 //         ),
 //         id2: SyntaxId(
-//             0,
+//             1,
 //         ),
 //     },
 //     Block {

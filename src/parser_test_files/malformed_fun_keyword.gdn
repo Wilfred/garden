@@ -19,7 +19,7 @@ ffun foo(_: Bool) {
 //             ),
 //         ),
 //         id2: SyntaxId(
-//             2,
+//             5,
 //         ),
 //     },
 //     ParenthesizedArguments {
@@ -36,7 +36,7 @@ ffun foo(_: Bool) {
 //                     ),
 //                 ),
 //                 id2: SyntaxId(
-//                     3,
+//                     7,
 //                 ),
 //             },
 //         ],

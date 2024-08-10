@@ -12,6 +12,8 @@ use crate::{
     pos_to_id::find_item_at,
 };
 
+/// Print the position of the definition associated with the
+/// expression at `offset`.
 pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     let mut next_id2 = SyntaxId(0);
     let (items, _errors) = parse_toplevel_items(path, src, &mut next_id2);

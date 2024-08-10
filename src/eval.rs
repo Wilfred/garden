@@ -2603,6 +2603,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
         if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
             let expr_id = outer_expr.id.clone();
+            let expr_id2 = outer_expr.id2;
 
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
@@ -2690,7 +2691,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                     expr_position.clone(),
                                     Expression_::Variable(Symbol::new(expr_position, "Unit")),
                                     &expr_id,
-                                    SyntaxId(0),
+                                    expr_id2,
                                 )
                             }
                         };

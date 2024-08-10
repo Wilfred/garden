@@ -17,13 +17,9 @@ let foo: Int = 1;
 //             1,
 //         ),
 //         id: OnceCell(
-//             SyntaxId(
-//                 3,
-//             ),
+//             SyntaxId(3),
 //         ),
-//         id2: SyntaxId(
-//             3,
-//         ),
+//         id2: SyntaxId(3),
 //     },
 // )
 

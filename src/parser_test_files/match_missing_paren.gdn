@@ -29,24 +29,16 @@ fun foo() {
 //                                 [],
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(
-//                                     1,
-//                                 ),
+//                                 SyntaxId(1),
 //                             ),
-//                             id2: SyntaxId(
-//                                 3,
-//                             ),
+//                             id2: SyntaxId(3),
 //                         },
 //                         [],
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(
-//                             0,
-//                         ),
+//                         SyntaxId(0),
 //                     ),
-//                     id2: SyntaxId(
-//                         4,
-//                     ),
+//                     id2: SyntaxId(4),
 //                 },
 //             ],
 //             close_brace: Position { ... },

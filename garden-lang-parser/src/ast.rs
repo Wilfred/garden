@@ -300,8 +300,21 @@ pub enum Expression_ {
 
 /// A syntactic item that the IDE can interact with, such as an
 /// expression or a variable name.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+#[derive(Clone, PartialEq, Eq, Hash, Copy)]
 pub struct SyntaxId(pub usize);
+
+impl std::fmt::Debug for SyntaxId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Avoid deriving Debug because otherwise we get:
+        //
+        // SyntaxId(
+        //   123
+        // )
+        //
+        // which is too verbose.
+        write!(f, "SyntaxId({})", self.0)
+    }
+}
 
 #[derive(Debug)]
 pub struct SyntaxIdGenerator {

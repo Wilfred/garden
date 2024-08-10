@@ -13,13 +13,9 @@ Foo { x: 1, y: 2 };
 //                     1,
 //                 ),
 //                 id: OnceCell(
-//                     SyntaxId(
-//                         2,
-//                     ),
+//                     SyntaxId(2),
 //                 ),
-//                 id2: SyntaxId(
-//                     3,
-//                 ),
+//                 id2: SyntaxId(3),
 //             },
 //         ),
 //         (
@@ -30,13 +26,9 @@ Foo { x: 1, y: 2 };
 //                     2,
 //                 ),
 //                 id: OnceCell(
-//                     SyntaxId(
-//                         3,
-//                     ),
+//                     SyntaxId(3),
 //                 ),
-//                 id2: SyntaxId(
-//                     5,
-//                 ),
+//                 id2: SyntaxId(5),
 //             },
 //         ),
 //     ],

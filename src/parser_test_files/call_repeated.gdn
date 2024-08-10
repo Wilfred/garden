@@ -12,13 +12,9 @@ foo()();
 //                     Symbol"foo",
 //                 ),
 //                 id: OnceCell(
-//                     SyntaxId(
-//                         2,
-//                     ),
+//                     SyntaxId(2),
 //                 ),
-//                 id2: SyntaxId(
-//                     1,
-//                 ),
+//                 id2: SyntaxId(1),
 //             },
 //             ParenthesizedArguments {
 //                 open_paren: Position { ... },
@@ -27,13 +23,9 @@ foo()();
 //             },
 //         ),
 //         id: OnceCell(
-//             SyntaxId(
-//                 1,
-//             ),
+//             SyntaxId(1),
 //         ),
-//         id2: SyntaxId(
-//             2,
-//         ),
+//         id2: SyntaxId(2),
 //     },
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },

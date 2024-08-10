@@ -11,13 +11,9 @@ let a b
 //             Symbol"b",
 //         ),
 //         id: OnceCell(
-//             SyntaxId(
-//                 2,
-//             ),
+//             SyntaxId(2),
 //         ),
-//         id2: SyntaxId(
-//             2,
-//         ),
+//         id2: SyntaxId(2),
 //     },
 // )
 

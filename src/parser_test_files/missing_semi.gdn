@@ -23,13 +23,9 @@ fun foo() { 1 }
 //                         1,
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(
-//                             0,
-//                         ),
+//                         SyntaxId(0),
 //                     ),
-//                     id2: SyntaxId(
-//                         1,
-//                     ),
+//                     id2: SyntaxId(1),
 //                 },
 //             ],
 //             close_brace: Position { ... },

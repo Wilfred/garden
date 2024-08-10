@@ -39,24 +39,16 @@ fun foo(s: String) {
 //                                 Symbol"s",
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(
-//                                     3,
-//                                 ),
+//                                 SyntaxId(3),
 //                             ),
-//                             id2: SyntaxId(
-//                                 5,
-//                             ),
+//                             id2: SyntaxId(5),
 //                         },
 //                         Symbol"__placeholder",
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(
-//                             2,
-//                         ),
+//                         SyntaxId(2),
 //                     ),
-//                     id2: SyntaxId(
-//                         7,
-//                     ),
+//                     id2: SyntaxId(7),
 //                 },
 //             ],
 //             close_brace: Position { ... },

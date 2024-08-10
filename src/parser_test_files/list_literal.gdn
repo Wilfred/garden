@@ -10,13 +10,9 @@
 //                 1,
 //             ),
 //             id: OnceCell(
-//                 SyntaxId(
-//                     1,
-//                 ),
+//                 SyntaxId(1),
 //             ),
-//             id2: SyntaxId(
-//                 3,
-//             ),
+//             id2: SyntaxId(3),
 //         },
 //         Expression {
 //             pos: Position { ... },
@@ -24,13 +20,9 @@
 //                 2,
 //             ),
 //             id: OnceCell(
-//                 SyntaxId(
-//                     2,
-//                 ),
+//                 SyntaxId(2),
 //             ),
-//             id2: SyntaxId(
-//                 4,
-//             ),
+//             id2: SyntaxId(4),
 //         },
 //     ],
 // )

@@ -9,13 +9,9 @@ if (x) {} else if (y) {}
 //             Symbol"x",
 //         ),
 //         id: OnceCell(
-//             SyntaxId(
-//                 1,
-//             ),
+//             SyntaxId(1),
 //         ),
-//         id2: SyntaxId(
-//             1,
-//         ),
+//         id2: SyntaxId(1),
 //     },
 //     Block {
 //         is_loop_body: false,
@@ -37,13 +33,9 @@ if (x) {} else if (y) {}
 //                                 Symbol"y",
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(
-//                                     4,
-//                                 ),
+//                                 SyntaxId(4),
 //                             ),
-//                             id2: SyntaxId(
-//                                 3,
-//                             ),
+//                             id2: SyntaxId(3),
 //                         },
 //                         Block {
 //                             is_loop_body: false,
@@ -54,13 +46,9 @@ if (x) {} else if (y) {}
 //                         None,
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(
-//                             3,
-//                         ),
+//                         SyntaxId(3),
 //                     ),
-//                     id2: SyntaxId(
-//                         4,
-//                     ),
+//                     id2: SyntaxId(4),
 //                 },
 //             ],
 //             close_brace: Position { ... },

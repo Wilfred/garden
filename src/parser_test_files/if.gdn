@@ -9,13 +9,9 @@ if (True) {}
 //             Symbol"True",
 //         ),
 //         id: OnceCell(
-//             SyntaxId(
-//                 1,
-//             ),
+//             SyntaxId(1),
 //         ),
-//         id2: SyntaxId(
-//             1,
-//         ),
+//         id2: SyntaxId(1),
 //     },
 //     Block {
 //         is_loop_body: false,

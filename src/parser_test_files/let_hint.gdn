@@ -16,7 +16,7 @@ let foo: Int = 1;
 //         expr_: IntLiteral(
 //             1,
 //         ),
-//         id2: SyntaxId(3),
+//         id: SyntaxId(3),
 //     },
 // )
 

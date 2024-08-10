@@ -8,7 +8,7 @@ if (x) {} else if (y) {}
 //         expr_: Variable(
 //             Symbol"x",
 //         ),
-//         id2: SyntaxId(1),
+//         id: SyntaxId(1),
 //     },
 //     Block {
 //         is_loop_body: false,
@@ -29,7 +29,7 @@ if (x) {} else if (y) {}
 //                             expr_: Variable(
 //                                 Symbol"y",
 //                             ),
-//                             id2: SyntaxId(3),
+//                             id: SyntaxId(3),
 //                         },
 //                         Block {
 //                             is_loop_body: false,
@@ -39,7 +39,7 @@ if (x) {} else if (y) {}
 //                         },
 //                         None,
 //                     ),
-//                     id2: SyntaxId(4),
+//                     id: SyntaxId(4),
 //                 },
 //             ],
 //             close_brace: Position { ... },

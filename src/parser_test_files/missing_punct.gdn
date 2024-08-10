@@ -10,7 +10,7 @@ let a b
 //         expr_: Variable(
 //             Symbol"b",
 //         ),
-//         id2: SyntaxId(2),
+//         id: SyntaxId(2),
 //     },
 // )
 

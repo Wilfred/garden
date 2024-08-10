@@ -13,7 +13,7 @@ ffun foo(_: Bool) {
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
-//         id2: SyntaxId(5),
+//         id: SyntaxId(5),
 //     },
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },
@@ -23,7 +23,7 @@ ffun foo(_: Bool) {
 //                 expr_: Variable(
 //                     Symbol"_",
 //                 ),
-//                 id2: SyntaxId(7),
+//                 id: SyntaxId(7),
 //             },
 //         ],
 //         close_paren: Position { ... },

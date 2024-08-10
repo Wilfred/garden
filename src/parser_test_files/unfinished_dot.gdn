@@ -38,11 +38,11 @@ fun foo(s: String) {
 //                             expr_: Variable(
 //                                 Symbol"s",
 //                             ),
-//                             id2: SyntaxId(5),
+//                             id: SyntaxId(5),
 //                         },
 //                         Symbol"__placeholder",
 //                     ),
-//                     id2: SyntaxId(7),
+//                     id: SyntaxId(7),
 //                 },
 //             ],
 //             close_brace: Position { ... },

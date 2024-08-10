@@ -10,7 +10,7 @@ let A = 1;
 //         expr_: IntLiteral(
 //             1,
 //         ),
-//         id2: SyntaxId(1),
+//         id: SyntaxId(1),
 //     },
 // )
 

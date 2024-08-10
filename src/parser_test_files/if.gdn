@@ -8,7 +8,7 @@ if (True) {}
 //         expr_: Variable(
 //             Symbol"True",
 //         ),
-//         id2: SyntaxId(1),
+//         id: SyntaxId(1),
 //     },
 //     Block {
 //         is_loop_body: false,

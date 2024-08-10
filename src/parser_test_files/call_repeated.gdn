@@ -11,7 +11,7 @@ foo()();
 //                 expr_: Variable(
 //                     Symbol"foo",
 //                 ),
-//                 id2: SyntaxId(1),
+//                 id: SyntaxId(1),
 //             },
 //             ParenthesizedArguments {
 //                 open_paren: Position { ... },
@@ -19,7 +19,7 @@ foo()();
 //                 close_paren: Position { ... },
 //             },
 //         ),
-//         id2: SyntaxId(2),
+//         id: SyntaxId(2),
 //     },
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },

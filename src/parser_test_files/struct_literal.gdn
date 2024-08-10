@@ -12,7 +12,7 @@ Foo { x: 1, y: 2 };
 //                 expr_: IntLiteral(
 //                     1,
 //                 ),
-//                 id2: SyntaxId(3),
+//                 id: SyntaxId(3),
 //             },
 //         ),
 //         (
@@ -22,7 +22,7 @@ Foo { x: 1, y: 2 };
 //                 expr_: IntLiteral(
 //                     2,
 //                 ),
-//                 id2: SyntaxId(5),
+//                 id: SyntaxId(5),
 //             },
 //         ),
 //     ],

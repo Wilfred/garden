@@ -9,7 +9,7 @@ return x;
 //             expr_: Variable(
 //                 Symbol"x",
 //             ),
-//             id2: SyntaxId(1),
+//             id: SyntaxId(1),
 //         },
 //     ),
 // )

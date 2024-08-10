@@ -33,7 +33,7 @@ fun foo<T>(value: T): Unit {
 //                         Expression {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
-//                             id2: SyntaxId(2),
+//                             id: SyntaxId(2),
 //                         },
 //                         LessThan,
 //                         Expression {
@@ -41,10 +41,10 @@ fun foo<T>(value: T): Unit {
 //                             expr_: Variable(
 //                                 Symbol"T",
 //                             ),
-//                             id2: SyntaxId(4),
+//                             id: SyntaxId(4),
 //                         },
 //                     ),
-//                     id2: SyntaxId(5),
+//                     id: SyntaxId(5),
 //                 },
 //                 Expression {
 //                     pos: Position { ... },
@@ -52,7 +52,7 @@ fun foo<T>(value: T): Unit {
 //                         Expression {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
-//                             id2: SyntaxId(6),
+//                             id: SyntaxId(6),
 //                         },
 //                         GreaterThan,
 //                         Expression {
@@ -60,10 +60,10 @@ fun foo<T>(value: T): Unit {
 //                             expr_: Variable(
 //                                 Symbol"value",
 //                             ),
-//                             id2: SyntaxId(8),
+//                             id: SyntaxId(8),
 //                         },
 //                     ),
-//                     id2: SyntaxId(9),
+//                     id: SyntaxId(9),
 //                 },
 //             ],
 //             close_brace: Position { ... },

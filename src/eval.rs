@@ -488,14 +488,14 @@ pub(crate) fn eval_toplevel_call(
 
     let recv_expr = Expression {
         pos: Position::todo(),
-        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0)),
+        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, env.id_gen.next())),
         id: OnceCell::new(),
-        id2: SyntaxId(0),
+        id2: env.id_gen.next(),
     };
 
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(SyntaxId(0)); args.len()],
+        arguments: vec![Expression::invalid(env.id_gen.next()); args.len()],
         close_paren: Position::todo(),
     };
 
@@ -503,7 +503,7 @@ pub(crate) fn eval_toplevel_call(
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
         id: OnceCell::new(),
-        id2: SyntaxId(0),
+        id2: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
 
@@ -548,7 +548,7 @@ pub(crate) fn eval_toplevel_method_call(
 
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(SyntaxId(0)); args.len()],
+        arguments: vec![Expression::invalid(env.id_gen.next()); args.len()],
         close_paren: Position::todo(),
     };
 
@@ -556,7 +556,7 @@ pub(crate) fn eval_toplevel_method_call(
         pos: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
         id: OnceCell::new(),
-        id2: SyntaxId(0),
+        id2: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
 
@@ -856,7 +856,7 @@ struct ErrorInfo {
 }
 
 fn eval_if(
-    env: &Env,
+    env: &mut Env,
     stack_frame: &mut StackFrame,
     position: &Position,
     bool_position: &Position,
@@ -875,7 +875,7 @@ fn eval_if(
                 Expression::new(
                     position.clone(),
                     Expression_::Block(then_body.clone()),
-                    SyntaxId(0),
+                    env.id_gen.next(),
                 ),
             ));
         } else {
@@ -886,7 +886,7 @@ fn eval_if(
                         Expression::new(
                             position.clone(),
                             Expression_::Block(else_body.clone()),
-                            SyntaxId(0),
+                            env.id_gen.next(),
                         ),
                     ));
                 }
@@ -928,7 +928,7 @@ fn to_rust_bool(value: &Value) -> Option<bool> {
 }
 
 fn eval_while(
-    env: &Env,
+    env: &mut Env,
     stack_frame: &mut StackFrame,
     condition_pos: &Position,
     expr: Expression,
@@ -947,7 +947,11 @@ fn eval_while(
             // Evaluate the body.
             stack_frame.exprs_to_eval.push((
                 false,
-                Expression::new(expr.pos, Expression_::Block(body.clone()), SyntaxId(0)),
+                Expression::new(
+                    expr.pos,
+                    Expression_::Block(body.clone()),
+                    env.id_gen.next(),
+                ),
             ))
         } else {
             stack_frame.evalled_values.push(Value::unit());
@@ -2689,7 +2693,11 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                 // Evaluate `return;` as `return Unit;`.
                                 Expression::new_with_id(
                                     expr_position.clone(),
-                                    Expression_::Variable(Symbol::new(expr_position, "Unit")),
+                                    Expression_::Variable(Symbol::new(
+                                        expr_position,
+                                        "Unit",
+                                        env.id_gen.next(),
+                                    )),
                                     &expr_id,
                                     expr_id2,
                                 )
@@ -3445,7 +3453,7 @@ fn eval_match_cases(
 
             stack_frame.exprs_to_eval.push((
                 false,
-                Expression::new(case_expr_pos.clone(), case_block, SyntaxId(0)),
+                Expression::new(case_expr_pos.clone(), case_block, env.id_gen.next()),
             ));
             return Ok(());
         }
@@ -3564,6 +3572,7 @@ mod tests {
                         path: PathBuf::from("__test.gdn"),
                     },
                     "foo",
+                    env.id_gen.next(),
                 ),
                 None,
                 Box::new(Expression::new(
@@ -3575,10 +3584,10 @@ mod tests {
                         path: PathBuf::from("__test.gdn"),
                     },
                     Expression_::IntLiteral(123),
-                    SyntaxId(0),
+                    env.id_gen.next(),
                 )),
             ),
-            SyntaxId(0),
+            env.id_gen.next(),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
 
@@ -3599,8 +3608,9 @@ mod tests {
                     path: PathBuf::from("__test.gdn"),
                 },
                 "foo",
+                env.id_gen.next(),
             )),
-            SyntaxId(0),
+            env.id_gen.next(),
         )];
         eval_exprs(&exprs, &mut env).unwrap();
     }

@@ -146,12 +146,12 @@ pub struct Symbol {
 }
 
 impl Symbol {
-    pub fn new<S: AsRef<str>>(position: Position, name: S) -> Self {
+    pub fn new<S: AsRef<str>>(position: Position, name: S, id2: SyntaxId) -> Self {
         Self {
             position,
             name: SymbolName(name.as_ref().to_owned()),
             id: OnceCell::new(),
-            id2: SyntaxId(0),
+            id2,
         }
     }
 }

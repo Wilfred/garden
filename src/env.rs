@@ -66,6 +66,7 @@ pub(crate) struct Env {
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
     types: HashMap<TypeName, TypeDef>,
+    pub(crate) id_gen: SyntaxIdGenerator,
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
     pub(crate) prev_call_args: HashMap<SymbolName, Vec<Value>>,
@@ -252,24 +253,12 @@ impl Default for Env {
             TypeDef::Builtin(BuiltinType::Fun),
         );
 
-        let mut env = Self {
-            file_scope,
-            methods,
-            tests: HashMap::new(),
-            types,
-            prev_call_args: HashMap::new(),
-            prev_method_call_args: HashMap::new(),
-            stack: Stack::default(),
-        };
-
-        // TODO: store next ID in env to avoid new expressions having clashing IDs.
         let mut id_gen = SyntaxIdGenerator::default();
 
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) =
             parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, &mut id_gen);
         assert!(errors.is_empty(), "Prelude should be syntactically legal");
-        eval_toplevel_defs(&prelude_items, &mut env);
 
         let builtins_src = include_str!("builtins.gdn");
         let (builtin_items, errors) =
@@ -278,6 +267,18 @@ impl Default for Env {
             errors.is_empty(),
             "Stubs for built-ins should be syntactically legal"
         );
+        let mut env = Self {
+            file_scope,
+            methods,
+            tests: HashMap::new(),
+            types,
+            id_gen,
+            prev_call_args: HashMap::new(),
+            prev_method_call_args: HashMap::new(),
+            stack: Stack::default(),
+        };
+
+        eval_toplevel_defs(&prelude_items, &mut env);
         eval_toplevel_defs(&builtin_items, &mut env);
 
         env

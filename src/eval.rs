@@ -489,7 +489,7 @@ pub(crate) fn eval_toplevel_call(
     let recv_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, env.id_gen.next())),
-        id2: env.id_gen.next(),
+        id: env.id_gen.next(),
     };
 
     let paren_args = ParenthesizedArguments {
@@ -501,7 +501,7 @@ pub(crate) fn eval_toplevel_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
-        id2: env.id_gen.next(),
+        id: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
 
@@ -533,7 +533,7 @@ pub(crate) fn eval_toplevel_method_call(
     let recv_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
-        id2: env.id_gen.next(),
+        id: env.id_gen.next(),
     };
 
     let meth_sym = Symbol {
@@ -551,7 +551,7 @@ pub(crate) fn eval_toplevel_method_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
-        id2: env.id_gen.next(),
+        id: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
 
@@ -1831,7 +1831,7 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 caller_pos: Some(caller_expr.pos.clone()),
-                caller_expr_id: Some(caller_expr.id2),
+                caller_expr_id: Some(caller_expr.id),
                 bindings: Bindings {
                     block_bindings: bindings,
                 },
@@ -1894,7 +1894,7 @@ fn eval_call(
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
                 caller_pos: Some(caller_expr.pos.clone()),
-                caller_expr_id: Some(caller_expr.id2),
+                caller_expr_id: Some(caller_expr.id),
                 enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
                 bindings: Bindings::new_with(fun_bindings),
                 type_bindings,
@@ -2219,7 +2219,7 @@ fn eval_method_call(
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
         caller_pos: Some(caller_expr.pos.clone()),
-        caller_expr_id: Some(caller_expr.id2),
+        caller_expr_id: Some(caller_expr.id),
         bindings: Bindings::new_with(fun_bindings),
         type_bindings,
         bindings_next_block: vec![],
@@ -2601,7 +2601,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
     while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
-            let expr_id2 = outer_expr.id2;
+            let expr_id = outer_expr.id;
 
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
@@ -2692,7 +2692,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                         "Unit",
                                         env.id_gen.next(),
                                     )),
-                                    expr_id2,
+                                    expr_id,
                                 )
                             }
                         };
@@ -3093,7 +3093,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             // the match above.
             if done_children
                 && session.stop_at_expr_id.is_some()
-                && session.stop_at_expr_id.as_ref() == Some(&expr_id2)
+                && session.stop_at_expr_id.as_ref() == Some(&expr_id)
             {
                 let v = match stack_frame.evalled_values.last() {
                     Some(value) => value.clone(),

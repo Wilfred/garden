@@ -42,7 +42,7 @@ impl Visitor for IdFinder {
             return;
         }
 
-        self.found_ids.push(expr.id2);
+        self.found_ids.push(expr.id);
         self.visit_expr_(&expr.expr_)
     }
 
@@ -67,7 +67,7 @@ struct ExprOfIdFinder {
 
 impl Visitor for ExprOfIdFinder {
     fn visit_expr(&mut self, expr: &Expression) {
-        if expr.id2 == self.id {
+        if expr.id == self.id {
             self.expr = Some(expr.clone());
             return;
         }

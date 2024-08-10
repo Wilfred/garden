@@ -338,24 +338,24 @@ impl SyntaxIdGenerator {
 pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
-    pub id2: SyntaxId,
+    pub id: SyntaxId,
 }
 
 impl Expression {
-    pub fn new(position: Position, expr_: Expression_, id2: SyntaxId) -> Self {
+    pub fn new(position: Position, expr_: Expression_, id: SyntaxId) -> Self {
         Self {
             pos: position,
             expr_,
-            id2,
+            id,
         }
     }
 
     /// Helper for creating Invalid expressions.
-    pub fn invalid(id2: SyntaxId) -> Self {
+    pub fn invalid(id: SyntaxId) -> Self {
         Self {
             pos: Position::todo(),
             expr_: Expression_::Invalid,
-            id2,
+            id,
         }
     }
 }

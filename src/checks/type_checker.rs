@@ -269,7 +269,7 @@ impl<'a> TypeCheckVisitor<'a> {
         expected_return_ty: Option<&Type>,
     ) -> Type {
         let ty = self.check_expr_(&expr.expr_, &expr.pos, type_bindings, expected_return_ty);
-        self.id_to_ty.insert(expr.id2, ty.clone());
+        self.id_to_ty.insert(expr.id, ty.clone());
 
         ty
     }

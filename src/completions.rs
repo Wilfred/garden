@@ -35,7 +35,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
         if let Some(expr) = find_expr_of_id(&items, *id) {
             match &expr.expr_ {
                 Expression_::DotAccess(recv, _) => {
-                    let recv_id = recv.id2;
+                    let recv_id = recv.id;
                     let recv_ty = &id_to_ty[&recv_id];
                     print_methods(&env, recv_ty);
                 }

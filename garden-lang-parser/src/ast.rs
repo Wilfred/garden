@@ -312,7 +312,8 @@ impl Default for SyntaxIdGenerator {
 }
 
 impl SyntaxIdGenerator {
-    pub(crate) fn next(&mut self) -> SyntaxId {
+    #[allow(clippy::should_implement_trait)]
+    pub fn next(&mut self) -> SyntaxId {
         let next_id = self.next_id;
         self.next_id = SyntaxId(next_id.0 + 1);
         next_id

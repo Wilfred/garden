@@ -34,7 +34,7 @@ fun foo<T>(value: T): Unit {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
 //                             id: OnceCell(
-//                                 SyntaxId(2),
+//                                 <uninit>,
 //                             ),
 //                             id2: SyntaxId(2),
 //                         },
@@ -45,13 +45,13 @@ fun foo<T>(value: T): Unit {
 //                                 Symbol"T",
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(3),
+//                                 <uninit>,
 //                             ),
 //                             id2: SyntaxId(4),
 //                         },
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(1),
+//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(5),
 //                 },
@@ -62,7 +62,7 @@ fun foo<T>(value: T): Unit {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
 //                             id: OnceCell(
-//                                 SyntaxId(6),
+//                                 <uninit>,
 //                             ),
 //                             id2: SyntaxId(6),
 //                         },
@@ -73,13 +73,13 @@ fun foo<T>(value: T): Unit {
 //                                 Symbol"value",
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(7),
+//                                 <uninit>,
 //                             ),
 //                             id2: SyntaxId(8),
 //                         },
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(5),
+//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(9),
 //                 },

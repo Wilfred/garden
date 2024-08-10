@@ -11,7 +11,7 @@ let x = 1;
 //             1,
 //         ),
 //         id: OnceCell(
-//             SyntaxId(2),
+//             <uninit>,
 //         ),
 //         id2: SyntaxId(1),
 //     },

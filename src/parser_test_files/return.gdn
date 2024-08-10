@@ -10,7 +10,7 @@ return x;
 //                 Symbol"x",
 //             ),
 //             id: OnceCell(
-//                 SyntaxId(1),
+//                 <uninit>,
 //             ),
 //             id2: SyntaxId(1),
 //         },

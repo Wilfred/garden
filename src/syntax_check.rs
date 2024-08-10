@@ -10,7 +10,7 @@ use garden_lang_parser::{
 };
 
 use crate::{
-    checks::{assign_ids::assign_toplevel_item_ids, check_toplevel_items},
+    checks::check_toplevel_items,
     diagnostics::{format_parse_error, Diagnostic, Level},
 };
 
@@ -37,7 +37,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
 
     let mut id_gen = SyntaxIdGenerator::default();
     let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
-    assign_toplevel_item_ids(&items);
 
     for e in errors.into_iter() {
         match e {

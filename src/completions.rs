@@ -7,7 +7,7 @@ use garden_lang_parser::{
 use serde::Serialize;
 
 use crate::{
-    checks::{assign_ids::assign_toplevel_item_ids, type_checker::check_types},
+    checks::type_checker::check_types,
     env::Env,
     eval::eval_defs,
     garden_type::Type,
@@ -26,7 +26,6 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     }
 
     eval_defs(&definitions, &mut env);
-    assign_toplevel_item_ids(&items);
 
     let ids_at_pos = find_item_at(&items, offset);
 

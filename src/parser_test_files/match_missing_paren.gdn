@@ -29,14 +29,14 @@ fun foo() {
 //                                 [],
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(1),
+//                                 <uninit>,
 //                             ),
 //                             id2: SyntaxId(3),
 //                         },
 //                         [],
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(0),
+//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(4),
 //                 },

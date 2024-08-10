@@ -9,7 +9,7 @@ if (x) {} else if (y) {}
 //             Symbol"x",
 //         ),
 //         id: OnceCell(
-//             SyntaxId(1),
+//             <uninit>,
 //         ),
 //         id2: SyntaxId(1),
 //     },
@@ -33,7 +33,7 @@ if (x) {} else if (y) {}
 //                                 Symbol"y",
 //                             ),
 //                             id: OnceCell(
-//                                 SyntaxId(4),
+//                                 <uninit>,
 //                             ),
 //                             id2: SyntaxId(3),
 //                         },
@@ -46,7 +46,7 @@ if (x) {} else if (y) {}
 //                         None,
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(3),
+//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(4),
 //                 },

@@ -3,10 +3,7 @@ use std::path::Path;
 use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
 
 use crate::{
-    checks::{assign_ids::assign_toplevel_item_ids, type_checker::check_types},
-    env::Env,
-    eval::eval_defs,
-    pos_to_id::find_item_at,
+    checks::type_checker::check_types, env::Env, eval::eval_defs, pos_to_id::find_item_at,
 };
 
 /// Print the position of the definition associated with the
@@ -23,8 +20,6 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     }
 
     eval_defs(&definitions, &mut env);
-
-    assign_toplevel_item_ids(&items);
     let (_, _, _, id_to_pos) = check_types(&items, &env);
 
     let ids_at_query_pos = find_item_at(&items, offset);

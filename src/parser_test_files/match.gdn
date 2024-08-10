@@ -9,7 +9,7 @@ match (1) {}
 //             1,
 //         ),
 //         id: OnceCell(
-//             SyntaxId(1),
+//             <uninit>,
 //         ),
 //         id2: SyntaxId(0),
 //     },

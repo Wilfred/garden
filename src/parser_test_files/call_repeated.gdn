@@ -12,7 +12,7 @@ foo()();
 //                     Symbol"foo",
 //                 ),
 //                 id: OnceCell(
-//                     SyntaxId(2),
+//                     <uninit>,
 //                 ),
 //                 id2: SyntaxId(1),
 //             },
@@ -23,7 +23,7 @@ foo()();
 //             },
 //         ),
 //         id: OnceCell(
-//             SyntaxId(1),
+//             <uninit>,
 //         ),
 //         id2: SyntaxId(2),
 //     },

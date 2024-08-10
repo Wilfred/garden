@@ -23,7 +23,7 @@ fun foo() { 1 }
 //                         1,
 //                     ),
 //                     id: OnceCell(
-//                         SyntaxId(0),
+//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(1),
 //                 },

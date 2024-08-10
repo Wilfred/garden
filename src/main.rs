@@ -39,7 +39,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use checks::assign_ids::assign_toplevel_item_ids;
 use clap::{Parser, Subcommand};
 use eval::eval_up_to;
 use go_to_def::print_pos;
@@ -196,7 +195,6 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
     };
 
     let (items, mut errors) = parse_toplevel_items(path, src, &mut env.id_gen);
-    assign_toplevel_item_ids(&items);
 
     if let Some(e) = errors.pop() {
         match e {
@@ -250,7 +248,6 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
         Ok(src) => {
             let mut id_gen = SyntaxIdGenerator::default();
             let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
-            assign_toplevel_item_ids(&items);
 
             for error in errors.into_iter() {
                 match error {

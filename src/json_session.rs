@@ -8,7 +8,6 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::checks::assign_ids::assign_toplevel_item_ids;
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{eval_all_toplevel_items, eval_env, eval_up_to, push_test_stackframe};
@@ -111,8 +110,6 @@ fn handle_eval_request(
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),
     );
-    // TODO: this should happen during parsing, so we can't forget it.
-    assign_toplevel_item_ids(&items);
 
     // TODO: eval requests should return all parse errors.
     if let Some(e) = errors.pop() {
@@ -233,7 +230,6 @@ fn handle_eval_up_to_id_request(
         src,
         &mut env.id_gen,
     );
-    assign_toplevel_item_ids(&items);
 
     if let Some(e) = errors.pop() {
         match e {

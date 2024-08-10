@@ -10,7 +10,7 @@
 //                 1,
 //             ),
 //             id: OnceCell(
-//                 SyntaxId(1),
+//                 <uninit>,
 //             ),
 //             id2: SyntaxId(3),
 //         },
@@ -20,7 +20,7 @@
 //                 2,
 //             ),
 //             id: OnceCell(
-//                 SyntaxId(2),
+//                 <uninit>,
 //             ),
 //             id2: SyntaxId(4),
 //         },

@@ -2685,7 +2685,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             Some(expr) => *expr.clone(),
                             None => {
                                 // Evaluate `return;` as `return Unit;`.
-                                Expression::new_with_id(
+                                Expression::new(
                                     expr_position.clone(),
                                     Expression_::Variable(Symbol::new(
                                         expr_position,

@@ -350,14 +350,6 @@ impl Expression {
         }
     }
 
-    pub fn new_with_id(position: Position, expr_: Expression_, id2: SyntaxId) -> Self {
-        Self {
-            pos: position,
-            expr_,
-            id2,
-        }
-    }
-
     /// Helper for creating Invalid expressions.
     pub fn invalid(id2: SyntaxId) -> Self {
         Self {

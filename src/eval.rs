@@ -539,7 +539,7 @@ pub(crate) fn eval_toplevel_method_call(
     let meth_sym = Symbol {
         position: Position::todo(),
         name: meth_name.clone(),
-        id2: env.id_gen.next(),
+        id: env.id_gen.next(),
     };
 
     let paren_args = ParenthesizedArguments {

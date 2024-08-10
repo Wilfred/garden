@@ -140,15 +140,15 @@ impl From<&str> for SymbolName {
 pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
-    pub id2: SyntaxId,
+    pub id: SyntaxId,
 }
 
 impl Symbol {
-    pub fn new<S: AsRef<str>>(position: Position, name: S, id2: SyntaxId) -> Self {
+    pub fn new<S: AsRef<str>>(position: Position, name: S, id: SyntaxId) -> Self {
         Self {
             position,
             name: SymbolName(name.as_ref().to_owned()),
-            id2,
+            id,
         }
     }
 }
@@ -159,7 +159,7 @@ impl std::fmt::Debug for Symbol {
             f.debug_struct("Symbol")
                 .field("name", &self.name)
                 .field("position", &self.position)
-                .field("id2", &self.id2)
+                .field("id", &self.id)
                 .finish()
         } else {
             write!(f, "Symbol\"{}\"", self.name.0)

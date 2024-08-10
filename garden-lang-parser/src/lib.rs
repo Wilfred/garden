@@ -1705,7 +1705,7 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) ->
     Symbol {
         position,
         name: SymbolName("__placeholder".to_string()),
-        id2: id_gen.next(),
+        id: id_gen.next(),
     }
 }
 
@@ -1743,7 +1743,7 @@ fn parse_symbol(
     Symbol {
         position: variable_token.position,
         name: SymbolName(variable_token.text.to_string()),
-        id2: id_gen.next(),
+        id: id_gen.next(),
     }
 }
 

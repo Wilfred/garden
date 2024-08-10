@@ -613,7 +613,7 @@ impl<'a> TypeCheckVisitor<'a> {
             }
             Expression_::Variable(sym) => {
                 if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
-                    self.id_to_pos.insert(sym.id2, position.clone());
+                    self.id_to_pos.insert(sym.id, position.clone());
                     return value_ty.clone();
                 }
 
@@ -627,11 +627,11 @@ impl<'a> TypeCheckVisitor<'a> {
                         };
                         if let Some(fun_info) = fun_info {
                             if let Some(fun_sym) = &fun_info.name {
-                                self.id_to_pos.insert(sym.id2, fun_sym.position.clone());
+                                self.id_to_pos.insert(sym.id, fun_sym.position.clone());
                             }
 
                             if let Some(doc_comment) = &fun_info.doc_comment {
-                                self.id_to_doc_comment.insert(sym.id2, doc_comment.clone());
+                                self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
                             }
                         }
 
@@ -748,7 +748,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 match methods.get(&sym.name) {
                     Some(method_info) => {
                         self.id_to_pos
-                            .insert(sym.id2, method_info.name_sym.position.clone());
+                            .insert(sym.id, method_info.name_sym.position.clone());
 
                         let Some(fun_info) = method_info.fun_info() else {
                             return Type::error("This method has no fun_info");
@@ -872,7 +872,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
     fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
         self.bindings.set(symbol, ty.clone());
-        self.id_to_ty.insert(symbol.id2, ty);
+        self.id_to_ty.insert(symbol.id, ty);
     }
 }
 

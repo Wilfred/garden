@@ -48,7 +48,7 @@ impl Visitor for IdFinder {
 
     fn visit_symbol(&mut self, symbol: &Symbol) {
         if symbol.position.contains_offset(self.offset) {
-            self.found_ids.push(symbol.id2);
+            self.found_ids.push(symbol.id);
         }
     }
 

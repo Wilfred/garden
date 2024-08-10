@@ -53,7 +53,7 @@ impl From<&str> for TypeName {
 pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
-    pub id2: SyntaxId,
+    pub id: SyntaxId,
 }
 
 /// Only consider the name when comparing type symbols. This is
@@ -70,7 +70,7 @@ impl std::fmt::Debug for TypeSymbol {
             f.debug_struct("TypeSymbol")
                 .field("name", &self.name)
                 .field("position", &self.position)
-                .field("id2", &self.id2)
+                .field("id", &self.id)
                 .finish()
         } else {
             write!(f, "TypeSymbol\"{}\"", self.name.name)

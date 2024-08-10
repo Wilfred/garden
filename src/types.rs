@@ -29,18 +29,18 @@ impl TypeDef {
                     TypeSymbol {
                         name: "Args".into(),
                         position: Position::todo(),
-                        id2: SyntaxId(0),
+                        id: SyntaxId(0),
                     },
                     TypeSymbol {
                         name: "Ret".into(),
                         position: Position::todo(),
-                        id2: SyntaxId(0),
+                        id: SyntaxId(0),
                     },
                 ],
                 BuiltinType::List => vec![TypeSymbol {
                     name: "T".into(),
                     position: Position::todo(),
-                    id2: SyntaxId(0),
+                    id: SyntaxId(0),
                 }],
                 BuiltinType::Tuple => {
                     // TODO: tuple can actually take an arbtitrary

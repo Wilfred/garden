@@ -77,7 +77,7 @@ impl Type {
                     name: "NoValue".to_owned(),
                 },
                 position: Position::todo(),
-                id2: SyntaxId(0),
+                id: SyntaxId(0),
             },
             args: vec![],
         }
@@ -91,7 +91,7 @@ impl Type {
                     name: "Unit".to_owned(),
                 },
                 position: Position::todo(),
-                id2: SyntaxId(0),
+                id: SyntaxId(0),
             },
             args: vec![],
         }
@@ -105,7 +105,7 @@ impl Type {
                     name: "Bool".to_owned(),
                 },
                 position: Position::todo(),
-                id2: SyntaxId(0),
+                id: SyntaxId(0),
             },
             args: vec![],
         }

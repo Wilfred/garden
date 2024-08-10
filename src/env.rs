@@ -103,7 +103,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "String".into(),
                         },
-                        id2: id_gen.next(),
+                        id: id_gen.next(),
                     },
                     position: Position::todo(),
                 },
@@ -122,7 +122,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "String".into(),
                         },
-                        id2: id_gen.next(),
+                        id: id_gen.next(),
                     },
                     position: Position::todo(),
                 },
@@ -141,7 +141,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "String".into(),
                         },
-                        id2: id_gen.next(),
+                        id: id_gen.next(),
                     },
                     position: Position::todo(),
                 },
@@ -169,7 +169,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "List".into(),
                         },
-                        id2: id_gen.next(),
+                        id: id_gen.next(),
                     },
                     position: Position::todo(),
                 },
@@ -188,7 +188,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "List".into(),
                         },
-                        id2: id_gen.next(),
+                        id: id_gen.next(),
                     },
                     position: Position::todo(),
                 },
@@ -207,7 +207,7 @@ impl Default for Env {
                         name: TypeName {
                             name: "List".into(),
                         },
-                        id2: id_gen.next(),
+                        id: id_gen.next(),
                     },
                     position: Position::todo(),
                 },

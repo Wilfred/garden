@@ -1115,7 +1115,7 @@ fn parse_type_symbol(
     TypeSymbol {
         name: TypeName { name: name.name.0 },
         position: name.position,
-        id2: id_gen.next(),
+        id: id_gen.next(),
     }
 }
 
@@ -1266,7 +1266,7 @@ fn parse_tuple_type_hint(
                 name: "Tuple".to_owned(),
             },
             position: open_paren.position.clone(),
-            id2: id_gen.next(),
+            id: id_gen.next(),
         },
         args: item_hints,
         position: Position::merge(&open_paren.position, &close_paren.position),
@@ -1598,7 +1598,7 @@ fn parse_method(
                         name: "__MISSING_TYPE".to_owned(),
                     },
                     position: receiver_sym.position.clone(),
-                    id2: id_gen.next(),
+                    id: id_gen.next(),
                 },
                 args: vec![],
                 position: receiver_sym.position.clone(),

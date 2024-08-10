@@ -182,7 +182,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     };
 
                     if let Some(name_sym) = def_name_sym {
-                        let hint_id = hint.sym.id2;
+                        let hint_id = hint.sym.id;
                         self.id_to_pos.insert(hint_id, name_sym.position.clone());
                     }
                 }

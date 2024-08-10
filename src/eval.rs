@@ -362,11 +362,9 @@ pub(crate) fn eval_call_main(
     env: &mut Env,
     session: &mut Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
-    let mut id_gen = SyntaxIdGenerator::default();
-
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
-        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut id_gen);
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut env.id_gen);
     assert!(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."

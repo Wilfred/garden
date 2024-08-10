@@ -15,10 +15,8 @@ use crate::{
 };
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
-    let mut id_gen = SyntaxIdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
-
     let mut env = Env::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
 
     let mut definitions = vec![];
     for item in &items {

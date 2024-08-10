@@ -588,9 +588,8 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                let mut id_gen = SyntaxIdGenerator::default();
                 let (items, errors) =
-                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut id_gen);
+                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut env.id_gen);
                 if errors.is_empty() {
                     for (i, item) in items.iter().enumerate() {
                         write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()

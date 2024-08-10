@@ -12,11 +12,9 @@ use garden_lang_parser::{
 };
 
 pub fn show_type(src: &str, path: &Path, offset: usize) {
-    let mut id_gen = SyntaxIdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
-    assign_toplevel_item_ids(&items);
-
     let mut env = Env::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
+    assign_toplevel_item_ids(&items);
 
     let mut definitions = vec![];
     for item in &items {

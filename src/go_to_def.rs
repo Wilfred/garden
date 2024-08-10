@@ -1,9 +1,6 @@
 use std::path::Path;
 
-use garden_lang_parser::{
-    ast::{SyntaxIdGenerator, ToplevelItem},
-    parse_toplevel_items,
-};
+use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
 
 use crate::{
     checks::{assign_ids::assign_toplevel_item_ids, type_checker::check_types},
@@ -15,10 +12,8 @@ use crate::{
 /// Print the position of the definition associated with the
 /// expression at `offset`.
 pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
-    let mut id_gen = SyntaxIdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
-
     let mut env = Env::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
 
     let mut definitions = vec![];
     for item in &items {

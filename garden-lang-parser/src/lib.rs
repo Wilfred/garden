@@ -1904,7 +1904,11 @@ fn parse_toplevel_item_from_tokens(
     Some(parse_toplevel_expr(src, tokens, next_id2, diagnostics))
 }
 
-pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<ParseError>) {
+pub fn parse_inline_expr_from_str(
+    path: &Path,
+    src: &str,
+    next_id2: &mut SyntaxId,
+) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
     let mut tokens = match lex(path, src) {
@@ -1915,12 +1919,15 @@ pub fn parse_inline_expr_from_str(path: &Path, src: &str) -> (Expression, Vec<Pa
         }
     };
 
-    let next_id2 = &mut SyntaxId(0);
     let expr = parse_inline_expression(src, &mut tokens, next_id2, &mut diagnostics);
     (expr, diagnostics)
 }
 
-pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+pub fn parse_toplevel_items(
+    path: &Path,
+    src: &str,
+    next_id2: &mut SyntaxId,
+) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
     let mut tokens = match lex(path, src) {
         Ok(tokens) => tokens,
@@ -1930,7 +1937,6 @@ pub fn parse_toplevel_items(path: &Path, src: &str) -> (Vec<ToplevelItem>, Vec<P
         }
     };
 
-    let next_id2 = &mut SyntaxId(0);
     let items = parse_toplevel_items_from_tokens(src, &mut tokens, next_id2, &mut diagnostics);
     (items, diagnostics)
 }
@@ -1965,19 +1971,28 @@ mod tests {
 
     #[test]
     fn test_incomplete_expression() {
-        let (_, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), "1 + ");
+        let (_, errors) =
+            parse_toplevel_items(&PathBuf::from("__test.gdn"), "1 + ", &mut SyntaxId(0));
         assert!(!errors.is_empty())
     }
 
     #[test]
     fn test_repeated_param() {
-        let (_, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(x, x) {} ");
+        let (_, errors) = parse_toplevel_items(
+            &PathBuf::from("__test.gdn"),
+            "fun f(x, x) {} ",
+            &mut SyntaxId(0),
+        );
         assert!(!errors.is_empty())
     }
 
     #[test]
     fn test_repeated_param_underscore() {
-        let (_, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), "fun f(_, _) {} ");
+        let (_, errors) = parse_toplevel_items(
+            &PathBuf::from("__test.gdn"),
+            "fun f(_, _) {} ",
+            &mut SyntaxId(0),
+        );
         assert!(errors.is_empty())
     }
 }

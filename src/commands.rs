@@ -14,7 +14,9 @@ use crate::types::{BuiltinType, TypeDef};
 use crate::values::Value;
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
-use garden_lang_parser::ast::{self, MethodKind, SourceString, SymbolName, TypeHint, TypeName};
+use garden_lang_parser::ast::{
+    self, MethodKind, SourceString, SymbolName, SyntaxId, TypeHint, TypeName,
+};
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
 #[derive(Debug, EnumIter)]
@@ -113,10 +115,14 @@ impl Command {
             ":parse" => Ok(Command::Parse(args)),
             ":quit" => Ok(Command::Quit),
             ":replace" => {
+                // TODO: this should continue from the last SyntaxId.
+                let mut next_id2 = SyntaxId(0);
+
                 // TODO: find a better name for this.
                 let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
+                    &mut next_id2,
                 );
                 if errors.is_empty() {
                     Ok(Command::Replace(Some(expr)))
@@ -132,9 +138,11 @@ impl Command {
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
             ":type" => {
+                let mut next_id2 = SyntaxId(0);
                 let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
+                    &mut next_id2,
                 );
                 if errors.is_empty() {
                     Ok(Command::Type(Some(expr)))

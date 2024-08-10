@@ -22,10 +22,8 @@ pub(crate) fn check_types(
     HashMap<SyntaxId, String>,
     HashMap<SyntaxId, Position>,
 ) {
-    let mut env = env.clone();
-
     let mut visitor = TypeCheckVisitor {
-        env: &mut env,
+        env,
         diagnostics: vec![],
         bindings: LocalBindings::default(),
         id_to_ty: HashMap::default(),

@@ -60,7 +60,7 @@ impl Stack {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,

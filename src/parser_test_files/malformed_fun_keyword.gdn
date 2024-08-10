@@ -13,9 +13,6 @@ ffun foo(_: Bool) {
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
-//         id: OnceCell(
-//             <uninit>,
-//         ),
 //         id2: SyntaxId(5),
 //     },
 //     ParenthesizedArguments {
@@ -25,9 +22,6 @@ ffun foo(_: Bool) {
 //                 pos: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"_",
-//                 ),
-//                 id: OnceCell(
-//                     <uninit>,
 //                 ),
 //                 id2: SyntaxId(7),
 //             },

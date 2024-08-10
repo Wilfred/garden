@@ -38,15 +38,9 @@ fun foo(s: String) {
 //                             expr_: Variable(
 //                                 Symbol"s",
 //                             ),
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(5),
 //                         },
 //                         Symbol"__placeholder",
-//                     ),
-//                     id: OnceCell(
-//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(7),
 //                 },

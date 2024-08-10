@@ -11,9 +11,6 @@ foo()();
 //                 expr_: Variable(
 //                     Symbol"foo",
 //                 ),
-//                 id: OnceCell(
-//                     <uninit>,
-//                 ),
 //                 id2: SyntaxId(1),
 //             },
 //             ParenthesizedArguments {
@@ -21,9 +18,6 @@ foo()();
 //                 arguments: [],
 //                 close_paren: Position { ... },
 //             },
-//         ),
-//         id: OnceCell(
-//             <uninit>,
 //         ),
 //         id2: SyntaxId(2),
 //     },

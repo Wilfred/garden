@@ -8,9 +8,6 @@ match (1) {}
 //         expr_: IntLiteral(
 //             1,
 //         ),
-//         id: OnceCell(
-//             <uninit>,
-//         ),
 //         id2: SyntaxId(0),
 //     },
 //     [],

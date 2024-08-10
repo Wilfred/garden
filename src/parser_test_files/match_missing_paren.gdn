@@ -28,15 +28,9 @@ fun foo() {
 //                                 TypeSymbol"x",
 //                                 [],
 //                             ),
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(3),
 //                         },
 //                         [],
-//                     ),
-//                     id: OnceCell(
-//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(4),
 //                 },

@@ -9,18 +9,12 @@
 //             expr_: IntLiteral(
 //                 1,
 //             ),
-//             id: OnceCell(
-//                 <uninit>,
-//             ),
 //             id2: SyntaxId(3),
 //         },
 //         Expression {
 //             pos: Position { ... },
 //             expr_: IntLiteral(
 //                 2,
-//             ),
-//             id: OnceCell(
-//                 <uninit>,
 //             ),
 //             id2: SyntaxId(4),
 //         },

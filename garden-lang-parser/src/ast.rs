@@ -1,6 +1,6 @@
 //! Syntax tree definitions for Garden.
 
-use std::{cell::OnceCell, fmt::Display};
+use std::fmt::Display;
 
 use crate::position::Position;
 
@@ -338,7 +338,6 @@ impl SyntaxIdGenerator {
 pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
-    pub id: OnceCell<SyntaxId>,
     pub id2: SyntaxId,
 }
 
@@ -347,21 +346,14 @@ impl Expression {
         Self {
             pos: position,
             expr_,
-            id: OnceCell::new(),
             id2,
         }
     }
 
-    pub fn new_with_id(
-        position: Position,
-        expr_: Expression_,
-        id: &OnceCell<SyntaxId>,
-        id2: SyntaxId,
-    ) -> Self {
+    pub fn new_with_id(position: Position, expr_: Expression_, id2: SyntaxId) -> Self {
         Self {
             pos: position,
             expr_,
-            id: id.clone(),
             id2,
         }
     }
@@ -371,7 +363,6 @@ impl Expression {
         Self {
             pos: Position::todo(),
             expr_: Expression_::Invalid,
-            id: OnceCell::new(),
             id2,
         }
     }

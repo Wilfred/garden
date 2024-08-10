@@ -8,9 +8,6 @@ if (True) {} else {}
 //         expr_: Variable(
 //             Symbol"True",
 //         ),
-//         id: OnceCell(
-//             <uninit>,
-//         ),
 //         id2: SyntaxId(1),
 //     },
 //     Block {

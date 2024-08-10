@@ -8,9 +8,6 @@ if (x) {} else if (y) {}
 //         expr_: Variable(
 //             Symbol"x",
 //         ),
-//         id: OnceCell(
-//             <uninit>,
-//         ),
 //         id2: SyntaxId(1),
 //     },
 //     Block {
@@ -32,9 +29,6 @@ if (x) {} else if (y) {}
 //                             expr_: Variable(
 //                                 Symbol"y",
 //                             ),
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(3),
 //                         },
 //                         Block {
@@ -44,9 +38,6 @@ if (x) {} else if (y) {}
 //                             close_brace: Position { ... },
 //                         },
 //                         None,
-//                     ),
-//                     id: OnceCell(
-//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(4),
 //                 },

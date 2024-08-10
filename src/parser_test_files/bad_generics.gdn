@@ -33,9 +33,6 @@ fun foo<T>(value: T): Unit {
 //                         Expression {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(2),
 //                         },
 //                         LessThan,
@@ -44,14 +41,8 @@ fun foo<T>(value: T): Unit {
 //                             expr_: Variable(
 //                                 Symbol"T",
 //                             ),
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(4),
 //                         },
-//                     ),
-//                     id: OnceCell(
-//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(5),
 //                 },
@@ -61,9 +52,6 @@ fun foo<T>(value: T): Unit {
 //                         Expression {
 //                             pos: Position { ... },
 //                             expr_: Invalid,
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(6),
 //                         },
 //                         GreaterThan,
@@ -72,14 +60,8 @@ fun foo<T>(value: T): Unit {
 //                             expr_: Variable(
 //                                 Symbol"value",
 //                             ),
-//                             id: OnceCell(
-//                                 <uninit>,
-//                             ),
 //                             id2: SyntaxId(8),
 //                         },
-//                     ),
-//                     id: OnceCell(
-//                         <uninit>,
 //                     ),
 //                     id2: SyntaxId(9),
 //                 },

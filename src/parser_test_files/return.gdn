@@ -9,9 +9,6 @@ return x;
 //             expr_: Variable(
 //                 Symbol"x",
 //             ),
-//             id: OnceCell(
-//                 <uninit>,
-//             ),
 //             id2: SyntaxId(1),
 //         },
 //     ),

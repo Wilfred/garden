@@ -12,9 +12,6 @@ Foo { x: 1, y: 2 };
 //                 expr_: IntLiteral(
 //                     1,
 //                 ),
-//                 id: OnceCell(
-//                     <uninit>,
-//                 ),
 //                 id2: SyntaxId(3),
 //             },
 //         ),
@@ -24,9 +21,6 @@ Foo { x: 1, y: 2 };
 //                 pos: Position { ... },
 //                 expr_: IntLiteral(
 //                     2,
-//                 ),
-//                 id: OnceCell(
-//                     <uninit>,
 //                 ),
 //                 id2: SyntaxId(5),
 //             },

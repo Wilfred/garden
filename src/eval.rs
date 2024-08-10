@@ -1,7 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
-use std::cell::{OnceCell, RefCell};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
@@ -489,7 +489,6 @@ pub(crate) fn eval_toplevel_call(
     let recv_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, env.id_gen.next())),
-        id: OnceCell::new(),
         id2: env.id_gen.next(),
     };
 
@@ -502,7 +501,6 @@ pub(crate) fn eval_toplevel_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
-        id: OnceCell::new(),
         id2: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
@@ -535,7 +533,6 @@ pub(crate) fn eval_toplevel_method_call(
     let recv_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
-        id: OnceCell::new(),
         id2: env.id_gen.next(),
     };
 
@@ -554,7 +551,6 @@ pub(crate) fn eval_toplevel_method_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
-        id: OnceCell::new(),
         id2: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((true, call_expr));
@@ -2605,7 +2601,6 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
     while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
-            let expr_id = outer_expr.id.clone();
             let expr_id2 = outer_expr.id2;
 
             if session.interrupted.load(Ordering::SeqCst) {
@@ -2697,7 +2692,6 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                         "Unit",
                                         env.id_gen.next(),
                                     )),
-                                    &expr_id,
                                     expr_id2,
                                 )
                             }

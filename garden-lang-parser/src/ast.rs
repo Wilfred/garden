@@ -72,6 +72,7 @@ impl std::fmt::Debug for TypeSymbol {
                 .field("name", &self.name)
                 .field("position", &self.position)
                 .field("id", &self.id)
+                .field("id2", &self.id2)
                 .finish()
         } else {
             write!(f, "TypeSymbol\"{}\"", self.name.name)

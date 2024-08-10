@@ -298,9 +298,24 @@ pub enum Expression_ {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub struct SyntaxId(pub usize);
 
-impl SyntaxId {
-    pub(crate) fn increment(&self) -> Self {
-        SyntaxId(self.0 + 1)
+#[derive(Debug)]
+pub struct SyntaxIdGenerator {
+    pub next_id: SyntaxId,
+}
+
+impl Default for SyntaxIdGenerator {
+    fn default() -> Self {
+        Self {
+            next_id: SyntaxId(0),
+        }
+    }
+}
+
+impl SyntaxIdGenerator {
+    pub(crate) fn next(&mut self) -> SyntaxId {
+        let next_id = self.next_id;
+        self.next_id = SyntaxId(next_id.0 + 1);
+        next_id
     }
 }
 

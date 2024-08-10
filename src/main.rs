@@ -50,7 +50,7 @@ use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
 use crate::env::Env;
 use crate::eval::eval_toplevel_tests;
 use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
-use garden_lang_parser::ast::{SourceString, SyntaxId, ToplevelItem};
+use garden_lang_parser::ast::{SourceString, SyntaxIdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -195,8 +195,8 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
         stop_at_expr_id: None,
     };
 
-    let mut next_id2 = SyntaxId(0);
-    let (items, mut errors) = parse_toplevel_items(path, src, &mut next_id2);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, mut errors) = parse_toplevel_items(path, src, &mut id_gen);
     assign_toplevel_item_ids(&items);
 
     if let Some(e) = errors.pop() {
@@ -249,8 +249,8 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<Atom
 fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
     match String::from_utf8(src_bytes) {
         Ok(src) => {
-            let mut next_id2 = SyntaxId(0);
-            let (items, errors) = parse_toplevel_items(path, &src, &mut next_id2);
+            let mut id_gen = SyntaxIdGenerator::default();
+            let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
             assign_toplevel_item_ids(&items);
 
             for error in errors.into_iter() {
@@ -302,8 +302,8 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
 
     match String::from_utf8(src_bytes) {
         Ok(src) => {
-            let mut next_id2 = SyntaxId(0);
-            let (items, errors) = parse_toplevel_items(path, &src, &mut next_id2);
+            let mut id_gen = SyntaxIdGenerator::default();
+            let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
             if errors.is_empty() {
                 let mut env = Env::default();
                 let mut session = Session {
@@ -372,8 +372,8 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
 fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: &Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
         Ok(src) => {
-            let mut next_id2 = SyntaxId(0);
-            let (items, errors) = parse_toplevel_items(path, &src, &mut next_id2);
+            let mut id_gen = SyntaxIdGenerator::default();
+            let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
             if errors.is_empty() {
                 let mut env = Env::default();
                 let mut session = Session {

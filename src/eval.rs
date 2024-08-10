@@ -25,8 +25,8 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
-    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId, TestInfo,
-    ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId,
+    SyntaxIdGenerator, TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -362,11 +362,11 @@ pub(crate) fn eval_call_main(
     env: &mut Env,
     session: &mut Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
-    let mut next_id2 = SyntaxId(0);
+    let mut id_gen = SyntaxIdGenerator::default();
 
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
-        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut next_id2);
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut id_gen);
     assert!(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."
@@ -3484,9 +3484,8 @@ mod tests {
     use garden_lang_parser::position::Position;
 
     fn parse_defs_from_str(src: &str) -> Vec<Definition> {
-        let mut next_id2 = SyntaxId(0);
-        let (items, errors) =
-            parse_toplevel_items(&PathBuf::from("__test.gdn"), src, &mut next_id2);
+        let mut id_gen = SyntaxIdGenerator::default();
+        let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, &mut id_gen);
         assert!(errors.is_empty());
 
         let mut defs = vec![];
@@ -3503,9 +3502,8 @@ mod tests {
     }
 
     fn parse_exprs_from_str(src: &str) -> Vec<Expression> {
-        let mut next_id2 = SyntaxId(0);
-        let (items, errors) =
-            parse_toplevel_items(&PathBuf::from("__test.gdn"), src, &mut next_id2);
+        let mut id_gen = SyntaxIdGenerator::default();
+        let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, &mut id_gen);
         assert!(errors.is_empty());
 
         let mut exprs = vec![];
@@ -4017,8 +4015,8 @@ mod tests {
 
         let mut env = Env::default();
 
-        let mut next_id2 = SyntaxId(0);
-        let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut next_id2);
+        let mut id_gen = SyntaxIdGenerator::default();
+        let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut id_gen);
         assert!(errors.is_empty());
         let eval_result = eval_all_toplevel_items(&defs, &mut env, &mut session);
         assert!(eval_result.is_ok());

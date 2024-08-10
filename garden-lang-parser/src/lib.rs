@@ -128,17 +128,14 @@ fn require_token_inner<'a>(
 
 fn parse_integer(
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let token = require_a_token(tokens, diagnostics, "integer literal");
 
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
-
     if INTEGER_RE.is_match(token.text) {
         let i: i64 = token.text.parse().unwrap();
-        Expression::new(token.position, Expression_::IntLiteral(i), id2)
+        Expression::new(token.position, Expression_::IntLiteral(i), id_gen.next())
     } else {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
@@ -148,35 +145,36 @@ fn parse_integer(
 
         // Choose an arbitrary value that's hopefully unlikely to
         // occur in real code.
-        Expression::new(token.position, Expression_::IntLiteral(11223344), id2)
+        Expression::new(
+            token.position,
+            Expression_::IntLiteral(11223344),
+            id_gen.next(),
+        )
     }
 }
 
 fn parse_variable_expression(
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, diagnostics);
 
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
-
     Expression::new(
         variable.position.clone(),
         Expression_::Variable(variable),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_parenthesis_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     require_token(tokens, diagnostics, "(");
-    let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     expr
@@ -185,27 +183,24 @@ fn parse_parenthesis_expression(
 fn parse_list_literal(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
-    let items = parse_comma_separated_exprs(src, tokens, next_id2, diagnostics, "]");
+    let items = parse_comma_separated_exprs(src, tokens, id_gen, diagnostics, "]");
     let close_bracket = require_token(tokens, diagnostics, "]");
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
 
     Expression::new(
         Position::merge(&open_bracket.position, &close_bracket.position),
         Expression_::ListLiteral(items),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_lambda_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let fun_keyword = require_token(tokens, diagnostics, "fun");
@@ -214,7 +209,7 @@ fn parse_lambda_expression(
     let params = parse_parameters(tokens, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    let body = parse_block(src, tokens, next_id2, diagnostics, false);
+    let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let start_offset = fun_keyword.position.start_offset;
     let end_offset = body.close_brace.end_offset;
@@ -222,9 +217,6 @@ fn parse_lambda_expression(
         offset: start_offset,
         src: src[start_offset..end_offset].to_owned(),
     };
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
 
     Expression::new(
         Position::merge(&fun_keyword.position, &body.close_brace),
@@ -237,29 +229,29 @@ fn parse_lambda_expression(
             type_params,
             return_hint,
         }),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_if_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
 
     require_token(tokens, diagnostics, "(");
-    let condition = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let condition = parse_inline_expression(src, tokens, id_gen, diagnostics);
     require_token(tokens, diagnostics, ")");
 
-    let then_body = parse_block(src, tokens, next_id2, diagnostics, false);
+    let then_body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
 
         if peeked_symbol_is(tokens, "if") {
-            let if_expr = parse_if_expression(src, tokens, next_id2, diagnostics);
+            let if_expr = parse_if_expression(src, tokens, id_gen, diagnostics);
             Some(Block {
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
@@ -270,7 +262,7 @@ fn parse_if_expression(
                 is_loop_body: false,
             })
         } else {
-            Some(parse_block(src, tokens, next_id2, diagnostics, false))
+            Some(parse_block(src, tokens, id_gen, diagnostics, false))
         }
     } else {
         None
@@ -281,58 +273,49 @@ fn parse_if_expression(
         None => &then_body.close_brace,
     };
 
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
-
     Expression::new(
         Position::merge(&if_token.position, last_brace_pos),
         Expression_::If(Box::new(condition), then_body, else_body),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_while_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let while_token = require_token(tokens, diagnostics, "while");
 
     require_token(tokens, diagnostics, "(");
-    let condition = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let condition = parse_inline_expression(src, tokens, id_gen, diagnostics);
     require_token(tokens, diagnostics, ")");
 
-    let body = parse_block(src, tokens, next_id2, diagnostics, true);
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
+    let body = parse_block(src, tokens, id_gen, diagnostics, true);
 
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
         Expression_::While(Box::new(condition), body),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_break_expression(
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let break_token = require_token(tokens, diagnostics, "break");
     let _ = require_end_token(tokens, diagnostics, ";");
 
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
-
-    Expression::new(break_token.position, Expression_::Break, id2)
+    Expression::new(break_token.position, Expression_::Break, id_gen.next())
 }
 
 fn parse_return_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
@@ -340,26 +323,20 @@ fn parse_return_expression(
     if peeked_symbol_is(tokens, ";") {
         let semicolon = require_token(tokens, diagnostics, ";");
 
-        let id2 = *next_id2;
-        *next_id2 = next_id2.increment();
-
         return Expression::new(
             Position::merge(&return_token.position, &semicolon.position),
             Expression_::Return(None),
-            id2,
+            id_gen.next(),
         );
     }
 
-    let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
 
     Expression::new(
         Position::merge(&return_token.position, &semicolon.position),
         Expression_::Return(Some(Box::new(expr))),
-        id2,
+        id_gen.next(),
     )
 }
 
@@ -407,60 +384,54 @@ fn unescape_string(src: &str) -> String {
 fn parse_simple_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     if let Some(token) = tokens.peek() {
         if token.text == "{" {
-            let block = parse_block(src, tokens, next_id2, diagnostics, false);
-
-            let id2 = *next_id2;
-            *next_id2 = next_id2.increment();
+            let block = parse_block(src, tokens, id_gen, diagnostics, false);
 
             return Expression::new(
                 Position::merge(&block.open_brace, &block.close_brace),
                 Expression_::Block(block),
-                id2,
+                id_gen.next(),
             );
         }
 
         if token.text == "(" {
-            return parse_parenthesis_expression(src, tokens, next_id2, diagnostics);
+            return parse_parenthesis_expression(src, tokens, id_gen, diagnostics);
         }
 
         if token.text == "[" {
-            return parse_list_literal(src, tokens, next_id2, diagnostics);
+            return parse_list_literal(src, tokens, id_gen, diagnostics);
         }
 
         if token.text == "fun" {
-            return parse_lambda_expression(src, tokens, next_id2, diagnostics);
+            return parse_lambda_expression(src, tokens, id_gen, diagnostics);
         }
 
         if SYMBOL_RE.is_match(token.text) {
             if let Some((_, token)) = tokens.peek_two() {
                 if token.text == "{" {
-                    return parse_struct_literal(src, tokens, next_id2, diagnostics);
+                    return parse_struct_literal(src, tokens, id_gen, diagnostics);
                 }
             }
 
-            return parse_variable_expression(tokens, next_id2, diagnostics);
+            return parse_variable_expression(tokens, id_gen, diagnostics);
         }
 
         if token.text.starts_with('\"') {
             tokens.pop();
 
-            let id2 = *next_id2;
-            *next_id2 = next_id2.increment();
-
             return Expression::new(
                 token.position,
                 Expression_::StringLiteral(unescape_string(token.text)),
-                id2,
+                id_gen.next(),
             );
         }
 
         if INTEGER_RE.is_match(token.text) {
-            return parse_integer(tokens, next_id2, diagnostics);
+            return parse_integer(tokens, id_gen, diagnostics);
         }
 
         diagnostics.push(ParseError::Invalid {
@@ -469,10 +440,7 @@ fn parse_simple_expression(
             additional: vec![],
         });
 
-        let id2 = *next_id2;
-        *next_id2 = next_id2.increment();
-
-        return Expression::new(token.position, Expression_::Invalid, id2);
+        return Expression::new(token.position, Expression_::Invalid, id_gen.next());
     }
 
     diagnostics.push(ParseError::Incomplete {
@@ -480,16 +448,13 @@ fn parse_simple_expression(
         position: Position::todo(),
     });
 
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
-
-    Expression::new(Position::todo(), Expression_::Invalid, id2)
+    Expression::new(Position::todo(), Expression_::Invalid, id_gen.next())
 }
 
 fn parse_struct_literal_fields(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<(Symbol, Expression)> {
     let mut fields = vec![];
@@ -501,7 +466,7 @@ fn parse_struct_literal_fields(
         let start_idx = tokens.idx;
         let sym = parse_symbol(tokens, diagnostics);
         require_token(tokens, diagnostics, ":");
-        let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
+        let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
 
         if tokens.idx == start_idx {
             // We haven't made forward progress, the syntax must be
@@ -540,35 +505,32 @@ fn parse_struct_literal_fields(
 fn parse_struct_literal(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let name = parse_type_symbol(tokens, diagnostics);
     let open_brace = require_token(tokens, diagnostics, "{");
-    let fields = parse_struct_literal_fields(src, tokens, next_id2, diagnostics);
+    let fields = parse_struct_literal_fields(src, tokens, id_gen, diagnostics);
 
     let close_brace = require_token(tokens, diagnostics, "}");
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
 
     Expression::new(
         Position::merge(&open_brace.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_match_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let match_keyword = require_token(tokens, diagnostics, "match");
 
     require_token(tokens, diagnostics, "(");
-    let scrutinee = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let scrutinee = parse_inline_expression(src, tokens, id_gen, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     require_token(tokens, diagnostics, "{");
@@ -590,7 +552,7 @@ fn parse_match_expression(
         let start_idx = tokens.idx;
         let pattern = parse_pattern(tokens, diagnostics);
         require_token(tokens, diagnostics, "=>");
-        let case_expr = parse_case_expr(src, tokens, next_id2, diagnostics);
+        let case_expr = parse_case_expr(src, tokens, id_gen, diagnostics);
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
@@ -601,23 +563,20 @@ fn parse_match_expression(
 
     let close_paren = require_token(tokens, diagnostics, "}");
 
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
-
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
         Expression_::Match(Box::new(scrutinee), cases),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_case_expr(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let case_expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let case_expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
     if peeked_symbol_is(tokens, ",") {
         tokens.pop().unwrap();
     }
@@ -643,7 +602,7 @@ fn parse_pattern(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) ->
 fn parse_comma_separated_exprs(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     terminator: &str,
 ) -> Vec<Expression> {
@@ -654,7 +613,7 @@ fn parse_comma_separated_exprs(
         }
 
         let start_idx = tokens.idx;
-        let arg = parse_inline_expression(src, tokens, next_id2, diagnostics);
+        let arg = parse_inline_expression(src, tokens, id_gen, diagnostics);
         if matches!(arg.expr_, Expression_::Invalid) {
             break;
         }
@@ -687,11 +646,11 @@ fn parse_comma_separated_exprs(
 fn parse_call_arguments(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ParenthesizedArguments {
     let open_paren_token = require_token(tokens, diagnostics, "(");
-    let arguments = parse_comma_separated_exprs(src, tokens, next_id2, diagnostics, ")");
+    let arguments = parse_comma_separated_exprs(src, tokens, id_gen, diagnostics, ")");
     let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {
@@ -710,47 +669,41 @@ fn parse_call_arguments(
 fn parse_simple_expression_with_trailing(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression(src, tokens, next_id2, diagnostics);
+    let mut expr = parse_simple_expression(src, tokens, id_gen, diagnostics);
 
     loop {
         let start_idx = tokens.idx;
         match tokens.peek() {
             Some(token) if token.text == "(" => {
-                let arguments = parse_call_arguments(src, tokens, next_id2, diagnostics);
-
-                let id2 = *next_id2;
-                *next_id2 = next_id2.increment();
+                let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
 
                 expr = Expression::new(
                     Position::merge(&expr.pos, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
-                    id2,
+                    id_gen.next(),
                 );
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
                 let variable = parse_symbol(tokens, diagnostics);
 
-                let id2 = *next_id2;
-                *next_id2 = next_id2.increment();
-
                 if peeked_symbol_is(tokens, "(") {
                     // TODO: just treat a method call as a call of a dot access.
-                    let arguments = parse_call_arguments(src, tokens, next_id2, diagnostics);
+                    let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
 
                     expr = Expression::new(
                         Position::merge(&expr.pos, &arguments.close_paren),
                         Expression_::MethodCall(Box::new(expr), variable, arguments),
-                        id2,
+                        id_gen.next(),
                     );
                 } else {
                     expr = Expression::new(
                         Position::merge(&expr.pos, &variable.position),
                         Expression_::DotAccess(Box::new(expr), variable),
-                        id2,
+                        id_gen.next(),
                     );
                 }
             }
@@ -797,10 +750,10 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 fn parse_inline_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    parse_general_expression(src, tokens, next_id2, diagnostics, true)
+    parse_general_expression(src, tokens, id_gen, diagnostics, true)
 }
 
 /// Parse a block member expression. This is an expression that can
@@ -817,17 +770,17 @@ fn parse_inline_expression(
 fn parse_block_member_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    parse_general_expression(src, tokens, next_id2, diagnostics, false)
+    parse_general_expression(src, tokens, id_gen, diagnostics, false)
 }
 
 /// Parse an inline or block member expression.
 fn parse_general_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     is_inline: bool,
 ) -> Expression {
@@ -836,22 +789,22 @@ fn parse_general_expression(
         // complex assignments like `foo.bar = 1;`.
         if let Some((_, token)) = tokens.peek_two() {
             if token.text == "=" {
-                return parse_assign_expression(src, tokens, next_id2, diagnostics);
+                return parse_assign_expression(src, tokens, id_gen, diagnostics);
             }
         }
 
         if let Some(token) = tokens.peek() {
             if token.text == "let" {
-                return parse_let_expression(src, tokens, next_id2, diagnostics);
+                return parse_let_expression(src, tokens, id_gen, diagnostics);
             }
             if token.text == "return" {
-                return parse_return_expression(src, tokens, next_id2, diagnostics);
+                return parse_return_expression(src, tokens, id_gen, diagnostics);
             }
             if token.text == "while" {
-                return parse_while_expression(src, tokens, next_id2, diagnostics);
+                return parse_while_expression(src, tokens, id_gen, diagnostics);
             }
             if token.text == "break" {
-                return parse_break_expression(tokens, next_id2, diagnostics);
+                return parse_break_expression(tokens, id_gen, diagnostics);
             }
         }
     }
@@ -860,16 +813,16 @@ fn parse_general_expression(
         // `if` can occur as both an inline expression and a standalone
         // expression.
         if token.text == "if" {
-            return parse_if_expression(src, tokens, next_id2, diagnostics);
+            return parse_if_expression(src, tokens, id_gen, diagnostics);
         }
 
         // Likewise match.
         if token.text == "match" {
-            return parse_match_expression(src, tokens, next_id2, diagnostics);
+            return parse_match_expression(src, tokens, id_gen, diagnostics);
         }
     }
 
-    let expr = parse_simple_expression_or_binop(src, tokens, next_id2, diagnostics);
+    let expr = parse_simple_expression_or_binop(src, tokens, id_gen, diagnostics);
     if !is_inline {
         let _ = require_end_token(tokens, diagnostics, ";");
     }
@@ -891,25 +844,21 @@ fn parse_general_expression(
 fn parse_simple_expression_or_binop(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression_with_trailing(src, tokens, next_id2, diagnostics);
+    let mut expr = parse_simple_expression_with_trailing(src, tokens, id_gen, diagnostics);
 
     if let Some(token) = tokens.peek() {
         if let Some(op) = token_as_binary_op(token) {
             tokens.pop();
 
-            let rhs_expr =
-                parse_simple_expression_with_trailing(src, tokens, next_id2, diagnostics);
-
-            let id2 = *next_id2;
-            *next_id2 = next_id2.increment();
+            let rhs_expr = parse_simple_expression_with_trailing(src, tokens, id_gen, diagnostics);
 
             expr = Expression::new(
                 Position::merge(&expr.pos, &rhs_expr.pos),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
-                id2,
+                id_gen.next(),
             );
         }
     }
@@ -920,15 +869,15 @@ fn parse_simple_expression_or_binop(
 fn parse_definition(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun" {
-            return parse_function_or_method(src, tokens, next_id2, diagnostics);
+            return parse_function_or_method(src, tokens, id_gen, diagnostics);
         }
         if token.text == "test" {
-            return Some(parse_test(src, tokens, next_id2, diagnostics));
+            return Some(parse_test(src, tokens, id_gen, diagnostics));
         }
         if token.text == "enum" {
             return Some(parse_enum(src, tokens, diagnostics));
@@ -1100,7 +1049,7 @@ fn parse_struct(
 fn parse_test(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
     let test_token = require_token(tokens, diagnostics, "test");
@@ -1120,7 +1069,7 @@ fn parse_test(
         None
     };
 
-    let body = parse_block(src, tokens, next_id2, diagnostics, false);
+    let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let mut start_offset = test_token.position.start_offset;
     if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
@@ -1496,7 +1445,7 @@ fn parse_struct_fields(
 fn parse_block(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     is_loop_body: bool,
 ) -> Block {
@@ -1517,7 +1466,7 @@ fn parse_block(
         }
 
         let start_idx = tokens.idx;
-        let expr = parse_block_member_expression(src, tokens, next_id2, diagnostics);
+        let expr = parse_block_member_expression(src, tokens, id_gen, diagnostics);
         match &expr.expr_ {
             Expression_::Invalid => break,
             _ => {
@@ -1562,7 +1511,7 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
 fn parse_function_or_method(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     let fun_token = require_token(tokens, diagnostics, "fun");
@@ -1577,9 +1526,9 @@ fn parse_function_or_method(
     // ```
     match tokens.peek() {
         Some(token) => Some(if token.text == "(" {
-            parse_method(src, tokens, next_id2, diagnostics, fun_token, type_params)
+            parse_method(src, tokens, id_gen, diagnostics, fun_token, type_params)
         } else {
-            parse_function(src, tokens, next_id2, diagnostics, fun_token, type_params)
+            parse_function(src, tokens, id_gen, diagnostics, fun_token, type_params)
         }),
         None => {
             diagnostics.push(ParseError::Incomplete {
@@ -1594,7 +1543,7 @@ fn parse_function_or_method(
 fn parse_method(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
     type_params: Vec<TypeSymbol>,
@@ -1631,7 +1580,7 @@ fn parse_method(
     let params = parse_parameters(tokens, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    let body = parse_block(src, tokens, next_id2, diagnostics, false);
+    let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
@@ -1669,7 +1618,7 @@ fn parse_method(
 fn parse_function(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
     type_params: Vec<TypeSymbol>,
@@ -1681,7 +1630,7 @@ fn parse_function(
     let params = parse_parameters(tokens, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
-    let body = parse_block(src, tokens, next_id2, diagnostics, false);
+    let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let mut start_offset = fun_token.position.start_offset;
     if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
@@ -1765,7 +1714,7 @@ fn parse_symbol(tokens: &mut TokenStream, diagnostics: &mut Vec<ParseError>) -> 
 fn parse_let_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let let_token = require_token(tokens, diagnostics, "let");
@@ -1774,52 +1723,46 @@ fn parse_let_expression(
     let hint = parse_colon_and_hint_opt(tokens, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
 
     Expression::new(
         Position::merge(&let_token.position, &semicolon.position),
         Expression_::Let(variable, hint, Box::new(expr)),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_assign_expression(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_inline_expression(src, tokens, next_id2, diagnostics);
+    let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
     let semicolon = require_end_token(tokens, diagnostics, ";");
-
-    let id2 = *next_id2;
-    *next_id2 = next_id2.increment();
 
     Expression::new(
         Position::merge(&variable.position, &semicolon.position),
         Expression_::Assign(variable, Box::new(expr)),
-        id2,
+        id_gen.next(),
     )
 }
 
 fn parse_toplevel_expr(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let initial_token_idx = tokens.idx;
 
     // Always allow a semicolon-terminated expression at the top level.
     let mut block_diagnostics = vec![];
-    let block_expr = parse_block_member_expression(src, tokens, next_id2, &mut block_diagnostics);
+    let block_expr = parse_block_member_expression(src, tokens, id_gen, &mut block_diagnostics);
     if block_diagnostics.is_empty() {
         return ToplevelItem::Expr(ToplevelExpression(block_expr));
     }
@@ -1832,7 +1775,7 @@ fn parse_toplevel_expr(
     // consumes the rest of the token stream. This ensures that `1 2`
     // does not parse but `1; 2` does.
     let mut inline_diagnostics = vec![];
-    let expr = parse_inline_expression(src, tokens, next_id2, &mut inline_diagnostics);
+    let expr = parse_inline_expression(src, tokens, id_gen, &mut inline_diagnostics);
     if tokens.is_empty() {
         // Consumed the whole stream.
         return ToplevelItem::Expr(ToplevelExpression(expr));
@@ -1852,14 +1795,14 @@ fn parse_toplevel_expr(
 fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<ToplevelItem> {
     let mut items: Vec<ToplevelItem> = vec![];
 
     while !tokens.is_empty() {
         let start_idx = tokens.idx;
-        match parse_toplevel_item_from_tokens(src, tokens, next_id2, diagnostics) {
+        match parse_toplevel_item_from_tokens(src, tokens, id_gen, diagnostics) {
             Some(item) => {
                 let was_invalid = matches!(
                     item,
@@ -1888,7 +1831,7 @@ fn parse_toplevel_items_from_tokens(
 fn parse_toplevel_item_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     if let Some(token) = tokens.peek() {
@@ -1897,17 +1840,17 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "enum"
             || token.text == "struct"
         {
-            return parse_definition(src, tokens, next_id2, diagnostics).map(ToplevelItem::Def);
+            return parse_definition(src, tokens, id_gen, diagnostics).map(ToplevelItem::Def);
         }
     }
 
-    Some(parse_toplevel_expr(src, tokens, next_id2, diagnostics))
+    Some(parse_toplevel_expr(src, tokens, id_gen, diagnostics))
 }
 
 pub fn parse_inline_expr_from_str(
     path: &Path,
     src: &str,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
@@ -1919,14 +1862,14 @@ pub fn parse_inline_expr_from_str(
         }
     };
 
-    let expr = parse_inline_expression(src, &mut tokens, next_id2, &mut diagnostics);
+    let expr = parse_inline_expression(src, &mut tokens, id_gen, &mut diagnostics);
     (expr, diagnostics)
 }
 
 pub fn parse_toplevel_items(
     path: &Path,
     src: &str,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
     let mut tokens = match lex(path, src) {
@@ -1937,7 +1880,7 @@ pub fn parse_toplevel_items(
         }
     };
 
-    let items = parse_toplevel_items_from_tokens(src, &mut tokens, next_id2, &mut diagnostics);
+    let items = parse_toplevel_items_from_tokens(src, &mut tokens, id_gen, &mut diagnostics);
     (items, diagnostics)
 }
 
@@ -1946,7 +1889,7 @@ pub fn parse_toplevel_items(
 pub fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
-    next_id2: &mut SyntaxId,
+    id_gen: &mut SyntaxIdGenerator,
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
@@ -1959,7 +1902,7 @@ pub fn parse_toplevel_items_from_span(
         }
     };
 
-    let items = parse_toplevel_items_from_tokens(src, &mut tokens, next_id2, &mut diagnostics);
+    let items = parse_toplevel_items_from_tokens(src, &mut tokens, id_gen, &mut diagnostics);
     (items, diagnostics)
 }
 
@@ -1971,8 +1914,11 @@ mod tests {
 
     #[test]
     fn test_incomplete_expression() {
-        let (_, errors) =
-            parse_toplevel_items(&PathBuf::from("__test.gdn"), "1 + ", &mut SyntaxId(0));
+        let (_, errors) = parse_toplevel_items(
+            &PathBuf::from("__test.gdn"),
+            "1 + ",
+            &mut SyntaxIdGenerator::default(),
+        );
         assert!(!errors.is_empty())
     }
 
@@ -1981,7 +1927,7 @@ mod tests {
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "fun f(x, x) {} ",
-            &mut SyntaxId(0),
+            &mut SyntaxIdGenerator::default(),
         );
         assert!(!errors.is_empty())
     }
@@ -1991,7 +1937,7 @@ mod tests {
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "fun f(_, _) {} ",
-            &mut SyntaxId(0),
+            &mut SyntaxIdGenerator::default(),
         );
         assert!(errors.is_empty())
     }

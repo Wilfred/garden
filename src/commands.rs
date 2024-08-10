@@ -15,7 +15,7 @@ use crate::values::Value;
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{
-    self, MethodKind, SourceString, SymbolName, SyntaxId, TypeHint, TypeName,
+    self, MethodKind, SourceString, SymbolName, SyntaxIdGenerator, TypeHint, TypeName,
 };
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
@@ -116,13 +116,13 @@ impl Command {
             ":quit" => Ok(Command::Quit),
             ":replace" => {
                 // TODO: this should continue from the last SyntaxId.
-                let mut next_id2 = SyntaxId(0);
+                let mut id_gen = SyntaxIdGenerator::default();
 
                 // TODO: find a better name for this.
                 let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
-                    &mut next_id2,
+                    &mut id_gen,
                 );
                 if errors.is_empty() {
                     Ok(Command::Replace(Some(expr)))
@@ -138,11 +138,11 @@ impl Command {
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
             ":type" => {
-                let mut next_id2 = SyntaxId(0);
+                let mut id_gen = SyntaxIdGenerator::default();
                 let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
-                    &mut next_id2,
+                    &mut id_gen,
                 );
                 if errors.is_empty() {
                     Ok(Command::Type(Some(expr)))
@@ -588,9 +588,9 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                let mut next_id2 = SyntaxId(0);
+                let mut id_gen = SyntaxIdGenerator::default();
                 let (items, errors) =
-                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut next_id2);
+                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut id_gen);
                 if errors.is_empty() {
                     for (i, item) in items.iter().enumerate() {
                         write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()

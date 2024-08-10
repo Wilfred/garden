@@ -11,7 +11,7 @@ use crate::{
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, SyntaxId,
+    BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, SyntaxIdGenerator,
     TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
@@ -263,17 +263,17 @@ impl Default for Env {
         };
 
         // TODO: store next ID in env to avoid new expressions having clashing IDs.
-        let mut next_id2 = SyntaxId(0);
+        let mut id_gen = SyntaxIdGenerator::default();
 
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) =
-            parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, &mut next_id2);
+            parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, &mut id_gen);
         assert!(errors.is_empty(), "Prelude should be syntactically legal");
         eval_toplevel_defs(&prelude_items, &mut env);
 
         let builtins_src = include_str!("builtins.gdn");
         let (builtin_items, errors) =
-            parse_toplevel_items(&PathBuf::from("builtins.gdn"), builtins_src, &mut next_id2);
+            parse_toplevel_items(&PathBuf::from("builtins.gdn"), builtins_src, &mut id_gen);
         assert!(
             errors.is_empty(),
             "Stubs for built-ins should be syntactically legal"

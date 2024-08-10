@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{SyntaxId, ToplevelItem},
+    ast::{SyntaxIdGenerator, ToplevelItem},
     parse_toplevel_items,
 };
 
@@ -15,8 +15,8 @@ use crate::{
 /// Print the position of the definition associated with the
 /// expression at `offset`.
 pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
-    let mut next_id2 = SyntaxId(0);
-    let (items, _errors) = parse_toplevel_items(path, src, &mut next_id2);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     let mut env = Env::default();
 

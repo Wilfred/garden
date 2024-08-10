@@ -7,13 +7,13 @@ use crate::{
     pos_to_id::find_item_at,
 };
 use garden_lang_parser::{
-    ast::{SyntaxId, ToplevelItem},
+    ast::{SyntaxIdGenerator, ToplevelItem},
     parse_toplevel_items,
 };
 
 pub fn show_type(src: &str, path: &Path, offset: usize) {
-    let mut next_id2 = SyntaxId(0);
-    let (items, _errors) = parse_toplevel_items(path, src, &mut next_id2);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
     assign_toplevel_item_ids(&items);
 
     let mut env = Env::default();

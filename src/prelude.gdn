@@ -200,6 +200,10 @@ test string_index_of {
 }
 
 // Join `items` (a list of strings) with this string as a separator.
+//
+// ```
+// ":".join(["a", "b", "c"]); // "a:b:c"
+// ```
 fun (self: String) join(items: List<String>): String {
     if (items.is_empty()) {
         return "";

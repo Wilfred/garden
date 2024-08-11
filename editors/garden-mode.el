@@ -562,8 +562,12 @@ If called with a prefix, stop the previous session."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") #'garden-definition)
 
+    ;; Emacs commands to eval Garden snippets.
     (define-key map (kbd "C-x C-e") #'garden-send)
     (define-key map (kbd "C-c C-c") #'garden-send)
+
+    ;; No mnemonic, just easy to type.
+    (define-key map (kbd "C-c c") #'garden-eval-up-to)
 
     (define-key map (kbd "C-c a") #'garden-abort-command)
 

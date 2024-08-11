@@ -1215,10 +1215,10 @@ fn unify_all(tys: &[Type]) -> Option<Type> {
 /// (In, String) -> return None
 /// ```
 fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
-    if ty_1.is_no_value() {
+    if ty_1.is_no_value() || ty_1.is_error() {
         return Some(ty_2.clone());
     }
-    if ty_2.is_no_value() {
+    if ty_2.is_no_value() || ty_2.is_error() {
         return Some(ty_1.clone());
     }
     if ty_1 == ty_2 {

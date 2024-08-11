@@ -1,0 +1,12 @@
+fun map_over_strings(lines: List<String>) {
+    lines.map(fun(line) {
+        if (line.starts_with("a")) {
+            "b";
+        } else {
+            line;
+        }
+    });
+
+}
+
+// args: check

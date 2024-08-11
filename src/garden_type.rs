@@ -65,6 +65,10 @@ impl Type {
         }
     }
 
+    pub(crate) fn is_error(&self) -> bool {
+        matches!(self, Type::Error(_))
+    }
+
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
         Type::Error(msg.as_ref().to_owned())
     }

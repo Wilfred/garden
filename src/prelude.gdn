@@ -295,6 +295,11 @@ test trim_right {
 
 // Returns this string without the suffix specified. If this string
 // does not end with the suffix, return the string unchanged.
+//
+// ```
+// "foo".strip_suffix("o"); // "fo"
+// "bar".strip_suffix("o"); // "bar"
+// ```
 fun (self: String) strip_suffix(suffix: String): String {
     if (self.ends_with(suffix)) {
         return self.substring(0, self.len() - suffix.len());
@@ -310,6 +315,11 @@ test strip_suffix {
 
 // Returns this string without the prefix specified. If this string
 // does not start with the prefix, return the string unchanged.
+//
+// ```
+// "foo".strip_prefix("f"); // "oo"
+// "bar".strip_prefix("f"); // "bar"
+// ```
 fun (self: String) strip_prefix(prefix: String): String {
     if (self.starts_with(prefix)) {
         // return self.substring(prefix.len(), self.len(), 1);

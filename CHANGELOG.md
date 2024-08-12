@@ -1,7 +1,21 @@
-# 0.16 (unreleased)
+# 0.17 (unreleased)
 **Goal: WASM and website.**
 **Goal: Offer actions when runtime errors occur.**
+**Goal: Speculative sandboxed execution of tests and completions.**
+
+# 0.16 (unreleased)
 **Goal: Evaluate functions up to the cursor.**
+
+## Tooling
+
+Added an `eval_up_to_id` JSON command that allows functions or blocks
+to be evaluated up to a specific expression. For functions, the
+previous argument values used are passed in.
+
+The command `:methods` now takes an additional argument, to only
+show items matching that substring, e.g. `:methods Str`.
+
+Fixed several crashes, particularly on incomplete programs.
 
 # 0.15 (released 15th July 2024)
 **Goal: Basic IDE features.**

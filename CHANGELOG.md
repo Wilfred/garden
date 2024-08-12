@@ -3,7 +3,7 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
-# 0.16 (unreleased)
+# 0.16 (released 11th August 2024)
 **Goal: Evaluate functions up to the cursor.**
 
 ## Tooling

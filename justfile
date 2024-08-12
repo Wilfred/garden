@@ -4,7 +4,7 @@ default:
 watch:
     REGENERATE=y cargo watch -x b -x t
 
-release:
+tag_then_bump:
     #!/bin/bash
 
     set -ex

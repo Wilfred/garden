@@ -322,11 +322,27 @@ pub(crate) fn toplevel_item_containing_offset(
 }
 
 fn handle_request(
-    req: Request,
+    req_src: &str,
     env: &mut Env,
     session: &mut Session,
     complete_src: &mut String,
 ) -> Response {
+    let Ok(req) = serde_json::from_str::<Request>(req_src) else {
+        return Response {
+            kind: ResponseKind::MalformedRequest,
+            value: Err(ResponseError {
+                position: None,
+                message: format!(
+                    "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
+                    sample_request_as_json(),
+                    req_src,
+                ),
+                stack: None,
+            }),
+            warnings: vec![],
+        };
+    };
+
     match req {
         Request::Run {
             path,
@@ -549,22 +565,7 @@ pub(crate) fn json_session(interrupted: &Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            let response = match serde_json::from_str::<Request>(&buf_str) {
-                Ok(req) => handle_request(req, &mut env, &mut session, &mut complete_src),
-                Err(_) => Response {
-                    kind: ResponseKind::MalformedRequest,
-                    value: Err(ResponseError {
-                        position: None,
-                        message: format!(
-                            "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
-                            sample_request_as_json(),
-                            buf_str,
-                        ),
-                        stack: None,
-                    }),
-                    warnings: vec![],
-                },
-            };
+            let response = handle_request(&buf_str, &mut env, &mut session, &mut complete_src);
             let serialized = serde_json::to_string(&response).unwrap();
             println!("{}", serialized);
         } else {

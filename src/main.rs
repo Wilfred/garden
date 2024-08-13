@@ -112,10 +112,10 @@ fn main() {
 
     let args = Cli::parse();
     match args.command {
-        Commands::Repl => cli_session::repl(&interrupted),
-        Commands::Json => json_session::json_session(&interrupted),
+        Commands::Repl => cli_session::repl(interrupted),
+        Commands::Json => json_session::json_session(interrupted),
         Commands::Run { path, arguments } => match std::fs::read(&path) {
-            Ok(src_bytes) => run_file(src_bytes, &path, &arguments, &interrupted),
+            Ok(src_bytes) => run_file(src_bytes, &path, &arguments, interrupted),
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
@@ -133,7 +133,7 @@ fn main() {
             }
         },
         Commands::Test { path } => match std::fs::read(&path) {
-            Ok(src_bytes) => run_tests_in_file(src_bytes, &path, &interrupted),
+            Ok(src_bytes) => run_tests_in_file(src_bytes, &path, interrupted),
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
@@ -141,7 +141,7 @@ fn main() {
         Commands::TestEvalUpTo { offset, path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                test_eval_up_to(&src, &path, offset, &interrupted);
+                test_eval_up_to(&src, &path, offset, interrupted);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
@@ -184,7 +184,7 @@ fn main() {
 }
 
 /// Evaluate a garden file, then run eval-up-to and print the result.
-fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: &Arc<AtomicBool>) {
+fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<AtomicBool>) {
     let mut env = Env::default();
     let mut session = Session {
         interrupted,
@@ -293,7 +293,7 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
 }
 
 // TODO: Much of this logic is duplicated with run_file.
-fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBool>) {
+fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut succeeded = false;
 
     match String::from_utf8(src_bytes) {
@@ -364,7 +364,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: &Arc<AtomicBo
     }
 }
 
-fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: &Arc<AtomicBool>) {
+fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
     match String::from_utf8(src_bytes) {
         Ok(src) => {
             let mut env = Env::default();

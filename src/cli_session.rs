@@ -79,7 +79,7 @@ fn read_expr(
     }
 }
 
-pub(crate) fn repl(interrupted: &Arc<AtomicBool>) {
+pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     print_repl_header();
 
     let mut env = Env::default();

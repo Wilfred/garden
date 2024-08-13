@@ -493,7 +493,7 @@ fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
     }
 }
 
-fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
+fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
     match eval_env(env, session) {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,
@@ -521,7 +521,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session<'_>) -> Response {
     }
 }
 
-pub(crate) fn json_session(interrupted: &Arc<AtomicBool>) {
+pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let response = Response {
         kind: ResponseKind::Ready,
         value: Ok("The Garden: Good programs take time to grow.".into()),

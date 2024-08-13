@@ -67,7 +67,9 @@ impl FreeVariableVisitor<'_> {
         diagnostics
     }
 
-    fn is_bound(&self, name: &SymbolName) -> bool {
+    /// Is `name` locally bound in syntactic context we're currently
+    /// checking?
+    fn is_locally_bound(&self, name: &SymbolName) -> bool {
         if name.0 == "__BUILTIN_IMPLEMENTATION" {
             return true;
         }
@@ -81,6 +83,7 @@ impl FreeVariableVisitor<'_> {
         false
     }
 
+    /// Mark `name`, a local variable, as used in `self.bound_scopes`.
     fn mark_used(&mut self, name: &SymbolName) {
         if name.0 == "__BUILTIN_IMPLEMENTATION" {
             // Mark everything as used, because this is just a stub.
@@ -136,7 +139,7 @@ impl FreeVariableVisitor<'_> {
     }
 
     fn check_symbol(&mut self, var: &Symbol) {
-        if self.is_bound(&var.name) {
+        if self.is_locally_bound(&var.name) {
             self.mark_used(&var.name);
         } else if self.env.file_scope.contains_key(&var.name) {
             // Bound in file scope, nothing to do.

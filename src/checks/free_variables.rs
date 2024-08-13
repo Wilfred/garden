@@ -144,6 +144,15 @@ impl FreeVariableVisitor<'_> {
         } else if self.env.file_scope.contains_key(&var.name) {
             // Bound in file scope, nothing to do.
         } else {
+            if let Some(stack_frame) = self.env.stack.0.last() {
+                // Already bound in this block. This only applies in JSON
+                // sessions where evaluating `let x = 1` means that all
+                // future inputs have `x` in scope.
+                if stack_frame.bindings.has(&var.name) {
+                    return;
+                }
+            }
+
             // Variable is free.
             if !self.free.contains_key(&var.name) {
                 // Only record the first occurrence as free.

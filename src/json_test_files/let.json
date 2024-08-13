@@ -4,5 +4,5 @@
 // args: test-json
 // expected stdout:
 // {"kind":"evaluate","value":{"Ok":"Unit"},"warnings":[]}
-// {"kind":"evaluate","value":{"Ok":"6"},"warnings":[{"message":"Unbound symbol: x","position":{"start_offset":0,"end_offset":1,"line_number":0,"end_line_number":0,"path":"__json_session_unnamed__"},"level":"Error"}]}
+// {"kind":"evaluate","value":{"Ok":"6"},"warnings":[]}
 

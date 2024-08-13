@@ -186,12 +186,16 @@ impl<'a> TypeCheckVisitor<'a> {
         // Only bind and check locals that have an explicit type
         // hint.
         for param in &fun_info.params {
-            if let Some(hint) = &param.hint {
-                let param_ty = Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
-                self.save_hint_ty_id(hint, &param_ty);
-
-                self.set_binding(&param.symbol, param_ty);
-            }
+            let param_ty = match &param.hint {
+                Some(hint) => {
+                    let param_ty =
+                        Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+                    self.save_hint_ty_id(hint, &param_ty);
+                    param_ty
+                }
+                None => Type::Top,
+            };
+            self.set_binding(&param.symbol, param_ty);
         }
 
         let expected_return_ty = match &fun_info.return_hint {

@@ -10,3 +10,11 @@ fun map_over_strings(lines: List<String>) {
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `if` and `else` have incompatible types: `String` and `_`.
+// 
+// --> src/check_test_files/lambda_containing_if.gdn:4
+//             "b";
+//             ^^^
+

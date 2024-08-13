@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
+## Stdlib
+
+Added `List::for_each`.
+
 # 0.16 (released 11th August 2024)
 **Goal: Evaluate functions up to the cursor.**
 

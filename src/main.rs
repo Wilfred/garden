@@ -43,6 +43,7 @@ use clap::{Parser, Subcommand};
 use eval::eval_up_to;
 use go_to_def::print_pos;
 use hover::show_type;
+use json_session::handle_request;
 use owo_colors::OwoColorize as _;
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
@@ -83,6 +84,11 @@ enum Commands {
     ///
     /// Used for testing the eval-up-to feature.
     TestEvalUpTo { offset: usize, path: PathBuf },
+    /// Evaluate all the entries in the .jsonl file as if they were in
+    /// a JSON session.
+    ///
+    /// Lines starting `//` are ignored.
+    TestJson { path: PathBuf },
     /// Check the Garden program at the path specified for issues.
     Check {
         path: PathBuf,
@@ -175,6 +181,32 @@ fn main() {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
                 completions::complete(&src, &path, offset);
+            }
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
+        Commands::TestJson { path } => match std::fs::read(&path) {
+            Ok(src_bytes) => {
+                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+
+                let mut env = Env::default();
+                let mut complete_src = String::new();
+                let mut session = Session {
+                    interrupted,
+                    has_attached_stdout: true,
+                    start_time: Instant::now(),
+                    trace_exprs: false,
+                    stop_at_expr_id: None,
+                };
+
+                let json_lines = src
+                    .lines()
+                    .filter(|line| !line.starts_with("//") && !line.is_empty());
+                for line in json_lines {
+                    let response = handle_request(line, &mut env, &mut session, &mut complete_src);
+                    println!("{}", serde_json::to_string(&response).unwrap());
+                }
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
@@ -477,6 +509,13 @@ mod tests {
     #[test]
     fn test_runtime() -> TestResult<()> {
         let mut config = TestConfig::new("target/debug/garden", "src/runtime_test_files", "// ")?;
+        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
+        config.run_tests()
+    }
+
+    #[test]
+    fn test_json_session() -> TestResult<()> {
+        let mut config = TestConfig::new("target/debug/garden", "src/json_test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
     }

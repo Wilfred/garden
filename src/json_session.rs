@@ -321,7 +321,7 @@ pub(crate) fn toplevel_item_containing_offset(
     None
 }
 
-fn handle_request(
+pub(crate) fn handle_request(
     req_src: &str,
     env: &mut Env,
     session: &mut Session,

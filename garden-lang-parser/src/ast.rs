@@ -5,7 +5,7 @@ use std::fmt::Display;
 use crate::position::Position;
 
 /// An owned string of the source text associated with a definition.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct SourceString {
     /// The offset of this string into the defining file, at the time
     /// of evaluation.
@@ -49,7 +49,7 @@ impl From<&str> for TypeName {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq)]
 pub struct TypeSymbol {
     pub name: TypeName,
     pub position: Position,
@@ -87,7 +87,7 @@ impl Display for TypeSymbol {
 /// Represents a type name in source code. This might be a concrete
 /// type, such as `List<Int>`, or may refer to generics
 /// e.g. `List<T>`.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TypeHint {
     pub sym: TypeSymbol,
     pub args: Vec<TypeHint>,
@@ -136,7 +136,7 @@ impl From<&str> for SymbolName {
 /// function name or a method name.
 ///
 /// See also [`TypeSymbol`].
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
@@ -167,13 +167,13 @@ impl std::fmt::Debug for Symbol {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SymbolWithHint {
     pub symbol: Symbol,
     pub hint: Option<TypeHint>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BinaryOperatorKind {
     Add,
     Subtract,
@@ -190,20 +190,20 @@ pub enum BinaryOperatorKind {
 }
 
 /// The left hand side of a case in a `match` expression.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pattern {
     pub symbol: Symbol,
     pub argument: Option<Symbol>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParenthesizedArguments {
     pub open_paren: Position,
     pub arguments: Vec<Expression>,
     pub close_paren: Position,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression_ {
     /// ```garden
     /// match (x) {
@@ -334,7 +334,7 @@ impl SyntaxIdGenerator {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
@@ -360,7 +360,7 @@ impl Expression {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
     pub is_loop_body: bool,
     pub open_brace: Position,
@@ -368,10 +368,10 @@ pub struct Block {
     pub close_brace: Position,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ToplevelExpression(pub Expression);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
@@ -383,7 +383,7 @@ pub struct FunInfo {
     pub body: Block,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
@@ -392,7 +392,7 @@ pub struct TestInfo {
     pub body: Block,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VariantInfo {
     pub name_sym: Symbol,
     /// If this variant is of the form `Foo(T)`, the type hint inside
@@ -400,14 +400,14 @@ pub struct VariantInfo {
     pub payload_hint: Option<TypeHint>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FieldInfo {
     pub sym: Symbol,
     pub hint: TypeHint,
     pub doc_comment: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
@@ -416,7 +416,7 @@ pub struct EnumInfo {
     pub variants: Vec<VariantInfo>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
@@ -430,7 +430,7 @@ pub struct StructInfo {
     pub fields: Vec<FieldInfo>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuiltinMethodKind {
     ListAppend,
     ListGet,
@@ -440,13 +440,13 @@ pub enum BuiltinMethodKind {
     StringSubstring,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MethodKind {
     BuiltinMethod(BuiltinMethodKind, Option<FunInfo>),
     UserDefinedMethod(FunInfo),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MethodInfo {
     /// The type that has this method.
     pub receiver_hint: TypeHint,
@@ -476,7 +476,7 @@ impl MethodInfo {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Definition_ {
     /// ```garden
     /// fun foo() {}
@@ -491,10 +491,10 @@ pub enum Definition_ {
     Struct(StructInfo),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Definition(pub SourceString, pub Position, pub Definition_);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToplevelItem {
     Def(Definition),
     Expr(ToplevelExpression),

@@ -12,7 +12,7 @@ use crate::garden_type::TypeDefKind;
 use crate::types::TypeDef;
 use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Value {
     /// An integer value.
     Integer(i64),
@@ -147,7 +147,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltinFunctionKind {
     Error,
     ListDirectory,

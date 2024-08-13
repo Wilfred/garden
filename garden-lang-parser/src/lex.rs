@@ -14,7 +14,7 @@ lazy_static! {
     pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Token<'a> {
     pub(crate) position: Position,
     pub(crate) text: &'a str,

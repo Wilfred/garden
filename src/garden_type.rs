@@ -13,7 +13,7 @@ use crate::{
     values::Value,
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TypeDefKind {
     Enum,
     Struct,
@@ -23,7 +23,7 @@ pub(crate) enum TypeDefKind {
 /// defined, they're added with a value of None.
 pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Type {
     /// The top type, which includes all values.
     Top,

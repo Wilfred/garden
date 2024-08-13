@@ -33,7 +33,7 @@ use garden_lang_parser::position::Position;
 
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.

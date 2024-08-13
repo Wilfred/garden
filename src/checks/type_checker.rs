@@ -126,24 +126,12 @@ impl Visitor for TypeCheckVisitor<'_> {
             }
         }
 
-        self.bindings.enter_block();
-
         let mut type_bindings = self.env.stack.type_bindings();
         for type_param in &fun_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);
         }
 
-        for param in &fun_info.params {
-            let param_ty = match &param.hint {
-                Some(hint) => Type::from_hint(hint, self.env, &type_bindings).unwrap_or_err_ty(),
-                None => Type::Top,
-            };
-            self.set_binding(&param.symbol, param_ty);
-        }
-
         self.check_fun_info(fun_info, &type_bindings);
-
-        self.bindings.exit_block();
     }
 
     fn visit_block(&mut self, block: &Block) {

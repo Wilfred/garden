@@ -1204,9 +1204,14 @@ fn unify_all(tys: &[Type]) -> Option<Type> {
 /// (Int, NoValue) -> Int
 /// (NoValue, Int) -> Int
 /// (List<Int>, List<NoValue>) -> List<Int>
-/// (In, String) -> return None
+/// (String, Top) -> Top
+/// (Int, String) -> return None
 /// ```
 fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
+    if matches!(ty_1, Type::Top) || matches!(ty_2, Type::Top) {
+        return Some(Type::Top);
+    }
+
     if ty_1.is_no_value() || ty_1.is_error() {
         return Some(ty_2.clone());
     }

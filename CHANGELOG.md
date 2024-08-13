@@ -7,6 +7,10 @@
 
 Added `List::for_each`.
 
+## Checks
+
+Fixed several type checking bugs.
+
 # 0.16 (released 11th August 2024)
 **Goal: Evaluate functions up to the cursor.**
 

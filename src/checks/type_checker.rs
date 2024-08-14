@@ -183,8 +183,6 @@ impl<'a> TypeCheckVisitor<'a> {
         // Check the function body with the locals bound.
         self.bindings.enter_block();
 
-        // Only bind and check locals that have an explicit type
-        // hint.
         for param in &fun_info.params {
             let param_ty = match &param.hint {
                 Some(hint) => {

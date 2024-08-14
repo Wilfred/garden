@@ -727,6 +727,14 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 let receiver_ty = self.check_expr(recv, type_bindings, expected_return_ty);
                 let Some(receiver_ty_name) = receiver_ty.type_name() else {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "Expected a type with a `{}` method, but got a `{}`.",
+                            &sym.name, receiver_ty
+                        ),
+                        position: recv.pos.clone(),
+                    });
                     return Type::error("No type name for this method receiver");
                 };
 

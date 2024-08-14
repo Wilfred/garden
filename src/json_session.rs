@@ -299,7 +299,11 @@ fn handle_eval_up_to_id_request(
                 },
             },
         },
-        None => todo!("return null in some form"),
+        None => Response {
+            kind: ResponseKind::Evaluate,
+            value: Ok("Did not find an expression to evaluate".to_owned()),
+            warnings: vec![],
+        },
     }
 }
 

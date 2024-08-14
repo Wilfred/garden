@@ -459,7 +459,7 @@ fun<T> (self: List<T>) for_each(f: Fun<(T), Unit>): Unit {
 
 test list_for_each {
     let total = 0;
-    [1, 2, 3].for_each(fun(i) { total = total + i; });
+    [1, 2, 3].for_each(fun(i: Int) { total = total + i; });
     should_equal(total, 6);
 }
 
@@ -484,7 +484,7 @@ fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
 }
 
 test list_map {
-    let incremented = [1, 2, 3].map(fun(x) { x + 1; });
+    let incremented = [1, 2, 3].map(fun(x: Int) { x + 1; });
     should_equal(incremented, [2, 3, 4]);
 }
 

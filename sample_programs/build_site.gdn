@@ -1,3 +1,30 @@
+fun render_markdown(src: String): String {
+    let lines = src.lines();
+    let parts: List<String> = lines.map(fun(line: String) {
+        if (line.starts_with("# ")) {
+            render_markdown_header(line);
+        } else if (line != "") {
+            render_markdown_paragraph(line);
+        } else {
+            line;
+        }
+    });
+
+    "\n".join(parts);
+}
+
+fun render_markdown_header(src: String): String {
+    "".join(["<h1>", src.strip_prefix("# "), "</h1>"]);
+}
+
+fun render_markdown_paragraph(src: String): String {
+    "".join(["<p>", src, "</p>"]);
+}
+
+{
+    print(render_markdown("# foo\n\nbar."));
+}
+
 fun file_name(path: String): String {
     let parts = path.split("/");
     parts.last().or_exception();

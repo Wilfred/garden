@@ -617,7 +617,7 @@ fn parse_comma_separated_exprs(
 
         let start_idx = tokens.idx;
         let arg = parse_inline_expression(src, tokens, id_gen, diagnostics);
-        if arg.expr_.is_invalid() {
+        if arg.expr_.is_invalid_or_placeholder() {
             break;
         }
 
@@ -1499,7 +1499,7 @@ fn parse_block(
 
         let start_idx = tokens.idx;
         let expr = parse_block_member_expression(src, tokens, id_gen, diagnostics);
-        if expr.expr_.is_invalid() {
+        if expr.expr_.is_invalid_or_placeholder() {
             break;
         }
         exprs.push(expr);

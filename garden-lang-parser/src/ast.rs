@@ -295,8 +295,12 @@ pub enum Expression_ {
 }
 
 impl Expression_ {
-    pub(crate) fn is_invalid(&self) -> bool {
-        matches!(self, Expression_::Invalid)
+    pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
+        match self {
+            Expression_::Variable(sym) => sym.name.0 == "__placeholder",
+            Expression_::Invalid => true,
+            _ => false,
+        }
     }
 }
 

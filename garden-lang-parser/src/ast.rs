@@ -294,6 +294,12 @@ pub enum Expression_ {
     Invalid,
 }
 
+impl Expression_ {
+    pub(crate) fn is_invalid(&self) -> bool {
+        matches!(self, Expression_::Invalid)
+    }
+}
+
 /// A syntactic item that the IDE can interact with, such as an
 /// expression or a variable name.
 #[derive(Clone, PartialEq, Eq, Hash, Copy)]

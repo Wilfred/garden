@@ -617,7 +617,7 @@ fn parse_comma_separated_exprs(
 
         let start_idx = tokens.idx;
         let arg = parse_inline_expression(src, tokens, id_gen, diagnostics);
-        if matches!(arg.expr_, Expression_::Invalid) {
+        if arg.expr_.is_invalid() {
             break;
         }
 
@@ -1499,16 +1499,14 @@ fn parse_block(
 
         let start_idx = tokens.idx;
         let expr = parse_block_member_expression(src, tokens, id_gen, diagnostics);
-        match &expr.expr_ {
-            Expression_::Invalid => break,
-            _ => {
-                exprs.push(expr);
-                assert!(
-                    tokens.idx > start_idx,
-                    "The parser should always make forward progress."
-                );
-            }
+        if expr.expr_.is_invalid() {
+            break;
         }
+        exprs.push(expr);
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
     }
 
     let close_brace = require_token(tokens, diagnostics, "}");

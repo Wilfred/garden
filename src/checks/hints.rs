@@ -92,7 +92,7 @@ impl Visitor for HintVisitor<'_> {
             }
             Some(type_) => {
                 let type_args_pos = match type_hint.args.last() {
-                    Some(arg) => arg.sym.position.clone(),
+                    Some(arg) => arg.position.clone(),
                     None => type_hint.position.clone(),
                 };
 

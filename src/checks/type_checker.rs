@@ -436,8 +436,23 @@ impl<'a> TypeCheckVisitor<'a> {
                 Type::unit()
             }
             Expression_::Break => Type::unit(),
-            Expression_::Assign(_sym, expr) => {
-                self.check_expr(expr, type_bindings, expected_return_ty);
+            Expression_::Assign(sym, expr) => {
+                let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
+
+                // TODO: also enforce the type of an assignment at runtime.
+                if let Some((sym_ty, _)) = self.bindings.get(&sym.name) {
+                    if !is_subtype(&expr_ty, sym_ty) {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "`{}` has type `{}`, but tried to assign a value of type `{}`.",
+                                sym.name, sym_ty, expr_ty
+                            ),
+                            position: sym.position.clone(),
+                        });
+                    }
+                }
+
                 Type::unit()
             }
             Expression_::Let(sym, hint, expr) => {

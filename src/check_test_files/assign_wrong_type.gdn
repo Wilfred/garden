@@ -1,0 +1,14 @@
+fun foo() {
+    let x = 1;
+    x = "";
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `x` has type `Int`, but tried to assign a value of type `String`.
+// 
+// --> src/check_test_files/assign_wrong_type.gdn:3
+//     x = "";
+//     ^
+

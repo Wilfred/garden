@@ -76,7 +76,7 @@ pub(crate) struct ResponseError {
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
-    pub(crate) value: Result<String, ResponseError>,
+    pub(crate) value: Result<Option<String>, ResponseError>,
     pub(crate) warnings: Vec<Diagnostic>,
 }
 
@@ -171,7 +171,7 @@ fn handle_eval_request(
             };
 
             let value_summary = if let Some(last_value) = eval_summary.values.last() {
-                if eval_summary.new_syms.is_empty() {
+                Some(if eval_summary.new_syms.is_empty() {
                     last_value.display(env)
                 } else {
                     format!(
@@ -179,9 +179,13 @@ fn handle_eval_request(
                         definition_summary,
                         last_value.display(env)
                     )
-                }
+                })
             } else {
-                format!("{}.", definition_summary)
+                if eval_summary.new_syms.is_empty() {
+                    None
+                } else {
+                    Some(format!("{}.", definition_summary))
+                }
             };
 
             Response {
@@ -275,7 +279,7 @@ fn handle_eval_up_to_id_request(
         Some(eval_res) => match eval_res {
             Ok(v) => Response {
                 kind: ResponseKind::Evaluate,
-                value: Ok(v.display(env)),
+                value: Ok(Some(v.display(env))),
                 warnings: vec![],
             },
             Err(e) => match e {
@@ -301,7 +305,7 @@ fn handle_eval_up_to_id_request(
         },
         None => Response {
             kind: ResponseKind::Evaluate,
-            value: Ok("Did not find an expression to evaluate".to_owned()),
+            value: Ok(Some("Did not find an expression to evaluate".to_owned())),
             warnings: vec![],
         },
     }
@@ -359,12 +363,12 @@ pub(crate) fn handle_request(
                 match run_command(&mut out_buf, &command, env, session) {
                     Ok(()) => Response {
                         kind: ResponseKind::RunCommand,
-                        value: Ok(format!("{}", String::from_utf8_lossy(&out_buf))),
+                        value: Ok(Some(format!("{}", String::from_utf8_lossy(&out_buf)))),
                         warnings: vec![],
                     },
                     Err(EvalAction::Abort) => Response {
                         kind: ResponseKind::RunCommand,
-                        value: Ok("Aborted".to_owned()),
+                        value: Ok(Some("Aborted".to_owned())),
                         warnings: vec![],
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
@@ -482,7 +486,7 @@ fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
 
 fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
     let value = match position_of_name(name, env) {
-        Ok(pos) => Ok(pos.as_ide_string()),
+        Ok(pos) => Ok(Some(pos.as_ide_string())),
         Err(message) => Err(ResponseError {
             position: None,
             message,
@@ -501,7 +505,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
     match eval_env(env, session) {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,
-            value: Ok(result.display(env)),
+            value: Ok(Some(result.display(env))),
             warnings: vec![],
         },
         Err(EvalError::ResumableError(position, e)) => Response {
@@ -528,7 +532,9 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
 pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let response = Response {
         kind: ResponseKind::Ready,
-        value: Ok("The Garden: Good programs take time to grow.".into()),
+        value: Ok(Some(
+            "The Garden: Good programs take time to grow.".to_owned(),
+        )),
         warnings: vec![],
     };
     let serialized = serde_json::to_string(&response).unwrap();

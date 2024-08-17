@@ -269,9 +269,8 @@ the user entering a value in the *garden* buffer."
                           (concat response-ok-value "\n")))
                         ((string= response-kind "found_definition")
                          (garden--visit response-ok-value))
-                        ((and (string= response-kind "evaluate")
-                              response-ok-value)
-                         (unless (string= response-ok-value "void")
+                        ((string= response-kind "evaluate")
+                         (unless (or (null response-ok-value) (string= response-ok-value "void"))
                            (message "%s" response-ok-value))
                          (garden--fontify-value (concat response-ok-value "\n")))
                         (t

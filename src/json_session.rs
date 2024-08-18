@@ -154,38 +154,44 @@ fn handle_eval_request(
 
     match eval_all_toplevel_items(&items, env, session) {
         Ok(eval_summary) => {
-            let definition_summary = if eval_summary.new_syms.len() == 1 {
+            let definition_summary = if eval_summary.new_syms.is_empty() {
+                "".to_owned()
+            } else if eval_summary.new_syms.len() == 1 {
                 format!("Loaded {}", eval_summary.new_syms[0].0)
             } else {
                 format!("Loaded {} definitions", eval_summary.new_syms.len())
             };
 
             let total_tests = eval_summary.tests_passed + eval_summary.tests_failed;
-            let definition_summary = if total_tests == 0 {
-                definition_summary
+            let test_summary = if total_tests == 0 {
+                "".to_owned()
             } else {
                 format!(
-                    "{definition_summary}, ran {total_tests} {}",
+                    "{total_tests} {}",
                     if total_tests == 1 { "test" } else { "tests" }
                 )
             };
 
+            let test_summary = if test_summary.is_empty() && definition_summary.is_empty() {
+                "".to_owned()
+            } else if definition_summary.is_empty() {
+                format!("Ran {test_summary}")
+            } else {
+                format!(", ran {test_summary}")
+            };
+
+            let summary = format!("{definition_summary}{test_summary}");
+
             let value_summary = if let Some(last_value) = eval_summary.values.last() {
-                Some(if eval_summary.new_syms.is_empty() {
+                Some(if summary.is_empty() {
                     last_value.display(env)
                 } else {
-                    format!(
-                        "{}, and evaluated {}",
-                        definition_summary,
-                        last_value.display(env)
-                    )
+                    format!("{summary}, and evaluated {}.", last_value.display(env))
                 })
+            } else if summary.is_empty() {
+                None
             } else {
-                if eval_summary.new_syms.is_empty() {
-                    None
-                } else {
-                    Some(format!("{}.", definition_summary))
-                }
+                Some(format!("{summary}."))
             };
 
             Response {

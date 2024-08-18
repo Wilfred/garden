@@ -94,6 +94,8 @@ enum Commands {
         path: PathBuf,
         #[clap(long, action)]
         json: bool,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
     },
     /// Show the type of the expression at the position given.
     ShowType { offset: usize, path: PathBuf },
@@ -134,10 +136,15 @@ fn main() {
         Commands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
         }
-        Commands::Check { path, json } => match std::fs::read(&path) {
+        Commands::Check {
+            path,
+            json,
+            override_path,
+        } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                syntax_check::check(&path, &src, json);
+                let src_path = override_path.unwrap_or(path);
+                syntax_check::check(&src_path, &src, json);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

@@ -99,7 +99,12 @@ enum Commands {
     ShowType { offset: usize, path: PathBuf },
     /// Show the definition position of the value at the position
     /// given.
-    DefinitionPosition { offset: usize, path: PathBuf },
+    DefinitionPosition {
+        offset: usize,
+        path: PathBuf,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+    },
     /// Show possible completions at the position given.
     Complete { offset: usize, path: PathBuf },
     /// Parse the Garden program at the path specified and print the
@@ -168,10 +173,15 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
-        Commands::DefinitionPosition { path, offset } => match std::fs::read(&path) {
+        Commands::DefinitionPosition {
+            path,
+            offset,
+            override_path,
+        } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-                print_pos(&src, &path, offset);
+                let src_path = override_path.unwrap_or(path);
+                print_pos(&src, &src_path, offset);
             }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

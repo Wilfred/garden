@@ -172,12 +172,10 @@ fn handle_eval_request(
                 )
             };
 
-            let test_summary = if test_summary.is_empty() && definition_summary.is_empty() {
-                "".to_owned()
-            } else if definition_summary.is_empty() {
-                format!("Ran {test_summary}")
-            } else {
-                format!(", ran {test_summary}")
+            let test_summary = match (test_summary.is_empty(), definition_summary.is_empty()) {
+                (true, _) => "".to_owned(),
+                (false, true) => format!("Ran {test_summary}"),
+                (false, false) => format!(", ran {test_summary}"),
             };
 
             let summary = format!("{definition_summary}{test_summary}");

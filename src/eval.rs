@@ -99,7 +99,10 @@ impl Bindings {
     }
 
     fn add_new(&mut self, name: &SymbolName, value: Value) {
-        // TODO: Handle underscore checks here rather than at all the call sites.
+        if name.is_underscore() {
+            return;
+        }
+
         let block_bindings = self
             .block_bindings
             .last_mut()
@@ -1036,9 +1039,7 @@ fn eval_let(
         };
     }
 
-    if !var_name.is_underscore() {
-        stack_frame.bindings.add_new(var_name, expr_value);
-    }
+    stack_frame.bindings.add_new(var_name, expr_value);
 
     // `let x = 1` should always evaluate to Unit. This is slightly
     // annoying when incrementally writing a block, but makes it

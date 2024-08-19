@@ -739,6 +739,11 @@ impl<'a> TypeCheckVisitor<'a> {
                     .collect::<Vec<_>>();
 
                 let receiver_ty = self.check_expr(recv, type_bindings, expected_return_ty);
+                if matches!(receiver_ty, Type::Error(_)) {
+                    // Allow calling methods on error types, to avoid cascading errors.
+                    return Type::error("Called method on an error type");
+                }
+
                 let Some(receiver_ty_name) = receiver_ty.type_name() else {
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,

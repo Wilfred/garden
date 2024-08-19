@@ -184,7 +184,10 @@ fn handle_eval_request(
                 Some(if summary.is_empty() {
                     last_value.display(env)
                 } else {
-                    format!("{summary}, and evaluated {}.", last_value.display(env))
+                    format!(
+                        "{summary}, and the expression evaluated to {}.",
+                        last_value.display(env)
+                    )
                 })
             } else if summary.is_empty() {
                 None

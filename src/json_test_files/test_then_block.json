@@ -1,5 +1,6 @@
 { "method": "run", "input": "test foo {} { 1 + 2; }" }
 
 // args: test-json
-// expected stdout: {"kind":"evaluate","value":{"Ok":"Ran 1 test, and evaluated 3."},"warnings":[]}
+// expected stdout:
+// {"kind":"evaluate","value":{"Ok":"Ran 1 test, and the expression evaluated to 3."},"warnings":[]}
 

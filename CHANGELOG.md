@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
+## Runtime
+
+Fixed an interpreter crash when evaluating tests.
+
 ## Stdlib
 
 Added `List::for_each`.

@@ -648,17 +648,20 @@ If called with a prefix, stop the previous session."
         (setq result (buffer-string))))
     result))
 
-(defun garden--async-command (command-name callback)
-  "Run CLI command COMMAND with the position of point, and call CALLBACK with the result."
+(defun garden--async-command (command-name callback &optional extra-args)
+  "Run CLI command COMMAND with the position of point, and call CALLBACK with
+the result."
   (let ((tmp-file-of-src (garden--buf-as-tmp-file))
         (output-buffer (generate-new-buffer (format "*garden-%s-async*" command-name))))
     (make-process
      :name (format "garden-mode-%s" command-name)
      :buffer output-buffer
-     :command (list garden-executable
-                    command-name
-                    (format "%s" (1- (point)))
-                    tmp-file-of-src)
+     :command
+     (append (list garden-executable
+                   command-name
+                   (format "%s" (1- (point)))
+                   tmp-file-of-src)
+             extra-args)
      :sentinel (lambda (process event)
                  (when (string= event "exited abnormally with code 101\n")
                    (with-current-buffer (process-buffer process)
@@ -693,7 +696,10 @@ If called with a prefix, stop the previous session."
   "Go to the definition of the thing at point."
   (interactive)
   (xref-push-marker-stack)
-  (garden--async-command "definition-position" #'garden--go-to-position))
+  (garden--async-command
+   "definition-position"
+   #'garden--go-to-position
+   (list "--override-path" (buffer-file-name))))
 
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))

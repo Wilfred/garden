@@ -3,7 +3,7 @@ use garden_lang_parser::{
     position::Position,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub(crate) enum BuiltinType {
     Int,
     String,

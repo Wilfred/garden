@@ -164,7 +164,7 @@ impl<'a> TypeCheckVisitor<'a> {
             Type::UserDefined { name_sym, .. } => {
                 if let Some(type_def) = self.env.get_type_def(&name_sym.name) {
                     let def_name_sym = match type_def {
-                        TypeDef::Builtin(_) => None,
+                        TypeDef::Builtin(_, struct_info) => None,
                         TypeDef::Enum(enum_info) => Some(&enum_info.name_sym),
                         TypeDef::Struct(struct_info) => Some(&struct_info.name_sym),
                     };

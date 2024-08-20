@@ -229,29 +229,29 @@ impl Default for Env {
         // TODO: String literals are duplicated with type_representation.
         types.insert(
             TypeName { name: "Int".into() },
-            TypeDef::Builtin(BuiltinType::Int),
+            TypeDef::Builtin(BuiltinType::Int, None),
         );
         types.insert(
             TypeName {
                 name: "String".into(),
             },
-            TypeDef::Builtin(BuiltinType::String),
+            TypeDef::Builtin(BuiltinType::String, None),
         );
         types.insert(
             TypeName {
                 name: "List".into(),
             },
-            TypeDef::Builtin(BuiltinType::List),
+            TypeDef::Builtin(BuiltinType::List, None),
         );
         types.insert(
             TypeName {
                 name: "Tuple".into(),
             },
-            TypeDef::Builtin(BuiltinType::Tuple),
+            TypeDef::Builtin(BuiltinType::Tuple, None),
         );
         types.insert(
             TypeName { name: "Fun".into() },
-            TypeDef::Builtin(BuiltinType::Fun),
+            TypeDef::Builtin(BuiltinType::Fun, None),
         );
 
         let prelude_src = include_str!("prelude.gdn");

@@ -219,7 +219,7 @@ impl Value {
                 };
 
                 let variant_name = match type_ {
-                    TypeDef::Builtin(_) => {
+                    TypeDef::Builtin(_, _) => {
                         unreachable!("Enum type names should never map to built-in types")
                     }
                     TypeDef::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {
@@ -254,7 +254,7 @@ impl Value {
                 };
 
                 match type_ {
-                    TypeDef::Builtin(_) => {
+                    TypeDef::Builtin(_, _) => {
                         unreachable!("Enum type names should never map to built-in types")
                     }
                     TypeDef::Enum(enum_info) => match enum_info.variants.get(*variant_idx) {

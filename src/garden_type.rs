@@ -141,7 +141,7 @@ impl Type {
 
         match env.get_type_def(name) {
             Some(type_) => match type_ {
-                TypeDef::Builtin(builtin_type) => match builtin_type {
+                TypeDef::Builtin(builtin_type, _) => match builtin_type {
                     BuiltinType::Int => Ok(Type::Int),
                     BuiltinType::String => Ok(Type::String),
                     BuiltinType::List => {

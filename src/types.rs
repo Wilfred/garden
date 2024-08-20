@@ -14,7 +14,7 @@ pub(crate) enum BuiltinType {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TypeDef {
-    Builtin(BuiltinType),
+    Builtin(BuiltinType, Option<StructInfo>),
     Enum(EnumInfo),
     Struct(StructInfo),
 }
@@ -22,7 +22,7 @@ pub(crate) enum TypeDef {
 impl TypeDef {
     pub(crate) fn params(&self) -> Vec<TypeSymbol> {
         match self {
-            TypeDef::Builtin(built_in_type) => match built_in_type {
+            TypeDef::Builtin(built_in_type, _) => match built_in_type {
                 BuiltinType::Int => vec![],
                 BuiltinType::String => vec![],
                 BuiltinType::Fun => vec![

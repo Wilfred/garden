@@ -36,7 +36,7 @@ fun file_name(path: String): String {
 fun template_files(website_dir: String): List<String> {
     // TODO: a ? syntax.
     let dir_files = list_directory(website_dir).or_error();
-    dir_files.filter(fun (p) {p.ends_with(".tmpl.html"); });
+    dir_files.filter(fun (p: String) {p.ends_with(".tmpl.html"); });
 }
 
 // Convert "foo.tmpl.html" to "foo.html".

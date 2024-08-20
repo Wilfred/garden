@@ -689,6 +689,8 @@ the result."
          (path (plist-get info :path))
          (start-offset (plist-get info :start_offset))
          (_end-offset (plist-get info :end_offset)))
+    (unless info
+      (user-error "No position available."))
     (garden--visit-path path)
     (goto-char (1+ start-offset))))
 

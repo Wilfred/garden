@@ -25,8 +25,8 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
-    ParenthesizedArguments, Pattern, SourceString, Symbol, SymbolWithHint, SyntaxId, TestInfo,
-    ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    ParenthesizedArguments, Pattern, SourceString, StructInfo, Symbol, SymbolWithHint, SyntaxId,
+    TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -671,11 +671,15 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 new_syms.push(name_as_sym);
             }
             Definition_::Struct(struct_info) => {
-                // Add the struct definition to the type environment.
-                env.add_type(
-                    struct_info.name_sym.name.clone(),
-                    TypeDef::Struct(struct_info.clone()),
-                );
+                if is_builtin_type(struct_info) {
+                    update_builtin_type_info(struct_info, env, &mut diagnostics);
+                } else {
+                    // Add the struct definition to the type environment.
+                    env.add_type(
+                        struct_info.name_sym.name.clone(),
+                        TypeDef::Struct(struct_info.clone()),
+                    );
+                }
 
                 let name_as_sym = SymbolName(struct_info.name_sym.name.name.clone());
                 new_syms.push(name_as_sym);
@@ -690,6 +694,51 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
         tests_passed: 0,
         tests_failed: 0,
     }
+}
+
+fn update_builtin_type_info(
+    struct_info: &StructInfo,
+    env: &mut Env,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    let symbol = &struct_info.name_sym;
+
+    let Some(current_def) = env.types.get(&symbol.name) else {
+        diagnostics.push(Diagnostic {
+            level: Level::Warning,
+            message: format!(
+                "Tried to update a built-in stub for a type `{}` that doesn't exist.",
+                symbol.name
+            ),
+            position: symbol.position.clone(),
+        });
+        return;
+    };
+
+    let TypeDef::Builtin(kind, _) = current_def else {
+        diagnostics.push(Diagnostic {
+            level: Level::Warning,
+            message: format!(
+                "Tried to update a built-in stub but {} isn't a built-in type.",
+                symbol.name,
+            ),
+            position: symbol.position.clone(),
+        });
+        return;
+    };
+
+    env.types.insert(
+        symbol.name.clone(),
+        TypeDef::Builtin(*kind, Some(struct_info.clone())),
+    );
+}
+
+fn is_builtin_type(struct_info: &StructInfo) -> bool {
+    let Some(field) = struct_info.fields.first() else {
+        return false;
+    };
+
+    field.sym.name.0 == "__BUILTIN_IMPLEMENTATION"
 }
 
 fn update_builtin_meth_info(

@@ -64,7 +64,7 @@ pub(crate) struct Env {
     pub(crate) file_scope: HashMap<SymbolName, Value>,
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
-    types: HashMap<TypeName, TypeDef>,
+    pub(crate) types: HashMap<TypeName, TypeDef>,
     pub(crate) id_gen: SyntaxIdGenerator,
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.

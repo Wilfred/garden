@@ -1,0 +1,7 @@
+fun foo() {
+    let x: Bool = True;
+}
+
+// args: definition-position 25
+// expected stdout: null
+

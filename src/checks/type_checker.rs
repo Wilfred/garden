@@ -469,6 +469,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     Some(hint) => {
                         let hint_ty =
                             Type::from_hint(hint, self.env, type_bindings).unwrap_or_err_ty();
+                        self.save_hint_ty_id(hint, &hint_ty);
 
                         if !is_subtype(&expr_ty, &hint_ty) {
                             self.diagnostics.push(Diagnostic {

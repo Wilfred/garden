@@ -193,7 +193,7 @@ pub(crate) enum EvalAction {
 
 fn describe_type(type_: &TypeDef) -> String {
     match type_ {
-        TypeDef::Builtin(builtin_type, struct_info) => {
+        TypeDef::Builtin(builtin_type, _) => {
             let name = match builtin_type {
                 BuiltinType::Int => "Int",
                 BuiltinType::String => "String",
@@ -669,7 +669,8 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         name: name.to_owned(),
     }) {
         match type_ {
-            TypeDef::Builtin(_, struct_info) => Ok(None),
+            TypeDef::Builtin(_, Some(struct_info)) => Ok(Some(struct_info.src_string.clone())),
+            TypeDef::Builtin(_, None) => Ok(None),
             TypeDef::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
             TypeDef::Struct(struct_info) => Ok(Some(struct_info.src_string.clone())),
         }

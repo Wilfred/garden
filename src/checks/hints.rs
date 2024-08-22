@@ -97,7 +97,7 @@ impl Visitor for HintVisitor<'_> {
                 };
 
                 match type_ {
-                    TypeDef::Builtin(b, struct_info) => {
+                    TypeDef::Builtin(b, _) => {
                         let num_expected = match b {
                             BuiltinType::Int => Some(0),
                             BuiltinType::String => Some(0),

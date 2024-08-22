@@ -454,9 +454,8 @@ fn position_of_name(name: &str, env: &Env) -> Result<Position, String> {
         name: name.to_owned(),
     }) {
         let pos = match type_ {
-            TypeDef::Builtin(_, struct_info) => {
-                return Err(format!("`{}` is a built-in type.", name))
-            }
+            TypeDef::Builtin(_, Some(struct_info)) => &struct_info.name_sym.position,
+            TypeDef::Builtin(_, None) => return Err(format!("`{}` is a built-in type.", name)),
             TypeDef::Enum(enum_info) => &enum_info.name_sym.position,
             TypeDef::Struct(struct_info) => &struct_info.name_sym.position,
         };

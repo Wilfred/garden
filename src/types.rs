@@ -14,6 +14,8 @@ pub(crate) enum BuiltinType {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TypeDef {
+    /// A built-in type, such as Int. StructInfo includes the
+    /// definition postion and doc comment from builtins.gdn.
     Builtin(BuiltinType, Option<StructInfo>),
     Enum(EnumInfo),
     Struct(StructInfo),

@@ -160,23 +160,29 @@ impl<'a> TypeCheckVisitor<'a> {
 
     /// Update `id_to_pos` for this type hint.
     fn save_hint_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
-        match &param_ty {
-            Type::UserDefined { name_sym, .. } => {
-                if let Some(type_def) = self.env.get_type_def(&name_sym.name) {
-                    let def_name_sym = match type_def {
-                        TypeDef::Builtin(_, Some(struct_info)) => Some(&struct_info.name_sym),
-                        TypeDef::Builtin(_, None) => None,
-                        TypeDef::Enum(enum_info) => Some(&enum_info.name_sym),
-                        TypeDef::Struct(struct_info) => Some(&struct_info.name_sym),
-                    };
-
-                    if let Some(name_sym) = def_name_sym {
-                        let hint_id = hint.sym.id;
-                        self.id_to_pos.insert(hint_id, name_sym.position.clone());
-                    }
-                }
+        let ty_name: TypeName = match &param_ty {
+            Type::UserDefined { name_sym, .. } => name_sym.name.clone(),
+            Type::String => "String".into(),
+            Type::Int => "Int".into(),
+            Type::List(_) => "List".into(),
+            _ => {
+                return;
             }
-            _ => {}
+        };
+
+        if let Some(type_def) = self.env.get_type_def(&ty_name) {
+            let def_name_sym = match type_def {
+                TypeDef::Builtin(_, Some(struct_info)) => &struct_info.name_sym,
+                TypeDef::Builtin(_, None) => {
+                    return;
+                }
+                TypeDef::Enum(enum_info) => &enum_info.name_sym,
+                TypeDef::Struct(struct_info) => &struct_info.name_sym,
+            };
+
+            let hint_id = hint.sym.id;
+            self.id_to_pos
+                .insert(hint_id, def_name_sym.position.clone());
         }
     }
 

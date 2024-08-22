@@ -27,6 +27,8 @@ pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
 pub(crate) enum Type {
     /// The top type, which includes all values.
     Top,
+    /// TODO: String, Int and List ought to be UserDefined now they
+    /// have a stub in builtins.gdn.
     String,
     Int,
     List(Box<Type>),

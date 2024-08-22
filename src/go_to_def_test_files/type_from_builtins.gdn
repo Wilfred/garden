@@ -1,0 +1,8 @@
+fun foo(): Int {
+    123;
+}
+
+// args: definition-position 14
+// expected stdout:
+// {"start_offset":65,"end_offset":68,"line_number":4,"end_line_number":4,"path":"builtins.gdn"}
+

@@ -1,3 +1,15 @@
+struct String {
+    __BUILTIN_IMPLEMENTATION: NoValue,
+}
+
+struct Int {
+    __BUILTIN_IMPLEMENTATION: NoValue,
+}
+
+struct List<T> {
+    __BUILTIN_IMPLEMENTATION: NoValue,
+}
+
 // Stop the program immediately, and report the error message given.
 //
 // ```

@@ -1,11 +1,14 @@
+// A Unicode string, such as "hello world ☃".
 struct String {
     __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
+// A 64-bit integer, such as 1234.
 struct Int {
     __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
+// A sequence of values of type T, such as [1, 2, 3].
 struct List<T> {
     __BUILTIN_IMPLEMENTATION: NoValue,
 }

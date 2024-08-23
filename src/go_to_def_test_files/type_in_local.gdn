@@ -3,5 +3,6 @@ fun foo() {
 }
 
 // args: definition-position 25
-// expected stdout: null
+// expected stdout:
+// {"start_offset":120,"end_offset":124,"line_number":4,"end_line_number":4,"path":"prelude.gdn"}
 

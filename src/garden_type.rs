@@ -125,10 +125,6 @@ impl Type {
         }
     }
 
-    pub(crate) fn string_list() -> Self {
-        Self::list(Self::string())
-    }
-
     pub(crate) fn from_hint(
         hint: &TypeHint,
         env: &Env,

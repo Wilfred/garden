@@ -1689,7 +1689,7 @@ fn eval_builtin_call(
                     Value::ok(
                         Value::List {
                             items,
-                            elem_type: Type::string_list(),
+                            elem_type: Type::list(Type::string()),
                         },
                         env,
                     )

@@ -162,7 +162,6 @@ impl<'a> TypeCheckVisitor<'a> {
     fn save_hint_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
         // Recurse on hint arguments.
         let param_ty_args: Vec<Type> = match param_ty {
-            Type::List(arg) => vec![*arg.clone()],
             Type::Tuple(args) => args.clone(),
             Type::Fun {
                 params, return_, ..
@@ -176,7 +175,6 @@ impl<'a> TypeCheckVisitor<'a> {
 
         let ty_name: TypeName = match &param_ty {
             Type::UserDefined { name: name_sym, .. } => name_sym.clone(),
-            Type::List(_) => "List".into(),
             _ => {
                 return;
             }
@@ -542,7 +540,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     elem_ty = item_ty;
                 }
 
-                Type::List(Box::new(elem_ty))
+                Type::list(elem_ty)
             }
             Expression_::StructLiteral(name_sym, fields) => {
                 for (_, expr) in fields {
@@ -1037,7 +1035,6 @@ fn subst_type_vars_in_fun_info_return_ty(
 fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
         Type::Error(_) | Type::Top => ty.clone(),
-        Type::List(elem_ty) => Type::List(Box::new(subst_ty_vars(elem_ty, ty_var_env))),
         Type::Tuple(elem_tys) => Type::Tuple(
             elem_tys
                 .iter()
@@ -1084,9 +1081,6 @@ fn unify_and_solve_ty(expected_ty: &Type, actual_ty: &Type, ty_var_env: &mut Typ
     match (expected_ty, actual_ty) {
         (Type::TypeParameter(n), _) => {
             ty_var_env.insert(n.clone(), Some(actual_ty.clone()));
-        }
-        (Type::List(expected_elem_ty), Type::List(actual_elem_ty)) => {
-            unify_and_solve_ty(expected_elem_ty, actual_elem_ty, ty_var_env)
         }
         (
             Type::Fun {
@@ -1161,18 +1155,6 @@ fn unify_and_solve_hint(
                 // can handle multiple occurrences where some are
                 // NoValue.
                 ty_var_env.insert(hint_name.clone(), Some(ty.clone()));
-                return Ok(());
-            }
-        }
-    }
-
-    if hint_name.name == "List" && hint.args.len() == 1 {
-        match ty {
-            Type::List(elem_ty) => {
-                return unify_and_solve_hint(env, &hint.args[0], position, elem_ty, ty_var_env);
-            }
-            _ => {
-                // No solving to do.
                 return Ok(());
             }
         }
@@ -1293,9 +1275,6 @@ fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
                 name: name_1.clone(),
                 args: unified_args,
             })
-        }
-        (Type::List(el_ty_1), Type::List(el_ty_2)) => {
-            Some(Type::List(Box::new(unify(el_ty_1, el_ty_2)?)))
         }
         _ => {
             // TODO: functions are generic types and should be handled

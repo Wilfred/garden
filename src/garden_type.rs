@@ -24,9 +24,6 @@ pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
 pub(crate) enum Type {
     /// The top type, which includes all values.
     Top,
-    /// TODO: List ought to be UserDefined now there is a stub in
-    /// builtins.gdn.
-    List(Box<Type>),
     /// Tuples, e.g. `(Int, String)`.
     Tuple(Vec<Type>),
     Fun {
@@ -118,8 +115,18 @@ impl Type {
         }
     }
 
+    pub(crate) fn list(ty: Type) -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                name: "List".to_owned(),
+            },
+            args: vec![ty],
+        }
+    }
+
     pub(crate) fn string_list() -> Self {
-        Self::List(Box::new(Self::string()))
+        Self::list(Self::string())
     }
 
     pub(crate) fn from_hint(
@@ -153,7 +160,7 @@ impl Type {
                             None => Self::error("Missing type argument to List<>"),
                         };
 
-                        Ok(Type::List(Box::new(elem_type)))
+                        Ok(Type::list(elem_type))
                     }
                     BuiltinType::Tuple => Ok(Type::Tuple(args)),
                     BuiltinType::Fun => match &args[..] {
@@ -207,7 +214,7 @@ impl Type {
                 None => Self::error("No fun_info for built-in function"),
             },
             Value::String(_) => Type::string(),
-            Value::List { elem_type, .. } => Type::List(Box::new(elem_type.clone())),
+            Value::List { elem_type, .. } => Type::list(elem_type.clone()),
             Value::Enum { runtime_type, .. } => runtime_type.clone(),
             Value::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
             Value::Struct { runtime_type, .. } => runtime_type.clone(),
@@ -259,9 +266,6 @@ impl Type {
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
             Type::Top | Type::Error(_) => None,
-            Type::List(_) => Some(TypeName {
-                name: "List".to_owned(),
-            }),
             Type::Tuple(_) => None,
             Type::Fun { .. } => Some(TypeName {
                 name: "Fun".to_owned(),
@@ -298,7 +302,6 @@ impl Display for Type {
                     )
                 }
             }
-            Type::List(elem_type) => write!(f, "List<{}>", elem_type),
             Type::Tuple(elem_tys) => write!(
                 f,
                 "({})",
@@ -338,12 +341,6 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
         // TODO: what if the parameters are in different scopes?
         (Type::TypeParameter(lhs_name), Type::TypeParameter(rhs_name)) => lhs_name == rhs_name,
         (Type::TypeParameter(_), _) => false,
-        (Type::List(lhs_elem), Type::List(rhs_elem)) => {
-            // List is covariant in its element.
-            // List<NoValue> <: List<Int>
-            is_subtype(lhs_elem, rhs_elem)
-        }
-        (Type::List(_), _) => false,
         (Type::Tuple(lhs_elems), Type::Tuple(rhs_elems)) => {
             if lhs_elems.len() == rhs_elems.len() {
                 lhs_elems
@@ -406,6 +403,7 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
             // we can assume that all user-defined types have
             // covariant arguments.
             // Foo<NoValue> <: Foo<Int>
+            // List<NoValue> <: List<Int>
             for (lhs_arg, rhs_arg) in lhs_args.iter().zip(rhs_args) {
                 if !is_subtype(lhs_arg, rhs_arg) {
                     return false;

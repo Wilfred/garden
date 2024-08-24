@@ -605,10 +605,14 @@ impl<'a> TypeCheckVisitor<'a> {
                         Type::bool()
                     }
                     BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
-                        if lhs_ty != rhs_ty {
-                            self.diagnostics.push(Diagnostic { level: Level::Warning,
-                                message: format!("Left hand side has type `{}`, but right hand side has type `{}`, so this will always have the same result.", lhs_ty, rhs_ty),
-                                position: rhs.pos.clone(),
+                        if !is_subtype(&lhs_ty, &rhs_ty) && !is_subtype(&rhs_ty, &lhs_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Warning,
+                                message: format!(
+                                    "Comparing `{}` with `{}` will always be `False`.",
+                                    lhs_ty, rhs_ty
+                                ),
+                                position: pos.clone(),
                             });
                         }
 

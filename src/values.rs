@@ -1,8 +1,5 @@
 use std::fmt::Display;
 
-use garden_lang_parser::ast::SyntaxId;
-use garden_lang_parser::ast::TypeSymbol;
-use garden_lang_parser::position::Position;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
@@ -91,12 +88,8 @@ impl Value {
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name_sym: TypeSymbol {
-                    name: TypeName {
-                        name: "Result".to_owned(),
-                    },
-                    position: Position::todo(),
-                    id: SyntaxId(0),
+                name_sym: TypeName {
+                    name: "Result".to_owned(),
                 },
                 args: vec![value_type, Type::no_value()],
             },
@@ -114,12 +107,8 @@ impl Value {
             },
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name_sym: TypeSymbol {
-                    name: TypeName {
-                        name: "Result".to_owned(),
-                    },
-                    position: Position::todo(),
-                    id: SyntaxId(0),
+                name_sym: TypeName {
+                    name: "Result".to_owned(),
                 },
                 args: vec![Type::no_value(), value_type],
             },

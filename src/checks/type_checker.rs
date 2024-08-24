@@ -175,7 +175,7 @@ impl<'a> TypeCheckVisitor<'a> {
         }
 
         let ty_name: TypeName = match &param_ty {
-            Type::UserDefined { name_sym, .. } => name_sym.name.clone(),
+            Type::UserDefined { name_sym, .. } => name_sym.clone(),
             Type::String => "String".into(),
             Type::Int => "Int".into(),
             Type::List(_) => "List".into(),
@@ -554,7 +554,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 if let Some(TypeDef::Struct(_)) = self.env.get_type_def(&name_sym.name) {
                     Type::UserDefined {
                         kind: TypeDefKind::Struct,
-                        name_sym: name_sym.clone(),
+                        name_sym: name_sym.name.clone(),
                         args: vec![],
                     }
                 } else {
@@ -871,8 +871,7 @@ impl<'a> TypeCheckVisitor<'a> {
                         name_sym,
                         ..
                     } => {
-                        if let Some(TypeDef::Struct(struct_info)) =
-                            self.env.get_type_def(&name_sym.name)
+                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym)
                         {
                             for field in &struct_info.fields {
                                 if field.sym.name == field_sym.name {
@@ -1218,7 +1217,7 @@ fn unify_and_solve_hint(
     }
 
     match ty {
-        Type::UserDefined { name_sym, args, .. } if name_sym.name.name == hint_name.name => {
+        Type::UserDefined { name_sym, args, .. } if name_sym.name == hint_name.name => {
             // TODO: stop assuming that all types are covariant.
             for (hint_arg, arg) in hint.args.iter().zip(args) {
                 unify_and_solve_hint(env, hint_arg, position, arg, ty_var_env)?;

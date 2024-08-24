@@ -2,10 +2,7 @@ use std::{collections::HashMap, fmt::Display};
 
 use itertools::Itertools as _;
 
-use garden_lang_parser::{
-    ast::{FunInfo, Symbol, SyntaxId, TypeHint, TypeName, TypeSymbol},
-    position::Position,
-};
+use garden_lang_parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 
 use crate::{
     env::Env,
@@ -46,9 +43,7 @@ pub(crate) enum Type {
     },
     UserDefined {
         kind: TypeDefKind,
-        /// The symbol where this type was mentioned, not where it was
-        /// defined.
-        name_sym: TypeSymbol,
+        name_sym: TypeName,
         args: Vec<Type>,
     },
     #[allow(clippy::enum_variant_names)]
@@ -62,7 +57,7 @@ pub(crate) enum Type {
 impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            Type::UserDefined { name_sym, .. } => name_sym.name.name == "NoValue",
+            Type::UserDefined { name_sym, .. } => name_sym.name == "NoValue",
             _ => false,
         }
     }
@@ -78,12 +73,8 @@ impl Type {
     pub(crate) fn no_value() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name_sym: TypeSymbol {
-                name: TypeName {
-                    name: "NoValue".to_owned(),
-                },
-                position: Position::todo(),
-                id: SyntaxId(0),
+            name_sym: TypeName {
+                name: "NoValue".to_owned(),
             },
             args: vec![],
         }
@@ -92,12 +83,8 @@ impl Type {
     pub(crate) fn unit() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name_sym: TypeSymbol {
-                name: TypeName {
-                    name: "Unit".to_owned(),
-                },
-                position: Position::todo(),
-                id: SyntaxId(0),
+            name_sym: TypeName {
+                name: "Unit".to_owned(),
             },
             args: vec![],
         }
@@ -106,12 +93,8 @@ impl Type {
     pub(crate) fn bool() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name_sym: TypeSymbol {
-                name: TypeName {
-                    name: "Bool".to_owned(),
-                },
-                position: Position::todo(),
-                id: SyntaxId(0),
+            name_sym: TypeName {
+                name: "Bool".to_owned(),
             },
             args: vec![],
         }
@@ -180,12 +163,12 @@ impl Type {
                 },
                 TypeDef::Enum(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Enum,
-                    name_sym: hint.sym.clone(),
+                    name_sym: hint.sym.name.clone(),
                     args,
                 }),
                 TypeDef::Struct(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Struct,
-                    name_sym: hint.sym.clone(),
+                    name_sym: hint.sym.name.clone(),
                     args,
                 }),
             },
@@ -273,7 +256,7 @@ impl Type {
             }),
             Type::UserDefined {
                 kind: _, name_sym, ..
-            } => Some(name_sym.name.clone()),
+            } => Some(name_sym.clone()),
             Type::TypeParameter(name) => Some(name.clone()),
         }
     }

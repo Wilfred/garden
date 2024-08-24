@@ -88,7 +88,7 @@ impl Value {
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name_sym: TypeName {
+                name: TypeName {
                     name: "Result".to_owned(),
                 },
                 args: vec![value_type, Type::no_value()],
@@ -107,7 +107,7 @@ impl Value {
             },
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
-                name_sym: TypeName {
+                name: TypeName {
                     name: "Result".to_owned(),
                 },
                 args: vec![Type::no_value(), value_type],

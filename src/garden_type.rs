@@ -43,7 +43,7 @@ pub(crate) enum Type {
     },
     UserDefined {
         kind: TypeDefKind,
-        name_sym: TypeName,
+        name: TypeName,
         args: Vec<Type>,
     },
     #[allow(clippy::enum_variant_names)]
@@ -57,7 +57,7 @@ pub(crate) enum Type {
 impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            Type::UserDefined { name_sym, .. } => name_sym.name == "NoValue",
+            Type::UserDefined { name, .. } => name.name == "NoValue",
             _ => false,
         }
     }
@@ -73,7 +73,7 @@ impl Type {
     pub(crate) fn no_value() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name_sym: TypeName {
+            name: TypeName {
                 name: "NoValue".to_owned(),
             },
             args: vec![],
@@ -83,7 +83,7 @@ impl Type {
     pub(crate) fn unit() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name_sym: TypeName {
+            name: TypeName {
                 name: "Unit".to_owned(),
             },
             args: vec![],
@@ -93,7 +93,7 @@ impl Type {
     pub(crate) fn bool() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
-            name_sym: TypeName {
+            name: TypeName {
                 name: "Bool".to_owned(),
             },
             args: vec![],
@@ -163,12 +163,12 @@ impl Type {
                 },
                 TypeDef::Enum(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Enum,
-                    name_sym: hint.sym.name.clone(),
+                    name: hint.sym.name.clone(),
                     args,
                 }),
                 TypeDef::Struct(_) => Ok(Type::UserDefined {
                     kind: TypeDefKind::Struct,
-                    name_sym: hint.sym.name.clone(),
+                    name: hint.sym.name.clone(),
                     args,
                 }),
             },
@@ -255,7 +255,9 @@ impl Type {
                 name: "Fun".to_owned(),
             }),
             Type::UserDefined {
-                kind: _, name_sym, ..
+                kind: _,
+                name: name_sym,
+                ..
             } => Some(name_sym.clone()),
             Type::TypeParameter(name) => Some(name.clone()),
         }
@@ -265,7 +267,11 @@ impl Type {
 impl Display for Type {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Type::UserDefined { name_sym, args, .. } => {
+            Type::UserDefined {
+                name: name_sym,
+                args,
+                ..
+            } => {
                 if args.is_empty() {
                     write!(f, "{}", name_sym.name)
                 } else {
@@ -375,12 +381,12 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
         (
             Type::UserDefined {
                 kind: _,
-                name_sym: lhs_name_sym,
+                name: lhs_name_sym,
                 args: lhs_args,
             },
             Type::UserDefined {
                 kind: _,
-                name_sym: rhs_name_sym,
+                name: rhs_name_sym,
                 args: rhs_args,
             },
         ) => {

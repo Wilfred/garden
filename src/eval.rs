@@ -3703,7 +3703,7 @@ mod tests {
             value,
             Value::List {
                 items: vec![Value::Integer(3), Value::Integer(12)],
-                elem_type: Type::Int
+                elem_type: Type::int()
             }
         );
     }
@@ -3777,7 +3777,7 @@ mod tests {
             value,
             Value::List {
                 items: vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
-                elem_type: Type::Int
+                elem_type: Type::int()
             }
         );
     }

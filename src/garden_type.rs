@@ -27,7 +27,6 @@ pub(crate) enum Type {
     /// TODO: String, Int and List ought to be UserDefined now they
     /// have a stub in builtins.gdn.
     String,
-    Int,
     List(Box<Type>),
     /// Tuples, e.g. `(Int, String)`.
     Tuple(Vec<Type>),
@@ -100,6 +99,16 @@ impl Type {
         }
     }
 
+    pub(crate) fn int() -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                name: "Int".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn string_list() -> Self {
         Self::List(Box::new(Self::String))
     }
@@ -127,7 +136,7 @@ impl Type {
         match env.get_type_def(name) {
             Some(type_) => match type_ {
                 TypeDef::Builtin(builtin_type, _) => match builtin_type {
-                    BuiltinType::Int => Ok(Type::Int),
+                    BuiltinType::Int => Ok(Type::int()),
                     BuiltinType::String => Ok(Type::String),
                     BuiltinType::List => {
                         let elem_type = match args.first() {
@@ -178,7 +187,7 @@ impl Type {
 
     pub(crate) fn from_value(value: &Value, env: &Env, type_bindings: &TypeVarEnv) -> Self {
         match value {
-            Value::Integer(_) => Type::Int,
+            Value::Integer(_) => Type::int(),
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
                 Self::from_fun_info(fun_info, env, type_bindings).unwrap_or_err_ty()
             }
@@ -244,9 +253,6 @@ impl Type {
             Type::String => Some(TypeName {
                 name: "String".to_owned(),
             }),
-            Type::Int => Some(TypeName {
-                name: "Int".to_owned(),
-            }),
             Type::List(_) => Some(TypeName {
                 name: "List".to_owned(),
             }),
@@ -287,7 +293,6 @@ impl Display for Type {
                 }
             }
             Type::String => write!(f, "String"),
-            Type::Int => write!(f, "Int"),
             Type::List(elem_type) => write!(f, "List<{}>", elem_type),
             Type::Tuple(elem_tys) => write!(
                 f,
@@ -324,8 +329,6 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
             // and we don't want duplicate errors.
             true
         }
-        (Type::Int, Type::Int) => true,
-        (Type::Int, _) => false,
         (Type::String, Type::String) => true,
         (Type::String, _) => false,
         // A type parameter is only a subtype of itself.

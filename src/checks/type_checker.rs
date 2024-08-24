@@ -160,6 +160,20 @@ impl<'a> TypeCheckVisitor<'a> {
 
     /// Update `id_to_pos` for this type hint.
     fn save_hint_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
+        // Recurse on hint arguments.
+        let param_ty_args: Vec<Type> = match param_ty {
+            Type::List(arg) => vec![*arg.clone()],
+            Type::Tuple(args) => args.clone(),
+            Type::Fun {
+                params, return_, ..
+            } => vec![Type::Tuple(params.clone()), *return_.clone()],
+            Type::UserDefined { args, .. } => args.clone(),
+            _ => vec![],
+        };
+        for (param_ty_arg, hint_arg) in param_ty_args.iter().zip(&hint.args) {
+            self.save_hint_ty_id(hint_arg, param_ty_arg)
+        }
+
         let ty_name: TypeName = match &param_ty {
             Type::UserDefined { name_sym, .. } => name_sym.name.clone(),
             Type::String => "String".into(),

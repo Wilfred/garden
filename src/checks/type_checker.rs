@@ -176,7 +176,6 @@ impl<'a> TypeCheckVisitor<'a> {
 
         let ty_name: TypeName = match &param_ty {
             Type::UserDefined { name: name_sym, .. } => name_sym.clone(),
-            Type::String => "String".into(),
             Type::List(_) => "List".into(),
             _ => {
                 return;
@@ -532,7 +531,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 Type::no_value()
             }
             Expression_::IntLiteral(_) => Type::int(),
-            Expression_::StringLiteral(_) => Type::String,
+            Expression_::StringLiteral(_) => Type::string(),
             Expression_::ListLiteral(items) => {
                 let mut elem_ty = Type::no_value();
 
@@ -1037,7 +1036,7 @@ fn subst_type_vars_in_fun_info_return_ty(
 
 fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
-        Type::Error(_) | Type::Top | Type::String => ty.clone(),
+        Type::Error(_) | Type::Top => ty.clone(),
         Type::List(elem_ty) => Type::List(Box::new(subst_ty_vars(elem_ty, ty_var_env))),
         Type::Tuple(elem_tys) => Type::Tuple(
             elem_tys

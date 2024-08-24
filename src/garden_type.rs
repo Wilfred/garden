@@ -24,9 +24,8 @@ pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
 pub(crate) enum Type {
     /// The top type, which includes all values.
     Top,
-    /// TODO: String, Int and List ought to be UserDefined now they
-    /// have a stub in builtins.gdn.
-    String,
+    /// TODO: List ought to be UserDefined now there is a stub in
+    /// builtins.gdn.
     List(Box<Type>),
     /// Tuples, e.g. `(Int, String)`.
     Tuple(Vec<Type>),
@@ -109,8 +108,18 @@ impl Type {
         }
     }
 
+    pub(crate) fn string() -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                name: "String".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn string_list() -> Self {
-        Self::List(Box::new(Self::String))
+        Self::List(Box::new(Self::string()))
     }
 
     pub(crate) fn from_hint(
@@ -137,7 +146,7 @@ impl Type {
             Some(type_) => match type_ {
                 TypeDef::Builtin(builtin_type, _) => match builtin_type {
                     BuiltinType::Int => Ok(Type::int()),
-                    BuiltinType::String => Ok(Type::String),
+                    BuiltinType::String => Ok(Type::string()),
                     BuiltinType::List => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
@@ -197,7 +206,7 @@ impl Type {
                 }
                 None => Self::error("No fun_info for built-in function"),
             },
-            Value::String(_) => Type::String,
+            Value::String(_) => Type::string(),
             Value::List { elem_type, .. } => Type::List(Box::new(elem_type.clone())),
             Value::Enum { runtime_type, .. } => runtime_type.clone(),
             Value::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
@@ -250,9 +259,6 @@ impl Type {
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
             Type::Top | Type::Error(_) => None,
-            Type::String => Some(TypeName {
-                name: "String".to_owned(),
-            }),
             Type::List(_) => Some(TypeName {
                 name: "List".to_owned(),
             }),
@@ -292,7 +298,6 @@ impl Display for Type {
                     )
                 }
             }
-            Type::String => write!(f, "String"),
             Type::List(elem_type) => write!(f, "List<{}>", elem_type),
             Type::Tuple(elem_tys) => write!(
                 f,
@@ -329,8 +334,6 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
             // and we don't want duplicate errors.
             true
         }
-        (Type::String, Type::String) => true,
-        (Type::String, _) => false,
         // A type parameter is only a subtype of itself.
         // TODO: what if the parameters are in different scopes?
         (Type::TypeParameter(lhs_name), Type::TypeParameter(rhs_name)) => lhs_name == rhs_name,

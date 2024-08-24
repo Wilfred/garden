@@ -1,4 +1,4 @@
-// A Unicode string, such as "hello world ☃".
+// A Unicode string, such as "hello world".
 struct String {
     __BUILTIN_IMPLEMENTATION: NoValue,
 }

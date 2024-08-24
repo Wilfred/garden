@@ -4,5 +4,5 @@ fun foo(): Int {
 
 // args: definition-position 14
 // expected stdout:
-// {"start_offset":148,"end_offset":151,"line_number":6,"end_line_number":6,"path":"builtins.gdn"}
+// {"start_offset":144,"end_offset":147,"line_number":6,"end_line_number":6,"path":"builtins.gdn"}
 

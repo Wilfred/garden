@@ -1,0 +1,9 @@
+fun main(_args: List<String>): Unit {
+    let x = "a";
+    let x = x.append("b");
+    println(x);
+}
+
+// args: run
+// expected stdout: ab
+

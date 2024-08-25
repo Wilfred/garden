@@ -3,6 +3,15 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
+## Language
+
+Variable shadowing is now supported, so the following is legal:
+
+```
+let x = 1;
+let x = x + 1; // 2
+```
+
 ## Runtime
 
 Fixed an interpreter crash when evaluating tests.

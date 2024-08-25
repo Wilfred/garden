@@ -1050,18 +1050,6 @@ fn eval_let(
     variable: &Symbol,
     hint: &Option<TypeHint>,
 ) -> Result<(), ErrorInfo> {
-    let var_name = &variable.name;
-    if stack_frame.bindings.has(var_name) {
-        return Err(ErrorInfo {
-            message: ErrorMessage(format!(
-                "{} is already bound. Try `{} = something` instead.",
-                var_name, var_name
-            )),
-            restore_values: vec![],
-            error_position: variable.position.clone(),
-        });
-    }
-
     let expr_value = stack_frame
         .evalled_values
         .pop()
@@ -1088,7 +1076,7 @@ fn eval_let(
         };
     }
 
-    stack_frame.bindings.add_new(var_name, expr_value);
+    stack_frame.bindings.add_new(&variable.name, expr_value);
 
     // `let x = 1` should always evaluate to Unit. This is slightly
     // annoying when incrementally writing a block, but makes it

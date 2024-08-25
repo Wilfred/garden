@@ -1,0 +1,14 @@
+fun main(_args: List<String>): Unit {
+    let x = "a";
+
+    if (True) {
+        let x = "foo";
+        x = x.append("bar");
+    }
+    
+    println(x);
+}
+
+// args: run
+// expected stdout: a
+

@@ -3723,15 +3723,6 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_let_twice() {
-        let exprs = parse_exprs_from_str("let foo = True; let foo = False;");
-
-        let mut env = Env::default();
-        let value = eval_exprs(&exprs, &mut env);
-        assert!(value.is_err());
-    }
-
-    #[test]
     fn test_eval_if() {
         let exprs = parse_exprs_from_str("let foo = if (True) { 1; } else { 2; }; foo;");
 

@@ -97,7 +97,7 @@ impl FreeVariableVisitor<'_> {
             return;
         }
 
-        for scope in self.bound_scopes.iter_mut() {
+        for scope in self.bound_scopes.iter_mut().rev() {
             if scope.contains_key(name) {
                 scope.insert(name.clone(), UseState::Used);
                 return;

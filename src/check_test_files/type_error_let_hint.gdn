@@ -9,5 +9,5 @@
 // 
 // --> src/check_test_files/type_error_let_hint.gdn:2
 //     let _: Bool = 123;
-//            ^^^^
+//                   ^^^
 

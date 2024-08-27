@@ -489,7 +489,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                     "Expected `{}` for this let expression, but got `{}`.",
                                     hint_ty, expr_ty
                                 ),
-                                position: hint.position.clone(),
+                                position: expr.pos.clone(),
                             });
                         }
 

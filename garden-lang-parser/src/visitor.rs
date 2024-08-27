@@ -126,7 +126,7 @@ pub trait Visitor {
                 self.visit_expr_if(cond, then_body, else_body.as_ref());
             }
             Expression_::While(cond, body) => {
-                self.visit_expr_while(cond.as_ref(), body);
+                self.visit_expr_while(&cond.expr, body);
             }
             Expression_::Break => {}
             Expression_::Assign(sym, expr) => {

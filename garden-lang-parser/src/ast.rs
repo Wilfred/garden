@@ -228,7 +228,7 @@ pub enum Expression_ {
     /// ```garden
     /// while (x) { y; z; }
     /// ```
-    While(Box<Expression>, Block),
+    While(ParenthesizedExpression, Block),
     /// ```garden
     /// break;
     /// ```

@@ -436,7 +436,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 }
             }
             Expression_::While(cond_expr, body) => {
-                let cond_ty = self.check_expr(cond_expr, type_bindings, expected_return_ty);
+                let cond_ty = self.check_expr(&cond_expr.expr, type_bindings, expected_return_ty);
                 if !is_subtype(&cond_ty, &Type::bool()) {
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,
@@ -444,7 +444,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             "Expected `Bool` inside an `while` condition, but got `{}`.",
                             cond_ty
                         ),
-                        position: cond_expr.pos.clone(),
+                        position: cond_expr.expr.pos.clone(),
                     });
                 }
 

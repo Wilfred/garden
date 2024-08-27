@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use garden_lang_parser::ast::ParenthesizedExpression;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
@@ -198,8 +199,12 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.visit_expr(expr);
     }
 
-    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Box<Expression>)]) {
-        self.visit_expr(scrutinee);
+    fn visit_expr_match(
+        &mut self,
+        scrutinee: &ParenthesizedExpression,
+        cases: &[(Pattern, Box<Expression>)],
+    ) {
+        self.visit_parenthesized_expression(scrutinee);
         for (pattern, case_expr) in cases {
             // TODO: add a check that there's an enum with this
             // variant, and that we've covered all the variants.

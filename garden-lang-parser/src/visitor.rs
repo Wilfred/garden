@@ -120,13 +120,13 @@ pub trait Visitor {
     fn visit_expr_(&mut self, expr_: &Expression_) {
         match expr_ {
             Expression_::Match(scrutinee, cases) => {
-                self.visit_expr_match(scrutinee.expr.as_ref(), cases);
+                self.visit_expr_match(scrutinee, cases);
             }
             Expression_::If(cond, then_body, else_body) => {
                 self.visit_expr_if(cond, then_body, else_body.as_ref());
             }
             Expression_::While(cond, body) => {
-                self.visit_expr_while(&cond.expr, body);
+                self.visit_expr_while(cond, body);
             }
             Expression_::Break => {}
             Expression_::Assign(sym, expr) => {
@@ -205,8 +205,12 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Box<Expression>)]) {
-        self.visit_expr(scrutinee);
+    fn visit_expr_match(
+        &mut self,
+        scrutinee: &ParenthesizedExpression,
+        cases: &[(Pattern, Box<Expression>)],
+    ) {
+        self.visit_parenthesized_expression(scrutinee);
         for (_, case_expr) in cases {
             self.visit_expr(case_expr);
         }
@@ -225,8 +229,8 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_while(&mut self, cond: &Expression, body: &Block) {
-        self.visit_expr(cond);
+    fn visit_expr_while(&mut self, cond: &ParenthesizedExpression, body: &Block) {
+        self.visit_parenthesized_expression(cond);
         self.visit_block(body);
     }
 

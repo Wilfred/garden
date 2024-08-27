@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeSymbol};
+use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol};
 
 use garden_lang_parser::visitor::Visitor;
 
@@ -16,8 +16,8 @@ pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<SyntaxI
     visitor.found_ids
 }
 
-/// Find the expression whose ID is `id`. May return `None` if the ID
-/// belongs to a symbol rather than an expressions.
+/// Find the expression whose ID is `id`. If the ID points to a symbol
+/// in an assignment, return the RHS of that assignment.
 pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Expression> {
     let mut visitor = ExprOfIdFinder { id, expr: None };
     for item in items {
@@ -73,5 +73,14 @@ impl Visitor for ExprOfIdFinder {
         }
 
         self.visit_expr_(&expr.expr_);
+    }
+
+    fn visit_expr_let(&mut self, symbol: &Symbol, _: Option<&TypeHint>, expr: &Expression) {
+        if symbol.id == self.id {
+            self.expr = Some(expr.clone());
+            return;
+        }
+
+        self.visit_expr(expr);
     }
 }

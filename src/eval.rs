@@ -2652,10 +2652,12 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
             match &outer_expr.expr_ {
                 Expression_::Match(scrutinee, cases) => {
                     if done_children {
-                        eval_match_cases(env, &mut stack_frame, &scrutinee.pos, cases)?;
+                        eval_match_cases(env, &mut stack_frame, &scrutinee.expr.pos, cases)?;
                     } else {
                         stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
-                        stack_frame.exprs_to_eval.push((false, *scrutinee.clone()));
+                        stack_frame
+                            .exprs_to_eval
+                            .push((false, *scrutinee.expr.clone()));
                     }
                 }
                 Expression_::If(condition, ref then_body, ref else_body) => {

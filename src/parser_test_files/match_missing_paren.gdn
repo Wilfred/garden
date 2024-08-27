@@ -22,13 +22,17 @@ fun foo() {
 //                 Expression {
 //                     pos: Position { ... },
 //                     expr_: Match(
-//                         Expression {
-//                             pos: Position { ... },
-//                             expr_: StructLiteral(
-//                                 TypeSymbol"x",
-//                                 [],
-//                             ),
-//                             id: SyntaxId(3),
+//                         ParenthesizedExpression {
+//                             open_paren: Position { ... },
+//                             expr: Expression {
+//                                 pos: Position { ... },
+//                                 expr_: StructLiteral(
+//                                     TypeSymbol"x",
+//                                     [],
+//                                 ),
+//                                 id: SyntaxId(3),
+//                             },
+//                             close_paren: Position { ... },
 //                         },
 //                         [],
 //                     ),

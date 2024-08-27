@@ -120,7 +120,7 @@ pub trait Visitor {
     fn visit_expr_(&mut self, expr_: &Expression_) {
         match expr_ {
             Expression_::Match(scrutinee, cases) => {
-                self.visit_expr_match(scrutinee.as_ref(), cases);
+                self.visit_expr_match(scrutinee.expr.as_ref(), cases);
             }
             Expression_::If(cond, then_body, else_body) => {
                 self.visit_expr_if(cond, then_body, else_body.as_ref());

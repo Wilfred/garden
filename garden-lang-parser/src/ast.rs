@@ -219,7 +219,7 @@ pub enum Expression_ {
     ///     _ => error("yikes"),
     /// }
     /// ```
-    Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
+    Match(ParenthesizedExpression, Vec<(Pattern, Box<Expression>)>),
     /// ```garden
     /// if (x) { y; }
     /// if (x) { y; } else { z; }

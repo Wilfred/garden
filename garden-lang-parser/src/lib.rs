@@ -538,9 +538,14 @@ fn parse_match_expression(
 ) -> Expression {
     let match_keyword = require_token(tokens, diagnostics, "match");
 
-    require_token(tokens, diagnostics, "(");
-    let scrutinee = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    require_token(tokens, diagnostics, ")");
+    let open_paren = require_token(tokens, diagnostics, "(");
+    let scrutinee_expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
+    let close_paren = require_token(tokens, diagnostics, ")");
+    let scrutinee = ParenthesizedExpression {
+        open_paren: open_paren.position,
+        expr: Box::new(scrutinee_expr),
+        close_paren: close_paren.position,
+    };
 
     require_token(tokens, diagnostics, "{");
 
@@ -574,7 +579,7 @@ fn parse_match_expression(
 
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
-        Expression_::Match(Box::new(scrutinee), cases),
+        Expression_::Match(scrutinee, cases),
         id_gen.next(),
     )
 }

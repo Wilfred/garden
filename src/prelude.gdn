@@ -426,6 +426,11 @@ fun<T> (self: List<T>) is_empty(): Bool {
     self.len() == 0;
 }
 
+test is_empty {
+    should_equal([].is_empty(), True);
+    should_equal([1].is_empty(), False);
+}
+
 // Does this list contain `item`?
 fun<T> (self: List<T>) contains(item: T): Bool {
     let i = 0;

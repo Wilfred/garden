@@ -1,0 +1,9 @@
+fun main(_) {
+    if (1 == 2) {
+        print("yikes");
+    }
+}
+
+// args: test-eval-up-to 30
+// expected stdout: False
+

@@ -1,4 +1,6 @@
-use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol};
+use garden_lang_parser::ast::{
+    Expression, ParenthesizedExpression, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol,
+};
 
 use garden_lang_parser::visitor::Visitor;
 
@@ -44,6 +46,18 @@ impl Visitor for IdFinder {
 
         self.found_ids.push(expr.id);
         self.visit_expr_(&expr.expr_)
+    }
+
+    fn visit_parenthesized_expression(&mut self, paren_expr: &ParenthesizedExpression) {
+        let close_paren_pos = &paren_expr.close_paren;
+
+        // If the cursor is just after the closing parenthesis, treat
+        // it as the enclosed expression.
+        if self.offset > 0 && close_paren_pos.contains_offset(self.offset - 1) {
+            self.found_ids.push(paren_expr.expr.id);
+        }
+
+        self.visit_expr(&paren_expr.expr);
     }
 
     fn visit_symbol(&mut self, symbol: &Symbol) {

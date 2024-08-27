@@ -3,12 +3,16 @@ if (True) {}
 // args: dump-ast
 // expected stdout:
 // If(
-//     Expression {
-//         pos: Position { ... },
-//         expr_: Variable(
-//             Symbol"True",
-//         ),
-//         id: SyntaxId(1),
+//     ParenthesizedExpression {
+//         open_paren: Position { ... },
+//         expr: Expression {
+//             pos: Position { ... },
+//             expr_: Variable(
+//                 Symbol"True",
+//             ),
+//             id: SyntaxId(1),
+//         },
+//         close_paren: Position { ... },
 //     },
 //     Block {
 //         is_loop_body: false,

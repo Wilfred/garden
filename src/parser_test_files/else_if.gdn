@@ -3,12 +3,16 @@ if (x) {} else if (y) {}
 // args: dump-ast
 // expected stdout:
 // If(
-//     Expression {
-//         pos: Position { ... },
-//         expr_: Variable(
-//             Symbol"x",
-//         ),
-//         id: SyntaxId(1),
+//     ParenthesizedExpression {
+//         open_paren: Position { ... },
+//         expr: Expression {
+//             pos: Position { ... },
+//             expr_: Variable(
+//                 Symbol"x",
+//             ),
+//             id: SyntaxId(1),
+//         },
+//         close_paren: Position { ... },
 //     },
 //     Block {
 //         is_loop_body: false,
@@ -24,12 +28,16 @@ if (x) {} else if (y) {}
 //                 Expression {
 //                     pos: Position { ... },
 //                     expr_: If(
-//                         Expression {
-//                             pos: Position { ... },
-//                             expr_: Variable(
-//                                 Symbol"y",
-//                             ),
-//                             id: SyntaxId(3),
+//                         ParenthesizedExpression {
+//                             open_paren: Position { ... },
+//                             expr: Expression {
+//                                 pos: Position { ... },
+//                                 expr_: Variable(
+//                                     Symbol"y",
+//                                 ),
+//                                 id: SyntaxId(3),
+//                             },
+//                             close_paren: Position { ... },
 //                         },
 //                         Block {
 //                             is_loop_body: false,

@@ -197,6 +197,13 @@ pub struct Pattern {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParenthesizedExpression {
+    pub open_paren: Position,
+    pub expr: Box<Expression>,
+    pub close_paren: Position,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParenthesizedArguments {
     pub open_paren: Position,
     pub arguments: Vec<Expression>,
@@ -217,7 +224,7 @@ pub enum Expression_ {
     /// if (x) { y; }
     /// if (x) { y; } else { z; }
     /// ```
-    If(Box<Expression>, Block, Option<Block>),
+    If(ParenthesizedExpression, Block, Option<Block>),
     /// ```garden
     /// while (x) { y; z; }
     /// ```

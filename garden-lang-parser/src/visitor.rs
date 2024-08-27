@@ -1,6 +1,7 @@
 use crate::{
     Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
-    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    ParenthesizedExpression, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint,
+    TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -108,6 +109,10 @@ pub trait Visitor {
         }
     }
 
+    fn visit_parenthesized_expression(&mut self, paren_expr: &ParenthesizedExpression) {
+        self.visit_expr(&paren_expr.expr);
+    }
+
     fn visit_expr(&mut self, expr: &Expression) {
         self.visit_expr_(&expr.expr_);
     }
@@ -207,8 +212,13 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_if(&mut self, cond: &Expression, then_body: &Block, else_body: Option<&Block>) {
-        self.visit_expr(cond);
+    fn visit_expr_if(
+        &mut self,
+        cond: &ParenthesizedExpression,
+        then_body: &Block,
+        else_body: Option<&Block>,
+    ) {
+        self.visit_parenthesized_expression(cond);
         self.visit_block(then_body);
         if let Some(else_body) = else_body {
             self.visit_block(else_body);

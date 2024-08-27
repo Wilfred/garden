@@ -240,9 +240,14 @@ fn parse_if_expression(
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
 
-    require_token(tokens, diagnostics, "(");
-    let condition = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    require_token(tokens, diagnostics, ")");
+    let open_paren = require_token(tokens, diagnostics, "(");
+    let cond_expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
+    let close_paren = require_token(tokens, diagnostics, ")");
+    let condition = ParenthesizedExpression {
+        open_paren: open_paren.position,
+        expr: Box::new(cond_expr),
+        close_paren: close_paren.position,
+    };
 
     let then_body = parse_block(src, tokens, id_gen, diagnostics, false);
 
@@ -274,7 +279,7 @@ fn parse_if_expression(
 
     Expression::new(
         Position::merge(&if_token.position, last_brace_pos),
-        Expression_::If(Box::new(condition), then_body, else_body),
+        Expression_::If(condition, then_body, else_body),
         id_gen.next(),
     )
 }

@@ -384,7 +384,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 }
             }
             Expression_::If(cond_expr, then_block, else_block) => {
-                let cond_ty = self.check_expr(cond_expr, type_bindings, expected_return_ty);
+                let cond_ty = self.check_expr(&cond_expr.expr, type_bindings, expected_return_ty);
                 if !is_subtype(&cond_ty, &Type::bool()) {
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,
@@ -392,7 +392,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             "Expected `Bool` inside an `if` condition, but got `{}`.",
                             cond_ty
                         ),
-                        position: cond_expr.pos.clone(),
+                        position: cond_expr.expr.pos.clone(),
                     });
                 }
 
@@ -422,7 +422,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
                         let position = match then_block.exprs.last() {
                             Some(last_expr) => last_expr.pos.clone(),
-                            None => cond_expr.pos.clone(),
+                            None => cond_expr.expr.pos.clone(),
                         };
 
                         self.diagnostics.push(Diagnostic {

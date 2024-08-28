@@ -10,5 +10,5 @@ fun foo() {
 // 
 // --> src/check_test_files/assign_wrong_type.gdn:3
 //     x = "";
-//     ^
+//         ^^
 

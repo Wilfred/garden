@@ -466,7 +466,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                 "`{}` has type `{}`, but tried to assign a value of type `{}`.",
                                 sym.name, sym_ty, expr_ty
                             ),
-                            position: sym.position.clone(),
+                            position: expr.pos.clone(),
                         });
                     }
                 }

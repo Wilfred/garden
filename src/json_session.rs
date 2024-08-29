@@ -227,7 +227,7 @@ fn handle_eval_request(
     }
 }
 
-fn handle_eval_up_to_id_request(
+fn handle_eval_up_to_request(
     path: Option<&PathBuf>,
     src: &str,
     offset: usize,
@@ -444,7 +444,7 @@ pub(crate) fn handle_request(
         },
         Request::FindDefinition { name } => handle_find_def_request(&name, env),
         Request::EvalUpToId { path, src, offset } => {
-            handle_eval_up_to_id_request(path.as_ref(), &src, offset, env, session)
+            handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
     }
 }

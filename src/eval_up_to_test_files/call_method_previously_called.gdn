@@ -12,5 +12,5 @@ fun main(_) {
 }
 
 // args: test-eval-up-to 94
-// expected stdout: 10
+// expected stdout: src/eval_up_to_test_files/call_method_previously_called.gdn:6: 10
 

@@ -5,5 +5,5 @@ fun main(_) {
 }
 
 // args: test-eval-up-to 30
-// expected stdout: False
+// expected stdout: src/eval_up_to_test_files/if_closing_paren.gdn:2: False
 

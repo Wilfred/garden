@@ -7,5 +7,5 @@ fun foo () {
 fun main(_) {}
 
 // args: test-eval-up-to 56
-// expected stdout: 3
+// expected stdout: src/eval_up_to_test_files/fun_no_args.gdn:4: 3
 

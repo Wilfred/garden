@@ -8,5 +8,5 @@ fun main(_) {
 }
 
 // args: test-eval-up-to 46
-// expected stdout: 12
+// expected stdout: src/eval_up_to_test_files/call_func_previously_called.gdn:3: 12
 

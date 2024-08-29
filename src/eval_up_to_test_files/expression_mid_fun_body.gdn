@@ -8,5 +8,5 @@ fun main(_) {
 }
 
 // args: test-eval-up-to 53
-// expected stdout: ["hello"]
+// expected stdout: src/eval_up_to_test_files/expression_mid_fun_body.gdn:2: ["hello"]
 

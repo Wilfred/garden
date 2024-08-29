@@ -282,7 +282,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
 
     match eval_up_to(&mut env, &mut session, &items, offset) {
         Some(eval_res) => match eval_res {
-            Ok(v) => println!("{}", v.display(&env)),
+            Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
             Err(e) => match e {
                 EvalError::Interrupted => eprintln!("Interrupted."),
                 EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),

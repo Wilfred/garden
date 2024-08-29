@@ -292,10 +292,10 @@ fn handle_eval_up_to_request(
 
     match eval_up_to(env, session, &items, offset) {
         Some(eval_res) => match eval_res {
-            Ok(v) => Response {
+            Ok((v, pos)) => Response {
                 kind: ResponseKind::Evaluate,
                 value: Ok(Some(v.display(env))),
-                position: None,
+                position: Some(pos),
                 warnings: vec![],
             },
             Err(e) => match e {

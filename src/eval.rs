@@ -382,16 +382,19 @@ pub(crate) fn eval_up_to(
     session: &mut Session,
     items: &[ToplevelItem],
     offset: usize,
-) -> Option<Result<Value, EvalError>> {
+) -> Option<Result<(Value, Position), EvalError>> {
     let mut expr_id: Option<SyntaxId> = None;
+    let mut position = None;
     for syn_id in find_item_at(items, offset).into_iter().rev() {
         // TODO: this is iterating items twice, which will be slower.
         if let Some(expr) = find_expr_of_id(items, syn_id) {
             expr_id = Some(expr.id);
+            position = Some(expr.pos.clone());
             break;
         }
     }
     let expr_id = expr_id?;
+    let position = position?;
 
     let item = toplevel_item_containing_offset(items, offset)?;
 
@@ -412,7 +415,7 @@ pub(crate) fn eval_up_to(
                 let res = eval_toplevel_call(&name_sym.name, &args, env, session);
                 session.stop_at_expr_id = None;
 
-                Some(res)
+                Some(res.map(|v| (v, position)))
             }
             Definition_::Method(method_info) => {
                 let type_name = &method_info.receiver_hint.sym.name;
@@ -430,7 +433,7 @@ pub(crate) fn eval_up_to(
                 );
                 session.stop_at_expr_id = None;
 
-                Some(res)
+                Some(res.map(|v| (v, position)))
             }
             Definition_::Test(test) => {
                 session.stop_at_expr_id = Some(expr_id);
@@ -439,7 +442,7 @@ pub(crate) fn eval_up_to(
                 let res = eval_env(env, session);
                 session.stop_at_expr_id = None;
 
-                Some(res)
+                Some(res.map(|v| (v, position)))
             }
             Definition_::Enum(_) | Definition_::Struct(_) => {
                 // nothing to do
@@ -455,7 +458,7 @@ pub(crate) fn eval_up_to(
             match res {
                 Ok(mut eval_summary) => {
                     let value = eval_summary.values.pop()?;
-                    Some(Ok(value))
+                    Some(Ok((value, position)))
                 }
                 Err(e) => Some(Err(e)),
             }

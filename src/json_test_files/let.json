@@ -3,6 +3,6 @@
 
 // args: test-json
 // expected stdout:
-// {"kind":"evaluate","value":{"Ok":"Unit"},"warnings":[]}
-// {"kind":"evaluate","value":{"Ok":"6"},"warnings":[]}
+// {"kind":"evaluate","value":{"Ok":"Unit"},"position":null,"warnings":[]}
+// {"kind":"evaluate","value":{"Ok":"6"},"position":null,"warnings":[]}
 

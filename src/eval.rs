@@ -1418,6 +1418,7 @@ fn eval_builtin_call(
                         let response = Response {
                             kind: ResponseKind::Printed,
                             value: Ok(Some(s.clone())),
+                            position: None,
                             warnings: vec![],
                         };
                         let serialized = serde_json::to_string(&response).unwrap();
@@ -1464,6 +1465,7 @@ fn eval_builtin_call(
                         let response = Response {
                             kind: ResponseKind::Printed,
                             value: Ok(Some(format!("{}\n", s))),
+                            position: None,
                             warnings: vec![],
                         };
                         let serialized = serde_json::to_string(&response).unwrap();

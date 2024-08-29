@@ -3,5 +3,5 @@
 // args: test-json
 // expected stdout:
 // hello world
-// {"kind":"evaluate","value":{"Ok":"Unit"},"warnings":[]}
+// {"kind":"evaluate","value":{"Ok":"Unit"},"position":null,"warnings":[]}
 

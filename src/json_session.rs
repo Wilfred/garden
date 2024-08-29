@@ -77,6 +77,7 @@ pub(crate) struct ResponseError {
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
     pub(crate) value: Result<Option<String>, ResponseError>,
+    pub(crate) position: Option<Position>,
     pub(crate) warnings: Vec<Diagnostic>,
 }
 
@@ -135,6 +136,7 @@ fn handle_eval_request(
                         message: message.0,
                         stack,
                     }),
+                    position: None,
                     warnings: vec![],
                 };
             }
@@ -146,6 +148,7 @@ fn handle_eval_request(
                         message: message.0,
                         stack: None,
                     }),
+                    position: None,
                     warnings: vec![],
                 };
             }
@@ -198,6 +201,7 @@ fn handle_eval_request(
             Response {
                 kind: ResponseKind::Evaluate,
                 value: Ok(value_summary),
+                position: None,
                 warnings: eval_summary.diagnostics,
             }
         }
@@ -212,6 +216,7 @@ fn handle_eval_request(
                     message: format!("Error: {}", e.0),
                     stack: Some(stack),
                 }),
+                position: None,
                 warnings: vec![],
             }
         }
@@ -222,6 +227,7 @@ fn handle_eval_request(
                 message: "Interrupted".to_owned(),
                 stack: None,
             }),
+            position: None,
             warnings: vec![],
         },
     }
@@ -265,6 +271,7 @@ fn handle_eval_up_to_request(
                         message: message.0,
                         stack,
                     }),
+                    position: None,
                     warnings: vec![],
                 };
             }
@@ -276,6 +283,7 @@ fn handle_eval_up_to_request(
                         message: message.0,
                         stack: None,
                     }),
+                    position: None,
                     warnings: vec![],
                 };
             }
@@ -287,6 +295,7 @@ fn handle_eval_up_to_request(
             Ok(v) => Response {
                 kind: ResponseKind::Evaluate,
                 value: Ok(Some(v.display(env))),
+                position: None,
                 warnings: vec![],
             },
             Err(e) => match e {
@@ -297,6 +306,7 @@ fn handle_eval_up_to_request(
                         message: "Interrupted.".to_owned(),
                         stack: None,
                     }),
+                    position: None,
                     warnings: vec![],
                 },
                 EvalError::ResumableError(_, message) => Response {
@@ -306,6 +316,7 @@ fn handle_eval_up_to_request(
                         message: message.0,
                         stack: None,
                     }),
+                    position: None,
                     warnings: vec![],
                 },
             },
@@ -313,6 +324,7 @@ fn handle_eval_up_to_request(
         None => Response {
             kind: ResponseKind::Evaluate,
             value: Ok(Some("Did not find an expression to evaluate".to_owned())),
+            position: None,
             warnings: vec![],
         },
     }
@@ -354,6 +366,7 @@ pub(crate) fn handle_request(
                 ),
                 stack: None,
             }),
+            position: None,
             warnings: vec![],
         };
     };
@@ -371,11 +384,13 @@ pub(crate) fn handle_request(
                     Ok(()) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok(Some(format!("{}", String::from_utf8_lossy(&out_buf)))),
+                        position: None,
                         warnings: vec![],
                     },
                     Err(EvalAction::Abort) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok(Some("Aborted".to_owned())),
+                        position: None,
                         warnings: vec![],
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
@@ -393,6 +408,7 @@ pub(crate) fn handle_request(
                                     message: format!("No such test: {}", name),
                                     stack: None,
                                 }),
+                                position: None,
                                 warnings: vec![],
                             },
                         }
@@ -429,6 +445,7 @@ pub(crate) fn handle_request(
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),
                         stack: None,
                     }),
+                    position: None,
                     warnings: vec![],
                 }
             }
@@ -505,6 +522,7 @@ fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
     Response {
         kind: ResponseKind::FoundDefinition,
         value,
+        position: None,
         warnings: vec![],
     }
 }
@@ -514,6 +532,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,
             value: Ok(Some(result.display(env))),
+            position: None,
             warnings: vec![],
         },
         Err(EvalError::ResumableError(position, e)) => Response {
@@ -523,6 +542,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
                 message: format!("Error: {}", e.0),
                 stack: None,
             }),
+            position: None,
             warnings: vec![],
         },
         Err(EvalError::Interrupted) => Response {
@@ -532,6 +552,7 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
                 message: "Interrupted".to_owned(),
                 stack: None,
             }),
+            position: None,
             warnings: vec![],
         },
     }
@@ -543,6 +564,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         value: Ok(Some(
             "The Garden: Good programs take time to grow.".to_owned(),
         )),
+        position: None,
         warnings: vec![],
     };
     let serialized = serde_json::to_string(&response).unwrap();
@@ -598,6 +620,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
                     ),
                     stack: None,
                 }),
+                        position: None,
                 warnings: vec![],
             };
             let serialized = serde_json::to_string(&err_response).unwrap();

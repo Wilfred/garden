@@ -1,5 +1,5 @@
 { "method": "run", "input": "" }
 
 // args: test-json
-// expected stdout: {"kind":"evaluate","value":{"Ok":null},"warnings":[]}
+// expected stdout: {"kind":"evaluate","value":{"Ok":null},"position":null,"warnings":[]}
 

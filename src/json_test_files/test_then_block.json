@@ -2,5 +2,5 @@
 
 // args: test-json
 // expected stdout:
-// {"kind":"evaluate","value":{"Ok":"Ran 1 test, and the expression evaluated to 3."},"warnings":[]}
+// {"kind":"evaluate","value":{"Ok":"Ran 1 test, and the expression evaluated to 3."},"position":null,"warnings":[]}
 

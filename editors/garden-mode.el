@@ -82,14 +82,7 @@ evaluate, and display the result."
 (defun garden--flash-region (start end)
   "Temporarily highlight from START to END."
   (let* ((overlay (make-overlay start end)))
-    (overlay-put overlay 'face 'bold-italic)
-    (run-with-timer 0.5 nil 'delete-overlay overlay)))
-
-(defun garden--flash-error-region (start end)
-  "Temporarily highlight from START to END."
-  (let* ((overlay (make-overlay start end)))
-    ;; TODO: find a better face.
-    (overlay-put overlay 'face 'highlight)
+    (overlay-put overlay 'face 'bold-highlight)
     (run-with-timer 1.0 nil 'delete-overlay overlay)))
 
 (defgroup garden nil
@@ -229,7 +222,7 @@ the user entering a value in the *garden* buffer."
     (when (and position-offset end-offset)
       (with-current-buffer buf
         ;; Convert to one-indexed Emacs point positions.
-        (garden--flash-error-region (1+ position-offset) (1+ end-offset))))))
+        (garden--flash-region (1+ position-offset) (1+ end-offset))))))
 
 (defun garden-process-filter (proc output)
   (when garden-log-json

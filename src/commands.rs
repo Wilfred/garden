@@ -590,18 +590,16 @@ pub(crate) fn run_command<T: Write>(
             if let Some(src) = src {
                 let (items, errors) =
                     parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut env.id_gen);
-                if errors.is_empty() {
-                    for (i, item) in items.iter().enumerate() {
-                        write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()
-                    }
-                } else {
-                    for error in errors {
-                        let msg = match error {
-                            ParseError::Invalid { message, .. } => message,
-                            ParseError::Incomplete { message, .. } => message,
-                        };
-                        write!(buf, "{}: {}", "Error".bright_red(), msg.0).unwrap();
-                    }
+                for error in errors {
+                    let msg = match error {
+                        ParseError::Invalid { message, .. } => message,
+                        ParseError::Incomplete { message, .. } => message,
+                    };
+                    writeln!(buf, "{}: {}", "Error".bright_red(), msg.0).unwrap();
+                }
+
+                for (i, item) in items.iter().enumerate() {
+                    write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()
                 }
             } else {
                 write!(buf, ":parse requires a code snippet, e.g. `:parse 1 + 2`").unwrap();

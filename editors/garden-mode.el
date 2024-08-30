@@ -70,6 +70,13 @@ evaluate, and display the result."
    (1- (point-min))
    (1- (point-max))))
 
+(defun garden-send-or-eval-up-to ()
+  "Send the current region if region is active, otherwise eval-up-to."
+  (interactive)
+  (if (region-active-p)
+      (garden-send)
+    (garden-eval-up-to)))
+
 (defun garden--backward-expr ()
   "Move point back to the start of the expression before point."
   (when (looking-back (rx "}") 1)
@@ -564,7 +571,7 @@ If called with a prefix, stop the previous session."
     (define-key map (kbd "C-c C-c") #'garden-send)
 
     ;; No mnemonic, just easy to type.
-    (define-key map (kbd "C-c c") #'garden-eval-up-to)
+    (define-key map (kbd "C-c c") #'garden-send-or-eval-up-to)
 
     (define-key map (kbd "C-c a") #'garden-abort-command)
 

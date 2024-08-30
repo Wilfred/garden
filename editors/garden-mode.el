@@ -224,7 +224,7 @@ the user entering a value in the *garden* buffer."
   "Unparsed JSON output from the Garden process.")
 
 (defun garden--flash-position (buf position)
-  (let* ((position-offset (plist-get position :offset))
+  (let* ((position-offset (plist-get position :start_offset))
          (end-offset (plist-get position :end_offset)))
     (when (and position-offset end-offset)
       (with-current-buffer buf

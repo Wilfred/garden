@@ -893,10 +893,24 @@ impl<'a> TypeCheckVisitor<'a> {
 
                             Type::error("No struct field with this name")
                         } else {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("`{}` is not a struct.", recv_ty_name),
+                                position: field_sym.position.clone(),
+                            });
+
                             Type::error("No struct with this name")
                         }
                     }
-                    _ => Type::error("This type is not a struct"),
+                    _ => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!("`{}` is not a struct.", recv_ty_name),
+                            position: field_sym.position.clone(),
+                        });
+
+                        Type::error("This type is not a struct")
+                    }
                 }
             }
             Expression_::FunLiteral(fun_info) => self.check_fun_info(fun_info, type_bindings),

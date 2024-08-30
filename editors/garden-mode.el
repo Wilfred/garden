@@ -223,6 +223,14 @@ the user entering a value in the *garden* buffer."
 (defvar garden--output ""
   "Unparsed JSON output from the Garden process.")
 
+(defun garden--flash-position (buf position)
+  (let* ((position-offset (plist-get position :offset))
+         (end-offset (plist-get position :end_offset)))
+    (when (and position-offset end-offset)
+      (with-current-buffer buf
+        ;; Convert to one-indexed Emacs point positions.
+        (garden--flash-error-region (1+ position-offset) (1+ end-offset))))))
+
 (defun garden-process-filter (proc output)
   (when garden-log-json
     (garden--log-json-to-buf output))
@@ -248,14 +256,9 @@ the user entering a value in the *garden* buffer."
                        (cond
                         (response-err-value
                          (let* ((position (plist-get response-err-value :position))
-                                (position-offset (plist-get position :offset))
-                                (end-offset (plist-get position :end_offset))
                                 (err-msg (plist-get response-err-value :message)))
                            ;; TODO: find the buffer with the path which matches this position.
-                           (when (and position-offset end-offset)
-                             (with-current-buffer buf
-                               ;; Convert to one-indexed Emacs point positions.
-                               (garden--flash-error-region (1+ position-offset) (1+ end-offset))))
+                           (garden--flash-position buf position)
                            (message "%s" err-msg)
                            (setq error-buf (garden--report-error response-err-value))
                            (garden--fontify-error (concat err-msg "\n"))))

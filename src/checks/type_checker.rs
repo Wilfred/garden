@@ -863,7 +863,7 @@ impl<'a> TypeCheckVisitor<'a> {
             Expression_::DotAccess(recv, field_sym) => {
                 let recv_ty = self.check_expr(recv, type_bindings, expected_return_ty);
                 let Some(recv_ty_name) = recv_ty.type_name() else {
-                    return Type::error("No type name found this receiver");
+                    return Type::error("No type name found for this receiver");
                 };
 
                 match recv_ty {

@@ -90,7 +90,7 @@ evaluate, and display the result."
   (let* ((overlay (make-overlay start end)))
     ;; TODO: find a better face.
     (overlay-put overlay 'face 'highlight)
-    (run-with-timer 3.0 nil 'delete-overlay overlay)))
+    (run-with-timer 1.0 nil 'delete-overlay overlay)))
 
 (defgroup garden nil
   "A Garden major mode."
@@ -245,6 +245,7 @@ the user entering a value in the *garden* buffer."
           (when (s-starts-with-p "{" line)
             (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
                    (response-value (plist-get response :value))
+                   (response-position (plist-get response :position))
                    (response-warnings (plist-get response :warnings))
                    (response-kind (plist-get response :kind))
                    (response-ok-value (plist-get response-value :Ok))
@@ -273,6 +274,7 @@ the user entering a value in the *garden* buffer."
                         ((string= response-kind "found_definition")
                          (garden--visit response-ok-value))
                         ((string= response-kind "evaluate")
+                         (garden--flash-position buf response-position)
                          (unless (or (null response-ok-value) (string= response-ok-value "void"))
                            (message "%s" response-ok-value))
                          (garden--fontify-value (concat response-ok-value "\n")))

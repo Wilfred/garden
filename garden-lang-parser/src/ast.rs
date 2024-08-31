@@ -124,6 +124,11 @@ impl SymbolName {
     pub fn is_underscore(&self) -> bool {
         self.0 == "_"
     }
+
+    pub fn is_placeholder(&self) -> bool {
+        // TODO: Prevent users from writing this symbol in userland code.
+        self.0 == "__placeholder"
+    }
 }
 
 impl From<&str> for SymbolName {

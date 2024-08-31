@@ -34,10 +34,16 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     if let Some(id) = ids_at_pos.last() {
         if let Some(expr) = find_expr_of_id(&items, *id) {
             match &expr.expr_ {
-                Expression_::DotAccess(recv, _) => {
+                Expression_::DotAccess(recv, meth_sym) => {
                     let recv_id = recv.id;
                     let recv_ty = &id_to_ty[&recv_id];
-                    print_methods(&env, recv_ty);
+
+                    let prefix = if meth_sym.name.is_placeholder() {
+                        ""
+                    } else {
+                        &meth_sym.name.0
+                    };
+                    print_methods(&env, recv_ty, prefix);
                 }
                 _ => {}
             }
@@ -51,7 +57,7 @@ struct CompletionItem {
     suffix: String,
 }
 
-fn print_methods(env: &Env, recv_ty: &Type) {
+fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
     let Some(type_name) = recv_ty.type_name() else {
         return;
     };
@@ -63,6 +69,10 @@ fn print_methods(env: &Env, recv_ty: &Type) {
     let mut items = vec![];
 
     for (method_name, meth_info) in methods.iter() {
+        if !method_name.0.starts_with(prefix) {
+            continue;
+        }
+
         let Some(fun_info) = meth_info.fun_info() else {
             continue;
         };

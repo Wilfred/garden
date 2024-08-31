@@ -53,7 +53,7 @@ Added a command `garden definition-position foo.gdn 123` that shows
 the definition position of the symbol in file `foo.gdn` at offset 123.
 
 Added a command `garden complete foo.gdn 123` that shows all the
-methods available for the type of thte expression in file `foo.gdn` at
+methods available for the type of the expression in file `foo.gdn` at
 offset 123.
 
 Configured Emacs mode to show hover information, provide go-to-def and

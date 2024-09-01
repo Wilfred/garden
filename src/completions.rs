@@ -53,7 +53,9 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 struct CompletionItem {
+    /// Shown as the name and inserted when the user chooses this item.
     name: String,
+    /// Extra information shown immediately after the completion item.
     suffix: String,
 }
 

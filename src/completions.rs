@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
     ast::{Expression_, ToplevelItem},
@@ -12,6 +12,7 @@ use crate::{
     eval::eval_defs,
     garden_type::Type,
     pos_to_id::{find_expr_of_id, find_item_at},
+    types::TypeDef,
 };
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
@@ -64,11 +65,10 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
         return;
     };
 
-    let Some(methods) = env.methods.get(&type_name) else {
-        return;
-    };
+    let empty_hashmap = HashMap::new();
+    let methods = env.methods.get(&type_name).unwrap_or(&empty_hashmap);
 
-    let mut items = vec![];
+    let mut items: Vec<CompletionItem> = vec![];
 
     for (method_name, meth_info) in methods.iter() {
         if !method_name.0.starts_with(prefix) {
@@ -97,6 +97,19 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
             name: method_name.0.clone(),
             suffix: format!("({}){}", params, return_hint),
         });
+    }
+
+    if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&type_name) {
+        for field in &struct_info.fields {
+            if !field.sym.name.0.starts_with(prefix) {
+                continue;
+            }
+
+            items.push(CompletionItem {
+                name: field.sym.name.0.clone(),
+                suffix: format!(": {}", field.hint.as_src()),
+            });
+        }
     }
 
     items.sort();

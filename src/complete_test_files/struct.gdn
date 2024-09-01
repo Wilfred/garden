@@ -1,0 +1,14 @@
+struct Person {
+    name: String,
+    num_pets: Int,
+}
+
+fun foo(p: Person) {
+    p.
+}
+
+// args: complete 84
+// expected stdout:
+// {"name":"name","suffix":": String"}
+// {"name":"num_pets","suffix":": Int"}
+

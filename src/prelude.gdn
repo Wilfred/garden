@@ -7,6 +7,18 @@ enum Bool {
     False,
 }
 
+fun (self: Bool) not(): Bool {
+    match (self) {
+        True => False,
+        False => True,
+    }
+}
+
+test not {
+    should_equal(True.not(), False);
+    should_equal(False.not(), True);
+}
+
 // The unit type. Use this when your function doesn't have any useful
 // value to return, such as side-effecting functions.
 enum Unit {

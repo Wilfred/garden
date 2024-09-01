@@ -18,7 +18,7 @@ Fixed an interpreter crash when evaluating tests.
 
 ## Stdlib
 
-Added `List::for_each`.
+Added `List::for_each` and `Bool::not`.
 
 ## Checks
 

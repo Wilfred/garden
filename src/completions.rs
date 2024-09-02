@@ -93,10 +93,17 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
             None => "".to_owned(),
         };
 
-        items.push(CompletionItem {
-            name: method_name.0.clone(),
-            suffix: format!("({}){}", params, return_hint),
-        });
+        let (name, suffix) = if params.is_empty() {
+            // Complete parentheses too if there are zero parameters.
+            (format!("{}()", method_name.0), return_hint)
+        } else {
+            (
+                method_name.0.clone(),
+                format!("({}){}", params, return_hint),
+            )
+        };
+
+        items.push(CompletionItem { name, suffix });
     }
 
     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&type_name) {

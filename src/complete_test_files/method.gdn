@@ -9,14 +9,14 @@ fun file_name(s: String) {
 // {"name":"ends_with","suffix":"(String): Bool"}
 // {"name":"index_of","suffix":"(String): Option<Int>"}
 // {"name":"join","suffix":"(List<String>): String"}
-// {"name":"len","suffix":"(): Int"}
-// {"name":"lines","suffix":"(): List<String>"}
+// {"name":"len()","suffix":": Int"}
+// {"name":"lines()","suffix":": List<String>"}
 // {"name":"split","suffix":"(String): List<String>"}
 // {"name":"split_once","suffix":"(String): Option<List<String>>"}
 // {"name":"starts_with","suffix":"(String): Bool"}
 // {"name":"strip_prefix","suffix":"(String): String"}
 // {"name":"strip_suffix","suffix":"(String): String"}
 // {"name":"substring","suffix":"(Int, Int): String"}
-// {"name":"trim_left","suffix":"(): String"}
-// {"name":"trim_right","suffix":"(): String"}
+// {"name":"trim_left()","suffix":": String"}
+// {"name":"trim_right()","suffix":": String"}
 

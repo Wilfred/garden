@@ -443,6 +443,16 @@ test is_empty {
     should_equal([1].is_empty(), False);
 }
 
+// Is this list non-empty?
+fun<T> (self: List<T>) is_non_empty(): Bool {
+    self.len() != 0;
+}
+
+test is_non_empty {
+    should_equal([].is_non_empty(), False);
+    should_equal([1].is_non_empty(), True);
+}
+
 // Does this list contain `item`?
 fun<T> (self: List<T>) contains(item: T): Bool {
     let i = 0;

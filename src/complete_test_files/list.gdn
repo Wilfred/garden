@@ -12,6 +12,7 @@ fun foo() {
 // {"name":"for_each","suffix":"(Fun<Tuple<T>, Unit>): Unit"}
 // {"name":"get","suffix":"(Int): T"}
 // {"name":"is_empty()","suffix":": Bool"}
+// {"name":"is_non_empty()","suffix":": Bool"}
 // {"name":"last()","suffix":": Option<T>"}
 // {"name":"len()","suffix":": Int"}
 // {"name":"map","suffix":"(Fun<Tuple<T>, U>): List<U>"}

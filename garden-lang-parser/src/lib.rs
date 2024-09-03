@@ -291,10 +291,6 @@ fn parse_break_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let break_token = require_token(tokens, diagnostics, "break");
-    if peeked_symbol_is(tokens, ";") {
-        tokens.pop();
-    }
-
     Expression::new(break_token.position, Expression_::Break, id_gen.next())
 }
 
@@ -305,11 +301,7 @@ fn parse_return_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
-
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    if peeked_symbol_is(tokens, ";") {
-        tokens.pop();
-    }
 
     Expression::new(
         Position::merge(&return_token.position, &expr.pos),
@@ -1770,9 +1762,6 @@ fn parse_assign_expression(
 
     require_token(tokens, diagnostics, "=");
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    if peeked_symbol_is(tokens, ";") {
-        tokens.pop();
-    }
 
     Expression::new(
         Position::merge(&variable.position, &expr.pos),

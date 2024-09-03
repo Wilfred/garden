@@ -1,9 +1,9 @@
 fun takes_int(b: Bool): Int {
     if (b) {
-        return "foo";
+        return "foo"
     }
 
-    123;
+    123
 }
 
 // args: check
@@ -12,6 +12,6 @@ fun takes_int(b: Bool): Int {
 // Error: Expected this function to return `Int`, but got `String`.
 // 
 // --> src/check_test_files/type_error_early_return.gdn:3
-//         return "foo";
+//         return "foo"
 //                ^^^^^
 

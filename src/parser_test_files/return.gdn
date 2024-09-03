@@ -1,4 +1,4 @@
-return x;
+return x
 
 // args: dump-ast
 // expected stdout:

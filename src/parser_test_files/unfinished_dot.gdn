@@ -56,9 +56,4 @@ fun foo(s: String) {
 // --> src/parser_test_files/unfinished_dot.gdn:3
 // }
 // ^
-// Error: Parse error: Expected `;`, got `}`
-// 
-// --> src/parser_test_files/unfinished_dot.gdn:2
-//     s.
-//      ^
 

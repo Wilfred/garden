@@ -81,11 +81,6 @@ test bar {
 // --> src/parser_test_files/incomplete_fun.gdn:3
 // test bar {
 // ^^^^
-// Error: Parse error: Expected `;`, got `test`
-// 
-// --> src/parser_test_files/incomplete_fun.gdn:1
-// fun
-// ^^^
 // Error: Parse error: Expected `}`, got `test`
 // 
 // --> src/parser_test_files/incomplete_fun.gdn:3

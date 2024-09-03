@@ -9,14 +9,14 @@
 //             expr_: IntLiteral(
 //                 1,
 //             ),
-//             id: SyntaxId(3),
+//             id: SyntaxId(0),
 //         },
 //         Expression {
 //             pos: Position { ... },
 //             expr_: IntLiteral(
 //                 2,
 //             ),
-//             id: SyntaxId(4),
+//             id: SyntaxId(1),
 //         },
 //     ],
 // )

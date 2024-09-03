@@ -13,7 +13,7 @@ ffun foo(_: Bool) {
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
-//         id: SyntaxId(5),
+//         id: SyntaxId(3),
 //     },
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },
@@ -23,7 +23,7 @@ ffun foo(_: Bool) {
 //                 expr_: Variable(
 //                     Symbol"_",
 //                 ),
-//                 id: SyntaxId(7),
+//                 id: SyntaxId(5),
 //             },
 //         ],
 //         close_paren: Position { ... },
@@ -32,11 +32,6 @@ ffun foo(_: Bool) {
 // Invalid
 
 // expected stderr:
-// Error: Parse error: Expected `;`, got `foo`
-// 
-// --> src/parser_test_files/malformed_fun_keyword.gdn:2
-// ffun foo(_: Bool) {
-// ^^^^
 // Error: Parse error: Expected an expression, got: `:`.
 // 
 // --> src/parser_test_files/malformed_fun_keyword.gdn:2
@@ -47,19 +42,9 @@ ffun foo(_: Bool) {
 // --> src/parser_test_files/malformed_fun_keyword.gdn:2
 // ffun foo(_: Bool) {
 //           ^
-// Error: Parse error: Expected `;`, got `:`
-// 
-// --> src/parser_test_files/malformed_fun_keyword.gdn:2
-// ffun foo(_: Bool) {
-//          ^
 // Error: Parse error: Expected an expression, got: `:`.
 // 
 // --> src/parser_test_files/malformed_fun_keyword.gdn:2
 // ffun foo(_: Bool) {
 //           ^
-// Error: Parse error: Expected `;`, got `:`
-// 
-// --> src/parser_test_files/malformed_fun_keyword.gdn:2
-// ffun foo(_: Bool) {
-//          ^
 

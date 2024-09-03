@@ -316,7 +316,9 @@ fn parse_break_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let break_token = require_token(tokens, diagnostics, "break");
-    let _ = require_end_token(tokens, diagnostics, ";");
+    if peeked_symbol_is(tokens, ";") {
+        tokens.pop();
+    }
 
     Expression::new(break_token.position, Expression_::Break, id_gen.next())
 }
@@ -340,10 +342,12 @@ fn parse_return_expression(
     }
 
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    let semicolon = require_end_token(tokens, diagnostics, ";");
+    if peeked_symbol_is(tokens, ";") {
+        tokens.pop();
+    }
 
     Expression::new(
-        Position::merge(&return_token.position, &semicolon.position),
+        Position::merge(&return_token.position, &expr.pos),
         Expression_::Return(Some(Box::new(expr))),
         id_gen.next(),
     )
@@ -1804,10 +1808,12 @@ fn parse_assign_expression(
 
     require_token(tokens, diagnostics, "=");
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    let semicolon = require_end_token(tokens, diagnostics, ";");
+    if peeked_symbol_is(tokens, ";") {
+        tokens.pop();
+    }
 
     Expression::new(
-        Position::merge(&variable.position, &semicolon.position),
+        Position::merge(&variable.position, &expr.pos),
         Expression_::Assign(variable, Box::new(expr)),
         id_gen.next(),
     )

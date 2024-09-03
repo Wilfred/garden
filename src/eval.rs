@@ -355,7 +355,7 @@ pub(crate) fn eval_toplevel_tests(
 
 fn call_to_main_src(cli_args: &[String]) -> String {
     let arg_literals: Vec<_> = cli_args.iter().map(|s| escape_string_literal(s)).collect();
-    format!("main([{}]);", arg_literals.join(", "))
+    format!("main([{}])", arg_literals.join(", "))
 }
 
 /// Evaluate a call to the user's main() function.

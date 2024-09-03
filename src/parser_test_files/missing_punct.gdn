@@ -20,15 +20,29 @@ foo(a b)
 //                 ),
 //                 id: SyntaxId(3),
 //             },
-//             Expression {
-//                 pos: Position { ... },
-//                 expr_: Variable(
-//                     Symbol"b",
-//                 ),
-//                 id: SyntaxId(5),
-//             },
 //         ],
 //         close_paren: Position { ... },
 //     },
 // )
+// Variable(
+//     Symbol"b",
+// )
+// Invalid
+
+// expected stderr:
+// Error: Parse error: Invalid syntax: Expected `,` or `)`, got `b`
+// 
+// --> src/parser_test_files/missing_punct.gdn:1
+// foo(a b)
+//       ^
+// Error: Parse error: Expected `)`, got `b`
+// 
+// --> src/parser_test_files/missing_punct.gdn:1
+// foo(a b)
+//       ^
+// Error: Parse error: Expected an expression, got: `)`.
+// 
+// --> src/parser_test_files/missing_punct.gdn:1
+// foo(a b)
+//        ^
 

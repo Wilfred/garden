@@ -645,6 +645,16 @@ fn parse_comma_separated_exprs(
         if let Some(token) = tokens.peek() {
             if token.text == "," {
                 tokens.pop();
+            } else if token.text != terminator {
+                diagnostics.push(ParseError::Invalid {
+                    position: token.position.clone(),
+                    message: ErrorMessage(format!(
+                        "Invalid syntax: Expected `,` or `{}`, got `{}`",
+                        terminator, token.text
+                    )),
+                    additional: vec![],
+                });
+                break;
             }
         } else {
             diagnostics.push(ParseError::Incomplete {

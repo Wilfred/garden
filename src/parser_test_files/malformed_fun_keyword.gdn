@@ -32,7 +32,7 @@ ffun foo(_: Bool) {
 // Invalid
 
 // expected stderr:
-// Error: Parse error: Expected an expression, got: `:`.
+// Error: Parse error: Invalid syntax: Expected `,` or `)`, got `:`
 // 
 // --> src/parser_test_files/malformed_fun_keyword.gdn:2
 // ffun foo(_: Bool) {

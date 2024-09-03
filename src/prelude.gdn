@@ -15,8 +15,8 @@ fun (self: Bool) not(): Bool {
 }
 
 test not {
-    should_equal(True.not(), False);
-    should_equal(False.not(), True);
+    should_equal(True.not(), False)
+    should_equal(False.not(), True)
 }
 
 // The unit type. Use this when your function doesn't have any useful
@@ -45,11 +45,11 @@ enum Result<T, E> {
 // `foo(dbg(bar()))`.
 //
 // ```
-// dbg([1, 2]);
+// dbg([1, 2])
 // ```
 fun<T> dbg(value: T): T {
-    println(string_repr(value));
-    value;
+    println(string_repr(value))
+    value
 }
 
 // Raise an error.
@@ -57,7 +57,7 @@ fun<T> dbg(value: T): T {
 // You can use this function for code that you haven't implemented
 // yet.
 fun todo(): NoValue {
-    error("Not yet implemented");
+    error("Not yet implemented")
 }
 
 // If this value is `Ok`, unwrap it, otherwise error.
@@ -69,7 +69,7 @@ fun<T, E> (self: Result<T, E>) or_error(): T {
 }
 
 test or_error {
-    should_equal(Ok("foo").or_error(), "foo");
+    should_equal(Ok("foo").or_error(), "foo")
 }
 
 enum NoValue {}
@@ -79,306 +79,306 @@ enum NoValue {}
 // Does this string start with `s`?
 fun (self: String) starts_with(s: String): Bool {
     if (s.len() > self.len()) {
-        return False;
+        return False
     }
 
-    self.substring(0, s.len()) == s;
+    self.substring(0, s.len()) == s
 }
 
 test starts_with {
-    should_equal("abc".starts_with("ab"), True);
-    should_equal("abc".starts_with(""), True);
+    should_equal("abc".starts_with("ab"), True)
+    should_equal("abc".starts_with(""), True)
 
-    should_equal("abc".starts_with("x"), False);
-    should_equal("abc".starts_with("b"), False);
-    should_equal("abc".starts_with("abcaa"), False);
+    should_equal("abc".starts_with("x"), False)
+    should_equal("abc".starts_with("b"), False)
+    should_equal("abc".starts_with("abcaa"), False)
 }
 
 // Does this string end with `s`?
 fun (self: String) ends_with(s: String): Bool {
     if (s.len() > self.len()) {
-        return False;
+        return False
     }
 
-    self.substring(self.len() - s.len(), self.len()) == s;
+    self.substring(self.len() - s.len(), self.len()) == s
 }
 
 test ends_with {
-    should_equal("abc".ends_with("bc"), True);
-    should_equal("abc".ends_with(""), True);
+    should_equal("abc".ends_with("bc"), True)
+    should_equal("abc".ends_with(""), True)
 
-    should_equal("abc".ends_with("x"), False);
-    should_equal("abc".ends_with("b"), False);
-    should_equal("abc".ends_with("aabc"), False);
+    should_equal("abc".ends_with("x"), False)
+    should_equal("abc".ends_with("b"), False)
+    should_equal("abc".ends_with("aabc"), False)
 }
 
 // Split this string into a list of lines.
 fun (self: String) lines(): List<String> {
-    let parts: List<String> = [];
+    let parts: List<String> = []
 
-    let line_start = 0;
-    let i = 0;
+    let line_start = 0
+    let i = 0
     while (i < self.len()) {
-        let char = self.substring(i, i + 1);
+        let char = self.substring(i, i + 1)
 
         if (char == "\n") {
-            parts = parts.append(self.substring(line_start, i));
-            line_start = i + 1;
+            parts = parts.append(self.substring(line_start, i))
+            line_start = i + 1
         }
 
-        i = i + 1;
+        i = i + 1
     }
 
     // Append last line if it wasn't terminated with a newline.
     if (line_start != self.len()) {
-        parts = parts.append(self.substring(line_start, self.len()));
+        parts = parts.append(self.substring(line_start, self.len()))
     }
 
-    parts;
+    parts
 }
 
 test lines {
-    should_equal("".lines(), []);
-    should_equal("a".lines(), ["a"]);
-    should_equal("a\nb".lines(), ["a", "b"]);
-    should_equal("a\nb\n".lines(), ["a", "b"]);
+    should_equal("".lines(), [])
+    should_equal("a".lines(), ["a"])
+    should_equal("a\nb".lines(), ["a", "b"])
+    should_equal("a\nb\n".lines(), ["a", "b"])
 }
 
 // Split this string on the first occurrence of `needle`, and return
 // the text before and after `needle`.
 //
 // ```
-// "abcd".split_once("b"); // Some(["a", "cd"])
+// "abcd".split_once("b") // Some(["a", "cd"])
 // ```
 fun (self: String) split_once(needle: String): Option<List<String>> {
-    let i = 0;
+    let i = 0
     while ((i + needle.len()) <= self.len()) {
-        let substring = self.substring(i, i + needle.len());
+        let substring = self.substring(i, i + needle.len())
         if (substring == needle) {
             return Some([
                 self.substring(0, i),
                 self.substring(i + needle.len(), self.len()),
-            ]);
+            ])
         }
 
-        i = i + 1;
+        i = i + 1
     }
 
-    return None;
+    return None
 }
 
 test split_once {
     // Needle not present.
-    should_equal("abc".split_once("x"), None);
+    should_equal("abc".split_once("x"), None)
 
     // Needle present once.
-    should_equal("abc".split_once("b"), Some(["a", "c"]));
+    should_equal("abc".split_once("b"), Some(["a", "c"]))
 
     // Needle present at end
-    should_equal("abc".split_once("c"), Some(["ab", ""]));
+    should_equal("abc".split_once("c"), Some(["ab", ""]))
 
     // Needle present multiple times.
-    should_equal("abcbe".split_once("b"), Some(["a", "cbe"]));
+    should_equal("abcbe".split_once("b"), Some(["a", "cbe"]))
 }
 
 // Find the first index of `needle` in `self`.
 //
 // ```
-// "abc".index_of("c"); // 2
+// "abc".index_of("c") // 2
 // ```
 fun (self: String) index_of(needle: String): Option<Int> {
-    let i = 0;
+    let i = 0
     while ((i + needle.len()) <= self.len()) {
-        let substring = self.substring(i, i + needle.len());
+        let substring = self.substring(i, i + needle.len())
 
         // TODO: better error on ! here
         if (substring == needle) {
-            return Some(i);
+            return Some(i)
         }
 
-        i = i + 1;
+        i = i + 1
     }
 
-    None;
+    None
 }
 
 test string_index_of {
-    should_equal("abc".index_of("x"), None);
+    should_equal("abc".index_of("x"), None)
 
-    should_equal("abc".index_of("a"), Some(0));
-    should_equal("abca".index_of("a"), Some(0));
+    should_equal("abc".index_of("a"), Some(0))
+    should_equal("abca".index_of("a"), Some(0))
 
-    should_equal("abc".index_of("c"), Some(2));
+    should_equal("abc".index_of("c"), Some(2))
 }
 
 // Join `items` (a list of strings) with this string as a separator.
 //
 // ```
-// ":".join(["a", "b", "c"]); // "a:b:c"
+// ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
 fun (self: String) join(items: List<String>): String {
     if (items.is_empty()) {
-        return "";
+        return ""
     }
     if (items.len() == 1) {
-        return items.get(0);
+        return items.get(0)
     }
 
-    let res = items.get(0);
-    let i = 1;
+    let res = items.get(0)
+    let i = 1
     while (i < items.len()) {
-        res = res.append(self);
-        res = res.append(items.get(i));
-        i = i + 1;
+        res = res.append(self)
+        res = res.append(items.get(i))
+        i = i + 1
     }
-    res;
+    res
 }
 
 test join {
-    should_equal(" ".join(["x"]), "x");
+    should_equal(" ".join(["x"]), "x")
 
     // TODO: should .join() exist on String or on List?
-    should_equal(" ".join(["x", "y"]), "x y");
+    should_equal(" ".join(["x", "y"]), "x y")
 }
 
 // Does this string contain `substring`?
 fun (self: String) contains(substring: String): Bool {
     if (substring.len() > self.len()) {
-        return False;
+        return False
     }
 
     // TODO: better parse error if this last parenthesis is missing.
-    // dbg(string_length(haystack) - string_length(substring));
+    // dbg(string_length(haystack) - string_length(substring))
 
-    let i = 0;
+    let i = 0
     while (i <= (self.len() - substring.len())) {
-        let section = self.substring(i, i + substring.len());
+        let section = self.substring(i, i + substring.len())
         if (section == substring) {
-            return True;
+            return True
         }
 
-        i = i + 1;
+        i = i + 1
     }
 
-    False;
+    False
 }
 
 fun (self: String) trim_left(): String {
-    let i = 0;
+    let i = 0
     while (i < self.len()) {
-        let char = self.substring(i, i + 1);
+        let char = self.substring(i, i + 1)
         if (char != " ") {
-            break;
+            break
         }
 
-        i = i + 1;
+        i = i + 1
     }
 
-    self.substring(i, self.len());
+    self.substring(i, self.len())
 }
 
 test trim_left {
-    should_equal("a".trim_left(), "a");
-    should_equal("a b".trim_left(), "a b");
-    should_equal("  a".trim_left(), "a");
-    should_equal("a ".trim_left(), "a ");
+    should_equal("a".trim_left(), "a")
+    should_equal("a b".trim_left(), "a b")
+    should_equal("  a".trim_left(), "a")
+    should_equal("a ".trim_left(), "a ")
 }
 
 fun (self: String) trim_right(): String {
-    let i = self.len() - 1;
+    let i = self.len() - 1
     while (i >= 0) {
-        let char = self.substring(i, i + 1);
+        let char = self.substring(i, i + 1)
         if (char != " ") {
-            break;
+            break
         }
 
-        i = i - 1;
+        i = i - 1
     }
 
-    self.substring(0, i + 1);
+    self.substring(0, i + 1)
 }
 
 test trim_right {
-    should_equal("a".trim_right(), "a");
-    should_equal("a b".trim_right(), "a b");
-    should_equal(" a".trim_right(), " a");
-    should_equal("a  ".trim_right(), "a");
+    should_equal("a".trim_right(), "a")
+    should_equal("a b".trim_right(), "a b")
+    should_equal(" a".trim_right(), " a")
+    should_equal("a  ".trim_right(), "a")
 }
 
 // Returns this string without the suffix specified. If this string
 // does not end with the suffix, return the string unchanged.
 //
 // ```
-// "foo".strip_suffix("o"); // "fo"
-// "bar".strip_suffix("o"); // "bar"
+// "foo".strip_suffix("o") // "fo"
+// "bar".strip_suffix("o") // "bar"
 // ```
 fun (self: String) strip_suffix(suffix: String): String {
     if (self.ends_with(suffix)) {
-        return self.substring(0, self.len() - suffix.len());
+        return self.substring(0, self.len() - suffix.len())
     }
 
-    self;
+    self
 }
 
 test strip_suffix {
-    should_equal("abcdef".strip_suffix("ef"), "abcd");
-    should_equal("abcdef".strip_suffix("xyz"), "abcdef");
+    should_equal("abcdef".strip_suffix("ef"), "abcd")
+    should_equal("abcdef".strip_suffix("xyz"), "abcdef")
 }
 
 // Returns this string without the prefix specified. If this string
 // does not start with the prefix, return the string unchanged.
 //
 // ```
-// "foo".strip_prefix("f"); // "oo"
-// "bar".strip_prefix("f"); // "bar"
+// "foo".strip_prefix("f") // "oo"
+// "bar".strip_prefix("f") // "bar"
 // ```
 fun (self: String) strip_prefix(prefix: String): String {
     if (self.starts_with(prefix)) {
-        // return self.substring(prefix.len(), self.len(), 1);
-        return self.substring(prefix.len(), self.len());
+        // return self.substring(prefix.len(), self.len(), 1)
+        return self.substring(prefix.len(), self.len())
     }
 
-    self;
+    self
 }
 
 test strip_prefix {
-    should_equal("abcdef".strip_prefix("ab"), "cdef");
-    should_equal("abcdef".strip_prefix("xyz"), "abcdef");
+    should_equal("abcdef".strip_prefix("ab"), "cdef")
+    should_equal("abcdef".strip_prefix("xyz"), "abcdef")
 }
 
 // Split this string on occurrences of `needle`.
 //
 // ```
-// "a,b".split(","); // ["a", "b"]
-// "ab".split(","); // ["ab"]
-// "a,,b,".split(","); // ["a", "", "b", ""]
+// "a,b".split(",") // ["a", "b"]
+// "ab".split(",") // ["ab"]
+// "a,,b,".split(",") // ["a", "", "b", ""]
 // ```
 fun (self: String) split(needle: String): List<String> {
-    let s = self;
+    let s = self
 
-    let parts: List<String> = [];
+    let parts: List<String> = []
     while (s != "") {
         match (s.index_of(needle)) {
             Some(i) => {
-                parts = parts.append(s.substring(0, i));
-                s = s.substring(i + needle.len(), s.len());
+                parts = parts.append(s.substring(0, i))
+                s = s.substring(i + needle.len(), s.len())
             }
             None => {
-                parts = parts.append(s);
-                break;
+                parts = parts.append(s)
+                break
             }
         }
 
     }
 
 
-    parts;
+    parts
 }
 
 test split {
-    should_equal("ab".split(","), ["ab"]);
-    should_equal("a,b".split(","), ["a", "b"]);
-    should_equal("a,,b".split(","), ["a", "", "b"]);
+    should_equal("ab".split(","), ["ab"])
+    should_equal("a,b".split(","), ["a", "b"])
+    should_equal("a,,b".split(","), ["a", "", "b"])
 }
 
 // List methods.
@@ -386,133 +386,133 @@ test split {
 // Get the first item in this list, if the list is not empty.
 fun<T> (self: List<T>) first(): Option<T> {
     if (self.is_empty()) {
-        None;
+        None
     } else {
-        Some(self.get(0));
+        Some(self.get(0))
     }
 }
 
 test first {
-    should_equal([].first(), None);
-    should_equal([123].first(), Some(123));
+    should_equal([].first(), None)
+    should_equal([123].first(), Some(123))
 }
 
 // Get the last item in this list, if the list is not empty.
 fun<T> (self: List<T>) last(): Option<T> {
     if (self.is_empty()) {
-        None;
+        None
     } else {
-        Some(self.get(self.len() - 1));
+        Some(self.get(self.len() - 1))
     }
 }
 
 test last {
-    should_equal([].last(), None);
-    should_equal([123].last(), Some(123));
+    should_equal([].last(), None)
+    should_equal([123].last(), Some(123))
 }
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
 fun<T> (self: List<T>) filter(f: Fun<(T), Bool>): List<T> {
-    let result: List<T> = [];
+    let result: List<T> = []
 
-    let i = 0;
+    let i = 0
     while (i < self.len()) {
-        let item = self.get(i);
+        let item = self.get(i)
 
         if (f(item)) {
-            result = result.append(item);
+            result = result.append(item)
         }
 
-        i = i + 1;
+        i = i + 1
     }
-    result;
+    result
 }
 
 test filter {
-    should_equal([1, 2].filter(fun(_) { True; }), [1, 2]);
+    should_equal([1, 2].filter(fun(_) { True }), [1, 2])
 }
 
 // Is this list empty?
 fun<T> (self: List<T>) is_empty(): Bool {
-    self.len() == 0;
+    self.len() == 0
 }
 
 test is_empty {
-    should_equal([].is_empty(), True);
-    should_equal([1].is_empty(), False);
+    should_equal([].is_empty(), True)
+    should_equal([1].is_empty(), False)
 }
 
 // Is this list non-empty?
 fun<T> (self: List<T>) is_non_empty(): Bool {
-    self.len() != 0;
+    self.len() != 0
 }
 
 test is_non_empty {
-    should_equal([].is_non_empty(), False);
-    should_equal([1].is_non_empty(), True);
+    should_equal([].is_non_empty(), False)
+    should_equal([1].is_non_empty(), True)
 }
 
 // Does this list contain `item`?
 fun<T> (self: List<T>) contains(item: T): Bool {
-    let i = 0;
+    let i = 0
     while (i < self.len()) {
         if (self.get(i) == item) {
-            return True;
+            return True
         }
 
-        i = i + 1;
+        i = i + 1
     }
 
-    False;
+    False
 }
 
 test contains {
-    should_equal([10, 11].contains(10), True);
+    should_equal([10, 11].contains(10), True)
 }
 
 // Call `f` with every item in this list.
 //
 // ```
-// [1, 2].for_each(fun(x) { print(string_repr(x + 1)); }); // prints 2, then 3.
+// [1, 2].for_each(fun(x) { print(string_repr(x + 1)) }) // prints 2, then 3.
 // ```
 fun<T> (self: List<T>) for_each(f: Fun<(T), Unit>): Unit {
-    let i = 0;
+    let i = 0
     while (i < self.len()) {
-        f(self.get(i));
-        i = i + 1;
+        f(self.get(i))
+        i = i + 1
     }
 }
 
 test list_for_each {
-    let total = 0;
-    [1, 2, 3].for_each(fun(i: Int) { total = total + i; });
-    should_equal(total, 6);
+    let total = 0
+    [1, 2, 3].for_each(fun(i: Int) { total = total + i })
+    should_equal(total, 6)
 }
 
 // Call `f` on every item in this list, and return a list of the
 // results.
 //
 // ```
-// [1, 2].map(fun(x) { x + 1; }); // [2, 3]
+// [1, 2].map(fun(x) { x + 1 }) // [2, 3]
 // ```
 fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
-    let items: List<U> = [];
-    let i = 0;
+    let items: List<U> = []
+    let i = 0
 
     while (i < self.len()) {
-        let new_item = f(self.get(i));
-        items = items.append(new_item);
+        let new_item = f(self.get(i))
+        items = items.append(new_item)
 
-        i = i + 1;
+        i = i + 1
     }
 
-    items;
+    items
 }
 
 test list_map {
-    let incremented = [1, 2, 3].map(fun(x: Int) { x + 1; });
-    should_equal(incremented, [2, 3, 4]);
+    let incremented = [1, 2, 3].map(fun(x: Int) { x + 1 })
+    should_equal(incremented, [2, 3, 4])
 }
 
 // Option methods.
@@ -526,7 +526,7 @@ fun<T> (self: Option<T>) or_exception(): T {
 }
 
 test option_or_exception {
-    should_equal(Some(123).or_exception(), 123);
+    should_equal(Some(123).or_exception(), 123)
 }
 
 // Testing heleprs.
@@ -534,6 +534,6 @@ test option_or_exception {
 // Assert that `actual`and `expected` are equal values.
 fun should_equal(actual, expected): Unit {
     if (actual != expected) {
-        error("".join(["Expected ", string_repr(expected), " but got ", string_repr(actual), "."]));
+        error("".join(["Expected ", string_repr(expected), " but got ", string_repr(actual), "."]))
     }
 }

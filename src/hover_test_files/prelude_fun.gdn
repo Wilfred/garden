@@ -7,7 +7,7 @@ fun foo() {
 // Stop the program immediately, and report the error message given.
 // 
 // ```
-// error("Computer is melting!");
+// error("Computer is melting!")
 // ```
 // Fun<(String), NoValue>
 

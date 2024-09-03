@@ -1,6 +1,6 @@
 {
-    [1, 2].filter(fun(_) { True; });
-    [1, 2, 3].map(fun(x) { x + 1; });
+    [1, 2].filter(fun(_) { True })
+    [1, 2, 3].map(fun(x) { x + 1 })
 }
 
 // args: check
@@ -9,6 +9,6 @@
 // Error: Expected `Int`, but got `_`.
 // 
 // --> src/check_test_files/type_inference_lambda.gdn:3
-//     [1, 2, 3].map(fun(x) { x + 1; });
+//     [1, 2, 3].map(fun(x) { x + 1 })
 //                            ^
 

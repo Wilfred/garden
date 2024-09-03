@@ -1,9 +1,9 @@
 fun foo(): Option<NoSuchType> {
-    None;
+    None
 }
 
 fun main(args: List<String>): Unit {
-    foo();
+    foo()
 }
 
 // args: run

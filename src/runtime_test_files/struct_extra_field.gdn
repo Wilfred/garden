@@ -1,7 +1,7 @@
 struct Foo {}
 
 fun main(args: List<String>): Unit {
-    Foo { x: 1 };
+    Foo { x: 1 }
 }
 
 // args: run
@@ -9,7 +9,7 @@ fun main(args: List<String>): Unit {
 // Error: `Foo` does not have a field named `x`.
 // 
 // --> src/runtime_test_files/struct_extra_field.gdn:4[2m[1m	 fun main()[0m[0m
-//     Foo { x: 1 };
+//     Foo { x: 1 }
 //           ^
 // --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__

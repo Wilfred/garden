@@ -1,5 +1,5 @@
 fun (self: String) doStuff(): String {
-    self;
+    self
 }
 
 // args: check

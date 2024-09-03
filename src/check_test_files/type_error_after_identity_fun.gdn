@@ -1,9 +1,9 @@
 fun<T> id(v: T): T {
-    v;
+    v
 }
 
 {
-    id(1).no_such_meth();
+    id(1).no_such_meth()
 }
 
 // args: check
@@ -12,6 +12,6 @@ fun<T> id(v: T): T {
 // Error: `Int` has no method `no_such_meth`.
 // 
 // --> src/check_test_files/type_error_after_identity_fun.gdn:6
-//     id(1).no_such_meth();
+//     id(1).no_such_meth()
 //           ^^^^^^^^^^^^
 

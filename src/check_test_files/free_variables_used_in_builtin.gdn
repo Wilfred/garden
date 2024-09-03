@@ -1,6 +1,6 @@
 fun foo(x: Int) {
     // We should not complain about unused variables in built-in signatures.
-    __BUILTIN_IMPLEMENTATION;
+    __BUILTIN_IMPLEMENTATION
 }
 
 // args: check

@@ -1,7 +1,7 @@
 fun takes_int(_v: Int) {}
 
 {
-    takes_int("foo");
+    takes_int("foo")
 }
 
 // args: check
@@ -10,6 +10,6 @@ fun takes_int(_v: Int) {}
 // Error: Expected `Int` argument but got `String`.
 // 
 // --> src/check_test_files/type_error_local_function.gdn:4
-//     takes_int("foo");
+//     takes_int("foo")
 //               ^^^^^
 

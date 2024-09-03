@@ -1,5 +1,5 @@
 {
-    foo;
+    foo
 }
 
 // args: check
@@ -8,6 +8,6 @@
 // Error: Unbound symbol: foo
 // 
 // --> src/check_test_files/free_variable_block.gdn:2
-//     foo;
+//     foo
 //     ^^^
 

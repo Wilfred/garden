@@ -1,4 +1,4 @@
-abc_def;
+abc_def
 
 // args: dump-ast
 // expected stdout:

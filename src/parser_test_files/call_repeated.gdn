@@ -1,4 +1,4 @@
-foo()();
+foo()()
 
 // args: dump-ast
 // expected stdout:

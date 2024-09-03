@@ -1,7 +1,7 @@
 enum Foo {}
 
 fun opt_foo(): Option<Foo> {
-    error("");
+    error("")
 }
 
 // args: check

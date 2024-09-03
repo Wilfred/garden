@@ -1,5 +1,5 @@
 test foo {
-    1 + "bar";
+    1 + "bar"
 }
 
 // args: check
@@ -8,6 +8,6 @@ test foo {
 // Error: Expected `Int`, but got `String`.
 // 
 // --> src/check_test_files/type_error_in_test.gdn:2
-//     1 + "bar";
+//     1 + "bar"
 //         ^^^^^
 

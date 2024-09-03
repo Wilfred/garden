@@ -1,6 +1,6 @@
 fun foo(b: Bool): Int {
     if (b) {
-        123;
+        123
     }
 }
 
@@ -10,6 +10,6 @@ fun foo(b: Bool): Int {
 // Error: `if` expressions without `else` should have type `Unit`, but got `Int`.
 // 
 // --> src/check_test_files/type_error_if_without_else.gdn:3
-//         123;
+//         123
 //         ^^^
 

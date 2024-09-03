@@ -1,7 +1,7 @@
 struct MyStruct<T> {}
 
 fun foo(): MyStruct {
-    error("");
+    error("")
 }
 
 // args: check

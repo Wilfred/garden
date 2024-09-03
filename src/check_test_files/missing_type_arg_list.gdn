@@ -1,9 +1,9 @@
 fun foo(): List {
-    error("");
+    error("")
 }
 
 fun bar(): Int<String> {
-    error("");
+    error("")
 }
 
 // args: check

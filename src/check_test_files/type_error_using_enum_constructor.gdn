@@ -1,5 +1,5 @@
 fun foo(): Int {
-    Some;
+    Some
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun foo(): Int {
 // Error: Expected to return `Int` but got `Fun<(T), Option<T>>`.
 // 
 // --> src/check_test_files/type_error_using_enum_constructor.gdn:2
-//     Some;
+//     Some
 //     ^^^^
 

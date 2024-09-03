@@ -1,5 +1,5 @@
 fun foo(s: String) {
-    s.no_such_meth();
+    s.no_such_meth()
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun foo(s: String) {
 // Error: `String` has no method `no_such_meth`.
 // 
 // --> src/check_test_files/type_error_param.gdn:2
-//     s.no_such_meth();
+//     s.no_such_meth()
 //       ^^^^^^^^^^^^
 

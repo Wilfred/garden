@@ -1,5 +1,5 @@
 {
-    let _: NoSuchType = 1;
+    let _: NoSuchType = 1
 }
 
 // args: check
@@ -8,6 +8,6 @@
 // Error: No such type: NoSuchType
 // 
 // --> src/check_test_files/missing_type_let_hint.gdn:2
-//     let _: NoSuchType = 1;
+//     let _: NoSuchType = 1
 //            ^^^^^^^^^^
 

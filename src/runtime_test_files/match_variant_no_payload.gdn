@@ -6,8 +6,8 @@ fun takes_opt(v: Option<Int>): Int {
 }
 
 fun main(_args: List<String>): Unit {
-    dbg(takes_opt(None));
-    Unit;
+    dbg(takes_opt(None))
+    Unit
 }
 
 // args: run

@@ -1,5 +1,5 @@
 fun map_over_strings(value) {
-    value.foo();
+    value.foo()
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun map_over_strings(value) {
 // Error: Expected a type with a `foo` method, but got a `_`.
 // 
 // --> src/check_test_files/method_on_top.gdn:2
-//     value.foo();
+//     value.foo()
 //     ^^^^^
 

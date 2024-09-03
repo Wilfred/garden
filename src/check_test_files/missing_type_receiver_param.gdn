@@ -1,5 +1,5 @@
 fun<T> (self: List<NoSuchType>) foo() {
-    None;
+    None
 }
 
 // args: check

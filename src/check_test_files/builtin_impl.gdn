@@ -1,5 +1,5 @@
 fun foo(_: String): NoValue {
-    __BUILTIN_IMPLEMENTATION;
+    __BUILTIN_IMPLEMENTATION
 }
 
 // args: check

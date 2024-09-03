@@ -1,6 +1,6 @@
 fun foo(s: String, i: Int) {
     if (s == i) {
-        print("hello world");
+        print("hello world")
     }
 }
 

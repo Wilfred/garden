@@ -1,5 +1,5 @@
 fun foo(parts: List<String>): String {
-    parts.first();
+    parts.first()
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun foo(parts: List<String>): String {
 // Error: Expected to return `String` but got `Option<String>`.
 // 
 // --> src/check_test_files/type_error_return_option.gdn:2
-//     parts.first();
+//     parts.first()
 //     ^^^^^^^^^^^^^
 

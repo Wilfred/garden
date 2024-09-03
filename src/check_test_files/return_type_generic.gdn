@@ -1,5 +1,5 @@
 fun<T> foo(): T {
-    error("");
+    error("")
 }
 
 // args: check

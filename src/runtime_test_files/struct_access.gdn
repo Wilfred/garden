@@ -3,12 +3,12 @@ struct Foo {
 }
 
 fun get_x(foo: Foo): Int {
-    foo.x;
+    foo.x
 }
 
 fun main(args: List<String>): Unit {
-    dbg(get_x(Foo { x: 1 + 2 }));
-    Unit;
+    dbg(get_x(Foo { x: 1 + 2 }))
+    Unit
 }
 
 // args: run

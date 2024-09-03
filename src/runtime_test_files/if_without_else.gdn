@@ -2,13 +2,13 @@ fun foo(b: Bool): Int {
     if (b) {
         // TODO: this is an error according to the type checker, we
         // should error at runtime too.
-        123;
+        123
     }
 }
 
 fun main(_args: List<String>): Unit {
-    foo(True);
-    Unit;
+    foo(True)
+    Unit
 }
 
 // args: run

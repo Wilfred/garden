@@ -1,5 +1,5 @@
 fun main(_) {
-    dbg("foo".append("bar"));
+    dbg("foo".append("bar"))
 }
 
 // args: run

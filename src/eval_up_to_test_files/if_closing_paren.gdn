@@ -1,6 +1,6 @@
 fun main(_) {
     if (1 == 2) {
-        print("yikes");
+        print("yikes")
     }
 }
 

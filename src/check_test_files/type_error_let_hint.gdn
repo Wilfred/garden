@@ -1,5 +1,5 @@
 {
-    let _: Bool = 123;
+    let _: Bool = 123
 }
 
 // args: check
@@ -8,6 +8,6 @@
 // Error: Expected `Bool` for this let expression, but got `Int`.
 // 
 // --> src/check_test_files/type_error_let_hint.gdn:2
-//     let _: Bool = 123;
+//     let _: Bool = 123
 //                   ^^^
 

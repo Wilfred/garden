@@ -1,4 +1,4 @@
-"a\nb\\c\"d";
+"a\nb\\c\"d"
 
 // args: dump-ast
 // expected stdout:

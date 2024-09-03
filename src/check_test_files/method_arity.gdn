@@ -1,5 +1,5 @@
 {
-    "abc".len(1, 2);
+    "abc".len(1, 2)
 }
 
 // args: check
@@ -8,6 +8,6 @@
 // Error: `String::len` requires 0 arguments, but got 2.
 // 
 // --> src/check_test_files/method_arity.gdn:2
-//     "abc".len(1, 2);
+//     "abc".len(1, 2)
 //           ^^^
 

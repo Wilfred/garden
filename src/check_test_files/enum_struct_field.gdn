@@ -1,5 +1,5 @@
 fun foo(b: Bool) {
-    b.some_field;
+    b.some_field
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun foo(b: Bool) {
 // Error: `Bool` is not a struct.
 // 
 // --> src/check_test_files/enum_struct_field.gdn:2
-//     b.some_field;
+//     b.some_field
 //       ^^^^^^^^^^
 

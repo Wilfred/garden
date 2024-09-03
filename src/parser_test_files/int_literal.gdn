@@ -1,4 +1,4 @@
--123;
+-123
 
 // args: dump-ast
 // expected stdout:

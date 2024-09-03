@@ -1,5 +1,5 @@
 fun foo(x) {
-    x;
+    x
 }
 
 // args: check

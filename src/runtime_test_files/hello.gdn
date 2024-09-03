@@ -1,5 +1,5 @@
 fun main(args: List<String>): Unit {
-    println("Hello, World!");
+    println("Hello, World!")
 }
 
 // args: run

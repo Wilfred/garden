@@ -1,5 +1,5 @@
 fun foo(): Option {
-    None;
+    None
 }
 
 // args: check

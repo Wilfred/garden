@@ -1,5 +1,5 @@
 test foo {
-    x;
+    x
 }
 
 // args: check
@@ -8,6 +8,6 @@ test foo {
 // Error: Unbound symbol: x
 // 
 // --> src/check_test_files/free_variable_in_test.gdn:2
-//     x;
+//     x
 //     ^
 

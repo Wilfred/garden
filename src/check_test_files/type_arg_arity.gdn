@@ -1,5 +1,5 @@
 fun foo(): List<Int, Int, Int> {
-    error("");
+    error("")
 }
 
 // args: check

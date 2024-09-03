@@ -1,5 +1,5 @@
 fun foo(): (Int, List) {
-    error("");
+    error("")
 }
 
 // args: check

@@ -1,5 +1,5 @@
 {
-    1 < (2 < 3);
+    1 < (2 < 3)
 }
 
 // args: check
@@ -8,6 +8,6 @@
 // Error: Expected `Int`, but got `Bool`.
 // 
 // --> src/check_test_files/type_error_comparison_nested.gdn:2
-//     1 < (2 < 3);
+//     1 < (2 < 3)
 //          ^^^^^
 

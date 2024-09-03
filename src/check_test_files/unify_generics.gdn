@@ -1,14 +1,14 @@
 {
     if (True) {
-        None;
+        None
     } else {
-        Some(123);
+        Some(123)
     }
 
     if (False) {
-        [];
+        []
     } else {
-        ["abc"];
+        ["abc"]
     }
 }
 

@@ -1,6 +1,6 @@
 {
-    string_repr(1).foo();
-    "abc".substring(0, 1).foo();
+    string_repr(1).foo()
+    "abc".substring(0, 1).foo()
 }
 
 // args: check
@@ -9,11 +9,11 @@
 // Error: `String` has no method `foo`.
 // 
 // --> src/check_test_files/no_such_method_chained.gdn:2
-//     string_repr(1).foo();
+//     string_repr(1).foo()
 //                    ^^^
 // Error: `String` has no method `foo`.
 // 
 // --> src/check_test_files/no_such_method_chained.gdn:3
-//     "abc".substring(0, 1).foo();
+//     "abc".substring(0, 1).foo()
 //                           ^^^
 

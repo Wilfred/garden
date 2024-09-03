@@ -1,5 +1,5 @@
 fun foo(f: Fun<(Int, Int), Int>): Int {
-    f(1, 2);
+    f(1, 2)
 }
 
 // args: check

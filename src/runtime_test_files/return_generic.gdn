@@ -1,9 +1,9 @@
 fun<T> option_identity(value: Option<T>): Option<T> {
-    value;
+    value
 }
 
 fun main(_) {
-    dbg(option_identity(Some(1)));
+    dbg(option_identity(Some(1)))
 }
 
 // args: run

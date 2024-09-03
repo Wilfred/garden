@@ -1,8 +1,8 @@
 fun foo(b: Bool): Option<Int> {
     if (b) {
-        None;
+        None
     } else {
-        123;
+        123
     }
 }
 
@@ -12,6 +12,6 @@ fun foo(b: Bool): Option<Int> {
 // Error: `if` and `else` have incompatible types: `Option<NoValue>` and `Int`.
 // 
 // --> src/check_test_files/type_error_if_else.gdn:3
-//         None;
+//         None
 //         ^^^^
 

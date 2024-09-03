@@ -1,5 +1,5 @@
 fun foo(): Int {
-    x;
+    x
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun foo(): Int {
 // Error: Unbound symbol: x
 // 
 // --> src/check_test_files/free_variable.gdn:2
-//     x;
+//     x
 //     ^
 

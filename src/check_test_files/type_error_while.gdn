@@ -1,6 +1,6 @@
 {
     while (1) {
-        string_repr(1234);
+        string_repr(1234)
     }
 }
 

@@ -734,7 +734,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// foo()
 /// x + 1
 /// if (a) { b } else { c }
-/// while (z) { foo(); }
+/// while (z) { foo() }
 /// ```
 fn parse_inline_expression(
     src: &str,
@@ -751,10 +751,10 @@ fn parse_inline_expression(
 /// Examples:
 ///
 /// ```garden
-/// foo();
-/// let x = y + 1;
-/// if (a) { b; } else { c; }
-/// while (z) { foo(); }
+/// foo()
+/// let x = y + 1
+/// if (a) { b } else { c }
+/// while (z) { foo() }
 /// ```
 fn parse_block_member_expression(
     src: &str,
@@ -775,7 +775,7 @@ fn parse_general_expression(
 ) -> Expression {
     if !is_inline {
         // TODO: Matching on tokens will prevent us from doing more
-        // complex assignments like `foo.bar = 1;`.
+        // complex assignments like `foo.bar = 1`.
         if let Some((_, token)) = tokens.peek_two() {
             if token.text == "=" {
                 return parse_assign_expression(src, tokens, id_gen, diagnostics);

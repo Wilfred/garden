@@ -4,17 +4,12 @@ struct Foo {
 
 fun main(_args: List<String>): Unit {
     let _f = Foo {};
-    return;
+    return Unit;
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an expression, got: `;`.
-// 
-// --> src/check_test_files/struct_missing_field.gdn:7
-//     return;
-//           ^
 // Error: Missing field `x` in struct literal.
 // 
 // --> src/check_test_files/struct_missing_field.gdn:6

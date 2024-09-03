@@ -811,12 +811,7 @@ fn parse_general_expression(
         }
     }
 
-    let expr = parse_simple_expression_or_binop(src, tokens, id_gen, diagnostics);
-    if !is_inline && peeked_symbol_is(tokens, ";") {
-        tokens.pop();
-    }
-
-    expr
+    parse_simple_expression_or_binop(src, tokens, id_gen, diagnostics)
 }
 
 /// In Garden, an expression can only contain a single binary

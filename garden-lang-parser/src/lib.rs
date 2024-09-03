@@ -1783,10 +1783,12 @@ fn parse_let_expression(
 
     require_token(tokens, diagnostics, "=");
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    let semicolon = require_end_token(tokens, diagnostics, ";");
+    if peeked_symbol_is(tokens, ";") {
+        tokens.pop();
+    }
 
     Expression::new(
-        Position::merge(&let_token.position, &semicolon.position),
+        Position::merge(&let_token.position, &expr.pos),
         Expression_::Let(variable, hint, Box::new(expr)),
         id_gen.next(),
     )

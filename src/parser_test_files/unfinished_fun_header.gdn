@@ -11,3 +11,20 @@ f{
 //     [],
 // )
 
+// expected stderr:
+// Error: Parse error: 'let' is a reserved word that cannot be used as a name
+// 
+// --> src/parser_test_files/unfinished_fun_header.gdn:2
+//     let xx = 99;
+//     ^^^
+// Error: Parse error: Expected `:`, got `let`
+// 
+// --> src/parser_test_files/unfinished_fun_header.gdn:2
+//     let xx = 99;
+//     ^^^
+// Error: Parse error: 'let' is a reserved word that cannot be used as a name
+// 
+// --> src/parser_test_files/unfinished_fun_header.gdn:2
+//     let xx = 99;
+//     ^^^
+

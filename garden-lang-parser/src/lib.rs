@@ -1791,11 +1791,13 @@ fn parse_toplevel_expr(
     let expr = parse_inline_expression(src, tokens, id_gen, &mut inline_diagnostics);
     if tokens.is_empty() {
         // Consumed the whole stream.
+        diagnostics.extend(inline_diagnostics);
         return ToplevelItem::Expr(ToplevelExpression(expr));
     }
 
     if matches!(expr.expr_, Expression_::Block(_)) {
         // Also allow standalone blocks at the top level.
+        diagnostics.extend(block_diagnostics);
         return ToplevelItem::Expr(ToplevelExpression(expr));
     }
 

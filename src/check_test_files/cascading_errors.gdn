@@ -1,10 +1,10 @@
 fun foo() {
-    let x = no_such_fun();
+    let x = no_such_fun()
     // Calling methods on an error type is fine.
-    x.len();
+    x.len()
 
     // Likewise arithmetic on an error type.
-    let _y = x + 1;
+    let _y = x + 1
 }
 
 // args: check
@@ -13,6 +13,6 @@ fun foo() {
 // Error: Unbound symbol: no_such_fun
 // 
 // --> src/check_test_files/cascading_errors.gdn:2
-//     let x = no_such_fun();
+//     let x = no_such_fun()
 //             ^^^^^^^^^^^
 

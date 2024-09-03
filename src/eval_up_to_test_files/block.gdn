@@ -1,11 +1,11 @@
 {
-    let aa = 1;
-    let bb = aa + 2;
-    bb * 2;
+    let aa = 1
+    let bb = aa + 2
+    bb * 2
 }
 
 fun main(_) {}
 
-// args: test-eval-up-to 45
+// args: test-eval-up-to 43
 // expected stdout: src/eval_up_to_test_files/block.gdn:4: 3
 

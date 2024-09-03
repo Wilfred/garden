@@ -1752,9 +1752,6 @@ fn parse_let_expression(
 
     require_token(tokens, diagnostics, "=");
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
-    if peeked_symbol_is(tokens, ";") {
-        tokens.pop();
-    }
 
     Expression::new(
         Position::merge(&let_token.position, &expr.pos),

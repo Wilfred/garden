@@ -1,5 +1,5 @@
 {
-    let value = Some("foo");
+    let value = Some("foo")
     match (value) {
         Some(v) => v + 1,
         None => error("")

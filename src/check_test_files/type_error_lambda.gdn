@@ -1,6 +1,6 @@
 {
-    let f = fun(x: Int): Int { x.no_such_meth(); };
-    f();
+    let f = fun(x: Int): Int { x.no_such_meth() }
+    f()
 }
 
 // args: check
@@ -9,11 +9,11 @@
 // Error: `Int` has no method `no_such_meth`.
 // 
 // --> src/check_test_files/type_error_lambda.gdn:2
-//     let f = fun(x: Int): Int { x.no_such_meth(); };
+//     let f = fun(x: Int): Int { x.no_such_meth() }
 //                                  ^^^^^^^^^^^^
 // Error: This function expects 1 argument, but got 0.
 // 
 // --> src/check_test_files/type_error_lambda.gdn:3
-//     f();
+//     f()
 //     ^
 

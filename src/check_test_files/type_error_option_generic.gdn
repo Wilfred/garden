@@ -1,6 +1,6 @@
 {
-    let value = Some("foo");
-    value.or_exception() + 1;
+    let value = Some("foo")
+    value.or_exception() + 1
 }
 
 // args: check
@@ -9,6 +9,6 @@
 // Error: Expected `Int`, but got `String`.
 // 
 // --> src/check_test_files/type_error_option_generic.gdn:3
-//     value.or_exception() + 1;
+//     value.or_exception() + 1
 //     ^^^^^^^^^^^^^^^^^^^^
 

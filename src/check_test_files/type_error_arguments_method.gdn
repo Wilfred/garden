@@ -1,6 +1,6 @@
 {
-    let s = "";
-    s.substring("", "");
+    let s = ""
+    s.substring("", "")
 }
 
 // args: check
@@ -9,11 +9,11 @@
 // Error: Expected `Int` argument but got `String`.
 // 
 // --> src/check_test_files/type_error_arguments_method.gdn:3
-//     s.substring("", "");
+//     s.substring("", "")
 //                 ^^
 // Error: Expected `Int` argument but got `String`.
 // 
 // --> src/check_test_files/type_error_arguments_method.gdn:3
-//     s.substring("", "");
+//     s.substring("", "")
 //                     ^^
 

@@ -1,6 +1,6 @@
 fun foo() {
-    let s = "";
-    return s.no_such_meth();
+    let s = ""
+    return s.no_such_meth()
 }
 
 // args: check
@@ -9,6 +9,6 @@ fun foo() {
 // Error: `String` has no method `no_such_meth`.
 // 
 // --> src/check_test_files/type_error_return.gdn:3
-//     return s.no_such_meth();
+//     return s.no_such_meth()
 //              ^^^^^^^^^^^^
 

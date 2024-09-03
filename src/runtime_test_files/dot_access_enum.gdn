@@ -1,6 +1,6 @@
 fun main(args: List<String>): Unit {
-    let x = Some(1);
-    x.y;
+    let x = Some(1)
+    x.y
 }
 
 // args: run
@@ -8,7 +8,7 @@ fun main(args: List<String>): Unit {
 // Error: Expected a struct, but got Option<Int>: Some(1)
 // 
 // --> src/runtime_test_files/dot_access_enum.gdn:3[2m[1m	 fun main()[0m[0m
-//     x.y;
+//     x.y
 //     ^
 // --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__

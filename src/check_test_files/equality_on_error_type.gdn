@@ -1,8 +1,8 @@
 fun foo() {
-    let v = no_such_func();
+    let v = no_such_func()
     // should not emit an equality warning
     if (v == "") {
-        print("hello world");
+        print("hello world")
     }
 }
 
@@ -12,6 +12,6 @@ fun foo() {
 // Error: Unbound symbol: no_such_func
 // 
 // --> src/check_test_files/equality_on_error_type.gdn:2
-//     let v = no_such_func();
+//     let v = no_such_func()
 //             ^^^^^^^^^^^^
 

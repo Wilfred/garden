@@ -3,8 +3,8 @@ struct Foo {
 }
 
 fun main(_args: List<String>): Unit {
-    let _f = Foo { x: 1 + 2, y: 2 };
-    return Unit;
+    let _f = Foo { x: 1 + 2, y: 2 }
+    return Unit
 }
 
 // args: check
@@ -13,6 +13,6 @@ fun main(_args: List<String>): Unit {
 // Error: Struct `Foo` has no field named `y`
 // 
 // --> src/check_test_files/struct_extra_field.gdn:6
-//     let _f = Foo { x: 1 + 2, y: 2 };
+//     let _f = Foo { x: 1 + 2, y: 2 }
 //                              ^
 

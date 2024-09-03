@@ -1,4 +1,4 @@
-let foo: Int = 1;
+let foo: Int = 1
 
 // args: dump-ast
 // expected stdout:

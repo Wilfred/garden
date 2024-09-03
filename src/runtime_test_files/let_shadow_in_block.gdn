@@ -1,12 +1,12 @@
 fun main(_args: List<String>): Unit {
-    let x = "a";
+    let x = "a"
 
     if (True) {
-        let x = "foo";
-        x = x.append("bar");
+        let x = "foo"
+        x = x.append("bar")
     }
     
-    println(x);
+    println(x)
 }
 
 // args: run

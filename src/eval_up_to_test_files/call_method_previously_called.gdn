@@ -3,12 +3,12 @@ struct WrappedNum {
 }
 
 fun (self: WrappedNum) increment(): Int {
-    self.value + 1;
+    self.value + 1
 }
 
 fun main(_) {
-    let wn = WrappedNum { value: 10 };
-    wn.increment();
+    let wn = WrappedNum { value: 10 }
+    wn.increment()
 }
 
 // args: test-eval-up-to 94

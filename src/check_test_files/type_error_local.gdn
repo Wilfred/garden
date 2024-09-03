@@ -1,6 +1,6 @@
 {
-    let s = "";
-    s.no_such_meth();
+    let s = ""
+    s.no_such_meth()
 }
 
 // args: check
@@ -9,6 +9,6 @@
 // Error: `String` has no method `no_such_meth`.
 // 
 // --> src/check_test_files/type_error_local.gdn:3
-//     s.no_such_meth();
+//     s.no_such_meth()
 //       ^^^^^^^^^^^^
 

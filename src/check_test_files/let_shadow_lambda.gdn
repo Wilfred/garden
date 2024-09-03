@@ -1,14 +1,14 @@
 fun main(_args: List<String>): Unit {
     // This is unused.
-    let x = "a";
+    let x = "a"
 
     let f = fun() {
         // This is not.
-        let x = "foo";
-        println(x);
-    };
+        let x = "foo"
+        println(x)
+    }
 
-    f();
+    f()
 }
 
 // args: check
@@ -17,6 +17,6 @@ fun main(_args: List<String>): Unit {
 // Warning: `x` is unused.
 // 
 // --> src/check_test_files/let_shadow_lambda.gdn:3
-//     let x = "a";
+//     let x = "a"
 //         ^
 

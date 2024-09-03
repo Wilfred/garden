@@ -1,9 +1,9 @@
 fun foo(): Unit {
-    let _ = 1;
+    let _ = 1
 }
 
 fun main(_args: List<String>): Unit {
-    foo();
+    foo()
 }
 
 // args: check

@@ -1,12 +1,12 @@
 fun foo(aa: Int) {
-    let bb = aa + 2;
-    bb * 2;
+    let bb = aa + 2
+    bb * 2
 }
 
 fun main(_) {
-    foo(10);
+    foo(10)
 }
 
-// args: test-eval-up-to 46
+// args: test-eval-up-to 45
 // expected stdout: src/eval_up_to_test_files/call_func_previously_called.gdn:3: 12
 

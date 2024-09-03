@@ -1,6 +1,6 @@
 fun foo() {
-    let x = 1;
-    x = "";
+    let x = 1
+    x = ""
 }
 
 // args: check
@@ -9,6 +9,6 @@ fun foo() {
 // Error: `x` has type `Int`, but tried to assign a value of type `String`.
 // 
 // --> src/check_test_files/assign_wrong_type.gdn:3
-//     x = "";
+//     x = ""
 //         ^^
 

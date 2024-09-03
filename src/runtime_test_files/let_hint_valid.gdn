@@ -1,6 +1,6 @@
 fun main(_args: List<String>): Unit {
-    let x: String = "foo";
-    print(x);
+    let x: String = "foo"
+    print(x)
 }
 
 // args: run

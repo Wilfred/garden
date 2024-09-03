@@ -1,4 +1,4 @@
-{ "method": "run", "input": "let x = 2;" }
+{ "method": "run", "input": "let x = 2" }
 { "method": "run", "input": "x * 3" }
 
 // args: test-json

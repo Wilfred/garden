@@ -70,35 +70,10 @@ fn require_token<'a>(
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
 ) -> Token<'a> {
-    require_token_inner(tokens, diagnostics, expected, false)
-}
-
-fn require_end_token<'a>(
-    tokens: &mut TokenStream<'a>,
-    diagnostics: &mut Vec<ParseError>,
-    expected: &str,
-) -> Token<'a> {
-    require_token_inner(tokens, diagnostics, expected, true)
-}
-
-fn require_token_inner<'a>(
-    tokens: &mut TokenStream<'a>,
-    diagnostics: &mut Vec<ParseError>,
-    expected: &str,
-    highlight_prev_token: bool,
-) -> Token<'a> {
-    // TODO: If we have an open delimiter, we want the incorrect
-    // current token. If we've forgotten a terminator like ; we want
-    // the previous token.
-    let prev_token = tokens.prev();
-
     match tokens.pop() {
         Some(token) => {
             if token.text != expected {
-                let position = match prev_token {
-                    Some(prev_token) if highlight_prev_token => prev_token.position.clone(),
-                    _ => token.position.clone(),
-                };
+                let position = token.position.clone();
 
                 diagnostics.push(ParseError::Invalid {
                     position,

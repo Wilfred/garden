@@ -4,7 +4,7 @@ struct Foo {
 
 fun main(_args: List<String>): Unit {
     let _f = Foo { x: 1 + 2, y: 2 };
-    return;
+    return Unit;
 }
 
 // args: check

@@ -12,6 +12,9 @@ let x = 1;
 let x = x + 1; // 2
 ```
 
+`return` now requires an argument, so `return;` must now be written
+`return Unit;`.
+
 ## Runtime
 
 Fixed an interpreter crash when evaluating tests.

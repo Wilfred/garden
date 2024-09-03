@@ -331,16 +331,6 @@ fn parse_return_expression(
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
 
-    if peeked_symbol_is(tokens, ";") {
-        let semicolon = require_token(tokens, diagnostics, ";");
-
-        return Expression::new(
-            Position::merge(&return_token.position, &semicolon.position),
-            Expression_::Return(None),
-            id_gen.next(),
-        );
-    }
-
     let expr = parse_inline_expression(src, tokens, id_gen, diagnostics);
     if peeked_symbol_is(tokens, ";") {
         tokens.pop();

@@ -1,5 +1,0 @@
-fun main(args: List<String>): Unit {
-    return;
-}
-
-// args: run

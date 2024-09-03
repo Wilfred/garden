@@ -1,13 +1,13 @@
 fun foo(): Int {
-    1
+    1 +
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `;`, got `}`
+// Error: Expected an expression, got: `}`.
 // 
-// --> src/check_test_files/bad_syntax.gdn:2
-//     1
-//     ^
+// --> src/check_test_files/bad_syntax.gdn:3
+// }
+// ^
 

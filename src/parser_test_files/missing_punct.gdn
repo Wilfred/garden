@@ -1,24 +1,34 @@
-let a b
+foo(a b)
 
 // args: dump-ast
 // expected stdout:
-// Let(
-//     Symbol"a",
-//     None,
+// Call(
 //     Expression {
 //         pos: Position { ... },
 //         expr_: Variable(
-//             Symbol"b",
+//             Symbol"foo",
 //         ),
-//         id: SyntaxId(2),
+//         id: SyntaxId(1),
+//     },
+//     ParenthesizedArguments {
+//         open_paren: Position { ... },
+//         arguments: [
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
+//                     Symbol"a",
+//                 ),
+//                 id: SyntaxId(3),
+//             },
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
+//                     Symbol"b",
+//                 ),
+//                 id: SyntaxId(5),
+//             },
+//         ],
+//         close_paren: Position { ... },
 //     },
 // )
-
-// expected stderr:
-// Error: Parse error: Expected `=`, got `b`
-// 
-// --> src/parser_test_files/missing_punct.gdn:1
-// let a b
-//       ^
-// Parse error (incomplete input): Expected `;`, got EOF
 

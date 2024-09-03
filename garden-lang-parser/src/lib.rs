@@ -615,7 +615,7 @@ fn parse_comma_separated_exprs(
                     )),
                     additional: vec![],
                 });
-                break;
+                continue;
             }
         } else {
             diagnostics.push(ParseError::Incomplete {

@@ -37,6 +37,11 @@ ffun foo(_: Bool) {
 // --> src/parser_test_files/malformed_fun_keyword.gdn:2
 // ffun foo(_: Bool) {
 //           ^
+// Error: Parse error: Expected an expression, got: `:`.
+// 
+// --> src/parser_test_files/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
 // Error: Parse error: Expected `)`, got `:`
 // 
 // --> src/parser_test_files/malformed_fun_keyword.gdn:2

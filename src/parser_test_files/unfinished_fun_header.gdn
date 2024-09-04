@@ -8,7 +8,80 @@ f{
 // expected stdout:
 // StructLiteral(
 //     TypeSymbol"f",
-//     [],
+//     [
+//         (
+//             Symbol"__placeholder",
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Let(
+//                     Symbol"xx",
+//                     None,
+//                     Expression {
+//                         pos: Position { ... },
+//                         expr_: IntLiteral(
+//                             99,
+//                         ),
+//                         id: SyntaxId(22),
+//                     },
+//                 ),
+//                 id: SyntaxId(23),
+//             },
+//         ),
+//         (
+//             Symbol"__placeholder",
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Let(
+//                     Symbol"yy",
+//                     None,
+//                     Expression {
+//                         pos: Position { ... },
+//                         expr_: BinaryOperator(
+//                             Expression {
+//                                 pos: Position { ... },
+//                                 expr_: Variable(
+//                                     Symbol"xx",
+//                                 ),
+//                                 id: SyntaxId(27),
+//                             },
+//                             Add,
+//                             Expression {
+//                                 pos: Position { ... },
+//                                 expr_: IntLiteral(
+//                                     1,
+//                                 ),
+//                                 id: SyntaxId(28),
+//                             },
+//                         ),
+//                         id: SyntaxId(29),
+//                     },
+//                 ),
+//                 id: SyntaxId(30),
+//             },
+//         ),
+//         (
+//             Symbol"yy",
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: BinaryOperator(
+//                     Expression {
+//                         pos: Position { ... },
+//                         expr_: Invalid,
+//                         id: SyntaxId(32),
+//                     },
+//                     Add,
+//                     Expression {
+//                         pos: Position { ... },
+//                         expr_: IntLiteral(
+//                             10,
+//                         ),
+//                         id: SyntaxId(33),
+//                     },
+//                 ),
+//                 id: SyntaxId(34),
+//             },
+//         ),
+//     ],
 // )
 
 // expected stderr:
@@ -24,7 +97,22 @@ f{
 //     ^^^
 // Error: Parse error: 'let' is a reserved word that cannot be used as a name
 // 
-// --> src/parser_test_files/unfinished_fun_header.gdn:2
-//     let xx = 99
+// --> src/parser_test_files/unfinished_fun_header.gdn:3
+//     let yy = xx + 1
 //     ^^^
+// Error: Parse error: Expected `:`, got `let`
+// 
+// --> src/parser_test_files/unfinished_fun_header.gdn:3
+//     let yy = xx + 1
+//     ^^^
+// Error: Parse error: Expected `:`, got `+`
+// 
+// --> src/parser_test_files/unfinished_fun_header.gdn:4
+//     yy + 10
+//        ^
+// Error: Parse error: Expected an expression, got: `+`.
+// 
+// --> src/parser_test_files/unfinished_fun_header.gdn:4
+//     yy + 10
+//        ^
 

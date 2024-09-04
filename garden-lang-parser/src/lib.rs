@@ -148,7 +148,7 @@ fn parse_parenthesis_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     require_token(tokens, diagnostics, "(");
-    let expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
     require_token(tokens, diagnostics, ")");
 
     expr
@@ -216,7 +216,7 @@ fn parse_if_expression(
     let if_token = require_token(tokens, diagnostics, "if");
 
     let open_paren = require_token(tokens, diagnostics, "(");
-    let cond_expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let cond_expr = parse_expression(src, tokens, id_gen, diagnostics);
     let close_paren = require_token(tokens, diagnostics, ")");
     let condition = ParenthesizedExpression {
         open_paren: open_paren.position,
@@ -268,7 +268,7 @@ fn parse_while_expression(
     let while_token = require_token(tokens, diagnostics, "while");
 
     let open_paren = require_token(tokens, diagnostics, "(");
-    let cond_expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let cond_expr = parse_expression(src, tokens, id_gen, diagnostics);
     let close_paren = require_token(tokens, diagnostics, ")");
     let condition = ParenthesizedExpression {
         open_paren: open_paren.position,
@@ -301,7 +301,7 @@ fn parse_return_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
-    let expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&return_token.position, &expr.pos),
@@ -436,7 +436,7 @@ fn parse_struct_literal_fields(
         let start_idx = tokens.idx;
         let sym = parse_symbol(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, ":");
-        let expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+        let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
         if tokens.idx == start_idx {
             // We haven't made forward progress, the syntax must be
@@ -500,7 +500,7 @@ fn parse_match_expression(
     let match_keyword = require_token(tokens, diagnostics, "match");
 
     let open_paren = require_token(tokens, diagnostics, "(");
-    let scrutinee_expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let scrutinee_expr = parse_expression(src, tokens, id_gen, diagnostics);
     let close_paren = require_token(tokens, diagnostics, ")");
     let scrutinee = ParenthesizedExpression {
         open_paren: open_paren.position,
@@ -551,7 +551,7 @@ fn parse_case_expr(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let case_expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let case_expr = parse_expression(src, tokens, id_gen, diagnostics);
     if peeked_symbol_is(tokens, ",") {
         tokens.pop().unwrap();
     }
@@ -592,7 +592,7 @@ fn parse_comma_separated_exprs(
         }
 
         let start_idx = tokens.idx;
-        let arg = parse_general_expression(src, tokens, id_gen, diagnostics);
+        let arg = parse_expression(src, tokens, id_gen, diagnostics);
         if arg.expr_.is_invalid_or_placeholder() {
             break;
         }
@@ -735,7 +735,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// if (a) { b } else { c }
 /// while (z) { foo() }
 /// ```
-fn parse_general_expression(
+fn parse_expression(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -1438,7 +1438,7 @@ fn parse_block(
         }
 
         let start_idx = tokens.idx;
-        let expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+        let expr = parse_expression(src, tokens, id_gen, diagnostics);
         if expr.expr_.is_invalid_or_placeholder() {
             break;
         }
@@ -1697,7 +1697,7 @@ fn parse_let_expression(
     let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&let_token.position, &expr.pos),
@@ -1715,7 +1715,7 @@ fn parse_assign_expression(
     let variable = parse_symbol(tokens, id_gen, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_general_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&variable.position, &expr.pos),
@@ -1734,7 +1734,7 @@ fn parse_toplevel_expr(
 
     // Always allow a semicolon-terminated expression at the top level.
     let mut block_diagnostics = vec![];
-    let block_expr = parse_general_expression(src, tokens, id_gen, &mut block_diagnostics);
+    let block_expr = parse_expression(src, tokens, id_gen, &mut block_diagnostics);
     if block_diagnostics.is_empty() {
         return ToplevelItem::Expr(ToplevelExpression(block_expr));
     }
@@ -1747,7 +1747,7 @@ fn parse_toplevel_expr(
     // consumes the rest of the token stream. This ensures that `1 2`
     // does not parse but `1; 2` does.
     let mut inline_diagnostics = vec![];
-    let expr = parse_general_expression(src, tokens, id_gen, &mut inline_diagnostics);
+    let expr = parse_expression(src, tokens, id_gen, &mut inline_diagnostics);
     if tokens.is_empty() {
         // Consumed the whole stream.
         diagnostics.extend(inline_diagnostics);
@@ -1836,7 +1836,7 @@ pub fn parse_inline_expr_from_str(
         }
     };
 
-    let expr = parse_general_expression(src, &mut tokens, id_gen, &mut diagnostics);
+    let expr = parse_expression(src, &mut tokens, id_gen, &mut diagnostics);
     (expr, diagnostics)
 }
 

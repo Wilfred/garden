@@ -176,9 +176,8 @@ pub(crate) fn lex_between<'a>(
             continue;
         }
 
-        // TODO: remove ; here.
         for token_char in [
-            '+', '-', '*', '/', '(', ')', '{', '}', ';', '=', ',', '<', '>', '[', ']', '.', ':',
+            '+', '-', '*', '/', '(', ')', '{', '}', '=', ',', '<', '>', '[', ']', '.', ':',
         ] {
             if s.starts_with(token_char) {
                 tokens.push(Token {

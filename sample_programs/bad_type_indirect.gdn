@@ -4,11 +4,11 @@ fun two(b) {
 }
 
 fun one(x) {
-    two(x);
+    two(x)
 }
 
-fun call_g() { two("a string"); }
+fun call_g() { two("a string") }
 
 fun main(args) {
-    one("not bool");
+    one("not bool")
 }

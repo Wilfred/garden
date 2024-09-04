@@ -1,33 +1,33 @@
 fun render_markdown(src: String): String {
-    let lines = src.lines();
+    let lines = src.lines()
     let parts: List<String> = lines.map(fun(line: String) {
         if (line.starts_with("# ")) {
-            render_markdown_header(line);
+            render_markdown_header(line)
         } else if (line != "") {
-            render_markdown_paragraph(line);
+            render_markdown_paragraph(line)
         } else {
-            line;
+            line
         }
-    });
+    })
 
-    "\n".join(parts);
+    "\n".join(parts)
 }
 
 fun render_markdown_header(src: String): String {
-    "".join(["<h1>", src.strip_prefix("# "), "</h1>"]);
+    "".join(["<h1>", src.strip_prefix("# "), "</h1>"])
 }
 
 fun render_markdown_paragraph(src: String): String {
-    "".join(["<p>", src, "</p>"]);
+    "".join(["<p>", src, "</p>"])
 }
 
 {
-    print(render_markdown("# foo\n\nbar."));
+    print(render_markdown("# foo\n\nbar."))
 }
 
 fun file_name(path: String): String {
-    let parts = path.split("/");
-    parts.last().or_exception();
+    let parts = path.split("/")
+    parts.last().or_exception()
 }
 
 // A list of all the files in `website_dir` that are templates.
@@ -35,52 +35,52 @@ fun file_name(path: String): String {
 // Returns absolute paths.
 fun template_files(website_dir: String): List<String> {
     // TODO: a ? syntax.
-    let dir_files = list_directory(website_dir).or_error();
-    dir_files.filter(fun (p: String) {p.ends_with(".tmpl.html"); });
+    let dir_files = list_directory(website_dir).or_error()
+    dir_files.filter(fun (p: String) {p.ends_with(".tmpl.html") })
 }
 
 // Convert "foo.tmpl.html" to "foo.html".
 fun output_path(template_path: String): String {
-    template_path.strip_suffix(".tmpl.html").append(".html");
+    template_path.strip_suffix(".tmpl.html").append(".html")
 }
 
 {
-    template_files("/home/wilfred/projects/garden/website");
+    template_files("/home/wilfred/projects/garden/website")
 }
 
 fun build_site(): Unit {
-    let website_dir = "/home/wilfred/projects/garden/website";
+    let website_dir = "/home/wilfred/projects/garden/website"
 
-    let base_tmpl_path = "/".join([website_dir, "template.html"]);
-    let tmpl_paths = template_files(website_dir);
+    let base_tmpl_path = "/".join([website_dir, "template.html"])
+    let tmpl_paths = template_files(website_dir)
 
-    let i = 0;
+    let i = 0
     while (i < tmpl_paths.len()) {
-        let tmpl_path = tmpl_paths.get(i);
-        let dest_path = output_path(tmpl_path);
-        write_website_file(base_tmpl_path, tmpl_path, dest_path);
+        let tmpl_path = tmpl_paths.get(i)
+        let dest_path = output_path(tmpl_path)
+        write_website_file(base_tmpl_path, tmpl_path, dest_path)
 
-        i = i + 1;
+        i = i + 1
     }
 }
 
 fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {
-    let base_tmpl_src = read_file(base_tmpl_path).or_error();
+    let base_tmpl_src = read_file(base_tmpl_path).or_error()
     let parts = match (base_tmpl_src.split_once("MAIN_CONTENT")) {
         Some(s) => s,
         None => ["", ""]
-    };
+    }
 
-    let tmpl = read_file(page_path).or_error();
+    let tmpl = read_file(page_path).or_error()
 
-    let src = "".join([parts.get(0).trim_right(), tmpl, parts.get(1).trim_left()]);
-    write_file(src, dest_path).or_error();
+    let src = "".join([parts.get(0).trim_right(), tmpl, parts.get(1).trim_left()])
+    write_file(src, dest_path).or_error()
 }
 
 {
-    build_site();
+    build_site()
 }
 
 fun main(_: List<String>) {
-    build_site();
+    build_site()
 }

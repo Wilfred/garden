@@ -1,7 +1,7 @@
 #!/usr/bin/env -S garden run
 
 fun in_git_repo(): Bool {
-    let git_dir_path = working_directory().concat("/.git")
+    let git_dir_path = working_directory().append("/.git")
     path_exists(git_dir_path)
 }
 
@@ -30,18 +30,17 @@ fun main(args: List<String>): Unit {
         return Unit
     }
 
-    let branches = all_branches.filter(fun(name) { name.contains(needle) })
+    let branches = all_branches.filter(fun(name: String) { name.contains(needle) })
     match (branches.first()) {
         Some(name) => {
             if (branches.len() == 1) {
-                let branch_name = branches.get(0)
-                check_out(branch_name)
+                check_out(name)
             } else {
                 let formatted_branches = ", ".join(branches)
                 let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches])
                 println(msg)
             }
         }
-        None => println("No branches found matching: ".concat(needle))
+        None => println("No branches found matching: ".append(needle))
     }
 }

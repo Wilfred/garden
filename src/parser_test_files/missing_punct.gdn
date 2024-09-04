@@ -8,7 +8,7 @@ foo(a b)
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
-//         id: SyntaxId(8),
+//         id: SyntaxId(1),
 //     },
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },
@@ -18,14 +18,14 @@ foo(a b)
 //                 expr_: Variable(
 //                     Symbol"a",
 //                 ),
-//                 id: SyntaxId(10),
+//                 id: SyntaxId(3),
 //             },
 //             Expression {
 //                 pos: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"b",
 //                 ),
-//                 id: SyntaxId(12),
+//                 id: SyntaxId(5),
 //             },
 //         ],
 //         close_paren: Position { ... },

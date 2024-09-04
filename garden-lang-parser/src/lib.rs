@@ -1730,40 +1730,8 @@ fn parse_toplevel_expr(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
-    let initial_token_idx = tokens.idx;
-
-    // Always allow a semicolon-terminated expression at the top level.
-    let mut block_diagnostics = vec![];
-    let block_expr = parse_expression(src, tokens, id_gen, &mut block_diagnostics);
-    if block_diagnostics.is_empty() {
-        return ToplevelItem::Expr(ToplevelExpression(block_expr));
-    }
-
-    // Reset the token stream position.
-    let block_stream_idx = tokens.idx;
-    tokens.idx = initial_token_idx;
-
-    // Try parsing again as an inline expression, but only if this
-    // consumes the rest of the token stream. This ensures that `1 2`
-    // does not parse but `1; 2` does.
-    let mut inline_diagnostics = vec![];
-    let expr = parse_expression(src, tokens, id_gen, &mut inline_diagnostics);
-    if tokens.is_empty() {
-        // Consumed the whole stream.
-        diagnostics.extend(inline_diagnostics);
-        return ToplevelItem::Expr(ToplevelExpression(expr));
-    }
-
-    if matches!(expr.expr_, Expression_::Block(_)) {
-        // Also allow standalone blocks at the top level.
-        diagnostics.extend(block_diagnostics);
-        return ToplevelItem::Expr(ToplevelExpression(expr));
-    }
-
-    // Prefer the block parse result.
-    tokens.idx = block_stream_idx;
-    diagnostics.extend(block_diagnostics);
-    ToplevelItem::Expr(ToplevelExpression(block_expr))
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    ToplevelItem::Expr(ToplevelExpression(expr))
 }
 
 fn parse_toplevel_items_from_tokens(

@@ -21,10 +21,10 @@ f{
 //                         expr_: IntLiteral(
 //                             99,
 //                         ),
-//                         id: SyntaxId(22),
+//                         id: SyntaxId(4),
 //                     },
 //                 ),
-//                 id: SyntaxId(23),
+//                 id: SyntaxId(5),
 //             },
 //         ),
 //         (
@@ -42,7 +42,7 @@ f{
 //                                 expr_: Variable(
 //                                     Symbol"xx",
 //                                 ),
-//                                 id: SyntaxId(27),
+//                                 id: SyntaxId(9),
 //                             },
 //                             Add,
 //                             Expression {
@@ -50,13 +50,13 @@ f{
 //                                 expr_: IntLiteral(
 //                                     1,
 //                                 ),
-//                                 id: SyntaxId(28),
+//                                 id: SyntaxId(10),
 //                             },
 //                         ),
-//                         id: SyntaxId(29),
+//                         id: SyntaxId(11),
 //                     },
 //                 ),
-//                 id: SyntaxId(30),
+//                 id: SyntaxId(12),
 //             },
 //         ),
 //         (
@@ -67,7 +67,7 @@ f{
 //                     Expression {
 //                         pos: Position { ... },
 //                         expr_: Invalid,
-//                         id: SyntaxId(32),
+//                         id: SyntaxId(14),
 //                     },
 //                     Add,
 //                     Expression {
@@ -75,10 +75,10 @@ f{
 //                         expr_: IntLiteral(
 //                             10,
 //                         ),
-//                         id: SyntaxId(33),
+//                         id: SyntaxId(15),
 //                     },
 //                 ),
-//                 id: SyntaxId(34),
+//                 id: SyntaxId(16),
 //             },
 //         ),
 //     ],

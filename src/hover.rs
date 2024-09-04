@@ -31,7 +31,9 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
 
     for id in hovered_ids.iter().rev() {
         if let Some(ty) = id_to_ty.get(id) {
-            println!("{}", ty);
+            if !ty.is_error() {
+                println!("{}", ty);
+            }
             break;
         }
     }

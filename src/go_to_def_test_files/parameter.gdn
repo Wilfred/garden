@@ -1,5 +1,5 @@
 fun foo(path: String) {
-    path;
+    path
 }
 
 // args: definition-position 32

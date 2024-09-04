@@ -1,5 +1,5 @@
 fun foo(): Int {
-    123;
+    123
 }
 
 // args: definition-position 14

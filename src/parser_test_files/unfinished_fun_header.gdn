@@ -1,7 +1,7 @@
 f{
-    let xx = 99;
-    let yy = xx + 1;
-    yy + 10;
+    let xx = 99
+    let yy = xx + 1
+    yy + 10
 }
 
 // args: dump-ast
@@ -15,16 +15,16 @@ f{
 // Error: Parse error: 'let' is a reserved word that cannot be used as a name
 // 
 // --> src/parser_test_files/unfinished_fun_header.gdn:2
-//     let xx = 99;
+//     let xx = 99
 //     ^^^
 // Error: Parse error: Expected `:`, got `let`
 // 
 // --> src/parser_test_files/unfinished_fun_header.gdn:2
-//     let xx = 99;
+//     let xx = 99
 //     ^^^
 // Error: Parse error: 'let' is a reserved word that cannot be used as a name
 // 
 // --> src/parser_test_files/unfinished_fun_header.gdn:2
-//     let xx = 99;
+//     let xx = 99
 //     ^^^
 

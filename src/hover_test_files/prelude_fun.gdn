@@ -1,5 +1,5 @@
 fun foo() {
-    error("");
+    error("")
 }
 
 // args: show-type 20

@@ -455,7 +455,7 @@ pub(crate) fn eval_up_to(
     match item {
         ToplevelItem::Def(def) => match &def.2 {
             Definition_::Fun(name_sym, fun_info) => {
-                eval_toplevel_defs(items, env);
+                eval_toplevel_defs(&[item.clone()], env);
                 let args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
@@ -472,6 +472,7 @@ pub(crate) fn eval_up_to(
                 Some(res.map(|v| (v, position)))
             }
             Definition_::Method(method_info) => {
+                eval_toplevel_defs(&[item.clone()], env);
                 let type_name = &method_info.receiver_hint.sym.name;
 
                 let prev_calls_for_type = env.prev_method_call_args.get(type_name)?.clone();

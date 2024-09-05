@@ -1,0 +1,10 @@
+fun foo(aa: Int) {
+}
+
+fun main(_) {
+    foo(10)
+}
+
+// args: test-eval-up-to 10
+// expected stdout: src/eval_up_to_test_files/param.gdn:1: 10
+

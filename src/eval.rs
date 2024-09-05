@@ -374,6 +374,45 @@ pub(crate) fn eval_call_main(
     eval_all_toplevel_items(&call_expr_items, env, session)
 }
 
+pub(crate) fn eval_up_to_param(
+    env: &Env,
+    items: &[ToplevelItem],
+    id: SyntaxId,
+) -> Option<(Value, Position)> {
+    for item in items {
+        let ToplevelItem::Def(def) = item else {
+            continue;
+        };
+        match &def.2 {
+            Definition_::Fun(name_sym, fun_info) => {
+                let prev_args = match env.prev_call_args.get(&name_sym.name) {
+                    _ if fun_info.params.is_empty() => vec![],
+                    Some(prev_args) => prev_args.clone(),
+                    None => {
+                        continue;
+                    }
+                };
+
+                for (i, param) in fun_info.params.iter().enumerate() {
+                    if param.symbol.id != id {
+                        continue;
+                    }
+
+                    if let Some(value) = prev_args.get(i) {
+                        return Some((value.clone(), param.symbol.position.clone()));
+                    }
+                }
+            }
+            Definition_::Method(_) => {
+                // TODO
+            }
+            _ => {}
+        }
+    }
+
+    None
+}
+
 /// Try to evaluate items up to the syntax ID specified.
 ///
 /// Returns None if we couldn't find anything to evaluate (not an error).
@@ -383,17 +422,32 @@ pub(crate) fn eval_up_to(
     items: &[ToplevelItem],
     offset: usize,
 ) -> Option<Result<(Value, Position), EvalError>> {
+    let syn_ids = find_item_at(items, offset);
+
     let mut expr_id: Option<SyntaxId> = None;
     let mut position = None;
-    for syn_id in find_item_at(items, offset).into_iter().rev() {
+    for syn_id in syn_ids.iter().rev() {
         // TODO: this is iterating items twice, which will be slower.
-        if let Some(expr) = find_expr_of_id(items, syn_id) {
+        if let Some(expr) = find_expr_of_id(items, *syn_id) {
             expr_id = Some(expr.id);
             position = Some(expr.pos.clone());
             break;
         }
     }
-    let expr_id = expr_id?;
+
+    let expr_id = match expr_id {
+        Some(id) => id,
+        None => {
+            if let Some(syn_id) = syn_ids.last() {
+                if let Some((value, pos)) = eval_up_to_param(env, items, *syn_id) {
+                    return Some(Ok((value, pos)));
+                }
+            }
+
+            return None;
+        }
+    };
+
     let position = position?;
 
     let item = toplevel_item_containing_offset(items, offset)?;

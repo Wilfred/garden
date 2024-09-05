@@ -22,7 +22,7 @@ fun render_markdown_paragraph(src: String): String {
 }
 
 {
-    print(render_markdown("# foo\n\nbar."))
+    render_markdown("# foo\n\nbar.")
 }
 
 fun file_name(path: String): String {

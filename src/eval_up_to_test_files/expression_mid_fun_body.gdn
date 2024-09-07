@@ -1,5 +1,6 @@
 fun foo(aa: String): String {
     let lines = aa.lines()
+    //               ^
     "world"
 }
 
@@ -7,6 +8,6 @@ fun main(_) {
     foo("hello")
 }
 
-// args: test-eval-up-to 53
+// args: test-eval-up-to
 // expected stdout: src/eval_up_to_test_files/expression_mid_fun_body.gdn:2: ["hello"]
 

@@ -1,9 +1,10 @@
 fun main(_) {
     if (1 == 2) {
+        //    ^
         print("yikes")
     }
 }
 
-// args: test-eval-up-to 30
+// args: test-eval-up-to
 // expected stdout: src/eval_up_to_test_files/if_closing_paren.gdn:2: False
 

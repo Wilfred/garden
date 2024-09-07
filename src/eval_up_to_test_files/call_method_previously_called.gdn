@@ -4,6 +4,7 @@ struct WrappedNum {
 
 fun (self: WrappedNum) increment(): Int {
     self.value + 1
+    //    ^
 }
 
 fun main(_) {
@@ -11,6 +12,6 @@ fun main(_) {
     wn.increment()
 }
 
-// args: test-eval-up-to 94
+// args: test-eval-up-to
 // expected stdout: src/eval_up_to_test_files/call_method_previously_called.gdn:6: 10
 

@@ -15,6 +15,7 @@
 // Occurs in WIP code when you plan to match on more cases later on.
 #![allow(clippy::single_match)]
 
+mod caret_finder;
 mod checks;
 mod cli_session;
 mod colors;
@@ -83,7 +84,7 @@ enum Commands {
     /// run eval-up-to at the position specified and print the result.
     ///
     /// Used for testing the eval-up-to feature.
-    TestEvalUpTo { offset: usize, path: PathBuf },
+    TestEvalUpTo { path: PathBuf },
     /// Evaluate all the entries in the .jsonl file as if they were in
     /// a JSON session.
     ///
@@ -156,9 +157,12 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
-        Commands::TestEvalUpTo { offset, path } => match std::fs::read(&path) {
+        Commands::TestEvalUpTo { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+
+                let offset = caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment containing `^` in source.");
                 test_eval_up_to(&src, &path, offset, interrupted);
             }
             Err(e) => {

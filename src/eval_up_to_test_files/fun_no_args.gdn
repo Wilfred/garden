@@ -2,10 +2,11 @@ fun foo () {
     let aa = 1
     let bb = aa + 2
     bb * 2
+//  ^
 }
 
 fun main(_) {}
 
-// args: test-eval-up-to 54
+// args: test-eval-up-to
 // expected stdout: src/eval_up_to_test_files/fun_no_args.gdn:4: 3
 

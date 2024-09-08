@@ -226,7 +226,7 @@ fn main() {
                     .filter(|line| !line.starts_with("//") && !line.is_empty());
                 for line in json_lines {
                     let response = handle_request(line, &mut env, &mut session, &mut complete_src);
-                    println!("{}", serde_json::to_string(&response).unwrap());
+                    println!("{}", serde_json::to_string_pretty(&response).unwrap());
                 }
             }
             Err(e) => {

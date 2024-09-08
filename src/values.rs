@@ -24,6 +24,11 @@ pub(crate) enum Value {
     String(String),
     /// A list value, along with the type of its elements.
     List { items: Vec<Value>, elem_type: Type },
+    /// A tuple value, along with type of each item.
+    Tuple {
+        items: Vec<Value>,
+        item_types: Vec<Type>,
+    },
     /// A value in a user-defined enum.
     Enum {
         type_name: TypeName,
@@ -127,6 +132,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::BuiltinFunction(_, _) => "Fun",
             Value::String(_) => "String",
             Value::List { .. } => "List",
+            Value::Tuple { .. } => "Tuple",
             Value::Enum { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
                 &type_name.name
             }
@@ -191,6 +197,26 @@ impl Value {
                 }
 
                 s.push(']');
+
+                s
+            }
+            Value::Tuple { items, .. } => {
+                let mut s = String::new();
+
+                s.push('(');
+
+                for (i, item) in items.iter().enumerate() {
+                    if i != 0 {
+                        s.push_str(", ");
+                    }
+
+                    s.push_str(&item.display(env));
+                }
+                if items.len() == 1 {
+                    s.push(',');
+                }
+
+                s.push(')');
 
                 s
             }

@@ -494,6 +494,7 @@ pub(crate) fn run_command<T: Write>(
                     Value::Integer(_) => false,
                     Value::String(_) => false,
                     Value::List { .. } => false,
+                    Value::Tuple { .. } => false,
                     Value::Enum { .. } => false,
                     Value::EnumConstructor { .. } => false,
                     Value::Struct { .. } => false,

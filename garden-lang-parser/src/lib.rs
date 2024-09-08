@@ -141,14 +141,74 @@ fn parse_variable_expression(
     )
 }
 
-fn parse_parenthesis_expression(
+/// Parse a tuple literal `(1, 2)` or a parenthesised expression `(1 +
+/// 2)`.
+fn parse_tuple_literal_or_parenthesis_expression(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    require_token(tokens, diagnostics, "(");
+    let open_paren = require_token(tokens, diagnostics, "(");
+    if peeked_symbol_is(tokens, ")") {
+        // Empty tuple.
+        let close_paren = require_token(tokens, diagnostics, ")");
+
+        return Expression::new(
+            Position::merge(&open_paren.position, &close_paren.position),
+            Expression_::TupleLiteral(vec![]),
+            id_gen.next(),
+        );
+    }
+
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr_pos = expr.pos.clone();
+
+    if peeked_symbol_is(tokens, ",") {
+        let mut exprs = vec![expr];
+
+        loop {
+            if peeked_symbol_is(tokens, ",") {
+                tokens.pop();
+            } else if !peeked_symbol_is(tokens, ")") {
+                let position = if let Some(token) = tokens.peek() {
+                    token.position.clone()
+                } else {
+                    expr_pos
+                };
+
+                diagnostics.push(ParseError::Invalid {
+                    position,
+                    message: ErrorMessage("Expected `,` or `)`. ".to_owned()),
+                    additional: vec![],
+                });
+
+                break;
+            }
+
+            // After a comma, we expect either a closing paren or another expression.
+            if peeked_symbol_is(tokens, ")") {
+                break;
+            }
+
+            let start_idx = tokens.idx;
+            exprs.push(parse_expression(src, tokens, id_gen, diagnostics));
+            assert!(
+                tokens.idx > start_idx,
+                "The parser should always make forward progress."
+            );
+        }
+
+        let close_paren = require_token(tokens, diagnostics, ")");
+
+        return Expression::new(
+            Position::merge(&open_paren.position, &close_paren.position),
+            Expression_::TupleLiteral(exprs),
+            id_gen.next(),
+        );
+    }
+
+    // No comma, must be a parenthesised expression.
     require_token(tokens, diagnostics, ")");
 
     expr
@@ -369,7 +429,7 @@ fn parse_simple_expression(
         }
 
         if token.text == "(" {
-            return parse_parenthesis_expression(src, tokens, id_gen, diagnostics);
+            return parse_tuple_literal_or_parenthesis_expression(src, tokens, id_gen, diagnostics);
         }
 
         if token.text == "[" {

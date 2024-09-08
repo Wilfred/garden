@@ -2891,6 +2891,35 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     }
                 }
+                Expression_::TupleLiteral(items) => {
+                    if done_children {
+                        let mut items: Vec<Value> = Vec::with_capacity(items.len());
+                        let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
+
+                        for _ in 0..items.len() {
+                            let element = stack_frame.evalled_values.pop().expect(
+                                "Value stack should have sufficient items for the list literal",
+                            );
+
+                            item_types.push(Type::from_value(
+                                &element,
+                                env,
+                                &stack_frame.type_bindings,
+                            ));
+                            items.push(element);
+                        }
+
+                        stack_frame
+                            .evalled_values
+                            .push(Value::Tuple { items, item_types });
+                    } else {
+                        stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
+
+                        for item in items.iter() {
+                            stack_frame.exprs_to_eval.push((false, item.clone()));
+                        }
+                    }
+                }
                 Expression_::StructLiteral(type_sym, field_exprs) => {
                     if done_children {
                         if let Err(ErrorInfo {

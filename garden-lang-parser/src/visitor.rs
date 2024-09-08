@@ -147,6 +147,11 @@ pub trait Visitor {
                     self.visit_expr(expr);
                 }
             }
+            Expression_::TupleLiteral(exprs) => {
+                for expr in exprs {
+                    self.visit_expr(expr);
+                }
+            }
             Expression_::StructLiteral(name_sym, field_exprs) => {
                 self.visit_expr_struct_literal(name_sym, field_exprs);
             }

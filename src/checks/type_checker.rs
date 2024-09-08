@@ -544,6 +544,13 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::list(elem_ty)
             }
+            Expression_::TupleLiteral(items) => {
+                let item_tys: Vec<_> = items
+                    .iter()
+                    .map(|item| self.check_expr(item, type_bindings, expected_return_ty))
+                    .collect();
+                Type::Tuple(item_tys)
+            }
             Expression_::StructLiteral(name_sym, fields) => {
                 for (_, expr) in fields {
                     self.check_expr(expr, type_bindings, expected_return_ty);

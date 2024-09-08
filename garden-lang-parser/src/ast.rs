@@ -265,6 +265,12 @@ pub enum Expression_ {
     /// ```
     ListLiteral(Vec<Expression>),
     /// ```garden
+    /// ()
+    /// (x,)
+    /// (x, y)
+    /// ```
+    TupleLiteral(Vec<Expression>),
+    /// ```garden
     /// Foo { x: 1, y: bar() };
     /// ```
     ///

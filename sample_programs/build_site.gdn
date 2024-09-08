@@ -1,3 +1,11 @@
+fun render_markdown_header(src: String): String {
+    "".join(["<h1>", src.strip_prefix("# "), "</h1>"])
+}
+
+fun render_markdown_paragraph(src: String): String {
+    "".join(["<p>", src, "</p>"])
+}
+
 fun render_markdown(src: String): String {
     let lines = src.lines()
     let parts: List<String> = lines.map(fun(line: String) {
@@ -11,14 +19,6 @@ fun render_markdown(src: String): String {
     })
 
     "\n".join(parts)
-}
-
-fun render_markdown_header(src: String): String {
-    "".join(["<h1>", src.strip_prefix("# "), "</h1>"])
-}
-
-fun render_markdown_paragraph(src: String): String {
-    "".join(["<p>", src, "</p>"])
 }
 
 {

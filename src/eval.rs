@@ -2893,12 +2893,12 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 }
                 Expression_::TupleLiteral(items) => {
                     if done_children {
-                        let mut items: Vec<Value> = Vec::with_capacity(items.len());
+                        let mut items_values: Vec<Value> = Vec::with_capacity(items.len());
                         let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
 
                         for _ in 0..items.len() {
                             let element = stack_frame.evalled_values.pop().expect(
-                                "Value stack should have sufficient items for the list literal",
+                                "Value stack should have sufficient items for the tuple literal",
                             );
 
                             item_types.push(Type::from_value(
@@ -2906,12 +2906,13 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                                 env,
                                 &stack_frame.type_bindings,
                             ));
-                            items.push(element);
+                            items_values.push(element);
                         }
 
-                        stack_frame
-                            .evalled_values
-                            .push(Value::Tuple { items, item_types });
+                        stack_frame.evalled_values.push(Value::Tuple {
+                            items: items_values,
+                            item_types,
+                        });
                     } else {
                         stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
 

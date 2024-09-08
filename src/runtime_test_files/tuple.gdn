@@ -1,0 +1,11 @@
+fun return_tuple(): (Int, String) {
+    (123, "foo")
+}
+
+fun main(_) {
+    println(string_repr(return_tuple()))
+}
+
+// args: run
+// expected stdout: (123, "foo")
+

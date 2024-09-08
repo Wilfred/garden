@@ -381,6 +381,22 @@ test split {
     should_equal("a,,b".split(","), ["a", "", "b"])
 }
 
+fun (self: String) chars(): List<String> {
+    let cs: List<String> = []
+
+    let i = 0
+    while (i < self.len()) {
+        cs = cs.append(self.substring(i, i + 1))
+        i = i + 1
+    }
+
+    cs
+}
+
+test string_chars {
+    should_equal("abc".chars(), ["a", "b", "c"])
+}
+
 // List methods.
 
 // Get the first item in this list, if the list is not empty.

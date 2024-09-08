@@ -1956,8 +1956,10 @@ fn eval_call(
                 arg_values,
             )?;
 
-            env.prev_call_args
-                .insert(name_sym.name.clone(), arg_values.to_vec());
+            if !env.prev_call_args.contains_key(&name_sym.name) {
+                env.prev_call_args
+                    .insert(name_sym.name.clone(), arg_values.to_vec());
+            }
 
             let mut type_bindings = TypeVarEnv::new();
             for param_sym in &fi.type_params {
@@ -2226,10 +2228,12 @@ fn eval_method_call(
         .entry(receiver_type_name.clone())
         .or_default();
 
-    prev_meth_calls_for_ty.insert(
-        meth_name.name.clone(),
-        (receiver_value.clone(), arg_values.clone()),
-    );
+    if !prev_meth_calls_for_ty.contains_key(&meth_name.name) {
+        prev_meth_calls_for_ty.insert(
+            meth_name.name.clone(),
+            (receiver_value.clone(), arg_values.clone()),
+        );
+    }
 
     let receiver_method = match env.methods.get(&receiver_type_name) {
         Some(receiver_methods) => {

@@ -390,14 +390,34 @@ pub(crate) fn run_command<T: Write>(
                     env.methods.get(type_name).unwrap().values().collect();
                 method_names.sort_by_key(|meth| &meth.name_sym.name.0);
 
-                for method_name in method_names {
-                    let name = format!("{}::{}", type_name, &method_name.name_sym.name);
+                for meth_info in method_names {
+                    let name = format!("{}::{}", type_name, &meth_info.name_sym.name);
+
+                    let signature = match meth_info.fun_info() {
+                        Some(fun_info) => {
+                            let params = fun_info
+                                .params
+                                .iter()
+                                .map(|p| match &p.hint {
+                                    Some(hint) => format!("_: {}", hint.as_src()),
+                                    None => "_".to_owned(),
+                                })
+                                .join(", ");
+
+                            let ret_hint = match &fun_info.return_hint {
+                                Some(hint) => format!(": {}", hint.as_src()),
+                                None => "".to_owned(),
+                            };
+                            format!("({}){}", params, ret_hint)
+                        }
+                        None => "()".to_owned(),
+                    };
 
                     if name.contains(&text) {
                         if !is_first {
                             writeln!(buf).unwrap();
                         }
-                        write!(buf, "{}", name).unwrap();
+                        write!(buf, "{}{}", name, signature).unwrap();
                         is_first = false;
                     }
                 }

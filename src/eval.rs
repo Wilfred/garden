@@ -13,7 +13,6 @@ use std::time::Instant;
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
-use strsim::normalized_levenshtein;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
@@ -202,10 +201,17 @@ pub(crate) struct StackFrame {
     pub(crate) evalled_values: Vec<Value>,
 }
 
-fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
+pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
     let mut res: Vec<_> = available.iter().collect();
-    res.sort_by_key(|n| OrderedFloat(normalized_levenshtein(&n.0, &name.0)));
-    res.last().map(|n| (**n).clone())
+    res.sort_by_key(|n| OrderedFloat(strsim::sorensen_dice(&n.0, &name.0)));
+
+    if let Some(closest) = res.last() {
+        if strsim::sorensen_dice(&closest.0, &name.0) > 0.2 {
+            return Some((**closest).clone());
+        }
+    }
+
+    None
 }
 
 fn most_similar_var(name: &SymbolName, stack_frame: &StackFrame, env: &Env) -> Option<SymbolName> {

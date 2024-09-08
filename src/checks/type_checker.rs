@@ -9,6 +9,7 @@ use garden_lang_parser::visitor::Visitor;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
+use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
 use crate::values::Value;
@@ -848,11 +849,22 @@ impl<'a> TypeCheckVisitor<'a> {
                         subst_ty_vars(&ret_ty, &ty_var_env)
                     }
                     None => {
+                        let available_methods = methods.keys().collect::<Vec<_>>();
+                        let suggest =
+                            if let Some(similar) = most_similar(&available_methods, &sym.name) {
+                                // TODO: consider arity and types when
+                                // trying to suggest the best
+                                // alternative.
+                                format!(" Did you mean `{}`?", similar)
+                            } else {
+                                "".to_owned()
+                            };
+
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
-                                "`{}` has no method `{}`.",
-                                receiver_ty_name, sym.name
+                                "`{}` has no method `{}`.{}",
+                                receiver_ty_name, sym.name, suggest
                             ),
                             position: sym.position.clone(),
                         });

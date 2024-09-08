@@ -14,7 +14,7 @@ struct Bar {}
 // --> src/check_test_files/no_such_method.gdn:4
 //     "abc".foo()
 //           ^^^
-// Error: `List` has no method `foo`.
+// Error: `List` has no method `foo`. Did you mean `for_each`?
 // 
 // --> src/check_test_files/no_such_method.gdn:5
 //     [1].foo()

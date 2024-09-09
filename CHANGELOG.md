@@ -8,6 +8,8 @@
 Expressions no longer use trailing semicolons, so `let x = 1;` is now
 `let x = 1`.
 
+Added tuples, e.g. `(1, "Foo")`.
+
 Variable shadowing is now supported, so the following is legal:
 
 ```

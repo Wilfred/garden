@@ -219,49 +219,49 @@ pub struct ParenthesizedArguments {
 pub enum Expression_ {
     /// ```garden
     /// match (x) {
-    ///     None => { get_value(); }
+    ///     None => { get_value() }
     ///     Some(y) => y + 1,
     ///     _ => error("yikes"),
     /// }
     /// ```
     Match(ParenthesizedExpression, Vec<(Pattern, Box<Expression>)>),
     /// ```garden
-    /// if (x) { y; }
-    /// if (x) { y; } else { z; }
+    /// if (x) { y }
+    /// if (x) { y } else { z }
     /// ```
     If(ParenthesizedExpression, Block, Option<Block>),
     /// ```garden
-    /// while (x) { y; z; }
+    /// while (x) { y z }
     /// ```
     While(ParenthesizedExpression, Block),
     /// ```garden
-    /// break;
+    /// break
     /// ```
     Break,
     /// ```garden
-    /// x = y;
+    /// x = y
     /// ```
     Assign(Symbol, Box<Expression>),
     /// ```garden
-    /// let x = y;
-    /// let x: T = y;
+    /// let x = y
+    /// let x: T = y
     /// ```
     Let(Symbol, Option<TypeHint>, Box<Expression>),
     /// ```garden
-    /// return x;
-    /// return;
+    /// return x
+    /// return
     /// ```
     Return(Option<Box<Expression>>),
     /// ```garden
-    /// 123;
+    /// 123
     /// ```
     IntLiteral(i64),
     /// ```garden
-    /// "foo";
+    /// "foo"
     /// ```
     StringLiteral(String),
     /// ```garden
-    /// [x, y];
+    /// [x, y]
     /// ```
     ListLiteral(Vec<Expression>),
     /// ```garden
@@ -271,24 +271,24 @@ pub enum Expression_ {
     /// ```
     TupleLiteral(Vec<Expression>),
     /// ```garden
-    /// Foo { x: 1, y: bar() };
+    /// Foo { x: 1, y: bar() }
     /// ```
     ///
     /// Field values are executed in the order they occur in source
     /// code, so we want an ordered data type here.
     StructLiteral(TypeSymbol, Vec<(Symbol, Expression)>),
     /// ```garden
-    /// x + y;
-    /// x < y;
-    /// x && y;
+    /// x + y
+    /// x < y
+    /// x && y
     /// ```
     BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
     /// ```garden
-    /// x;
+    /// x
     /// ```
     Variable(Symbol),
     /// ```garden
-    /// x();
+    /// x()
     /// ```
     Call(Box<Expression>, ParenthesizedArguments),
     /// ```garden
@@ -300,11 +300,11 @@ pub enum Expression_ {
     /// ```
     DotAccess(Box<Expression>, Symbol),
     /// ```garden
-    /// fun(x, y) { x + y; }
+    /// fun(x, y) { x + y }
     /// ```
     FunLiteral(FunInfo),
     /// ```garden
-    /// { x; y; }
+    /// { x y }
     /// ```
     Block(Block),
     /// We had a parse error in this position, so there's no

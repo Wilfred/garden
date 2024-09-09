@@ -1806,13 +1806,10 @@ fn parse_toplevel_items_from_tokens(
         let start_idx = tokens.idx;
         match parse_toplevel_item_from_tokens(src, tokens, id_gen, diagnostics) {
             Some(item) => {
-                let was_invalid = matches!(
-                    item,
-                    ToplevelItem::Expr(ToplevelExpression(Expression {
-                        expr_: Expression_::Invalid,
-                        ..
-                    }))
-                );
+                let was_invalid = match &item {
+                    ToplevelItem::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
+                    _ => false,
+                };
 
                 items.push(item);
                 if was_invalid {
@@ -1821,7 +1818,7 @@ fn parse_toplevel_items_from_tokens(
 
                 assert!(
                     tokens.idx > start_idx,
-                    "The parser should always make forward progress, looking"
+                    "The parser should always make forward progress",
                 );
             }
             None => break,

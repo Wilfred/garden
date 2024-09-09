@@ -454,7 +454,7 @@ enclosing point and print the result."
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
        '("let" "fun" "enum" "struct" "if" "else" "while" "return" "test" "match"
-         "break" "continue")
+         "break" "continue" "for" "in")
        'symbols)
      . font-lock-keyword-face)
 

@@ -1696,7 +1696,7 @@ fn parse_function(
 
 const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "enum", "struct", "if", "else", "while", "return", "test", "match", "break",
-    "continue",
+    "continue", "for", "in",
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {

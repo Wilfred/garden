@@ -454,8 +454,38 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::unit()
             }
-            Expression_::ForIn(_sym, _expr, _body) => {
-                todo!()
+            Expression_::ForIn(sym, expr, body) => {
+                let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
+
+                self.bindings.enter_block();
+
+                let elem_ty = match expr_ty {
+                    Type::UserDefined { name, args, .. } if name.name == "List" => {
+                        if let Some(arg) = args.first() {
+                            arg.clone()
+                        } else {
+                            Type::error("Bad list arity")
+                        }
+                    }
+                    _ => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected `List` for a `for` loop, but got `{}`.",
+                                expr_ty
+                            ),
+                            position: expr.pos.clone(),
+                        });
+                        Type::error("For loop expression that isn't a list")
+                    }
+                };
+
+                self.set_binding(sym, elem_ty);
+
+                self.check_block(body, type_bindings, expected_return_ty);
+                self.bindings.exit_block();
+
+                Type::unit()
             }
             Expression_::Break => Type::unit(),
             Expression_::Assign(sym, expr) => {

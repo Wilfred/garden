@@ -2789,28 +2789,11 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 }
                 Expression_::Return(expr) => {
                     if done_children {
-                        // No more expressions to evaluate in this function.
+                        // No more expressions to evaluate in this function, we're returning.
                         stack_frame.exprs_to_eval.clear();
                     } else {
                         stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
-
-                        let next_expr_to_eval = match expr {
-                            Some(expr) => *expr.clone(),
-                            None => {
-                                // Evaluate `return;` as `return Unit;`.
-                                Expression::new(
-                                    expr_position.clone(),
-                                    Expression_::Variable(Symbol::new(
-                                        expr_position,
-                                        "Unit",
-                                        env.id_gen.next(),
-                                    )),
-                                    expr_id,
-                                )
-                            }
-                        };
-
-                        stack_frame.exprs_to_eval.push((false, next_expr_to_eval));
+                        stack_frame.exprs_to_eval.push((false, *expr.clone()));
                     }
                 }
                 Expression_::Assign(variable, expr) => {

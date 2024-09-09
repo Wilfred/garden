@@ -249,9 +249,8 @@ pub enum Expression_ {
     Let(Symbol, Option<TypeHint>, Box<Expression>),
     /// ```garden
     /// return x
-    /// return
     /// ```
-    Return(Option<Box<Expression>>),
+    Return(Box<Expression>),
     /// ```garden
     /// 123
     /// ```

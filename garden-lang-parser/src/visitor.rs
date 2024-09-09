@@ -137,9 +137,7 @@ pub trait Visitor {
             }
             Expression_::Return(expr) => {
                 // TODO: custom method for this variant
-                if let Some(expr) = expr {
-                    self.visit_expr(expr);
-                }
+                self.visit_expr(expr);
             }
             Expression_::ListLiteral(exprs) => {
                 // TODO: custom method for this variant

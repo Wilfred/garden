@@ -504,14 +504,8 @@ impl<'a> TypeCheckVisitor<'a> {
                 Type::unit()
             }
             Expression_::Return(inner_expr) => {
-                let (ty, position) = if let Some(inner_expr) = inner_expr {
-                    (
-                        self.check_expr(inner_expr, type_bindings, expected_return_ty),
-                        inner_expr.pos.clone(),
-                    )
-                } else {
-                    (Type::unit(), pos.clone())
-                };
+                let ty = self.check_expr(inner_expr, type_bindings, expected_return_ty);
+                let position = inner_expr.pos.clone();
 
                 if let Some(expected_return_ty) = expected_return_ty {
                     if !is_subtype(&ty, expected_return_ty) {

@@ -235,6 +235,10 @@ pub enum Expression_ {
     /// ```
     While(ParenthesizedExpression, Block),
     /// ```garden
+    /// for x in y { z }
+    /// ```
+    ForIn(Symbol, Box<Expression>, Block),
+    /// ```garden
     /// break
     /// ```
     Break,

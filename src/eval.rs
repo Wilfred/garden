@@ -2787,6 +2787,9 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             .push((false, *condition.expr.clone()));
                     }
                 }
+                Expression_::ForIn(_sym, _expr, _body) => {
+                    todo!()
+                }
                 Expression_::Return(expr) => {
                     if done_children {
                         // No more expressions to evaluate in this function, we're returning.

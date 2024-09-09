@@ -128,6 +128,9 @@ pub trait Visitor {
             Expression_::While(cond, body) => {
                 self.visit_expr_while(cond, body);
             }
+            Expression_::ForIn(sym, expr, body) => {
+                self.visit_expr_for_in(sym, expr, body);
+            }
             Expression_::Break => {}
             Expression_::Assign(sym, expr) => {
                 self.visit_expr_assign(sym, expr);
@@ -234,6 +237,12 @@ pub trait Visitor {
 
     fn visit_expr_while(&mut self, cond: &ParenthesizedExpression, body: &Block) {
         self.visit_parenthesized_expression(cond);
+        self.visit_block(body);
+    }
+
+    fn visit_expr_for_in(&mut self, symbol: &Symbol, expr: &Expression, body: &Block) {
+        self.visit_symbol(symbol);
+        self.visit_expr(expr);
         self.visit_block(body);
     }
 

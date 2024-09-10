@@ -199,6 +199,9 @@ pub(crate) struct StackFrame {
     /// False: Push subexpressions to exprs_to_eval.
     pub(crate) exprs_to_eval: Vec<(bool, Expression)>,
     pub(crate) evalled_values: Vec<Value>,
+    /// If we're currently evaluating a `for` loop, the index of the
+    /// current iteration.
+    pub(crate) for_loop_indices: HashMap<SyntaxId, usize>,
 }
 
 pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
@@ -641,6 +644,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         bindings_next_block: vec![],
         exprs_to_eval,
         evalled_values: vec![Value::unit()],
+        for_loop_indices: HashMap::new(),
     };
     env.stack.0.push(stack_frame);
 }
@@ -1945,6 +1949,7 @@ fn eval_call(
                 enclosing_fun: Some(fun_info.clone()),
                 enclosing_name: EnclosingSymbol::Closure,
                 src: fun_info.src_string.clone(),
+                for_loop_indices: HashMap::new(),
             }));
         }
         Value::Fun {
@@ -2006,6 +2011,7 @@ fn eval_call(
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
+                for_loop_indices: HashMap::new(),
             }));
         }
         Value::BuiltinFunction(kind, _) => eval_builtin_call(
@@ -2332,6 +2338,7 @@ fn eval_method_call(
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
         evalled_values: vec![Value::unit()],
+        for_loop_indices: HashMap::new(),
     }))
 }
 

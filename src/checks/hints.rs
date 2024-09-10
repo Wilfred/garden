@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{
-    EnumInfo, Expression, FunInfo, StructInfo, Symbol, ToplevelItem, TypeHint, TypeName, TypeSymbol,
-};
+use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
 use garden_lang_parser::visitor::Visitor;
 
 use crate::{

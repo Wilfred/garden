@@ -235,8 +235,8 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_while(&mut self, cond: &ParenthesizedExpression, body: &Block) {
-        self.visit_parenthesized_expression(cond);
+    fn visit_expr_while(&mut self, cond: &Expression, body: &Block) {
+        self.visit_expr(cond);
         self.visit_block(body);
     }
 

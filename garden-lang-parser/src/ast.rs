@@ -231,9 +231,9 @@ pub enum Expression_ {
     /// ```
     If(ParenthesizedExpression, Block, Option<Block>),
     /// ```garden
-    /// while (x) { y z }
+    /// while x { y z }
     /// ```
-    While(ParenthesizedExpression, Block),
+    While(Box<Expression>, Block),
     /// ```garden
     /// for x in y { z }
     /// ```

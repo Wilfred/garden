@@ -2775,7 +2775,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }) = eval_while(
                             env,
                             &mut stack_frame,
-                            &condition.expr.pos,
+                            &condition.pos,
                             outer_expr.clone(),
                             body,
                         ) {
@@ -2789,9 +2789,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         }
                     } else {
                         stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
-                        stack_frame
-                            .exprs_to_eval
-                            .push((false, *condition.expr.clone()));
+                        stack_frame.exprs_to_eval.push((false, *condition.clone()));
                     }
                 }
                 Expression_::ForIn(_sym, _expr, _body) => {

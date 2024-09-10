@@ -127,7 +127,7 @@ fn parse_integer(
     }
 }
 
-fn parse_variable_expression(
+fn parse_variable(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -143,7 +143,7 @@ fn parse_variable_expression(
 
 /// Parse a tuple literal `(1, 2)` or a parenthesised expression `(1 +
 /// 2)`.
-fn parse_tuple_literal_or_parenthesis_expression(
+fn parse_tuple_literal_or_parentheses(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -231,7 +231,7 @@ fn parse_list_literal(
     )
 }
 
-fn parse_lambda_expression(
+fn parse_lambda(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -267,7 +267,7 @@ fn parse_lambda_expression(
     )
 }
 
-fn parse_if_expression(
+fn parse_if(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -290,7 +290,7 @@ fn parse_if_expression(
         tokens.pop();
 
         if peeked_symbol_is(tokens, "if") {
-            let if_expr = parse_if_expression(src, tokens, id_gen, diagnostics);
+            let if_expr = parse_if(src, tokens, id_gen, diagnostics);
             Some(Block {
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
@@ -319,7 +319,7 @@ fn parse_if_expression(
     )
 }
 
-fn parse_while_expression(
+fn parse_while(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -337,7 +337,7 @@ fn parse_while_expression(
     )
 }
 
-fn parse_for_in_expression(
+fn parse_for_in(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -357,7 +357,7 @@ fn parse_for_in_expression(
         id_gen.next(),
     )
 }
-fn parse_break_expression(
+fn parse_break(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -366,7 +366,7 @@ fn parse_break_expression(
     Expression::new(break_token.position, Expression_::Break, id_gen.next())
 }
 
-fn parse_return_expression(
+fn parse_return(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -441,7 +441,7 @@ fn parse_simple_expression(
         }
 
         if token.text == "(" {
-            return parse_tuple_literal_or_parenthesis_expression(src, tokens, id_gen, diagnostics);
+            return parse_tuple_literal_or_parentheses(src, tokens, id_gen, diagnostics);
         }
 
         if token.text == "[" {
@@ -449,7 +449,7 @@ fn parse_simple_expression(
         }
 
         if token.text == "fun" {
-            return parse_lambda_expression(src, tokens, id_gen, diagnostics);
+            return parse_lambda(src, tokens, id_gen, diagnostics);
         }
 
         if SYMBOL_RE.is_match(token.text) {
@@ -465,7 +465,7 @@ fn parse_simple_expression(
                 }
             }
 
-            return parse_variable_expression(tokens, id_gen, diagnostics);
+            return parse_variable(tokens, id_gen, diagnostics);
         }
 
         if token.text.starts_with('\"') {
@@ -569,7 +569,7 @@ fn parse_struct_literal(
     )
 }
 
-fn parse_match_expression(
+fn parse_match(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -823,31 +823,31 @@ fn parse_expression(
     // complex assignments like `foo.bar = 1`.
     if let Some((_, token)) = tokens.peek_two() {
         if token.text == "=" {
-            return parse_assign_expression(src, tokens, id_gen, diagnostics);
+            return parse_assign(src, tokens, id_gen, diagnostics);
         }
     }
 
     if let Some(token) = tokens.peek() {
         if token.text == "let" {
-            return parse_let_expression(src, tokens, id_gen, diagnostics);
+            return parse_let(src, tokens, id_gen, diagnostics);
         }
         if token.text == "return" {
-            return parse_return_expression(src, tokens, id_gen, diagnostics);
+            return parse_return(src, tokens, id_gen, diagnostics);
         }
         if token.text == "while" {
-            return parse_while_expression(src, tokens, id_gen, diagnostics);
+            return parse_while(src, tokens, id_gen, diagnostics);
         }
         if token.text == "for" {
-            return parse_for_in_expression(src, tokens, id_gen, diagnostics);
+            return parse_for_in(src, tokens, id_gen, diagnostics);
         }
         if token.text == "break" {
-            return parse_break_expression(tokens, id_gen, diagnostics);
+            return parse_break(tokens, id_gen, diagnostics);
         }
         if token.text == "if" {
-            return parse_if_expression(src, tokens, id_gen, diagnostics);
+            return parse_if(src, tokens, id_gen, diagnostics);
         }
         if token.text == "match" {
-            return parse_match_expression(src, tokens, id_gen, diagnostics);
+            return parse_match(src, tokens, id_gen, diagnostics);
         }
     }
 
@@ -1766,7 +1766,7 @@ fn parse_symbol(
     }
 }
 
-fn parse_let_expression(
+fn parse_let(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -1787,7 +1787,7 @@ fn parse_let_expression(
     )
 }
 
-fn parse_assign_expression(
+fn parse_assign(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,

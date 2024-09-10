@@ -168,24 +168,6 @@ impl Visitor for HintVisitor<'_> {
             self.visit_type_hint(type_arg);
         }
     }
-
-    fn visit_expr_struct_literal(
-        &mut self,
-        type_symbol: &TypeSymbol,
-        field_exprs: &[(Symbol, Expression)],
-    ) {
-        if self.env.get_type_def(&type_symbol.name).is_none() {
-            self.diagnostics.push(Diagnostic {
-                level: Level::Error,
-                message: format!("No such type: {}", &type_symbol),
-                position: type_symbol.position.clone(),
-            });
-        }
-
-        for (_, expr) in field_exprs {
-            self.visit_expr(expr);
-        }
-    }
 }
 
 fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String {

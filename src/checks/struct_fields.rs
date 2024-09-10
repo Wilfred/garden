@@ -21,7 +21,20 @@ impl Visitor for StructFieldVisitor<'_> {
             self.visit_expr(expr);
         }
 
-        let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym.name) else {
+        let Some(type_def) = self.env.get_type_def(&name_sym.name) else {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: format!("No such type `{}`.", name_sym),
+                position: name_sym.position.clone(),
+            });
+            return;
+        };
+        let TypeDef::Struct(struct_info) = type_def else {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: format!("`{}` is not a struct.", name_sym),
+                position: name_sym.position.clone(),
+            });
             return;
         };
 

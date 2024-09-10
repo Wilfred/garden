@@ -1,6 +1,6 @@
 fun main(_: List<String>) {
     let i = 0
-    while (True) {
+    while True {
         if (i == 10) {
             break
         }

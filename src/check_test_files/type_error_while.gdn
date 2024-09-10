@@ -1,5 +1,5 @@
 {
-    while (1) {
+    while 1 {
         string_repr(1234)
     }
 }
@@ -10,6 +10,6 @@
 // Error: Expected `Bool` inside an `while` condition, but got `Int`.
 // 
 // --> src/check_test_files/type_error_while.gdn:2
-//     while (1) {
-//            ^
+//     while 1 {
+//           ^
 

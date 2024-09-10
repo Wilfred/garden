@@ -4006,7 +4006,7 @@ mod tests {
 
     #[test]
     fn test_eval_while() {
-        let exprs = parse_exprs_from_str("let i = 0 while (i < 5) { i = i + 1 }");
+        let exprs = parse_exprs_from_str("let i = 0 while i < 5 { i = i + 1 }");
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4015,7 +4015,7 @@ mod tests {
 
     #[test]
     fn test_eval_while_block_scope_does_not_leak() {
-        let exprs = parse_exprs_from_str("let i = 0 while (i < 5) { i = i + 1 let x = 1 }");
+        let exprs = parse_exprs_from_str("let i = 0 while i < 5 { i = i + 1 let x = 1 }");
 
         let mut env = Env::default();
         assert!(eval_exprs(&exprs, &mut env).is_ok());

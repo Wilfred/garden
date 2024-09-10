@@ -3,7 +3,7 @@ fun list_filter(items, f) {
   let result = []
 
   let i = 0
-  while (i < list_length(items)) {
+  while i < list_length(items) {
     let item = list_get(items, i)
 
     if (f(item)) {

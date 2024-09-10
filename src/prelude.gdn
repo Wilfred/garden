@@ -118,7 +118,7 @@ fun (self: String) lines(): List<String> {
 
     let line_start = 0
     let i = 0
-    while (i < self.len()) {
+    while i < self.len() {
         let char = self.substring(i, i + 1)
 
         if (char == "\n") {
@@ -152,7 +152,7 @@ test lines {
 // ```
 fun (self: String) split_once(needle: String): Option<List<String>> {
     let i = 0
-    while ((i + needle.len()) <= self.len()) {
+    while (i + needle.len()) <= self.len() {
         let substring = self.substring(i, i + needle.len())
         if (substring == needle) {
             return Some([
@@ -188,7 +188,7 @@ test split_once {
 // ```
 fun (self: String) index_of(needle: String): Option<Int> {
     let i = 0
-    while ((i + needle.len()) <= self.len()) {
+    while (i + needle.len()) <= self.len() {
         let substring = self.substring(i, i + needle.len())
 
         // TODO: better error on ! here
@@ -226,7 +226,7 @@ fun (self: String) join(items: List<String>): String {
 
     let res = items.get(0)
     let i = 1
-    while (i < items.len()) {
+    while i < items.len() {
         res = res.append(self)
         res = res.append(items.get(i))
         i = i + 1
@@ -251,7 +251,7 @@ fun (self: String) contains(substring: String): Bool {
     // dbg(string_length(haystack) - string_length(substring))
 
     let i = 0
-    while (i <= (self.len() - substring.len())) {
+    while i <= (self.len() - substring.len()) {
         let section = self.substring(i, i + substring.len())
         if (section == substring) {
             return True
@@ -265,7 +265,7 @@ fun (self: String) contains(substring: String): Bool {
 
 fun (self: String) trim_left(): String {
     let i = 0
-    while (i < self.len()) {
+    while i < self.len() {
         let char = self.substring(i, i + 1)
         if (char != " ") {
             break
@@ -286,7 +286,7 @@ test trim_left {
 
 fun (self: String) trim_right(): String {
     let i = self.len() - 1
-    while (i >= 0) {
+    while i >= 0 {
         let char = self.substring(i, i + 1)
         if (char != " ") {
             break
@@ -357,7 +357,7 @@ fun (self: String) split(needle: String): List<String> {
     let s = self
 
     let parts: List<String> = []
-    while (s != "") {
+    while s != "" {
         match (s.index_of(needle)) {
             Some(i) => {
                 parts = parts.append(s.substring(0, i))
@@ -385,7 +385,7 @@ fun (self: String) chars(): List<String> {
     let cs: List<String> = []
 
     let i = 0
-    while (i < self.len()) {
+    while i < self.len() {
         cs = cs.append(self.substring(i, i + 1))
         i = i + 1
     }
@@ -433,7 +433,7 @@ fun<T> (self: List<T>) filter(f: Fun<(T), Bool>): List<T> {
     let result: List<T> = []
 
     let i = 0
-    while (i < self.len()) {
+    while i < self.len() {
         let item = self.get(i)
 
         if (f(item)) {
@@ -472,7 +472,7 @@ test is_non_empty {
 // Does this list contain `item`?
 fun<T> (self: List<T>) contains(item: T): Bool {
     let i = 0
-    while (i < self.len()) {
+    while i < self.len() {
         if (self.get(i) == item) {
             return True
         }
@@ -494,7 +494,7 @@ test contains {
 // ```
 fun<T> (self: List<T>) for_each(f: Fun<(T), Unit>): Unit {
     let i = 0
-    while (i < self.len()) {
+    while i < self.len() {
         f(self.get(i))
         i = i + 1
     }
@@ -516,7 +516,7 @@ fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
     let items: List<U> = []
     let i = 0
 
-    while (i < self.len()) {
+    while i < self.len() {
         let new_item = f(self.get(i))
         items = items.append(new_item)
 

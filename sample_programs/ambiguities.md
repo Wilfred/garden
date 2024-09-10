@@ -35,3 +35,4 @@ let x = foo
 ```
 
 Proposal: consider EOL, EOF or } to be an expression terminator.
+Or require types to begin with a capital letter?

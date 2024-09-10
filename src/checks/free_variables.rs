@@ -199,6 +199,15 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.visit_expr(expr);
     }
 
+    fn visit_expr_for_in(&mut self, symbol: &Symbol, expr: &Expression, body: &Block) {
+        self.visit_expr(expr);
+
+        self.push_scope();
+        self.add_binding(symbol);
+        self.visit_block(body);
+        self.pop_scope();
+    }
+
     fn visit_expr_match(
         &mut self,
         scrutinee: &ParenthesizedExpression,

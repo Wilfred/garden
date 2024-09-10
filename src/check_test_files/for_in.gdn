@@ -1,0 +1,7 @@
+fun foo(items: List<Int>) {
+    for x in (items) {
+        x + 1
+    }
+}
+
+// args: check

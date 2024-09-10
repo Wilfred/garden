@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
+use garden_lang_parser::ast::{
+    EnumInfo, Expression, FunInfo, StructInfo, Symbol, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+};
 use garden_lang_parser::visitor::Visitor;
 
 use crate::{
@@ -164,6 +166,24 @@ impl Visitor for HintVisitor<'_> {
 
         for type_arg in &type_hint.args {
             self.visit_type_hint(type_arg);
+        }
+    }
+
+    fn visit_expr_struct_literal(
+        &mut self,
+        type_symbol: &TypeSymbol,
+        field_exprs: &[(Symbol, Expression)],
+    ) {
+        if self.env.get_type_def(&type_symbol.name).is_none() {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: format!("No such type: {}", &type_symbol),
+                position: type_symbol.position.clone(),
+            });
+        }
+
+        for (_, expr) in field_exprs {
+            self.visit_expr(expr);
         }
     }
 }

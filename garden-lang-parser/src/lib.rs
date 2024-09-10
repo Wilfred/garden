@@ -345,6 +345,26 @@ fn parse_while_expression(
     )
 }
 
+fn parse_for_in_expression(
+    src: &str,
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let for_token = require_token(tokens, diagnostics, "for");
+    let symbol = parse_symbol(tokens, id_gen, diagnostics);
+    require_token(tokens, diagnostics, "in");
+
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+
+    let body = parse_block(src, tokens, id_gen, diagnostics, true);
+
+    Expression::new(
+        Position::merge(&for_token.position, &body.close_brace),
+        Expression_::ForIn(symbol, Box::new(expr), body),
+        id_gen.next(),
+    )
+}
 fn parse_break_expression(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -818,6 +838,9 @@ fn parse_expression(
         }
         if token.text == "while" {
             return parse_while_expression(src, tokens, id_gen, diagnostics);
+        }
+        if token.text == "for" {
+            return parse_for_in_expression(src, tokens, id_gen, diagnostics);
         }
         if token.text == "break" {
             return parse_break_expression(tokens, id_gen, diagnostics);

@@ -3,7 +3,7 @@ struct Box<T> {
 }
 
 fun foo(): Box<Int> {
-    Box { value: "not an int" }
+    Box{ value: "not an int" }
 }
 
 fun main(args: List<String>): Unit {

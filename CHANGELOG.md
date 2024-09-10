@@ -17,6 +17,10 @@ let x = 1;
 let x = x + 1; // 2
 ```
 
+Struct literals now require the opening brace to be touching the type
+name, so `Person { name: "wilfred" }` is now written
+`Person{ name: "wilfred" }`.
+
 `return` now requires an argument, so `return;` must now be written
 `return Unit;`.
 

@@ -3,7 +3,7 @@ struct Foo {
 }
 
 fun main(_args: List<String>): Unit {
-    let _f = Foo { x: 1 + 2, x: 42 }
+    let _f = Foo{ x: 1 + 2, x: 42 }
     return Unit
 }
 
@@ -13,6 +13,6 @@ fun main(_args: List<String>): Unit {
 // Warning: Duplicate field `x` in struct literal.
 // 
 // --> src/check_test_files/struct_repeated_field.gdn:6
-//     let _f = Foo { x: 1 + 2, x: 42 }
-//                              ^
+//     let _f = Foo{ x: 1 + 2, x: 42 }
+//                             ^
 

@@ -3,7 +3,7 @@ struct Box<T> {
 }
 
 fun foo(): Box<Int> {
-    Box { value: 1234 }
+    Box{ value: 1234 }
 }
 
 fun main(args: List<String>): Unit {

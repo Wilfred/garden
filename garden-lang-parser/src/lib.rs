@@ -461,8 +461,14 @@ fn parse_simple_expression(
         }
 
         if SYMBOL_RE.is_match(token.text) {
-            if let Some((_, token)) = tokens.peek_two() {
-                if token.text == "{" {
+            if let Some((prev_token, token)) = tokens.peek_two() {
+                // Require struct literals to have the opening brace
+                // immediately after the name, to avoid ambiguity.
+                //
+                // TODO: arguably this should be done in the lexer.
+                if token.text == "{"
+                    && prev_token.position.end_offset == token.position.start_offset
+                {
                     return parse_struct_literal(src, tokens, id_gen, diagnostics);
                 }
             }

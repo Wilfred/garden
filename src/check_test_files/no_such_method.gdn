@@ -3,7 +3,7 @@ struct Bar {}
 {
     "abc".foo()
     [1].foo()
-    Bar {}.foo()
+    Bar{}.foo()
 }
 
 // args: check
@@ -22,6 +22,6 @@ struct Bar {}
 // Error: `Bar` has no method `foo`.
 // 
 // --> src/check_test_files/no_such_method.gdn:6
-//     Bar {}.foo()
-//            ^^^
+//     Bar{}.foo()
+//           ^^^
 

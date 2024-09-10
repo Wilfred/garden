@@ -26,17 +26,16 @@ fun foo() {
 //                             open_paren: Position { ... },
 //                             expr: Expression {
 //                                 pos: Position { ... },
-//                                 expr_: StructLiteral(
-//                                     TypeSymbol"x",
-//                                     [],
+//                                 expr_: Variable(
+//                                     Symbol"x",
 //                                 ),
-//                                 id: SyntaxId(3),
+//                                 id: SyntaxId(2),
 //                             },
 //                             close_paren: Position { ... },
 //                         },
 //                         [],
 //                     ),
-//                     id: SyntaxId(4),
+//                     id: SyntaxId(3),
 //                 },
 //             ],
 //             close_brace: Position { ... },
@@ -50,16 +49,9 @@ fun foo() {
 // --> src/parser_test_files/match_missing_paren.gdn:2
 //     match x {}
 //           ^
-// Error: Parse error: Expected `)`, got `}`
+// Error: Parse error: Expected `)`, got `{`
 // 
-// --> src/parser_test_files/match_missing_paren.gdn:3
-// }
-// ^
-// Error: Parse error: Expected `{`, got `}`
-// 
-// --> src/parser_test_files/match_missing_paren.gdn:3
-// }
-// ^
-// Parse error (incomplete input): Invalid syntax: Expected `}` here, but got EOF
-// Parse error (incomplete input): Expected `}`, got EOF
+// --> src/parser_test_files/match_missing_paren.gdn:2
+//     match x {}
+//             ^
 

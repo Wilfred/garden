@@ -1,4 +1,4 @@
-Foo { x: 1, y: 2 }
+Foo{ x: 1, y: 2 }
 
 // args: dump-ast
 // expected stdout:

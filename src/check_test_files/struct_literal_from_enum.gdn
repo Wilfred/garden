@@ -5,7 +5,7 @@ enum Color {
 }
 
 fun foo() {
-    Color {}
+    Color{}
 }
 
 // args: check
@@ -14,6 +14,6 @@ fun foo() {
 // Error: `Color` is not a struct.
 // 
 // --> src/check_test_files/struct_literal_from_enum.gdn:8
-//     Color {}
+//     Color{}
 //     ^^^^^
 

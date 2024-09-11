@@ -226,10 +226,10 @@ pub enum Expression_ {
     /// ```
     Match(ParenthesizedExpression, Vec<(Pattern, Box<Expression>)>),
     /// ```garden
-    /// if (x) { y }
-    /// if (x) { y } else { z }
+    /// if x { y }
+    /// if x { y } else { z }
     /// ```
-    If(ParenthesizedExpression, Block, Option<Block>),
+    If(Box<Expression>, Block, Option<Block>),
     /// ```garden
     /// while x { y z }
     /// ```

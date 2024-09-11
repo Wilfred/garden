@@ -222,13 +222,8 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_if(
-        &mut self,
-        cond: &ParenthesizedExpression,
-        then_body: &Block,
-        else_body: Option<&Block>,
-    ) {
-        self.visit_parenthesized_expression(cond);
+    fn visit_expr_if(&mut self, cond: &Expression, then_body: &Block, else_body: Option<&Block>) {
+        self.visit_expr(cond);
         self.visit_block(then_body);
         if let Some(else_body) = else_body {
             self.visit_block(else_body);

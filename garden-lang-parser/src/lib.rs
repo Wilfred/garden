@@ -275,15 +275,7 @@ fn parse_if(
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
 
-    let open_paren = require_token(tokens, diagnostics, "(");
     let cond_expr = parse_expression(src, tokens, id_gen, diagnostics);
-    let close_paren = require_token(tokens, diagnostics, ")");
-    let condition = ParenthesizedExpression {
-        open_paren: open_paren.position,
-        expr: Box::new(cond_expr),
-        close_paren: close_paren.position,
-    };
-
     let then_body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
@@ -314,7 +306,7 @@ fn parse_if(
 
     Expression::new(
         Position::merge(&if_token.position, last_brace_pos),
-        Expression_::If(condition, then_body, else_body),
+        Expression_::If(Box::new(cond_expr), then_body, else_body),
         id_gen.next(),
     )
 }

@@ -1,12 +1,12 @@
 fun foo(x: Option<Int>) {
     // This is OK.
-    match (x) {
+    match x {
         Some(_) => {}
         _ => {}
     }
 
     // This is not.
-    match (x) {
+    match x {
         Some(_) => {}
     }
 }
@@ -17,6 +17,6 @@ fun foo(x: Option<Int>) {
 // Error: This match expression does not cover all the cases of `Option`. It's missing `None`.
 // 
 // --> src/check_test_files/type_error_missing_case.gdn:9
-//     match (x) {
-//            ^
+//     match x {
+//           ^
 

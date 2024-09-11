@@ -1,4 +1,4 @@
-match (1) {}
+match 1 {}
 
 // args: dump-ast
 // expected stdout:

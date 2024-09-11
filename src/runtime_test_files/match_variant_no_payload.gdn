@@ -1,5 +1,5 @@
 fun takes_opt(v: Option<Int>): Int {
-    match (v) {
+    match v {
         Some(i) => i + 1,
         None => 123,
     }

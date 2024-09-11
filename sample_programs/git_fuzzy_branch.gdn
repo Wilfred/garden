@@ -31,7 +31,7 @@ fun main(args: List<String>): Unit {
     }
 
     let branches = all_branches.filter(fun(name: String) { name.contains(needle) })
-    match (branches.first()) {
+    match branches.first() {
         Some(name) => {
             if branches.len() == 1 {
                 check_out(name)

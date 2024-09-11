@@ -8,7 +8,7 @@ enum Bool {
 }
 
 fun (self: Bool) not(): Bool {
-    match (self) {
+    match self {
         True => False,
         False => True,
     }
@@ -62,7 +62,7 @@ fun todo(): NoValue {
 
 // If this value is `Ok`, unwrap it, otherwise error.
 fun<T, E> (self: Result<T, E>) or_error(): T {
-    match (self) {
+    match self {
         Ok(v) => v
         Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
     }
@@ -358,7 +358,7 @@ fun (self: String) split(needle: String): List<String> {
 
     let parts: List<String> = []
     while s != "" {
-        match (s.index_of(needle)) {
+        match s.index_of(needle) {
             Some(i) => {
                 parts = parts.append(s.substring(0, i))
                 s = s.substring(i + needle.len(), s.len())
@@ -535,7 +535,7 @@ test list_map {
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
 fun<T> (self: Option<T>) or_exception(): T {
-    match (self) {
+    match self {
         Some(v) => v,
         None => error("Called or_exception on a `None` value.")
     }

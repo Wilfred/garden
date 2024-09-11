@@ -66,7 +66,7 @@ fun build_site(): Unit {
 
 fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {
     let base_tmpl_src = read_file(base_tmpl_path).or_error()
-    let parts = match (base_tmpl_src.split_once("MAIN_CONTENT")) {
+    let parts = match base_tmpl_src.split_once("MAIN_CONTENT") {
         Some(s) => s,
         None => ["", ""]
     }

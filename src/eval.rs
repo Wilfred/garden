@@ -187,7 +187,7 @@ pub(crate) struct StackFrame {
     ///
     /// For example:
     /// ```garden
-    /// match (x) { Some(y) => { y + 1 } _ => {}}
+    /// match x { Some(y) => { y + 1 } _ => {}}
     /// ```
     ///
     /// We want `y` to be bound, but only in the block.
@@ -4120,7 +4120,7 @@ mod tests {
 
     #[test]
     fn test_eval_match() {
-        let exprs = parse_exprs_from_str("let x = Some(1) match (x) { Some(i) => i + 1 _ => {} }");
+        let exprs = parse_exprs_from_str("let x = Some(1) match x { Some(i) => i + 1 _ => {} }");
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();

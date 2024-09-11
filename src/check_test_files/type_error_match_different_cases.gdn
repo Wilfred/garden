@@ -5,7 +5,7 @@ enum Foo {
 }
 
 {
-    match (One) {
+    match One {
         One => [],
         Two => error(""),
         Three => "stuff",

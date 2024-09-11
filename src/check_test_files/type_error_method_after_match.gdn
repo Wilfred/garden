@@ -1,5 +1,5 @@
 fun foo(x: Option<Int>) {
-    let i = match (x) {
+    let i = match x {
         Some(v) => v,
         None => 0,
     }

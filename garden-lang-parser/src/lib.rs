@@ -728,7 +728,13 @@ fn parse_simple_expression_with_trailing(
     loop {
         let start_idx = tokens.idx;
         match tokens.peek() {
-            Some(token) if token.text == "(" => {
+            Some(token)
+                if token.text == "(" && expr.pos.end_offset == token.position.start_offset =>
+            {
+                // Require parentheses to touch when we're parsing a
+                // function call. This allows us to disambiguabe
+                // `foo()` (a call) from `foo ()` (the variable `foo`
+                // followed by a tuple).
                 let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
 
                 expr = Expression::new(

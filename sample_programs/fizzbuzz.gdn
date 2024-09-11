@@ -6,11 +6,11 @@ fun mod(x: Int, y: Int): Int {
 fun main(args: List<String>): Unit {
     let i = 1
     while i < 21 {
-        if (mod(i, 15) == 0) {
+        if mod(i, 15) == 0 {
             println("FizzBuzz")
-        } else if (mod(i, 5) == 0) {
+        } else if mod(i, 5) == 0 {
             println("Buzz")
-        } else if (mod(i, 3) == 0) {
+        } else if mod(i, 3) == 0 {
             println("Fizz")
         } else {
             println(string_repr(i))

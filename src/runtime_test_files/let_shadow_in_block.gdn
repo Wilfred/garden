@@ -1,7 +1,7 @@
 fun main(_args: List<String>): Unit {
     let x = "a"
 
-    if (True) {
+    if True {
         let x = "foo"
         x = x.append("bar")
     }

@@ -1,5 +1,5 @@
 fun takes_int(b: Bool): Int {
-    if (b) {
+    if b {
         return "foo"
     }
 

@@ -1,5 +1,5 @@
 fun foo(b: Bool): Option<Int> {
-    if (b) {
+    if b {
         None
     } else {
         123

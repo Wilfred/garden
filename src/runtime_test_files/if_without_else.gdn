@@ -1,5 +1,5 @@
 fun foo(b: Bool): Int {
-    if (b) {
+    if b {
         // TODO: this is an error according to the type checker, we
         // should error at runtime too.
         123

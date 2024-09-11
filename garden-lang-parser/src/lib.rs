@@ -802,7 +802,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// ```garden
 /// foo()
 /// let x = y + 1
-/// if (a) { b } else { c }
+/// if a { b } else { c }
 /// while z { foo() }
 /// ```
 fn parse_expression(

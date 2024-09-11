@@ -1,4 +1,4 @@
-if (x) {} else if (y) {}
+if x {} else if y {}
 
 // args: dump-ast
 // expected stdout:

@@ -1,5 +1,5 @@
 {
-    if (1) {
+    if 1 {
         string_repr(1234)
     } else {
         ""
@@ -12,6 +12,6 @@
 // Error: Expected `Bool` inside an `if` condition, but got `Int`.
 // 
 // --> src/check_test_files/type_error_if.gdn:2
-//     if (1) {
-//         ^
+//     if 1 {
+//        ^
 

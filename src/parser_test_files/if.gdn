@@ -1,4 +1,4 @@
-if (True) {}
+if True {}
 
 // args: dump-ast
 // expected stdout:

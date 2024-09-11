@@ -4,7 +4,7 @@ fun add_one(i: Int): Int {
 }
 
 fun should_equal(x, y): Unit {
-    if (x != y) {
+    if x != y {
         error("Expected values to be equal")
     }
 }

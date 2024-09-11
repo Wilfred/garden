@@ -3819,7 +3819,7 @@ mod tests {
 
     #[test]
     fn test_eval_if() {
-        let exprs = parse_exprs_from_str("let foo = if (True) { 1 } else { 2 } foo");
+        let exprs = parse_exprs_from_str("let foo = if True { 1 } else { 2 } foo");
 
         let mut env = Env::default();
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -3828,7 +3828,7 @@ mod tests {
 
     #[test]
     fn test_eval_if_block_scope() {
-        let exprs = parse_exprs_from_str("if (True) { let x = 1 } x");
+        let exprs = parse_exprs_from_str("if True { let x = 1 } x");
 
         let mut env = Env::default();
         assert!(eval_exprs(&exprs, &mut env).is_err());

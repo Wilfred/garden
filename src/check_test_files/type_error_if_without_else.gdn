@@ -1,5 +1,5 @@
 fun foo(b: Bool): Int {
-    if (b) {
+    if b {
         123
     }
 }

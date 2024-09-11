@@ -78,7 +78,7 @@ enum NoValue {}
 
 // Does this string start with `s`?
 fun (self: String) starts_with(s: String): Bool {
-    if (s.len() > self.len()) {
+    if s.len() > self.len() {
         return False
     }
 
@@ -96,7 +96,7 @@ test starts_with {
 
 // Does this string end with `s`?
 fun (self: String) ends_with(s: String): Bool {
-    if (s.len() > self.len()) {
+    if s.len() > self.len() {
         return False
     }
 
@@ -121,7 +121,7 @@ fun (self: String) lines(): List<String> {
     while i < self.len() {
         let char = self.substring(i, i + 1)
 
-        if (char == "\n") {
+        if char == "\n" {
             parts = parts.append(self.substring(line_start, i))
             line_start = i + 1
         }
@@ -130,7 +130,7 @@ fun (self: String) lines(): List<String> {
     }
 
     // Append last line if it wasn't terminated with a newline.
-    if (line_start != self.len()) {
+    if line_start != self.len() {
         parts = parts.append(self.substring(line_start, self.len()))
     }
 
@@ -154,7 +154,7 @@ fun (self: String) split_once(needle: String): Option<List<String>> {
     let i = 0
     while (i + needle.len()) <= self.len() {
         let substring = self.substring(i, i + needle.len())
-        if (substring == needle) {
+        if substring == needle {
             return Some([
                 self.substring(0, i),
                 self.substring(i + needle.len(), self.len()),
@@ -192,7 +192,7 @@ fun (self: String) index_of(needle: String): Option<Int> {
         let substring = self.substring(i, i + needle.len())
 
         // TODO: better error on ! here
-        if (substring == needle) {
+        if substring == needle {
             return Some(i)
         }
 
@@ -217,10 +217,10 @@ test string_index_of {
 // ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
 fun (self: String) join(items: List<String>): String {
-    if (items.is_empty()) {
+    if items.is_empty() {
         return ""
     }
-    if (items.len() == 1) {
+    if items.len() == 1 {
         return items.get(0)
     }
 
@@ -243,7 +243,7 @@ test join {
 
 // Does this string contain `substring`?
 fun (self: String) contains(substring: String): Bool {
-    if (substring.len() > self.len()) {
+    if substring.len() > self.len() {
         return False
     }
 
@@ -253,7 +253,7 @@ fun (self: String) contains(substring: String): Bool {
     let i = 0
     while i <= (self.len() - substring.len()) {
         let section = self.substring(i, i + substring.len())
-        if (section == substring) {
+        if section == substring {
             return True
         }
 
@@ -267,7 +267,7 @@ fun (self: String) trim_left(): String {
     let i = 0
     while i < self.len() {
         let char = self.substring(i, i + 1)
-        if (char != " ") {
+        if char != " " {
             break
         }
 
@@ -288,7 +288,7 @@ fun (self: String) trim_right(): String {
     let i = self.len() - 1
     while i >= 0 {
         let char = self.substring(i, i + 1)
-        if (char != " ") {
+        if char != " " {
             break
         }
 
@@ -313,7 +313,7 @@ test trim_right {
 // "bar".strip_suffix("o") // "bar"
 // ```
 fun (self: String) strip_suffix(suffix: String): String {
-    if (self.ends_with(suffix)) {
+    if self.ends_with(suffix) {
         return self.substring(0, self.len() - suffix.len())
     }
 
@@ -333,7 +333,7 @@ test strip_suffix {
 // "bar".strip_prefix("f") // "bar"
 // ```
 fun (self: String) strip_prefix(prefix: String): String {
-    if (self.starts_with(prefix)) {
+    if self.starts_with(prefix) {
         // return self.substring(prefix.len(), self.len(), 1)
         return self.substring(prefix.len(), self.len())
     }
@@ -401,7 +401,7 @@ test string_chars {
 
 // Get the first item in this list, if the list is not empty.
 fun<T> (self: List<T>) first(): Option<T> {
-    if (self.is_empty()) {
+    if self.is_empty() {
         None
     } else {
         Some(self.get(0))
@@ -415,7 +415,7 @@ test first {
 
 // Get the last item in this list, if the list is not empty.
 fun<T> (self: List<T>) last(): Option<T> {
-    if (self.is_empty()) {
+    if self.is_empty() {
         None
     } else {
         Some(self.get(self.len() - 1))
@@ -436,7 +436,7 @@ fun<T> (self: List<T>) filter(f: Fun<(T), Bool>): List<T> {
     while i < self.len() {
         let item = self.get(i)
 
-        if (f(item)) {
+        if f(item) {
             result = result.append(item)
         }
 
@@ -473,7 +473,7 @@ test is_non_empty {
 fun<T> (self: List<T>) contains(item: T): Bool {
     let i = 0
     while i < self.len() {
-        if (self.get(i) == item) {
+        if self.get(i) == item {
             return True
         }
 
@@ -549,7 +549,7 @@ test option_or_exception {
 
 // Assert that `actual`and `expected` are equal values.
 fun should_equal(actual, expected): Unit {
-    if (actual != expected) {
+    if actual != expected {
         error("".join(["Expected ", string_repr(expected), " but got ", string_repr(actual), "."]))
     }
 }

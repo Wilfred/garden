@@ -6,7 +6,7 @@ fun list_filter(items, f) {
   while i < list_length(items) {
     let item = list_get(items, i)
 
-    if (f(item)) {
+    if f(item) {
       result = list_append(result, item)
     }
 

@@ -1,5 +1,5 @@
 fun foo(s: String, i: Int) {
-    if (s == i) {
+    if s == i {
         print("hello world")
     }
 }
@@ -10,6 +10,6 @@ fun foo(s: String, i: Int) {
 // Warning: Comparing `String` with `Int` will always be `False`.
 // 
 // --> src/check_test_files/equality_on_different_type.gdn:2
-//     if (s == i) {
-//         ^^^^^^
+//     if s == i {
+//        ^^^^^^
 

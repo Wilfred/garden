@@ -1,11 +1,11 @@
 {
-    if (True) {
+    if True {
         None
     } else {
         Some(123)
     }
 
-    if (False) {
+    if False {
         []
     } else {
         ["abc"]

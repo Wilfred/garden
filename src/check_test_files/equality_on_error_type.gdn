@@ -1,7 +1,7 @@
 fun foo() {
     let v = no_such_func()
     // should not emit an equality warning
-    if (v == "") {
+    if v == "" {
         print("hello world")
     }
 }

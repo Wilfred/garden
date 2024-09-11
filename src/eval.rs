@@ -187,7 +187,7 @@ pub(crate) struct StackFrame {
     ///
     /// For example:
     /// ```garden
-    /// match (x) { Some(y) => { y + 1; } _ => {}}
+    /// match (x) { Some(y) => { y + 1 } _ => {}}
     /// ```
     ///
     /// We want `y` to be bound, but only in the block.

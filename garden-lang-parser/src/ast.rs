@@ -218,13 +218,13 @@ pub struct ParenthesizedArguments {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression_ {
     /// ```garden
-    /// match (x) {
+    /// match x {
     ///     None => { get_value() }
     ///     Some(y) => y + 1,
     ///     _ => error("yikes"),
     /// }
     /// ```
-    Match(ParenthesizedExpression, Vec<(Pattern, Box<Expression>)>),
+    Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
     /// ```garden
     /// if x { y }
     /// if x { y } else { z }

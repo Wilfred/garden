@@ -21,8 +21,9 @@ Struct literals now require the opening brace to be touching the type
 name, so `Person { name: "wilfred" }` is now written
 `Person{ name: "wilfred" }`.
 
-`while` loops and `if` expressions no longer require parentheses, so
-`while x {}` and `if True {}` are now valid.
+`while` loops, `match` expressions and `if` expressions no longer
+require parentheses, so `while x {}`, `match x {}` and `if True {}`
+are now valid.
 
 `return` now requires an argument, so `return;` must now be written
 `return Unit;`.

@@ -1,7 +1,6 @@
 use crate::{
     Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
-    ParenthesizedExpression, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint,
-    TypeSymbol,
+    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -109,10 +108,6 @@ pub trait Visitor {
         }
     }
 
-    fn visit_parenthesized_expression(&mut self, paren_expr: &ParenthesizedExpression) {
-        self.visit_expr(&paren_expr.expr);
-    }
-
     fn visit_expr(&mut self, expr: &Expression) {
         self.visit_expr_(&expr.expr_);
     }
@@ -211,12 +206,8 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_match(
-        &mut self,
-        scrutinee: &ParenthesizedExpression,
-        cases: &[(Pattern, Box<Expression>)],
-    ) {
-        self.visit_parenthesized_expression(scrutinee);
+    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Box<Expression>)]) {
+        self.visit_expr(scrutinee);
         for (_, case_expr) in cases {
             self.visit_expr(case_expr);
         }

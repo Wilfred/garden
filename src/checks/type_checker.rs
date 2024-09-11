@@ -291,8 +291,7 @@ impl<'a> TypeCheckVisitor<'a> {
     ) -> Type {
         match expr_ {
             Expression_::Match(scrutinee, cases) => {
-                let scrutinee_ty =
-                    self.check_expr(&scrutinee.expr, type_bindings, expected_return_ty);
+                let scrutinee_ty = self.check_expr(scrutinee, type_bindings, expected_return_ty);
                 let scrutinee_ty_name = scrutinee_ty.type_name();
 
                 let mut case_tys = vec![];
@@ -301,7 +300,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
                     check_match_exhaustive(
                         self.env,
-                        &scrutinee.expr.pos,
+                        &scrutinee.pos,
                         scrutinee_ty_name,
                         &patterns,
                         &mut self.diagnostics,

@@ -3,16 +3,12 @@ match (1) {}
 // args: dump-ast
 // expected stdout:
 // Match(
-//     ParenthesizedExpression {
-//         open_paren: Position { ... },
-//         expr: Expression {
-//             pos: Position { ... },
-//             expr_: IntLiteral(
-//                 1,
-//             ),
-//             id: SyntaxId(0),
-//         },
-//         close_paren: Position { ... },
+//     Expression {
+//         pos: Position { ... },
+//         expr_: IntLiteral(
+//             1,
+//         ),
+//         id: SyntaxId(0),
 //     },
 //     [],
 // )

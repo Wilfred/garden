@@ -22,16 +22,12 @@ fun foo() {
 //                 Expression {
 //                     pos: Position { ... },
 //                     expr_: Match(
-//                         ParenthesizedExpression {
-//                             open_paren: Position { ... },
-//                             expr: Expression {
-//                                 pos: Position { ... },
-//                                 expr_: Variable(
-//                                     Symbol"x",
-//                                 ),
-//                                 id: SyntaxId(2),
-//                             },
-//                             close_paren: Position { ... },
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Variable(
+//                                 Symbol"x",
+//                             ),
+//                             id: SyntaxId(2),
 //                         },
 //                         [],
 //                     ),
@@ -42,16 +38,4 @@ fun foo() {
 //         },
 //     },
 // )
-
-// expected stderr:
-// Error: Parse error: Expected `(`, got `x`
-// 
-// --> src/parser_test_files/match_missing_paren.gdn:2
-//     match x {}
-//           ^
-// Error: Parse error: Expected `)`, got `{`
-// 
-// --> src/parser_test_files/match_missing_paren.gdn:2
-//     match x {}
-//             ^
 

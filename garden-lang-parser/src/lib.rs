@@ -568,15 +568,7 @@ fn parse_match(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let match_keyword = require_token(tokens, diagnostics, "match");
-
-    let open_paren = require_token(tokens, diagnostics, "(");
     let scrutinee_expr = parse_expression(src, tokens, id_gen, diagnostics);
-    let close_paren = require_token(tokens, diagnostics, ")");
-    let scrutinee = ParenthesizedExpression {
-        open_paren: open_paren.position,
-        expr: Box::new(scrutinee_expr),
-        close_paren: close_paren.position,
-    };
 
     require_token(tokens, diagnostics, "{");
 
@@ -610,7 +602,7 @@ fn parse_match(
 
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
-        Expression_::Match(scrutinee, cases),
+        Expression_::Match(Box::new(scrutinee_expr), cases),
         id_gen.next(),
     )
 }

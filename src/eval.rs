@@ -1087,6 +1087,70 @@ fn eval_while(
     Ok(())
 }
 
+fn eval_for_in(
+    env: &mut Env,
+    stack_frame: &mut StackFrame,
+    iter_sym: &Symbol,
+    iteree_pos: &Position,
+    outer_expr: Expression,
+    body: &Block,
+) -> Result<(), ErrorInfo> {
+    let iteree_value = stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for `for` loop");
+
+    let Value::List { items, .. } = &iteree_value else {
+        return Err(ErrorInfo {
+            message: format_type_error(
+                &TypeName {
+                    name: "List".into(),
+                },
+                &iteree_value,
+                env,
+            ),
+            restore_values: vec![iteree_value],
+            error_position: iteree_pos.clone(),
+        });
+    };
+
+    let iteree_idx = *stack_frame
+        .for_loop_indices
+        .get(&outer_expr.id)
+        .unwrap_or(&0);
+    if iteree_idx >= items.len() {
+        // We're done with this for loop.
+        return Ok(());
+    }
+
+    // After an iteration the loop body, evaluate again. We don't
+    // re-evaluate the iteree expression though.
+    stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
+    stack_frame.evalled_values.push(iteree_value.clone());
+
+    let mut bindings: Vec<(Symbol, Value)> = vec![];
+    if !iter_sym.name.is_underscore() {
+        bindings.push((iter_sym.clone(), items[iteree_idx].clone()));
+    }
+
+    stack_frame.bindings_next_block = bindings;
+    stack_frame.exprs_to_eval.push((
+        false,
+        Expression::new(
+            outer_expr.pos,
+            Expression_::Block(body.clone()),
+            env.id_gen.next(),
+        ),
+    ));
+
+    // Next time we evaluate the for loop, we will want the next index.
+    stack_frame
+        .for_loop_indices
+        .insert(outer_expr.id, iteree_idx + 1);
+
+    Ok(())
+}
+
 fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
     let var_name = &variable.name;
     if !stack_frame.bindings.has(var_name) {
@@ -2788,8 +2852,32 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                         stack_frame.exprs_to_eval.push((false, *condition.clone()));
                     }
                 }
-                Expression_::ForIn(_sym, _expr, _body) => {
-                    todo!()
+                Expression_::ForIn(sym, expr, body) => {
+                    if done_children {
+                        if let Err(ErrorInfo {
+                            message,
+                            restore_values,
+                            error_position: position,
+                        }) = eval_for_in(
+                            env,
+                            &mut stack_frame,
+                            sym,
+                            &expr.pos,
+                            outer_expr.clone(),
+                            body,
+                        ) {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, outer_expr.clone()),
+                                &restore_values,
+                            );
+                            return Err(EvalError::ResumableError(position, message));
+                        }
+                    } else {
+                        stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
+                        stack_frame.exprs_to_eval.push((false, *expr.clone()));
+                    }
                 }
                 Expression_::Return(expr) => {
                     if done_children {

@@ -1051,7 +1051,7 @@ fn eval_while(
     let condition_value = stack_frame
         .evalled_values
         .pop()
-        .expect("Popped an empty value stack for if condition");
+        .expect("Popped an empty value stack for while loop");
 
     if let Some(b) = to_rust_bool(&condition_value) {
         if b {

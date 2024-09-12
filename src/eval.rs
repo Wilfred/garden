@@ -1053,24 +1053,7 @@ fn eval_while(
         .pop()
         .expect("Popped an empty value stack for while loop");
 
-    if let Some(b) = to_rust_bool(&condition_value) {
-        if b {
-            // After the loop body, we will want to evaluate the expression again.
-            stack_frame.exprs_to_eval.push((false, expr.clone()));
-
-            // Evaluate the body.
-            stack_frame.exprs_to_eval.push((
-                false,
-                Expression::new(
-                    expr.pos,
-                    Expression_::Block(body.clone()),
-                    env.id_gen.next(),
-                ),
-            ))
-        } else {
-            stack_frame.evalled_values.push(Value::unit());
-        }
-    } else {
+    let Some(b) = to_rust_bool(&condition_value) else {
         return Err(ErrorInfo {
             message: format_type_error(
                 &TypeName {
@@ -1082,6 +1065,23 @@ fn eval_while(
             restore_values: vec![condition_value],
             error_position: condition_pos.clone(),
         });
+    };
+
+    if b {
+        // After the loop body, we will want to evaluate the expression again.
+        stack_frame.exprs_to_eval.push((false, expr.clone()));
+
+        // Evaluate the body.
+        stack_frame.exprs_to_eval.push((
+            false,
+            Expression::new(
+                expr.pos,
+                Expression_::Block(body.clone()),
+                env.id_gen.next(),
+            ),
+        ))
+    } else {
+        stack_frame.evalled_values.push(Value::unit());
     }
 
     Ok(())

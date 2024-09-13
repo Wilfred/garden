@@ -1229,10 +1229,10 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
     let actual_ty = Type::from_value(value, env, &env.stack.type_bindings());
 
     let msg = if actual_ty.is_unit() {
-        format!("Expected {}, but got Unit", expected.to_string(),)
+        format!("Expected `{}`, but got `Unit`", expected.to_string(),)
     } else {
         format!(
-            "Expected {}, but got {}: {}",
+            "Expected `{}`, but got `{}`: {}",
             expected.to_string(),
             Type::from_value(value, env, &env.stack.type_bindings()),
             value.display(env)
@@ -3464,7 +3464,7 @@ fn eval_dot_access(
         }
         _ => {
             return Err(ErrorInfo {
-                message: format_type_error("a struct", &recv_value, env),
+                message: format_type_error("struct", &recv_value, env),
                 restore_values: vec![recv_value],
                 error_position: recv_pos.clone(),
             })

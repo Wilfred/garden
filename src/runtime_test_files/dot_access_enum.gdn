@@ -5,7 +5,7 @@ fun main(args: List<String>): Unit {
 
 // args: run
 // expected stderr:
-// Error: Expected a struct, but got Option<Int>: Some(1)
+// Error: Expected `struct`, but got `Option<Int>`: Some(1)
 // 
 // --> src/runtime_test_files/dot_access_enum.gdn:3[2m[1m	 fun main()[0m[0m
 //     x.y

@@ -4,7 +4,7 @@ fun main(_) {
 
 // args: run
 // expected stderr:
-// Error: Expected String, but got Int: 123
+// Error: Expected `String`, but got `Int`: 123
 // 
 // --> src/runtime_test_files/string_append_type_error.gdn:2[2m[1m	 fun main()[0m[0m
 //     "foo".append(123)

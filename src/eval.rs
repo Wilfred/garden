@@ -1095,6 +1095,16 @@ fn eval_for_in(
     outer_expr: Expression,
     body: &Block,
 ) -> Result<(), ErrorInfo> {
+    let iteree_idx = *stack_frame
+        .for_loop_indices
+        .get(&outer_expr.id)
+        .unwrap_or(&0);
+
+    if iteree_idx > 0 {
+        // Discard the result of evaluating the previous loop body.
+        stack_frame.evalled_values.pop();
+    }
+
     let iteree_value = stack_frame
         .evalled_values
         .pop()
@@ -1114,12 +1124,9 @@ fn eval_for_in(
         });
     };
 
-    let iteree_idx = *stack_frame
-        .for_loop_indices
-        .get(&outer_expr.id)
-        .unwrap_or(&0);
     if iteree_idx >= items.len() {
         // We're done with this for loop.
+        stack_frame.evalled_values.push(Value::unit());
         return Ok(());
     }
 

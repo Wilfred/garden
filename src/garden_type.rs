@@ -61,6 +61,14 @@ impl Type {
         matches!(self, Type::Error(_))
     }
 
+    pub(crate) fn is_unit(&self) -> bool {
+        let Type::UserDefined { name, .. } = self else {
+            return false;
+        };
+
+        name.name == "Unit"
+    }
+
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
         Type::Error(msg.as_ref().to_owned())
     }

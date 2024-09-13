@@ -1226,12 +1226,20 @@ fn eval_let(
 }
 
 fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &Env) -> ErrorMessage {
-    ErrorMessage(format!(
-        "Expected {}, but got {}: {}",
-        expected.to_string(),
-        Type::from_value(value, env, &env.stack.type_bindings()),
-        value.display(env)
-    ))
+    let actual_ty = Type::from_value(value, env, &env.stack.type_bindings());
+
+    let msg = if actual_ty.is_unit() {
+        format!("Expected {}, but got Unit", expected.to_string(),)
+    } else {
+        format!(
+            "Expected {}, but got {}: {}",
+            expected.to_string(),
+            Type::from_value(value, env, &env.stack.type_bindings()),
+            value.display(env)
+        )
+    };
+
+    ErrorMessage(msg)
 }
 
 fn eval_boolean_binop(

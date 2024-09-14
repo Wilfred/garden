@@ -3626,10 +3626,16 @@ fn eval_block(stack_frame: &mut StackFrame, outer_expr: &Expression, block: &Blo
         stack_frame.bindings.add_new(&sym.name, expr);
     }
 
-    for expr in block.exprs.iter().rev() {
+    for (i, expr) in block.exprs.iter().rev().enumerate() {
         stack_frame.exprs_to_eval.push((
             EvaluatedState::NotEvaluated,
-            KeepValue::Yes,
+            if i == 0 {
+                // We only keep the value from the last expression in
+                // the block.
+                KeepValue::Yes
+            } else {
+                KeepValue::No
+            },
             expr.clone(),
         ));
     }

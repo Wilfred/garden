@@ -1,0 +1,13 @@
+fun foo() {
+    break
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `break` can only be used inside loops.
+// 
+// --> src/check_test_files/break_without_loop.gdn:2
+//     break
+//     ^^^^^
+

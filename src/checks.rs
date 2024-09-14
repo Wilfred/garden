@@ -1,6 +1,7 @@
 mod duplicates;
 mod free_variables;
 mod hints;
+mod loops;
 mod struct_fields;
 pub mod type_checker;
 
@@ -8,6 +9,7 @@ use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::eval_defs;
 use garden_lang_parser::ast::{Definition, ToplevelItem};
+use loops::check_loops;
 
 use self::duplicates::check_duplicates;
 use self::hints::check_hints;
@@ -47,6 +49,7 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     let (type_diagnostics, _, _, _) = check_types(items, env);
     diagnostics.extend(type_diagnostics);
     diagnostics.extend(check_duplicates(items, env));
+    diagnostics.extend(check_loops(items));
 
     diagnostics
 }

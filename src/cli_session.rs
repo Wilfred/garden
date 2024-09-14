@@ -10,7 +10,7 @@ use crate::commands::{
 };
 use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
-use crate::eval::{eval_env, eval_toplevel_defs, EvaluatedState, Session};
+use crate::eval::{eval_env, eval_toplevel_defs, EvaluatedState, KeepValue, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
 use garden_lang_parser::ast::{SyntaxIdGenerator, ToplevelItem};
@@ -128,9 +128,11 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 // exprs_to_eval is the first expression from the
                 // user.
                 for expr in exprs.iter().rev() {
-                    stack_frame
-                        .exprs_to_eval
-                        .push((EvaluatedState::NotEvaluated, expr.0.clone()));
+                    stack_frame.exprs_to_eval.push((
+                        EvaluatedState::NotEvaluated,
+                        KeepValue::Yes,
+                        expr.0.clone(),
+                    ));
                 }
             }
             Err(ReadError::NeedsEval(EvalAction::Abort)) => {
@@ -146,9 +148,11 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let stack_frame = env.stack.0.last_mut().unwrap();
 
                 stack_frame.evalled_values.pop();
-                stack_frame
-                    .exprs_to_eval
-                    .push((EvaluatedState::NotEvaluated, expr));
+                stack_frame.exprs_to_eval.push((
+                    EvaluatedState::NotEvaluated,
+                    KeepValue::Yes,
+                    expr,
+                ));
 
                 // TODO: Prevent :replace when we've not just halted.
             }

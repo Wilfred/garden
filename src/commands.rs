@@ -559,7 +559,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.0.last() {
-                for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
+                for (_, _, expr) in stack_frame.exprs_to_eval.iter().rev() {
                     writeln!(buf, "{:#?}", expr.expr_).unwrap();
                 }
             }

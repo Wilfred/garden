@@ -3269,6 +3269,19 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                 Expression_::Block(block) => {
                     if done_children {
                         stack_frame.bindings.pop_block();
+
+                        let mut block_expr_values = vec![];
+                        for _ in &block.exprs {
+                            block_expr_values.push(
+                                stack_frame
+                                    .evalled_values
+                                    .pop()
+                                    .expect("Should have a value from every block expression"),
+                            );
+                        }
+
+                        let block_value = block_expr_values.pop().unwrap_or_else(Value::unit);
+                        stack_frame.evalled_values.push(block_value);
                     } else {
                         stack_frame.exprs_to_eval.push((true, outer_expr.clone()));
 

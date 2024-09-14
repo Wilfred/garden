@@ -1,0 +1,22 @@
+{ "method": "run", "input": "let x = {}" }
+{ "method": "run", "input": "let y = {}" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": "evaluate",
+//   "value": {
+//     "Ok": "Unit"
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+// {
+//   "kind": "evaluate",
+//   "value": {
+//     "Ok": "Unit"
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+

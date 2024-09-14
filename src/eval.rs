@@ -206,6 +206,7 @@ pub(crate) struct StackFrame {
     pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
     /// A stack of expressions to evaluate.
     pub(crate) exprs_to_eval: Vec<(EvaluatedState, Expression)>,
+    /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
     /// If we're currently evaluating a `for` loop, the index of the
     /// current iteration.

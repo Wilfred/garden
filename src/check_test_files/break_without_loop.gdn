@@ -1,5 +1,14 @@
 fun foo() {
     break
+
+    while True {
+        // Good
+        break
+
+        // Bad
+        fun() { break }
+    }
+
 }
 
 // args: check
@@ -10,4 +19,9 @@ fun foo() {
 // --> src/check_test_files/break_without_loop.gdn:2
 //     break
 //     ^^^^^
+// Error: `break` can only be used inside loops.
+// 
+// --> src/check_test_files/break_without_loop.gdn:9
+//         fun() { break }
+//                 ^^^^^
 

@@ -175,7 +175,7 @@ pub trait Visitor {
                 }
             }
             Expression_::FunLiteral(fun_info) => {
-                self.visit_fun_info(fun_info);
+                self.visit_expr_fun_literal(fun_info);
             }
             Expression_::Block(b) => {
                 self.visit_block(b);
@@ -249,6 +249,10 @@ pub trait Visitor {
     fn visit_expr_assign(&mut self, symbol: &Symbol, expr: &Expression) {
         self.visit_symbol(symbol);
         self.visit_expr(expr);
+    }
+
+    fn visit_expr_fun_literal(&mut self, fun_info: &FunInfo) {
+        self.visit_fun_info(fun_info);
     }
 
     fn visit_symbol(&mut self, _: &Symbol) {}

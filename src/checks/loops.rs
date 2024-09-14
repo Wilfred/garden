@@ -1,7 +1,7 @@
 //! Check that loops are well-formed.
 
 use garden_lang_parser::{
-    ast::{Block, Expression, Expression_, Symbol, ToplevelItem},
+    ast::{Block, Expression, Expression_, FunInfo, Symbol, ToplevelItem},
     visitor::Visitor,
 };
 
@@ -31,6 +31,15 @@ impl Visitor for LoopVisitor {
         self.in_loop = true;
 
         self.visit_block(body);
+
+        self.in_loop = prev_in_loop;
+    }
+
+    fn visit_expr_fun_literal(&mut self, fun_info: &FunInfo) {
+        let prev_in_loop = self.in_loop;
+        self.in_loop = false;
+
+        self.visit_fun_info(fun_info);
 
         self.in_loop = prev_in_loop;
     }

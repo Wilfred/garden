@@ -3465,27 +3465,8 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         let block_value = block_expr_values.pop().unwrap_or_else(Value::unit);
                         stack_frame.evalled_values.push(block_value);
                     } else {
-                        stack_frame.exprs_to_eval.push((
-                            EvaluatedState::EvaluatedSubexpressions,
-                            KeepValue::Yes,
-                            outer_expr.clone(),
-                        ));
-
                         stack_frame.bindings.push_block();
-
-                        let bindings_next_block =
-                            std::mem::take(&mut stack_frame.bindings_next_block);
-                        for (sym, expr) in bindings_next_block {
-                            stack_frame.bindings.add_new(&sym.name, expr);
-                        }
-
-                        for expr in block.exprs.iter().rev() {
-                            stack_frame.exprs_to_eval.push((
-                                EvaluatedState::NotEvaluated,
-                                KeepValue::Yes,
-                                expr.clone(),
-                            ));
-                        }
+                        eval_block(&mut stack_frame, &outer_expr, block);
                     }
                 }
                 Expression_::DotAccess(recv, sym) => {
@@ -3631,6 +3612,27 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
         .evalled_values
         .pop()
         .expect("Should have a value from the last expression"))
+}
+
+fn eval_block(stack_frame: &mut StackFrame, outer_expr: &Expression, block: &Block) {
+    stack_frame.exprs_to_eval.push((
+        EvaluatedState::EvaluatedSubexpressions,
+        KeepValue::Yes,
+        outer_expr.clone(),
+    ));
+
+    let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
+    for (sym, expr) in bindings_next_block {
+        stack_frame.bindings.add_new(&sym.name, expr);
+    }
+
+    for expr in block.exprs.iter().rev() {
+        stack_frame.exprs_to_eval.push((
+            EvaluatedState::NotEvaluated,
+            KeepValue::Yes,
+            expr.clone(),
+        ));
+    }
 }
 
 fn eval_break(stack_frame: &mut StackFrame) {

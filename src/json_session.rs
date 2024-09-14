@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
-    eval_all_toplevel_items, eval_env, eval_up_to, push_test_stackframe, EvaluatedState, KeepValue,
+    eval, eval_all_toplevel_items, eval_up_to, push_test_stackframe, EvaluatedState, KeepValue,
 };
 use crate::types::TypeDef;
 use crate::values::Value;
@@ -534,7 +534,7 @@ fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
 }
 
 fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
-    match eval_env(env, session) {
+    match eval(env, session) {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,
             value: Ok(Some(result.display(env))),

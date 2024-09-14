@@ -366,7 +366,7 @@ pub(crate) fn eval_toplevel_tests(
 
     for test in test_defs {
         push_test_stackframe(test, env);
-        eval_env(env, session)?;
+        eval(env, session)?;
 
         tests_passed += 1;
     }
@@ -521,7 +521,7 @@ pub(crate) fn eval_up_to(
                 session.stop_at_expr_id = Some(expr_id);
 
                 push_test_stackframe(test, env);
-                let res = eval_env(env, session);
+                let res = eval(env, session);
                 session.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
@@ -596,7 +596,7 @@ pub(crate) fn eval_toplevel_call(
         call_expr,
     ));
 
-    eval_env(env, session)
+    eval(env, session)
 }
 
 /// Helper for starting evaluation with a method call. Used for
@@ -650,7 +650,7 @@ pub(crate) fn eval_toplevel_method_call(
         call_expr,
     ));
 
-    eval_env(env, session)
+    eval(env, session)
 }
 
 pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
@@ -2828,7 +2828,8 @@ fn eval_builtin_method_call(
     Ok(())
 }
 
-pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
+/// Execute the expressions in the stack on `env`.
+pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, keep_value, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
@@ -3947,7 +3948,7 @@ pub(crate) fn eval_exprs(
     // TODO: do this setup outside of this function.
     top_stack.exprs_to_eval = exprs_to_eval;
 
-    eval_env(env, session)
+    eval(env, session)
 }
 
 #[cfg(test)]

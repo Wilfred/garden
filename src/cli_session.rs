@@ -10,7 +10,7 @@ use crate::commands::{
 };
 use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
-use crate::eval::{eval_env, eval_toplevel_defs, EvaluatedState, KeepValue, Session};
+use crate::eval::{eval, eval_toplevel_defs, EvaluatedState, KeepValue, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
 use garden_lang_parser::ast::{SyntaxIdGenerator, ToplevelItem};
@@ -181,7 +181,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             }
         }
 
-        match eval_env(&mut env, &mut session) {
+        match eval(&mut env, &mut session) {
             Ok(result) => {
                 if let Some(display_str) = result.display_unless_unit(&env) {
                     println!("{}", display_str);

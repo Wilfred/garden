@@ -3325,7 +3325,8 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                     eval_break(&mut stack_frame);
                 }
                 Expression_::Continue => {
-                    todo!()
+                    done_children = true;
+                    eval_continue(&mut stack_frame);
                 }
                 Expression_::Invalid => {
                     restore_stack_frame(env, stack_frame, (done_children, outer_expr.clone()), &[]);
@@ -3449,7 +3450,24 @@ fn eval_break(stack_frame: &mut StackFrame) {
         }
     }
 
+    // Loops always evaluate to unit.
     stack_frame.evalled_values.push(Value::unit());
+}
+
+fn eval_continue(stack_frame: &mut StackFrame) {
+    // Pop all the currently evaluating expressions until we are no
+    // longer inside the innermost loop.
+    while let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+        if matches!(
+            expr.expr_,
+            Expression_::Block(Block {
+                is_loop_body: true,
+                ..
+            })
+        ) {
+            break;
+        }
+    }
 }
 
 fn eval_dot_access(

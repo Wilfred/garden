@@ -486,7 +486,12 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::unit()
             }
-            Expression_::Break | Expression_::Continue => Type::unit(),
+            Expression_::Break | Expression_::Continue => {
+                // As with `return`, these never produce a value, they
+                // jump elsewhere. `let x = break` will never assign
+                // a value to x.
+                Type::no_value()
+            }
             Expression_::Assign(sym, expr) => {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 

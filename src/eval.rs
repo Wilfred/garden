@@ -3145,7 +3145,6 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             return Err(EvalError::ResumableError(position, message));
                         }
                     } else {
-                        // TODO: error on duplicate fields in literal, perhaps in parser.
                         stack_frame.exprs_to_eval.push((
                             EvaluatedState::EvaluatedSubexpressions,
                             KeepValue::Yes,

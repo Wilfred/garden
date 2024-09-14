@@ -127,6 +127,7 @@ pub trait Visitor {
                 self.visit_expr_for_in(sym, expr, body);
             }
             Expression_::Break => {}
+            Expression_::Continue => {}
             Expression_::Assign(sym, expr) => {
                 self.visit_expr_assign(sym, expr);
             }

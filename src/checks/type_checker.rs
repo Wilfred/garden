@@ -486,7 +486,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::unit()
             }
-            Expression_::Break => Type::unit(),
+            Expression_::Break | Expression_::Continue => Type::unit(),
             Expression_::Assign(sym, expr) => {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 

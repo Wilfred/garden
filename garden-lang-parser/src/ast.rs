@@ -243,6 +243,10 @@ pub enum Expression_ {
     /// ```
     Break,
     /// ```garden
+    /// continue
+    /// ```
+    Continue,
+    /// ```garden
     /// x = y
     /// ```
     Assign(Symbol, Box<Expression>),

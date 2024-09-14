@@ -358,6 +358,19 @@ fn parse_break(
     Expression::new(break_token.position, Expression_::Break, id_gen.next())
 }
 
+fn parse_continue(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let continue_token = require_token(tokens, diagnostics, "continue");
+    Expression::new(
+        continue_token.position,
+        Expression_::Continue,
+        id_gen.next(),
+    )
+}
+
 fn parse_return(
     src: &str,
     tokens: &mut TokenStream,
@@ -832,6 +845,9 @@ fn parse_expression(
         }
         if token.text == "break" {
             return parse_break(tokens, id_gen, diagnostics);
+        }
+        if token.text == "continue" {
+            return parse_continue(tokens, id_gen, diagnostics);
         }
         if token.text == "if" {
             return parse_if(src, tokens, id_gen, diagnostics);

@@ -10,7 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Diagnostic, Level};
 use crate::env::Env;
-use crate::eval::{eval_all_toplevel_items, eval_env, eval_up_to, push_test_stackframe};
+use crate::eval::{
+    eval_all_toplevel_items, eval_env, eval_up_to, push_test_stackframe, EvaluatedState,
+};
 use crate::types::TypeDef;
 use crate::values::Value;
 use crate::{
@@ -417,7 +419,9 @@ pub(crate) fn handle_request(
                         let stack_frame = env.stack.0.last_mut().unwrap();
 
                         stack_frame.evalled_values.pop();
-                        stack_frame.exprs_to_eval.push((false, expr));
+                        stack_frame
+                            .exprs_to_eval
+                            .push((EvaluatedState::NotEvaluated, expr));
 
                         eval_to_response(env, session)
                     }

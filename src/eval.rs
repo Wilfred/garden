@@ -3280,6 +3280,7 @@ pub(crate) fn eval_env(env: &mut Env, session: &mut Session) -> Result<Value, Ev
                             );
                         }
 
+                        block_expr_values.truncate(1);
                         let block_value = block_expr_values.pop().unwrap_or_else(Value::unit);
                         stack_frame.evalled_values.push(block_value);
                     } else {

@@ -378,13 +378,29 @@ fn parse_return(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
-    Expression::new(
-        Position::merge(&return_token.position, &expr.pos),
-        Expression_::Return(Some(Box::new(expr))),
-        id_gen.next(),
-    )
+    let mut expr = None;
+    let mut pos = return_token.position.clone();
+
+    // The following is ambiguous:
+    //
+    // ```garden
+    // return
+    // foo()
+    // ```
+    //
+    // Is this two expressions `return`, `foo()`, or `return foo()`?
+    // We solve this ambiguity by requiring the returned expression to
+    // start on the same line as the `return` keyword.
+    if let Some(next_token) = tokens.peek() {
+        if return_token.position.end_line_number == next_token.position.line_number {
+            let returned_expr = parse_expression(src, tokens, id_gen, diagnostics);
+            pos = Position::merge(&pos, &returned_expr.pos);
+            expr = Some(Box::new(returned_expr));
+        }
+    }
+
+    Expression::new(pos, Expression_::Return(expr), id_gen.next())
 }
 
 fn unescape_string(src: &str) -> String {

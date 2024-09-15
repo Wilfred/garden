@@ -14,6 +14,8 @@
 #![allow(clippy::needless_if)]
 // Occurs in WIP code when you plan to match on more cases later on.
 #![allow(clippy::single_match)]
+// Sometimes explicit if statements are clearer.
+#![allow(clippy::collapsible_else_if)]
 
 mod caret_finder;
 mod checks;

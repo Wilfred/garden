@@ -1,7 +1,10 @@
-# 0.17 (unreleased)
-**Goal: WASM and website.**
+# 0.18 (unreleased)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
+
+# 0.17 (unreleased)
+**Goal: WASM and website.**
+**Goal: Less compulsory punctuation following eval-up-to-cursor testing.**
 
 ## Language
 

@@ -2,7 +2,7 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
-# 0.17 (unreleased)
+# 0.17 (released 15th September 2024)
 **Goal: WASM and website.**
 **Goal: Less compulsory punctuation following eval-up-to-cursor testing.**
 

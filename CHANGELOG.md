@@ -10,6 +10,9 @@ Expressions no longer use trailing semicolons, so `let x = 1;` is now
 
 Added tuples, e.g. `(1, "Foo")`.
 
+Added `for x in some_list` loops, and added `continue` to both `while`
+and `for` loops.
+
 Variable shadowing is now supported, so the following is legal:
 
 ```

@@ -10,6 +10,7 @@ let x = 1
 //         expr_: IntLiteral(
 //             1,
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(1),
 //     },
 // )

@@ -13,6 +13,7 @@ ffun foo(_: Bool) {
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(3),
 //     },
 //     ParenthesizedArguments {
@@ -23,6 +24,7 @@ ffun foo(_: Bool) {
 //                 expr_: Variable(
 //                     Symbol"_",
 //                 ),
+//                 value_is_used: true,
 //                 id: SyntaxId(5),
 //             },
 //         ],

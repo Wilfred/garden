@@ -576,6 +576,7 @@ pub(crate) fn eval_toplevel_call(
     let recv_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, env.id_gen.next())),
+        value_is_used: true,
         id: env.id_gen.next(),
     };
 
@@ -588,6 +589,7 @@ pub(crate) fn eval_toplevel_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
+        value_is_used: true,
         id: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((
@@ -624,6 +626,7 @@ pub(crate) fn eval_toplevel_method_call(
     let recv_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
+        value_is_used: true,
         id: env.id_gen.next(),
     };
 
@@ -642,6 +645,7 @@ pub(crate) fn eval_toplevel_method_call(
     let call_expr = Expression {
         pos: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
+        value_is_used: true,
         id: env.id_gen.next(),
     };
     stack_frame.exprs_to_eval.push((

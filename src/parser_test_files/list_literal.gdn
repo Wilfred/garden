@@ -9,6 +9,7 @@
 //             expr_: IntLiteral(
 //                 1,
 //             ),
+//             value_is_used: true,
 //             id: SyntaxId(0),
 //         },
 //         Expression {
@@ -16,6 +17,7 @@
 //             expr_: IntLiteral(
 //                 2,
 //             ),
+//             value_is_used: true,
 //             id: SyntaxId(1),
 //         },
 //     ],

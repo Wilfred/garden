@@ -8,6 +8,7 @@ if True {}
 //         expr_: Variable(
 //             Symbol"True",
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(1),
 //     },
 //     Block {

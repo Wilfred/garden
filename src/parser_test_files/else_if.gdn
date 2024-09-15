@@ -8,6 +8,7 @@ if x {} else if y {}
 //         expr_: Variable(
 //             Symbol"x",
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(1),
 //     },
 //     Block {
@@ -29,6 +30,7 @@ if x {} else if y {}
 //                             expr_: Variable(
 //                                 Symbol"y",
 //                             ),
+//                             value_is_used: true,
 //                             id: SyntaxId(3),
 //                         },
 //                         Block {
@@ -39,6 +41,7 @@ if x {} else if y {}
 //                         },
 //                         None,
 //                     ),
+//                     value_is_used: true,
 //                     id: SyntaxId(4),
 //                 },
 //             ],

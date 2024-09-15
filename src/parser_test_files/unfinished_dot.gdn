@@ -38,10 +38,12 @@ fun foo(s: String) {
 //                             expr_: Variable(
 //                                 Symbol"s",
 //                             ),
+//                             value_is_used: true,
 //                             id: SyntaxId(5),
 //                         },
 //                         Symbol"__placeholder",
 //                     ),
+//                     value_is_used: true,
 //                     id: SyntaxId(7),
 //                 },
 //             ],

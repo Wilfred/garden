@@ -373,6 +373,10 @@ impl SyntaxIdGenerator {
 pub struct Expression {
     pub pos: Position,
     pub expr_: Expression_,
+    /// Is this expression in a position where its value is used?
+    /// This is only false in blocks, e.g. in `{ foo() bar() }`,
+    /// `foo()` is ignored.
+    pub value_is_used: bool,
     pub id: SyntaxId,
 }
 
@@ -381,6 +385,7 @@ impl Expression {
         Self {
             pos: position,
             expr_,
+            value_is_used: true,
             id,
         }
     }
@@ -390,6 +395,7 @@ impl Expression {
         Self {
             pos: Position::todo(),
             expr_: Expression_::Invalid,
+            value_is_used: true,
             id,
         }
     }

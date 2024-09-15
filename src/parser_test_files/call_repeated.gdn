@@ -11,6 +11,7 @@ foo()()
 //                 expr_: Variable(
 //                     Symbol"foo",
 //                 ),
+//                 value_is_used: true,
 //                 id: SyntaxId(1),
 //             },
 //             ParenthesizedArguments {
@@ -19,6 +20,7 @@ foo()()
 //                 close_paren: Position { ... },
 //             },
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(2),
 //     },
 //     ParenthesizedArguments {

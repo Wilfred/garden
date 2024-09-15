@@ -8,6 +8,7 @@ return x
 //         expr_: Variable(
 //             Symbol"x",
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(1),
 //     },
 // )

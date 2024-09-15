@@ -8,6 +8,7 @@ foo(a b)
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
+//         value_is_used: true,
 //         id: SyntaxId(1),
 //     },
 //     ParenthesizedArguments {
@@ -18,6 +19,7 @@ foo(a b)
 //                 expr_: Variable(
 //                     Symbol"a",
 //                 ),
+//                 value_is_used: true,
 //                 id: SyntaxId(3),
 //             },
 //             Expression {
@@ -25,6 +27,7 @@ foo(a b)
 //                 expr_: Variable(
 //                     Symbol"b",
 //                 ),
+//                 value_is_used: true,
 //                 id: SyntaxId(5),
 //             },
 //         ],

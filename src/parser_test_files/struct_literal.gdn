@@ -12,6 +12,7 @@ Foo{ x: 1, y: 2 }
 //                 expr_: IntLiteral(
 //                     1,
 //                 ),
+//                 value_is_used: true,
 //                 id: SyntaxId(3),
 //             },
 //         ),
@@ -22,6 +23,7 @@ Foo{ x: 1, y: 2 }
 //                 expr_: IntLiteral(
 //                     2,
 //                 ),
+//                 value_is_used: true,
 //                 id: SyntaxId(5),
 //             },
 //         ),

@@ -3,13 +3,15 @@ return x
 // args: dump-ast
 // expected stdout:
 // Return(
-//     Expression {
-//         pos: Position { ... },
-//         expr_: Variable(
-//             Symbol"x",
-//         ),
-//         value_is_used: true,
-//         id: SyntaxId(1),
-//     },
+//     Some(
+//         Expression {
+//             pos: Position { ... },
+//             expr_: Variable(
+//                 Symbol"x",
+//             ),
+//             value_is_used: true,
+//             id: SyntaxId(1),
+//         },
+//     ),
 // )
 

@@ -382,7 +382,7 @@ fn parse_return(
 
     Expression::new(
         Position::merge(&return_token.position, &expr.pos),
-        Expression_::Return(Box::new(expr)),
+        Expression_::Return(Some(Box::new(expr))),
         id_gen.next(),
     )
 }

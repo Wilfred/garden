@@ -2986,9 +2986,15 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         stack_frame
                             .exprs_to_eval
                             .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
-                        stack_frame
-                            .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *expr.clone()));
+
+                        if let Some(expr) = expr {
+                            stack_frame
+                                .exprs_to_eval
+                                .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                        } else {
+                            // `return` is the same as `return Unit`.
+                            stack_frame.evalled_values.push(Value::unit());
+                        }
                     }
                 }
                 Expression_::Assign(variable, expr) => {

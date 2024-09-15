@@ -1152,6 +1152,9 @@ fn eval_for_in(
 
     if iteree_idx >= items.len() {
         // We're done with this for loop.
+
+        stack_frame.for_loop_indices.remove(&outer_expr.id);
+
         if expr_value_is_used {
             stack_frame.evalled_values.push(Value::unit());
         }

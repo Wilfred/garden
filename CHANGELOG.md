@@ -28,9 +28,6 @@ name, so `Person { name: "wilfred" }` is now written
 require parentheses, so `while x {}`, `match x {}` and `if True {}`
 are now valid.
 
-`return` now requires an argument, so `return;` must now be written
-`return Unit;`.
-
 ## Runtime
 
 Fixed an interpreter crash when evaluating tests.

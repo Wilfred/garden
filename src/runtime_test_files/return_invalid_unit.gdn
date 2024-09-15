@@ -2,7 +2,7 @@ fun foo(): Int {}
 
 fun main(args: List<String>): Unit {
     foo()
-    return Unit
+    return
 }
 
 // args: run

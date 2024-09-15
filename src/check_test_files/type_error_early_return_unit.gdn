@@ -1,6 +1,6 @@
 fun takes_int(b: Bool): Int {
     if b {
-        return Unit
+        return
     }
 
     123
@@ -12,6 +12,6 @@ fun takes_int(b: Bool): Int {
 // Error: Expected this function to return `Int`, but got `Unit`.
 // 
 // --> src/check_test_files/type_error_early_return_unit.gdn:3
-//         return Unit
-//                ^^^^
+//         return
+//         ^^^^^^
 

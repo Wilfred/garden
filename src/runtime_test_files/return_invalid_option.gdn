@@ -4,7 +4,7 @@ fun foo(): Option<Int> {
 
 fun main(args: List<String>): Unit {
     foo()
-    return Unit
+    return
 }
 
 // args: run

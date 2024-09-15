@@ -1537,10 +1537,10 @@ fn parse_block(
     }
 
     // Mark all expressions as not having their value used, except the
-    // last one.
+    // last one. For loops, we don't use the last value either.
     let exprs_len = exprs.len();
     for (i, expr) in exprs.iter_mut().enumerate() {
-        if i < exprs_len - 1 {
+        if i < exprs_len - 1 || is_loop_body {
             expr.value_is_used = false;
         }
     }

@@ -1126,11 +1126,6 @@ fn eval_for_in(
         .get(&outer_expr.id)
         .unwrap_or(&0);
 
-    if iteree_idx > 0 {
-        // Discard the result of evaluating the previous loop body.
-        stack_frame.evalled_values.pop();
-    }
-
     let iteree_value = stack_frame
         .evalled_values
         .pop()

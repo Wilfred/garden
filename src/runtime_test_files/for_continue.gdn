@@ -1,0 +1,18 @@
+fun main(_) {
+    let items = [1, 2, 3, 4, 5]
+    for item in items {
+        if item == 3 {
+            continue
+        }
+
+        println(string_repr(item))
+    }
+}
+
+// args: run
+// expected stdout:
+// 1
+// 2
+// 4
+// 5
+

@@ -3530,18 +3530,14 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                     if done_children.done_children() {
                         stack_frame.bindings.pop_block();
 
-                        let mut block_expr_values = vec![];
-                        for _ in &block.exprs {
-                            block_expr_values.push(
-                                stack_frame
-                                    .evalled_values
-                                    .pop()
-                                    .expect("Should have a value from every block expression"),
-                            );
-                        }
-
-                        block_expr_values.truncate(1);
-                        let block_value = block_expr_values.pop().unwrap_or_else(Value::unit);
+                        let block_value = if block.exprs.is_empty() {
+                            Value::unit()
+                        } else {
+                            stack_frame
+                                .evalled_values
+                                .pop()
+                                .expect("Should have a value from the last expression in his block")
+                        };
 
                         if expr_value_is_used {
                             stack_frame.evalled_values.push(block_value);

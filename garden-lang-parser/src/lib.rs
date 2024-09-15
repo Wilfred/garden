@@ -1536,6 +1536,15 @@ fn parse_block(
         );
     }
 
+    // Mark all expressions as not having their value used, except the
+    // last one.
+    let exprs_len = exprs.len();
+    for (i, expr) in exprs.iter_mut().enumerate() {
+        if i < exprs_len - 1 {
+            expr.value_is_used = false;
+        }
+    }
+
     let close_brace = require_token(tokens, diagnostics, "}");
     Block {
         open_brace: open_brace.position,

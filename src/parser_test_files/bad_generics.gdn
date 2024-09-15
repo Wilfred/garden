@@ -46,7 +46,7 @@ fun foo<T>(value: T): Unit {
 //                             id: SyntaxId(4),
 //                         },
 //                     ),
-//                     value_is_used: true,
+//                     value_is_used: false,
 //                     id: SyntaxId(5),
 //                 },
 //                 Expression {

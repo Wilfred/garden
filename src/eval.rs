@@ -1002,6 +1002,7 @@ struct ErrorInfo {
 fn eval_if(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     position: &Position,
     bool_position: &Position,
     then_body: &Block,
@@ -1037,7 +1038,9 @@ fn eval_if(
                     ));
                 }
                 None => {
-                    stack_frame.evalled_values.push(Value::unit());
+                    if expr_value_is_used {
+                        stack_frame.evalled_values.push(Value::unit());
+                    }
                 }
             }
         }
@@ -1076,6 +1079,7 @@ fn to_rust_bool(value: &Value) -> Option<bool> {
 fn eval_while(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     condition_pos: &Position,
     expr: Expression,
     body: &Block,
@@ -1118,7 +1122,9 @@ fn eval_while(
             ),
         ))
     } else {
-        stack_frame.evalled_values.push(Value::unit());
+        if expr_value_is_used {
+            stack_frame.evalled_values.push(Value::unit());
+        }
     }
 
     Ok(())
@@ -1127,6 +1133,7 @@ fn eval_while(
 fn eval_for_in(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     iter_sym: &Symbol,
     iteree_pos: &Position,
     outer_expr: Expression,
@@ -1163,7 +1170,9 @@ fn eval_for_in(
 
     if iteree_idx >= items.len() {
         // We're done with this for loop.
-        stack_frame.evalled_values.push(Value::unit());
+        if expr_value_is_used {
+            stack_frame.evalled_values.push(Value::unit());
+        }
         return Ok(());
     }
 
@@ -1200,7 +1209,11 @@ fn eval_for_in(
     Ok(())
 }
 
-fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), ErrorInfo> {
+fn eval_assign(
+    stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
+    variable: &Symbol,
+) -> Result<(), ErrorInfo> {
     let var_name = &variable.name;
     if !stack_frame.bindings.has(var_name) {
         return Err(ErrorInfo {
@@ -1219,7 +1232,9 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
         .expect("Popped an empty value stack for let value");
     stack_frame.bindings.set_existing(var_name, expr_value);
 
-    stack_frame.evalled_values.push(Value::unit());
+    if expr_value_is_used {
+        stack_frame.evalled_values.push(Value::unit());
+    }
 
     Ok(())
 }
@@ -1228,6 +1243,7 @@ fn eval_assign(stack_frame: &mut StackFrame, variable: &Symbol) -> Result<(), Er
 fn eval_let(
     env: &Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     variable: &Symbol,
     hint: &Option<TypeHint>,
 ) -> Result<(), ErrorInfo> {
@@ -1270,7 +1286,10 @@ fn eval_let(
     // ```
     //
     // It's annoying if the type checker complains here.
-    stack_frame.evalled_values.push(Value::unit());
+    if expr_value_is_used {
+        stack_frame.evalled_values.push(Value::unit());
+    }
+
     Ok(())
 }
 
@@ -1294,6 +1313,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
 fn eval_boolean_binop(
     env: &Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     lhs_position: &Position,
     rhs_position: &Position,
     op: BinaryOperatorKind,
@@ -1342,18 +1362,20 @@ fn eval_boolean_binop(
             }
         };
 
-        match op {
-            BinaryOperatorKind::And => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_bool && rhs_bool));
+        if expr_value_is_used {
+            match op {
+                BinaryOperatorKind::And => {
+                    stack_frame
+                        .evalled_values
+                        .push(Value::bool(lhs_bool && rhs_bool));
+                }
+                BinaryOperatorKind::Or => {
+                    stack_frame
+                        .evalled_values
+                        .push(Value::bool(lhs_bool || rhs_bool));
+                }
+                _ => unreachable!(),
             }
-            BinaryOperatorKind::Or => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_bool || rhs_bool));
-            }
-            _ => unreachable!(),
         }
     }
     Ok(())
@@ -1361,6 +1383,7 @@ fn eval_boolean_binop(
 
 fn eval_equality_binop(
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     op: BinaryOperatorKind,
 ) -> Result<(), ErrorInfo> {
     let rhs_value = stack_frame
@@ -1372,25 +1395,29 @@ fn eval_equality_binop(
         .pop()
         .expect("Popped an empty value stack for LHS of binary operator");
 
-    match op {
-        BinaryOperatorKind::Equal => {
-            stack_frame
-                .evalled_values
-                .push(Value::bool(lhs_value == rhs_value));
+    if expr_value_is_used {
+        match op {
+            BinaryOperatorKind::Equal => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::bool(lhs_value == rhs_value));
+            }
+            BinaryOperatorKind::NotEqual => {
+                stack_frame
+                    .evalled_values
+                    .push(Value::bool(lhs_value != rhs_value));
+            }
+            _ => unreachable!(),
         }
-        BinaryOperatorKind::NotEqual => {
-            stack_frame
-                .evalled_values
-                .push(Value::bool(lhs_value != rhs_value));
-        }
-        _ => unreachable!(),
     }
+
     Ok(())
 }
 
 fn eval_integer_binop(
     env: &Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     position: &Position,
     lhs_position: &Position,
     rhs_position: &Position,
@@ -1427,22 +1454,10 @@ fn eval_integer_binop(
             }
         };
 
-        match op {
-            BinaryOperatorKind::Add => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num.wrapping_add(rhs_num)));
-            }
-            BinaryOperatorKind::Subtract => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num.wrapping_sub(rhs_num)));
-            }
-            BinaryOperatorKind::Multiply => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num.wrapping_mul(rhs_num)));
-            }
+        let value = match op {
+            BinaryOperatorKind::Add => Value::Integer(lhs_num.wrapping_add(rhs_num)),
+            BinaryOperatorKind::Subtract => Value::Integer(lhs_num.wrapping_sub(rhs_num)),
+            BinaryOperatorKind::Multiply => Value::Integer(lhs_num.wrapping_mul(rhs_num)),
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
                     return Err(ErrorInfo {
@@ -1456,33 +1471,19 @@ fn eval_integer_binop(
                     });
                 }
 
-                stack_frame
-                    .evalled_values
-                    .push(Value::Integer(lhs_num / rhs_num));
+                Value::Integer(lhs_num / rhs_num)
             }
-            BinaryOperatorKind::LessThan => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_num < rhs_num));
-            }
-            BinaryOperatorKind::GreaterThan => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_num > rhs_num));
-            }
-            BinaryOperatorKind::LessThanOrEqual => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_num <= rhs_num));
-            }
-            BinaryOperatorKind::GreaterThanOrEqual => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_num >= rhs_num));
-            }
+            BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
+            BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
+            BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
+            BinaryOperatorKind::GreaterThanOrEqual => Value::bool(lhs_num >= rhs_num),
             _ => {
                 unreachable!()
             }
+        };
+
+        if expr_value_is_used {
+            stack_frame.evalled_values.push(value);
         }
     }
     Ok(())
@@ -1546,6 +1547,7 @@ fn eval_builtin_call(
     arg_positions: &[Position],
     arg_values: &[Value],
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     position: &Position,
     session: &Session,
 ) -> Result<(), ErrorInfo> {
@@ -1634,7 +1636,10 @@ fn eval_builtin_call(
                     });
                 }
             }
-            stack_frame.evalled_values.push(Value::unit());
+
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(Value::unit());
+            }
         }
         BuiltinFunctionKind::Println => {
             check_arity(
@@ -1681,7 +1686,10 @@ fn eval_builtin_call(
                     });
                 }
             }
-            stack_frame.evalled_values.push(Value::unit());
+
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(Value::unit());
+            }
         }
         BuiltinFunctionKind::Shell => {
             check_arity(
@@ -1724,7 +1732,9 @@ fn eval_builtin_call(
                                 }
                             };
 
-                            stack_frame.evalled_values.push(v);
+                            if expr_value_is_used {
+                                stack_frame.evalled_values.push(v);
+                            }
                         }
                         Err(v) => {
                             let mut saved_values = vec![];
@@ -1778,9 +1788,11 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            stack_frame
-                .evalled_values
-                .push(Value::String(arg_values[0].display(env)));
+            if expr_value_is_used {
+                stack_frame
+                    .evalled_values
+                    .push(Value::String(arg_values[0].display(env)));
+            }
         }
         BuiltinFunctionKind::PathExists => {
             check_arity(
@@ -1799,8 +1811,8 @@ fn eval_builtin_call(
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
                     }
-                    saved_values.push(receiver_value.clone());
 
                     return Err(ErrorInfo {
                         message: format_type_error(
@@ -1817,7 +1829,10 @@ fn eval_builtin_call(
             };
 
             let path = PathBuf::from(path_s);
-            stack_frame.evalled_values.push(Value::bool(path.exists()));
+
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(Value::bool(path.exists()));
+            }
         }
         BuiltinFunctionKind::ListDirectory => {
             check_arity(
@@ -1879,7 +1894,9 @@ fn eval_builtin_call(
                 }
             };
 
-            stack_frame.evalled_values.push(value);
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(value);
+            }
         }
         BuiltinFunctionKind::ReadFile => {
             check_arity(
@@ -1922,7 +1939,9 @@ fn eval_builtin_call(
                 Err(e) => Value::err(Value::String(e.to_string()), env),
             };
 
-            stack_frame.evalled_values.push(v);
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(v);
+            }
         }
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(
@@ -1937,9 +1956,11 @@ fn eval_builtin_call(
             // TODO: when we have a userland result type, use that.
             let path = std::env::current_dir().unwrap_or_default();
 
-            stack_frame
-                .evalled_values
-                .push(Value::String(path.display().to_string()));
+            if expr_value_is_used {
+                stack_frame
+                    .evalled_values
+                    .push(Value::String(path.display().to_string()));
+            }
         }
         BuiltinFunctionKind::WriteFile => {
             check_arity(
@@ -1992,7 +2013,9 @@ fn eval_builtin_call(
                 Err(e) => Value::err(Value::String(format!("{}", e)), env),
             };
 
-            stack_frame.evalled_values.push(v);
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(v);
+            }
         }
     }
 
@@ -2006,6 +2029,7 @@ fn eval_builtin_call(
 fn eval_call(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     caller_expr: &Expression,
     arg_positions: &[Position],
     arg_values: &[Value],
@@ -2143,6 +2167,7 @@ fn eval_call(
             arg_positions,
             arg_values,
             stack_frame,
+            expr_value_is_used,
             &caller_expr.pos,
             session,
         )?,
@@ -2176,7 +2201,10 @@ fn eval_call(
                 payload: Some(Box::new(arg_values[0].clone())),
                 runtime_type,
             };
-            stack_frame.evalled_values.push(value);
+
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(value);
+            }
         }
         v => {
             let mut saved_values = vec![];
@@ -2334,6 +2362,7 @@ fn check_param_types(
 fn eval_method_call(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     caller_expr: &Expression,
     meth_name: &Symbol,
     paren_args: &ParenthesizedArguments,
@@ -2412,6 +2441,7 @@ fn eval_method_call(
                 &arg_positions,
                 &arg_values,
                 stack_frame,
+                expr_value_is_used,
             )?;
             return Ok(None);
         }
@@ -2471,6 +2501,7 @@ fn eval_builtin_method_call(
     arg_positions: &[Position],
     arg_values: &[Value],
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
 ) -> Result<(), ErrorInfo> {
     match kind {
         BuiltinMethodKind::ListAppend => {
@@ -2488,16 +2519,18 @@ fn eval_builtin_method_call(
                     let mut new_items = items.clone();
                     new_items.push(arg_values[0].clone());
 
-                    // TODO: check that the new value has the same
-                    // type as the existing list items.
-                    stack_frame.evalled_values.push(Value::List {
-                        items: new_items,
-                        elem_type: Type::from_value(
-                            &arg_values[0],
-                            env,
-                            &stack_frame.type_bindings,
-                        ),
-                    });
+                    if expr_value_is_used {
+                        // TODO: check that the new value has the same
+                        // type as the existing list items.
+                        stack_frame.evalled_values.push(Value::List {
+                            items: new_items,
+                            elem_type: Type::from_value(
+                                &arg_values[0],
+                                env,
+                                &stack_frame.type_bindings,
+                            ),
+                        });
+                    }
                 }
                 v => {
                     let mut saved_values = vec![];
@@ -2558,7 +2591,9 @@ fn eval_builtin_method_call(
                         *i as usize
                     };
 
-                    stack_frame.evalled_values.push(items[index].clone());
+                    if expr_value_is_used {
+                        stack_frame.evalled_values.push(items[index].clone());
+                    }
                 }
                 (v, Value::Integer(_)) => {
                     let mut saved_values = vec![];
@@ -2606,9 +2641,11 @@ fn eval_builtin_method_call(
 
             match &receiver_value {
                 Value::List { items, .. } => {
-                    stack_frame
-                        .evalled_values
-                        .push(Value::Integer(items.len() as i64));
+                    if expr_value_is_used {
+                        stack_frame
+                            .evalled_values
+                            .push(Value::Integer(items.len() as i64));
+                    }
                 }
                 v => {
                     let mut saved_values = vec![];
@@ -2687,7 +2724,10 @@ fn eval_builtin_method_call(
             };
 
             arg1.push_str(arg2);
-            stack_frame.evalled_values.push(Value::String(arg1));
+
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(Value::String(arg1));
+            }
         }
         BuiltinMethodKind::StringLen => {
             check_arity(
@@ -2701,9 +2741,11 @@ fn eval_builtin_method_call(
 
             match &receiver_value {
                 Value::String(s) => {
-                    stack_frame
-                        .evalled_values
-                        .push(Value::Integer(s.chars().count() as i64));
+                    if expr_value_is_used {
+                        stack_frame
+                            .evalled_values
+                            .push(Value::Integer(s.chars().count() as i64));
+                    }
                 }
                 v => {
                     let mut saved_values = vec![];
@@ -2819,13 +2861,15 @@ fn eval_builtin_method_call(
                     });
             }
 
-            stack_frame.evalled_values.push(Value::String(
-                s_arg
-                    .chars()
-                    .skip(*from_arg as usize)
-                    .take((to_arg - from_arg) as usize)
-                    .collect(),
-            ));
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(Value::String(
+                    s_arg
+                        .chars()
+                        .skip(*from_arg as usize)
+                        .take((to_arg - from_arg) as usize)
+                        .collect(),
+                ));
+            }
         }
     }
 
@@ -2837,6 +2881,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
     while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, keep_value, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             let expr_position = outer_expr.pos.clone();
+            let expr_value_is_used = outer_expr.value_is_used;
             let expr_id = outer_expr.id;
 
             if session.interrupted.load(Ordering::SeqCst) {
@@ -2879,6 +2924,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         }) = eval_if(
                             env,
                             &mut stack_frame,
+                            expr_value_is_used,
                             &expr_position,
                             &condition.pos,
                             then_body,
@@ -2914,6 +2960,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         }) = eval_while(
                             env,
                             &mut stack_frame,
+                            expr_value_is_used,
                             &condition.pos,
                             outer_expr.clone(),
                             body,
@@ -2948,6 +2995,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         }) = eval_for_in(
                             env,
                             &mut stack_frame,
+                            expr_value_is_used,
                             sym,
                             &expr.pos,
                             outer_expr.clone(),
@@ -2997,7 +3045,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_assign(&mut stack_frame, variable)
+                        }) = eval_assign(&mut stack_frame, expr_value_is_used, variable)
                         {
                             restore_stack_frame(
                                 env,
@@ -3026,7 +3074,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_let(env, &mut stack_frame, variable, hint)
+                        }) = eval_let(env, &mut stack_frame, expr_value_is_used, variable, hint)
                         {
                             restore_stack_frame(
                                 env,
@@ -3051,11 +3099,15 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::IntLiteral(i) => {
                     done_children = EvaluatedState::EvaluatedSubexpressions;
-                    stack_frame.evalled_values.push(Value::Integer(*i));
+                    if expr_value_is_used {
+                        stack_frame.evalled_values.push(Value::Integer(*i));
+                    }
                 }
                 Expression_::StringLiteral(s) => {
                     done_children = EvaluatedState::EvaluatedSubexpressions;
-                    stack_frame.evalled_values.push(Value::String(s.clone()));
+                    if expr_value_is_used {
+                        stack_frame.evalled_values.push(Value::String(s.clone()));
+                    }
                 }
                 Expression_::ListLiteral(items) => {
                     if done_children.done_children() {
@@ -3073,10 +3125,12 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             list_values.push(element);
                         }
 
-                        stack_frame.evalled_values.push(Value::List {
-                            items: list_values,
-                            elem_type: element_type,
-                        });
+                        if expr_value_is_used {
+                            stack_frame.evalled_values.push(Value::List {
+                                items: list_values,
+                                elem_type: element_type,
+                            });
+                        }
                     } else {
                         stack_frame.exprs_to_eval.push((
                             EvaluatedState::EvaluatedSubexpressions,
@@ -3111,10 +3165,12 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             items_values.push(element);
                         }
 
-                        stack_frame.evalled_values.push(Value::Tuple {
-                            items: items_values,
-                            item_types,
-                        });
+                        if expr_value_is_used {
+                            stack_frame.evalled_values.push(Value::Tuple {
+                                items: items_values,
+                                item_types,
+                            });
+                        }
                     } else {
                         stack_frame.exprs_to_eval.push((
                             EvaluatedState::EvaluatedSubexpressions,
@@ -3137,9 +3193,13 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             message,
                             restore_values,
                             error_position: position,
-                        }) =
-                            eval_struct_value(env, &mut stack_frame, type_sym.clone(), field_exprs)
-                        {
+                        }) = eval_struct_value(
+                            env,
+                            &mut stack_frame,
+                            expr_value_is_used,
+                            type_sym.clone(),
+                            field_exprs,
+                        ) {
                             restore_stack_frame(
                                 env,
                                 stack_frame,
@@ -3167,7 +3227,10 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 Expression_::Variable(name_sym) => {
                     if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
                         done_children = EvaluatedState::EvaluatedSubexpressions;
-                        stack_frame.evalled_values.push(value);
+
+                        if expr_value_is_used {
+                            stack_frame.evalled_values.push(value);
+                        }
                     } else {
                         let suggestion = match most_similar_var(&name_sym.name, &stack_frame, env) {
                             Some(closest_name) => {
@@ -3212,6 +3275,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         }) = eval_integer_binop(
                             env,
                             &mut stack_frame,
+                            expr_value_is_used,
                             &expr_position,
                             &lhs.pos,
                             &rhs.pos,
@@ -3253,7 +3317,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_equality_binop(&mut stack_frame, *op)
+                        }) = eval_equality_binop(&mut stack_frame, expr_value_is_used, *op)
                         {
                             restore_stack_frame(
                                 env,
@@ -3291,8 +3355,14 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_boolean_binop(env, &mut stack_frame, &lhs.pos, &rhs.pos, *op)
-                        {
+                        }) = eval_boolean_binop(
+                            env,
+                            &mut stack_frame,
+                            expr_value_is_used,
+                            &lhs.pos,
+                            &rhs.pos,
+                            *op,
+                        ) {
                             restore_stack_frame(
                                 env,
                                 stack_frame,
@@ -3322,10 +3392,13 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::FunLiteral(fun_info) => {
                     done_children = EvaluatedState::EvaluatedSubexpressions;
-                    stack_frame.evalled_values.push(Value::Closure(
-                        stack_frame.bindings.block_bindings.clone(),
-                        fun_info.clone(),
-                    ));
+
+                    if expr_value_is_used {
+                        stack_frame.evalled_values.push(Value::Closure(
+                            stack_frame.bindings.block_bindings.clone(),
+                            fun_info.clone(),
+                        ));
+                    }
                 }
                 Expression_::Call(receiver, paren_args) => {
                     if done_children.done_children() {
@@ -3348,6 +3421,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         match eval_call(
                             env,
                             &mut stack_frame,
+                            expr_value_is_used,
                             &outer_expr,
                             &arg_positions,
                             &arg_values,
@@ -3404,6 +3478,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         match eval_method_call(
                             env,
                             &mut stack_frame,
+                            expr_value_is_used,
                             &outer_expr,
                             meth_name,
                             paren_args,
@@ -3467,7 +3542,10 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
 
                         block_expr_values.truncate(1);
                         let block_value = block_expr_values.pop().unwrap_or_else(Value::unit);
-                        stack_frame.evalled_values.push(block_value);
+
+                        if expr_value_is_used {
+                            stack_frame.evalled_values.push(block_value);
+                        }
                     } else {
                         stack_frame.bindings.push_block();
                         eval_block(&mut stack_frame, &outer_expr, block);
@@ -3479,8 +3557,13 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             message,
                             restore_values,
                             error_position: position,
-                        }) = eval_dot_access(env, &mut stack_frame, sym, &recv.pos)
-                        {
+                        }) = eval_dot_access(
+                            env,
+                            &mut stack_frame,
+                            expr_value_is_used,
+                            sym,
+                            &recv.pos,
+                        ) {
                             restore_stack_frame(
                                 env,
                                 stack_frame,
@@ -3504,7 +3587,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::Break => {
                     done_children = EvaluatedState::EvaluatedSubexpressions;
-                    eval_break(&mut stack_frame);
+                    eval_break(&mut stack_frame, expr_value_is_used);
                 }
                 Expression_::Continue => {
                     done_children = EvaluatedState::EvaluatedSubexpressions;
@@ -3645,7 +3728,7 @@ fn eval_block(stack_frame: &mut StackFrame, outer_expr: &Expression, block: &Blo
     }
 }
 
-fn eval_break(stack_frame: &mut StackFrame) {
+fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
     while let Some((_, _, expr)) = stack_frame.exprs_to_eval.pop() {
@@ -3665,7 +3748,9 @@ fn eval_break(stack_frame: &mut StackFrame) {
     }
 
     // Loops always evaluate to unit.
-    stack_frame.evalled_values.push(Value::unit());
+    if expr_value_is_used {
+        stack_frame.evalled_values.push(Value::unit());
+    }
 }
 
 fn eval_continue(stack_frame: &mut StackFrame) {
@@ -3687,6 +3772,7 @@ fn eval_continue(stack_frame: &mut StackFrame) {
 fn eval_dot_access(
     env: &Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     sym: &Symbol,
     recv_pos: &Position,
 ) -> Result<(), ErrorInfo> {
@@ -3701,7 +3787,10 @@ fn eval_dot_access(
 
             for (field_name, field_value) in fields {
                 if *field_name == sym.name {
-                    stack_frame.evalled_values.push(field_value.clone());
+                    if expr_value_is_used {
+                        stack_frame.evalled_values.push(field_value.clone());
+                    }
+
                     found = true;
                     break;
                 }
@@ -3733,6 +3822,7 @@ fn eval_dot_access(
 fn eval_struct_value(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     type_sym: TypeSymbol,
     field_exprs: &[(Symbol, Expression)],
 ) -> Result<(), ErrorInfo> {
@@ -3812,11 +3902,13 @@ fn eval_struct_value(
         args: type_args,
     };
 
-    stack_frame.evalled_values.push(Value::Struct {
-        type_name: type_sym.name,
-        fields,
-        runtime_type,
-    });
+    if expr_value_is_used {
+        stack_frame.evalled_values.push(Value::Struct {
+            type_name: type_sym.name,
+            fields,
+            runtime_type,
+        });
+    }
 
     Ok(())
 }

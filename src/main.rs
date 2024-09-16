@@ -368,10 +368,15 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
 
                 match eval_toplevel_tests(&items, &mut env, &mut session) {
                     Ok(summary) => {
+                        if summary.tests_passed == 1 {
+                            println!("The test {}.", "passed".green());
+                        } else {
+                            println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
+                        }
+
                         // TODO: should we allow tests to keep going
                         // after the first failure?
                         // TODO: print incremental progress as tests run.
-                        println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
                         succeeded = true;
                     }
                     Err(EvalError::ResumableError(position, e)) => {

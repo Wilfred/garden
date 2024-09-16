@@ -471,13 +471,10 @@ test is_non_empty {
 
 // Does this list contain `item`?
 fun<T> (self: List<T>) contains(item: T): Bool {
-    let i = 0
-    while i < self.len() {
-        if self.get(i) == item {
+    for self_item in self {
+        if self_item == item {
             return True
         }
-
-        i = i + 1
     }
 
     False

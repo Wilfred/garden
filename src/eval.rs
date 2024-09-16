@@ -208,9 +208,6 @@ pub(crate) struct StackFrame {
     pub(crate) exprs_to_eval: Vec<(EvaluatedState, Expression)>,
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
-    /// If we're currently evaluating a `for` loop, the index of the
-    /// current iteration.
-    pub(crate) for_loop_indices: HashMap<SyntaxId, usize>,
 }
 
 pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
@@ -661,7 +658,6 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         bindings_next_block: vec![],
         exprs_to_eval,
         evalled_values: vec![Value::unit()],
-        for_loop_indices: HashMap::new(),
     };
     env.stack.0.push(stack_frame);
 }
@@ -1121,15 +1117,19 @@ fn eval_for_in(
     outer_expr: Expression,
     body: &Block,
 ) -> Result<(), ErrorInfo> {
-    let iteree_idx = *stack_frame
-        .for_loop_indices
-        .get(&outer_expr.id)
-        .unwrap_or(&0);
-
     let iteree_value = stack_frame
         .evalled_values
         .pop()
-        .expect("Popped an empty value stack for `for` loop");
+        .expect("Popped an empty value stack for `for` loop iteree");
+
+    let iteree_idx = match stack_frame
+        .evalled_values
+        .pop()
+        .expect("Popped an empty value stack for `for` loop index")
+    {
+        Value::Integer(i) => i,
+        _ => unreachable!("`for` loop index should always be an integer"),
+    };
 
     let Value::List { items, .. } = &iteree_value else {
         return Err(ErrorInfo {
@@ -1145,11 +1145,8 @@ fn eval_for_in(
         });
     };
 
-    if iteree_idx >= items.len() {
+    if iteree_idx as usize >= items.len() {
         // We're done with this for loop.
-
-        stack_frame.for_loop_indices.remove(&outer_expr.id);
-
         if expr_value_is_used {
             stack_frame.evalled_values.push(Value::unit());
         }
@@ -1161,11 +1158,15 @@ fn eval_for_in(
     stack_frame
         .exprs_to_eval
         .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+
+    stack_frame
+        .evalled_values
+        .push(Value::Integer(iteree_idx + 1));
     stack_frame.evalled_values.push(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
     if !iter_sym.name.is_underscore() {
-        bindings.push((iter_sym.clone(), items[iteree_idx].clone()));
+        bindings.push((iter_sym.clone(), items[iteree_idx as usize].clone()));
     }
 
     stack_frame.bindings_next_block = bindings;
@@ -1177,11 +1178,6 @@ fn eval_for_in(
             env.id_gen.next(),
         ),
     ));
-
-    // Next time we evaluate the for loop, we will want the next index.
-    stack_frame
-        .for_loop_indices
-        .insert(outer_expr.id, iteree_idx + 1);
 
     Ok(())
 }
@@ -2071,7 +2067,6 @@ fn eval_call(
                 enclosing_fun: Some(fun_info.clone()),
                 enclosing_name: EnclosingSymbol::Closure,
                 src: fun_info.src_string.clone(),
-                for_loop_indices: HashMap::new(),
             }));
         }
         Value::Fun {
@@ -2133,7 +2128,6 @@ fn eval_call(
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
-                for_loop_indices: HashMap::new(),
             }));
         }
         Value::BuiltinFunction(kind, _) => eval_builtin_call(
@@ -2466,7 +2460,6 @@ fn eval_method_call(
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
         evalled_values: vec![Value::unit()],
-        for_loop_indices: HashMap::new(),
     }))
 }
 
@@ -2970,6 +2963,9 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             return Err(EvalError::ResumableError(position, message));
                         }
                     } else {
+                        // The initial value of the loop index.
+                        stack_frame.evalled_values.push(Value::Integer(0));
+
                         stack_frame
                             .exprs_to_eval
                             .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));

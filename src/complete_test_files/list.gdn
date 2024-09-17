@@ -9,7 +9,6 @@ fun foo() {
 // {"name":"contains","suffix":"(T): Bool"}
 // {"name":"filter","suffix":"(Fun<Tuple<T>, Bool>): List<T>"}
 // {"name":"first()","suffix":": Option<T>"}
-// {"name":"for_each","suffix":"(Fun<Tuple<T>, Unit>): Unit"}
 // {"name":"get","suffix":"(Int): T"}
 // {"name":"is_empty()","suffix":": Bool"}
 // {"name":"is_non_empty()","suffix":": Bool"}

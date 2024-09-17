@@ -484,25 +484,6 @@ test contains {
     should_equal([10, 11].contains(10), True)
 }
 
-// Call `f` with every item in this list.
-//
-// ```
-// [1, 2].for_each(fun(x) { print(string_repr(x + 1)) }) // prints 2, then 3.
-// ```
-fun<T> (self: List<T>) for_each(f: Fun<(T), Unit>): Unit {
-    let i = 0
-    while i < self.len() {
-        f(self.get(i))
-        i = i + 1
-    }
-}
-
-test list_for_each {
-    let total = 0
-    [1, 2, 3].for_each(fun(i: Int) { total = total + i })
-    should_equal(total, 6)
-}
-
 // Call `f` on every item in this list, and return a list of the
 // results.
 //

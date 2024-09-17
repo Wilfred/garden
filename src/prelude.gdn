@@ -432,16 +432,12 @@ test last {
 fun<T> (self: List<T>) filter(f: Fun<(T), Bool>): List<T> {
     let result: List<T> = []
 
-    let i = 0
-    while i < self.len() {
-        let item = self.get(i)
-
+    for item in self {
         if f(item) {
             result = result.append(item)
         }
-
-        i = i + 1
     }
+
     result
 }
 
@@ -492,13 +488,8 @@ test contains {
 // ```
 fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
     let items: List<U> = []
-    let i = 0
-
-    while i < self.len() {
-        let new_item = f(self.get(i))
-        items = items.append(new_item)
-
-        i = i + 1
+    for item in self {
+        items = items.append(f(item))
     }
 
     items

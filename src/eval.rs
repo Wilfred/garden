@@ -3444,17 +3444,8 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                     if done_children.done_children() {
                         stack_frame.bindings.pop_block();
 
-                        let block_value = if block.exprs.is_empty() {
-                            Value::unit()
-                        } else {
-                            stack_frame
-                                .evalled_values
-                                .pop()
-                                .expect("Should have a value from the last expression in his block")
-                        };
-
-                        if expr_value_is_used {
-                            stack_frame.evalled_values.push(block_value);
+                        if block.exprs.is_empty() && expr_value_is_used {
+                            stack_frame.evalled_values.push(Value::unit());
                         }
                     } else {
                         stack_frame.bindings.push_block();

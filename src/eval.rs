@@ -1098,7 +1098,7 @@ fn eval_while(
             Expression {
                 pos: expr.pos,
                 expr_: Expression_::Block(body.clone()),
-                value_is_used: true,
+                value_is_used: false,
                 id: env.id_gen.next(),
             },
         ))

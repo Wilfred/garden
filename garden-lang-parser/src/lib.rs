@@ -276,7 +276,7 @@ fn parse_if(
     let if_token = require_token(tokens, diagnostics, "if");
 
     let cond_expr = parse_expression(src, tokens, id_gen, diagnostics);
-    let then_body = parse_block(src, tokens, id_gen, diagnostics, false);
+    let mut then_body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
@@ -298,6 +298,14 @@ fn parse_if(
     } else {
         None
     };
+
+    if else_body.is_none() {
+        // We have no else block, so we're not using any values from
+        // the then block.
+        for expr in then_body.exprs.iter_mut() {
+            expr.value_is_used = false;
+        }
+    }
 
     let last_brace_pos = match &else_body {
         Some(else_body) => &else_body.close_brace,

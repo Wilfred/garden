@@ -1,0 +1,14 @@
+fun (self: String) foo() {
+    self = 123
+    self.index_of("a")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `self` has type `String`, but tried to assign a value of type `Int`.
+// 
+// --> src/check_test_files/type_error_redefine_self.gdn:2
+//     self = 123
+//            ^^^
+

@@ -1000,22 +1000,24 @@ fn eval_if(
         if b {
             stack_frame.exprs_to_eval.push((
                 EvaluatedState::NotEvaluated,
-                Expression::new(
-                    position.clone(),
-                    Expression_::Block(then_body.clone()),
-                    env.id_gen.next(),
-                ),
+                Expression {
+                    pos: position.clone(),
+                    expr_: Expression_::Block(then_body.clone()),
+                    value_is_used: true,
+                    id: env.id_gen.next(),
+                },
             ));
         } else {
             match else_body {
                 Some(else_body) => {
                     stack_frame.exprs_to_eval.push((
                         EvaluatedState::NotEvaluated,
-                        Expression::new(
-                            position.clone(),
-                            Expression_::Block(else_body.clone()),
-                            env.id_gen.next(),
-                        ),
+                        Expression {
+                            pos: position.clone(),
+                            expr_: Expression_::Block(else_body.clone()),
+                            value_is_used: true,
+                            id: env.id_gen.next(),
+                        },
                     ));
                 }
                 None => {
@@ -1093,11 +1095,12 @@ fn eval_while(
         // Evaluate the body.
         stack_frame.exprs_to_eval.push((
             EvaluatedState::NotEvaluated,
-            Expression::new(
-                expr.pos,
-                Expression_::Block(body.clone()),
-                env.id_gen.next(),
-            ),
+            Expression {
+                pos: expr.pos,
+                expr_: Expression_::Block(body.clone()),
+                value_is_used: true,
+                id: env.id_gen.next(),
+            },
         ))
     } else {
         if expr_value_is_used {
@@ -3902,7 +3905,12 @@ fn eval_match_cases(
 
             stack_frame.exprs_to_eval.push((
                 EvaluatedState::NotEvaluated,
-                Expression::new(case_expr_pos.clone(), case_block, env.id_gen.next()),
+                Expression {
+                    pos: case_expr_pos.clone(),
+                    expr_: case_block,
+                    value_is_used: true,
+                    id: env.id_gen.next(),
+                },
             ));
             return Ok(());
         }

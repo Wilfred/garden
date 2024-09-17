@@ -382,7 +382,7 @@ pub struct Expression {
 }
 
 impl Expression {
-    pub fn new(position: Position, expr_: Expression_, id: SyntaxId) -> Self {
+    pub(crate) fn new(position: Position, expr_: Expression_, id: SyntaxId) -> Self {
         Self {
             pos: position,
             expr_,

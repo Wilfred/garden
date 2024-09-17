@@ -82,6 +82,10 @@ enum Commands {
     },
     /// Run all the tests in the Garden program at the path specified.
     Test { path: PathBuf },
+    /// Run the tests associated with the definition at this offset,
+    /// but give up if the program exceeds a time limit or attempts
+    /// I/O.
+    SandboxedTest { offset: usize, path: PathBuf },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
     ///
@@ -159,6 +163,9 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
+        Commands::SandboxedTest { .. } => {
+            todo!()
+        }
         Commands::TestEvalUpTo { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");

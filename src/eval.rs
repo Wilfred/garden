@@ -1003,7 +1003,7 @@ fn eval_if(
                 Expression {
                     pos: position.clone(),
                     expr_: Expression_::Block(then_body.clone()),
-                    value_is_used: true,
+                    value_is_used: expr_value_is_used,
                     id: env.id_gen.next(),
                 },
             ));
@@ -1015,7 +1015,7 @@ fn eval_if(
                         Expression {
                             pos: position.clone(),
                             expr_: Expression_::Block(else_body.clone()),
-                            value_is_used: true,
+                            value_is_used: expr_value_is_used,
                             id: env.id_gen.next(),
                         },
                     ));
@@ -2870,7 +2870,13 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
             match &outer_expr.expr_ {
                 Expression_::Match(scrutinee, cases) => {
                     if done_children.done_children() {
-                        eval_match_cases(env, &mut stack_frame, &scrutinee.pos, cases)?;
+                        eval_match_cases(
+                            env,
+                            &mut stack_frame,
+                            expr_value_is_used,
+                            &scrutinee.pos,
+                            cases,
+                        )?;
                     } else {
                         stack_frame
                             .exprs_to_eval
@@ -3801,6 +3807,7 @@ fn eval_struct_value(
 fn eval_match_cases(
     env: &mut Env,
     stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
     scrutinee_pos: &Position,
     cases: &[(Pattern, Box<Expression>)],
 ) -> Result<(), EvalError> {
@@ -3908,7 +3915,7 @@ fn eval_match_cases(
                 Expression {
                     pos: case_expr_pos.clone(),
                     expr_: case_block,
-                    value_is_used: true,
+                    value_is_used: expr_value_is_used,
                     id: env.id_gen.next(),
                 },
             ));

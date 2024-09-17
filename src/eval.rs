@@ -1172,11 +1172,12 @@ fn eval_for_in(
     stack_frame.bindings_next_block = bindings;
     stack_frame.exprs_to_eval.push((
         EvaluatedState::NotEvaluated,
-        Expression::new(
-            outer_expr.pos,
-            Expression_::Block(body.clone()),
-            env.id_gen.next(),
-        ),
+        Expression {
+            pos: outer_expr.pos,
+            expr_: Expression_::Block(body.clone()),
+            value_is_used: false,
+            id: env.id_gen.next(),
+        },
     ));
 
     Ok(())

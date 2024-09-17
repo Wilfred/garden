@@ -191,6 +191,9 @@ pub(crate) struct StackFrame {
     pub(crate) caller_pos: Option<Position>,
     /// The ID of the call site expression.
     pub(crate) caller_expr_id: Option<SyntaxId>,
+    /// Does the call site use the return value? If this is false,
+    /// we're only called for side effects.
+    pub(crate) caller_uses_value: bool,
     pub(crate) bindings: Bindings,
     /// Types bound in this stack frame, due to generic parameters.
     pub(crate) type_bindings: TypeVarEnv,
@@ -658,6 +661,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         bindings_next_block: vec![],
         exprs_to_eval,
         evalled_values: vec![Value::unit()],
+        caller_uses_value: true,
     };
     env.stack.0.push(stack_frame);
 }
@@ -2071,6 +2075,7 @@ fn eval_call(
                 enclosing_fun: Some(fun_info.clone()),
                 enclosing_name: EnclosingSymbol::Closure,
                 src: fun_info.src_string.clone(),
+                caller_uses_value: expr_value_is_used,
             }));
         }
         Value::Fun {
@@ -2132,6 +2137,7 @@ fn eval_call(
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
+                caller_uses_value: expr_value_is_used,
             }));
         }
         Value::BuiltinFunction(kind, _) => eval_builtin_call(
@@ -2464,6 +2470,7 @@ fn eval_method_call(
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
         evalled_values: vec![Value::unit()],
+        caller_uses_value: expr_value_is_used,
     }))
 }
 
@@ -3571,12 +3578,14 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
             // The final evaluation result of the function
             // call should be used in the previous stack
             // frame.
-            env.stack
-                .0
-                .last_mut()
-                .unwrap()
-                .evalled_values
-                .push(return_value);
+            if stack_frame.caller_uses_value {
+                env.stack
+                    .0
+                    .last_mut()
+                    .unwrap()
+                    .evalled_values
+                    .push(return_value);
+            }
         } else {
             // Keep going on this stack frame.
             env.stack.0.push(stack_frame);

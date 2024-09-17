@@ -35,6 +35,7 @@ impl Default for Stack {
                 src: "// __toplevel__".to_owned(),
             },
             type_bindings: HashMap::new(),
+            caller_uses_value: true,
         }])
     }
 }

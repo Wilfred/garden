@@ -51,7 +51,7 @@ use owo_colors::OwoColorize as _;
 
 use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
 use crate::env::Env;
-use crate::eval::eval_toplevel_tests;
+use crate::eval::eval_tests;
 use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
 use garden_lang_parser::ast::{SourceString, SyntaxIdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
@@ -373,7 +373,7 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
 
                 eval_toplevel_defs(&items, &mut env);
 
-                match eval_toplevel_tests(&items, &mut env, &mut session) {
+                match eval_tests(&items, &mut env, &mut session) {
                     Ok(summary) => {
                         if summary.tests_passed == 1 {
                             println!("The test {}.", "passed".green());

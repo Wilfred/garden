@@ -318,7 +318,7 @@ pub(crate) fn eval_all_toplevel_items(
         .diagnostics
         .extend(check_toplevel_items_in_env(items, env));
 
-    let test_summary = eval_toplevel_tests(items, env, session)?;
+    let test_summary = eval_tests(items, env, session)?;
     summary.tests_passed = test_summary.tests_passed;
     summary.tests_failed = test_summary.tests_failed;
 
@@ -332,8 +332,8 @@ pub(crate) fn eval_all_toplevel_items(
     Ok(summary)
 }
 
-/// Evaluate toplevel tests.
-pub(crate) fn eval_toplevel_tests(
+/// Evaluate these tests.
+pub(crate) fn eval_tests(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,

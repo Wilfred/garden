@@ -54,13 +54,9 @@ fun build_site(): Unit {
     let base_tmpl_path = "/".join([website_dir, "template.html"])
     let tmpl_paths = template_files(website_dir)
 
-    let i = 0
-    while i < tmpl_paths.len() {
-        let tmpl_path = tmpl_paths.get(i)
+    for tmpl_path in tmpl_paths {
         let dest_path = output_path(tmpl_path)
         write_website_file(base_tmpl_path, tmpl_path, dest_path)
-
-        i = i + 1
     }
 }
 

@@ -265,6 +265,7 @@ pub(crate) struct Session {
 pub(crate) enum EvalError {
     Interrupted,
     ResumableError(Position, ErrorMessage),
+    ReachedTickLimit,
 }
 
 #[derive(Debug)]
@@ -2871,6 +2872,13 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 session.interrupted.store(false, Ordering::SeqCst);
                 restore_stack_frame(env, stack_frame, (done_children, outer_expr), &[]);
                 return Err(EvalError::Interrupted);
+            }
+
+            if let Some(tick_limit) = env.tick_limit {
+                if env.ticks >= tick_limit {
+                    restore_stack_frame(env, stack_frame, (done_children, outer_expr), &[]);
+                    return Err(EvalError::ReachedTickLimit);
+                }
             }
 
             if session.trace_exprs {

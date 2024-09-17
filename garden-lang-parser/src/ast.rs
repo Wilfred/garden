@@ -404,8 +404,8 @@ impl Expression {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
-    /// Is this block the body of a `while` loop? We use this to
-    /// detect which block to `break` from.
+    /// Is this block the body of a `while` or `for` loop? We use this
+    /// to detect which block to `break` from.
     pub is_loop_body: bool,
     pub open_brace: Position,
     pub exprs: Vec<Expression>,

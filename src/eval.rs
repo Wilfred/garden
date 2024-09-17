@@ -3939,7 +3939,6 @@ mod tests {
 
     use garden_lang_parser::ast::SyntaxIdGenerator;
     use garden_lang_parser::parse_toplevel_items;
-    use garden_lang_parser::position::Position;
 
     fn parse_defs_from_str(src: &str) -> Vec<Definition> {
         let mut id_gen = SyntaxIdGenerator::default();
@@ -4003,64 +4002,10 @@ mod tests {
     fn test_eval_persist_env() {
         let mut env = Env::default();
 
-        let exprs = vec![Expression::new(
-            Position {
-                start_offset: 0,
-                end_offset: 0,
-                line_number: 0,
-                end_line_number: 0,
-                path: PathBuf::from("__test.gdn"),
-            },
-            Expression_::Let(
-                Symbol::new(
-                    Position {
-                        start_offset: 0,
-                        end_offset: 0,
-                        line_number: 0,
-                        end_line_number: 0,
-                        path: PathBuf::from("__test.gdn"),
-                    },
-                    "foo",
-                    env.id_gen.next(),
-                ),
-                None,
-                Box::new(Expression::new(
-                    Position {
-                        start_offset: 0,
-                        end_offset: 0,
-                        line_number: 0,
-                        end_line_number: 0,
-                        path: PathBuf::from("__test.gdn"),
-                    },
-                    Expression_::IntLiteral(123),
-                    env.id_gen.next(),
-                )),
-            ),
-            env.id_gen.next(),
-        )];
+        let exprs = parse_exprs_from_str("let foo = 123");
         eval_exprs(&exprs, &mut env).unwrap();
 
-        let exprs = vec![Expression::new(
-            Position {
-                start_offset: 0,
-                end_offset: 0,
-                line_number: 0,
-                end_line_number: 0,
-                path: PathBuf::from("__test.gdn"),
-            },
-            Expression_::Variable(Symbol::new(
-                Position {
-                    start_offset: 0,
-                    end_offset: 0,
-                    line_number: 0,
-                    end_line_number: 0,
-                    path: PathBuf::from("__test.gdn"),
-                },
-                "foo",
-                env.id_gen.next(),
-            )),
-            env.id_gen.next(),
-        )];
+        let exprs = parse_exprs_from_str("foo");
         eval_exprs(&exprs, &mut env).unwrap();
     }
 

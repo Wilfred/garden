@@ -1,5 +1,10 @@
 fun main(_) {
     let items = [1, 2, 3, 4, 5]
+
+    // Check that an empty loop works.
+    for _ in items {}
+
+    // Check that a non-trivial loop with `break` works.
     for item in items {
         println(string_repr(item))
 

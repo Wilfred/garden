@@ -2861,6 +2861,8 @@ fn eval_builtin_method_call(
 pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
+            env.ticks += 1;
+
             let expr_position = outer_expr.pos.clone();
             let expr_value_is_used = outer_expr.value_is_used;
             let expr_id = outer_expr.id;

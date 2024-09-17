@@ -75,6 +75,11 @@ pub(crate) struct Env {
     pub(crate) prev_method_call_args: HashMap<TypeName, HashMap<SymbolName, (Value, Vec<Value>)>>,
     // TODO: should this be stored separately?
     pub(crate) stack: Stack,
+
+    /// The number of execution steps we've evaluated so far.
+    pub(crate) ticks: usize,
+    /// Stop evaluation if we exceed this number of ticks.
+    pub(crate) tick_limit: Option<usize>,
 }
 
 impl Default for Env {
@@ -276,6 +281,8 @@ impl Default for Env {
             prev_call_args: HashMap::new(),
             prev_method_call_args: HashMap::new(),
             stack: Stack::default(),
+            ticks: 0,
+            tick_limit: None,
         };
 
         eval_toplevel_defs(&prelude_items, &mut env);

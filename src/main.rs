@@ -149,7 +149,7 @@ fn main() {
             override_path,
         } => match std::fs::read(&path) {
             Ok(src_bytes) => {
-                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                let src = from_utf8_or_die(src_bytes, &path);
                 let src_path = override_path.unwrap_or(path);
                 syntax_check::check(&src_path, &src, json);
             }
@@ -171,8 +171,7 @@ fn main() {
         },
         Commands::TestEvalUpTo { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
-                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
-
+                let src = from_utf8_or_die(src_bytes, &path);
                 let offset = caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.");
                 test_eval_up_to(&src, &path, offset, interrupted);
@@ -189,7 +188,7 @@ fn main() {
         },
         Commands::ShowType { path, offset } => match std::fs::read(&path) {
             Ok(src_bytes) => {
-                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                let src = from_utf8_or_die(src_bytes, &path);
                 show_type(&src, &path, offset);
             }
             Err(e) => {
@@ -202,7 +201,7 @@ fn main() {
             override_path,
         } => match std::fs::read(&path) {
             Ok(src_bytes) => {
-                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                let src = from_utf8_or_die(src_bytes, &path);
                 let src_path = override_path.unwrap_or(path);
                 print_pos(&src, &src_path, offset);
             }
@@ -212,7 +211,7 @@ fn main() {
         },
         Commands::Complete { offset, path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
-                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                let src = from_utf8_or_die(src_bytes, &path);
                 completions::complete(&src, &path, offset);
             }
             Err(e) => {
@@ -221,7 +220,7 @@ fn main() {
         },
         Commands::TestJson { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
-                let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
+                let src = from_utf8_or_die(src_bytes, &path);
 
                 let mut env = Env::default();
                 let mut complete_src = String::new();
@@ -310,51 +309,55 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     }
 }
 
-fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
+fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
     match String::from_utf8(src_bytes) {
-        Ok(src) => {
-            let mut id_gen = SyntaxIdGenerator::default();
-            let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
-
-            for error in errors.into_iter() {
-                match error {
-                    ParseError::Invalid {
-                        position,
-                        message: e,
-                        additional: _,
-                    } => {
-                        eprintln!(
-                            "{}",
-                            &format_parse_error(
-                                &ErrorMessage(format!("Parse error: {}", e.0)),
-                                &position,
-                                Level::Error,
-                                &SourceString {
-                                    src: src.clone(),
-                                    offset: 0
-                                }
-                            )
-                        );
-                    }
-                    ParseError::Incomplete { message: e, .. } => {
-                        eprintln!("Parse error (incomplete input): {}", e.0);
-                    }
-                }
-            }
-
-            for item in items {
-                match item {
-                    ToplevelItem::Def(d) => {
-                        println!("{:#?}", d.2);
-                    }
-                    ToplevelItem::Expr(e) => {
-                        println!("{:#?}", e.0.expr_);
-                    }
-                }
-            }
-        }
+        Ok(s) => s,
         Err(e) => {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
+            std::process::exit(1);
+        }
+    }
+}
+
+fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
+    let src = from_utf8_or_die(src_bytes, path);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
+
+    for error in errors.into_iter() {
+        match error {
+            ParseError::Invalid {
+                position,
+                message: e,
+                additional: _,
+            } => {
+                eprintln!(
+                    "{}",
+                    &format_parse_error(
+                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &position,
+                        Level::Error,
+                        &SourceString {
+                            src: src.clone(),
+                            offset: 0
+                        }
+                    )
+                );
+            }
+            ParseError::Incomplete { message: e, .. } => {
+                eprintln!("Parse error (incomplete input): {}", e.0);
+            }
+        }
+    }
+
+    for item in items {
+        match item {
+            ToplevelItem::Def(d) => {
+                println!("{:#?}", d.2);
+            }
+            ToplevelItem::Expr(e) => {
+                println!("{:#?}", e.0.expr_);
+            }
         }
     }
 }
@@ -367,74 +370,68 @@ fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc
 fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut succeeded = false;
 
-    match String::from_utf8(src_bytes) {
-        Ok(src) => {
-            let mut env = Env::default();
-            let (items, errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
-            if errors.is_empty() {
-                let mut session = Session {
-                    interrupted,
-                    has_attached_stdout: true,
-                    start_time: Instant::now(),
-                    trace_exprs: false,
-                    stop_at_expr_id: None,
-                };
+    let src = from_utf8_or_die(src_bytes, path);
+    let mut env = Env::default();
+    let (items, errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
+    if errors.is_empty() {
+        let mut session = Session {
+            interrupted,
+            has_attached_stdout: true,
+            start_time: Instant::now(),
+            trace_exprs: false,
+            stop_at_expr_id: None,
+        };
 
-                eval_toplevel_defs(&items, &mut env);
+        eval_toplevel_defs(&items, &mut env);
 
-                match eval_tests(&items, &mut env, &mut session) {
-                    Ok(summary) => {
-                        if summary.tests_passed == 1 {
-                            println!("The test {}.", "passed".green());
-                        } else {
-                            println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
-                        }
-
-                        // TODO: should we allow tests to keep going
-                        // after the first failure?
-                        // TODO: print incremental progress as tests run.
-                        succeeded = true;
-                    }
-                    Err(EvalError::ResumableError(position, e)) => {
-                        eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
-                    }
-                    Err(EvalError::Interrupted) => {
-                        eprintln!("Interrupted");
-                    }
-                    Err(EvalError::ReachedTickLimit) => {
-                        eprintln!("Reached the tick limit.");
-                    }
+        match eval_tests(&items, &mut env, &mut session) {
+            Ok(summary) => {
+                if summary.tests_passed == 1 {
+                    println!("The test {}.", "passed".green());
+                } else {
+                    println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
                 }
-            } else {
-                for error in errors.into_iter() {
-                    match error {
-                        ParseError::Invalid {
-                            position,
-                            message: e,
-                            additional: _,
-                        } => {
-                            eprintln!(
-                                "{}",
-                                &format_parse_error(
-                                    &ErrorMessage(format!("Parse error: {}", e.0)),
-                                    &position,
-                                    Level::Error,
-                                    &SourceString {
-                                        src: src.clone(),
-                                        offset: 0
-                                    }
-                                )
-                            );
-                        }
-                        ParseError::Incomplete { message: e, .. } => {
-                            eprintln!("Parse error (incomplete input): {}", e.0);
-                        }
-                    }
-                }
+
+                // TODO: should we allow tests to keep going
+                // after the first failure?
+                // TODO: print incremental progress as tests run.
+                succeeded = true;
+            }
+            Err(EvalError::ResumableError(position, e)) => {
+                eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
+            }
+            Err(EvalError::Interrupted) => {
+                eprintln!("Interrupted");
+            }
+            Err(EvalError::ReachedTickLimit) => {
+                eprintln!("Reached the tick limit.");
             }
         }
-        Err(e) => {
-            eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
+    } else {
+        for error in errors.into_iter() {
+            match error {
+                ParseError::Invalid {
+                    position,
+                    message: e,
+                    additional: _,
+                } => {
+                    eprintln!(
+                        "{}",
+                        &format_parse_error(
+                            &ErrorMessage(format!("Parse error: {}", e.0)),
+                            &position,
+                            Level::Error,
+                            &SourceString {
+                                src: src.clone(),
+                                offset: 0
+                            }
+                        )
+                    );
+                }
+                ParseError::Incomplete { message: e, .. } => {
+                    eprintln!("Parse error (incomplete input): {}", e.0);
+                }
+            }
         }
     }
 
@@ -444,64 +441,58 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
 }
 
 fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
-    match String::from_utf8(src_bytes) {
-        Ok(src) => {
-            let mut env = Env::default();
-            let (items, errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
-            if errors.is_empty() {
-                let mut session = Session {
-                    interrupted,
-                    has_attached_stdout: true,
-                    start_time: Instant::now(),
-                    trace_exprs: false,
-                    stop_at_expr_id: None,
-                };
+    let src = from_utf8_or_die(src_bytes, path);
+    let mut env = Env::default();
+    let (items, errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
+    if errors.is_empty() {
+        let mut session = Session {
+            interrupted,
+            has_attached_stdout: true,
+            start_time: Instant::now(),
+            trace_exprs: false,
+            stop_at_expr_id: None,
+        };
 
-                eval_toplevel_defs(&items, &mut env);
+        eval_toplevel_defs(&items, &mut env);
 
-                match eval_call_main(arguments, &mut env, &mut session) {
-                    Ok(_) => {}
-                    Err(EvalError::ResumableError(position, msg)) => {
-                        eprintln!(
-                            "{}",
-                            &format_error_with_stack(&msg, &position, &env.stack.0)
-                        );
-                    }
-                    Err(EvalError::Interrupted) => {
-                        eprintln!("Interrupted");
-                    }
-                    Err(EvalError::ReachedTickLimit) => {
-                        eprintln!("Reached the tick limit.");
-                    }
-                }
-            } else {
-                for error in errors.into_iter() {
-                    match error {
-                        ParseError::Invalid {
-                            position,
-                            message: e,
-                            additional: _,
-                        } => eprintln!(
-                            "{}",
-                            &format_parse_error(
-                                &ErrorMessage(format!("Parse error: {}", e.0)),
-                                &position,
-                                Level::Error,
-                                &SourceString {
-                                    src: src.clone(),
-                                    offset: 0
-                                }
-                            )
-                        ),
-                        ParseError::Incomplete { message: e, .. } => {
-                            eprintln!("Parse error (incomplete input): {}", e.0)
-                        }
-                    }
-                }
+        match eval_call_main(arguments, &mut env, &mut session) {
+            Ok(_) => {}
+            Err(EvalError::ResumableError(position, msg)) => {
+                eprintln!(
+                    "{}",
+                    &format_error_with_stack(&msg, &position, &env.stack.0)
+                );
+            }
+            Err(EvalError::Interrupted) => {
+                eprintln!("Interrupted");
+            }
+            Err(EvalError::ReachedTickLimit) => {
+                eprintln!("Reached the tick limit.");
             }
         }
-        Err(e) => {
-            eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
+    } else {
+        for error in errors.into_iter() {
+            match error {
+                ParseError::Invalid {
+                    position,
+                    message: e,
+                    additional: _,
+                } => eprintln!(
+                    "{}",
+                    &format_parse_error(
+                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &position,
+                        Level::Error,
+                        &SourceString {
+                            src: src.clone(),
+                            offset: 0
+                        }
+                    )
+                ),
+                ParseError::Incomplete { message: e, .. } => {
+                    eprintln!("Parse error (incomplete input): {}", e.0)
+                }
+            }
         }
     }
 }

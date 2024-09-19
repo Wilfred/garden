@@ -258,33 +258,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         stop_at_expr_id: None,
     };
 
-    let (items, mut errors) = parse_toplevel_items(path, src, &mut env.id_gen);
-
-    if let Some(e) = errors.pop() {
-        match e {
-            ParseError::Invalid {
-                position,
-                message,
-                additional: _,
-            } => {
-                let formatted_error = format_parse_error(
-                    &message,
-                    &position,
-                    Level::Error,
-                    &SourceString {
-                        src: src.to_owned(),
-                        offset: 0,
-                    },
-                );
-                eprintln!("Error: {}", formatted_error);
-                return;
-            }
-            ParseError::Incomplete { message, .. } => {
-                eprintln!("Error: {}", message.0);
-                return;
-            }
-        }
-    }
+    let items = parse_toplevel_items_or_die(path, src, &mut env);
 
     eval_toplevel_defs(&items, &mut env);
     if let Err(e) = eval_call_main(&[], &mut env, &mut session) {
@@ -366,72 +340,44 @@ fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc
     todo!()
 }
 
-// TODO: Much of this logic is duplicated with run_file.
 fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut succeeded = false;
 
     let src = from_utf8_or_die(src_bytes, path);
     let mut env = Env::default();
-    let (items, errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
-    if errors.is_empty() {
-        let mut session = Session {
-            interrupted,
-            has_attached_stdout: true,
-            start_time: Instant::now(),
-            trace_exprs: false,
-            stop_at_expr_id: None,
-        };
+    let items = parse_toplevel_items_or_die(path, &src, &mut env);
 
-        eval_toplevel_defs(&items, &mut env);
+    let mut session = Session {
+        interrupted,
+        has_attached_stdout: true,
+        start_time: Instant::now(),
+        trace_exprs: false,
+        stop_at_expr_id: None,
+    };
 
-        match eval_tests(&items, &mut env, &mut session) {
-            Ok(summary) => {
-                if summary.tests_passed == 1 {
-                    println!("The test {}.", "passed".green());
-                } else {
-                    println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
-                }
+    eval_toplevel_defs(&items, &mut env);
 
-                // TODO: should we allow tests to keep going
-                // after the first failure?
-                // TODO: print incremental progress as tests run.
-                succeeded = true;
+    match eval_tests(&items, &mut env, &mut session) {
+        Ok(summary) => {
+            if summary.tests_passed == 1 {
+                println!("The test {}.", "passed".green());
+            } else {
+                println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
             }
-            Err(EvalError::ResumableError(position, e)) => {
-                eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
-            }
-            Err(EvalError::Interrupted) => {
-                eprintln!("Interrupted");
-            }
-            Err(EvalError::ReachedTickLimit) => {
-                eprintln!("Reached the tick limit.");
-            }
+
+            // TODO: should we allow tests to keep going
+            // after the first failure?
+            // TODO: print incremental progress as tests run.
+            succeeded = true;
         }
-    } else {
-        for error in errors.into_iter() {
-            match error {
-                ParseError::Invalid {
-                    position,
-                    message: e,
-                    additional: _,
-                } => {
-                    eprintln!(
-                        "{}",
-                        &format_parse_error(
-                            &ErrorMessage(format!("Parse error: {}", e.0)),
-                            &position,
-                            Level::Error,
-                            &SourceString {
-                                src: src.clone(),
-                                offset: 0
-                            }
-                        )
-                    );
-                }
-                ParseError::Incomplete { message: e, .. } => {
-                    eprintln!("Parse error (incomplete input): {}", e.0);
-                }
-            }
+        Err(EvalError::ResumableError(position, e)) => {
+            eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
+        }
+        Err(EvalError::Interrupted) => {
+            eprintln!("Interrupted");
+        }
+        Err(EvalError::ReachedTickLimit) => {
+            eprintln!("Reached the tick limit.");
         }
     }
 
@@ -440,37 +386,10 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
     }
 }
 
-fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
-    let src = from_utf8_or_die(src_bytes, path);
-    let mut env = Env::default();
-    let (items, errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
-    if errors.is_empty() {
-        let mut session = Session {
-            interrupted,
-            has_attached_stdout: true,
-            start_time: Instant::now(),
-            trace_exprs: false,
-            stop_at_expr_id: None,
-        };
+fn parse_toplevel_items_or_die(path: &Path, src: &str, env: &mut Env) -> Vec<ToplevelItem> {
+    let (items, errors) = parse_toplevel_items(path, src, &mut env.id_gen);
 
-        eval_toplevel_defs(&items, &mut env);
-
-        match eval_call_main(arguments, &mut env, &mut session) {
-            Ok(_) => {}
-            Err(EvalError::ResumableError(position, msg)) => {
-                eprintln!(
-                    "{}",
-                    &format_error_with_stack(&msg, &position, &env.stack.0)
-                );
-            }
-            Err(EvalError::Interrupted) => {
-                eprintln!("Interrupted");
-            }
-            Err(EvalError::ReachedTickLimit) => {
-                eprintln!("Reached the tick limit.");
-            }
-        }
-    } else {
+    if !errors.is_empty() {
         for error in errors.into_iter() {
             match error {
                 ParseError::Invalid {
@@ -484,7 +403,7 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                         &position,
                         Level::Error,
                         &SourceString {
-                            src: src.clone(),
+                            src: src.to_owned(),
                             offset: 0
                         }
                     )
@@ -493,6 +412,43 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
                     eprintln!("Parse error (incomplete input): {}", e.0)
                 }
             }
+        }
+
+        std::process::exit(1);
+    }
+
+    items
+}
+
+fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
+    let src = from_utf8_or_die(src_bytes, path);
+
+    let mut env = Env::default();
+    let items = parse_toplevel_items_or_die(path, &src, &mut env);
+
+    let mut session = Session {
+        interrupted,
+        has_attached_stdout: true,
+        start_time: Instant::now(),
+        trace_exprs: false,
+        stop_at_expr_id: None,
+    };
+
+    eval_toplevel_defs(&items, &mut env);
+
+    match eval_call_main(arguments, &mut env, &mut session) {
+        Ok(_) => {}
+        Err(EvalError::ResumableError(position, msg)) => {
+            eprintln!(
+                "{}",
+                &format_error_with_stack(&msg, &position, &env.stack.0)
+            );
+        }
+        Err(EvalError::Interrupted) => {
+            eprintln!("Interrupted");
+        }
+        Err(EvalError::ReachedTickLimit) => {
+            eprintln!("Reached the tick limit.");
         }
     }
 }

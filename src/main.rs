@@ -337,7 +337,49 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
 }
 
 fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
-    todo!()
+    let src = from_utf8_or_die(src_bytes, path);
+    let mut env = Env::default();
+    let items = parse_toplevel_items_or_die(path, &src, &mut env);
+
+    let mut session = Session {
+        interrupted,
+        has_attached_stdout: true,
+        start_time: Instant::now(),
+        trace_exprs: false,
+        stop_at_expr_id: None,
+    };
+
+    // TODO: for real IDE usage we'll want to use the environment of
+    // the current session.
+    eval_toplevel_defs(&items, &mut env);
+
+    let mut succeeded = false;
+
+    env.tick_limit = Some(1_000);
+    match eval_tests(&items, &mut env, &mut session) {
+        Ok(summary) => {
+            if summary.tests_passed == 1 {
+                println!("The test {}.", "passed".green());
+            } else {
+                println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
+            }
+
+            succeeded = true;
+        }
+        Err(EvalError::ResumableError(position, e)) => {
+            eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
+        }
+        Err(EvalError::Interrupted) => {
+            eprintln!("Interrupted");
+        }
+        Err(EvalError::ReachedTickLimit) => {
+            eprintln!("Reached the tick limit.");
+        }
+    }
+
+    if !succeeded {
+        std::process::exit(1);
+    }
 }
 
 fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
@@ -499,6 +541,17 @@ mod tests {
     fn test_eval_up_to() -> TestResult<()> {
         let mut config =
             TestConfig::new("target/debug/garden", "src/eval_up_to_test_files", "// ")?;
+        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
+        config.run_tests()
+    }
+
+    #[test]
+    fn test_sandboxed_test() -> TestResult<()> {
+        let mut config = TestConfig::new(
+            "target/debug/garden",
+            "src/sandboxed_test_test_files",
+            "// ",
+        )?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
     }

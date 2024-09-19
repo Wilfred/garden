@@ -85,7 +85,7 @@ enum Commands {
     /// Run the tests associated with the definition at this offset,
     /// but give up if the program exceeds a time limit or attempts
     /// I/O.
-    SandboxedTest { offset: usize, path: PathBuf },
+    SandboxedTest { path: PathBuf },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
     ///
@@ -163,9 +163,12 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
-        Commands::SandboxedTest { .. } => {
-            todo!()
-        }
+        Commands::SandboxedTest { path } => match std::fs::read(&path) {
+            Ok(src_bytes) => run_sandboxed_tests_in_file(src_bytes, &path, interrupted),
+            Err(e) => {
+                eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            }
+        },
         Commands::TestEvalUpTo { path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = String::from_utf8(src_bytes).expect("TODO: handle invalid bytes");
@@ -354,6 +357,10 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
             eprintln!("Error: {} is not valid UTF-8: {}", path.display(), e);
         }
     }
+}
+
+fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
+    todo!()
 }
 
 // TODO: Much of this logic is duplicated with run_file.

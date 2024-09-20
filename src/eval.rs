@@ -2509,7 +2509,7 @@ fn eval_method_call(
     caller_expr: &Expression,
     meth_name: &Symbol,
     paren_args: &ParenthesizedArguments,
-) -> Result<Option<StackFrame>, ErrorInfo> {
+) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     let mut arg_values: Vec<Value> = vec![];
     let mut arg_positions: Vec<Position> = vec![];
     for arg in &paren_args.arguments {
@@ -2550,14 +2550,16 @@ fn eval_method_call(
                     saved_values.push(value.clone());
                 }
 
-                return Err(ErrorInfo {
-                    message: ErrorMessage(format!(
-                        "No method named `{}` on `{}`.",
-                        meth_name.name, receiver_type_name
-                    )),
-                    restore_values: saved_values,
-                    error_position: meth_name.position.clone(),
-                });
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ResumableError(
+                        meth_name.position.clone(),
+                        ErrorMessage(format!(
+                            "No method named `{}` on `{}`.",
+                            meth_name.name, receiver_type_name
+                        )),
+                    ),
+                ));
             }
         }
         None => {
@@ -2566,11 +2568,13 @@ fn eval_method_call(
                 saved_values.push(value.clone());
             }
 
-            return Err(ErrorInfo {
-                message: ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name)),
-                restore_values: saved_values,
-                error_position: meth_name.position.clone(),
-            });
+            return Err((
+                RestoreValues(saved_values),
+                EvalError::ResumableError(
+                    meth_name.position.clone(),
+                    ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name)),
+                ),
+            ));
         }
     };
 
@@ -2585,6 +2589,18 @@ fn eval_method_call(
                 &arg_values,
                 stack_frame,
                 expr_value_is_used,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        RestoreValues(restore_values),
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
             return Ok(None);
         }
@@ -2604,6 +2620,18 @@ fn eval_method_call(
         fun_info.params.len(),
         &arg_positions,
         &arg_values,
+    )
+    .map_err(
+        |ErrorInfo {
+             error_position,
+             message,
+             restore_values,
+         }| {
+            (
+                RestoreValues(restore_values),
+                EvalError::ResumableError(error_position, message),
+            )
+        },
     )?;
 
     // TODO: check for duplicate parameter names.
@@ -3583,18 +3611,14 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 continue;
                             }
                             Ok(None) => {}
-                            Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position,
-                            }) => {
+                            Err((RestoreValues(restore_values), eval_err)) => {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
                                     (done_children, outer_expr.clone()),
                                     &restore_values,
                                 );
-                                return Err(EvalError::ResumableError(error_position, message));
+                                return Err(eval_err);
                             }
                         }
                     } else {

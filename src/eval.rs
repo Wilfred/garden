@@ -1316,7 +1316,7 @@ fn eval_boolean_binop(
     lhs_position: &Position,
     rhs_position: &Position,
     op: BinaryOperatorKind,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     {
         let rhs_value = stack_frame
             .evalled_values
@@ -1330,34 +1330,38 @@ fn eval_boolean_binop(
         let lhs_bool = match to_rust_bool(&lhs_value) {
             Some(b) => b,
             None => {
-                return Err(ErrorInfo {
-                    message: format_type_error(
-                        &TypeName {
-                            name: "Bool".into(),
-                        },
-                        &lhs_value,
-                        env,
+                return Err((
+                    RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                    EvalError::ResumableError(
+                        lhs_position.clone(),
+                        format_type_error(
+                            &TypeName {
+                                name: "Bool".into(),
+                            },
+                            &lhs_value,
+                            env,
+                        ),
                     ),
-                    restore_values: vec![lhs_value.clone(), rhs_value],
-                    error_position: lhs_position.clone(),
-                });
+                ));
             }
         };
 
         let rhs_bool = match to_rust_bool(&rhs_value) {
             Some(b) => b,
             None => {
-                return Err(ErrorInfo {
-                    message: format_type_error(
-                        &TypeName {
-                            name: "Bool".into(),
-                        },
-                        &rhs_value,
-                        env,
+                return Err((
+                    RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                    EvalError::ResumableError(
+                        rhs_position.clone(),
+                        format_type_error(
+                            &TypeName {
+                                name: "Bool".into(),
+                            },
+                            &rhs_value,
+                            env,
+                        ),
                     ),
-                    restore_values: vec![lhs_value, rhs_value.clone()],
-                    error_position: rhs_position.clone(),
-                });
+                ));
             }
         };
 
@@ -3483,11 +3487,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                     rhs,
                 ) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_boolean_binop(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_boolean_binop(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3501,7 +3501,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         // TODO: do short-circuit evaluation of && and ||.

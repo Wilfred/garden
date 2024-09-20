@@ -1388,7 +1388,7 @@ fn eval_equality_binop(
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
     op: BinaryOperatorKind,
-) -> Result<(), ErrorInfo> {
+) {
     let rhs_value = stack_frame
         .evalled_values
         .pop()
@@ -1413,8 +1413,6 @@ fn eval_equality_binop(
             _ => unreachable!(),
         }
     }
-
-    Ok(())
 }
 
 fn eval_integer_binop(
@@ -3455,20 +3453,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                     rhs,
                 ) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_equality_binop(&mut stack_frame, expr_value_is_used, *op)
-                        {
-                            restore_stack_frame(
-                                env,
-                                stack_frame,
-                                (done_children, outer_expr.clone()),
-                                &restore_values,
-                            );
-                            return Err(EvalError::ResumableError(position, message));
-                        }
+                        eval_equality_binop(&mut stack_frame, expr_value_is_used, *op)
                     } else {
                         stack_frame
                             .exprs_to_eval

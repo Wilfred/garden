@@ -1690,6 +1690,16 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::Shell => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((RestoreValues(saved_values), EvalError::ForbiddenInSandbox));
+            }
+
             check_arity(
                 &SymbolName("shell".to_owned()),
                 receiver_value,

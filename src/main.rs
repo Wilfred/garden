@@ -362,6 +362,8 @@ fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc
     let mut succeeded = false;
 
     env.tick_limit = Some(1_000);
+    env.enforce_sandbox = true;
+
     match eval_tests(&items, &mut env, &mut session) {
         Ok(summary) => {
             if summary.tests_passed == 1 {

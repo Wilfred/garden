@@ -1241,7 +1241,7 @@ fn eval_let(
     expr_value_is_used: bool,
     variable: &Symbol,
     hint: &Option<TypeHint>,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let expr_value = stack_frame
         .evalled_values
         .pop()
@@ -1251,20 +1251,24 @@ fn eval_let(
         let expected_ty = match Type::from_hint(hint, env, &stack_frame.type_bindings) {
             Ok(ty) => ty,
             Err(e) => {
-                return Err(ErrorInfo {
-                    error_position: hint.position.clone(),
-                    message: ErrorMessage(format!("Unbound type in hint: {}", e)),
-                    restore_values: vec![],
-                });
+                return Err((
+                    RestoreValues(vec![]),
+                    EvalError::ResumableError(
+                        hint.position.clone(),
+                        ErrorMessage(format!("Unbound type in hint: {}", e)),
+                    ),
+                ));
             }
         };
 
         if let Err(msg) = check_type(&expr_value, &expected_ty, env) {
-            return Err(ErrorInfo {
-                error_position: hint.position.clone(),
-                message: ErrorMessage(format!("Incorrect type for variable: {}", msg.0)),
-                restore_values: vec![expr_value],
-            });
+            return Err((
+                RestoreValues(vec![expr_value]),
+                EvalError::ResumableError(
+                    hint.position.clone(),
+                    ErrorMessage(format!("Incorrect type for variable: {}", msg.0)),
+                ),
+            ));
         };
     }
 
@@ -3229,11 +3233,8 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::Let(variable, hint, expr) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_let(env, &mut stack_frame, expr_value_is_used, variable, hint)
+                        if let Err((RestoreValues(restore_values), eval_err)) =
+                            eval_let(env, &mut stack_frame, expr_value_is_used, variable, hint)
                         {
                             restore_stack_frame(
                                 env,
@@ -3241,7 +3242,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame

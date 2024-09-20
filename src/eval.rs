@@ -1423,7 +1423,7 @@ fn eval_integer_binop(
     lhs_position: &Position,
     rhs_position: &Position,
     op: BinaryOperatorKind,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     {
         let rhs_value = stack_frame
             .evalled_values
@@ -1437,21 +1437,25 @@ fn eval_integer_binop(
         let lhs_num = match lhs_value {
             Value::Integer(i) => i,
             _ => {
-                return Err(ErrorInfo {
-                    message: format_type_error(&TypeName { name: "Int".into() }, &lhs_value, env),
-                    restore_values: vec![lhs_value.clone(), rhs_value],
-                    error_position: lhs_position.clone(),
-                });
+                return Err((
+                    RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                    EvalError::ResumableError(
+                        lhs_position.clone(),
+                        format_type_error(&TypeName { name: "Int".into() }, &lhs_value, env),
+                    ),
+                ));
             }
         };
         let rhs_num = match rhs_value {
             Value::Integer(i) => i,
             _ => {
-                return Err(ErrorInfo {
-                    message: format_type_error(&TypeName { name: "Int".into() }, &rhs_value, env),
-                    restore_values: vec![lhs_value, rhs_value.clone()],
-                    error_position: rhs_position.clone(),
-                });
+                return Err((
+                    RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                    EvalError::ResumableError(
+                        rhs_position.clone(),
+                        format_type_error(&TypeName { name: "Int".into() }, &rhs_value, env),
+                    ),
+                ));
             }
         };
 
@@ -1461,15 +1465,17 @@ fn eval_integer_binop(
             BinaryOperatorKind::Multiply => Value::Integer(lhs_num.wrapping_mul(rhs_num)),
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
-                    return Err(ErrorInfo {
-                        // TODO: this looks wrong, it should be the LHS value we print.
-                        message: ErrorMessage(format!(
-                            "Tried to divide {} by zero.",
-                            rhs_value.display(env)
-                        )),
-                        restore_values: vec![lhs_value, rhs_value.clone()],
-                        error_position: position.clone(),
-                    });
+                    return Err((
+                        RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                        EvalError::ResumableError(
+                            position.clone(),
+                            // TODO: this looks wrong, it should be the LHS value we print.
+                            ErrorMessage(format!(
+                                "Tried to divide {} by zero.",
+                                rhs_value.display(env)
+                            )),
+                        ),
+                    ));
                 }
 
                 Value::Integer(lhs_num / rhs_num)
@@ -3414,11 +3420,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                     rhs,
                 ) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_integer_binop(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_integer_binop(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3433,7 +3435,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame

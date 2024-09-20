@@ -2018,7 +2018,7 @@ fn eval_call(
     arg_values: &[Value],
     receiver_value: &Value,
     session: &Session,
-) -> Result<Option<StackFrame>, ErrorInfo> {
+) -> Result<Option<StackFrame>, (ErrorInfo, EvalError)> {
     match &receiver_value {
         Value::Closure(bindings, fun_info) => {
             let mut bindings = bindings.clone();
@@ -2029,16 +2029,21 @@ fn eval_call(
                     saved_values.push(value.clone());
                 }
 
-                return Err(ErrorInfo {
-                    message: ErrorMessage(format!(
-                        "Closure expects {} argument{}, but got {}",
-                        fun_info.params.len(),
-                        if fun_info.params.len() == 1 { "" } else { "s" },
-                        arg_values.len()
-                    )),
+                let message = ErrorMessage(format!(
+                    "Closure expects {} argument{}, but got {}",
+                    fun_info.params.len(),
+                    if fun_info.params.len() == 1 { "" } else { "s" },
+                    arg_values.len()
+                ));
+                let error_info = ErrorInfo {
+                    message: message.clone(),
                     restore_values: saved_values,
                     error_position: caller_expr.pos.clone(),
-                });
+                };
+                return Err((
+                    error_info,
+                    EvalError::ResumableError(caller_expr.pos.clone(), message),
+                ));
             }
 
             let mut fun_subexprs = vec![];
@@ -2093,6 +2098,22 @@ fn eval_call(
                 params.len(),
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             if !env.prev_call_args.contains_key(&name_sym.name) {
@@ -2113,6 +2134,22 @@ fn eval_call(
                 arg_positions,
                 arg_values,
                 &type_bindings,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             let mut fun_subexprs = vec![];
@@ -2153,6 +2190,22 @@ fn eval_call(
             expr_value_is_used,
             &caller_expr.pos,
             session,
+        )
+        .map_err(
+            |ErrorInfo {
+                 error_position,
+                 message,
+                 restore_values,
+             }| {
+                (
+                    ErrorInfo {
+                        error_position: error_position.clone(),
+                        message: message.clone(),
+                        restore_values,
+                    },
+                    EvalError::ResumableError(error_position, message),
+                )
+            },
         )?,
         Value::EnumConstructor {
             type_name,
@@ -2166,6 +2219,22 @@ fn eval_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             let runtime_type = enum_value_runtime_type(
@@ -2196,17 +2265,22 @@ fn eval_call(
             }
             saved_values.push(receiver_value.clone());
 
-            return Err(ErrorInfo {
+            let message = format_type_error(
+                &TypeName {
+                    name: "Function".into(),
+                },
+                v,
+                env,
+            );
+            let err_info = ErrorInfo {
                 error_position: caller_expr.pos.clone(),
-                message: format_type_error(
-                    &TypeName {
-                        name: "Function".into(),
-                    },
-                    v,
-                    env,
-                ),
+                message: message.clone(),
                 restore_values: saved_values,
-            });
+            };
+            return Err((
+                err_info,
+                EvalError::ResumableError(caller_expr.pos.clone(), message),
+            ));
         }
     }
 
@@ -3378,18 +3452,14 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 continue;
                             }
                             Ok(None) => {}
-                            Err(ErrorInfo {
-                                message,
-                                restore_values,
-                                error_position: position,
-                            }) => {
+                            Err((ErrorInfo { restore_values, .. }, eval_error)) => {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
                                     (done_children, outer_expr.clone()),
                                     &restore_values,
                                 );
-                                return Err(EvalError::ResumableError(position, message));
+                                return Err(eval_error);
                             }
                         }
                     } else {

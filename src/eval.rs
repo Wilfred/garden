@@ -3482,11 +3482,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::DotAccess(recv, sym) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_dot_access(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_dot_access(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3499,7 +3495,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame
@@ -3687,7 +3683,7 @@ fn eval_dot_access(
     expr_value_is_used: bool,
     sym: &Symbol,
     recv_pos: &Position,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let recv_value = stack_frame
         .evalled_values
         .pop()
@@ -3709,22 +3705,23 @@ fn eval_dot_access(
             }
 
             if !found {
-                return Err(ErrorInfo {
-                    message: ErrorMessage(format!(
-                        "This struct has no field named `{}`.",
-                        sym.name
-                    )),
-                    restore_values: vec![recv_value],
-                    error_position: sym.position.clone(),
-                });
+                return Err((
+                    RestoreValues(vec![recv_value]),
+                    EvalError::ResumableError(
+                        sym.position.clone(),
+                        ErrorMessage(format!("This struct has no field named `{}`.", sym.name)),
+                    ),
+                ));
             }
         }
         _ => {
-            return Err(ErrorInfo {
-                message: format_type_error("struct", &recv_value, env),
-                restore_values: vec![recv_value],
-                error_position: recv_pos.clone(),
-            })
+            return Err((
+                RestoreValues(vec![recv_value.clone()]),
+                EvalError::ResumableError(
+                    recv_pos.clone(),
+                    format_type_error("struct", &recv_value, env),
+                ),
+            ));
         }
     }
 

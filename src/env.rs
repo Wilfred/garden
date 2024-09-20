@@ -80,6 +80,11 @@ pub(crate) struct Env {
     pub(crate) ticks: usize,
     /// Stop evaluation if we exceed this number of ticks.
     pub(crate) tick_limit: Option<usize>,
+
+    /// Refuse to run code might modify the system, such as filesystem
+    /// access or shell commands. This should allow us to run
+    /// arbitrary code safely.
+    pub(crate) enforce_sandbox: bool,
 }
 
 impl Default for Env {
@@ -283,6 +288,7 @@ impl Default for Env {
             stack: Stack::default(),
             ticks: 0,
             tick_limit: None,
+            enforce_sandbox: false,
         };
 
         eval_toplevel_defs(&prelude_items, &mut env);

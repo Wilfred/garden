@@ -242,10 +242,10 @@ fn handle_eval_request(
             position: None,
             warnings: vec![],
         },
-        Err(EvalError::ForbiddenInSandbox) => Response {
+        Err(EvalError::ForbiddenInSandbox(position)) => Response {
             kind: ResponseKind::Evaluate,
             value: Err(ResponseError {
-                position: None,
+                position: Some(position),
                 message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                 stack: None,
             }),
@@ -351,10 +351,10 @@ fn handle_eval_up_to_request(
                     position: None,
                     warnings: vec![],
                 },
-                EvalError::ForbiddenInSandbox => Response {
+                EvalError::ForbiddenInSandbox(position) => Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
-                        position: None,
+                        position: Some(position),
                         message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                         stack: None,
                     }),
@@ -609,10 +609,10 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
             position: None,
             warnings: vec![],
         },
-        Err(EvalError::ForbiddenInSandbox) => Response {
+        Err(EvalError::ForbiddenInSandbox(position)) => Response {
             kind: ResponseKind::Evaluate,
             value: Err(ResponseError {
-                position: None,
+                position: Some(position),
                 message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                 stack: None,
             }),

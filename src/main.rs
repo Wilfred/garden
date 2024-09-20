@@ -266,7 +266,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
             EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
-            EvalError::ForbiddenInSandbox => {
+            EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
             }
         }
@@ -280,7 +280,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
                 EvalError::Interrupted => eprintln!("Interrupted."),
                 EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
                 EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
-                EvalError::ForbiddenInSandbox => {
+                EvalError::ForbiddenInSandbox(_) => {
                     eprintln!("Tried to execute unsafe code in sandboxed mode.")
                 }
             },
@@ -383,8 +383,11 @@ fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc
         Err(EvalError::ReachedTickLimit) => {
             eprintln!("Reached the tick limit.");
         }
-        Err(EvalError::ForbiddenInSandbox) => {
-            eprintln!("Tried to execute unsafe code in sandboxed mode.");
+        Err(EvalError::ForbiddenInSandbox(position)) => {
+            eprintln!(
+                "{}: Tried to execute unsafe code in sandboxed mode.",
+                position.as_ide_string()
+            );
         }
     }
 
@@ -432,8 +435,11 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
         Err(EvalError::ReachedTickLimit) => {
             eprintln!("Reached the tick limit.");
         }
-        Err(EvalError::ForbiddenInSandbox) => {
-            eprintln!("Tried to execute unsafe code in sandboxed mode.");
+        Err(EvalError::ForbiddenInSandbox(position)) => {
+            eprintln!(
+                "{}: Tried to execute unsafe code in sandboxed mode.",
+                position.as_ide_string()
+            );
         }
     }
 
@@ -506,8 +512,11 @@ fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: 
         Err(EvalError::ReachedTickLimit) => {
             eprintln!("Reached the tick limit.");
         }
-        Err(EvalError::ForbiddenInSandbox) => {
-            eprintln!("Tried to execute unsafe code in sandboxed mode.");
+        Err(EvalError::ForbiddenInSandbox(position)) => {
+            eprintln!(
+                "{}: Tried to execute unsafe code in sandboxed mode.",
+                position.as_ide_string()
+            );
         }
     }
 }

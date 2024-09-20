@@ -266,7 +266,7 @@ pub(crate) enum EvalError {
     Interrupted,
     ResumableError(Position, ErrorMessage),
     ReachedTickLimit,
-    ForbiddenInSandbox,
+    ForbiddenInSandbox(Position),
 }
 
 #[derive(Debug)]
@@ -1697,7 +1697,10 @@ fn eval_builtin_call(
                 }
                 saved_values.push(receiver_value.clone());
 
-                return Err((RestoreValues(saved_values), EvalError::ForbiddenInSandbox));
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
             }
 
             check_arity(

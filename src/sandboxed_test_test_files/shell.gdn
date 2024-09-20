@@ -4,5 +4,6 @@ test shell_is_unsafe {
 
 // args: sandboxed-test
 // expected exit status: 1
-// expected stderr: Tried to execute unsafe code in sandboxed mode.
+// expected stderr:
+// src/sandboxed_test_test_files/shell.gdn:2: Tried to execute unsafe code in sandboxed mode.
 

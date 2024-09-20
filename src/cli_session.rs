@@ -203,8 +203,11 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 println!("Reached tick limit.");
                 is_stopped = false;
             }
-            Err(EvalError::ForbiddenInSandbox) => {
-                println!("Reached tick limit.");
+            Err(EvalError::ForbiddenInSandbox(pos)) => {
+                println!(
+                    "{}: This call is forbidden in a sandbox.",
+                    pos.as_ide_string()
+                );
                 is_stopped = false;
             }
         }

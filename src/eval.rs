@@ -2139,18 +2139,6 @@ fn eval_call(
                 arg_positions,
                 arg_values,
                 &type_bindings,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             let mut fun_subexprs = vec![];
@@ -2343,17 +2331,19 @@ fn check_param_types(
     arg_positions: &[Position],
     arg_values: &[Value],
     type_bindings: &TypeVarEnv,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
             let param_ty = match Type::from_hint(param_hint, env, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
-                    return Err(ErrorInfo {
-                        error_position: arg_positions[i].clone(),
-                        message: ErrorMessage(format!("Unbound type in hint: {}", e)),
-                        restore_values: vec![],
-                    });
+                    return Err((
+                        RestoreValues(vec![]),
+                        EvalError::ResumableError(
+                            arg_positions[i].clone(),
+                            ErrorMessage(format!("Unbound type in hint: {}", e)),
+                        ),
+                    ));
                 }
             };
 
@@ -2364,11 +2354,13 @@ fn check_param_types(
                     saved_values.push(value.clone());
                 }
 
-                return Err(ErrorInfo {
-                    error_position: arg_positions[i].clone(),
-                    message: ErrorMessage(format!("Incorrect type for argument: {}", msg.0)),
-                    restore_values: saved_values,
-                });
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ResumableError(
+                        arg_positions[i].clone(),
+                        ErrorMessage(format!("Incorrect type for argument: {}", msg.0)),
+                    ),
+                ));
             }
         }
     }

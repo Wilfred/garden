@@ -1533,7 +1533,7 @@ fn eval_builtin_call(
     expr_value_is_used: bool,
     position: &Position,
     session: &Session,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (ErrorInfo, EvalError)> {
     match kind {
         BuiltinFunctionKind::Error => {
             check_arity(
@@ -1543,6 +1543,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             let mut saved_values = vec![];
@@ -1553,24 +1569,32 @@ fn eval_builtin_call(
 
             match &arg_values[0] {
                 Value::String(msg) => {
-                    return Err(ErrorInfo {
-                        message: ErrorMessage(msg.clone()),
-                        restore_values: saved_values,
-                        error_position: position.clone(),
-                    });
+                    let message = ErrorMessage(msg.clone());
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: position.clone(),
+                        },
+                        EvalError::ResumableError(position.clone(), message),
+                    ));
                 }
                 v => {
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             }
         }
@@ -1582,6 +1606,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             match &arg_values[0] {
@@ -1606,17 +1646,21 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             }
 
@@ -1632,6 +1676,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             match &arg_values[0] {
@@ -1656,17 +1716,21 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             }
 
@@ -1682,6 +1746,22 @@ fn eval_builtin_call(
                 2,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             match &arg_values[0] {
@@ -1726,17 +1806,21 @@ fn eval_builtin_call(
                             }
                             saved_values.push(receiver_value.clone());
 
-                            return Err(ErrorInfo {
-                                message: format_type_error(
-                                    &TypeName {
-                                        name: "List".into(),
-                                    },
-                                    &v,
-                                    env,
-                                ),
-                                restore_values: saved_values,
-                                error_position: arg_positions[0].clone(),
-                            });
+                            let message = format_type_error(
+                                &TypeName {
+                                    name: "List".into(),
+                                },
+                                &v,
+                                env,
+                            );
+                            return Err((
+                                ErrorInfo {
+                                    message: message.clone(),
+                                    restore_values: saved_values,
+                                    error_position: arg_positions[0].clone(),
+                                },
+                                EvalError::ResumableError(arg_positions[0].clone(), message),
+                            ));
                         }
                     }
                 }
@@ -1747,17 +1831,21 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             }
         }
@@ -1769,6 +1857,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             if expr_value_is_used {
@@ -1785,6 +1889,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             // TODO: define a separate path type in Garden.
@@ -1797,17 +1917,21 @@ fn eval_builtin_call(
                         saved_values.push(receiver_value.clone());
                     }
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             };
 
@@ -1825,6 +1949,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             // TODO: define a separate path type in Garden.
@@ -1837,17 +1977,21 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             };
 
@@ -1889,6 +2033,22 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             // TODO: define a separate path type in Garden.
@@ -1901,17 +2061,21 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
-                        ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             };
 
@@ -1934,6 +2098,22 @@ fn eval_builtin_call(
                 0,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             // TODO: when we have a userland result type, use that.
@@ -1953,6 +2133,22 @@ fn eval_builtin_call(
                 2,
                 arg_positions,
                 arg_values,
+            )
+            .map_err(
+                |ErrorInfo {
+                     error_position,
+                     message,
+                     restore_values,
+                 }| {
+                    (
+                        ErrorInfo {
+                            error_position: error_position.clone(),
+                            message: message.clone(),
+                            restore_values,
+                        },
+                        EvalError::ResumableError(error_position, message),
+                    )
+                },
             )?;
 
             let content_s = match &arg_values[0] {
@@ -1964,11 +2160,15 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error("String", v, env),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error("String", v, env);
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             };
 
@@ -1981,11 +2181,15 @@ fn eval_builtin_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error("String", v, env),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    let message = format_type_error("String", v, env);
+                    return Err((
+                        ErrorInfo {
+                            message: message.clone(),
+                            restore_values: saved_values,
+                            error_position: arg_positions[0].clone(),
+                        },
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
                 }
             };
 
@@ -2190,22 +2394,6 @@ fn eval_call(
             expr_value_is_used,
             &caller_expr.pos,
             session,
-        )
-        .map_err(
-            |ErrorInfo {
-                 error_position,
-                 message,
-                 restore_values,
-             }| {
-                (
-                    ErrorInfo {
-                        error_position: error_position.clone(),
-                        message: message.clone(),
-                        restore_values,
-                    },
-                    EvalError::ResumableError(error_position, message),
-                )
-            },
         )?,
         Value::EnumConstructor {
             type_name,

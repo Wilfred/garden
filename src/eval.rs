@@ -977,6 +977,10 @@ fn restore_stack_frame(
     env.stack.0.push(stack_frame);
 }
 
+/// Values to push back to the evalled_values stack if we encounter an error, so we can resume.
+#[derive(Debug, Clone)]
+struct RestoreValues(Vec<Value>);
+
 /// Information about an error during evaluation.
 #[derive(Debug, Clone)]
 struct ErrorInfo {
@@ -1533,7 +1537,7 @@ fn eval_builtin_call(
     expr_value_is_used: bool,
     position: &Position,
     session: &Session,
-) -> Result<(), (ErrorInfo, EvalError)> {
+) -> Result<(), (RestoreValues, EvalError)> {
     match kind {
         BuiltinFunctionKind::Error => {
             check_arity(
@@ -1551,11 +1555,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1571,11 +1571,7 @@ fn eval_builtin_call(
                 Value::String(msg) => {
                     let message = ErrorMessage(msg.clone());
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: position.clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(position.clone(), message),
                     ));
                 }
@@ -1588,11 +1584,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -1614,11 +1606,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1654,11 +1642,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -1684,11 +1668,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1724,11 +1704,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -1754,11 +1730,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1814,11 +1786,7 @@ fn eval_builtin_call(
                                 env,
                             );
                             return Err((
-                                ErrorInfo {
-                                    message: message.clone(),
-                                    restore_values: saved_values,
-                                    error_position: arg_positions[0].clone(),
-                                },
+                                RestoreValues(saved_values),
                                 EvalError::ResumableError(arg_positions[0].clone(), message),
                             ));
                         }
@@ -1839,11 +1807,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -1865,11 +1829,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1897,11 +1857,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1925,11 +1881,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -1957,11 +1909,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -1985,11 +1933,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -2041,11 +1985,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -2069,11 +2009,7 @@ fn eval_builtin_call(
                         env,
                     );
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -2106,11 +2042,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -2141,11 +2073,7 @@ fn eval_builtin_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -2162,11 +2090,7 @@ fn eval_builtin_call(
 
                     let message = format_type_error("String", v, env);
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -2183,11 +2107,7 @@ fn eval_builtin_call(
 
                     let message = format_type_error("String", v, env);
                     return Err((
-                        ErrorInfo {
-                            message: message.clone(),
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        },
+                        RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
                     ));
                 }
@@ -2222,7 +2142,7 @@ fn eval_call(
     arg_values: &[Value],
     receiver_value: &Value,
     session: &Session,
-) -> Result<Option<StackFrame>, (ErrorInfo, EvalError)> {
+) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     match &receiver_value {
         Value::Closure(bindings, fun_info) => {
             let mut bindings = bindings.clone();
@@ -2239,13 +2159,8 @@ fn eval_call(
                     if fun_info.params.len() == 1 { "" } else { "s" },
                     arg_values.len()
                 ));
-                let error_info = ErrorInfo {
-                    message: message.clone(),
-                    restore_values: saved_values,
-                    error_position: caller_expr.pos.clone(),
-                };
                 return Err((
-                    error_info,
+                    RestoreValues(saved_values),
                     EvalError::ResumableError(caller_expr.pos.clone(), message),
                 ));
             }
@@ -2310,11 +2225,7 @@ fn eval_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -2346,11 +2257,7 @@ fn eval_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -2415,11 +2322,7 @@ fn eval_call(
                      restore_values,
                  }| {
                     (
-                        ErrorInfo {
-                            error_position: error_position.clone(),
-                            message: message.clone(),
-                            restore_values,
-                        },
+                        RestoreValues(restore_values),
                         EvalError::ResumableError(error_position, message),
                     )
                 },
@@ -2460,13 +2363,8 @@ fn eval_call(
                 v,
                 env,
             );
-            let err_info = ErrorInfo {
-                error_position: caller_expr.pos.clone(),
-                message: message.clone(),
-                restore_values: saved_values,
-            };
             return Err((
-                err_info,
+                RestoreValues(saved_values),
                 EvalError::ResumableError(caller_expr.pos.clone(), message),
             ));
         }
@@ -3640,7 +3538,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 continue;
                             }
                             Ok(None) => {}
-                            Err((ErrorInfo { restore_values, .. }, eval_error)) => {
+                            Err((RestoreValues(restore_values), eval_error)) => {
                                 restore_stack_frame(
                                     env,
                                     stack_frame,

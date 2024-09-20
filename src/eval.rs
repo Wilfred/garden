@@ -1000,7 +1000,7 @@ fn eval_if(
     bool_position: &Position,
     then_body: &Block,
     else_body: Option<&Block>,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let condition_value = stack_frame
         .evalled_values
         .pop()
@@ -1038,17 +1038,19 @@ fn eval_if(
             }
         }
     } else {
-        return Err(ErrorInfo {
-            message: format_type_error(
-                &TypeName {
-                    name: "Bool".into(),
-                },
-                &condition_value,
-                env,
+        return Err((
+            RestoreValues(vec![condition_value.clone()]),
+            EvalError::ResumableError(
+                bool_position.clone(),
+                format_type_error(
+                    &TypeName {
+                        name: "Bool".into(),
+                    },
+                    &condition_value,
+                    env,
+                ),
             ),
-            restore_values: vec![condition_value],
-            error_position: bool_position.clone(),
-        });
+        ));
     }
 
     Ok(())
@@ -1076,24 +1078,26 @@ fn eval_while(
     condition_pos: &Position,
     expr: Expression,
     body: &Block,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let condition_value = stack_frame
         .evalled_values
         .pop()
         .expect("Popped an empty value stack for while loop");
 
     let Some(b) = to_rust_bool(&condition_value) else {
-        return Err(ErrorInfo {
-            message: format_type_error(
-                &TypeName {
-                    name: "Bool".into(),
-                },
-                &condition_value,
-                env,
+        return Err((
+            RestoreValues(vec![condition_value.clone()]),
+            EvalError::ResumableError(
+                condition_pos.clone(),
+                format_type_error(
+                    &TypeName {
+                        name: "Bool".into(),
+                    },
+                    &condition_value,
+                    env,
+                ),
             ),
-            restore_values: vec![condition_value],
-            error_position: condition_pos.clone(),
-        });
+        ));
     };
 
     if b {
@@ -1129,7 +1133,7 @@ fn eval_for_in(
     iteree_pos: &Position,
     outer_expr: Expression,
     body: &Block,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let iteree_value = stack_frame
         .evalled_values
         .pop()
@@ -1145,17 +1149,19 @@ fn eval_for_in(
     };
 
     let Value::List { items, .. } = &iteree_value else {
-        return Err(ErrorInfo {
-            message: format_type_error(
-                &TypeName {
-                    name: "List".into(),
-                },
-                &iteree_value,
-                env,
+        return Err((
+            RestoreValues(vec![iteree_value.clone()]),
+            EvalError::ResumableError(
+                iteree_pos.clone(),
+                format_type_error(
+                    &TypeName {
+                        name: "List".into(),
+                    },
+                    &iteree_value,
+                    env,
+                ),
             ),
-            restore_values: vec![iteree_value],
-            error_position: iteree_pos.clone(),
-        });
+        ));
     };
 
     if iteree_idx as usize >= items.len() {
@@ -1200,17 +1206,19 @@ fn eval_assign(
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
     variable: &Symbol,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let var_name = &variable.name;
     if !stack_frame.bindings.has(var_name) {
-        return Err(ErrorInfo {
-            message: ErrorMessage(format!(
-                "{} is not currently bound. Try `let {} = something`.",
-                var_name, var_name
-            )),
-            restore_values: vec![],
-            error_position: variable.position.clone(),
-        });
+        return Err((
+            RestoreValues(vec![]),
+            EvalError::ResumableError(
+                variable.position.clone(),
+                ErrorMessage(format!(
+                    "{} is not currently bound. Try `let {} = something`.",
+                    var_name, var_name
+                )),
+            ),
+        ));
     }
 
     let expr_value = stack_frame
@@ -3094,11 +3102,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::If(condition, ref then_body, ref else_body) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_if(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_if(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3113,7 +3117,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame
@@ -3126,11 +3130,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::While(condition, ref body) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_while(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_while(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3144,7 +3144,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame
@@ -3157,11 +3157,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::ForIn(sym, expr, body) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_for_in(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_for_in(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3176,7 +3172,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         // The initial value of the loop index.
@@ -3211,11 +3207,8 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::Assign(variable, expr) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_assign(&mut stack_frame, expr_value_is_used, variable)
+                        if let Err((RestoreValues(restore_values), eval_err)) =
+                            eval_assign(&mut stack_frame, expr_value_is_used, variable)
                         {
                             restore_stack_frame(
                                 env,
@@ -3223,7 +3216,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame

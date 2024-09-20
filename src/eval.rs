@@ -1503,7 +1503,7 @@ fn check_arity(
     expected: usize,
     arg_positions: &[Position],
     arg_values: &[Value],
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     if arg_values.len() != expected {
         let mut saved_values = vec![receiver_value.clone()];
         for value in arg_values.iter().rev() {
@@ -1519,17 +1519,19 @@ fn check_arity(
             receiver_pos.clone()
         };
 
-        return Err(ErrorInfo {
-            message: ErrorMessage(format!(
-                "Function {} requires {} argument{}, but got {}",
-                fun_name,
-                expected,
-                if expected == 1 { "" } else { "s" },
-                arg_values.len()
-            )),
-            restore_values: saved_values,
-            error_position,
-        });
+        return Err((
+            RestoreValues(saved_values),
+            EvalError::ResumableError(
+                error_position,
+                ErrorMessage(format!(
+                    "Function {} requires {} argument{}, but got {}",
+                    fun_name,
+                    expected,
+                    if expected == 1 { "" } else { "s" },
+                    arg_values.len()
+                )),
+            ),
+        ));
     }
 
     Ok(())
@@ -1567,18 +1569,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             let mut saved_values = vec![];
@@ -1618,18 +1608,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             match &arg_values[0] {
@@ -1680,18 +1658,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             match &arg_values[0] {
@@ -1742,18 +1708,6 @@ fn eval_builtin_call(
                 2,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             match &arg_values[0] {
@@ -1841,18 +1795,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             if expr_value_is_used {
@@ -1869,18 +1811,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             // TODO: define a separate path type in Garden.
@@ -1921,18 +1851,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             // TODO: define a separate path type in Garden.
@@ -1997,18 +1915,6 @@ fn eval_builtin_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             // TODO: define a separate path type in Garden.
@@ -2054,18 +1960,6 @@ fn eval_builtin_call(
                 0,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             // TODO: when we have a userland result type, use that.
@@ -2085,18 +1979,6 @@ fn eval_builtin_call(
                 2,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             let content_s = match &arg_values[0] {
@@ -2237,18 +2119,6 @@ fn eval_call(
                 params.len(),
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             if !env.prev_call_args.contains_key(&name_sym.name) {
@@ -2334,18 +2204,6 @@ fn eval_call(
                 1,
                 arg_positions,
                 arg_values,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
 
             let runtime_type = enum_value_runtime_type(
@@ -2609,18 +2467,6 @@ fn eval_method_call(
                 &arg_values,
                 stack_frame,
                 expr_value_is_used,
-            )
-            .map_err(
-                |ErrorInfo {
-                     error_position,
-                     message,
-                     restore_values,
-                 }| {
-                    (
-                        RestoreValues(restore_values),
-                        EvalError::ResumableError(error_position, message),
-                    )
-                },
             )?;
             return Ok(None);
         }
@@ -2640,18 +2486,6 @@ fn eval_method_call(
         fun_info.params.len(),
         &arg_positions,
         &arg_values,
-    )
-    .map_err(
-        |ErrorInfo {
-             error_position,
-             message,
-             restore_values,
-         }| {
-            (
-                RestoreValues(restore_values),
-                EvalError::ResumableError(error_position, message),
-            )
-        },
     )?;
 
     // TODO: check for duplicate parameter names.
@@ -2693,7 +2527,7 @@ fn eval_builtin_method_call(
     arg_values: &[Value],
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     match kind {
         BuiltinMethodKind::ListAppend => {
             check_arity(
@@ -2730,17 +2564,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "List".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            receiver_pos.clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "List".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: receiver_pos.clone(),
-                    });
+                    ));
                 }
             }
         }
@@ -2773,11 +2609,10 @@ fn eval_builtin_method_call(
                             )
                         });
 
-                        return Err(ErrorInfo {
-                            message,
-                            restore_values: saved_values,
-                            error_position: arg_positions[0].clone(),
-                        });
+                        return Err((
+                            RestoreValues(saved_values),
+                            EvalError::ResumableError(arg_positions[0].clone(), message),
+                        ));
                     } else {
                         *i as usize
                     };
@@ -2793,17 +2628,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "List".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "List".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    ));
                 }
                 (_, v) => {
                     let mut saved_values = vec![];
@@ -2812,11 +2649,13 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "Int".into() }, v, env),
-                        restore_values: saved_values,
-                        error_position: arg_positions[1].clone(),
-                    });
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[1].clone(),
+                            format_type_error(&TypeName { name: "Int".into() }, v, env),
+                        ),
+                    ));
                 }
             }
         }
@@ -2845,17 +2684,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "List".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "List".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    ));
                 }
             }
         }
@@ -2878,17 +2719,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    ));
                 }
             };
             let arg2 = match &arg_values[0] {
@@ -2900,17 +2743,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    ));
                 }
             };
 
@@ -2945,17 +2790,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    ));
                 }
             }
         }
@@ -2978,17 +2825,19 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(
-                            &TypeName {
-                                name: "String".into(),
-                            },
-                            v,
-                            env,
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
                         ),
-                        restore_values: saved_values,
-                        error_position: arg_positions[0].clone(),
-                    });
+                    ));
                 }
             };
             let from_arg = match &arg_values[0] {
@@ -3000,11 +2849,13 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "Int".into() }, v, env),
-                        restore_values: saved_values,
-                        error_position: arg_positions[1].clone(),
-                    });
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[1].clone(),
+                            format_type_error(&TypeName { name: "Int".into() }, v, env),
+                        ),
+                    ));
                 }
             };
             let to_arg = match &arg_values[1] {
@@ -3016,11 +2867,13 @@ fn eval_builtin_method_call(
                     }
                     saved_values.push(receiver_value.clone());
 
-                    return Err(ErrorInfo {
-                        message: format_type_error(&TypeName { name: "Int".into() }, v, env),
-                        restore_values: saved_values,
-                        error_position: arg_positions[2].clone(),
-                    });
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[2].clone(),
+                            format_type_error(&TypeName { name: "Int".into() }, v, env),
+                        ),
+                    ));
                 }
             };
 
@@ -3031,11 +2884,13 @@ fn eval_builtin_method_call(
                 }
                 saved_values.push(receiver_value.clone());
 
-                return Err(ErrorInfo {
-                    message: ErrorMessage(format!("The first argument to String::substring must be greater than 0, but got: {}", from_arg)),
-                        restore_values: saved_values,
-                        error_position: arg_positions[1].clone(),
-                    });
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ResumableError(
+                        arg_positions[1].clone(),
+                        ErrorMessage(format!("The first argument to String::substring must be greater than 0, but got: {}", from_arg)),
+                    ),
+                ));
             }
 
             if from_arg > to_arg {
@@ -3045,11 +2900,13 @@ fn eval_builtin_method_call(
                 }
                 saved_values.push(receiver_value.clone());
 
-                return Err(ErrorInfo {
-                    message: ErrorMessage(format!("The first argument to String::substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg)),
-                        restore_values: saved_values,
-                        error_position: arg_positions[1].clone(),
-                    });
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ResumableError(
+                        arg_positions[1].clone(),
+                        ErrorMessage(format!("The first argument to String::substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg)),
+                    ),
+                ));
             }
 
             if expr_value_is_used {

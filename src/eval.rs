@@ -978,7 +978,7 @@ fn restore_stack_frame(
 }
 
 /// Information about an error during evaluation.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct ErrorInfo {
     error_position: Position,
     message: ErrorMessage,

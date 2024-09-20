@@ -242,6 +242,16 @@ fn handle_eval_request(
             position: None,
             warnings: vec![],
         },
+        Err(EvalError::ForbiddenInSandbox) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(ResponseError {
+                position: None,
+                message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
+                stack: None,
+            }),
+            position: None,
+            warnings: vec![],
+        },
     }
 }
 
@@ -336,6 +346,16 @@ fn handle_eval_up_to_request(
                     value: Err(ResponseError {
                         position: None,
                         message: "Reached the tick limit.".to_owned(),
+                        stack: None,
+                    }),
+                    position: None,
+                    warnings: vec![],
+                },
+                EvalError::ForbiddenInSandbox => Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                         stack: None,
                     }),
                     position: None,
@@ -584,6 +604,16 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
             value: Err(ResponseError {
                 position: None,
                 message: "Reached the tick limit.".to_owned(),
+                stack: None,
+            }),
+            position: None,
+            warnings: vec![],
+        },
+        Err(EvalError::ForbiddenInSandbox) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(ResponseError {
+                position: None,
+                message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                 stack: None,
             }),
             position: None,

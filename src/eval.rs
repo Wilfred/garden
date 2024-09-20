@@ -266,6 +266,7 @@ pub(crate) enum EvalError {
     Interrupted,
     ResumableError(Position, ErrorMessage),
     ReachedTickLimit,
+    ForbiddenInSandbox,
 }
 
 #[derive(Debug)]

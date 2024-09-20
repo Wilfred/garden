@@ -981,17 +981,6 @@ fn restore_stack_frame(
 #[derive(Debug, Clone)]
 struct RestoreValues(Vec<Value>);
 
-/// Information about an error during evaluation.
-#[derive(Debug, Clone)]
-struct ErrorInfo {
-    error_position: Position,
-    message: ErrorMessage,
-    /// Values that were popped from the stack frame to evaluate the
-    /// current subexpression. We will need to restore these in order
-    /// to halt in a state where the user can retry.
-    restore_values: Vec<Value>,
-}
-
 fn eval_if(
     env: &mut Env,
     stack_frame: &mut StackFrame,
@@ -3194,11 +3183,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::StructLiteral(type_sym, field_exprs) => {
                     if done_children.done_children() {
-                        if let Err(ErrorInfo {
-                            message,
-                            restore_values,
-                            error_position: position,
-                        }) = eval_struct_value(
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_struct_value(
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
@@ -3211,7 +3196,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                                 (done_children, outer_expr.clone()),
                                 &restore_values,
                             );
-                            return Err(EvalError::ResumableError(position, message));
+                            return Err(eval_err);
                         }
                     } else {
                         stack_frame
@@ -3734,24 +3719,26 @@ fn eval_struct_value(
     expr_value_is_used: bool,
     type_sym: TypeSymbol,
     field_exprs: &[(Symbol, Expression)],
-) -> Result<(), ErrorInfo> {
+) -> Result<(), (RestoreValues, EvalError)> {
     let Some(type_info) = env.get_type_def(&type_sym.name) else {
-        return Err(ErrorInfo {
-            message: ErrorMessage(format!("No type exists named `{}`.", type_sym.name)),
-            restore_values: vec![],
-            error_position: type_sym.position.clone(),
-        });
+        return Err((
+            RestoreValues(vec![]),
+            EvalError::ResumableError(
+                type_sym.position.clone(),
+                ErrorMessage(format!("No type exists named `{}`.", type_sym.name)),
+            ),
+        ));
     };
     let TypeDef::Struct(struct_info) = type_info else {
         let message = ErrorMessage(format!(
             "`{}` is not a struct, so it cannot be initialized with struct syntax.",
             type_sym.name,
         ));
-        return Err(ErrorInfo {
-            message,
-            restore_values: vec![],
-            error_position: type_sym.position.clone(),
-        });
+
+        return Err((
+            RestoreValues(vec![]),
+            EvalError::ResumableError(type_sym.position.clone(), message),
+        ));
     };
 
     let type_params: HashSet<_> = struct_info.type_params.iter().map(|p| &p.name).collect();
@@ -3778,11 +3765,11 @@ fn eval_struct_value(
                 "`{}` does not have a field named `{}`.",
                 type_sym.name, field_sym.name
             ));
-            return Err(ErrorInfo {
-                message,
-                restore_values: vec![], // TODO
-                error_position: field_sym.position.clone(),
-            });
+
+            return Err((
+                RestoreValues(vec![]), // TODO
+                EvalError::ResumableError(field_sym.position.clone(), message),
+            ));
         };
 
         if type_params.contains(&field_info.hint.sym.name) {

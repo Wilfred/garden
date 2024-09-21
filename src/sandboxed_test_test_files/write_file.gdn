@@ -1,0 +1,9 @@
+test write_file_is_unsafe {
+    write_file("hello world", "/tmp/foo.txt")
+}
+
+// args: sandboxed-test
+// expected exit status: 1
+// expected stderr:
+// src/sandboxed_test_test_files/write_file.gdn:2: Tried to execute unsafe code in sandboxed mode.
+

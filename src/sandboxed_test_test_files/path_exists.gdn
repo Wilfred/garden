@@ -1,0 +1,9 @@
+test path_exists_is_unsafe {
+    path_exists("/")
+}
+
+// args: sandboxed-test
+// expected exit status: 1
+// expected stderr:
+// src/sandboxed_test_test_files/path_exists.gdn:2: Tried to execute unsafe code in sandboxed mode.
+

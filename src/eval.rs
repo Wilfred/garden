@@ -1806,6 +1806,19 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::PathExists => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
             check_arity(
                 &SymbolName("path_exists".to_owned()),
                 receiver_value,
@@ -1846,6 +1859,19 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::ListDirectory => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
             check_arity(
                 &SymbolName("list_directory".to_owned()),
                 receiver_value,
@@ -1910,6 +1936,19 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::ReadFile => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
             check_arity(
                 &SymbolName("read_file".to_owned()),
                 receiver_value,
@@ -1974,6 +2013,19 @@ fn eval_builtin_call(
             }
         }
         BuiltinFunctionKind::WriteFile => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
             check_arity(
                 &SymbolName("write_file".to_owned()),
                 receiver_value,

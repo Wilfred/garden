@@ -133,12 +133,20 @@ fn format_pos_in_fun(
     } else {
         let line_positions = LinePositions::from(src.as_str());
 
-        for span in line_positions.from_offsets(offset, end_offset) {
+        for (i, span) in line_positions
+            .from_offsets(offset, end_offset)
+            .iter()
+            .enumerate()
+        {
             // .lines() in the Rust stdlib discards the trailing
             // newline, so we end up with s_lines not having the last line.
             let Some(relevant_line) = s_lines.get(span.line.as_usize()) else {
                 continue;
             };
+
+            if i != 0 {
+                res.push('\n');
+            }
 
             res.push_str(relevant_line);
 

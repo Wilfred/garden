@@ -11,7 +11,7 @@ use garden_lang_parser::{
 
 use crate::{
     checks::check_toplevel_items,
-    diagnostics::{format_parse_error, Diagnostic, Level},
+    diagnostics::{format_diagnostic, Diagnostic, Level},
 };
 
 #[derive(Debug, Serialize)]
@@ -104,7 +104,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 Severity::Warning => Level::Warning,
             };
 
-            format_parse_error(
+            format_diagnostic(
                 &diagnostic.message,
                 &diagnostic.position,
                 level,

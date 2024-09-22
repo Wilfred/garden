@@ -49,7 +49,7 @@ use hover::show_type;
 use json_session::handle_request;
 use owo_colors::OwoColorize as _;
 
-use crate::diagnostics::{format_error_with_stack, format_parse_error, Level};
+use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::eval_tests;
 use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
@@ -313,7 +313,7 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
             } => {
                 eprintln!(
                     "{}",
-                    &format_parse_error(
+                    &format_diagnostic(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
                         Level::Error,
@@ -460,7 +460,7 @@ fn parse_toplevel_items_or_die(path: &Path, src: &str, env: &mut Env) -> Vec<Top
                     additional: _,
                 } => eprintln!(
                     "{}",
-                    &format_parse_error(
+                    &format_diagnostic(
                         &ErrorMessage(format!("Parse error: {}", e.0)),
                         &position,
                         Level::Error,

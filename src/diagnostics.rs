@@ -69,7 +69,7 @@ pub(crate) fn format_error_with_stack(
     res
 }
 
-fn format_diagnostic(
+pub(crate) fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,
     level: Level,
@@ -83,15 +83,6 @@ fn format_diagnostic(
     let mut res = format!("{}: {}\n\n", level_s, message.0);
     res.push_str(&format_pos_in_fun(position, src_string, None, true));
     res
-}
-
-pub(crate) fn format_parse_error(
-    message: &ErrorMessage,
-    position: &Position,
-    level: Level,
-    src_string: &SourceString,
-) -> String {
-    format_diagnostic(message, position, level, src_string)
 }
 
 fn format_pos_in_fun(

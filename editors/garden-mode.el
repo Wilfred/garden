@@ -757,7 +757,7 @@ the result."
   ;; TODO: respect `garden-executable'.
   :command ("/home/wilfred/projects/garden/target/debug/garden" "check" "--json" source)
   :error-parser garden-flycheck--parse
-  :modes (garden-mode))
+  :modes garden-mode)
 
 ;;;###autoload
 (add-hook 'garden-mode-hook #'flycheck-mode)

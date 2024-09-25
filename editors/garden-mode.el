@@ -736,7 +736,7 @@ the result."
        (--remove (s-blank-p it))
        (--map (json-parse-string it :object-type 'plist :null-object nil))))
 
-(defun garden-flycheck--parse (json-output _checker _buffer)
+(defun garden-flycheck--parse (json-output _checker buffer)
   "Parse JSON output from garden check."
   ;; (garden--log-json-to-buf json-output)
   (--map
@@ -748,7 +748,8 @@ the result."
       (1+ start-offset)
       (if (string= severity "warning") 'warning 'error)
       message
-      :end-pos (1+ end-offset)))
+      :end-pos (1+ end-offset)
+      :buffer buffer))
    (garden--jsonl-parse json-output)))
 
 (flycheck-define-checker garden

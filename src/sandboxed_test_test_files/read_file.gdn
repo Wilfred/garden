@@ -1,5 +1,6 @@
 test read_file_is_unsafe {
     read_file("/tmp/foo.txt")
+    // ^
 }
 
 // args: sandboxed-test

@@ -1,5 +1,6 @@
 test shell_is_unsafe {
     shell("ls", ["/"])
+    // ^
 }
 
 // args: sandboxed-test

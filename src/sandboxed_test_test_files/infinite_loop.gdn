@@ -4,6 +4,7 @@ fun foo() {
 
 test foo_call {
     foo()
+    // ^
 }
 
 // args: sandboxed-test

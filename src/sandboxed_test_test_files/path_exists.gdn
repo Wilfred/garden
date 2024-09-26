@@ -1,5 +1,6 @@
 test path_exists_is_unsafe {
     path_exists("/")
+    // ^
 }
 
 // args: sandboxed-test

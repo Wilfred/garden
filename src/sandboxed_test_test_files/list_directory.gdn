@@ -1,5 +1,6 @@
 test list_directory_is_unsafe {
     list_directory("/")
+    // ^
 }
 
 // args: sandboxed-test

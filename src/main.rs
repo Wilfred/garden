@@ -167,7 +167,10 @@ fn main() {
             }
         },
         Commands::SandboxedTest { path, offset } => match std::fs::read(&path) {
-            Ok(src_bytes) => run_sandboxed_tests_in_file(src_bytes, &path, interrupted),
+            Ok(src_bytes) => {
+                let src = from_utf8_or_die(src_bytes, &path);
+                run_sandboxed_tests_in_file(&src, &path, interrupted)
+            }
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
@@ -345,10 +348,9 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
     }
 }
 
-fn run_sandboxed_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
-    let src = from_utf8_or_die(src_bytes, path);
+fn run_sandboxed_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut env = Env::default();
-    let items = parse_toplevel_items_or_die(path, &src, &mut env);
+    let items = parse_toplevel_items_or_die(path, src, &mut env);
 
     let mut session = Session {
         interrupted,

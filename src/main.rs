@@ -378,7 +378,17 @@ fn run_sandboxed_tests_in_file(
     env.tick_limit = Some(1_000);
     env.enforce_sandbox = true;
 
-    match eval_tests(&items, &mut env, &mut session) {
+    let mut contained_items = vec![];
+    for item in items.into_iter() {
+        let ToplevelItem::Def(def) = &item else {
+            continue;
+        };
+        if def.1.contains_offset(offset) {
+            contained_items.push(item);
+        }
+    }
+
+    match eval_tests(&contained_items, &mut env, &mut session) {
         Ok(summary) => {
             if summary.tests_passed == 1 {
                 println!("The test {}.", "passed".green());

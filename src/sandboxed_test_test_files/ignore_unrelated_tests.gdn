@@ -1,0 +1,12 @@
+test write_file_is_unsafe {
+    write_file("hello world", "/tmp/foo.txt")
+}
+
+test safe_test {
+    1 + 2
+    // ^
+}
+
+// args: sandboxed-test
+// expected stdout: The test [32mpassed[39m.
+

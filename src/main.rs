@@ -85,7 +85,10 @@ enum Commands {
     /// Run the tests associated with the definition at this offset,
     /// but give up if the program exceeds a time limit or attempts
     /// I/O.
-    SandboxedTest { path: PathBuf },
+    SandboxedTest {
+        path: PathBuf,
+        offset: Option<usize>,
+    },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
     ///
@@ -163,7 +166,7 @@ fn main() {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);
             }
         },
-        Commands::SandboxedTest { path } => match std::fs::read(&path) {
+        Commands::SandboxedTest { path, offset } => match std::fs::read(&path) {
             Ok(src_bytes) => run_sandboxed_tests_in_file(src_bytes, &path, interrupted),
             Err(e) => {
                 eprintln!("Error: Could not read file {}: {}", path.display(), e);

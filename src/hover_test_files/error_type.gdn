@@ -3,4 +3,4 @@ fun foo(s: String) {
     // ^
 }
 
-// args: show-type 0
+// args: show-type

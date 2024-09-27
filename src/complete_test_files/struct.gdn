@@ -8,7 +8,7 @@ fun foo(p: Person) {
 //   ^
 }
 
-// args: complete 0
+// args: complete
 // expected stdout:
 // {"name":"name","suffix":": String"}
 // {"name":"num_pets","suffix":": Int"}

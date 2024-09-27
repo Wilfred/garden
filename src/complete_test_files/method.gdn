@@ -3,7 +3,7 @@ fun file_name(s: String) {
 //   ^
 }
 
-// args: complete 0
+// args: complete
 // expected stdout:
 // {"name":"append","suffix":"(String): String"}
 // {"name":"chars()","suffix":": List<String>"}

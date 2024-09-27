@@ -3,7 +3,7 @@ fun foo(s: String) {
     //    ^
 }
 
-// args: complete 0
+// args: complete
 // expected stdout:
 // {"name":"strip_prefix","suffix":"(String): String"}
 // {"name":"strip_suffix","suffix":"(String): String"}

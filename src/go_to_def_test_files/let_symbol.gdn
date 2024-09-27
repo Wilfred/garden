@@ -4,7 +4,7 @@ fun file_name() {
     //^
 }
 
-// args: definition-position 0
+// args: definition-position
 // expected stdout:
 // {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"path":"src/go_to_def_test_files/let_symbol.gdn"}
 

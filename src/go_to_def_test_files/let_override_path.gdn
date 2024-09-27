@@ -4,7 +4,7 @@ fun file_name() {
     //^
 }
 
-// args: definition-position --override-path="new_path.gdn" 0
+// args: definition-position --override-path="new_path.gdn"
 // expected stdout:
 // {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"path":"new_path.gdn"}
 

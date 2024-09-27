@@ -665,8 +665,8 @@ the result."
      :command
      (append (list garden-executable
                    command-name
-                   (format "%s" (1- (point)))
-                   tmp-file-of-src)
+                   tmp-file-of-src
+                   (format "%s" (1- (point))))
              extra-args)
      :sentinel (lambda (process event)
                  (when (s-starts-with-p "exited abnormally with code " event)

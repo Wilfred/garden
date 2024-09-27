@@ -4,6 +4,6 @@ fun file_name(path: String): String {
     parts.last().or_exception()
 }
 
-// args: show-type 0
+// args: show-type
 // expected stdout: String
 

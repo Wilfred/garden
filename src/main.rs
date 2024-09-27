@@ -108,17 +108,23 @@ enum Commands {
         override_path: Option<PathBuf>,
     },
     /// Show the type of the expression at the position given.
-    ShowType { offset: usize, path: PathBuf },
+    ShowType {
+        path: PathBuf,
+        offset: Option<usize>,
+    },
     /// Show the definition position of the value at the position
     /// given.
     DefinitionPosition {
-        offset: usize,
         path: PathBuf,
+        offset: Option<usize>,
         #[clap(long)]
         override_path: Option<PathBuf>,
     },
     /// Show possible completions at the position given.
-    Complete { offset: usize, path: PathBuf },
+    Complete {
+        path: PathBuf,
+        offset: Option<usize>,
+    },
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
@@ -199,7 +205,10 @@ fn main() {
         Commands::ShowType { path, offset } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = from_utf8_or_die(src_bytes, &path);
-                let offset = caret_finder::find_caret_offset(&src).unwrap_or(offset);
+                let offset = offset.unwrap_or_else(|| {
+                    caret_finder::find_caret_offset(&src)
+                        .expect("Could not find comment containing `^` in source.")
+                });
                 show_type(&src, &path, offset);
             }
             Err(e) => {
@@ -213,7 +222,10 @@ fn main() {
         } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = from_utf8_or_die(src_bytes, &path);
-                let offset = caret_finder::find_caret_offset(&src).unwrap_or(offset);
+                let offset = offset.unwrap_or_else(|| {
+                    caret_finder::find_caret_offset(&src)
+                        .expect("Could not find comment containing `^` in source.")
+                });
 
                 let src_path = override_path.unwrap_or(path);
                 print_pos(&src, &src_path, offset);
@@ -225,7 +237,10 @@ fn main() {
         Commands::Complete { offset, path } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = from_utf8_or_die(src_bytes, &path);
-                let offset = caret_finder::find_caret_offset(&src).unwrap_or(offset);
+                let offset = offset.unwrap_or_else(|| {
+                    caret_finder::find_caret_offset(&src)
+                        .expect("Could not find comment containing `^` in source.")
+                });
                 completions::complete(&src, &path, offset);
             }
             Err(e) => {

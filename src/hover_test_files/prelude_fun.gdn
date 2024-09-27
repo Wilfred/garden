@@ -3,7 +3,7 @@ fun foo() {
     // ^
 }
 
-// args: show-type 0
+// args: show-type
 // expected stdout:
 // Stop the program immediately, and report the error message given.
 // 

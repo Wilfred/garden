@@ -3,6 +3,6 @@ fun file_name() {
     //  ^
 }
 
-// args: show-type 0
+// args: show-type
 // expected stdout: Int
 

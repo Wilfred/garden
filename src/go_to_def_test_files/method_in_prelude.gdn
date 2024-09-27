@@ -3,7 +3,7 @@ fun foo(s: String) {
     // ^
 }
 
-// args: definition-position 0
+// args: definition-position
 // expected stdout:
 // {"start_offset":3564,"end_offset":3570,"line_number":172,"end_line_number":172,"path":"builtins.gdn"}
 

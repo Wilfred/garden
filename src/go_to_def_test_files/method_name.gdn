@@ -3,7 +3,7 @@ fun file_name(path: String) {
     //   ^
 }
 
-// args: definition-position 0
+// args: definition-position
 // expected stdout:
 // {"start_offset":8043,"end_offset":8048,"line_number":355,"end_line_number":355,"path":"prelude.gdn"}
 

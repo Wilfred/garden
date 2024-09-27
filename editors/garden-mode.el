@@ -161,11 +161,15 @@ repeated parentheses/brackets on the same line."
 
     (indent-line-to (* garden-indent-offset paren-depth))))
 
+(defvar garden--last-test-result nil)
+
 (defun garden-test-sandboxed ()
   (interactive)
   (garden--async-command
    "sandboxed-test"
    (lambda (result)
+     (setq result (s-trim result))
+     (setq garden--last-test-result result)
      (message "%s" result))))
 
 (defun garden--propertize-read-only (s)
@@ -625,7 +629,11 @@ If called with a prefix, stop the previous session."
   :syntax-table garden-mode-syntax-table
 
   (setq mode-name
-        '(:eval (if (garden--session-active-p) "Garden[active]" "Garden")))
+        '(:eval
+          (cond
+           (garden--last-test-result (format "Garden[%s]" garden--last-test-result) )
+           ((garden--session-active-p "Garden[active"))
+           (t "Garden"))))
   (set (make-local-variable 'indent-line-function) #'garden-indent-line)
 
   (setq-local comment-start "// ")

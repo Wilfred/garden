@@ -213,6 +213,8 @@ fn main() {
         } => match std::fs::read(&path) {
             Ok(src_bytes) => {
                 let src = from_utf8_or_die(src_bytes, &path);
+                let offset = caret_finder::find_caret_offset(&src).unwrap_or(offset);
+
                 let src_path = override_path.unwrap_or(path);
                 print_pos(&src, &src_path, offset);
             }

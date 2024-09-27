@@ -1,8 +1,9 @@
 fun file_name(path: String) {
     path.split("/")
+    //   ^
 }
 
-// args: definition-position 42
+// args: definition-position 0
 // expected stdout:
 // {"start_offset":8043,"end_offset":8048,"line_number":355,"end_line_number":355,"path":"prelude.gdn"}
 

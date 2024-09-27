@@ -1,7 +1,8 @@
 fun foo(_: List<String>) {
+    //          ^
 }
 
-// args: definition-position 21
+// args: definition-position 0
 // expected stdout:
 // {"start_offset":51,"end_offset":57,"line_number":1,"end_line_number":1,"path":"builtins.gdn"}
 

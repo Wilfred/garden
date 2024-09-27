@@ -1,8 +1,9 @@
 fun foo(path: String) {
     path
+    // ^
 }
 
-// args: definition-position 32
+// args: definition-position 0
 // expected stdout:
 // {"start_offset":8,"end_offset":12,"line_number":0,"end_line_number":0,"path":"src/go_to_def_test_files/parameter.gdn"}
 

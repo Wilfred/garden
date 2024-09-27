@@ -161,6 +161,13 @@ repeated parentheses/brackets on the same line."
 
     (indent-line-to (* garden-indent-offset paren-depth))))
 
+(defun garden-test-sandboxed ()
+  (interactive)
+  (garden--async-command
+   "sandboxed-test"
+   (lambda (result)
+     (message "%s" result))))
+
 (defun garden--propertize-read-only (s)
   (propertize
    s

@@ -431,8 +431,7 @@ pub struct FunInfo {
 pub struct TestInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
-    /// The name of the test. This is optional in test definitions.
-    pub name: Symbol,
+    pub name_sym: Symbol,
     pub body: Block,
 }
 

@@ -351,7 +351,8 @@ pub(crate) fn eval_tests(
     // Update all the test definitions in the environment before
     // evaluating anything.
     for test in &test_defs {
-        env.tests.insert(test.name.name.clone(), (*test).clone());
+        env.tests
+            .insert(test.name_sym.name.clone(), (*test).clone());
     }
 
     for test in test_defs {
@@ -651,7 +652,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
 
     let stack_frame = StackFrame {
         src: test.src_string.clone(),
-        enclosing_name: EnclosingSymbol::Test(test.name.clone()),
+        enclosing_name: EnclosingSymbol::Test(test.name_sym.clone()),
         enclosing_fun: None,
         caller_pos: None,
         caller_expr_id: None,
@@ -704,7 +705,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 new_syms.push(SymbolName(meth_info.full_name()));
             }
             Definition_::Test(test) => {
-                env.tests.insert(test.name.name.clone(), test.clone());
+                env.tests.insert(test.name_sym.name.clone(), test.clone());
             }
             Definition_::Enum(enum_info) => {
                 // Add the enum definition to the type environment.

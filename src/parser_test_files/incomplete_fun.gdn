@@ -33,7 +33,7 @@ test bar {
 //     TestInfo {
 //         src_string: SourceString,
 //         doc_comment: None,
-//         name: Symbol"bar",
+//         name_sym: Symbol"bar",
 //         body: Block {
 //             is_loop_body: false,
 //             open_brace: Position { ... },

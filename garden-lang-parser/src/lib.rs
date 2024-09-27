@@ -1138,7 +1138,7 @@ fn parse_test(
         Definition_::Test(TestInfo {
             src_string,
             doc_comment,
-            name,
+            name_sym: name,
             body,
         }),
     )

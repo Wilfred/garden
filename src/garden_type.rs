@@ -262,7 +262,7 @@ impl Type {
             type_params,
             params: param_types,
             return_: Box::new(return_),
-            name: fun_info.name.clone(),
+            name: fun_info.name_sym.clone(),
         })
     }
 

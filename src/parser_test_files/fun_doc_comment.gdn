@@ -11,7 +11,7 @@ fun foo() {}
 //         doc_comment: Some(
 //             "Hello\nWorld",
 //         ),
-//         name: Some(
+//         name_sym: Some(
 //             Symbol"foo",
 //         ),
 //         type_params: [],

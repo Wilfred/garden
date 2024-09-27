@@ -269,7 +269,7 @@ fn describe_fun(value: &Value) -> Option<String> {
         } => Some(format_fun_info(fun_info, name_sym, None)),
         Value::BuiltinFunction(_kind, fun_info) => {
             if let Some(fun_info) = fun_info {
-                if let Some(fun_name) = &fun_info.name {
+                if let Some(fun_name) = &fun_info.name_sym {
                     return Some(format_fun_info(fun_info, fun_name, None));
                 }
             }
@@ -292,7 +292,7 @@ fn format_fun_info(
         res.push_str("\n\n");
     }
 
-    if let Some(name_sym) = &fun_info.name {
+    if let Some(name_sym) = &fun_info.name_sym {
         res.push_str(&format!(
             "// Defined in {}\n",
             name_sym.position.as_ide_string()

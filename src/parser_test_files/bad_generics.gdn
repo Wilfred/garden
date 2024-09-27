@@ -12,7 +12,7 @@ fun foo<T>(value: T): Unit {
 //         doc_comment: Some(
 //             "This should be `fun<T> foo()`. Ideally we'd show a better parse\nerror message here, but parsing should at least terminate.",
 //         ),
-//         name: Some(
+//         name_sym: Some(
 //             Symbol"foo",
 //         ),
 //         type_params: [],

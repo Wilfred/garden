@@ -259,7 +259,7 @@ fn parse_lambda(
             params,
             body,
             doc_comment: None,
-            name: None,
+            name_sym: None,
             type_params,
             return_hint,
         }),
@@ -1652,7 +1652,7 @@ fn parse_method(
     };
     require_token(tokens, diagnostics, ")");
 
-    let name = parse_symbol(tokens, id_gen, diagnostics);
+    let name_sym = parse_symbol(tokens, id_gen, diagnostics);
 
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
@@ -1674,7 +1674,7 @@ fn parse_method(
     let fun_info = FunInfo {
         src_string: src_string.clone(),
         doc_comment,
-        name: Some(name.clone()),
+        name_sym: Some(name_sym.clone()),
         type_params,
         params,
         body,
@@ -1683,7 +1683,7 @@ fn parse_method(
     let meth_info = MethodInfo {
         receiver_hint,
         receiver_sym,
-        name_sym: name,
+        name_sym,
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
@@ -1702,7 +1702,7 @@ fn parse_function(
 ) -> Definition {
     let doc_comment = parse_doc_comment(&fun_token);
 
-    let name = parse_symbol(tokens, id_gen, diagnostics);
+    let name_sym = parse_symbol(tokens, id_gen, diagnostics);
 
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
@@ -1727,11 +1727,11 @@ fn parse_function(
         src_string.clone(),
         position,
         Definition_::Fun(
-            name.clone(),
+            name_sym.clone(),
             FunInfo {
                 src_string,
                 doc_comment,
-                name: Some(name),
+                name_sym: Some(name_sym),
                 type_params,
                 params,
                 body,

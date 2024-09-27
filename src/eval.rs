@@ -880,7 +880,7 @@ fn update_builtin_meth_info(
 }
 
 fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut Vec<Diagnostic>) {
-    let Some(symbol) = &fun_info.name else {
+    let Some(symbol) = &fun_info.name_sym else {
         return;
     };
 

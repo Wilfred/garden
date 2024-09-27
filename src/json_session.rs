@@ -543,7 +543,7 @@ fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
     let Some(fun_info) = fun_info else {
         return Err(format!("`{}` does not have any function information (closure or undocumented built-in function).", name));
     };
-    let Some(name) = &fun_info.name else {
+    let Some(name) = &fun_info.name_sym else {
         return Err(format!(
             "`{}` does not have a name symbol (it's a closure).",
             name

@@ -10,7 +10,7 @@ test bar {
 //     FunInfo {
 //         src_string: SourceString,
 //         doc_comment: None,
-//         name: Some(
+//         name_sym: Some(
 //             Symbol"__placeholder",
 //         ),
 //         type_params: [],

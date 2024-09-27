@@ -116,7 +116,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         if std::env::var_os("GDN_TRUST_PRELUDE").is_some() {
             // Skip typechecking builtins and prelude to help print debugging.
-            if let Some(n) = &fun_info.name {
+            if let Some(n) = &fun_info.name_sym {
                 let path = n.position.path.clone();
                 if path.display().to_string().ends_with("prelude.gdn") {
                     return;
@@ -266,7 +266,7 @@ impl<'a> TypeCheckVisitor<'a> {
             type_params: vec![],
             params: param_tys,
             return_: Box::new(return_ty),
-            name: fun_info.name.clone(),
+            name: fun_info.name_sym.clone(),
         }
     }
 
@@ -699,7 +699,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             _ => None,
                         };
                         if let Some(fun_info) = fun_info {
-                            if let Some(fun_sym) = &fun_info.name {
+                            if let Some(fun_sym) = &fun_info.name_sym {
                                 self.id_to_pos.insert(sym.id, fun_sym.position.clone());
                             }
 

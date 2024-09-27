@@ -15,7 +15,7 @@ fun (self: List) foo() {}
 //             FunInfo {
 //                 src_string: SourceString,
 //                 doc_comment: None,
-//                 name: Some(
+//                 name_sym: Some(
 //                     Symbol"foo",
 //                 ),
 //                 type_params: [],

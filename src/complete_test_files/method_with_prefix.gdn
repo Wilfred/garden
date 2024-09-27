@@ -1,6 +1,10 @@
 fun foo(s: String) {
     s.strip
-    //     ^
+    //    ^
 }
 
 // args: complete 0
+// expected stdout:
+// {"name":"strip_prefix","suffix":"(String): String"}
+// {"name":"strip_suffix","suffix":"(String): String"}
+

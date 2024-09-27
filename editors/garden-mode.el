@@ -630,7 +630,8 @@ If called with a prefix, stop the previous session."
   (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
 
 (defun garden--buf-as-tmp-file ()
-  "Write the contents of the current buffer to a temporary file, and return its path."
+  "Write the contents of the current buffer to a temporary file,
+and return its path."
   (let* ((src (buffer-string))
          (temp-file (make-temp-file "garden-")))
     (with-temp-file temp-file

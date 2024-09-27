@@ -1,0 +1,9 @@
+test foo {
+    should_equal(1, 2)
+    // ^
+}
+
+// args: sandboxed-test
+// expected exit status: 1
+// expected stdout: Error
+

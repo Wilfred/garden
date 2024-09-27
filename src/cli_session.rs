@@ -14,6 +14,7 @@ use crate::eval::{eval, eval_toplevel_defs, EvaluatedState, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
 use garden_lang_parser::ast::{SyntaxIdGenerator, ToplevelItem};
+use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;
@@ -189,6 +190,14 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
                 let _ = last_src; // should use this.
+                println!(
+                    "{}",
+                    &format_error_with_stack(&msg, &position, &env.stack.0)
+                );
+                is_stopped = true;
+            }
+            Err(EvalError::AssertionFailed(position)) => {
+                let msg = ErrorMessage("Assertion failed".to_owned());
                 println!(
                     "{}",
                     &format_error_with_stack(&msg, &position, &env.stack.0)

@@ -1,6 +1,7 @@
 fun foo(path: String) {
+    //  ^
 }
 
-// args: show-type 10
+// args: show-type 0
 // expected stdout: String
 

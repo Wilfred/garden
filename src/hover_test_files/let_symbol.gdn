@@ -1,7 +1,8 @@
 fun file_name() {
     let foo = 1
+    //  ^
 }
 
-// args: show-type 28
+// args: show-type 0
 // expected stdout: Int
 

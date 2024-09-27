@@ -1,8 +1,9 @@
 fun foo() {
     error("")
+    // ^
 }
 
-// args: show-type 20
+// args: show-type 0
 // expected stdout:
 // Stop the program immediately, and report the error message given.
 // 

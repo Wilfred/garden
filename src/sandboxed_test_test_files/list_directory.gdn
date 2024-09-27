@@ -4,6 +4,5 @@ test list_directory_is_unsafe {
 }
 
 // args: sandboxed-test
-// expected exit status: 1
 // expected stdout: Sandbox
 

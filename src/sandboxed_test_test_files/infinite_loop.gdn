@@ -8,6 +8,5 @@ test foo_call {
 }
 
 // args: sandboxed-test
-// expected exit status: 1
 // expected stdout: Timeout
 

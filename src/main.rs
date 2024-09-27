@@ -392,8 +392,6 @@ fn run_sandboxed_tests_in_file(
     // the current session.
     eval_toplevel_defs(&items, &mut env);
 
-    let mut succeeded = false;
-
     env.tick_limit = Some(1_000);
     env.enforce_sandbox = true;
 
@@ -422,8 +420,6 @@ fn run_sandboxed_tests_in_file(
             } else {
                 println!("{} tests: OK", summary.tests_passed);
             }
-
-            succeeded = true;
         }
         Err(EvalError::ResumableError(_, _)) => {
             println!("Error")
@@ -437,10 +433,6 @@ fn run_sandboxed_tests_in_file(
         Err(EvalError::ForbiddenInSandbox(_)) => {
             println!("Sandbox");
         }
-    }
-
-    if !succeeded {
-        std::process::exit(1);
     }
 }
 

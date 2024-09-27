@@ -4,6 +4,5 @@ test path_exists_is_unsafe {
 }
 
 // args: sandboxed-test
-// expected exit status: 1
 // expected stdout: Sandbox
 

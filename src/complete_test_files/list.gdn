@@ -1,9 +1,10 @@
 fun foo() {
     let items = [1, 2]
     items.
+    //   ^
 }
 
-// args: complete 46
+// args: complete 0
 // expected stdout:
 // {"name":"append","suffix":"(T): List<T>"}
 // {"name":"contains","suffix":"(T): Bool"}

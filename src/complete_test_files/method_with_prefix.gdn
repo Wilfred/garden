@@ -1,5 +1,6 @@
 fun foo(s: String) {
     s.strip
+    //     ^
 }
 
-// args: complete 33
+// args: complete 0

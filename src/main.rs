@@ -53,7 +53,7 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::eval_tests;
 use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
-use garden_lang_parser::ast::{SourceString, SyntaxIdGenerator, ToplevelItem};
+use garden_lang_parser::ast::{Definition_, SourceString, SyntaxIdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -398,16 +398,22 @@ fn run_sandboxed_tests_in_file(
     env.enforce_sandbox = true;
 
     let mut contained_items = vec![];
-    for item in items.into_iter() {
+    for item in items.iter() {
         let ToplevelItem::Def(def) = &item else {
             continue;
         };
-        if def.1.contains_offset(offset) {
-            contained_items.push(item);
+        if def.1.contains_offset(offset) && matches!(def.2, Definition_::Test(_)) {
+            contained_items.push(item.clone());
         }
     }
 
-    match eval_tests(&contained_items, &mut env, &mut session) {
+    let relevant_items = if contained_items.is_empty() {
+        items
+    } else {
+        contained_items
+    };
+
+    match eval_tests(&relevant_items, &mut env, &mut session) {
         Ok(summary) => {
             if summary.tests_passed == 0 {
                 println!("0 tests");

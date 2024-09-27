@@ -1,0 +1,18 @@
+fun foo() {
+    // Cursor isn't inside a test, so just run all the tests in this
+    // file.
+    print("")
+    // ^
+
+}
+
+test one {
+    
+}
+
+test two {
+}
+
+// args: sandboxed-test
+// expected stdout: 2 tests: OK
+

@@ -409,7 +409,9 @@ fn run_sandboxed_tests_in_file(
 
     match eval_tests(&contained_items, &mut env, &mut session) {
         Ok(summary) => {
-            if summary.tests_passed == 1 {
+            if summary.tests_passed == 0 {
+                println!("0 tests");
+            } else if summary.tests_passed == 1 {
                 println!("1 test: OK");
             } else {
                 println!("{} tests: OK", summary.tests_passed);

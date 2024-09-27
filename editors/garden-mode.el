@@ -669,7 +669,7 @@ the result."
                    tmp-file-of-src)
              extra-args)
      :sentinel (lambda (process event)
-                 (when (string= event "exited abnormally with code 101\n")
+                 (when (s-starts-with-p "exited abnormally with code " event)
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))

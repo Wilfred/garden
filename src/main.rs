@@ -391,27 +391,24 @@ fn run_sandboxed_tests_in_file(
     match eval_tests(&contained_items, &mut env, &mut session) {
         Ok(summary) => {
             if summary.tests_passed == 1 {
-                println!("The test {}.", "passed".green());
+                println!("1 test: OK");
             } else {
-                println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
+                println!("{} tests: OK", summary.tests_passed);
             }
 
             succeeded = true;
         }
-        Err(EvalError::ResumableError(position, e)) => {
-            eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
+        Err(EvalError::ResumableError(_, _)) => {
+            println!("Error")
         }
         Err(EvalError::Interrupted) => {
-            eprintln!("Interrupted");
+            println!("Interrupted");
         }
         Err(EvalError::ReachedTickLimit) => {
-            eprintln!("Reached the tick limit.");
+            println!("Timeout");
         }
-        Err(EvalError::ForbiddenInSandbox(position)) => {
-            eprintln!(
-                "{}: Tried to execute unsafe code in sandboxed mode.",
-                position.as_ide_string()
-            );
+        Err(EvalError::ForbiddenInSandbox(_)) => {
+            println!("Sandbox");
         }
     }
 

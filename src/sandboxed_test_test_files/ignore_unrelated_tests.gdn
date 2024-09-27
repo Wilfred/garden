@@ -8,5 +8,5 @@ test safe_test {
 }
 
 // args: sandboxed-test
-// expected stdout: The test [32mpassed[39m.
+// expected stdout: 1 test: OK
 

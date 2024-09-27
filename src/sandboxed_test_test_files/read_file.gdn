@@ -5,6 +5,5 @@ test read_file_is_unsafe {
 
 // args: sandboxed-test
 // expected exit status: 1
-// expected stderr:
-// src/sandboxed_test_test_files/read_file.gdn:2: Tried to execute unsafe code in sandboxed mode.
+// expected stdout: Sandbox
 

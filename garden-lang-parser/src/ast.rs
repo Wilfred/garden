@@ -432,7 +432,7 @@ pub struct TestInfo {
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     /// The name of the test. This is optional in test definitions.
-    pub name: Option<Symbol>,
+    pub name: Symbol,
     pub body: Block,
 }
 

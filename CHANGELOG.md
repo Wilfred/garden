@@ -2,6 +2,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
+## Syntax
+
+Tests now require a name, so `test {}` is no longer legal. Use `test
+some_name {}` instead.
+
 ## Standard Library
 
 Removed `List::for_each` (use `for x in y` loops instead).

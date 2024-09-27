@@ -149,7 +149,7 @@ impl Default for Bindings {
 pub(crate) enum EnclosingSymbol {
     Fun(Symbol),
     Method(TypeName, Symbol),
-    Test(Option<Symbol>),
+    Test(Symbol),
     Closure,
     Toplevel,
 }
@@ -161,8 +161,7 @@ impl std::fmt::Display for EnclosingSymbol {
             EnclosingSymbol::Method(type_name, meth_sym) => {
                 write!(f, "fun (self: {}) {}()", type_name.name, meth_sym.name)
             }
-            EnclosingSymbol::Test(None) => write!(f, "test"),
-            EnclosingSymbol::Test(Some(test_sym)) => write!(f, "test {}", test_sym.name),
+            EnclosingSymbol::Test(test_sym) => write!(f, "test {}", test_sym.name),
             EnclosingSymbol::Closure => write!(f, "closure"),
             EnclosingSymbol::Toplevel => write!(f, "__toplevel__"),
         }
@@ -352,9 +351,7 @@ pub(crate) fn eval_tests(
     // Update all the test definitions in the environment before
     // evaluating anything.
     for test in &test_defs {
-        if let Some(test_sym) = &test.name {
-            env.tests.insert(test_sym.name.clone(), (*test).clone());
-        }
+        env.tests.insert(test.name.name.clone(), (*test).clone());
     }
 
     for test in test_defs {
@@ -707,9 +704,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                 new_syms.push(SymbolName(meth_info.full_name()));
             }
             Definition_::Test(test) => {
-                if let Some(test_sym) = &test.name {
-                    env.tests.insert(test_sym.name.clone(), test.clone());
-                }
+                env.tests.insert(test.name.name.clone(), test.clone());
             }
             Definition_::Enum(enum_info) => {
                 // Add the enum definition to the type environment.

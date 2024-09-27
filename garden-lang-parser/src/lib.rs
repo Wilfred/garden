@@ -1116,20 +1116,7 @@ fn parse_test(
     let test_token = require_token(tokens, diagnostics, "test");
     let doc_comment = parse_doc_comment(&test_token);
 
-    let name = if let Some(token) = tokens.peek() {
-        if token.text == "{" {
-            None
-        } else {
-            Some(parse_symbol(tokens, id_gen, diagnostics))
-        }
-    } else {
-        diagnostics.push(ParseError::Incomplete {
-            position: test_token.position.clone(),
-            message: ErrorMessage("Unfinished test definition".to_owned()),
-        });
-        None
-    };
-
+    let name = parse_symbol(tokens, id_gen, diagnostics);
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let mut start_offset = test_token.position.start_offset;

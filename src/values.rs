@@ -80,6 +80,17 @@ impl Value {
         }
     }
 
+    pub(crate) fn as_rust_bool(&self) -> Option<bool> {
+        match self {
+            Value::Enum {
+                runtime_type,
+                variant_idx,
+                ..
+            } if runtime_type == &Type::bool() => Some(*variant_idx == 0),
+            _ => None,
+        }
+    }
+
     pub(crate) fn ok(v: Value, env: &Env) -> Self {
         let value_type = Type::from_value(&v, env, &env.stack.type_bindings());
 
@@ -144,6 +155,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltinFunctionKind {
+    // Assert,
     Error,
     ListDirectory,
     Shell,
@@ -159,6 +171,7 @@ pub(crate) enum BuiltinFunctionKind {
 impl Display for BuiltinFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
+            // BuiltinFunctionKind::Assert => "assert",
             BuiltinFunctionKind::Error => "error",
             BuiltinFunctionKind::ListDirectory => "list_directory",
             BuiltinFunctionKind::Shell => "shell",

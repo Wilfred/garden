@@ -998,7 +998,7 @@ fn eval_if(
         .pop()
         .expect("Popped an empty value stack for if condition");
 
-    if let Some(b) = to_rust_bool(&condition_value) {
+    if let Some(b) = condition_value.as_rust_bool() {
         if b {
             stack_frame.exprs_to_eval.push((
                 EvaluatedState::NotEvaluated,
@@ -1048,21 +1048,6 @@ fn eval_if(
     Ok(())
 }
 
-/// If `value` is a Bool value, convert it to a Rust bool.
-fn to_rust_bool(value: &Value) -> Option<bool> {
-    match value {
-        Value::Enum {
-            type_name,
-            variant_idx,
-            ..
-        } if type_name.name == "Bool" => {
-            // TODO: this assumes users never redefine Bool.
-            Some(*variant_idx == 0)
-        }
-        _ => None,
-    }
-}
-
 fn eval_while(
     env: &mut Env,
     stack_frame: &mut StackFrame,
@@ -1076,7 +1061,7 @@ fn eval_while(
         .pop()
         .expect("Popped an empty value stack for while loop");
 
-    let Some(b) = to_rust_bool(&condition_value) else {
+    let Some(b) = condition_value.as_rust_bool() else {
         return Err((
             RestoreValues(vec![condition_value.clone()]),
             EvalError::ResumableError(
@@ -1319,7 +1304,7 @@ fn eval_boolean_binop(
             .pop()
             .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_bool = match to_rust_bool(&lhs_value) {
+        let lhs_bool = match lhs_value.as_rust_bool() {
             Some(b) => b,
             None => {
                 return Err((
@@ -1338,7 +1323,7 @@ fn eval_boolean_binop(
             }
         };
 
-        let rhs_bool = match to_rust_bool(&rhs_value) {
+        let rhs_bool = match rhs_value.as_rust_bool() {
             Some(b) => b,
             None => {
                 return Err((

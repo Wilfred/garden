@@ -22,6 +22,18 @@ fun error(message: String): NoValue {
     __BUILTIN_IMPLEMENTATION
 }
 
+// Stop the program if `condition` is `False`.
+//
+// ```
+// assert((1 + 1) == 2, "Arithmetic is broken!")
+// ```
+//
+// This is intended for writing tests. See `error` for reporting other
+// issues.
+fun assert(condition: Bool, message: String): Unit {
+    __BUILTIN_IMPLEMENTATION
+}
+
 // List the contents of the specified directory.
 //
 // ```
@@ -37,7 +49,7 @@ fun list_directory(path: String): Result<List<String>, String> {
 // path_exists("/") // True
 // path_exists("/no_such_dir") // False
 // ```
-// 
+//
 // Note that a path may exist without the current user having
 // permission to read it.
 fun path_exists(path: String): Bool {

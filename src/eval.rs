@@ -1577,6 +1577,65 @@ fn eval_builtin_call(
                 }
             }
         }
+        BuiltinFunctionKind::Assert => {
+            check_arity(
+                &SymbolName("assert".to_owned()),
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let msg = match &arg_values[1] {
+                Value::String(msg) => msg,
+                v => {
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[1].clone(), message),
+                    ));
+                }
+            };
+
+            match arg_values[0].as_rust_bool() {
+                Some(b) => {
+                    if b {
+                    } else {
+                        let message = ErrorMessage(format!("Assertion failed: {}", msg));
+                        return Err((
+                            RestoreValues(saved_values),
+                            EvalError::AssertionFailed(position.clone()),
+                        ));
+                    }
+                }
+                None => {
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "Bool".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            }
+        }
         BuiltinFunctionKind::Print => {
             check_arity(
                 &SymbolName("print".to_owned()),

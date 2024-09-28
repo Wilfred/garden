@@ -470,7 +470,7 @@ enclosing point and print the result."
      . font-lock-keyword-face)
 
     (,(regexp-opt
-       '("error" "list_directory" "path_exists" "print" "println"
+       '("assert" "error" "list_directory" "path_exists" "print" "println"
          "read_file" "shell" "should_equal" "string_repr" "todo"
          "working_directory" "write_file")
        'symbols)

@@ -896,7 +896,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
-                "Tried to update a built-in stub for a function {} that doesn't exist.",
+                "Tried to update a built-in stub for a function `{}` that doesn't exist.",
                 symbol.name
             ),
             position: symbol.position.clone(),
@@ -908,7 +908,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
-                "Tried to update a built-in stub but {} isn't a built-in function (it's a {}).",
+                "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
                 Type::from_value(value, env, &env.stack.type_bindings()),
             ),

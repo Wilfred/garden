@@ -267,7 +267,7 @@ pub(crate) enum EvalError {
     /// Normal userland error, e.g. `error()` was called.
     ResumableError(Position, ErrorMessage),
     /// `should_equal()` failed.
-    AssertionFailed(Position),
+    AssertionFailed(Position, ErrorMessage),
     /// Ran out of ticks (i.e. program did not terminate in time).
     ReachedTickLimit,
     /// Tried to execute a function that isn't permitted in the
@@ -1617,7 +1617,7 @@ fn eval_builtin_call(
                         let message = ErrorMessage(format!("Assertion failed: {}", msg));
                         return Err((
                             RestoreValues(saved_values),
-                            EvalError::AssertionFailed(position.clone()),
+                            EvalError::AssertionFailed(position.clone(), message),
                         ));
                     }
                 }

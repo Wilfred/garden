@@ -6,7 +6,6 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
-use garden_lang_parser::diagnostics::ErrorMessage;
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
@@ -223,9 +222,8 @@ fn handle_eval_request(
                 warnings: vec![],
             }
         }
-        Err(EvalError::AssertionFailed(position)) => {
-            let msg = ErrorMessage("Assertion failed".to_owned());
-            let stack = format_error_with_stack(&msg, &position, &env.stack.0);
+        Err(EvalError::AssertionFailed(position, message)) => {
+            let stack = format_error_with_stack(&message, &position, &env.stack.0);
 
             Response {
                 kind: ResponseKind::Evaluate,
@@ -357,11 +355,11 @@ fn handle_eval_up_to_request(
                     position: None,
                     warnings: vec![],
                 },
-                EvalError::AssertionFailed(_) => Response {
+                EvalError::AssertionFailed(_, message) => Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
                         position: None,
-                        message: "Assertion failed".to_owned(),
+                        message: format!("Assertion failed: {}", message.0),
                         stack: None,
                     }),
                     position: None,
@@ -615,11 +613,11 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
             position: None,
             warnings: vec![],
         },
-        Err(EvalError::AssertionFailed(position)) => Response {
+        Err(EvalError::AssertionFailed(position, message)) => Response {
             kind: ResponseKind::Evaluate,
             value: Err(ResponseError {
                 position: Some(position),
-                message: "Assertion failed".to_owned(),
+                message: format!("Assertion failed: {}", message.0),
                 stack: None,
             }),
             position: None,

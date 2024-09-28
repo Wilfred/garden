@@ -196,8 +196,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 );
                 is_stopped = true;
             }
-            Err(EvalError::AssertionFailed(position, _)) => {
-                let msg = ErrorMessage("Assertion failed".to_owned());
+            Err(EvalError::AssertionFailed(position, msg)) => {
                 println!(
                     "{}",
                     &format_error_with_stack(&msg, &position, &env.stack.0)

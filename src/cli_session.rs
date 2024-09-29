@@ -14,7 +14,6 @@ use crate::eval::{eval, eval_toplevel_defs, EvaluatedState, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
 use garden_lang_parser::ast::{SyntaxIdGenerator, ToplevelItem};
-use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;

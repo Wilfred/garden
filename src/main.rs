@@ -19,7 +19,6 @@
 // I'm not convinced it's always clearer to use match with cmp.
 #![allow(clippy::comparison_chain)]
 
-
 mod caret_finder;
 mod checks;
 mod cli_session;

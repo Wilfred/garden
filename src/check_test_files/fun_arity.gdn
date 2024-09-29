@@ -9,5 +9,5 @@
 // 
 // --> src/check_test_files/fun_arity.gdn:2
 //     string_repr(1, 2, 3)
-//     ^^^^^^^^^^^
+//                    ^^^^
 

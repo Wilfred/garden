@@ -746,7 +746,26 @@ impl<'a> TypeCheckVisitor<'a> {
                             None => "This function".to_owned(),
                         };
 
-                        if params.len() != paren_args.arguments.len() {
+                        if params.len() < paren_args.arguments.len() {
+                            // Got too many arguments.
+                            let first_excess_arg = &paren_args.arguments[params.len()];
+                            let last_arg = paren_args.arguments.last().unwrap();
+
+                            let position = Position::merge(&first_excess_arg.pos, &last_arg.pos);
+
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "{} expects {} argument{}, but got {}.",
+                                    formatted_name,
+                                    params.len(),
+                                    if params.len() == 1 { "" } else { "s" },
+                                    paren_args.arguments.len()
+                                ),
+                                position,
+                            });
+                        } else if params.len() > paren_args.arguments.len() {
+                            // Got too few arguments.
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!(

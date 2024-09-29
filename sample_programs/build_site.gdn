@@ -2,6 +2,10 @@ fun render_markdown_header(src: String): String {
     "".join(["<h1>", src.strip_prefix("# "), "</h1>"])
 }
 
+test render_markdown_header {
+    assert(render_markdown_header("# foo") == "<h1>foo</h1>", "Rendering a basic header")
+}
+
 fun render_markdown_paragraph(src: String): String {
     // TODO: when cursor is inside a definition, show whether the
     // tests passed/failed/skipped due to IO.

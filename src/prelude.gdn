@@ -15,8 +15,8 @@ fun (self: Bool) not(): Bool {
 }
 
 test not {
-    should_equal(True.not(), False)
-    should_equal(False.not(), True)
+    assert(True.not() == False, "Negating True should be False")
+    assert(False.not() == True, "Negating False should be True")
 }
 
 // The unit type. Use this when your function doesn't have any useful
@@ -69,7 +69,7 @@ fun<T, E> (self: Result<T, E>) or_error(): T {
 }
 
 test or_error {
-    should_equal(Ok("foo").or_error(), "foo")
+    assert(Ok("foo").or_error() == "foo", "or_error() on Ok() should be fine")
 }
 
 enum NoValue {}
@@ -86,12 +86,12 @@ fun (self: String) starts_with(s: String): Bool {
 }
 
 test starts_with {
-    should_equal("abc".starts_with("ab"), True)
-    should_equal("abc".starts_with(""), True)
+    assert("abc".starts_with("ab") == True, "abc starts with ab")
+    assert("abc".starts_with("") == True, "abc starts with empty string")
 
-    should_equal("abc".starts_with("x"), False)
-    should_equal("abc".starts_with("b"), False)
-    should_equal("abc".starts_with("abcaa"), False)
+    assert("abc".starts_with("x") == False, "abc does not start with x")
+    assert("abc".starts_with("b") == False, "abc does not start with b")
+    assert("abc".starts_with("abcaa") == False, "abc does not start with abcaa")
 }
 
 // Does this string end with `s`?
@@ -104,12 +104,12 @@ fun (self: String) ends_with(s: String): Bool {
 }
 
 test ends_with {
-    should_equal("abc".ends_with("bc"), True)
-    should_equal("abc".ends_with(""), True)
+    assert("abc".ends_with("bc") == True, "abc ends with bc")
+    assert("abc".ends_with("") == True, "abc ends with empty string")
 
-    should_equal("abc".ends_with("x"), False)
-    should_equal("abc".ends_with("b"), False)
-    should_equal("abc".ends_with("aabc"), False)
+    assert("abc".ends_with("x") == False, "abc does not end with x")
+    assert("abc".ends_with("b") == False, "abc does not end with b")
+    assert("abc".ends_with("aabc") == False, "abc does not end with aabc")
 }
 
 // Split this string into a list of lines.
@@ -138,10 +138,10 @@ fun (self: String) lines(): List<String> {
 }
 
 test lines {
-    should_equal("".lines(), [])
-    should_equal("a".lines(), ["a"])
-    should_equal("a\nb".lines(), ["a", "b"])
-    should_equal("a\nb\n".lines(), ["a", "b"])
+    assert("".lines() == [], "Empty string has no lines")
+    assert("a".lines() == ["a"], "Single line")
+    assert("a\nb".lines() == ["a", "b"], "Two lines with no trailing newline")
+    assert("a\nb\n".lines() == ["a", "b"], "Two lines with trailing newline")
 }
 
 // Split this string on the first occurrence of `needle`, and return
@@ -168,17 +168,13 @@ fun (self: String) split_once(needle: String): Option<List<String>> {
 }
 
 test split_once {
-    // Needle not present.
-    should_equal("abc".split_once("x"), None)
+    assert("abc".split_once("x") == None, "Needle not present is None")
 
-    // Needle present once.
-    should_equal("abc".split_once("b"), Some(["a", "c"]))
+    assert("abc".split_once("b") == Some(["a", "c"]), "Needle present once")
 
-    // Needle present at end
-    should_equal("abc".split_once("c"), Some(["ab", ""]))
+    assert("abc".split_once("c") == Some(["ab", ""]), "Needle present at end")
 
-    // Needle present multiple times.
-    should_equal("abcbe".split_once("b"), Some(["a", "cbe"]))
+    assert("abcbe".split_once("b") == Some(["a", "cbe"]), "Needle present multiple times")
 }
 
 // Find the first index of `needle` in `self`.
@@ -203,12 +199,12 @@ fun (self: String) index_of(needle: String): Option<Int> {
 }
 
 test string_index_of {
-    should_equal("abc".index_of("x"), None)
+    assert("abc".index_of("x") == None, "abc does not contain x")
 
-    should_equal("abc".index_of("a"), Some(0))
-    should_equal("abca".index_of("a"), Some(0))
+    assert("abc".index_of("a") == Some(0), "abc has a at 0")
+    assert("abca".index_of("a") == Some(0), "abca has a at 0")
 
-    should_equal("abc".index_of("c"), Some(2))
+    assert("abc".index_of("c") == Some(2), "abc has c at 2")
 }
 
 // Join `items` (a list of strings) with this string as a separator.
@@ -235,10 +231,10 @@ fun (self: String) join(items: List<String>): String {
 }
 
 test join {
-    should_equal(" ".join(["x"]), "x")
+    assert(" ".join(["x"]) == "x", "Joining single item list")
 
     // TODO: should .join() exist on String or on List?
-    should_equal(" ".join(["x", "y"]), "x y")
+    assert(" ".join(["x", "y"]) == "x y", "Joining multiple items")
 }
 
 // Does this string contain `substring`?
@@ -278,10 +274,10 @@ fun (self: String) trim_left(): String {
 }
 
 test trim_left {
-    should_equal("a".trim_left(), "a")
-    should_equal("a b".trim_left(), "a b")
-    should_equal("  a".trim_left(), "a")
-    should_equal("a ".trim_left(), "a ")
+    assert("a".trim_left() == "a", "Trim with no whitespace should be the same")
+    assert("a b".trim_left() == "a b", "Trim with only whitespace in the middle")
+    assert("  a".trim_left() == "a", "Trim with leading whitespace")
+    assert("a ".trim_left() == "a ", "Trim with trailing whitespace")
 }
 
 fun (self: String) trim_right(): String {
@@ -299,10 +295,10 @@ fun (self: String) trim_right(): String {
 }
 
 test trim_right {
-    should_equal("a".trim_right(), "a")
-    should_equal("a b".trim_right(), "a b")
-    should_equal(" a".trim_right(), " a")
-    should_equal("a  ".trim_right(), "a")
+    assert("a".trim_right() == "a", "Trim with no whitespace")
+    assert("a b".trim_right() == "a b", "Trim with only whitespace in the middle")
+    assert(" a".trim_right() == " a", "Trim with leading whitespace")
+    assert("a  ".trim_right() == "a", "Trim with trailing whitespace")
 }
 
 // Returns this string without the suffix specified. If this string
@@ -321,8 +317,8 @@ fun (self: String) strip_suffix(suffix: String): String {
 }
 
 test strip_suffix {
-    should_equal("abcdef".strip_suffix("ef"), "abcd")
-    should_equal("abcdef".strip_suffix("xyz"), "abcdef")
+    assert("abcdef".strip_suffix("ef") == "abcd", "")
+    assert("abcdef".strip_suffix("xyz") == "abcdef", "")
 }
 
 // Returns this string without the prefix specified. If this string
@@ -342,8 +338,8 @@ fun (self: String) strip_prefix(prefix: String): String {
 }
 
 test strip_prefix {
-    should_equal("abcdef".strip_prefix("ab"), "cdef")
-    should_equal("abcdef".strip_prefix("xyz"), "abcdef")
+    assert("abcdef".strip_prefix("ab") == "cdef", "")
+    assert("abcdef".strip_prefix("xyz") == "abcdef", "")
 }
 
 // Split this string on occurrences of `needle`.
@@ -376,9 +372,9 @@ fun (self: String) split(needle: String): List<String> {
 }
 
 test split {
-    should_equal("ab".split(","), ["ab"])
-    should_equal("a,b".split(","), ["a", "b"])
-    should_equal("a,,b".split(","), ["a", "", "b"])
+    assert("ab".split(",") == ["ab"], "No occurrences")
+    assert("a,b".split(",") == ["a", "b"], "One occurrence")
+    assert("a,,b".split(",") == ["a", "", "b"], "Two occurrences")
 }
 
 fun (self: String) chars(): List<String> {
@@ -394,7 +390,7 @@ fun (self: String) chars(): List<String> {
 }
 
 test string_chars {
-    should_equal("abc".chars(), ["a", "b", "c"])
+    assert("abc".chars() == ["a", "b", "c"], "")
 }
 
 // List methods.
@@ -409,8 +405,8 @@ fun<T> (self: List<T>) first(): Option<T> {
 }
 
 test first {
-    should_equal([].first(), None)
-    should_equal([123].first(), Some(123))
+    assert([].first() == None, "")
+    assert([123].first() == Some(123), "")
 }
 
 // Get the last item in this list, if the list is not empty.
@@ -423,8 +419,8 @@ fun<T> (self: List<T>) last(): Option<T> {
 }
 
 test last {
-    should_equal([].last(), None)
-    should_equal([123].last(), Some(123))
+    assert([].last() == None, "")
+    assert([123].last() == Some(123), "")
 }
 
 // Return a copy of this list with the items where `f(item)` returns
@@ -442,7 +438,7 @@ fun<T> (self: List<T>) filter(f: Fun<(T), Bool>): List<T> {
 }
 
 test filter {
-    should_equal([1, 2].filter(fun(_) { True }), [1, 2])
+    assert([1, 2].filter(fun(_) { True }) == [1, 2], "")
 }
 
 // Is this list empty?
@@ -451,8 +447,8 @@ fun<T> (self: List<T>) is_empty(): Bool {
 }
 
 test is_empty {
-    should_equal([].is_empty(), True)
-    should_equal([1].is_empty(), False)
+    assert([].is_empty(), "")
+    assert([1].is_empty().not(), "")
 }
 
 // Is this list non-empty?
@@ -461,8 +457,8 @@ fun<T> (self: List<T>) is_non_empty(): Bool {
 }
 
 test is_non_empty {
-    should_equal([].is_non_empty(), False)
-    should_equal([1].is_non_empty(), True)
+    assert([].is_non_empty().not(), "")
+    assert([1].is_non_empty(), "")
 }
 
 // Does this list contain `item`?
@@ -477,7 +473,7 @@ fun<T> (self: List<T>) contains(item: T): Bool {
 }
 
 test contains {
-    should_equal([10, 11].contains(10), True)
+    assert([10, 11].contains(10) == True, "")
 }
 
 // Call `f` on every item in this list, and return a list of the
@@ -497,7 +493,7 @@ fun<T, U> (self: List<T>) map(f: Fun<(T), U>): List<U> {
 
 test list_map {
     let incremented = [1, 2, 3].map(fun(x: Int) { x + 1 })
-    should_equal(incremented, [2, 3, 4])
+    assert(incremented == [2, 3, 4], "")
 }
 
 // Option methods.
@@ -511,14 +507,5 @@ fun<T> (self: Option<T>) or_exception(): T {
 }
 
 test option_or_exception {
-    should_equal(Some(123).or_exception(), 123)
-}
-
-// Testing heleprs.
-
-// Assert that `actual`and `expected` are equal values.
-fun should_equal(actual, expected): Unit {
-    if actual != expected {
-        error("".join(["Expected ", string_repr(expected), " but got ", string_repr(actual), "."]))
-    }
+    assert(Some(123).or_exception() == 123, "")
 }

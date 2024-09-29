@@ -3,16 +3,10 @@ fun add_one(i: Int): Int {
     i + 1
 }
 
-fun should_equal(x, y): Unit {
-    if x != y {
-        error("Expected values to be equal")
-    }
-}
-
 test passing_example {
-    should_equal(add_one(1), 2)
+    assert(add_one(1) == 2, "Expected 2")
 }
 
 test failing_example {
-    should_equal(add_one(1), 99)
+    assert(add_one(1) == 99, "This should fail")
 }

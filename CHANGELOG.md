@@ -9,6 +9,8 @@ some_name {}` instead.
 
 ## Standard Library
 
+Added `assert()` and removed `should_equal()`.
+
 Removed `List::for_each` (use `for x in y` loops instead).
 
 # 0.17 (released 15th September 2024)

@@ -1,8 +1,8 @@
 test foo {
-    should_equal(1, 2)
+    assert(1 == 2, "Should fail")
     // ^
 }
 
 // args: sandboxed-test
-// expected stdout: Error
+// expected stdout: Failed
 

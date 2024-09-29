@@ -266,7 +266,7 @@ pub(crate) enum EvalError {
     Interrupted,
     /// Normal userland error, e.g. `error()` was called.
     ResumableError(Position, ErrorMessage),
-    /// `should_equal()` failed.
+    /// `assert()` failed.
     AssertionFailed(Position, ErrorMessage),
     /// Ran out of ticks (i.e. program did not terminate in time).
     ReachedTickLimit,

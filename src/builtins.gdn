@@ -31,6 +31,8 @@ fun error(message: String): NoValue {
 // This is intended for writing tests. See `error` for reporting other
 // issues.
 fun assert(condition: Bool, message: String): Unit {
+    // TODO: this is a good case for optional arguments: we don't
+    // always want to pass a message.
     __BUILTIN_IMPLEMENTATION
 }
 

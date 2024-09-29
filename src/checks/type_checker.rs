@@ -570,14 +570,22 @@ impl<'a> TypeCheckVisitor<'a> {
             Expression_::IntLiteral(_) => Type::int(),
             Expression_::StringLiteral(_) => Type::string(),
             Expression_::ListLiteral(items) => {
-                let mut elem_ty = Type::no_value();
+                let item_tys = items
+                    .iter()
+                    .map(|item| self.check_expr(item, type_bindings, expected_return_ty))
+                    .collect::<Vec<_>>();
 
-                for item in items {
-                    let item_ty = self.check_expr(item, type_bindings, expected_return_ty);
-                    // TODO: unify the types of all elements in the
-                    // list, rather than letting the last win.
-                    elem_ty = item_ty;
-                }
+                let elem_ty = match unify_all(&item_tys) {
+                    Some(ty) => ty,
+                    None => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: "List elements have different types.".to_owned(),
+                            position: pos.clone(),
+                        });
+                        Type::error("List elements have different types")
+                    }
+                };
 
                 Type::list(elem_ty)
             }

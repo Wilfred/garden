@@ -13,6 +13,10 @@ Added `assert()` and removed `should_equal()`.
 
 Removed `List::for_each` (use `for x in y` loops instead).
 
+## Checks
+
+Fixed several type checking bugs.
+
 # 0.17 (released 15th September 2024)
 **Goal: WASM and website.**
 **Goal: Less compulsory punctuation following eval-up-to-cursor testing.**

@@ -16,6 +16,9 @@
 #![allow(clippy::single_match)]
 // Sometimes explicit if statements are clearer.
 #![allow(clippy::collapsible_else_if)]
+// I'm not convinced it's always clearer to use match with cmp.
+#![allow(clippy::comparison_chain)]
+
 
 mod caret_finder;
 mod checks;

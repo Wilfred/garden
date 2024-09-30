@@ -347,6 +347,7 @@ pub(crate) fn eval_tests(
     session: &mut Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut tests_passed = 0;
+    let mut tests_failed = 0;
 
     let mut test_defs = vec![];
     for item in items {
@@ -364,9 +365,26 @@ pub(crate) fn eval_tests(
 
     for test in test_defs {
         push_test_stackframe(test, env);
-        eval(env, session)?;
 
-        tests_passed += 1;
+        match eval(env, session) {
+            Ok(_) => {
+                tests_passed += 1;
+            }
+            Err(e) => match e {
+                EvalError::Interrupted => {
+                    tests_failed += 1;
+                    break;
+                }
+                EvalError::ResumableError(_, _)
+                | EvalError::AssertionFailed(_, _)
+                | EvalError::ReachedTickLimit
+                | EvalError::ForbiddenInSandbox(_) => {
+                    tests_failed += 1;
+                }
+            },
+        }
+
+        env.stack.pop_to_toplevel();
     }
 
     Ok(ToplevelEvalSummary {
@@ -374,7 +392,7 @@ pub(crate) fn eval_tests(
         new_syms: vec![],
         diagnostics: vec![],
         tests_passed,
-        tests_failed: 0,
+        tests_failed,
     })
 }
 

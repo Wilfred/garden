@@ -4,5 +4,5 @@ test foo {
 }
 
 // args: sandboxed-test
-// expected stdout: Failed
+// expected stdout: 1 failed
 

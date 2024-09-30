@@ -417,12 +417,17 @@ fn run_sandboxed_tests_in_file(
 
     match eval_tests(&relevant_items, &mut env, &mut session) {
         Ok(summary) => {
-            if summary.tests_passed == 0 {
+            if summary.tests_passed == 0 && summary.tests_failed == 0 {
                 println!("0 tests");
-            } else if summary.tests_passed == 1 {
-                println!("1 test: OK");
+            } else if summary.tests_passed == 0 {
+                println!("{} failed", summary.tests_failed);
+            } else if summary.tests_failed == 0 {
+                println!("{} passed", summary.tests_passed);
             } else {
-                println!("{} tests: OK", summary.tests_passed);
+                println!(
+                    "{} passed, {} failed",
+                    summary.tests_passed, summary.tests_failed
+                );
             }
         }
         Err(EvalError::ResumableError(_, _)) => {

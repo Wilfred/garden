@@ -14,5 +14,5 @@ test two {
 }
 
 // args: sandboxed-test
-// expected stdout: 2 tests: OK
+// expected stdout: 2 passed
 

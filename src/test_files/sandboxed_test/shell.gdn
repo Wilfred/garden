@@ -4,5 +4,5 @@ test shell_is_unsafe {
 }
 
 // args: sandboxed-test
-// expected stdout: Sandbox
+// expected stdout: 1 failed
 

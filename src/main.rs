@@ -467,14 +467,16 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
 
     match eval_tests(&items, &mut env, &mut session) {
         Ok(summary) => {
-            if summary.tests_passed == 1 {
-                println!("The test {}.", "passed".green());
+            if summary.tests_passed == 0 && summary.tests_failed == 0 {
+                println!("No tests found.");
             } else {
-                println!("All {} test(s) {}.", summary.tests_passed, "passed".green());
+                println!(
+                    "{} passed, {} failed.",
+                    summary.tests_passed, summary.tests_failed
+                );
             }
 
-            // TODO: should we allow tests to keep going
-            // after the first failure?
+            // TODO: support printing back traces from every test failure.
             // TODO: print incremental progress as tests run.
             succeeded = true;
         }

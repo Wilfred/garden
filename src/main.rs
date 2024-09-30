@@ -602,6 +602,13 @@ mod tests {
     }
 
     #[test]
+    fn test_test() -> TestResult<()> {
+        let mut config = TestConfig::new("target/debug/garden", "src/test_test_files", "// ")?;
+        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
+        config.run_tests()
+    }
+
+    #[test]
     fn test_hover() -> TestResult<()> {
         let mut config = TestConfig::new("target/debug/garden", "src/hover_test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();

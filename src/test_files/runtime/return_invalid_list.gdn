@@ -1,0 +1,21 @@
+fun foo(): List<Int> {
+    [""] // should error
+}
+
+fun main(args: List<String>): Unit {
+    foo()
+    return
+}
+
+// args: run
+// expected stderr:
+// Error: Expected `List<Int>`, but got `List<String>`: [""]
+// 
+// --> src/test_files/runtime/return_invalid_list.gdn:1[2m[1m	 fun foo()[0m[0m
+// fun foo(): List<Int> {
+//            ^^^^^^^^^
+// --> src/test_files/runtime/return_invalid_list.gdn:6[2m[1m	 fun main()[0m[0m
+//     foo()
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// // __toplevel__
+

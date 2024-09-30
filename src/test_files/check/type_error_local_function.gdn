@@ -1,0 +1,15 @@
+fun takes_int(_v: Int) {}
+
+{
+    takes_int("foo")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Int` argument but got `String`.
+// 
+// --> src/test_files/check/type_error_local_function.gdn:4
+//     takes_int("foo")
+//               ^^^^^
+

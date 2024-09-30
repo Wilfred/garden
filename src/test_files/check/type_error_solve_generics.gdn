@@ -1,0 +1,21 @@
+fun<T> takes_options(_x: Option<T>, _y: Option<T>) {}
+
+{
+    takes_options(None, None)
+    takes_options(None, Some(123))
+
+    // TODO: should be accepted by type checker.
+    // takes_options(Some(123), None)
+
+    takes_options(Some("foo"), Some(123))
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Option<Int>` argument but got `Option<String>`.
+// 
+// --> src/test_files/check/type_error_solve_generics.gdn:10
+//     takes_options(Some("foo"), Some(123))
+//                   ^^^^^^^^^^^
+

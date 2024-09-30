@@ -1,0 +1,11 @@
+fun (self: String) do_stuff(_arg: NoSuchType): Unit {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: No such type: NoSuchType
+// 
+// --> src/test_files/check/missing_type_method_arg.gdn:1
+// fun (self: String) do_stuff(_arg: NoSuchType): Unit {}
+//                                   ^^^^^^^^^^
+

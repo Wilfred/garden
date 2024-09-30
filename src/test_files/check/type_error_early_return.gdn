@@ -1,0 +1,17 @@
+fun takes_int(b: Bool): Int {
+    if b {
+        return "foo"
+    }
+
+    123
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected this function to return `Int`, but got `String`.
+// 
+// --> src/test_files/check/type_error_early_return.gdn:3
+//         return "foo"
+//                ^^^^^
+

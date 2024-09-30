@@ -1,0 +1,15 @@
+{
+    while 1 {
+        string_repr(1234)
+    }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Bool` inside an `while` condition, but got `Int`.
+// 
+// --> src/test_files/check/type_error_while.gdn:2
+//     while 1 {
+//           ^
+

@@ -1,0 +1,17 @@
+struct WrappedNum {
+    value: Int,
+}
+
+fun (self: WrappedNum) increment(): Int {
+    self.value + 1
+    //    ^
+}
+
+fun main(_) {
+    let wn = WrappedNum{ value: 10 }
+    wn.increment()
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/call_method_previously_called.gdn:6: 10
+

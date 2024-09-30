@@ -1,0 +1,18 @@
+fun fib(i: Int): Int {
+    if i == 0 {
+    // ^
+        return 0
+    } else if i == 1 {
+        return 1
+    } else {
+        return fib(i - 1) + fib(i - 2)
+    }
+}
+
+fun main(_) {
+    fib(10)
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/recursive_fun.gdn:2: 10
+

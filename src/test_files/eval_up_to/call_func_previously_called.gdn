@@ -1,0 +1,13 @@
+fun foo(aa: Int) {
+    let bb = aa + 2
+    bb * 2
+//  ^
+}
+
+fun main(_) {
+    foo(10)
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/call_func_previously_called.gdn:3: 12
+

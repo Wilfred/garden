@@ -1,0 +1,17 @@
+{
+    if 1 {
+        string_repr(1234)
+    } else {
+        ""
+    }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Bool` inside an `if` condition, but got `Int`.
+// 
+// --> src/test_files/check/type_error_if.gdn:2
+//     if 1 {
+//        ^
+

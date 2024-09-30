@@ -588,76 +588,8 @@ mod tests {
     use goldentests::{TestConfig, TestResult};
 
     #[test]
-    fn test_parser() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/parser_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_checks() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/check_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_test() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/test_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_hover() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/hover_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_go_to_def() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/go_to_def_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_completion() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/complete_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_eval_up_to() -> TestResult<()> {
-        let mut config =
-            TestConfig::new("target/debug/garden", "src/eval_up_to_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_sandboxed_test() -> TestResult<()> {
-        let mut config = TestConfig::new(
-            "target/debug/garden",
-            "src/sandboxed_test_test_files",
-            "// ",
-        )?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_runtime() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/runtime_test_files", "// ")?;
-        config.overwrite_tests = std::env::var("REGENERATE").is_ok();
-        config.run_tests()
-    }
-
-    #[test]
-    fn test_json_session() -> TestResult<()> {
-        let mut config = TestConfig::new("target/debug/garden", "src/json_test_files", "// ")?;
+    fn run_test_files() -> TestResult<()> {
+        let mut config = TestConfig::new("target/debug/garden", "src/test_files", "// ")?;
         config.overwrite_tests = std::env::var("REGENERATE").is_ok();
         config.run_tests()
     }

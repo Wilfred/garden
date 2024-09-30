@@ -1,8 +1,0 @@
-fun main(_) {
-    let foo = 1 + 2
-    //  ^
-}
-
-// args: test-eval-up-to
-// expected stdout: src/eval_up_to_test_files/let_var.gdn:2: 3
-

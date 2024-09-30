@@ -1,0 +1,44 @@
+foo(a b)
+
+// args: dump-ast
+// expected stdout:
+// Call(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"foo",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(1),
+//     },
+//     ParenthesizedArguments {
+//         open_paren: Position { ... },
+//         arguments: [
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
+//                     Symbol"a",
+//                 ),
+//                 value_is_used: true,
+//                 id: SyntaxId(3),
+//             },
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
+//                     Symbol"b",
+//                 ),
+//                 value_is_used: true,
+//                 id: SyntaxId(5),
+//             },
+//         ],
+//         close_paren: Position { ... },
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: Invalid syntax: Expected `,` or `)`, got `b`
+// 
+// --> src/test_files/parser/missing_punct.gdn:1
+// foo(a b)
+//       ^
+

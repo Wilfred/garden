@@ -1,0 +1,10 @@
+fun main(_) {
+    if 1 == 2 {
+        //^
+        print("yikes")
+    }
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/if_condition.gdn:2: False
+

@@ -1,0 +1,57 @@
+// We don't really care how this parses, but it shouldn't crash the parser.
+ffun foo(_: Bool) {
+}
+
+// args: dump-ast
+// expected stdout:
+// Variable(
+//     Symbol"ffun",
+// )
+// Call(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"foo",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(3),
+//     },
+//     ParenthesizedArguments {
+//         open_paren: Position { ... },
+//         arguments: [
+//             Expression {
+//                 pos: Position { ... },
+//                 expr_: Variable(
+//                     Symbol"_",
+//                 ),
+//                 value_is_used: true,
+//                 id: SyntaxId(5),
+//             },
+//         ],
+//         close_paren: Position { ... },
+//     },
+// )
+// Invalid
+
+// expected stderr:
+// Error: Parse error: Invalid syntax: Expected `,` or `)`, got `:`
+// 
+// --> src/test_files/parser/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+// Error: Parse error: Expected an expression, got: `:`.
+// 
+// --> src/test_files/parser/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+// Error: Parse error: Expected `)`, got `:`
+// 
+// --> src/test_files/parser/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+// Error: Parse error: Expected an expression, got: `:`.
+// 
+// --> src/test_files/parser/malformed_fun_keyword.gdn:2
+// ffun foo(_: Bool) {
+//           ^
+

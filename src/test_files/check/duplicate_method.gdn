@@ -1,0 +1,13 @@
+fun (self: String) foo() {}
+
+fun (self: String) foo() {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: The method `String::foo` is already defined in this file.
+// 
+// --> src/test_files/check/duplicate_method.gdn:3
+// fun (self: String) foo() {}
+//                    ^^^
+

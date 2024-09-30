@@ -1,0 +1,17 @@
+fun get_ints_explicit(items: List<String>): List<Int> {
+    items.map(fun(_item: String): Int { 1 })
+}
+
+fun get_ints_inferred(items: List<String>): List<Int> {
+    items.map(fun(item) { item.len() })
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a type with a `len` method, but got a `_`.
+// 
+// --> src/test_files/check/map.gdn:6
+//     items.map(fun(item) { item.len() })
+//                           ^^^^
+

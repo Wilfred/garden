@@ -1,0 +1,14 @@
+enum Foo<T> {
+    One,
+    Two(T<Int>),
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Generic type arguments cannot take parameters.
+// 
+// --> src/test_files/check/generic_taking_arguments.gdn:3
+//     Two(T<Int>),
+//           ^^^
+

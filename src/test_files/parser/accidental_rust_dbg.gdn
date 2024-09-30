@@ -1,0 +1,12 @@
+fun foo() {
+    dbg!(1);
+}
+
+// args: dump-ast
+// expected stderr:
+// Error: Parse error: Unrecognized syntax: `!`
+// 
+// --> src/test_files/parser/accidental_rust_dbg.gdn:2
+//     dbg!(1);
+//        ^
+

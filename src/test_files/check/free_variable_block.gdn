@@ -1,0 +1,13 @@
+{
+    foo
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unbound symbol: foo
+// 
+// --> src/test_files/check/free_variable_block.gdn:2
+//     foo
+//     ^^^
+

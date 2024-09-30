@@ -1,0 +1,18 @@
+fun foo() {
+    let x = no_such_fun()
+    // Calling methods on an error type is fine.
+    x.len()
+
+    // Likewise arithmetic on an error type.
+    let _y = x + 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unbound symbol: no_such_fun
+// 
+// --> src/test_files/check/cascading_errors.gdn:2
+//     let x = no_such_fun()
+//             ^^^^^^^^^^^
+

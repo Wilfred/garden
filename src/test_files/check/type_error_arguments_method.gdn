@@ -1,0 +1,19 @@
+{
+    let s = ""
+    s.substring("", "")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Int` argument but got `String`.
+// 
+// --> src/test_files/check/type_error_arguments_method.gdn:3
+//     s.substring("", "")
+//                 ^^
+// Error: Expected `Int` argument but got `String`.
+// 
+// --> src/test_files/check/type_error_arguments_method.gdn:3
+//     s.substring("", "")
+//                     ^^
+

@@ -1,0 +1,13 @@
+fun foo(): Int {
+    x
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unbound symbol: x
+// 
+// --> src/test_files/check/free_variable.gdn:2
+//     x
+//     ^
+

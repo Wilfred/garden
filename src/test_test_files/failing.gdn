@@ -1,0 +1,13 @@
+test foo {
+    assert(1 == 2, "Should fail")
+}
+
+// args: test
+// expected exit status: 1
+// expected stderr:
+// Error: Assertion failed: Should fail
+// 
+// --> src/test_test_files/failing.gdn:2[2m[1m	 test foo[0m[0m
+//     assert(1 == 2, "Should fail")
+//     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+

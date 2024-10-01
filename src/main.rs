@@ -49,7 +49,6 @@ use eval::eval_up_to;
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::handle_request;
-use owo_colors::OwoColorize as _;
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;

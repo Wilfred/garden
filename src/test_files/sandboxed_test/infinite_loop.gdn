@@ -8,5 +8,5 @@ test foo_call {
 }
 
 // args: sandboxed-test
-// expected stdout: 1 failed
+// expected stdout: 0 passed, 1 timed out
 

@@ -416,19 +416,36 @@ fn run_sandboxed_tests_in_file(
 
     match eval_tests(&relevant_items, &mut env, &mut session) {
         Ok(summary) => {
-            if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
-                println!("0 tests");
-            } else if summary.tests_passed == 0 {
-                println!("{} failed", summary.tests_failed.len());
-            } else if summary.tests_failed.is_empty() {
-                println!("{} passed", summary.tests_passed);
-            } else {
-                println!(
-                    "{} passed, {} failed",
-                    summary.tests_passed,
-                    summary.tests_failed.len()
-                );
+            let mut num_failed = 0;
+            let mut num_errored = 0;
+            let mut num_sandboxed = 0;
+            let mut num_timed_out = 0;
+
+            for err in &summary.tests_failed {
+                match err {
+                    EvalError::Interrupted => num_errored += 1,
+                    EvalError::ResumableError(_, _) => num_errored += 1,
+                    EvalError::AssertionFailed(_, _) => num_failed += 1,
+                    EvalError::ReachedTickLimit => num_timed_out += 1,
+                    EvalError::ForbiddenInSandbox(_) => num_sandboxed += 1,
+                }
             }
+
+            print!("{} passed", summary.tests_passed);
+            if num_failed > 0 {
+                print!(", {} failed", num_failed);
+            }
+            if num_errored > 0 {
+                print!(", {} errored", num_errored);
+            }
+            if num_timed_out > 0 {
+                print!(", {} timed out", num_timed_out);
+            }
+            if num_sandboxed > 0 {
+                print!(", {} sandboxed", num_sandboxed);
+            }
+
+            println!();
         }
         Err(EvalError::ResumableError(_, _)) => {
             println!("Error")

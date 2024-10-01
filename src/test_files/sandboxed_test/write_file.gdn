@@ -4,5 +4,5 @@ test write_file_is_unsafe {
 }
 
 // args: sandboxed-test
-// expected stdout: 1 failed
+// expected stdout: 0 passed, 1 sandboxed
 

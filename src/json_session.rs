@@ -6,6 +6,7 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
+use garden_lang_parser::diagnostics::ErrorMessage;
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
@@ -222,7 +223,8 @@ fn handle_eval_request(
                 warnings: vec![],
             }
         }
-        Err(EvalError::AssertionFailed(position, message)) => {
+        Err(EvalError::AssertionFailed(position)) => {
+            let message = ErrorMessage("Assertion failed".to_owned());
             let stack = format_error_with_stack(&message, &position, &env.stack.0);
 
             Response {
@@ -355,11 +357,11 @@ fn handle_eval_up_to_request(
                     position: None,
                     warnings: vec![],
                 },
-                EvalError::AssertionFailed(_, message) => Response {
+                EvalError::AssertionFailed(_) => Response {
                     kind: ResponseKind::Evaluate,
                     value: Err(ResponseError {
                         position: None,
-                        message: format!("Assertion failed: {}", message.0),
+                        message: "Assertion failed".to_owned(),
                         stack: None,
                     }),
                     position: None,
@@ -613,11 +615,11 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
             position: None,
             warnings: vec![],
         },
-        Err(EvalError::AssertionFailed(position, message)) => Response {
+        Err(EvalError::AssertionFailed(position)) => Response {
             kind: ResponseKind::Evaluate,
             value: Err(ResponseError {
                 position: Some(position),
-                message: format!("Assertion failed: {}", message.0),
+                message: "Assertion failed".to_owned(),
                 stack: None,
             }),
             position: None,

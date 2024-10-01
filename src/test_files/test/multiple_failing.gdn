@@ -1,0 +1,11 @@
+test foo {
+    assert(1 == 2, "Should fail in foo")
+}
+
+test bar {
+    assert(1 == 2, "Should fail in bar")
+}
+
+// args: test
+// expected stdout: 0 passed, 2 failed.
+

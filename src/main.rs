@@ -416,16 +416,17 @@ fn run_sandboxed_tests_in_file(
 
     match eval_tests(&relevant_items, &mut env, &mut session) {
         Ok(summary) => {
-            if summary.tests_passed == 0 && summary.tests_failed == 0 {
+            if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
                 println!("0 tests");
             } else if summary.tests_passed == 0 {
-                println!("{} failed", summary.tests_failed);
-            } else if summary.tests_failed == 0 {
+                println!("{} failed", summary.tests_failed.len());
+            } else if summary.tests_failed.is_empty() {
                 println!("{} passed", summary.tests_passed);
             } else {
                 println!(
                     "{} passed, {} failed",
-                    summary.tests_passed, summary.tests_failed
+                    summary.tests_passed,
+                    summary.tests_failed.len()
                 );
             }
         }
@@ -466,12 +467,13 @@ fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBoo
 
     match eval_tests(&items, &mut env, &mut session) {
         Ok(summary) => {
-            if summary.tests_passed == 0 && summary.tests_failed == 0 {
+            if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
                 println!("No tests found.");
             } else {
                 println!(
                     "{} passed, {} failed.",
-                    summary.tests_passed, summary.tests_failed
+                    summary.tests_passed,
+                    summary.tests_failed.len()
                 );
             }
 

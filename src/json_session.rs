@@ -167,7 +167,7 @@ fn handle_eval_request(
                 format!("Loaded {} definitions", eval_summary.new_syms.len())
             };
 
-            let total_tests = eval_summary.tests_passed + eval_summary.tests_failed;
+            let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
             let test_summary = if total_tests == 0 {
                 "".to_owned()
             } else {

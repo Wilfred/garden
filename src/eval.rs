@@ -260,7 +260,7 @@ pub(crate) struct Session {
     pub(crate) stop_at_expr_id: Option<SyntaxId>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum EvalError {
     /// User pressed ctrl-c.
     Interrupted,
@@ -282,7 +282,7 @@ pub(crate) struct ToplevelEvalSummary {
     pub(crate) diagnostics: Vec<Diagnostic>,
     // TODO: Report the names of tests that passed/failed.
     pub(crate) tests_passed: usize,
-    pub(crate) tests_failed: usize,
+    pub(crate) tests_failed: Vec<EvalError>,
 }
 
 /// Evaluate toplevel definitions, but ignore toplevel expressions and tests.
@@ -347,7 +347,7 @@ pub(crate) fn eval_tests(
     session: &mut Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut tests_passed = 0;
-    let mut tests_failed = 0;
+    let mut tests_failed = vec![];
 
     let mut test_defs = vec![];
     for item in items {
@@ -370,18 +370,12 @@ pub(crate) fn eval_tests(
             Ok(_) => {
                 tests_passed += 1;
             }
-            Err(e) => match e {
-                EvalError::Interrupted => {
-                    tests_failed += 1;
+            Err(e) => {
+                tests_failed.push(e.clone());
+                if matches!(e, EvalError::Interrupted) {
                     break;
                 }
-                EvalError::ResumableError(_, _)
-                | EvalError::AssertionFailed(_, _)
-                | EvalError::ReachedTickLimit
-                | EvalError::ForbiddenInSandbox(_) => {
-                    tests_failed += 1;
-                }
-            },
+            }
         }
 
         env.stack.pop_to_toplevel();
@@ -800,7 +794,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
         new_syms,
         diagnostics,
         tests_passed: 0,
-        tests_failed: 0,
+        tests_failed: vec![],
     }
 }
 

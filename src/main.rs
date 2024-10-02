@@ -395,7 +395,11 @@ fn run_sandboxed_tests_in_file(
     // the current session.
     eval_toplevel_defs(&items, &mut env);
 
-    env.tick_limit = Some(1_000);
+    // TODO: allow users to choose this value.
+    //
+    // Currently it's chosen by bumping it if writing a sample file
+    // that hits the limit.
+    env.tick_limit = Some(10_000);
     env.enforce_sandbox = true;
 
     let mut contained_items = vec![];

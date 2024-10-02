@@ -3018,7 +3018,8 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
             env.ticks += 1;
 
             let expr_position = outer_expr.pos.clone();
-            let expr_value_is_used = outer_expr.value_is_used;
+            let expr_value_is_used = outer_expr.value_is_used
+                || session.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
             let expr_id = outer_expr.id;
 
             if session.interrupted.load(Ordering::SeqCst) {

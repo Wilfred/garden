@@ -161,16 +161,22 @@ repeated parentheses/brackets on the same line."
 
     (indent-line-to (* garden-indent-offset paren-depth))))
 
-(defvar garden--last-test-result nil)
+(defvar garden--last-test-result nil
+  "A plist recording the last test result for each file.")
 
 (defun garden-test-sandboxed ()
   (interactive)
-  (garden--async-command
-   "sandboxed-test"
-   (lambda (result)
-     (setq result (s-trim result))
-     (setq garden--last-test-result result)
-     (message "%s" result))))
+  (let ((buf (current-buffer)))
+    (garden--async-command
+     "sandboxed-test"
+     (lambda (result)
+       (setq result (s-trim result))
+       (setq
+        garden--last-test-result
+        (plist-put garden--last-test-result
+                   buf result))
+
+       (message "%s" result)))))
 
 (defun garden--propertize-read-only (s)
   (propertize
@@ -630,10 +636,11 @@ If called with a prefix, stop the previous session."
 
   (setq mode-name
         '(:eval
-          (cond
-           (garden--last-test-result (format "Garden[%s]" garden--last-test-result) )
-           ((garden--session-active-p "Garden[active"))
-           (t "Garden"))))
+          (let ((test-result (plist-get garden--last-test-result (current-buffer))))
+            (cond
+             (test-result (format "Garden[%s]" test-result) )
+             ((garden--session-active-p) "Garden[active]")
+             (t "Garden")))))
   (set (make-local-variable 'indent-line-function) #'garden-indent-line)
 
   (setq-local comment-start "// ")

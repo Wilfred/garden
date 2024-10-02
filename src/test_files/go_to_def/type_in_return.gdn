@@ -4,5 +4,5 @@ fun foo(): Unit {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":527,"end_offset":531,"line_number":23,"end_line_number":23,"path":"prelude.gdn"}
+// {"start_offset":461,"end_offset":465,"line_number":23,"end_line_number":23,"path":"prelude.gdn"}
 

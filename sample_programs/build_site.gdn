@@ -24,11 +24,11 @@ fun render_markdown(src: String): String {
 }
 
 test render_markdown_header {
-    assert(render_markdown("# foo") == "<h1>foo</h1>", "Rendering a basic header")
+    assert(render_markdown("# foo") == "<h1>foo</h1>")
 }
 
 test render_markdown_paragraph {
-    assert(render_markdown("foo bar") == "<p>foo bar</p>", "Rendering a basic paragraph")
+    assert(render_markdown("foo bar") == "<p>foo bar</p>")
 }
 
 {

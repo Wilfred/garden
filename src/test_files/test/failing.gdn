@@ -1,5 +1,5 @@
 test foo {
-    assert(1 == 2, "Should fail")
+    assert(1 == 2)
 }
 
 // args: test

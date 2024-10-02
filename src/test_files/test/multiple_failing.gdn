@@ -1,9 +1,9 @@
 test foo {
-    assert(1 == 2, "Should fail in foo")
+    assert(1 == 2)
 }
 
 test bar {
-    assert(1 == 2, "Should fail in bar")
+    assert(1 == 2)
 }
 
 // args: test

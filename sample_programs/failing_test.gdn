@@ -4,9 +4,9 @@ fun add_one(i: Int): Int {
 }
 
 test passing_example {
-    assert(add_one(1) == 2, "Expected 2")
+    assert(add_one(1) == 2)
 }
 
 test failing_example {
-    assert(add_one(1) == 99, "This should fail")
+    assert(add_one(1) == 99)
 }

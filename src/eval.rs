@@ -1594,7 +1594,7 @@ fn eval_builtin_call(
                 &SymbolName("assert".to_owned()),
                 receiver_value,
                 receiver_pos,
-                2,
+                1,
                 arg_positions,
                 arg_values,
             )?;
@@ -1604,23 +1604,6 @@ fn eval_builtin_call(
                 saved_values.push(value.clone());
             }
             saved_values.push(receiver_value.clone());
-
-            let msg = match &arg_values[1] {
-                Value::String(msg) => msg,
-                v => {
-                    let message = format_type_error(
-                        &TypeName {
-                            name: "String".into(),
-                        },
-                        v,
-                        env,
-                    );
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[1].clone(), message),
-                    ));
-                }
-            };
 
             match arg_values[0].as_rust_bool() {
                 Some(b) => {

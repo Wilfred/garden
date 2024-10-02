@@ -25,14 +25,12 @@ fun error(message: String): NoValue {
 // Stop the program if `condition` is `False`.
 //
 // ```
-// assert((1 + 1) == 2, "Arithmetic is broken!")
+// assert((1 + 1) == 2)
 // ```
 //
 // This is intended for writing tests. See `error` for reporting other
 // issues.
-fun assert(condition: Bool, message: String): Unit {
-    // TODO: this is a good case for optional arguments: we don't
-    // always want to pass a message.
+fun assert(condition: Bool): Unit {
     __BUILTIN_IMPLEMENTATION
 }
 

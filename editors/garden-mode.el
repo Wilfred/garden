@@ -89,7 +89,7 @@ evaluate, and display the result."
 (defun garden--flash-region (start end)
   "Temporarily highlight from START to END."
   (let* ((overlay (make-overlay start end)))
-    (overlay-put overlay 'face 'bold-highlight)
+    (overlay-put overlay 'face 'warning)
     (run-with-timer 1.0 nil 'delete-overlay overlay)))
 
 (defgroup garden nil

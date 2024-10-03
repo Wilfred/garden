@@ -174,9 +174,20 @@ repeated parentheses/brackets on the same line."
        (setq
         garden--last-test-result
         (plist-put garden--last-test-result
-                   buf result))
+                   buf result))))))
 
-       (message "%s" result)))))
+(define-minor-mode garden-speculative-mode
+  "Speculatively run tests when point is at the beginning of a definition."
+  :lighter " GSpec"
+  (if garden-speculative-mode
+      (add-hook 'post-command-hook #'garden-speculative--run nil t)
+    (remove-hook 'post-command-hook #'garden-speculative--run t)))
+
+(defun garden-speculative--run ()
+  (let ((sym (thing-at-point 'symbol t)))
+    (when (and sym
+               (or (string= sym "fun") (string= sym "test")))
+      (garden-test-sandboxed))))
 
 (defun garden--propertize-read-only (s)
   (propertize

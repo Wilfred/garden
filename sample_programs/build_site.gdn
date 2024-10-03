@@ -6,8 +6,8 @@ fun render_markdown_header(src: String): String {
         src = src.strip_prefix("#")
     }
 
-    let open_tag = "".join(["<", "h", string_repr(h_count), ">"])
-    let close_tag = "".join(["<", "h", string_repr(h_count), ">"])
+    let open_tag = "".join(["<h", string_repr(h_count), ">"])
+    let close_tag = "".join(["</h", string_repr(h_count), ">"])
 
     "".join([open_tag, src.strip_prefix(" "), close_tag])
 }

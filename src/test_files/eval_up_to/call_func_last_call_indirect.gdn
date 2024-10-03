@@ -1,0 +1,17 @@
+fun bar(x: Int) {
+    x
+//  ^
+}
+
+fun foo(i: Int) {
+    bar(i + 1)
+}
+
+fun main(_) {
+    foo(10)
+    foo(20)
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/call_func_last_call_indirect.gdn:2: 21
+

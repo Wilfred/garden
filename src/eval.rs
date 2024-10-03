@@ -2216,7 +2216,17 @@ fn eval_call(
                 arg_values,
             )?;
 
-            if !env.prev_call_args.contains_key(&name_sym.name) {
+            let mut is_self_call = false;
+            if let Some(enclosing_fi) = &stack_frame.enclosing_fun {
+                if enclosing_fi == fi {
+                    is_self_call = true;
+                }
+            }
+
+            // Always update prev_call_args, unless we're in a
+            // self-recursive call, as the initial arguments are
+            // generally more interesting.
+            if !is_self_call {
                 env.prev_call_args
                     .insert(name_sym.name.clone(), arg_values.to_vec());
             }

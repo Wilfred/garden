@@ -1,5 +1,15 @@
 fun render_markdown_header(src: String): String {
-    "".join(["<h1>", src.strip_prefix("# "), "</h1>"])
+    let h_count = 0
+
+    while src.starts_with("#") {
+        h_count = h_count + 1
+        src = src.strip_prefix("#")
+    }
+
+    let open_tag = "".join(["<", "h", string_repr(h_count), ">"])
+    let close_tag = "".join(["<", "h", string_repr(h_count), ">"])
+
+    "".join([open_tag, src.strip_prefix(" "), close_tag])
 }
 
 fun render_markdown_paragraph(src: String): String {
@@ -11,7 +21,7 @@ fun render_markdown_paragraph(src: String): String {
 fun render_markdown(src: String): String {
     let lines = src.lines()
     let parts: List<String> = lines.map(fun(line: String) {
-        if line.starts_with("# ") {
+        if line.starts_with("#") {
             render_markdown_header(line)
         } else if line != "" {
             render_markdown_paragraph(line)
@@ -23,8 +33,12 @@ fun render_markdown(src: String): String {
     "\n".join(parts)
 }
 
-test render_markdown_header {
+test render_h1 {
     assert(render_markdown("# foo") == "<h1>foo</h1>")
+}
+
+test render_h2 {
+    assert(render_markdown("## foo") == "<h2>foo</h2>")
 }
 
 test render_markdown_paragraph {

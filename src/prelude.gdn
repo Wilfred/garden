@@ -325,6 +325,7 @@ test strip_suffix {
 // ```
 // "foo".strip_prefix("f") // "oo"
 // "bar".strip_prefix("f") // "bar"
+// "ffoo".strip_prefix("f") // "foo"
 // ```
 fun (self: String) strip_prefix(prefix: String): String {
     if self.starts_with(prefix) {

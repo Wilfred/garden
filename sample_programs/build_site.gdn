@@ -13,8 +13,6 @@ fun render_markdown_header(src: String): String {
 }
 
 fun render_markdown_paragraph(src: String): String {
-    // TODO: when cursor is inside a definition, show whether the
-    // tests passed/failed/skipped due to IO.
     "".join(["<p>", src, "</p>"])
 }
 

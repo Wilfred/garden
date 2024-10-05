@@ -7,6 +7,8 @@
 Tests now require a name, so `test {}` is no longer legal. Use `test
 some_name {}` instead.
 
+Added `+=` and `-=` operators.
+
 ## Standard Library
 
 Added `assert()` and removed `should_equal()`.

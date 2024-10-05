@@ -2,12 +2,9 @@ fun main(_: List<String>): Unit {
     let i = 1
     i += 10
     dbg(i)
+    return
 }
 
 // args: run
-// expected exit status: 101
-// expected stderr:
-// thread 'main' panicked at src/eval.rs:3198:21:
-// not yet implemented
-// note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+// expected stdout: 11
 

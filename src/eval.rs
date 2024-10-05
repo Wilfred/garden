@@ -23,9 +23,9 @@ use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo, MethodKind,
-    ParenthesizedArguments, Pattern, SourceString, StructInfo, Symbol, SymbolWithHint, SyntaxId,
-    TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    AssignUpdateKind, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo,
+    MethodKind, ParenthesizedArguments, Pattern, SourceString, StructInfo, Symbol, SymbolWithHint,
+    SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -1187,6 +1187,66 @@ fn eval_for_in(
             id: env.id_gen.next(),
         },
     ));
+
+    Ok(())
+}
+
+fn eval_assign_update(
+    env: &Env,
+    stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
+    position: &Position,
+    variable: &Symbol,
+    op: AssignUpdateKind,
+) -> Result<(), (RestoreValues, EvalError)> {
+    let var_name = &variable.name;
+    if !stack_frame.bindings.has(var_name) {
+        return Err((
+            RestoreValues(vec![]),
+            EvalError::ResumableError(
+                variable.position.clone(),
+                ErrorMessage(format!(
+                    "{} is not currently bound. Try `let {} = something`.",
+                    var_name, var_name
+                )),
+            ),
+        ));
+    }
+
+    let expr_value = stack_frame.evalled_values.pop().expect(&format!(
+        "Popped an empty value stack for `{}`",
+        op.as_src()
+    ));
+
+    let mut num = match expr_value {
+        Value::Integer(i) => i,
+        _ => {
+            return Err((
+                RestoreValues(vec![expr_value.clone()]),
+                EvalError::ResumableError(
+                    position.clone(),
+                    format_type_error(&TypeName { name: "Int".into() }, &expr_value, env),
+                ),
+            ));
+        }
+    };
+
+    match op {
+        AssignUpdateKind::Add => {
+            num += 1;
+        }
+        AssignUpdateKind::Subtract => {
+            num -= 1;
+        }
+    }
+
+    stack_frame
+        .bindings
+        .set_existing(var_name, Value::Integer(num));
+
+    if expr_value_is_used {
+        stack_frame.evalled_values.push(Value::unit());
+    }
 
     Ok(())
 }
@@ -3194,8 +3254,32 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             .push((EvaluatedState::NotEvaluated, *expr.clone()));
                     }
                 }
-                Expression_::AssignUpdate(_variable, _, _expr) => {
-                    todo!()
+                Expression_::AssignUpdate(variable, op, expr) => {
+                    if done_children.done_children() {
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_assign_update(
+                            env,
+                            &mut stack_frame,
+                            expr_value_is_used,
+                            &expr_position,
+                            variable,
+                            *op,
+                        ) {
+                            restore_stack_frame(
+                                env,
+                                stack_frame,
+                                (done_children, outer_expr.clone()),
+                                &restore_values,
+                            );
+                            return Err(eval_err);
+                        }
+                    } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                        stack_frame
+                            .exprs_to_eval
+                            .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                    }
                 }
                 Expression_::Let(variable, hint, expr) => {
                     if done_children.done_children() {

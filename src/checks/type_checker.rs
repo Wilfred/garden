@@ -512,12 +512,31 @@ impl<'a> TypeCheckVisitor<'a> {
                 Type::unit()
             }
             Expression_::AssignUpdate(sym, _, expr) => {
-                let _expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
+                let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 
                 // TODO: also enforce the type of an assignment at runtime.
-                if let Some((_sym_ty, _)) = self.bindings.get(&sym.name) {
-                    // TODO: require that the LHS is integer.
-                    // TODO: require the the RHS is integer.
+                if let Some((sym_ty, _)) = self.bindings.get(&sym.name) {
+                    if !is_subtype(sym_ty, &Type::int()) {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "`+=` can only be used with `Int` variables, but got `{}`.",
+                                expr_ty
+                            ),
+                            position: sym.position.clone(),
+                        });
+                    }
+
+                    if !is_subtype(&expr_ty, &Type::int()) {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected an `Int` expression for this `+=`, but got `{}`.",
+                                expr_ty
+                            ),
+                            position: expr.pos.clone(),
+                        });
+                    }
                 }
 
                 Type::unit()

@@ -198,6 +198,11 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.visit_expr(expr);
     }
 
+    fn visit_expr_assign_update(&mut self, symbol: &Symbol, expr: &Expression) {
+        self.check_symbol(symbol);
+        self.visit_expr(expr);
+    }
+
     fn visit_expr_for_in(&mut self, symbol: &Symbol, expr: &Expression, body: &Block) {
         self.visit_expr(expr);
 

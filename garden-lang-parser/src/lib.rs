@@ -852,6 +852,9 @@ fn parse_expression(
         if token.text == "=" {
             return parse_assign(src, tokens, id_gen, diagnostics);
         }
+        if token.text == "+=" || token.text == "-=" {
+            return parse_assign_update(src, tokens, id_gen, diagnostics);
+        }
     }
 
     if let Some(token) = tokens.peek() {
@@ -1827,6 +1830,35 @@ fn parse_assign(
     Expression::new(
         Position::merge(&variable.position, &expr.pos),
         Expression_::Assign(variable, Box::new(expr)),
+        id_gen.next(),
+    )
+}
+
+fn parse_assign_update(
+    src: &str,
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let variable = parse_symbol(tokens, id_gen, diagnostics);
+
+    let op_token = require_a_token(tokens, diagnostics, "`+=` or `-=`");
+    if op_token.text != "+=" && op_token.text != "-=" {
+        diagnostics.push(ParseError::Invalid {
+            position: op_token.position.clone(),
+            message: ErrorMessage(format!(
+                "Invalid syntax: Expected `+=` or `-=`, but got `{}`",
+                op_token.text
+            )),
+            additional: vec![],
+        });
+    }
+
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+
+    Expression::new(
+        Position::merge(&variable.position, &expr.pos),
+        Expression_::AssignUpdate(variable, (), Box::new(expr)),
         id_gen.next(),
     )
 }

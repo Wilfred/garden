@@ -1,0 +1,24 @@
+fun foo() {
+    let x = 0
+    x += 1 // OK
+
+    x += "" // bad
+
+    let y = "abc"
+    y -= 2 // bad
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an `Int` expression for this `+=`, but got `String`.
+// 
+// --> src/test_files/check/assign_add.gdn:5
+//     x += "" // bad
+//          ^^
+// Error: `-=` can only be used with `Int` variables, but got `Int`.
+// 
+// --> src/test_files/check/assign_add.gdn:8
+//     y -= 2 // bad
+//     ^
+

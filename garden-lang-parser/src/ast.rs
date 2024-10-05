@@ -251,6 +251,11 @@ pub enum Expression_ {
     /// ```
     Assign(Symbol, Box<Expression>),
     /// ```garden
+    /// x += y
+    /// x -= y
+    /// ```
+    AssignUpdate(Symbol, (), Box<Expression>),
+    /// ```garden
     /// let x = y
     /// let x: T = y
     /// ```

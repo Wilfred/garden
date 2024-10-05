@@ -3194,6 +3194,9 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             .push((EvaluatedState::NotEvaluated, *expr.clone()));
                     }
                 }
+                Expression_::AssignUpdate(_variable, _, _expr) => {
+                    todo!()
+                }
                 Expression_::Let(variable, hint, expr) => {
                     if done_children.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) =

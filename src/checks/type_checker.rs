@@ -511,6 +511,17 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::unit()
             }
+            Expression_::AssignUpdate(sym, _, expr) => {
+                let _expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
+
+                // TODO: also enforce the type of an assignment at runtime.
+                if let Some((_sym_ty, _)) = self.bindings.get(&sym.name) {
+                    // TODO: require that the LHS is integer.
+                    // TODO: require the the RHS is integer.
+                }
+
+                Type::unit()
+            }
             Expression_::Let(sym, hint, expr) => {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 

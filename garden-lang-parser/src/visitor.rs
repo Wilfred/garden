@@ -131,6 +131,9 @@ pub trait Visitor {
             Expression_::Assign(sym, expr) => {
                 self.visit_expr_assign(sym, expr);
             }
+            Expression_::AssignUpdate(sym, _, expr) => {
+                self.visit_expr_assign_update(sym, expr);
+            }
             Expression_::Let(sym, hint, expr) => {
                 self.visit_expr_let(sym, hint.as_ref(), expr);
             }
@@ -249,6 +252,11 @@ pub trait Visitor {
     }
 
     fn visit_expr_assign(&mut self, symbol: &Symbol, expr: &Expression) {
+        self.visit_symbol(symbol);
+        self.visit_expr(expr);
+    }
+
+    fn visit_expr_assign_update(&mut self, symbol: &Symbol, expr: &Expression) {
         self.visit_symbol(symbol);
         self.visit_expr(expr);
     }

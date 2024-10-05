@@ -383,7 +383,11 @@ fn run_sandboxed_tests_in_file(
     interrupted: Arc<AtomicBool>,
 ) {
     let mut env = Env::default();
-    let items = parse_toplevel_items_or_die(path, src, &mut env);
+    let (items, errors) = parse_toplevel_items(path, src, &mut env.id_gen);
+    if !errors.is_empty() {
+        println!("Parse error");
+        return;
+    }
 
     let mut session = Session {
         interrupted,

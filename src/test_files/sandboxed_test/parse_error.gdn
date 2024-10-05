@@ -1,0 +1,13 @@
+fun
+
+fun foo() {
+    // Cursor isn't inside a test, so just run all the tests in this
+    // file.
+    print("")
+    // ^
+
+}
+
+// args: sandboxed-test
+// expected stdout: Parse error
+

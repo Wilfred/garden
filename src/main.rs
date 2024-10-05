@@ -18,6 +18,8 @@
 #![allow(clippy::collapsible_else_if)]
 // I'm not convinced it's always clearer to use match with cmp.
 #![allow(clippy::comparison_chain)]
+// Garden has much bigger perf issues, let's not worry about this.
+#![allow(clippy::expect_fun_call)]
 
 mod caret_finder;
 mod checks;

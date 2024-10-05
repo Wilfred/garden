@@ -1843,22 +1843,28 @@ fn parse_assign_update(
     let variable = parse_symbol(tokens, id_gen, diagnostics);
 
     let op_token = require_a_token(tokens, diagnostics, "`+=` or `-=`");
-    if op_token.text != "+=" && op_token.text != "-=" {
-        diagnostics.push(ParseError::Invalid {
-            position: op_token.position.clone(),
-            message: ErrorMessage(format!(
-                "Invalid syntax: Expected `+=` or `-=`, but got `{}`",
-                op_token.text
-            )),
-            additional: vec![],
-        });
-    }
+
+    let op = match op_token.text {
+        "+=" => AssignUpdateKind::Add,
+        "-=" => AssignUpdateKind::Subtract,
+        _ => {
+            diagnostics.push(ParseError::Invalid {
+                position: op_token.position.clone(),
+                message: ErrorMessage(format!(
+                    "Invalid syntax: Expected `+=` or `-=`, but got `{}`",
+                    op_token.text
+                )),
+                additional: vec![],
+            });
+            AssignUpdateKind::Add
+        }
+    };
 
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&variable.position, &expr.pos),
-        Expression_::AssignUpdate(variable, (), Box::new(expr)),
+        Expression_::AssignUpdate(variable, op, Box::new(expr)),
         id_gen.next(),
     )
 }

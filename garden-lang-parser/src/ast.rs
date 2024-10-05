@@ -194,6 +194,21 @@ pub enum BinaryOperatorKind {
     Or,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AssignUpdateKind {
+    Add,
+    Subtract,
+}
+
+impl AssignUpdateKind {
+    pub fn as_src(&self) -> &'static str {
+        match self {
+            AssignUpdateKind::Add => "+=",
+            AssignUpdateKind::Subtract => "-=",
+        }
+    }
+}
+
 /// The left hand side of a case in a `match` expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pattern {
@@ -254,7 +269,7 @@ pub enum Expression_ {
     /// x += y
     /// x -= y
     /// ```
-    AssignUpdate(Symbol, (), Box<Expression>),
+    AssignUpdate(Symbol, AssignUpdateKind, Box<Expression>),
     /// ```garden
     /// let x = y
     /// let x: T = y

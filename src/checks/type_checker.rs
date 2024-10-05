@@ -511,7 +511,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::unit()
             }
-            Expression_::AssignUpdate(sym, _, expr) => {
+            Expression_::AssignUpdate(sym, op, expr) => {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 
                 // TODO: also enforce the type of an assignment at runtime.
@@ -520,7 +520,8 @@ impl<'a> TypeCheckVisitor<'a> {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
-                                "`+=` can only be used with `Int` variables, but got `{}`.",
+                                "`{}` can only be used with `Int` variables, but got `{}`.",
+                                op.as_src(),
                                 expr_ty
                             ),
                             position: sym.position.clone(),
@@ -531,7 +532,8 @@ impl<'a> TypeCheckVisitor<'a> {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!(
-                                "Expected an `Int` expression for this `+=`, but got `{}`.",
+                                "Expected an `Int` expression for this `{}`, but got `{}`.",
+                                op.as_src(),
                                 expr_ty
                             ),
                             position: expr.pos.clone(),

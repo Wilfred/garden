@@ -1605,11 +1605,20 @@ fn parse_function_or_method(
     // fun<T> (self: String) i_am_a_method() {}
     // ```
     match tokens.peek() {
-        Some(token) => Some(if token.text == "(" {
-            parse_method(src, tokens, id_gen, diagnostics, fun_token, type_params)
-        } else {
-            parse_function(src, tokens, id_gen, diagnostics, fun_token, type_params)
-        }),
+        Some(token) => {
+            if token.text == "(" {
+                Some(parse_method(
+                    src,
+                    tokens,
+                    id_gen,
+                    diagnostics,
+                    fun_token,
+                    type_params,
+                ))
+            } else {
+                parse_function(src, tokens, id_gen, diagnostics, fun_token, type_params)
+            }
+        }
         None => {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(),
@@ -1702,10 +1711,16 @@ fn parse_function(
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
     type_params: Vec<TypeSymbol>,
-) -> Definition {
+) -> Option<Definition> {
     let doc_comment = parse_doc_comment(&fun_token);
 
     let name_sym = parse_symbol(tokens, id_gen, diagnostics);
+    if is_keyword_placeholder(&name_sym) {
+        // The next name is a keyword, it's probably the beginning of
+        // a whole new definition. Give up on this definition having
+        // only consumed our own keyword.
+        return None;
+    }
 
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
@@ -1726,7 +1741,7 @@ fn parse_function(
 
     let position = Position::merge(&fun_token.position, &close_brace_pos);
 
-    Definition(
+    Some(Definition(
         src_string.clone(),
         position,
         Definition_::Fun(
@@ -1741,7 +1756,7 @@ fn parse_function(
                 return_hint,
             },
         ),
-    )
+    ))
 }
 
 const RESERVED_WORDS: &[&str] = &[

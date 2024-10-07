@@ -10,7 +10,7 @@ f{
 //     TypeSymbol"f",
 //     [
 //         (
-//             Symbol"__placeholder",
+//             Symbol"__keyword_placeholder",
 //             Expression {
 //                 pos: Position { ... },
 //                 expr_: Let(
@@ -30,7 +30,7 @@ f{
 //             },
 //         ),
 //         (
-//             Symbol"__placeholder",
+//             Symbol"__keyword_placeholder",
 //             Expression {
 //                 pos: Position { ... },
 //                 expr_: Let(

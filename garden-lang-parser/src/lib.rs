@@ -1757,6 +1757,18 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) ->
     }
 }
 
+fn keyword_placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
+    Symbol {
+        position,
+        name: SymbolName("__keyword_placeholder".to_string()),
+        id: id_gen.next(),
+    }
+}
+
+fn is_keyword_placeholder(symbol: &Symbol) -> bool {
+    symbol.name.0 == "__keyword_placeholder"
+}
+
 fn parse_symbol(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -1784,7 +1796,7 @@ fn parse_symbol(
                 additional: vec![],
             });
             tokens.unpop();
-            return placeholder_symbol(variable_token.position, id_gen);
+            return keyword_placeholder_symbol(variable_token.position, id_gen);
         }
     }
 

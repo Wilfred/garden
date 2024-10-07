@@ -127,7 +127,7 @@ impl SymbolName {
 
     pub fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing this symbol in userland code.
-        self.0 == "__placeholder"
+        self.0 == "__placeholder" || self.0 == "__keyword_placeholder"
     }
 }
 
@@ -343,7 +343,9 @@ pub enum Expression_ {
 impl Expression_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
         match self {
-            Expression_::Variable(sym) => sym.name.0 == "__placeholder",
+            Expression_::Variable(sym) => {
+                sym.name.0 == "__placeholder" || sym.name.0 == "__keyword_placeholder"
+            }
             Expression_::Invalid => true,
             _ => false,
         }

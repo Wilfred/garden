@@ -324,7 +324,7 @@ fn format_signature(
     }
 
     if let Some(recv_hint) = recv_hint {
-        res.push_str(&format!(" (self: {})", recv_hint.as_src()));
+        res.push_str(&format!(" (this: {})", recv_hint.as_src()));
     }
 
     res.push_str(&format!(" {}", name_sym.name));

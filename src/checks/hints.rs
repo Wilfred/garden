@@ -35,7 +35,7 @@ impl Visitor for HintVisitor<'_> {
         let old_type_params = self.bound_type_params.clone();
 
         // Bind type parameters before visiting the hint of self, so
-        // we handle e.g. `self: List<T>` correctly.
+        // we handle e.g. `this: List<T>` correctly.
         if let Some(fun_info) = method_info.fun_info() {
             for type_param in &fun_info.type_params {
                 self.bound_type_params.insert(type_param.name.clone());

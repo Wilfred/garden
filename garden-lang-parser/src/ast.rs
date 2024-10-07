@@ -548,7 +548,7 @@ pub enum Definition_ {
     /// ```
     Fun(Symbol, FunInfo),
     /// ```garden
-    /// fun (self: MyType) foo() {}
+    /// fun (this: MyType) foo() {}
     /// ```
     Method(MethodInfo),
     Test(TestInfo),

@@ -159,7 +159,7 @@ impl std::fmt::Display for EnclosingSymbol {
         match self {
             EnclosingSymbol::Fun(fun_sym) => write!(f, "fun {}()", fun_sym.name),
             EnclosingSymbol::Method(type_name, meth_sym) => {
-                write!(f, "fun (self: {}) {}()", type_name.name, meth_sym.name)
+                write!(f, "fun (this: {}) {}()", type_name.name, meth_sym.name)
             }
             EnclosingSymbol::Test(test_sym) => write!(f, "test {}", test_sym.name),
             EnclosingSymbol::Closure => write!(f, "closure"),
@@ -715,7 +715,7 @@ pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEv
                         // warnings otherwise.
                         //
                         // ```
-                        // fun (self: NoSuchType) foo(x: NoSuchType): NoSuchType {}
+                        // fun (this: NoSuchType) foo(x: NoSuchType): NoSuchType {}
                         // ```
                         env.add_method(meth_info);
                     }
@@ -4476,7 +4476,7 @@ mod tests {
     fn test_eval_method_call() {
         let mut env = Env::default();
 
-        let defs = parse_defs_from_str("fun (self: String) f() { True }");
+        let defs = parse_defs_from_str("fun (this: String) f() { True }");
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f()");
@@ -4488,7 +4488,7 @@ mod tests {
     fn test_eval_method_call_bad_airty() {
         let mut env = Env::default();
 
-        let defs = parse_defs_from_str("fun (self: String) f() { True }");
+        let defs = parse_defs_from_str("fun (this: String) f() { True }");
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f(123)");

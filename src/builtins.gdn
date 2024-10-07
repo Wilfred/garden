@@ -127,7 +127,7 @@ fun working_directory(): String {
 // ```
 // [10].append(11) // [10, 11]
 // ```
-fun<T> (self: List<T>) append(value: T): List<T> {
+fun<T> (this: List<T>) append(value: T): List<T> {
     __BUILTIN_IMPLEMENTATION
 }
 
@@ -137,7 +137,7 @@ fun<T> (self: List<T>) append(value: T): List<T> {
 // ```
 // [4, 5, 6].get(1) // 5
 // ```
-fun<T> (self: List<T>) get(index: Int): T {
+fun<T> (this: List<T>) get(index: Int): T {
     __BUILTIN_IMPLEMENTATION
 }
 
@@ -146,7 +146,7 @@ fun<T> (self: List<T>) get(index: Int): T {
 // ```
 // [10, 11, 12].len() // 3
 // ```
-fun<T> (self: List<T>) len(): Int {
+fun<T> (this: List<T>) len(): Int {
     __BUILTIN_IMPLEMENTATION
 }
 
@@ -155,7 +155,7 @@ fun<T> (self: List<T>) len(): Int {
 // ```
 // "foo".concat("bar") // "foobar"
 // ```
-fun (self: String) concat(value: String): String {
+fun (this: String) concat(value: String): String {
     __BUILTIN_IMPLEMENTATION
 }
 
@@ -164,7 +164,7 @@ fun (self: String) concat(value: String): String {
 // ```
 // "abc".len() // 3
 // ```
-fun (self: String) len(): Int {
+fun (this: String) len(): Int {
     __BUILTIN_IMPLEMENTATION
 }
 
@@ -173,7 +173,7 @@ fun (self: String) len(): Int {
 // ```
 // "abcdef".substring(1, 3) // "bc"
 // ```
-fun (self: String) substring(from_index: Int, to_index: Int): String {
+fun (this: String) substring(from_index: Int, to_index: Int): String {
     __BUILTIN_IMPLEMENTATION
 }
 
@@ -182,6 +182,6 @@ fun (self: String) substring(from_index: Int, to_index: Int): String {
 // ```
 // "ab".append("cd") // "abcd"
 // ```
-fun (self: String) append(suffix: String): String {
+fun (this: String) append(suffix: String): String {
     __BUILTIN_IMPLEMENTATION
 }

@@ -493,7 +493,7 @@ enclosing point and print the result."
        'symbols)
      . font-lock-builtin-face)
 
-    (,(regexp-opt '("self") 'symbols)
+    (,(regexp-opt '("this") 'symbols)
      . font-lock-variable-name-face)
 
     ;; Assume names in CamelCase are types. Require a type name to

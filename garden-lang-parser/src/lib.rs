@@ -1602,7 +1602,7 @@ fn parse_function_or_method(
     //
     // ```
     // fun<T> i_am_a_fun() {}
-    // fun<T> (self: String) i_am_a_method() {}
+    // fun<T> (this: String) i_am_a_method() {}
     // ```
     match tokens.peek() {
         Some(token) => {

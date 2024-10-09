@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
+use garden_lang_parser::parse_toplevel_items;
 
 use crate::{checks::type_checker::check_types, env::Env, eval::eval_toplevel_defs};
 
@@ -13,9 +13,9 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
 
     let mut containing_item = None;
     for item in items {
-        match item {
-            ToplevelItem::Def(definition) => todo!(),
-            ToplevelItem::Expr(toplevel_expression) => todo!(),
+        if item.position().contains_offset(offset) {
+            containing_item = Some(item);
+            break;
         }
     }
 

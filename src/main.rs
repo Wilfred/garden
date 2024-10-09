@@ -146,12 +146,10 @@ fn main() {
     match args.command {
         Commands::Repl => cli_session::repl(interrupted),
         Commands::Json => json_session::json_session(interrupted),
-        Commands::Run { path, arguments } => match std::fs::read(&path) {
-            Ok(src_bytes) => run_file(src_bytes, &path, &arguments, interrupted),
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
+        Commands::Run { path, arguments } => {
+            let src = read_utf8_or_die(&path);
+            run_file(&src, &path, &arguments, interrupted)
+        }
         Commands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
         }
@@ -159,123 +157,84 @@ fn main() {
             path,
             json,
             override_path,
-        } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
-                let src_path = override_path.unwrap_or(path);
-                syntax_check::check(&src_path, &src, json);
-            }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::Test { path } => match std::fs::read(&path) {
-            Ok(src_bytes) => run_tests_in_file(src_bytes, &path, interrupted),
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::SandboxedTest { path, offset } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
-                let offset = offset.unwrap_or_else(|| {
-                    caret_finder::find_caret_offset(&src)
-                        .expect("Could not find comment containing `^` in source.")
-                });
-                run_sandboxed_tests_in_file(&src, &path, offset, interrupted)
-            }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::TestEvalUpTo { path } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
-                let offset = caret_finder::find_caret_offset(&src)
-                    .expect("Could not find comment containing `^` in source.");
-                test_eval_up_to(&src, &path, offset, interrupted);
-            }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::DumpAst { path } => match std::fs::read(&path) {
-            Ok(src_bytes) => dump_ast(src_bytes, &path),
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::ShowType { path, offset } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
-                let offset = offset.unwrap_or_else(|| {
-                    caret_finder::find_caret_offset(&src)
-                        .expect("Could not find comment containing `^` in source.")
-                });
-                show_type(&src, &path, offset);
-            }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
+        } => {
+            let src = read_utf8_or_die(&path);
+            let src_path = override_path.unwrap_or(path);
+            syntax_check::check(&src_path, &src, json)
+        }
+        Commands::Test { path } => {
+            let src = read_utf8_or_die(&path);
+            run_tests_in_file(&src, &path, interrupted)
+        }
+        Commands::SandboxedTest { path, offset } => {
+            let src = read_utf8_or_die(&path);
+            let offset = offset.unwrap_or_else(|| {
+                caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment containing `^` in source.")
+            });
+            run_sandboxed_tests_in_file(&src, &path, offset, interrupted)
+        }
+        Commands::TestEvalUpTo { path } => {
+            let src = read_utf8_or_die(&path);
+            let offset = caret_finder::find_caret_offset(&src)
+                .expect("Could not find comment containing `^` in source.");
+            test_eval_up_to(&src, &path, offset, interrupted);
+        }
+        Commands::DumpAst { path } => {
+            let src = read_utf8_or_die(&path);
+            dump_ast(&src, &path)
+        }
+        Commands::ShowType { path, offset } => {
+            let src = read_utf8_or_die(&path);
+            let offset = offset.unwrap_or_else(|| {
+                caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment containing `^` in source.")
+            });
+            show_type(&src, &path, offset)
+        }
         Commands::DefinitionPosition {
             path,
             offset,
             override_path,
-        } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
-                let offset = offset.unwrap_or_else(|| {
-                    caret_finder::find_caret_offset(&src)
-                        .expect("Could not find comment containing `^` in source.")
-                });
+        } => {
+            let src = read_utf8_or_die(&path);
+            let offset = offset.unwrap_or_else(|| {
+                caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment containing `^` in source.")
+            });
 
-                let src_path = override_path.unwrap_or(path);
-                print_pos(&src, &src_path, offset);
-            }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::Complete { offset, path } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
-                let offset = offset.unwrap_or_else(|| {
-                    caret_finder::find_caret_offset(&src)
-                        .expect("Could not find comment containing `^` in source.")
-                });
-                completions::complete(&src, &path, offset);
-            }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
-        Commands::TestJson { path } => match std::fs::read(&path) {
-            Ok(src_bytes) => {
-                let src = from_utf8_or_die(src_bytes, &path);
+            let src_path = override_path.unwrap_or(path);
+            print_pos(&src, &src_path, offset)
+        }
+        Commands::Complete { offset, path } => {
+            let src = read_utf8_or_die(&path);
+            let offset = offset.unwrap_or_else(|| {
+                caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment containing `^` in source.")
+            });
+            completions::complete(&src, &path, offset);
+        }
+        Commands::TestJson { path } => {
+            let src = read_utf8_or_die(&path);
 
-                let mut env = Env::default();
-                let mut complete_src = String::new();
-                let mut session = Session {
-                    interrupted,
-                    has_attached_stdout: true,
-                    start_time: Instant::now(),
-                    trace_exprs: false,
-                    stop_at_expr_id: None,
-                };
+            let mut env = Env::default();
+            let mut complete_src = String::new();
+            let mut session = Session {
+                interrupted,
+                has_attached_stdout: true,
+                start_time: Instant::now(),
+                trace_exprs: false,
+                stop_at_expr_id: None,
+            };
 
-                let json_lines = src
-                    .lines()
-                    .filter(|line| !line.starts_with("//") && !line.is_empty());
-                for line in json_lines {
-                    let response = handle_request(line, &mut env, &mut session, &mut complete_src);
-                    println!("{}", serde_json::to_string_pretty(&response).unwrap());
-                }
+            let json_lines = src
+                .lines()
+                .filter(|line| !line.starts_with("//") && !line.is_empty());
+            for line in json_lines {
+                let response = handle_request(line, &mut env, &mut session, &mut complete_src);
+                println!("{}", serde_json::to_string_pretty(&response).unwrap());
             }
-            Err(e) => {
-                eprintln!("Error: Could not read file {}: {}", path.display(), e);
-            }
-        },
+        }
     }
 }
 
@@ -323,6 +282,16 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     }
 }
 
+fn read_utf8_or_die(path: &Path) -> String {
+    match std::fs::read(path) {
+        Ok(src_bytes) => from_utf8_or_die(src_bytes, path),
+        Err(e) => {
+            eprintln!("Error: Could not read file {}: {}", path.display(), e);
+            std::process::exit(1);
+        }
+    }
+}
+
 fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
     match String::from_utf8(src_bytes) {
         Ok(s) => s,
@@ -333,10 +302,9 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
     }
 }
 
-fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
-    let src = from_utf8_or_die(src_bytes, path);
+fn dump_ast(src: &str, path: &Path) {
     let mut id_gen = SyntaxIdGenerator::default();
-    let (items, errors) = parse_toplevel_items(path, &src, &mut id_gen);
+    let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     for error in errors.into_iter() {
         match error {
@@ -352,7 +320,7 @@ fn dump_ast(src_bytes: Vec<u8>, path: &Path) {
                         &position,
                         Level::Error,
                         &SourceString {
-                            src: src.clone(),
+                            src: src.to_owned(),
                             offset: 0
                         }
                     )
@@ -475,12 +443,11 @@ fn run_sandboxed_tests_in_file(
     }
 }
 
-fn run_tests_in_file(src_bytes: Vec<u8>, path: &Path, interrupted: Arc<AtomicBool>) {
+fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut succeeded = false;
 
-    let src = from_utf8_or_die(src_bytes, path);
     let mut env = Env::default();
-    let items = parse_toplevel_items_or_die(path, &src, &mut env);
+    let items = parse_toplevel_items_or_die(path, src, &mut env);
 
     let mut session = Session {
         interrupted,
@@ -571,11 +538,9 @@ fn parse_toplevel_items_or_die(path: &Path, src: &str, env: &mut Env) -> Vec<Top
     items
 }
 
-fn run_file(src_bytes: Vec<u8>, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
-    let src = from_utf8_or_die(src_bytes, path);
-
+fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
     let mut env = Env::default();
-    let items = parse_toplevel_items_or_die(path, &src, &mut env);
+    let items = parse_toplevel_items_or_die(path, src, &mut env);
 
     let mut session = Session {
         interrupted,

@@ -268,14 +268,19 @@ impl Default for Env {
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) =
             parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, &mut id_gen);
-        assert!(errors.is_empty(), "Prelude should be syntactically legal");
+        assert!(
+            errors.is_empty(),
+            "Prelude should be syntactically legal: {}",
+            errors.first().unwrap().position().as_ide_string()
+        );
 
         let builtins_src = include_str!("builtins.gdn");
         let (builtin_items, errors) =
             parse_toplevel_items(&PathBuf::from("builtins.gdn"), builtins_src, &mut id_gen);
         assert!(
             errors.is_empty(),
-            "Stubs for built-ins should be syntactically legal"
+            "Stubs for built-ins should be syntactically legal: {}",
+            errors.first().unwrap().position().as_ide_string()
         );
         let mut env = Self {
             file_scope,

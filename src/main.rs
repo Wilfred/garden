@@ -36,6 +36,7 @@ mod hover;
 mod json_session;
 mod pos_to_id;
 mod prompt;
+mod rename;
 mod syntax_check;
 mod types;
 mod values;
@@ -90,6 +91,13 @@ enum Commands {
     /// I/O.
     SandboxedTest {
         path: PathBuf,
+        offset: Option<usize>,
+    },
+    /// Rename the local variable at this offset to the new name
+    /// specified.
+    Rename {
+        path: PathBuf,
+        new_name: String,
         offset: Option<usize>,
     },
     /// Run the program specified, calling its main() function, then
@@ -234,6 +242,18 @@ fn main() {
                 let response = handle_request(line, &mut env, &mut session, &mut complete_src);
                 println!("{}", serde_json::to_string_pretty(&response).unwrap());
             }
+        }
+        Commands::Rename {
+            path,
+            new_name,
+            offset,
+        } => {
+            let src = read_utf8_or_die(&path);
+            let offset = offset.unwrap_or_else(|| {
+                caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment containing `^` in source.")
+            });
+            rename::rename(&src, offset, &new_name)
         }
     }
 }

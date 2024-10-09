@@ -1,0 +1,19 @@
+fun foo(): Unit {
+    let i = 1
+    let s = "foo"
+
+    // We expect an error here because it's parsed as `s.invalid`, and
+    // String values don't have fields.
+    s.
+    i = 2
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `String` is not a struct.
+// 
+// --> src/test_files/check/ambiguity_dot_access_or_assign.gdn:7
+//     s.
+//      ^
+

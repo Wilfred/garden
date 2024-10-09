@@ -52,10 +52,3 @@ fun foo(s: String) {
 //     },
 // )
 
-// expected stderr:
-// Error: Parse error: Invalid name: '}'
-// 
-// --> src/test_files/parser/unfinished_dot.gdn:3
-// }
-// ^
-

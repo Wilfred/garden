@@ -791,18 +791,37 @@ fn parse_simple_expression_with_trailing(
             }
             Some(token) if token.text == "." => {
                 tokens.pop();
-                let variable = parse_symbol(tokens, id_gen, diagnostics);
 
-                if peeked_symbol_is(tokens, "(") {
-                    // TODO: just treat a method call as a call of a dot access.
-                    let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
+                let next_token = tokens.peek();
 
-                    expr = Expression::new(
-                        Position::merge(&expr.pos, &arguments.close_paren),
-                        Expression_::MethodCall(Box::new(expr), variable, arguments),
-                        id_gen.next(),
-                    );
+                // Require the symbol name to touch the dot when we're
+                // parsing a dot access. This is an ambiguity problem
+                // when the user hasn't finished writing the dot
+                // access, but there is later code.
+                if Some(token.position.end_offset)
+                    == next_token.map(|tok| tok.position.start_offset)
+                {
+                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+
+                    if peeked_symbol_is(tokens, "(") {
+                        // TODO: just treat a method call as a call of a dot access.
+                        let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
+
+                        expr = Expression::new(
+                            Position::merge(&expr.pos, &arguments.close_paren),
+                            Expression_::MethodCall(Box::new(expr), variable, arguments),
+                            id_gen.next(),
+                        );
+                    } else {
+                        expr = Expression::new(
+                            Position::merge(&expr.pos, &variable.position),
+                            Expression_::DotAccess(Box::new(expr), variable),
+                            id_gen.next(),
+                        );
+                    }
                 } else {
+                    let variable = placeholder_symbol(token.position, id_gen);
+
                     expr = Expression::new(
                         Position::merge(&expr.pos, &variable.position),
                         Expression_::DotAccess(Box::new(expr), variable),

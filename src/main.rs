@@ -253,7 +253,7 @@ fn main() {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            rename::rename(&src, offset, &new_name)
+            rename::rename(&src, &path, offset, &new_name)
         }
     }
 }

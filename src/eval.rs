@@ -3666,7 +3666,7 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                         }
                     } else {
                         stack_frame.bindings.push_block();
-                        eval_block(&mut stack_frame, &outer_expr, block);
+                        eval_block(&mut stack_frame, expr_value_is_used, &outer_expr, block);
                     }
                 }
                 Expression_::DotAccess(recv, sym) => {
@@ -3808,7 +3808,12 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
         .expect("Should have a value from the last expression"))
 }
 
-fn eval_block(stack_frame: &mut StackFrame, outer_expr: &Expression, block: &Block) {
+fn eval_block(
+    stack_frame: &mut StackFrame,
+    expr_value_is_used: bool,
+    outer_expr: &Expression,
+    block: &Block,
+) {
     stack_frame
         .exprs_to_eval
         .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
@@ -3819,9 +3824,20 @@ fn eval_block(stack_frame: &mut StackFrame, outer_expr: &Expression, block: &Blo
     }
 
     for expr in block.exprs.iter().rev() {
+        let mut expr = expr.clone();
+
+        // Mark this expresison as unused. This ensures we recursively
+        // mark blocks as unused inside e.g. if expressions, unlike
+        // the parser.
+        //
+        // TODO: do we still need this in the parser?
+        if !expr_value_is_used {
+            expr.value_is_used = false;
+        }
+
         stack_frame
             .exprs_to_eval
-            .push((EvaluatedState::NotEvaluated, expr.clone()));
+            .push((EvaluatedState::NotEvaluated, expr));
     }
 }
 

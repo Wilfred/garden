@@ -12,8 +12,26 @@ fun render_markdown_header(src: String): String {
     "".join([open_tag, src.strip_prefix(" "), close_tag])
 }
 
+fun render_inline(src: String): String {
+    let parts = src.split("`")
+    let in_code = False
+    let rendered = ""
+
+    for part in parts {
+        if in_code {
+            rendered = "".join([rendered, "<code>", part, "</code>"])
+        } else {
+            rendered = "".join([rendered, part])
+        }
+
+        in_code = in_code.not()
+    }
+
+    rendered
+}
+
 fun render_markdown_paragraph(src: String): String {
-    "".join(["<p>", src, "</p>"])
+    "".join(["<p>", render_inline(src), "</p>"])
 }
 
 fun render_markdown(src: String): String {
@@ -41,6 +59,10 @@ test render_h2 {
 
 test render_markdown_paragraph {
     assert(render_markdown("foo bar") == "<p>foo bar</p>")
+}
+
+test render_backtick {
+    assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
 }
 
 {

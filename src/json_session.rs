@@ -403,12 +403,7 @@ pub(crate) fn toplevel_item_containing_offset(
     offset: usize,
 ) -> Option<&ToplevelItem> {
     for item in items {
-        let pos = match item {
-            ToplevelItem::Def(def) => &def.1,
-            ToplevelItem::Expr(expr) => &expr.0.pos,
-        };
-
-        if pos.contains_offset(offset) {
+        if item.position().contains_offset(offset) {
             return Some(item);
         }
     }

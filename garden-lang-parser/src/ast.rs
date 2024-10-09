@@ -564,3 +564,12 @@ pub enum ToplevelItem {
     Def(Definition),
     Expr(ToplevelExpression),
 }
+
+impl ToplevelItem {
+    pub fn position(&self) -> &Position {
+        match self {
+            ToplevelItem::Def(definition) => &definition.1,
+            ToplevelItem::Expr(toplevel_expression) => &toplevel_expression.0.pos,
+        }
+    }
+}

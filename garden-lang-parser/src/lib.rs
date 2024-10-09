@@ -40,6 +40,15 @@ pub enum ParseError {
     },
 }
 
+impl ParseError {
+    pub fn position(&self) -> &Position {
+        match self {
+            ParseError::Invalid { position, .. } => position,
+            ParseError::Incomplete { position, .. } => position,
+        }
+    }
+}
+
 fn peeked_symbol_is(tokens: &TokenStream, token: &str) -> bool {
     tokens.peek().map(|t| t.text == token).unwrap_or(false)
 }

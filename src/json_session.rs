@@ -20,7 +20,7 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName, ToplevelItem, TypeName};
+use garden_lang_parser::ast::{SourceString, SymbolName, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -396,19 +396,6 @@ fn handle_eval_up_to_request(
             warnings: vec![],
         },
     }
-}
-
-pub(crate) fn toplevel_item_containing_offset(
-    items: &[ToplevelItem],
-    offset: usize,
-) -> Option<&ToplevelItem> {
-    for item in items {
-        if item.position().contains_offset(offset) {
-            return Some(item);
-        }
-    }
-
-    None
 }
 
 pub(crate) fn handle_request(

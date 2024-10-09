@@ -18,7 +18,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
-use crate::json_session::{toplevel_item_containing_offset, Response, ResponseKind};
+use crate::json_session::{Response, ResponseKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
@@ -444,6 +444,16 @@ pub(crate) fn eval_up_to_param(
                 // TODO
             }
             _ => {}
+        }
+    }
+
+    None
+}
+
+fn toplevel_item_containing_offset(items: &[ToplevelItem], offset: usize) -> Option<&ToplevelItem> {
+    for item in items {
+        if item.position().contains_offset(offset) {
+            return Some(item);
         }
     }
 

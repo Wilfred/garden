@@ -1,15 +1,12 @@
 use std::{collections::HashMap, path::Path};
 
-use garden_lang_parser::{
-    ast::{Expression_, ToplevelItem},
-    parse_toplevel_items,
-};
+use garden_lang_parser::{ast::Expression_, parse_toplevel_items};
 use serde::Serialize;
 
 use crate::{
     checks::type_checker::check_types,
     env::Env,
-    eval::eval_defs,
+    eval::eval_toplevel_defs,
     garden_type::Type,
     pos_to_id::{find_expr_of_id, find_item_at},
     types::TypeDef,
@@ -19,14 +16,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let mut env = Env::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
 
-    let mut definitions = vec![];
-    for item in &items {
-        if let ToplevelItem::Def(def) = item {
-            definitions.push(def.clone());
-        }
-    }
-
-    eval_defs(&definitions, &mut env);
+    eval_toplevel_defs(&items, &mut env);
 
     let ids_at_pos = find_item_at(&items, offset);
 

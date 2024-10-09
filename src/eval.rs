@@ -685,7 +685,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     env.stack.0.push(stack_frame);
 }
 
-pub(crate) fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
+fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 

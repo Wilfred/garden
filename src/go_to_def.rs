@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use garden_lang_parser::{ast::ToplevelItem, parse_toplevel_items};
+use garden_lang_parser::parse_toplevel_items;
 
 use crate::{
-    checks::type_checker::check_types, env::Env, eval::eval_defs, pos_to_id::find_item_at,
+    checks::type_checker::check_types, env::Env, eval::eval_toplevel_defs, pos_to_id::find_item_at,
 };
 
 /// Print the position of the definition associated with the
@@ -12,14 +12,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     let mut env = Env::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
 
-    let mut definitions = vec![];
-    for item in &items {
-        if let ToplevelItem::Def(def) = item {
-            definitions.push(def.clone());
-        }
-    }
-
-    eval_defs(&definitions, &mut env);
+    eval_toplevel_defs(&items, &mut env);
     let (_, _, _, id_to_pos) = check_types(&items, &env);
 
     let ids_at_query_pos = find_item_at(&items, offset);

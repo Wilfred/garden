@@ -450,16 +450,6 @@ pub(crate) fn eval_up_to_param(
     None
 }
 
-fn toplevel_item_containing_offset(items: &[ToplevelItem], offset: usize) -> Option<&ToplevelItem> {
-    for item in items {
-        if item.position().contains_offset(offset) {
-            return Some(item);
-        }
-    }
-
-    None
-}
-
 /// Try to evaluate items up to the syntax ID specified.
 ///
 /// Returns None if we couldn't find anything to evaluate (not an error).
@@ -497,7 +487,9 @@ pub(crate) fn eval_up_to(
 
     let position = position?;
 
-    let item = toplevel_item_containing_offset(items, offset)?;
+    let item = items
+        .iter()
+        .find(|&item| item.position().contains_offset(offset))?;
 
     match item {
         ToplevelItem::Def(def) => match &def.2 {

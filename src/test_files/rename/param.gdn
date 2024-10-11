@@ -3,7 +3,7 @@ fun file_name(foo: Int) {
     let _ = foo
 }
 
-// args: rename new_foo
+// args: rename --new-name new_foo
 // expected stdout:
 // fun file_name(new_foo: Int) {
 //     //         ^

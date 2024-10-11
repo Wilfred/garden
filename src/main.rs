@@ -96,11 +96,12 @@ enum Commands {
     /// Rename the local variable at this offset to the new name
     /// specified.
     Rename {
-        new_name: String,
         path: PathBuf,
         offset: Option<usize>,
         #[clap(long)]
         override_path: Option<PathBuf>,
+        #[clap(long)]
+        new_name: String,
     },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.

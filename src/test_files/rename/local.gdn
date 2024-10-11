@@ -5,7 +5,7 @@ fun file_name() {
     foo = foo + 1
 }
 
-// args: rename new_foo
+// args: rename --new-name new_foo
 // expected stdout:
 // fun file_name() {
 //     let new_foo = 1

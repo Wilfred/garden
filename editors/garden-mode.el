@@ -742,6 +742,21 @@ the result."
    #'garden--go-to-position
    (list "--override-path" (buffer-file-name))))
 
+(defun garden-rename (new-name)
+  "Rename the variable at point."
+  (interactive "sNew name: ")
+  (let ((buf (current-buffer))
+        (start-pos (point)))
+    (garden--async-command
+     "rename"
+     (lambda (src)
+       (with-current-buffer buf
+         (delete-region (point-min) (point-max))
+         (insert src)
+         (goto-char start-pos)))
+     (list
+      "--new-name" new-name "--override-path" (buffer-file-name)))))
+
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-z") #'garden-toggle-session)

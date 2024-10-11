@@ -13,21 +13,21 @@ fun render_markdown_header(src: String): String {
 }
 
 fun render_inline(src: String): String {
-    let parts = src.split("`")
+    let src_parts = src.split("`")
     let in_code = False
-    let rendered = ""
 
-    for part in parts {
+    let parts: List<String> = []
+    for src_part in src_parts {
         if in_code {
-            rendered = "".join([rendered, "<code>", part, "</code>"])
+            parts = parts.append("".join(["<code>", src_part, "</code>"]))
         } else {
-            rendered = "".join([rendered, part])
+            parts = parts.append(src_part)
         }
 
         in_code = in_code.not()
     }
 
-    rendered
+    "".join(parts)
 }
 
 fun render_markdown_paragraph(src: String): String {

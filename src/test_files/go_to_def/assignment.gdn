@@ -1,0 +1,10 @@
+fun file_name() {
+    let foo = 1
+    foo = foo + 1
+    //^
+}
+
+// args: definition-position
+// expected stdout:
+// {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"path":"src/test_files/go_to_def/assignment.gdn"}
+

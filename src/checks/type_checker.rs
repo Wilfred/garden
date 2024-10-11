@@ -496,7 +496,9 @@ impl<'a> TypeCheckVisitor<'a> {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 
                 // TODO: also enforce the type of an assignment at runtime.
-                if let Some((sym_ty, _)) = self.bindings.get(&sym.name) {
+                if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
+                    self.id_to_pos.insert(sym.id, position.clone());
+
                     if !is_subtype(&expr_ty, sym_ty) {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
@@ -515,7 +517,9 @@ impl<'a> TypeCheckVisitor<'a> {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 
                 // TODO: also enforce the type of an assignment at runtime.
-                if let Some((sym_ty, _)) = self.bindings.get(&sym.name) {
+                if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
+                    self.id_to_pos.insert(sym.id, position.clone());
+
                     if !is_subtype(sym_ty, &Type::int()) {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
@@ -1041,6 +1045,7 @@ impl<'a> TypeCheckVisitor<'a> {
     fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
         self.bindings.set(symbol, ty.clone());
         self.id_to_ty.insert(symbol.id, ty);
+        self.id_to_pos.insert(symbol.id, symbol.position.clone());
     }
 }
 

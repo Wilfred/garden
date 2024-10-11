@@ -99,6 +99,8 @@ enum Commands {
         new_name: String,
         path: PathBuf,
         offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
     },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
@@ -247,13 +249,16 @@ fn main() {
             path,
             new_name,
             offset,
+            override_path,
         } => {
             let src = read_utf8_or_die(&path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            rename::rename(&src, &path, offset, &new_name)
+
+            let src_path = override_path.unwrap_or(path);
+            rename::rename(&src, &src_path, offset, &new_name)
         }
     }
 }

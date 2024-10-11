@@ -150,15 +150,15 @@ test lines {
 // ```
 // "abcd".split_once("b") // Some(["a", "cd"])
 // ```
-fun (this: String) split_once(needle: String): Option<List<String>> {
+fun (this: String) split_once(needle: String): Option<(String, String)> {
     let i = 0
     while (i + needle.len()) <= this.len() {
         let substring = this.substring(i, i + needle.len())
         if substring == needle {
-            return Some([
+            return Some((
                 this.substring(0, i),
                 this.substring(i + needle.len(), this.len()),
-            ])
+            ))
         }
 
         i = i + 1
@@ -170,9 +170,9 @@ fun (this: String) split_once(needle: String): Option<List<String>> {
 test split_once {
     assert("abc".split_once("x") == None)
 
-    assert("abc".split_once("b") == Some(["a", "c"]))
-    assert("abc".split_once("c") == Some(["ab", ""]))
-    assert("abcbe".split_once("b") == Some(["a", "cbe"]))
+    assert("abc".split_once("b") == Some(("a", "c")))
+    assert("abc".split_once("c") == Some(("ab", "")))
+    assert("abcbe".split_once("b") == Some(("a", "cbe")))
 }
 
 // Find the first index of `needle` in `this`.

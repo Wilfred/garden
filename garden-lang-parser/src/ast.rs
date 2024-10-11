@@ -99,6 +99,15 @@ impl TypeHint {
     pub fn as_src(&self) -> String {
         if self.args.is_empty() {
             format!("{}", self.sym.name)
+        } else if self.sym.name.name == "Tuple" {
+            let formatted_args = self
+                .args
+                .iter()
+                .map(|a| a.as_src())
+                .collect::<Vec<_>>()
+                .join(", ");
+
+            format!("({})", formatted_args)
         } else {
             let formatted_args = self
                 .args

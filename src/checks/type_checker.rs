@@ -699,7 +699,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Warning,
                                 message: format!(
-                                    "Comparing `{}` with `{}` will always be `False`.",
+                                    "You should compare values of the same type, but got `{}` and `{}`.",
                                     lhs_ty, rhs_ty
                                 ),
                                 position: pos.clone(),

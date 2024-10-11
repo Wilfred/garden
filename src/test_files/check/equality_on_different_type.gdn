@@ -1,4 +1,12 @@
 fun foo(s: String, i: Int) {
+    // Always False.
+    if s == i {
+        print("hello world")
+    }
+}
+
+fun bar(s: Option<String>, i: Option<Int>) {
+    // Only True when both values are None.
     if s == i {
         print("hello world")
     }
@@ -7,9 +15,14 @@ fun foo(s: String, i: Int) {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: Comparing `String` with `Int` will always be `False`.
+// Warning: You should compare values of the same type, but got `String` and `Int`.
 // 
-// --> src/test_files/check/equality_on_different_type.gdn:2
+// --> src/test_files/check/equality_on_different_type.gdn:3
+//     if s == i {
+//        ^^^^^^
+// Warning: You should compare values of the same type, but got `Option<String>` and `Option<Int>`.
+// 
+// --> src/test_files/check/equality_on_different_type.gdn:10
 //     if s == i {
 //        ^^^^^^
 

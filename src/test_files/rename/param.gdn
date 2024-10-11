@@ -1,0 +1,12 @@
+fun file_name(foo: Int) {
+    //         ^
+    let _ = foo
+}
+
+// args: rename new_foo
+// expected stdout:
+// fun file_name(new_foo: Int) {
+//     //         ^
+//     let _ = new_foo
+// }
+

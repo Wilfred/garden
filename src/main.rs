@@ -96,8 +96,8 @@ enum Commands {
     /// Rename the local variable at this offset to the new name
     /// specified.
     Rename {
-        path: PathBuf,
         new_name: String,
+        path: PathBuf,
         offset: Option<usize>,
     },
     /// Run the program specified, calling its main() function, then

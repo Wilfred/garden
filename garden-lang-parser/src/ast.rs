@@ -240,6 +240,18 @@ pub struct ParenthesizedArguments {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LetDestination {
+    /// ```garden
+    /// let x = y
+    /// ```
+    Symbol(Symbol),
+    /// ```garden
+    /// let (x, y) = z
+    /// ```
+    Destructure(Vec<Symbol>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression_ {
     /// ```garden
     /// match x {
@@ -282,8 +294,9 @@ pub enum Expression_ {
     /// ```garden
     /// let x = y
     /// let x: T = y
+    /// let (x, y) = z
     /// ```
-    Let(Symbol, Option<TypeHint>, Box<Expression>),
+    Let(LetDestination, Option<TypeHint>, Box<Expression>),
     /// ```garden
     /// return x
     /// return // equivalent to `return Unit`

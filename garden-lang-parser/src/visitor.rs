@@ -1,6 +1,6 @@
 use crate::{
-    Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, MethodInfo,
-    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
+    MethodInfo, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -134,8 +134,8 @@ pub trait Visitor {
             Expression_::AssignUpdate(sym, _, expr) => {
                 self.visit_expr_assign_update(sym, expr);
             }
-            Expression_::Let(sym, hint, expr) => {
-                self.visit_expr_let(sym, hint.as_ref(), expr);
+            Expression_::Let(dest, hint, expr) => {
+                self.visit_expr_let(dest, hint.as_ref(), expr);
             }
             Expression_::Return(expr) => {
                 // TODO: custom method for this variant
@@ -242,8 +242,23 @@ pub trait Visitor {
         self.visit_symbol(symbol);
     }
 
-    fn visit_expr_let(&mut self, symbol: &Symbol, hint: Option<&TypeHint>, expr: &Expression) {
-        self.visit_symbol(symbol);
+    fn visit_expr_let(
+        &mut self,
+        dest: &LetDestination,
+        hint: Option<&TypeHint>,
+        expr: &Expression,
+    ) {
+        match dest {
+            LetDestination::Symbol(symbol) => {
+                self.visit_symbol(symbol);
+            }
+            LetDestination::Destructure(symbols) => {
+                for symbol in symbols {
+                    self.visit_symbol(symbol);
+                }
+            }
+        }
+
         if let Some(hint) = hint {
             self.visit_type_hint(hint);
         }

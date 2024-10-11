@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, MethodInfo, Pattern, Symbol,
-    SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
+    Pattern, Symbol, SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -547,7 +547,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 Type::unit()
             }
-            Expression_::Let(sym, hint, expr) => {
+            Expression_::Let(dest, hint, expr) => {
                 let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
 
                 let ty = match hint {
@@ -572,7 +572,10 @@ impl<'a> TypeCheckVisitor<'a> {
                     None => expr_ty,
                 };
 
-                self.set_binding(sym, ty);
+                match dest {
+                    LetDestination::Symbol(symbol) => self.set_binding(symbol, ty),
+                    LetDestination::Destructure(_symbols) => todo!(),
+                }
 
                 Type::unit()
             }

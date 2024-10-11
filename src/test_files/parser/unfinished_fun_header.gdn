@@ -14,7 +14,9 @@ f{
 //             Expression {
 //                 pos: Position { ... },
 //                 expr_: Let(
-//                     Symbol"xx",
+//                     Symbol(
+//                         Symbol"xx",
+//                     ),
 //                     None,
 //                     Expression {
 //                         pos: Position { ... },
@@ -34,7 +36,9 @@ f{
 //             Expression {
 //                 pos: Position { ... },
 //                 expr_: Let(
-//                     Symbol"yy",
+//                     Symbol(
+//                         Symbol"yy",
+//                     ),
 //                     None,
 //                     Expression {
 //                         pos: Position { ... },

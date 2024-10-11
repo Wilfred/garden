@@ -3,7 +3,9 @@ let A = 1
 // args: dump-ast
 // expected stdout:
 // Let(
-//     Symbol"A",
+//     Symbol(
+//         Symbol"A",
+//     ),
 //     None,
 //     Expression {
 //         pos: Position { ... },

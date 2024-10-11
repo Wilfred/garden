@@ -1866,7 +1866,7 @@ fn parse_let(
 
     Expression::new(
         Position::merge(&let_token.position, &expr.pos),
-        Expression_::Let(variable, hint, Box::new(expr)),
+        Expression_::Let(LetDestination::Symbol(variable), hint, Box::new(expr)),
         id_gen.next(),
     )
 }

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use garden_lang_parser::ast::LetDestination;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
@@ -188,9 +189,24 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.check_symbol(var);
     }
 
-    fn visit_expr_let(&mut self, var: &Symbol, _hint: Option<&TypeHint>, expr: &Expression) {
+    fn visit_expr_let(
+        &mut self,
+        dest: &LetDestination,
+        _hint: Option<&TypeHint>,
+        expr: &Expression,
+    ) {
         self.visit_expr(expr);
-        self.add_binding(var);
+
+        match dest {
+            LetDestination::Symbol(symbol) => {
+                self.add_binding(symbol);
+            }
+            LetDestination::Destructure(symbols) => {
+                for symbol in symbols {
+                    self.add_binding(symbol);
+                }
+            }
+        }
     }
 
     fn visit_expr_assign(&mut self, var: &Symbol, expr: &Expression) {

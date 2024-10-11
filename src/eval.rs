@@ -23,9 +23,10 @@ use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
-    AssignUpdateKind, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo, MethodInfo,
-    MethodKind, ParenthesizedArguments, Pattern, SourceString, StructInfo, Symbol, SymbolWithHint,
-    SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    AssignUpdateKind, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
+    LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern, SourceString,
+    StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
+    TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -1290,7 +1291,7 @@ fn eval_let(
     env: &Env,
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
-    variable: &Symbol,
+    destination: &LetDestination,
     hint: &Option<TypeHint>,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let expr_value = stack_frame
@@ -1323,7 +1324,10 @@ fn eval_let(
         };
     }
 
-    stack_frame.bindings.add_new(&variable.name, expr_value);
+    match destination {
+        LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(&symbol.name, expr_value),
+        LetDestination::Destructure(_symbols) => todo!(),
+    }
 
     // `let x = 1` should always evaluate to Unit. This is slightly
     // annoying when incrementally writing a block, but makes it
@@ -3283,10 +3287,10 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                             .push((EvaluatedState::NotEvaluated, *expr.clone()));
                     }
                 }
-                Expression_::Let(variable, hint, expr) => {
+                Expression_::Let(destination, hint, expr) => {
                     if done_children.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) =
-                            eval_let(env, &mut stack_frame, expr_value_is_used, variable, hint)
+                            eval_let(env, &mut stack_frame, expr_value_is_used, destination, hint)
                         {
                             restore_stack_frame(
                                 env,

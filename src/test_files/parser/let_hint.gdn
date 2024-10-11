@@ -3,7 +3,9 @@ let foo: Int = 1
 // args: dump-ast
 // expected stdout:
 // Let(
-//     Symbol"foo",
+//     Symbol(
+//         Symbol"foo",
+//     ),
 //     Some(
 //         TypeHint {
 //             sym: TypeSymbol"Int",

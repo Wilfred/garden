@@ -1,4 +1,6 @@
-use garden_lang_parser::ast::{Expression, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol};
+use garden_lang_parser::ast::{
+    Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol,
+};
 
 use garden_lang_parser::visitor::Visitor;
 
@@ -75,10 +77,19 @@ impl Visitor for ExprOfIdFinder {
         self.visit_expr_(&expr.expr_);
     }
 
-    fn visit_expr_let(&mut self, symbol: &Symbol, _: Option<&TypeHint>, expr: &Expression) {
-        if symbol.id == self.id {
-            self.expr = Some(expr.clone());
-            return;
+    fn visit_expr_let(&mut self, dest: &LetDestination, _: Option<&TypeHint>, expr: &Expression) {
+        let symbols = match dest {
+            LetDestination::Symbol(symbol) => {
+                vec![symbol.clone()]
+            }
+            LetDestination::Destructure(symbols) => symbols.to_vec(),
+        };
+
+        for symbol in symbols {
+            if symbol.id == self.id {
+                self.expr = Some(expr.clone());
+                return;
+            }
         }
 
         self.visit_expr(expr);

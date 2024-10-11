@@ -1037,7 +1037,7 @@ fn parse_variant(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> VariantInfo {
-    let name = parse_symbol(tokens, id_gen, diagnostics);
+    let name_symbol = parse_symbol(tokens, id_gen, diagnostics);
 
     let mut payload_hint = None;
     if peeked_symbol_is(tokens, "(") {
@@ -1047,7 +1047,7 @@ fn parse_variant(
     }
 
     VariantInfo {
-        name_sym: name,
+        name_sym: name_symbol,
         payload_hint,
     }
 }
@@ -1060,7 +1060,7 @@ fn parse_enum(
 ) -> Definition {
     let enum_token = require_token(tokens, diagnostics, "enum");
     let doc_comment = parse_doc_comment(&enum_token);
-    let name_sym = parse_type_symbol(tokens, id_gen, diagnostics);
+    let name_symbol = parse_type_symbol(tokens, id_gen, diagnostics);
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
     let _open_brace = require_token(tokens, diagnostics, "{");
@@ -1088,7 +1088,7 @@ fn parse_enum(
         Definition_::Enum(EnumInfo {
             src_string,
             doc_comment,
-            name_sym,
+            name_sym: name_symbol,
             type_params,
             variants,
         }),

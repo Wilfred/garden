@@ -88,7 +88,7 @@ pub(crate) fn format_diagnostic(
 fn format_pos_in_fun(
     position: &Position,
     src_string: &SourceString,
-    enclosing_sym: Option<&EnclosingSymbol>,
+    enclosing_symbol: Option<&EnclosingSymbol>,
     underline: bool,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
@@ -107,7 +107,7 @@ fn format_pos_in_fun(
         res.push_str(&formatted_pos);
     }
 
-    if let Some(enclosing_sym) = enclosing_sym {
+    if let Some(enclosing_sym) = enclosing_symbol {
         let signature = format!("\t {}", enclosing_sym);
         res.push_str(&signature.bold().dimmed().to_string());
     }

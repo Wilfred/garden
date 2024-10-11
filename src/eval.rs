@@ -694,20 +694,20 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
 
     for definition in definitions {
         match &definition.2 {
-            Definition_::Fun(name_sym, fun_info) => {
+            Definition_::Fun(name_symbol, fun_info) => {
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, &mut diagnostics);
                 } else {
                     env.set_with_file_scope(
-                        &name_sym.name,
+                        &name_symbol.name,
                         Value::Fun {
-                            name_sym: name_sym.clone(),
+                            name_sym: name_symbol.clone(),
                             fun_info: fun_info.clone(),
                         },
                     );
                 }
 
-                new_syms.push(name_sym.name.clone());
+                new_syms.push(name_symbol.name.clone());
             }
             Definition_::Method(meth_info) => {
                 if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
@@ -1121,7 +1121,7 @@ fn eval_for_in(
     env: &mut Env,
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
-    iter_sym: &Symbol,
+    iter_symbol: &Symbol,
     iteree_pos: &Position,
     outer_expr: Expression,
     body: &Block,
@@ -1176,8 +1176,8 @@ fn eval_for_in(
     stack_frame.evalled_values.push(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
-    if !iter_sym.name.is_underscore() {
-        bindings.push((iter_sym.clone(), items[iteree_idx as usize].clone()));
+    if !iter_symbol.name.is_underscore() {
+        bindings.push((iter_symbol.clone(), items[iteree_idx as usize].clone()));
     }
 
     stack_frame.bindings_next_block = bindings;
@@ -3892,7 +3892,7 @@ fn eval_dot_access(
     env: &Env,
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
-    sym: &Symbol,
+    symbol: &Symbol,
     recv_pos: &Position,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let recv_value = stack_frame
@@ -3905,7 +3905,7 @@ fn eval_dot_access(
             let mut found = false;
 
             for (field_name, field_value) in fields {
-                if *field_name == sym.name {
+                if *field_name == symbol.name {
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(field_value.clone());
                     }
@@ -3919,8 +3919,8 @@ fn eval_dot_access(
                 return Err((
                     RestoreValues(vec![recv_value]),
                     EvalError::ResumableError(
-                        sym.position.clone(),
-                        ErrorMessage(format!("This struct has no field named `{}`.", sym.name)),
+                        symbol.position.clone(),
+                        ErrorMessage(format!("This struct has no field named `{}`.", symbol.name)),
                     ),
                 ));
             }
@@ -3943,27 +3943,27 @@ fn eval_struct_value(
     env: &mut Env,
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
-    type_sym: TypeSymbol,
+    type_symbol: TypeSymbol,
     field_exprs: &[(Symbol, Expression)],
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let Some(type_info) = env.get_type_def(&type_sym.name) else {
+    let Some(type_info) = env.get_type_def(&type_symbol.name) else {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(
-                type_sym.position.clone(),
-                ErrorMessage(format!("No type exists named `{}`.", type_sym.name)),
+                type_symbol.position.clone(),
+                ErrorMessage(format!("No type exists named `{}`.", type_symbol.name)),
             ),
         ));
     };
     let TypeDef::Struct(struct_info) = type_info else {
         let message = ErrorMessage(format!(
             "`{}` is not a struct, so it cannot be initialized with struct syntax.",
-            type_sym.name,
+            type_symbol.name,
         ));
 
         return Err((
             RestoreValues(vec![]),
-            EvalError::ResumableError(type_sym.position.clone(), message),
+            EvalError::ResumableError(type_symbol.position.clone(), message),
         ));
     };
 
@@ -3989,7 +3989,7 @@ fn eval_struct_value(
             // struct.
             let message = ErrorMessage(format!(
                 "`{}` does not have a field named `{}`.",
-                type_sym.name, field_sym.name
+                type_symbol.name, field_sym.name
             ));
 
             return Err((
@@ -4020,13 +4020,13 @@ fn eval_struct_value(
 
     let runtime_type = Type::UserDefined {
         kind: TypeDefKind::Struct,
-        name: type_sym.name.clone(),
+        name: type_symbol.name.clone(),
         args: type_args,
     };
 
     if expr_value_is_used {
         stack_frame.evalled_values.push(Value::Struct {
-            type_name: type_sym.name,
+            type_name: type_symbol.name,
             fields,
             runtime_type,
         });

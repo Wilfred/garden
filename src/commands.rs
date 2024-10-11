@@ -283,7 +283,7 @@ fn describe_fun(value: &Value) -> Option<String> {
 /// Format `fun_info` as a signature with doc comment.
 fn format_fun_info(
     fun_info: &ast::FunInfo,
-    name_sym: &ast::Symbol,
+    name_symbol: &ast::Symbol,
     recv_hint: Option<&TypeHint>,
 ) -> String {
     let mut res = String::new();
@@ -292,20 +292,20 @@ fn format_fun_info(
         res.push_str("\n\n");
     }
 
-    if let Some(name_sym) = &fun_info.name_sym {
+    if let Some(name_symbol) = &fun_info.name_sym {
         res.push_str(&format!(
             "// Defined in {}\n",
-            name_sym.position.as_ide_string()
+            name_symbol.position.as_ide_string()
         ));
     }
-    res.push_str(&format_signature(fun_info, name_sym, recv_hint));
+    res.push_str(&format_signature(fun_info, name_symbol, recv_hint));
 
     res
 }
 
 fn format_signature(
     fun_info: &ast::FunInfo,
-    name_sym: &ast::Symbol,
+    name_symbol: &ast::Symbol,
     recv_hint: Option<&TypeHint>,
 ) -> String {
     let mut res = String::new();
@@ -327,7 +327,7 @@ fn format_signature(
         res.push_str(&format!(" (this: {})", recv_hint.as_src()));
     }
 
-    res.push_str(&format!(" {}", name_sym.name));
+    res.push_str(&format!(" {}", name_symbol.name));
     res.push('(');
     for (i, param) in fun_info.params.iter().enumerate() {
         if i != 0 {

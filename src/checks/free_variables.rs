@@ -108,12 +108,15 @@ impl FreeVariableVisitor<'_> {
         panic!("Tried to mark an unbound variable {name} as used.")
     }
 
-    fn add_binding(&mut self, sym: &Symbol) {
+    fn add_binding(&mut self, symbol: &Symbol) {
         let scope = self
             .bound_scopes
             .last_mut()
             .expect("Should always be non-empty");
-        scope.insert(sym.name.clone(), UseState::NotUsed(sym.position.clone()));
+        scope.insert(
+            symbol.name.clone(),
+            UseState::NotUsed(symbol.position.clone()),
+        );
     }
 
     fn push_scope(&mut self) {

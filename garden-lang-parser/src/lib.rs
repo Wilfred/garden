@@ -1812,6 +1812,19 @@ fn is_keyword_placeholder(symbol: &Symbol) -> bool {
     symbol.name.0 == "__keyword_placeholder"
 }
 
+fn parse_let_destination(
+    tokens: &mut TokenStream,
+    id_gen: &mut SyntaxIdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> LetDestination {
+    if peeked_symbol_is(tokens, "(") {
+        tokens.pop();
+        todo!()
+    } else {
+        LetDestination::Symbol(parse_symbol(tokens, id_gen, diagnostics))
+    }
+}
+
 fn parse_symbol(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
@@ -1857,7 +1870,7 @@ fn parse_let(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let let_token = require_token(tokens, diagnostics, "let");
-    let variable = parse_symbol(tokens, id_gen, diagnostics);
+    let desination = parse_let_destination(tokens, id_gen, diagnostics);
 
     let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
@@ -1866,7 +1879,7 @@ fn parse_let(
 
     Expression::new(
         Position::merge(&let_token.position, &expr.pos),
-        Expression_::Let(LetDestination::Symbol(variable), hint, Box::new(expr)),
+        Expression_::Let(desination, hint, Box::new(expr)),
         id_gen.next(),
     )
 }

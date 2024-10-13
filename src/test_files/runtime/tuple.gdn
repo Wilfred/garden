@@ -4,10 +4,13 @@ fun return_tuple(): (Int, String) {
 
 fun main(_) {
     let v = return_tuple()
-    println(string_repr(v))
+    dbg(v)
     let (i, _) = v
+    dbg(i)
 }
 
 // args: run
-// expected stdout: (123, "foo")
+// expected stdout:
+// (123, "foo")
+// 123
 

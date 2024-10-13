@@ -1819,7 +1819,34 @@ fn parse_let_destination(
 ) -> LetDestination {
     if peeked_symbol_is(tokens, "(") {
         tokens.pop();
-        todo!()
+
+        let mut symbols = vec![];
+        loop {
+            if peeked_symbol_is(tokens, ")") {
+                tokens.pop();
+                break;
+            }
+
+            let start_idx = tokens.idx;
+
+            let symbol = parse_symbol(tokens, id_gen, diagnostics);
+            if symbol.is_placeholder() {
+                break;
+            }
+
+            symbols.push(symbol);
+
+            if !peeked_symbol_is(tokens, ")") {
+                require_token(tokens, diagnostics, ",");
+            }
+
+            assert!(
+                tokens.idx > start_idx,
+                "The parser should always make forward progress."
+            );
+        }
+
+        LetDestination::Destructure(symbols)
     } else {
         LetDestination::Symbol(parse_symbol(tokens, id_gen, diagnostics))
     }

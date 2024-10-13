@@ -13,7 +13,7 @@ fun main(_) {
 
     // Check that a non-trivial loop with `break` works.
     for item in items {
-        println(string_repr(item))
+        dbg(item)
 
         if item >= 3 {
             break

@@ -1892,6 +1892,12 @@ fn parse_assign(
 ) -> Expression {
     let variable = parse_symbol(tokens, id_gen, diagnostics);
 
+    if !peeked_symbol_is(tokens, "=") {
+        // Don't proceed if we don't have an equals sign at all. This
+        // prevents infinite recursions between assign and expr when
+        // no tokens are being consumed.
+        return Expression::invalid(id_gen.next());
+    }
     require_token(tokens, diagnostics, "=");
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 

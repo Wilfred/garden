@@ -574,7 +574,41 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 match dest {
                     LetDestination::Symbol(symbol) => self.set_binding(symbol, ty),
-                    LetDestination::Destructure(_symbols) => todo!(),
+                    LetDestination::Destructure(symbols) => match ty {
+                        Type::Tuple(item_tys) => {
+                            if item_tys.len() != symbols.len() {
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!(
+                                        "Expected a tuple of size {}, but got {}.",
+                                        symbols.len(),
+                                        item_tys.len()
+                                    ),
+                                    position: expr.pos.clone(),
+                                });
+                            }
+
+                            for (i, symbol) in symbols.iter().enumerate() {
+                                let ty = match item_tys.get(i) {
+                                    Some(ty) => ty.clone(),
+                                    None => Type::error("Tuple has too many items for the value"),
+                                };
+                                self.set_binding(symbol, ty);
+                            }
+                        }
+                        Type::Error(_) => {
+                            for symbol in symbols {
+                                self.set_binding(symbol, ty.clone());
+                            }
+                        }
+                        _ => {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected a tuple, but got `{}`.", ty),
+                                position: expr.pos.clone(),
+                            });
+                        }
+                    },
                 }
 
                 Type::unit()

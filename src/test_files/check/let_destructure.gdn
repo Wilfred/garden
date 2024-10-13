@@ -1,0 +1,41 @@
+fun get_tuple(): (Int, String) {
+    (1, "abc")
+}
+
+fun destructure() {
+    // good destructure, bad usage
+    let (x, y) = get_tuple()
+    let _ = x + y
+
+    // bad tuple size
+    let (_x, _y, _z) = get_tuple()
+    let (_x) = get_tuple()
+
+    // not a tuple
+    let () = "foo"
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Int`, but got `String`.
+// 
+// --> src/test_files/check/let_destructure.gdn:8
+//     let _ = x + y
+//                 ^
+// Error: Expected a tuple of size 3, but got 2.
+// 
+// --> src/test_files/check/let_destructure.gdn:11
+//     let (_x, _y, _z) = get_tuple()
+//                        ^^^^^^^^^^^
+// Error: Expected a tuple of size 1, but got 2.
+// 
+// --> src/test_files/check/let_destructure.gdn:12
+//     let (_x) = get_tuple()
+//                ^^^^^^^^^^^
+// Error: Expected a tuple, but got `String`.
+// 
+// --> src/test_files/check/let_destructure.gdn:15
+//     let () = "foo"
+//              ^^^^^
+

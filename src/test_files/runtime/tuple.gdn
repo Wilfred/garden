@@ -3,7 +3,9 @@ fun return_tuple(): (Int, String) {
 }
 
 fun main(_) {
-    println(string_repr(return_tuple()))
+    let v = return_tuple()
+    println(string_repr(v))
+    let (i, _) = v
 }
 
 // args: run

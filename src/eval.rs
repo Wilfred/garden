@@ -1292,6 +1292,7 @@ fn eval_let(
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
     destination: &LetDestination,
+    position: &Position,
     hint: &Option<TypeHint>,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let expr_value = stack_frame
@@ -1326,7 +1327,36 @@ fn eval_let(
 
     match destination {
         LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(&symbol.name, expr_value),
-        LetDestination::Destructure(_symbols) => todo!(),
+        LetDestination::Destructure(symbols) => match &expr_value {
+            Value::Tuple { items, .. } => {
+                if items.len() != symbols.len() {
+                    return Err((
+                        RestoreValues(vec![expr_value.clone()]),
+                        EvalError::ResumableError(
+                            position.clone(),
+                            ErrorMessage(format!(
+                                "Expected a tuple with {} items, got a tuple with {} items.",
+                                symbols.len(),
+                                items.len(),
+                            )),
+                        ),
+                    ));
+                }
+
+                for (symbol, item) in symbols.iter().zip(items) {
+                    stack_frame.bindings.add_new(&symbol.name, item.clone());
+                }
+            }
+            _ => {
+                return Err((
+                    RestoreValues(vec![expr_value]),
+                    EvalError::ResumableError(
+                        position.clone(),
+                        ErrorMessage(format!("Incorrect type for variable: {}", "x")),
+                    ),
+                ));
+            }
+        },
     }
 
     // `let x = 1` should always evaluate to Unit. This is slightly
@@ -3289,9 +3319,14 @@ pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalEr
                 }
                 Expression_::Let(destination, hint, expr) => {
                     if done_children.done_children() {
-                        if let Err((RestoreValues(restore_values), eval_err)) =
-                            eval_let(env, &mut stack_frame, expr_value_is_used, destination, hint)
-                        {
+                        if let Err((RestoreValues(restore_values), eval_err)) = eval_let(
+                            env,
+                            &mut stack_frame,
+                            expr_value_is_used,
+                            destination,
+                            &expr_position,
+                            hint,
+                        ) {
                             restore_stack_frame(
                                 env,
                                 stack_frame,

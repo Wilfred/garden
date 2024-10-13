@@ -165,6 +165,10 @@ impl Symbol {
             id,
         }
     }
+
+    pub fn is_placeholder(&self) -> bool {
+        self.name.is_placeholder()
+    }
 }
 
 impl std::fmt::Debug for Symbol {
@@ -365,9 +369,7 @@ pub enum Expression_ {
 impl Expression_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
         match self {
-            Expression_::Variable(sym) => {
-                sym.name.0 == "__placeholder" || sym.name.0 == "__keyword_placeholder"
-            }
+            Expression_::Variable(sym) => sym.is_placeholder(),
             Expression_::Invalid => true,
             _ => false,
         }

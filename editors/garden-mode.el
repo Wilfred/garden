@@ -622,7 +622,10 @@ If called with a prefix, stop the previous session."
   "Offer method names for the expression at point."
   (let ((done nil)
         (result nil))
-    (when (looking-back (rx ".") 1)
+    (when (looking-back
+           ;; Looking at . or .foo before point.
+           (rx "." (* (or (syntax symbol) (syntax word))))
+           50)
       (garden--async-command
        "complete"
        (lambda (s) (setq done t) (setq result s)))

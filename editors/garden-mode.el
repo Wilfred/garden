@@ -690,17 +690,20 @@ and return its path."
 (defun garden--async-command (command-name callback &optional extra-args)
   "Run CLI command COMMAND with the position of point, and call CALLBACK with
 the result."
-  (let ((tmp-file-of-src (garden--buf-as-tmp-file))
-        (output-buffer (generate-new-buffer (format "*garden-%s-async*" command-name))))
+  (let* ((tmp-file-of-src (garden--buf-as-tmp-file))
+         (output-buffer (generate-new-buffer (format "*garden-%s-async*" command-name)))
+         (command (append (list garden-executable
+                                command-name
+                                tmp-file-of-src
+                                (format "%s" (1- (point))))
+                          extra-args)))
+    (with-current-buffer (get-buffer-create "*garden-async*")
+      (goto-char (point-max))
+      (insert (format "%S\n" command)))
     (make-process
      :name (format "garden-mode-%s" command-name)
      :buffer output-buffer
-     :command
-     (append (list garden-executable
-                   command-name
-                   tmp-file-of-src
-                   (format "%s" (1- (point))))
-             extra-args)
+     :command command
      :sentinel (lambda (process event)
                  (when (s-starts-with-p "exited abnormally with code " event)
                    (with-current-buffer (process-buffer process)

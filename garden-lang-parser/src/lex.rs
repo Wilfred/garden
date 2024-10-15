@@ -121,13 +121,12 @@ pub(crate) fn lex_between<'a>(
         }
 
         // Skip over other whitespace.
-        if let Some(first_char) = s.chars().next() {
-            if first_char.is_whitespace() {
-                offset += 1;
-                continue;
-            }
-        } else {
+        let Some(first_char) = s.chars().next() else {
             break;
+        };
+        if first_char.is_whitespace() {
+            offset += 1;
+            continue;
         }
 
         for token_str in ["==", "!=", ">=", "<=", "&&", "||", "=>", "+=", "-="] {

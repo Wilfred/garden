@@ -624,23 +624,24 @@ If called with a prefix, stop the previous session."
         (result nil))
     (when (looking-back
            ;; Looking at . or .foo before point.
-           (rx "." (* (or (syntax symbol) (syntax word))))
+           (rx "." (group (* (or (syntax symbol) (syntax word)))))
            50)
-      (garden--async-command
-       "complete"
-       (lambda (s) (setq done t) (setq result s)))
-      (while (not done)
-        (sit-for 0.1))
-      (let ((items (garden--jsonl-parse result)))
-        (list
-         (point)
-         (point)
-         (--map (plist-get it :name) items)
-         :annotation-function
-         (lambda (k)
-           (plist-get
-            (--first (string= (plist-get it :name) k) items)
-            :suffix)))))))
+      (let ((prefix-start-pos (match-beginning 1)))
+        (garden--async-command
+         "complete"
+         (lambda (s) (setq done t) (setq result s)))
+        (while (not done)
+          (sit-for 0.1))
+        (let ((items (garden--jsonl-parse result)))
+          (list
+           prefix-start-pos
+           (point)
+           (--map (plist-get it :name) items)
+           :annotation-function
+           (lambda (k)
+             (plist-get
+              (--first (string= (plist-get it :name) k) items)
+              :suffix))))))))
 
 (define-derived-mode garden-mode prog-mode "Garden"
   "Major mode for editing Garden programs.

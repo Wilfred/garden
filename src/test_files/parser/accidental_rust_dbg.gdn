@@ -24,8 +24,16 @@ fun foo() {
 //                     expr_: Variable(
 //                         Symbol"dbg",
 //                     ),
-//                     value_is_used: true,
+//                     value_is_used: false,
 //                     id: SyntaxId(2),
+//                 },
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: IntLiteral(
+//                         1,
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(3),
 //                 },
 //             ],
 //             close_brace: Position { ... },
@@ -39,6 +47,9 @@ fun foo() {
 // --> src/test_files/parser/accidental_rust_dbg.gdn:2
 //     dbg!(1);
 //        ^
-// Parse error (incomplete input): Invalid syntax: Expected `}` here, but got EOF
-// Parse error (incomplete input): Expected `}`, got EOF
+// Error: Parse error: Unrecognized syntax: `;`
+// 
+// --> src/test_files/parser/accidental_rust_dbg.gdn:2
+//     dbg!(1);
+//            ^
 

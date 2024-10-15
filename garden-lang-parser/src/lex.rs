@@ -221,22 +221,20 @@ pub(crate) fn lex_between<'a>(
 
             offset += variable_match.end();
         } else {
-            break;
-        }
-    }
+            errors.push(ParseError::Invalid {
+                position: Position {
+                    start_offset: offset,
+                    end_offset: offset + 1,
+                    line_number: lp.from_offset(offset).as_usize(),
+                    end_line_number: lp.from_offset(offset).as_usize(),
+                    path: path.to_path_buf(),
+                },
+                message: ErrorMessage(format!("Unrecognized syntax: `{}`", &s[0..1])),
+                additional: vec![],
+            });
 
-    if offset != end_offset {
-        errors.push(ParseError::Invalid {
-            position: Position {
-                start_offset: offset,
-                end_offset: offset + 1,
-                line_number: lp.from_offset(offset).as_usize(),
-                end_line_number: lp.from_offset(offset).as_usize(),
-                path: path.to_path_buf(),
-            },
-            message: ErrorMessage(format!("Unrecognized syntax: `{}`", &s[offset..offset + 1])),
-            additional: vec![],
-        });
+            offset += 1;
+        }
     }
 
     (TokenStream { tokens, idx: 0 }, errors)

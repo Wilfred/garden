@@ -1,0 +1,11 @@
+fun file_name(path: String) {
+    // invalid semicolon here
+    let _ = 1;
+    
+    path
+    //^
+}
+
+// args: show-type
+// expected stdout: String
+

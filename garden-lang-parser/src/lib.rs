@@ -2039,13 +2039,10 @@ pub fn parse_inline_expr_from_str(
 ) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
-    let mut tokens = match lex(path, src) {
-        Ok(tokens) => tokens,
-        Err(e) => {
-            diagnostics.push(e);
-            TokenStream::empty()
-        }
-    };
+    let (mut tokens, lex_errors) = lex(path, src);
+    for error in lex_errors {
+        diagnostics.push(error);
+    }
 
     let expr = parse_expression(src, &mut tokens, id_gen, &mut diagnostics);
     (expr, diagnostics)
@@ -2057,13 +2054,11 @@ pub fn parse_toplevel_items(
     id_gen: &mut SyntaxIdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
-    let mut tokens = match lex(path, src) {
-        Ok(tokens) => tokens,
-        Err(e) => {
-            diagnostics.push(e);
-            TokenStream::empty()
-        }
-    };
+
+    let (mut tokens, lex_errors) = lex(path, src);
+    for error in lex_errors {
+        diagnostics.push(error);
+    }
 
     let items = parse_toplevel_items_from_tokens(src, &mut tokens, id_gen, &mut diagnostics);
     (items, diagnostics)
@@ -2079,13 +2074,11 @@ pub fn parse_toplevel_items_from_span(
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
-    let mut tokens = match lex_between(path, src, offset, end_offset) {
-        Ok(tokens) => tokens,
-        Err(e) => {
-            diagnostics.push(e);
-            TokenStream::empty()
-        }
-    };
+
+    let (mut tokens, lex_errors) = lex_between(path, src, offset, end_offset);
+    for error in lex_errors {
+        diagnostics.push(error);
+    }
 
     let items = parse_toplevel_items_from_tokens(src, &mut tokens, id_gen, &mut diagnostics);
     (items, diagnostics)

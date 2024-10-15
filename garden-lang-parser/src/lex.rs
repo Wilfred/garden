@@ -29,13 +29,6 @@ pub(crate) struct TokenStream<'a> {
 }
 
 impl<'a> TokenStream<'a> {
-    pub(crate) fn empty() -> Self {
-        Self {
-            tokens: vec![],
-            idx: 0,
-        }
-    }
-
     pub(crate) fn is_empty(&self) -> bool {
         self.tokens.get(self.idx).is_none()
     }
@@ -80,11 +73,12 @@ pub(crate) fn lex_between<'a>(
     s: &'a str,
     offset: usize,
     end_offset: usize,
-) -> Result<TokenStream<'a>, ParseError> {
+) -> (TokenStream<'a>, Vec<ParseError>) {
     assert!(end_offset <= s.len());
 
     let lp = LinePositions::from(s);
     let mut tokens: Vec<Token<'a>> = vec![];
+    let mut errors: Vec<ParseError> = vec![];
 
     let mut preceding_comments = vec![];
     let mut offset = offset;
@@ -233,7 +227,7 @@ pub(crate) fn lex_between<'a>(
     }
 
     if offset != end_offset {
-        return Err(ParseError::Invalid {
+        errors.push(ParseError::Invalid {
             position: Position {
                 start_offset: offset,
                 end_offset: offset + 1,
@@ -246,10 +240,10 @@ pub(crate) fn lex_between<'a>(
         });
     }
 
-    Ok(TokenStream { tokens, idx: 0 })
+    (TokenStream { tokens, idx: 0 }, errors)
 }
 
-pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> Result<TokenStream<'a>, ParseError> {
+pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> (TokenStream<'a>, Vec<ParseError>) {
     lex_between(path, s, 0, s.len())
 }
 
@@ -261,7 +255,7 @@ mod tests {
 
     #[test]
     fn test_lex_no_offset() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), "1").unwrap();
+        let tokens = lex(&PathBuf::from("__test.gdn"), "1").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -280,7 +274,7 @@ mod tests {
 
     #[test]
     fn test_lex_with_offset() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), " a").unwrap();
+        let tokens = lex(&PathBuf::from("__test.gdn"), " a").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -301,7 +295,7 @@ mod tests {
     fn test_lex_spaces() {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "1 + 2")
-                .unwrap()
+                .0
                 .tokens
                 .iter()
                 .map(|token| token.text)
@@ -314,7 +308,7 @@ mod tests {
     fn test_lex_no_spaces() {
         assert_eq!(
             lex(&PathBuf::from("__test.gdn"), "1+2")
-                .unwrap()
+                .0
                 .tokens
                 .iter()
                 .map(|token| token.text)
@@ -325,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_lex_comment() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n1").unwrap();
+        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n1").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -353,7 +347,7 @@ mod tests {
 
     #[test]
     fn test_lex_comment_not_touching() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n\n1").unwrap();
+        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n\n1").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -372,15 +366,11 @@ mod tests {
 
     #[test]
     fn test_lex_comment_leading_newline() {
-        assert!(lex(&PathBuf::from("__test.gdn"), "\n// 2")
-            .unwrap()
-            .is_empty());
+        assert!(lex(&PathBuf::from("__test.gdn"), "\n// 2").0.is_empty());
     }
 
     #[test]
     fn test_lex_standalone_comment() {
-        assert!(lex(&PathBuf::from("__test.gdn"), "// foo")
-            .unwrap()
-            .is_empty());
+        assert!(lex(&PathBuf::from("__test.gdn"), "// foo").0.is_empty());
     }
 }

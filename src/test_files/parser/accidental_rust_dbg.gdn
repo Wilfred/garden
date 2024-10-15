@@ -3,10 +3,42 @@ fun foo() {
 }
 
 // args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"foo",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             is_loop_body: false,
+//             open_brace: Position { ... },
+//             exprs: [
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: Variable(
+//                         Symbol"dbg",
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(2),
+//                 },
+//             ],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+
 // expected stderr:
 // Error: Parse error: Unrecognized syntax: `!`
 // 
 // --> src/test_files/parser/accidental_rust_dbg.gdn:2
 //     dbg!(1);
 //        ^
+// Parse error (incomplete input): Invalid syntax: Expected `}` here, but got EOF
+// Parse error (incomplete input): Expected `}`, got EOF
 

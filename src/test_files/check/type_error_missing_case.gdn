@@ -5,10 +5,18 @@ fun foo(x: Option<Int>) {
         _ => {}
     }
 
-    // This is not.
+    // Missing None.
     match x {
         Some(_) => {}
     }
+
+    // Duplicate.
+    match x {
+        Some(_) => {}
+        None => {}
+        None => {}
+    }
+
 }
 
 // args: check
@@ -19,4 +27,9 @@ fun foo(x: Option<Int>) {
 // --> src/test_files/check/type_error_missing_case.gdn:9
 //     match x {
 //           ^
+// Error: Duplicate case in pattern match.
+// 
+// --> src/test_files/check/type_error_missing_case.gdn:17
+//         None => {}
+//         ^^^^
 

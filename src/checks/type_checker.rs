@@ -1474,24 +1474,35 @@ fn check_match_exhaustive(
         return;
     };
 
-    for pattern in patterns {
-        if pattern.symbol.name.is_underscore() {
-            return;
-        }
-    }
-
     let mut variants_remaining: HashMap<SymbolName, VariantInfo> = HashMap::new();
     for variant in &enum_info.variants {
         variants_remaining.insert(variant.name_sym.name.clone(), variant.clone());
     }
 
+    let mut seen_underscore = false;
     for pattern in patterns {
-        // If any cases are _, this match is exhaustive.
         if pattern.symbol.name.is_underscore() {
-            return;
+            seen_underscore = true;
+            continue;
         }
 
-        variants_remaining.remove(&pattern.symbol.name);
+        match variants_remaining.remove(&pattern.symbol.name) {
+            Some(_) => {
+                // First time we've seen this variant.
+            }
+            None => {
+                diagnostics.push(Diagnostic {
+                    level: Level::Error,
+                    message: "Duplicate case in pattern match.".to_owned(),
+                    position: pattern.symbol.position.clone(),
+                });
+            }
+        }
+    }
+
+    // If any cases are _, this match is exhaustive.
+    if seen_underscore {
+        return;
     }
 
     let missing: Vec<_> = variants_remaining.keys().collect();

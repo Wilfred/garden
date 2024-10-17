@@ -172,6 +172,7 @@ fun (this: String) len(): Int {
 //
 // ```
 // "abcdef".substring(1, 3) // "bc"
+// "abc".substring(1, 99) // "bc"
 // ```
 fun (this: String) substring(from_index: Int, to_index: Int): String {
     __BUILTIN_IMPLEMENTATION

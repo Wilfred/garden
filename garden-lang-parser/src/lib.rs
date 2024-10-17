@@ -1457,7 +1457,6 @@ fn parse_parameters(
     require_token(tokens, diagnostics, ")");
 
     // Emit error if there are duplicate parameters.
-    // TODO: allow parsing to return an AST even if errors are present.
     let mut seen = HashSet::new();
     for param in &params {
         let param_name = &param.symbol.name.0;

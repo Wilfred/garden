@@ -1,0 +1,11 @@
+fun foo(v: Option<Int>) {
+    match v {
+        Some(num) => {}
+        //    ^
+        None => {}
+    }
+}
+
+// args: show-type
+// expected stdout: Int
+

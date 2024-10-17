@@ -214,7 +214,12 @@ pub trait Visitor {
 
     fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Box<Expression>)]) {
         self.visit_expr(scrutinee);
-        for (_, case_expr) in cases {
+        for (pattern, case_expr) in cases {
+            self.visit_symbol(&pattern.symbol);
+            if let Some(payload) = &pattern.argument {
+                self.visit_symbol(payload);
+            }
+
             self.visit_expr(case_expr);
         }
     }

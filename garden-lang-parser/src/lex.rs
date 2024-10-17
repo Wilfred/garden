@@ -107,7 +107,6 @@ pub(crate) fn lex_between<'a>(
                 offset += i + 1;
                 continue;
             } else {
-                offset += s.len();
                 break;
             }
         }

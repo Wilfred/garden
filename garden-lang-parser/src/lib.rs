@@ -1459,11 +1459,11 @@ fn parse_parameters(
     // Emit error if there are duplicate parameters.
     let mut seen = HashSet::new();
     for param in &params {
-        let param_name = &param.symbol.name.0;
         if param.symbol.name.is_underscore() {
             continue;
         }
 
+        let param_name = &param.symbol.name.0;
         if seen.contains(param_name) {
             diagnostics.push(ParseError::Invalid {
                 position: param.symbol.position.clone(),
@@ -1843,6 +1843,25 @@ fn parse_let_destination(
                 tokens.idx > start_idx,
                 "The parser should always make forward progress."
             );
+        }
+
+        let mut seen = HashSet::new();
+        for symbol in &symbols {
+            if symbol.name.is_underscore() {
+                continue;
+            }
+
+            let name = &symbol.name.0;
+            if seen.contains(name) {
+                diagnostics.push(ParseError::Invalid {
+                    position: symbol.position.clone(),
+                    message: ErrorMessage(format!("Duplicate destructure variable: `{}`.", name)),
+                    // TODO: report the position of the previous occurrence too.
+                    additional: vec![],
+                });
+            } else {
+                seen.insert(name.clone());
+            }
         }
 
         LetDestination::Destructure(symbols)

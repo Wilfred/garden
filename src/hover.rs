@@ -16,14 +16,14 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
     let hovered_ids = find_item_at(&items, offset);
 
     for id in hovered_ids.iter().rev() {
-        if let Some(doc_comment) = id_to_doc_comment.get(id) {
+        if let Some(doc_comment) = id_to_doc_comment.get(&id.id()) {
             println!("{}", doc_comment);
             break;
         }
     }
 
     for id in hovered_ids.iter().rev() {
-        if let Some(ty) = id_to_ty.get(id) {
+        if let Some(ty) = id_to_ty.get(&id.id()) {
             if !ty.is_error() {
                 println!("{}", ty);
             }

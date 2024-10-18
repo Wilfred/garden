@@ -1,6 +1,9 @@
 use std::{collections::HashMap, path::Path};
 
-use garden_lang_parser::{ast::Expression_, parse_toplevel_items};
+use garden_lang_parser::{
+    ast::{AstId, Expression_},
+    parse_toplevel_items,
+};
 use serde::Serialize;
 
 use crate::{
@@ -22,7 +25,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
 
     let (_, id_to_ty, _, _) = check_types(&items, &env);
 
-    if let Some(id) = ids_at_pos.last() {
+    if let Some(AstId::Expr(id)) = ids_at_pos.last() {
         if let Some(expr) = find_expr_of_id(&items, *id) {
             match &expr.expr_ {
                 Expression_::DotAccess(recv, meth_sym) => {

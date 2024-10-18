@@ -394,6 +394,26 @@ impl std::fmt::Debug for SyntaxId {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum AstId {
+    /// Syntax ID of an expression.
+    Expr(SyntaxId),
+    /// Syntax ID of a symbol. This is not necessarily part of an
+    /// expression: it could be a function parameter or type name.
+    Sym(SyntaxId),
+    TypeSym(SyntaxId),
+}
+
+impl AstId {
+    pub fn id(&self) -> SyntaxId {
+        match self {
+            AstId::Expr(syntax_id) => *syntax_id,
+            AstId::Sym(syntax_id) => *syntax_id,
+            AstId::TypeSym(syntax_id) => *syntax_id,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct SyntaxIdGenerator {
     pub next_id: SyntaxId,

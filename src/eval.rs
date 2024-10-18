@@ -23,7 +23,7 @@ use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
-    AssignUpdateKind, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
+    AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
     LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern, SourceString,
     StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
     TypeSymbol,
@@ -466,7 +466,7 @@ pub(crate) fn eval_up_to(
     let mut position = None;
     for syn_id in syn_ids.iter().rev() {
         // TODO: this is iterating items twice, which will be slower.
-        if let Some(expr) = find_expr_of_id(items, *syn_id) {
+        if let Some(expr) = find_expr_of_id(items, syn_id.id()) {
             expr_id = Some(expr.id);
             position = Some(expr.pos.clone());
             break;
@@ -476,7 +476,9 @@ pub(crate) fn eval_up_to(
     let expr_id = match expr_id {
         Some(id) => id,
         None => {
-            if let Some(syn_id) = syn_ids.last() {
+            // We didn't find an expression with this ID, try to
+            // evaluate a parameter with the ID.
+            if let Some(AstId::Sym(syn_id)) = syn_ids.last() {
                 if let Some((value, pos)) = eval_up_to_param(env, items, *syn_id) {
                     return Some(Ok((value, pos)));
                 }
@@ -491,6 +493,10 @@ pub(crate) fn eval_up_to(
     let item = items
         .iter()
         .find(|&item| item.position().contains_offset(offset))?;
+
+    // TODO: this evaluates to the innermost enclosing expr. For
+    // destructuring tuple, we want to return the tuple element and
+    // position.
 
     match item {
         ToplevelItem::Def(def) => match &def.2 {

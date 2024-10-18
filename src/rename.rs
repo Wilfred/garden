@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
-    ast::{Symbol, SyntaxId},
+    ast::{AstId, Symbol, SyntaxId},
     parse_toplevel_items,
     position::Position,
     visitor::Visitor,
@@ -20,8 +20,8 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
 
     let ids_at_pos = find_item_at(&items, offset);
 
-    let Some(id) = ids_at_pos.last() else {
-        eprintln!("No item found at offset {}", offset);
+    let Some(AstId::Sym(id)) = ids_at_pos.last() else {
+        eprintln!("No symbol found at offset {}", offset);
         return;
     };
     let Some(def_pos) = id_to_pos.get(id) else {

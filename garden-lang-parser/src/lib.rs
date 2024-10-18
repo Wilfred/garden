@@ -1831,7 +1831,12 @@ fn parse_let_destination(
 
             let symbol = parse_symbol(tokens, id_gen, diagnostics);
             if symbol.is_placeholder() {
-                break;
+                // If we saw a comma, the user has written e.g. `let
+                // (, y)` and we can sensibly parse most of
+                // it. Otherwise, give up.
+                if !peeked_symbol_is(tokens, ",") {
+                    break;
+                }
             }
 
             symbols.push(symbol);

@@ -1,5 +1,6 @@
 #![warn(clippy::todo)]
 #![warn(clippy::dbg_macro)]
+#![allow(clippy::collapsible_if)]
 #![allow(clippy::collapsible_else_if)]
 // Common in unfinished code.
 #![allow(clippy::if_same_then_else)]

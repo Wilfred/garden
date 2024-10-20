@@ -30,6 +30,49 @@ fun render_inline(src: String): String {
     "".join(parts)
 }
 
+// Render the next backtick text as code, and return the remainder of
+// the text to process.
+fun render_backtick(src: String): (String, String) {
+    assert(src.starts_with("`"))
+    src = src.substring(1, src.len())
+
+    match src.split_once("`") {
+        Some(parts) => {
+            let (before, after) = parts
+            ("".join(["<code>", before, "</code>"]), after)
+        }
+        None => {
+            ("", src)
+        }
+    }
+}
+
+fun render_link(src: String): (String, String) {
+    assert(src.starts_with("["))
+    src = src.substring(1, src.len())
+
+    src.split_once("](")
+    match src.split_once("](") {
+        Some(parts) => {
+            let (url_text, after_paren) = parts
+            match after_paren.split_once(")") {
+                Some(parts) => {
+                    let (url, after) = parts
+                    ("".join(["<a href=\"", url, "\">", url_text, "</a>"]), after)
+                }
+                None => (src, "")
+            }
+        }
+        None => {
+            ("", src)
+        }
+    }
+}
+
+{
+    render_link("[click me](example.com) b")
+}
+
 fun render_markdown_paragraph(src: String): String {
     "".join(["<p>", render_inline(src), "</p>"])
 }

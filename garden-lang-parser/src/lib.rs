@@ -617,7 +617,14 @@ fn parse_match(
     let match_keyword = require_token(tokens, diagnostics, "match");
     let scrutinee_expr = parse_expression(src, tokens, id_gen, diagnostics);
 
-    require_token(tokens, diagnostics, "{");
+    let open_brace = require_token(tokens, diagnostics, "{");
+    if open_brace.text != "{" {
+        return Expression::new(
+            scrutinee_expr.pos.clone(),
+            Expression_::Match(Box::new(scrutinee_expr), vec![]),
+            id_gen.next(),
+        );
+    }
 
     let mut cases = vec![];
     loop {
@@ -637,6 +644,11 @@ fn parse_match(
         let pattern = parse_pattern(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, "=>");
         let case_expr = parse_case_expr(src, tokens, id_gen, diagnostics);
+
+        if tokens.idx <= start_idx {
+            break;
+        }
+
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."

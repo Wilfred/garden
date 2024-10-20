@@ -1,0 +1,65 @@
+fun foo(src) {
+    match src
+            
+    ("")
+}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"foo",
+//         ),
+//         type_params: [],
+//         params: [
+//             SymbolWithHint {
+//                 symbol: Symbol"src",
+//                 hint: None,
+//             },
+//         ],
+//         return_hint: None,
+//         body: Block {
+//             is_loop_body: false,
+//             open_brace: Position { ... },
+//             exprs: [
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: Match(
+//                         Expression {
+//                             pos: Position { ... },
+//                             expr_: Variable(
+//                                 Symbol"src",
+//                             ),
+//                             value_is_used: true,
+//                             id: SyntaxId(3),
+//                         },
+//                         [],
+//                     ),
+//                     value_is_used: false,
+//                     id: SyntaxId(4),
+//                 },
+//                 Expression {
+//                     pos: Position { ... },
+//                     expr_: StringLiteral(
+//                         "",
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(5),
+//                 },
+//             ],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: Expected `{`, got `(`
+// 
+// --> src/test_files/parser/unfinished_match.gdn:4
+//     ("")
+//     ^
+

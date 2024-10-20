@@ -498,7 +498,7 @@ pub(crate) fn eval_up_to(
     // destructuring tuple, we want to return the tuple element and
     // position.
 
-    match item {
+    let mut res = match item {
         ToplevelItem::Def(def) => match &def.2 {
             Definition_::Fun(name_sym, fun_info) => {
                 eval_toplevel_defs(&[item.clone()], env);
@@ -564,7 +564,79 @@ pub(crate) fn eval_up_to(
                 Err(e) => Some(Err(e)),
             }
         }
+    };
+
+    // If the user asked for a single position in a tuple
+    // destructuring, handle it here.
+    if let Some(Ok((value, pos))) = &mut res {
+        if let Some((var_value, var_pos)) = let_var_pos(value, items, &syn_ids) {
+            *value = var_value;
+            *pos = var_pos;
+        }
     }
+
+    res
+}
+
+/// If the AstId corresponded to a let variable or a destructuring let
+/// variable, return the inner value and position.
+///
+/// ```garden
+/// let (x, y) = (1, 2)
+/// //      ^
+/// ```
+///
+/// In this example, we want the position to be the position of `y`,
+/// and the value to be `2`, not `(1, 2)`.
+fn let_var_pos(
+    value: &Value,
+    items: &[ToplevelItem],
+    ast_ids: &[AstId],
+) -> Option<(Value, Position)> {
+    let innermost_id = ast_ids.last()?;
+
+    for syn_id in ast_ids.iter().rev() {
+        let Some(expr) = find_expr_of_id(items, syn_id.id()) else {
+            continue;
+        };
+
+        let Expression_::Let(let_dest, _, _) = &expr.expr_ else {
+            continue;
+        };
+
+        match let_dest {
+            LetDestination::Symbol(symbol) => {
+                if &AstId::Sym(symbol.id) != innermost_id {
+                    return None;
+                }
+
+                return Some((value.clone(), symbol.position.clone()));
+            }
+            LetDestination::Destructure(symbols) => {
+                let mut matching_sym_i: Option<usize> = None;
+                for (i, symbol) in symbols.iter().enumerate() {
+                    if &AstId::Sym(symbol.id) == innermost_id {
+                        matching_sym_i = Some(i);
+                        break;
+                    }
+                }
+                let matching_sym_i = matching_sym_i?;
+
+                match value {
+                    Value::Tuple { items, .. } => {
+                        let tuple_item = items.get(matching_sym_i)?;
+                        return Some((
+                            tuple_item.clone(),
+                            symbols[matching_sym_i].position.clone(),
+                        ));
+                    }
+                    _ => return None,
+                }
+            }
+        };
+    }
+
+    None
 }
 
 /// Helper for starting evaluation with a function call. Used when

@@ -1,0 +1,11 @@
+{
+    let aa = (1, 2)
+    let (x, y) = aa
+    //   ^
+}
+
+fun main(_) {}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/tuple_destructure.gdn:3: 1
+

@@ -575,6 +575,12 @@ enclosing point and print the result."
 
 (defvar garden--previous-buf nil)
 
+(defun garden-restart ()
+  "Start a fresh garden session, discarding the state of the current."
+  (interactive)
+  (garden-stop-session)
+  (garden--start))
+
 (defun garden-toggle-session (prefix)
   "Toggle between the current *garden* buffer and a source buffer.
 If called with a prefix, stop the previous session."

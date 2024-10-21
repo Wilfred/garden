@@ -335,10 +335,12 @@ the user entering a value in the *garden* buffer."
       (find-file file-name)
     ;; For prelude and builtins, we don't have a fully qualified
     ;; path. Switch to the current prelude.gdn or builtins.gdn,
-    ;; if open.
-    (let ((target-buf (--find (string= (buffer-name it) file-name) (buffer-list))))
-      (when target-buf
-        (switch-to-buffer target-buf)))))
+    ;; relative to this elisp file.
+    (let* ((elisp-file-path (symbol-file 'garden-mode))
+           (elisp-dir (directory-file-name (file-name-directory elisp-file-path)))
+           (garden-src-root (file-name-directory elisp-dir))
+           (path (concat garden-src-root "src/" file-name)))
+      (find-file path))))
 
 (defun garden--visit (file-and-line-num)
   "Visit a position expressed in the format \"/path/foo.gdn:123\"."

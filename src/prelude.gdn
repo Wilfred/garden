@@ -32,6 +32,22 @@ enum Option<T> {
     None,
 }
 
+/// Return True if this value is `Some`.
+fun<T> (this: Option<T>) is_some(): Bool {
+    match this {
+        Some(_) => True,
+        None => False,
+    }
+}
+
+/// Return True if this value is `None`.
+fun<T> (this: Option<T>) is_none(): Bool {
+    match this {
+        Some(_) => False,
+        None => True,
+    }
+}
+
 // `Result` represents a value that succeeded, with `Ok(...)`, or
 // failed, with `Err(...)`.
 enum Result<T, E> {

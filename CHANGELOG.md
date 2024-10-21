@@ -13,6 +13,8 @@ Added `+=` and `-=` operators.
 
 Added `assert()` and removed `should_equal()`.
 
+Added `Option::is_some()` and `Option::is_none()`.
+
 Removed `List::for_each` (use `for x in y` loops instead).
 
 ## Checks

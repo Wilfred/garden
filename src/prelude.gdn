@@ -201,7 +201,6 @@ fun (this: String) index_of(needle: String): Option<Int> {
     while (i + needle.len()) <= this.len() {
         let substring = this.substring(i, i + needle.len())
 
-        // TODO: better error on ! here
         if substring == needle {
             return Some(i)
         }

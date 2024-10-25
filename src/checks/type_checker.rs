@@ -356,6 +356,9 @@ impl<'a> TypeCheckVisitor<'a> {
                     let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
                         continue;
                     };
+                    if scrutinee_ty_name.is_no_value() {
+                        continue;
+                    }
                     if pattern_type_name != scrutinee_ty_name {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
@@ -1479,30 +1482,32 @@ fn check_match_exhaustive(
         variants_remaining.insert(variant.name_sym.name.clone(), variant.clone());
     }
 
-    let mut seen_underscore = false;
-    for pattern in patterns {
-        if pattern.symbol.name.is_underscore() {
-            seen_underscore = true;
-            continue;
+    if !enum_info.variants.is_empty() {
+        let mut seen_underscore = false;
+        for pattern in patterns {
+            if pattern.symbol.name.is_underscore() {
+                seen_underscore = true;
+                continue;
+            }
+
+            match variants_remaining.remove(&pattern.symbol.name) {
+                Some(_) => {
+                    // First time we've seen this variant.
+                }
+                None => {
+                    diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: "Duplicate case in pattern match.".to_owned(),
+                        position: pattern.symbol.position.clone(),
+                    });
+                }
+            }
         }
 
-        match variants_remaining.remove(&pattern.symbol.name) {
-            Some(_) => {
-                // First time we've seen this variant.
-            }
-            None => {
-                diagnostics.push(Diagnostic {
-                    level: Level::Error,
-                    message: "Duplicate case in pattern match.".to_owned(),
-                    position: pattern.symbol.position.clone(),
-                });
-            }
+        // If any cases are _, this match is exhaustive.
+        if seen_underscore {
+            return;
         }
-    }
-
-    // If any cases are _, this match is exhaustive.
-    if seen_underscore {
-        return;
     }
 
     let missing: Vec<_> = variants_remaining.keys().collect();

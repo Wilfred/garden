@@ -5,6 +5,12 @@ fun foo(x: Option<Int>) {
         _ => {}
     }
 
+    // Matching on NoValue is harmless.
+    match todo() {
+        Some(_) => {}
+        None => {}
+    }
+
     // Missing None.
     match x {
         Some(_) => {}
@@ -24,12 +30,12 @@ fun foo(x: Option<Int>) {
 // expected stdout:
 // Error: This match expression does not cover all the cases of `Option`. It's missing `None`.
 // 
-// --> src/test_files/check/type_error_missing_case.gdn:9
+// --> src/test_files/check/type_error_missing_case.gdn:15
 //     match x {
 //           ^
 // Error: Duplicate case in pattern match.
 // 
-// --> src/test_files/check/type_error_missing_case.gdn:17
+// --> src/test_files/check/type_error_missing_case.gdn:23
 //         None => {}
 //         ^^^^
 

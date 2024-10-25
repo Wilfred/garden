@@ -32,6 +32,12 @@ pub struct TypeName {
     pub name: String,
 }
 
+impl TypeName {
+    pub fn is_no_value(&self) -> bool {
+        self.name == "NoValue"
+    }
+}
+
 impl std::fmt::Debug for TypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.name)

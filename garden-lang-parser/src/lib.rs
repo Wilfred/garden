@@ -1563,6 +1563,16 @@ fn parse_block(
     is_loop_body: bool,
 ) -> Block {
     let open_brace = require_token(tokens, diagnostics, "{");
+    if open_brace.text != "{" {
+        // No block, we've already emitted an error, so just treat it
+        // as an empty block.
+        return Block {
+            open_brace: open_brace.position.clone(),
+            exprs: vec![],
+            close_brace: open_brace.position,
+            is_loop_body,
+        };
+    }
 
     let mut exprs = vec![];
     loop {

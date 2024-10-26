@@ -1,0 +1,18 @@
+fun foo(i: Option<Int>) {
+    match i {
+        Some(_) => {
+            if True 
+        }
+        None => {}
+    }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `{`, got `}`
+// 
+// --> src/test_files/check/unfinished_if.gdn:5
+//         }
+//         ^
+

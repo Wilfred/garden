@@ -26,54 +26,43 @@ fun foo<T>(value: T): Unit {
 //         body: Block {
 //             is_loop_body: false,
 //             open_brace: Position { ... },
-//             exprs: [
-//                 Expression {
-//                     pos: Position { ... },
-//                     expr_: BinaryOperator(
-//                         Expression {
-//                             pos: Position { ... },
-//                             expr_: Invalid,
-//                             value_is_used: true,
-//                             id: SyntaxId(2),
-//                         },
-//                         LessThan,
-//                         Expression {
-//                             pos: Position { ... },
-//                             expr_: Variable(
-//                                 Symbol"T",
-//                             ),
-//                             value_is_used: true,
-//                             id: SyntaxId(4),
-//                         },
-//                     ),
-//                     value_is_used: false,
-//                     id: SyntaxId(5),
-//                 },
-//                 Expression {
-//                     pos: Position { ... },
-//                     expr_: BinaryOperator(
-//                         Expression {
-//                             pos: Position { ... },
-//                             expr_: Invalid,
-//                             value_is_used: true,
-//                             id: SyntaxId(6),
-//                         },
-//                         GreaterThan,
-//                         Expression {
-//                             pos: Position { ... },
-//                             expr_: Variable(
-//                                 Symbol"value",
-//                             ),
-//                             value_is_used: true,
-//                             id: SyntaxId(8),
-//                         },
-//                     ),
-//                     value_is_used: true,
-//                     id: SyntaxId(9),
-//                 },
-//             ],
+//             exprs: [],
 //             close_brace: Position { ... },
 //         },
+//     },
+// )
+// BinaryOperator(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Invalid,
+//         value_is_used: true,
+//         id: SyntaxId(2),
+//     },
+//     LessThan,
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"T",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(4),
+//     },
+// )
+// BinaryOperator(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Invalid,
+//         value_is_used: true,
+//         id: SyntaxId(6),
+//     },
+//     GreaterThan,
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"value",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(8),
 //     },
 // )
 // Invalid
@@ -115,16 +104,6 @@ fun foo<T>(value: T): Unit {
 // fun foo<T>(value: T): Unit {
 //          ^
 // Error: Parse error: Expected `)`, got `:`
-// 
-// --> src/test_files/parser/bad_generics.gdn:3
-// fun foo<T>(value: T): Unit {
-//                 ^
-// Error: Parse error: Expected an expression, got: `:`.
-// 
-// --> src/test_files/parser/bad_generics.gdn:3
-// fun foo<T>(value: T): Unit {
-//                 ^
-// Error: Parse error: Expected `}`, got `:`
 // 
 // --> src/test_files/parser/bad_generics.gdn:3
 // fun foo<T>(value: T): Unit {

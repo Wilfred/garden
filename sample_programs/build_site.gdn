@@ -13,21 +13,46 @@ fun render_markdown_header(src: String): String {
 }
 
 fun render_inline(src: String): String {
-    let src_parts = src.split("`")
-    let in_code = False
-
     let parts: List<String> = []
-    for src_part in src_parts {
-        if in_code {
-            parts = parts.append("".join(["<code>", src_part, "</code>"]))
-        } else {
-            parts = parts.append(src_part)
-        }
 
-        in_code = in_code.not()
+    while True {
+        match split_inline_punct(src) {
+            Some(src_parts) => {
+                let (before, after) = src_parts
+                parts = parts.append(before)
+
+                if after.starts_with("`") {
+                    let (rendered, new_src) = render_backtick(after)
+                    parts = parts.append(rendered)
+                    src = new_src
+                } else if after.ends_with("[") {
+                    let (rendered, new_src) = render_link(after)
+                    parts = parts.append(rendered)
+                    src = new_src
+                } else {
+                    assert(False)
+                }
+            }
+            None => {
+                parts = parts.append(src)
+                break
+            }
+        }
     }
 
     "".join(parts)
+}
+
+fun split_inline_punct(src: String): Option<(String, String)> {
+    let i = 0
+    while (i + 1) < src.len() {
+        let char = src.substring(i, i + 1)
+        if (char == "`") || (char == "[") {
+            return Some((src.substring(0, i), src.substring(i, src.len())))
+        }
+    }
+
+    None
 }
 
 // Render the next backtick text as code, and return the remainder of

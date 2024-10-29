@@ -309,7 +309,7 @@ pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> Topl
 
 /// Evaluate all toplevel items: definitions, then tests, then
 /// expressions.
-pub(crate) fn eval_all_toplevel_items(
+pub(crate) fn eval_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &mut Session,
@@ -415,7 +415,7 @@ pub(crate) fn eval_call_main(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."
     );
-    eval_all_toplevel_items(&call_expr_items, env, session)
+    eval_toplevel_items(&call_expr_items, env, session)
 }
 
 pub(crate) fn eval_up_to_param(
@@ -559,7 +559,7 @@ pub(crate) fn eval_up_to(
         ToplevelItem::Expr(_) => {
             session.stop_at_expr_id = Some(expr_id);
 
-            let res = eval_all_toplevel_items(&[item.clone()], env, session);
+            let res = eval_toplevel_items(&[item.clone()], env, session);
             session.stop_at_expr_id = None;
 
             match res {
@@ -4781,7 +4781,7 @@ mod tests {
         let mut id_gen = SyntaxIdGenerator::default();
         let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut id_gen);
         assert!(errors.is_empty());
-        let eval_result = eval_all_toplevel_items(&defs, &mut env, &mut session);
+        let eval_result = eval_toplevel_items(&defs, &mut env, &mut session);
         assert!(eval_result.is_ok());
     }
 }

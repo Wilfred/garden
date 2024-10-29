@@ -9,7 +9,7 @@ use serde::Serialize;
 use crate::{
     checks::type_checker::check_types,
     env::Env,
-    eval::eval_toplevel_defs,
+    eval::load_toplevel_items,
     garden_type::Type,
     pos_to_id::{find_expr_of_id, find_item_at},
     types::TypeDef,
@@ -19,7 +19,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let mut env = Env::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
 
-    eval_toplevel_defs(&items, &mut env);
+    load_toplevel_items(&items, &mut env);
 
     let ids_at_pos = find_item_at(&items, offset);
 

@@ -56,7 +56,7 @@ use json_session::handle_request;
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::eval_tests;
-use crate::eval::{eval_call_main, eval_toplevel_defs, EvalError, Session};
+use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
 use garden_lang_parser::ast::{Definition_, SourceString, SyntaxIdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
@@ -278,7 +278,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
 
     let items = parse_toplevel_items_or_die(path, src, &mut env);
 
-    eval_toplevel_defs(&items, &mut env);
+    load_toplevel_items(&items, &mut env);
     if let Err(e) = eval_call_main(&[], &mut env, &mut session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
@@ -395,7 +395,7 @@ fn run_sandboxed_tests_in_file(
 
     // TODO: for real IDE usage we'll want to use the environment of
     // the current session.
-    eval_toplevel_defs(&items, &mut env);
+    load_toplevel_items(&items, &mut env);
 
     // TODO: allow users to choose this value.
     //
@@ -486,7 +486,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
         complete_src: String::new(),
     };
 
-    eval_toplevel_defs(&items, &mut env);
+    load_toplevel_items(&items, &mut env);
 
     match eval_tests(&items, &mut env, &mut session) {
         Ok(summary) => {
@@ -580,7 +580,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         complete_src: String::new(),
     };
 
-    eval_toplevel_defs(&items, &mut env);
+    load_toplevel_items(&items, &mut env);
 
     match eval_call_main(arguments, &mut env, &mut session) {
         Ok(_) => {}

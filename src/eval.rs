@@ -293,7 +293,7 @@ pub(crate) struct ToplevelEvalSummary {
 /// Function definitions and method definitions are inserted into the
 /// environment, but tests are not executed and toplevel expressions
 /// are skipped.
-pub(crate) fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
+pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
     for item in items {
         match item {
@@ -507,7 +507,7 @@ pub(crate) fn eval_up_to(
     let mut res = match item {
         ToplevelItem::Def(def) => match &def.2 {
             Definition_::Fun(name_sym, fun_info) => {
-                eval_toplevel_defs(&[item.clone()], env);
+                load_toplevel_items(&[item.clone()], env);
                 let args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
@@ -524,7 +524,7 @@ pub(crate) fn eval_up_to(
                 Some(res.map(|v| (v, position)))
             }
             Definition_::Method(method_info) => {
-                eval_toplevel_defs(&[item.clone()], env);
+                load_toplevel_items(&[item.clone()], env);
                 let type_name = &method_info.receiver_hint.sym.name;
 
                 let prev_calls_for_type = env.prev_method_call_args.get(type_name)?.clone();

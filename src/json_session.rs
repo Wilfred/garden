@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
-    eval, eval_all_toplevel_items, eval_toplevel_defs, eval_up_to, push_test_stackframe,
+    eval, eval_all_toplevel_items, eval_up_to, load_toplevel_items, push_test_stackframe,
     EvaluatedState,
 };
 use crate::types::TypeDef;
@@ -146,7 +146,7 @@ fn handle_load_request(
         }
     }
 
-    let eval_summary = eval_toplevel_defs(&items, env);
+    let eval_summary = load_toplevel_items(&items, env);
 
     // TODO: this is duplicated with handle_eval_request.
     let definition_summary = if eval_summary.new_syms.is_empty() {

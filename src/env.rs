@@ -6,7 +6,7 @@ use crate::eval::EnclosingSymbol;
 use crate::garden_type::TypeVarEnv;
 use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
-    eval::{eval_toplevel_defs, Bindings, StackFrame},
+    eval::{load_toplevel_items, Bindings, StackFrame},
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
@@ -296,8 +296,8 @@ impl Default for Env {
             enforce_sandbox: false,
         };
 
-        eval_toplevel_defs(&prelude_items, &mut env);
-        eval_toplevel_defs(&builtin_items, &mut env);
+        load_toplevel_items(&prelude_items, &mut env);
+        load_toplevel_items(&builtin_items, &mut env);
 
         env
     }

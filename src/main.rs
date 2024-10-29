@@ -229,20 +229,20 @@ fn main() {
             let src = read_utf8_or_die(&path);
 
             let mut env = Env::default();
-            let mut complete_src = String::new();
             let mut session = Session {
                 interrupted,
                 has_attached_stdout: true,
                 start_time: Instant::now(),
                 trace_exprs: false,
                 stop_at_expr_id: None,
+                complete_src: String::new(),
             };
 
             let json_lines = src
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
             for line in json_lines {
-                let response = handle_request(line, &mut env, &mut session, &mut complete_src);
+                let response = handle_request(line, &mut env, &mut session);
                 println!("{}", serde_json::to_string_pretty(&response).unwrap());
             }
         }
@@ -273,6 +273,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
+        complete_src: String::new(),
     };
 
     let items = parse_toplevel_items_or_die(path, src, &mut env);
@@ -389,6 +390,7 @@ fn run_sandboxed_tests_in_file(
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
+        complete_src: String::new(),
     };
 
     // TODO: for real IDE usage we'll want to use the environment of
@@ -481,6 +483,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
+        complete_src: String::new(),
     };
 
     eval_toplevel_defs(&items, &mut env);
@@ -574,6 +577,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
+        complete_src: String::new(),
     };
 
     eval_toplevel_defs(&items, &mut env);

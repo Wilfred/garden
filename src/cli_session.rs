@@ -90,6 +90,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
+        complete_src: String::new(),
     };
 
     let mut rl = new_editor();

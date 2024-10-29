@@ -101,9 +101,8 @@ fn handle_eval_request(
     end_offset: Option<usize>,
     env: &mut Env,
     session: &mut Session,
-    complete_src: &mut String,
 ) -> Response {
-    complete_src.push_str(input);
+    session.complete_src.push_str(input);
 
     let (items, mut errors) = parse_toplevel_items_from_span(
         &path
@@ -398,12 +397,7 @@ fn handle_eval_up_to_request(
     }
 }
 
-pub(crate) fn handle_request(
-    req_src: &str,
-    env: &mut Env,
-    session: &mut Session,
-    complete_src: &mut String,
-) -> Response {
+pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session) -> Response {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         return Response {
             kind: ResponseKind::MalformedRequest,
@@ -501,15 +495,9 @@ pub(crate) fn handle_request(
                     warnings: vec![],
                 }
             }
-            Err(CommandParseError::NotCommandSyntax) => handle_eval_request(
-                path.as_ref(),
-                &input,
-                offset,
-                end_offset,
-                env,
-                session,
-                complete_src,
-            ),
+            Err(CommandParseError::NotCommandSyntax) => {
+                handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session)
+            }
         },
         Request::FindDefinition { name } => handle_find_def_request(&name, env),
         Request::EvalUpToId { path, src, offset } => {
@@ -653,7 +641,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     println!("{}", serialized);
 
     let mut env = Env::default();
-    let mut complete_src = String::new();
     let mut session = Session {
         interrupted,
         has_attached_stdout: false,
@@ -661,6 +648,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         trace_exprs: false,
         // TODO: set this position limit from the request.
         stop_at_expr_id: None,
+        complete_src: String::new(),
     };
 
     loop {
@@ -687,7 +675,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            let response = handle_request(&buf_str, &mut env, &mut session, &mut complete_src);
+            let response = handle_request(&buf_str, &mut env, &mut session);
             let serialized = serde_json::to_string(&response).unwrap();
             println!("{}", serialized);
         } else {

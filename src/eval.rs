@@ -259,6 +259,8 @@ pub(crate) struct Session {
     ///
     /// Useful for 'evaluate up to cursor'.
     pub(crate) stop_at_expr_id: Option<SyntaxId>,
+    /// A transcript of all inputs sent during the session.
+    pub(crate) complete_src: String,
 }
 
 #[derive(Debug, Clone)]
@@ -4343,6 +4345,7 @@ mod tests {
             start_time: Instant::now(),
             trace_exprs: false,
             stop_at_expr_id: None,
+            complete_src: String::new(),
         };
 
         super::eval_exprs(exprs, env, &mut session)
@@ -4766,6 +4769,7 @@ mod tests {
             start_time: Instant::now(),
             trace_exprs: false,
             stop_at_expr_id: None,
+            complete_src: String::new(),
         };
 
         let mut env = Env::default();

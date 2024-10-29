@@ -25,14 +25,6 @@ use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-enum Method {
-    Run,
-    FindDefinition,
-    EvalUpToId,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "method", rename_all = "snake_case")]
 enum Request {
     Run {

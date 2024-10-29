@@ -50,6 +50,8 @@ fun split_inline_punct(src: String): Option<(String, String)> {
         if (char == "`") || (char == "[") {
             return Some((src.substring(0, i), src.substring(i, src.len())))
         }
+
+        i += 1
     }
 
     None

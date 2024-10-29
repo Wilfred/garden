@@ -288,7 +288,11 @@ pub(crate) struct ToplevelEvalSummary {
     pub(crate) tests_failed: Vec<EvalError>,
 }
 
-/// Evaluate toplevel definitions, but ignore toplevel expressions and tests.
+/// Load, but do not evaluate, `items`.
+///
+/// Function definitions and method definitions are inserted into the
+/// environment, but tests are not executed and toplevel expressions
+/// are skipped.
 pub(crate) fn eval_toplevel_defs(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
     for item in items {

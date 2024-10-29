@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 use std::{
     io::BufRead,
@@ -12,7 +12,8 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
-    eval, eval_all_toplevel_items, eval_up_to, push_test_stackframe, EvaluatedState,
+    eval, eval_all_toplevel_items, eval_toplevel_defs, eval_up_to, push_test_stackframe,
+    EvaluatedState,
 };
 use crate::types::TypeDef;
 use crate::values::Value;
@@ -37,6 +38,12 @@ enum Request {
         offset: Option<usize>,
         #[serde(skip_serializing_if = "Option::is_none")]
         end_offset: Option<usize>,
+    },
+    Load {
+        input: String,
+        path: PathBuf,
+        offset: usize,
+        end_offset: usize,
     },
     FindDefinition {
         name: String,
@@ -84,6 +91,111 @@ pub(crate) fn sample_request_as_json() -> String {
         end_offset: Some(110),
     })
     .unwrap()
+}
+
+fn handle_load_request(
+    path: &Path,
+    input: &str,
+    offset: usize,
+    end_offset: usize,
+    env: &mut Env,
+) -> Response {
+    let (items, mut errors) =
+        parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
+
+    // TODO: eval requests should return all parse errors.
+    if let Some(e) = errors.pop() {
+        match e {
+            ParseError::Invalid {
+                position,
+                message,
+                additional: _,
+            } => {
+                let stack = Some(format_diagnostic(
+                    &message,
+                    &position,
+                    Level::Error,
+                    &SourceString {
+                        src: input.to_owned(),
+                        offset: 0,
+                    },
+                ));
+                return Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: Some(position),
+                        message: message.0,
+                        stack,
+                    }),
+                    position: None,
+                    warnings: vec![],
+                };
+            }
+            ParseError::Incomplete { message, .. } => {
+                return Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(ResponseError {
+                        position: None,
+                        message: message.0,
+                        stack: None,
+                    }),
+                    position: None,
+                    warnings: vec![],
+                };
+            }
+        }
+    }
+
+    let eval_summary = eval_toplevel_defs(&items, env);
+
+    // TODO: this is duplicated with handle_eval_request.
+    let definition_summary = if eval_summary.new_syms.is_empty() {
+        "".to_owned()
+    } else if eval_summary.new_syms.len() == 1 {
+        format!("Loaded {}", eval_summary.new_syms[0].0)
+    } else {
+        format!("Loaded {} definitions", eval_summary.new_syms.len())
+    };
+
+    let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
+    let test_summary = if total_tests == 0 {
+        "".to_owned()
+    } else {
+        format!(
+            "{total_tests} {}",
+            if total_tests == 1 { "test" } else { "tests" }
+        )
+    };
+
+    let test_summary = match (test_summary.is_empty(), definition_summary.is_empty()) {
+        (true, _) => "".to_owned(),
+        (false, true) => format!("Ran {test_summary}"),
+        (false, false) => format!(", ran {test_summary}"),
+    };
+
+    let summary = format!("{definition_summary}{test_summary}");
+
+    let value_summary = if let Some(last_value) = eval_summary.values.last() {
+        Some(if summary.is_empty() {
+            last_value.display(env)
+        } else {
+            format!(
+                "{summary}, and the expression evaluated to {}.",
+                last_value.display(env)
+            )
+        })
+    } else if summary.is_empty() {
+        None
+    } else {
+        Some(format!("{summary}."))
+    };
+
+    Response {
+        kind: ResponseKind::Evaluate,
+        value: Ok(value_summary),
+        position: None,
+        warnings: eval_summary.diagnostics,
+    }
 }
 
 fn handle_eval_request(
@@ -408,6 +520,12 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
     };
 
     match req {
+        Request::Load {
+            input,
+            path,
+            offset,
+            end_offset,
+        } => handle_load_request(&path, &input, offset, end_offset, env),
         Request::Run {
             path,
             input,

@@ -100,50 +100,11 @@ fn handle_load_request(
     end_offset: usize,
     env: &mut Env,
 ) -> Response {
-    let (items, mut errors) =
+    let (items, errors) =
         parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
 
-    // TODO: eval requests should return all parse errors.
-    if let Some(e) = errors.pop() {
-        match e {
-            ParseError::Invalid {
-                position,
-                message,
-                additional: _,
-            } => {
-                let stack = Some(format_diagnostic(
-                    &message,
-                    &position,
-                    Level::Error,
-                    &SourceString {
-                        src: input.to_owned(),
-                        offset: 0,
-                    },
-                ));
-                return Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: message.0,
-                        stack,
-                    }]),
-                    position: None,
-                    warnings: vec![],
-                };
-            }
-            ParseError::Incomplete { message, .. } => {
-                return Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: message.0,
-                        stack: None,
-                    }]),
-                    position: None,
-                    warnings: vec![],
-                };
-            }
-        }
+    if !errors.is_empty() {
+        return as_error_response(errors, input);
     }
 
     let eval_summary = load_toplevel_items(&items, env);
@@ -208,7 +169,7 @@ fn handle_eval_request(
 ) -> Response {
     session.complete_src.push_str(input);
 
-    let (items, mut errors) = parse_toplevel_items_from_span(
+    let (items, errors) = parse_toplevel_items_from_span(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
@@ -218,47 +179,8 @@ fn handle_eval_request(
         end_offset.unwrap_or(input.len()),
     );
 
-    // TODO: eval requests should return all parse errors.
-    if let Some(e) = errors.pop() {
-        match e {
-            ParseError::Invalid {
-                position,
-                message,
-                additional: _,
-            } => {
-                let stack = Some(format_diagnostic(
-                    &message,
-                    &position,
-                    Level::Error,
-                    &SourceString {
-                        src: input.to_owned(),
-                        offset: 0,
-                    },
-                ));
-                return Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: message.0,
-                        stack,
-                    }]),
-                    position: None,
-                    warnings: vec![],
-                };
-            }
-            ParseError::Incomplete { message, .. } => {
-                return Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: message.0,
-                        stack: None,
-                    }]),
-                    position: None,
-                    warnings: vec![],
-                };
-            }
-        }
+    if !errors.is_empty() {
+        return as_error_response(errors, input);
     }
 
     match eval_toplevel_items(&items, env, session) {
@@ -371,6 +293,47 @@ fn handle_eval_request(
             position: None,
             warnings: vec![],
         },
+    }
+}
+
+fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
+    let response_errors = errors
+        .into_iter()
+        .map(|e| match e {
+            ParseError::Invalid {
+                position,
+                message,
+                additional: _,
+            } => {
+                let stack = Some(format_diagnostic(
+                    &message,
+                    &position,
+                    Level::Error,
+                    &SourceString {
+                        src: input.to_owned(),
+                        offset: 0,
+                    },
+                ));
+
+                ResponseError {
+                    position: Some(position),
+                    message: message.0,
+                    stack,
+                }
+            }
+            ParseError::Incomplete { message, .. } => ResponseError {
+                position: None,
+                message: message.0,
+                stack: None,
+            },
+        })
+        .collect();
+
+    Response {
+        kind: ResponseKind::Evaluate,
+        value: Err(response_errors),
+        position: None,
+        warnings: vec![],
     }
 }
 

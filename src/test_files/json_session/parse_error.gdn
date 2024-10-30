@@ -1,0 +1,19 @@
+{ "method": "run", "input": "1 +" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": "evaluate",
+//   "value": {
+//     "Err": [
+//       {
+//         "position": null,
+//         "message": "Expected an expression.",
+//         "stack": null
+//       }
+//     ]
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+

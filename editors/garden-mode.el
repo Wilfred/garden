@@ -59,9 +59,10 @@ evaluate, and display the result."
     (when (region-active-p)
       (deactivate-mark))))
 
-(defun garden-send-buffer ()
+(defun garden-load-buffer ()
+  "Load all the definitions in the current buffer."
   (interactive)
-  (garden-send-input
+  (garden--load
    (save-restriction
      (widen)
      (buffer-substring-no-properties (point-min) (point-max)))
@@ -395,6 +396,16 @@ the user entering a value in the *garden* buffer."
     (when end-offset
       (setq args `(,@args (end_offset . ,end-offset))))
     (garden--process-send-string proc (garden--encode args))))
+
+(defun garden--load (string path offset end-offset)
+  "Send STRING to the current garden session for loading."
+  (let* ((buf (garden--active-buffer))
+         (args `((method . "run")
+                 (input . ,string)
+                 (path . ,path)
+                 (offset . ,offset)
+                 (end_offset . ,end-offset))))
+    (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
 
 (defun garden-send-input (string &optional path offset end-offset)
   "Send STRING to the current garden session for evaluation."

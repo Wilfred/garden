@@ -278,20 +278,25 @@ the user entering a value in the *garden* buffer."
                    (response-warnings (plist-get response :warnings))
                    (response-kind (plist-get response :kind))
                    (response-ok-value (plist-get response-value :Ok))
-                   (response-err-value (plist-get response-value :Err))
+                   (response-err-values (plist-get response-value :Err))
                    (buf (current-buffer))
                    error-buf)
               (with-current-buffer (process-buffer proc)
                 (let ((s
                        (cond
-                        (response-err-value
-                         (let* ((position (plist-get response-err-value :position))
-                                (err-msg (plist-get response-err-value :message)))
-                           ;; TODO: find the buffer with the path which matches this position.
-                           (garden--flash-position buf position)
-                           (message "%s" err-msg)
-                           (setq error-buf (garden--report-error response-err-value))
-                           (garden--fontify-error (concat err-msg "\n"))))
+                        (response-err-values
+                         (let (messages)
+                           (dolist (response-err-value (seq-into response-err-values #'list))
+                             (message "value: %S" response-err-value)
+                             (let* ((position (plist-get response-err-value :position))
+                                    (err-msg (plist-get response-err-value :message)))
+                               ;; TODO: find the buffer with the path which matches this position.
+                               (garden--flash-position buf position)
+
+                               (message "%s" err-msg)
+                               (setq error-buf (garden--report-error response-err-value))
+                               (push (garden--fontify-error (concat err-msg "\n")) messages)))
+                           (s-join "\n" messages)))
                         ((string= response-kind "ready")
                          (garden--propertize-read-only (concat response-ok-value "\n")))
                         ((string= response-kind "printed")

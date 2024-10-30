@@ -78,7 +78,7 @@ pub(crate) struct ResponseError {
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
-    pub(crate) value: Result<Option<String>, ResponseError>,
+    pub(crate) value: Result<Option<String>, Vec<ResponseError>>,
     pub(crate) position: Option<Position>,
     pub(crate) warnings: Vec<Diagnostic>,
 }
@@ -122,11 +122,11 @@ fn handle_load_request(
                 ));
                 return Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: Some(position),
                         message: message.0,
                         stack,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 };
@@ -134,11 +134,11 @@ fn handle_load_request(
             ParseError::Incomplete { message, .. } => {
                 return Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: message.0,
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 };
@@ -237,11 +237,11 @@ fn handle_eval_request(
                 ));
                 return Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: Some(position),
                         message: message.0,
                         stack,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 };
@@ -249,11 +249,11 @@ fn handle_eval_request(
             ParseError::Incomplete { message, .. } => {
                 return Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: message.0,
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 };
@@ -317,11 +317,11 @@ fn handle_eval_request(
 
             Response {
                 kind: ResponseKind::Evaluate,
-                value: Err(ResponseError {
+                value: Err(vec![ResponseError {
                     position: Some(position),
                     message: format!("Error: {}", e.0),
                     stack: Some(stack),
-                }),
+                }]),
                 position: None,
                 warnings: vec![],
             }
@@ -332,42 +332,42 @@ fn handle_eval_request(
 
             Response {
                 kind: ResponseKind::Evaluate,
-                value: Err(ResponseError {
+                value: Err(vec![ResponseError {
                     position: Some(position),
                     message: "Assertion failed".to_owned(),
                     stack: Some(stack),
-                }),
+                }]),
                 position: None,
                 warnings: vec![],
             }
         }
         Err(EvalError::Interrupted) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: None,
                 message: "Interrupted".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
         Err(EvalError::ReachedTickLimit) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: None,
                 message: "Reached the tick limit.".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: Some(position),
                 message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
@@ -407,11 +407,11 @@ fn handle_eval_up_to_request(
                 ));
                 return Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: Some(position),
                         message: message.0,
                         stack,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 };
@@ -419,11 +419,11 @@ fn handle_eval_up_to_request(
             ParseError::Incomplete { message, .. } => {
                 return Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: message.0,
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 };
@@ -442,51 +442,51 @@ fn handle_eval_up_to_request(
             Err(e) => match e {
                 EvalError::Interrupted => Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: "Interrupted.".to_owned(),
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 },
                 EvalError::ResumableError(_, message) => Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: message.0,
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 },
                 EvalError::AssertionFailed(_) => Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: "Assertion failed".to_owned(),
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 },
                 EvalError::ReachedTickLimit => Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: "Reached the tick limit.".to_owned(),
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 },
                 EvalError::ForbiddenInSandbox(position) => Response {
                     kind: ResponseKind::Evaluate,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: Some(position),
                         message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 },
@@ -505,7 +505,7 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         return Response {
             kind: ResponseKind::MalformedRequest,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: None,
                 message: format!(
                     "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
@@ -513,7 +513,7 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
                     req_src,
                 ),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         };
@@ -557,11 +557,11 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
                             }
                             None => Response {
                                 kind: ResponseKind::MalformedRequest,
-                                value: Err(ResponseError {
+                                value: Err(vec![ResponseError {
                                     position: None,
                                     message: format!("No such test: {}", name),
                                     stack: None,
-                                }),
+                                }]),
                                 position: None,
                                 warnings: vec![],
                             },
@@ -596,11 +596,11 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
 
                 Response {
                     kind: ResponseKind::RunCommand,
-                    value: Err(ResponseError {
+                    value: Err(vec![ResponseError {
                         position: None,
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),
                         stack: None,
-                    }),
+                    }]),
                     position: None,
                     warnings: vec![],
                 }
@@ -662,11 +662,11 @@ fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
 fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
     let value = match position_of_name(name, env) {
         Ok(pos) => Ok(Some(pos.as_ide_string())),
-        Err(message) => Err(ResponseError {
+        Err(message) => Err(vec![ResponseError {
             position: None,
             message,
             stack: None,
-        }),
+        }]),
     };
 
     Response {
@@ -687,51 +687,51 @@ fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
         },
         Err(EvalError::ResumableError(position, e)) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: Some(position),
                 message: format!("Error: {}", e.0),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
         Err(EvalError::AssertionFailed(position)) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: Some(position),
                 message: "Assertion failed".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
         Err(EvalError::Interrupted) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: None,
                 message: "Interrupted".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
         Err(EvalError::ReachedTickLimit) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: None,
                 message: "Reached the tick limit.".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
             kind: ResponseKind::Evaluate,
-            value: Err(ResponseError {
+            value: Err(vec![ResponseError {
                 position: Some(position),
                 message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                 stack: None,
-            }),
+            }]),
             position: None,
             warnings: vec![],
         },
@@ -791,7 +791,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         } else {
             let err_response = Response {
                 kind: ResponseKind::MalformedRequest,
-                value: Err(ResponseError {
+                value: Err(vec![ResponseError {
                     position: None,
                     message: format!(
                         "Invalid request (header missing). A valid request looks like: {}. The request received was:\n\n{}",
@@ -799,7 +799,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
                         line,
                     ),
                     stack: None,
-                }),
+                }]),
                         position: None,
                 warnings: vec![],
             };

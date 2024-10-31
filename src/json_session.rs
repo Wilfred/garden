@@ -464,9 +464,15 @@ fn handle_eval_up_to_request(
     }
 }
 
-pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session) -> Response {
+/// Process a request and print the response as JSON on stdout.
+pub(crate) fn handle_request(
+    req_src: &str,
+    pretty_print: bool,
+    env: &mut Env,
+    session: &mut Session,
+) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
-        return Response {
+        let res = Response {
             kind: ResponseKind::MalformedRequest,
             value: Err(vec![ResponseError {
                 position: None,
@@ -480,9 +486,18 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
             position: None,
             warnings: vec![],
         };
+
+        let serialized = if pretty_print {
+            serde_json::to_string_pretty(&res)
+        } else {
+            serde_json::to_string(&res)
+        }
+        .unwrap();
+        println!("{}", serialized);
+        return;
     };
 
-    match req {
+    let res = match req {
         Request::Load {
             input,
             path,
@@ -576,7 +591,16 @@ pub(crate) fn handle_request(req_src: &str, env: &mut Env, session: &mut Session
         Request::EvalUpToId { path, src, offset } => {
             handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
+    };
+
+    let serialized = if pretty_print {
+        serde_json::to_string_pretty(&res)
+    } else {
+        serde_json::to_string(&res)
     }
+    .unwrap();
+
+    println!("{}", serialized);
 }
 
 fn position_of_name(name: &str, env: &Env) -> Result<Position, String> {
@@ -748,9 +772,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            let response = handle_request(&buf_str, &mut env, &mut session);
-            let serialized = serde_json::to_string(&response).unwrap();
-            println!("{}", serialized);
+            handle_request(&buf_str, false, &mut env, &mut session);
         } else {
             let err_response = Response {
                 kind: ResponseKind::MalformedRequest,

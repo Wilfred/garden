@@ -36,9 +36,7 @@ use garden_lang_parser::position::Position;
 /// ```garden
 /// if y { let x = 1 }
 /// ```
-// TODO: Is it correct to define equality here? Closures should only
-// have reference equality probably.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
@@ -52,6 +50,16 @@ impl Default for BlockBindings {
         }
     }
 }
+
+/// Use reference equality for block bindings, so closures have
+/// reference equality.
+impl PartialEq for BlockBindings {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::eq(self, other)
+    }
+}
+
+impl Eq for BlockBindings {}
 
 /// The bindings in the current scope. This is a vec of block
 /// bindings, because exiting a block will remove some bindings.

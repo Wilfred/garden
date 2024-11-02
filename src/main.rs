@@ -20,6 +20,9 @@
 #![allow(clippy::comparison_chain)]
 // Garden has much bigger perf issues, let's not worry about this.
 #![allow(clippy::expect_fun_call)]
+// Distracting when refactoring multithreaded code, and ultimately
+// harmless.
+#![allow(clippy::arc_with_non_send_sync)]
 
 mod caret_finder;
 mod checks;

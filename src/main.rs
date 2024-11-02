@@ -44,7 +44,7 @@ mod version;
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
@@ -228,7 +228,7 @@ fn main() {
         Commands::TestJson { path } => {
             let src = read_utf8_or_die(&path);
 
-            let mut env = Env::default();
+            let env = Arc::new(Mutex::new(Env::default()));
             let mut session = Session {
                 interrupted,
                 has_attached_stdout: true,
@@ -242,7 +242,7 @@ fn main() {
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
             for line in json_lines {
-                handle_request(line, true, &mut env, &mut session);
+                handle_request(line, true, Arc::clone(&env), &mut session);
             }
         }
         Commands::Rename {

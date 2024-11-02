@@ -1,5 +1,6 @@
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::Instant;
 use std::{
     io::BufRead,
@@ -164,9 +165,11 @@ fn handle_eval_request(
     input: &str,
     offset: Option<usize>,
     end_offset: Option<usize>,
-    env: &mut Env,
+    env: Arc<Mutex<Env>>,
     session: &mut Session,
 ) -> Response {
+    let env = &mut *env.lock().unwrap();
+
     session.complete_src.push_str(input);
 
     let (items, errors) = parse_toplevel_items_from_span(
@@ -468,7 +471,7 @@ fn handle_eval_up_to_request(
 pub(crate) fn handle_request(
     req_src: &str,
     pretty_print: bool,
-    env: &mut Env,
+    env: Arc<Mutex<Env>>,
     session: &mut Session,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
@@ -503,7 +506,10 @@ pub(crate) fn handle_request(
             path,
             offset,
             end_offset,
-        } => handle_load_request(&path, &input, offset, end_offset, env),
+        } => {
+            let env = &mut *env.lock().unwrap();
+            handle_load_request(&path, &input, offset, end_offset, env)
+        }
         Request::Run {
             path,
             input,
@@ -511,6 +517,7 @@ pub(crate) fn handle_request(
             end_offset,
         } => match Command::from_string(&input) {
             Ok(command) => {
+                let env = &mut *env.lock().unwrap();
                 let mut out_buf: Vec<u8> = vec![];
                 match run_command(&mut out_buf, &command, env, session) {
                     Ok(()) => Response {
@@ -587,8 +594,12 @@ pub(crate) fn handle_request(
                 handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session)
             }
         },
-        Request::FindDefinition { name } => handle_find_def_request(&name, env),
+        Request::FindDefinition { name } => {
+            let env = &mut *env.lock().unwrap();
+            handle_find_def_request(&name, env)
+        }
         Request::EvalUpToId { path, src, offset } => {
+            let env = &mut *env.lock().unwrap();
             handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
     };
@@ -737,7 +748,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
 
-    let mut env = Env::default();
+    let env = Arc::new(Mutex::new(Env::default()));
     let mut session = Session {
         interrupted,
         has_attached_stdout: false,
@@ -772,7 +783,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            handle_request(&buf_str, false, &mut env, &mut session);
+            handle_request(&buf_str, false, Arc::clone(&env), &mut session);
         } else {
             let err_response = Response {
                 kind: ResponseKind::MalformedRequest,

@@ -166,12 +166,12 @@ fn handle_eval_request(
     offset: Option<usize>,
     end_offset: Option<usize>,
     env: Arc<Mutex<Env>>,
-    session: &mut Session,
+    session: Arc<Mutex<Session>>,
     pretty_print: bool,
 ) {
     let env = &mut *env.lock().unwrap();
 
-    session.complete_src.push_str(input);
+    session.lock().unwrap().complete_src.push_str(input);
 
     let (items, errors) = parse_toplevel_items_from_span(
         &path
@@ -195,7 +195,7 @@ fn handle_eval_request(
         return;
     }
 
-    let res = match eval_toplevel_items(&items, env, session) {
+    let res = match eval_toplevel_items(&items, env, &mut session.lock().unwrap()) {
         Ok(eval_summary) => {
             let definition_summary = if eval_summary.new_syms.is_empty() {
                 "".to_owned()
@@ -489,7 +489,7 @@ pub(crate) fn handle_request(
     req_src: &str,
     pretty_print: bool,
     env: Arc<Mutex<Env>>,
-    session: &mut Session,
+    session: Arc<Mutex<Session>>,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
@@ -535,6 +535,8 @@ pub(crate) fn handle_request(
         } => match Command::from_string(&input) {
             Ok(command) => {
                 let env = &mut *env.lock().unwrap();
+                let session = &mut *session.lock().unwrap();
+
                 let mut out_buf: Vec<u8> = vec![];
                 match run_command(&mut out_buf, &command, env, session) {
                     Ok(()) => Response {
@@ -626,6 +628,7 @@ pub(crate) fn handle_request(
         }
         Request::EvalUpToId { path, src, offset } => {
             let env = &mut *env.lock().unwrap();
+            let session = &mut *session.lock().unwrap();
             handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
     };
@@ -775,7 +778,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     println!("{}", serialized);
 
     let env = Arc::new(Mutex::new(Env::default()));
-    let mut session = Session {
+    let session = Arc::new(Mutex::new(Session {
         interrupted,
         has_attached_stdout: false,
         start_time: Instant::now(),
@@ -783,7 +786,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         // TODO: set this position limit from the request.
         stop_at_expr_id: None,
         complete_src: String::new(),
-    };
+    }));
 
     loop {
         let mut line = String::new();
@@ -809,7 +812,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            handle_request(&buf_str, false, Arc::clone(&env), &mut session);
+            handle_request(&buf_str, false, Arc::clone(&env), Arc::clone(&session));
         } else {
             let err_response = Response {
                 kind: ResponseKind::MalformedRequest,

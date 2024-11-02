@@ -232,20 +232,20 @@ fn main() {
             let src = read_utf8_or_die(&path);
 
             let env = Arc::new(Mutex::new(Env::default()));
-            let mut session = Session {
+            let session = Arc::new(Mutex::new(Session {
                 interrupted,
                 has_attached_stdout: true,
                 start_time: Instant::now(),
                 trace_exprs: false,
                 stop_at_expr_id: None,
                 complete_src: String::new(),
-            };
+            }));
 
             let json_lines = src
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
             for line in json_lines {
-                handle_request(line, true, Arc::clone(&env), &mut session);
+                handle_request(line, true, Arc::clone(&env), Arc::clone(&session));
             }
         }
         Commands::Rename {

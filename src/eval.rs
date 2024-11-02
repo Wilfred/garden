@@ -1,12 +1,11 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use garden_lang_parser::diagnostics::ErrorMessage;
@@ -40,13 +39,13 @@ use garden_lang_parser::position::Position;
 pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
-    pub(crate) values: Arc<RefCell<HashMap<SymbolName, Value>>>,
+    pub(crate) values: Arc<Mutex<HashMap<SymbolName, Value>>>,
 }
 
 impl Default for BlockBindings {
     fn default() -> Self {
         Self {
-            values: Arc::new(RefCell::new(HashMap::new())),
+            values: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
@@ -81,7 +80,7 @@ impl Bindings {
     fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
         Self {
             block_bindings: vec![BlockBindings {
-                values: Arc::new(RefCell::new(outer_scope)),
+                values: Arc::new(Mutex::new(outer_scope)),
             }],
         }
     }
@@ -92,7 +91,7 @@ impl Bindings {
         //
         // (Probably not, as long as users can inspect everything.)
         for block_bindings in self.block_bindings.iter().rev() {
-            if let Some(value) = block_bindings.values.borrow().get(name) {
+            if let Some(value) = block_bindings.values.lock().unwrap().get(name) {
                 return Some(value.clone());
             }
         }
@@ -107,8 +106,8 @@ impl Bindings {
     /// remove the innermost binding.
     pub(crate) fn remove(&mut self, name: &SymbolName) {
         for block_bindings in self.block_bindings.iter_mut().rev() {
-            if block_bindings.values.borrow().get(name).is_some() {
-                block_bindings.values.borrow_mut().remove(name);
+            if block_bindings.values.lock().unwrap().get(name).is_some() {
+                block_bindings.values.lock().unwrap().remove(name);
             }
         }
     }
@@ -124,16 +123,18 @@ impl Bindings {
             .expect("Vec of bindings should always be non-empty");
         block_bindings
             .values
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .insert(name.clone(), value);
     }
 
     fn set_existing(&mut self, name: &SymbolName, value: Value) {
         for block_bindings in self.block_bindings.iter_mut().rev() {
-            if block_bindings.values.borrow().contains_key(name) {
+            if block_bindings.values.lock().unwrap().contains_key(name) {
                 block_bindings
                     .values
-                    .borrow_mut()
+                    .lock()
+                    .unwrap()
                     .insert(name.clone(), value);
                 return;
             }
@@ -144,7 +145,7 @@ impl Bindings {
     pub(crate) fn all(&self) -> Vec<(SymbolName, Value)> {
         let mut res = vec![];
         for block_bindings in self.block_bindings.iter().rev() {
-            for (k, v) in block_bindings.values.borrow().iter() {
+            for (k, v) in block_bindings.values.lock().unwrap().iter() {
                 res.push((k.clone(), v.clone()));
             }
         }
@@ -2377,7 +2378,7 @@ fn eval_call(
             }
 
             bindings.push(BlockBindings {
-                values: Arc::new(RefCell::new(fun_bindings)),
+                values: Arc::new(Mutex::new(fun_bindings)),
             });
 
             return Ok(Some(StackFrame {

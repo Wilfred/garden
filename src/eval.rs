@@ -30,6 +30,12 @@ use garden_lang_parser::ast::{
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
 
+/// Bindings in a single block. For example, `x` is only bound inside
+/// the if block here.
+///
+/// ```garden
+/// if y { let x = 1 }
+/// ```
 // TODO: Is it correct to define equality here? Closures should only
 // have reference equality probably.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -47,6 +53,8 @@ impl Default for BlockBindings {
     }
 }
 
+/// The bindings in the current scope. This is a vec of block
+/// bindings, because exiting a block will remove some bindings.
 #[derive(Debug, Clone)]
 pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,

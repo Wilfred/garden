@@ -5,7 +5,6 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -37,13 +36,13 @@ use garden_lang_parser::position::Position;
 pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
-    pub(crate) values: Rc<RefCell<HashMap<SymbolName, Value>>>,
+    pub(crate) values: Arc<RefCell<HashMap<SymbolName, Value>>>,
 }
 
 impl Default for BlockBindings {
     fn default() -> Self {
         Self {
-            values: Rc::new(RefCell::new(HashMap::new())),
+            values: Arc::new(RefCell::new(HashMap::new())),
         }
     }
 }
@@ -66,7 +65,7 @@ impl Bindings {
     fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
         Self {
             block_bindings: vec![BlockBindings {
-                values: Rc::new(RefCell::new(outer_scope)),
+                values: Arc::new(RefCell::new(outer_scope)),
             }],
         }
     }
@@ -2362,7 +2361,7 @@ fn eval_call(
             }
 
             bindings.push(BlockBindings {
-                values: Rc::new(RefCell::new(fun_bindings)),
+                values: Arc::new(RefCell::new(fun_bindings)),
             });
 
             return Ok(Some(StackFrame {

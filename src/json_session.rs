@@ -167,7 +167,8 @@ fn handle_eval_request(
     end_offset: Option<usize>,
     env: Arc<Mutex<Env>>,
     session: &mut Session,
-) -> Response {
+    pretty_print: bool,
+) {
     let env = &mut *env.lock().unwrap();
 
     session.complete_src.push_str(input);
@@ -183,10 +184,18 @@ fn handle_eval_request(
     );
 
     if !errors.is_empty() {
-        return as_error_response(errors, input);
+        let res = as_error_response(errors, input);
+        let serialized = if pretty_print {
+            serde_json::to_string_pretty(&res)
+        } else {
+            serde_json::to_string(&res)
+        }
+        .unwrap();
+        println!("{}", serialized);
+        return;
     }
 
-    match eval_toplevel_items(&items, env, session) {
+    let res = match eval_toplevel_items(&items, env, session) {
         Ok(eval_summary) => {
             let definition_summary = if eval_summary.new_syms.is_empty() {
                 "".to_owned()
@@ -296,7 +305,15 @@ fn handle_eval_request(
             position: None,
             warnings: vec![],
         },
+    };
+
+    let serialized = if pretty_print {
+        serde_json::to_string_pretty(&res)
+    } else {
+        serde_json::to_string(&res)
     }
+    .unwrap();
+    println!("{}", serialized);
 }
 
 fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
@@ -591,7 +608,16 @@ pub(crate) fn handle_request(
                 }
             }
             Err(CommandParseError::NotCommandSyntax) => {
-                handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session)
+                handle_eval_request(
+                    path.as_ref(),
+                    &input,
+                    offset,
+                    end_offset,
+                    env,
+                    session,
+                    pretty_print,
+                );
+                return;
             }
         },
         Request::FindDefinition { name } => {

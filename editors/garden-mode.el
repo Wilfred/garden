@@ -412,6 +412,15 @@ the user entering a value in the *garden* buffer."
                  (end_offset . ,end-offset))))
     (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
 
+(defun garden-interrupt ()
+  "Interrupt the current Garden session.
+Useful for accidental infinite loops."
+  (interactive)
+  (let* ((buf (garden--active-buffer))
+         (args `((method . "interrupt")
+                 (input . ""))))
+    (garden--process-send-string (get-buffer-process buf) (garden--encode args))))
+
 (defun garden-send-input (string &optional path offset end-offset)
   "Send STRING to the current garden session for evaluation."
   (let ((buf (garden--active-buffer)))

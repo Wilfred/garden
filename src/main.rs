@@ -48,6 +48,7 @@ mod version;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
@@ -156,10 +157,12 @@ fn main() {
     })
     .expect("Error setting Ctrl-C handler");
 
+    let mut thread_handles: Vec<JoinHandle<()>> = vec![];
+
     let args = Cli::parse();
     match args.command {
         Commands::Repl => cli_session::repl(interrupted),
-        Commands::Json => json_session::json_session(interrupted),
+        Commands::Json => json_session::json_session(interrupted, &mut thread_handles),
         Commands::Run { path, arguments } => {
             let src = read_utf8_or_die(&path);
             run_file(&src, &path, &arguments, interrupted)
@@ -245,7 +248,13 @@ fn main() {
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
             for line in json_lines {
-                handle_request(line, true, Arc::clone(&env), Arc::clone(&session));
+                handle_request(
+                    line,
+                    true,
+                    Arc::clone(&env),
+                    Arc::clone(&session),
+                    &mut thread_handles,
+                );
             }
         }
         Commands::Rename {
@@ -263,6 +272,10 @@ fn main() {
             let src_path = override_path.unwrap_or(path);
             rename::rename(&src, &src_path, offset, &new_name)
         }
+    }
+
+    for handle in thread_handles {
+        handle.join().unwrap();
     }
 }
 

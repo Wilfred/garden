@@ -67,8 +67,6 @@ pub(crate) enum ResponseKind {
     Ready,
     MalformedRequest,
     Printed,
-    // TODO: find a nice way to suspend the interpreter.
-    InteractivePrompt,
     FoundDefinition,
 }
 

@@ -236,7 +236,7 @@ fn main() {
 
             let env = Arc::new(Mutex::new(Env::default()));
             let session = Arc::new(Mutex::new(Session {
-                interrupted,
+                interrupted: Arc::clone(&interrupted),
                 has_attached_stdout: true,
                 start_time: Instant::now(),
                 trace_exprs: false,
@@ -252,6 +252,7 @@ fn main() {
                     true,
                     Arc::clone(&env),
                     Arc::clone(&session),
+                    Arc::clone(&interrupted),
                     &mut thread_handles,
                 );
             }

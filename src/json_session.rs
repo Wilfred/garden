@@ -503,6 +503,7 @@ pub(crate) fn handle_request(
     pretty_print: bool,
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
+    _interrupted: Arc<AtomicBool>,
     thread_handles: &mut Vec<JoinHandle<()>>,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
@@ -794,7 +795,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>, thread_handles: &mut Ve
 
     let env = Arc::new(Mutex::new(Env::default()));
     let session = Arc::new(Mutex::new(Session {
-        interrupted,
+        interrupted: Arc::clone(&interrupted),
         has_attached_stdout: false,
         start_time: Instant::now(),
         trace_exprs: false,
@@ -831,6 +832,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>, thread_handles: &mut Ve
                 false,
                 Arc::clone(&env),
                 Arc::clone(&session),
+                Arc::clone(&interrupted),
                 thread_handles,
             );
         } else {

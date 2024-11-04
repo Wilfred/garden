@@ -241,7 +241,6 @@ fn main() {
                 start_time: Instant::now(),
                 trace_exprs: false,
                 stop_at_expr_id: None,
-                complete_src: String::new(),
             }));
 
             let json_lines = src
@@ -288,7 +287,6 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
-        complete_src: String::new(),
     };
 
     let items = parse_toplevel_items_or_die(path, src, &mut env);
@@ -405,7 +403,6 @@ fn run_sandboxed_tests_in_file(
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
-        complete_src: String::new(),
     };
 
     // TODO: for real IDE usage we'll want to use the environment of
@@ -498,7 +495,6 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
-        complete_src: String::new(),
     };
 
     load_toplevel_items(&items, &mut env);
@@ -592,7 +588,6 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         start_time: Instant::now(),
         trace_exprs: false,
         stop_at_expr_id: None,
-        complete_src: String::new(),
     };
 
     load_toplevel_items(&items, &mut env);

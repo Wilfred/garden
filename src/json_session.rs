@@ -171,8 +171,6 @@ fn handle_eval_request(
     thread_handles: &mut Vec<JoinHandle<()>>,
     pretty_print: bool,
 ) {
-    session.lock().unwrap().complete_src.push_str(input);
-
     let env_ref = &mut *env.lock().unwrap();
 
     let (items, errors) = parse_toplevel_items_from_span(
@@ -802,7 +800,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>, thread_handles: &mut Ve
         trace_exprs: false,
         // TODO: set this position limit from the request.
         stop_at_expr_id: None,
-        complete_src: String::new(),
     }));
 
     loop {

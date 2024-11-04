@@ -47,6 +47,8 @@ enum Request {
         offset: usize,
         end_offset: usize,
     },
+    /// Stop the current evaluation, as if we'd pressed Ctrl-c.
+    Interrupt,
     FindDefinition {
         name: String,
     },
@@ -503,7 +505,7 @@ pub(crate) fn handle_request(
     pretty_print: bool,
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
-    _interrupted: Arc<AtomicBool>,
+    interrupted: Arc<AtomicBool>,
     thread_handles: &mut Vec<JoinHandle<()>>,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
@@ -541,6 +543,15 @@ pub(crate) fn handle_request(
         } => {
             let env = &mut *env.lock().unwrap();
             handle_load_request(&path, &input, offset, end_offset, env)
+        }
+        Request::Interrupt => {
+            interrupted.store(true, std::sync::atomic::Ordering::Relaxed);
+            Response {
+                kind: ResponseKind::RunCommand,
+                value: Ok(Some("Interrupted".to_owned())),
+                position: None,
+                warnings: vec![],
+            }
         }
         Request::Run {
             path,

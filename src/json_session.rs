@@ -375,7 +375,7 @@ fn handle_eval_up_to_request(
     src: &str,
     offset: usize,
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Response {
     let (items, mut errors) = parse_toplevel_items(
         &path
@@ -653,7 +653,7 @@ pub(crate) fn handle_request(
         }
         Request::EvalUpToId { path, src, offset } => {
             let env = &mut *env.lock().unwrap();
-            let session = &mut *session.lock().unwrap();
+            let session = &*session.lock().unwrap();
             handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
     };
@@ -729,7 +729,7 @@ fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
     }
 }
 
-fn eval_to_response(env: &mut Env, session: &mut Session) -> Response {
+fn eval_to_response(env: &mut Env, session: &Session) -> Response {
     match eval(env, session) {
         Ok(result) => Response {
             kind: ResponseKind::Evaluate,

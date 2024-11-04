@@ -281,7 +281,7 @@ fn main() {
 /// Evaluate a garden file, then run eval-up-to and print the result.
 fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<AtomicBool>) {
     let mut env = Env::default();
-    let mut session = Session {
+    let session = Session {
         interrupted,
         has_attached_stdout: true,
         start_time: Instant::now(),
@@ -304,7 +304,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         return;
     }
 
-    match eval_up_to(&mut env, &mut session, &items, offset) {
+    match eval_up_to(&mut env, &session, &items, offset) {
         Some(eval_res) => match eval_res {
             Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
             Err(e) => match e {

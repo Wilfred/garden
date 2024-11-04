@@ -471,7 +471,7 @@ pub(crate) fn eval_up_to_param(
 /// Returns None if we couldn't find anything to evaluate (not an error).
 pub(crate) fn eval_up_to(
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
     items: &[ToplevelItem],
     offset: usize,
 ) -> Option<Result<(Value, Position), EvalError>> {

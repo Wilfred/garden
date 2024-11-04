@@ -270,11 +270,6 @@ pub(crate) struct Session {
     pub(crate) has_attached_stdout: bool,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
-    /// Stop after evaluating the expression with this ID, if we reach
-    /// it.
-    ///
-    /// Useful for 'evaluate up to cursor'.
-    pub(crate) stop_at_expr_id: Option<SyntaxId>,
 }
 
 #[derive(Debug, Clone)]
@@ -531,9 +526,9 @@ pub(crate) fn eval_up_to(
                     }
                 };
 
-                session.stop_at_expr_id = Some(expr_id);
+                env.stop_at_expr_id = Some(expr_id);
                 let res = eval_toplevel_call(&name_sym.name, &args, env, session);
-                session.stop_at_expr_id = None;
+                env.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
             }
@@ -544,7 +539,7 @@ pub(crate) fn eval_up_to(
                 let prev_calls_for_type = env.prev_method_call_args.get(type_name)?.clone();
                 let (prev_recv, prev_args) = prev_calls_for_type.get(&method_info.name_sym.name)?;
 
-                session.stop_at_expr_id = Some(expr_id);
+                env.stop_at_expr_id = Some(expr_id);
                 let res = eval_toplevel_method_call(
                     prev_recv,
                     &method_info.name_sym.name,
@@ -552,16 +547,16 @@ pub(crate) fn eval_up_to(
                     env,
                     session,
                 );
-                session.stop_at_expr_id = None;
+                env.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
             }
             Definition_::Test(test) => {
-                session.stop_at_expr_id = Some(expr_id);
+                env.stop_at_expr_id = Some(expr_id);
 
                 push_test_stackframe(test, env);
                 let res = eval(env, session);
-                session.stop_at_expr_id = None;
+                env.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
             }
@@ -571,10 +566,10 @@ pub(crate) fn eval_up_to(
             }
         },
         ToplevelItem::Expr(_) => {
-            session.stop_at_expr_id = Some(expr_id);
+            env.stop_at_expr_id = Some(expr_id);
 
             let res = eval_toplevel_items(&[item.clone()], env, session);
-            session.stop_at_expr_id = None;
+            env.stop_at_expr_id = None;
 
             match res {
                 Ok(mut eval_summary) => {
@@ -3222,8 +3217,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             env.ticks += 1;
 
             let expr_position = outer_expr.pos.clone();
-            let expr_value_is_used = outer_expr.value_is_used
-                || session.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
+            let expr_value_is_used =
+                outer_expr.value_is_used || env.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
             let expr_id = outer_expr.id;
 
             if session.interrupted.load(Ordering::SeqCst) {
@@ -3857,8 +3852,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // recurse (e.g. variable lookup), we set done_children in
             // the match above.
             if done_children.done_children()
-                && session.stop_at_expr_id.is_some()
-                && session.stop_at_expr_id.as_ref() == Some(&expr_id)
+                && env.stop_at_expr_id.is_some()
+                && env.stop_at_expr_id.as_ref() == Some(&expr_id)
             {
                 let v = match stack_frame.evalled_values.last() {
                     Some(value) => value.clone(),
@@ -3914,7 +3909,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // requested to stop at this call expression and return
             // that result.
             if stack_frame.caller_expr_id.is_some()
-                && session.stop_at_expr_id == stack_frame.caller_expr_id
+                && env.stop_at_expr_id == stack_frame.caller_expr_id
             {
                 env.stack.pop_to_toplevel();
                 return Ok(return_value);
@@ -4362,7 +4357,6 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
-            stop_at_expr_id: None,
         };
 
         super::eval_exprs(exprs, env, &session)
@@ -4785,7 +4779,6 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
-            stop_at_expr_id: None,
         };
 
         let mut env = Env::default();

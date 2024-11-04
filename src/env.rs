@@ -10,8 +10,8 @@ use crate::{
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, SyntaxIdGenerator,
-    TestInfo, TypeHint, TypeName, TypeSymbol,
+    BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, SyntaxId,
+    SyntaxIdGenerator, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
@@ -80,6 +80,12 @@ pub(crate) struct Env {
     pub(crate) ticks: usize,
     /// Stop evaluation if we exceed this number of ticks.
     pub(crate) tick_limit: Option<usize>,
+
+    /// Stop after evaluating the expression with this ID, if we reach
+    /// it.
+    ///
+    /// Used for 'evaluate up to cursor'.
+    pub(crate) stop_at_expr_id: Option<SyntaxId>,
 
     /// Refuse to run code might modify the system, such as filesystem
     /// access or shell commands. This should allow us to run
@@ -294,6 +300,7 @@ impl Default for Env {
             ticks: 0,
             tick_limit: None,
             enforce_sandbox: false,
+            stop_at_expr_id: None,
         };
 
         load_toplevel_items(&prelude_items, &mut env);

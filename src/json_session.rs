@@ -808,8 +808,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>, thread_handles: &mut Ve
         has_attached_stdout: false,
         start_time: Instant::now(),
         trace_exprs: false,
-        // TODO: set this position limit from the request.
-        stop_at_expr_id: None,
     }));
 
     loop {

@@ -178,7 +178,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             }
         }
 
-        match eval(&mut env, &mut session) {
+        match eval(&mut env, &session) {
             Ok(result) => {
                 if let Some(display_str) = result.display_unless_unit(&env) {
                     println!("{}", display_str);

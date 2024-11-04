@@ -292,7 +292,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     let items = parse_toplevel_items_or_die(path, src, &mut env);
 
     load_toplevel_items(&items, &mut env);
-    if let Err(e) = eval_call_main(&[], &mut env, &mut session) {
+    if let Err(e) = eval_call_main(&[], &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
@@ -397,7 +397,7 @@ fn run_sandboxed_tests_in_file(
         return;
     }
 
-    let mut session = Session {
+    let session = Session {
         interrupted,
         has_attached_stdout: true,
         start_time: Instant::now(),
@@ -432,7 +432,7 @@ fn run_sandboxed_tests_in_file(
         contained_items
     };
 
-    match eval_tests(&relevant_items, &mut env, &mut session) {
+    match eval_tests(&relevant_items, &mut env, &session) {
         Ok(summary) => {
             let mut num_failed = 0;
             let mut num_errored = 0;
@@ -489,7 +489,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut env = Env::default();
     let items = parse_toplevel_items_or_die(path, src, &mut env);
 
-    let mut session = Session {
+    let session = Session {
         interrupted,
         has_attached_stdout: true,
         start_time: Instant::now(),
@@ -499,7 +499,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
 
     load_toplevel_items(&items, &mut env);
 
-    match eval_tests(&items, &mut env, &mut session) {
+    match eval_tests(&items, &mut env, &session) {
         Ok(summary) => {
             if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
                 println!("No tests found.");
@@ -582,7 +582,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     let mut env = Env::default();
     let items = parse_toplevel_items_or_die(path, src, &mut env);
 
-    let mut session = Session {
+    let session = Session {
         interrupted,
         has_attached_stdout: true,
         start_time: Instant::now(),
@@ -592,7 +592,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
 
     load_toplevel_items(&items, &mut env);
 
-    match eval_call_main(arguments, &mut env, &mut session) {
+    match eval_call_main(arguments, &mut env, &session) {
         Ok(_) => {}
         Err(EvalError::ResumableError(position, msg)) => {
             eprintln!(

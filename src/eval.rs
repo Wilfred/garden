@@ -326,7 +326,7 @@ pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> Topl
 pub(crate) fn eval_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut defs = vec![];
     let mut exprs = vec![];
@@ -365,7 +365,7 @@ pub(crate) fn eval_toplevel_items(
 pub(crate) fn eval_tests(
     items: &[ToplevelItem],
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut tests_passed = 0;
     let mut tests_failed = vec![];
@@ -420,7 +420,7 @@ fn call_to_main_src(cli_args: &[String]) -> String {
 pub(crate) fn eval_call_main(
     cli_args: &[String],
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
@@ -665,7 +665,7 @@ pub(crate) fn eval_toplevel_call(
     name: &SymbolName,
     args: &[Value],
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Result<Value, EvalError> {
     let stack_frame = env
         .stack
@@ -717,7 +717,7 @@ pub(crate) fn eval_toplevel_method_call(
     meth_name: &SymbolName,
     args: &[Value],
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Result<Value, EvalError> {
     let stack_frame = env
         .stack
@@ -3216,7 +3216,7 @@ fn eval_builtin_method_call(
 }
 
 /// Execute the expressions in the stack on `env`.
-pub(crate) fn eval(env: &mut Env, session: &mut Session) -> Result<Value, EvalError> {
+pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.0.pop() {
         if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             env.ticks += 1;
@@ -4294,7 +4294,7 @@ fn eval_match_cases(
 pub(crate) fn eval_exprs(
     exprs: &[Expression],
     env: &mut Env,
-    session: &mut Session,
+    session: &Session,
 ) -> Result<Value, EvalError> {
     let mut exprs_to_eval = vec![];
     for expr in exprs.iter().rev() {
@@ -4357,7 +4357,7 @@ mod tests {
 
     fn eval_exprs(exprs: &[Expression], env: &mut Env) -> Result<Value, EvalError> {
         let interrupted = Arc::new(AtomicBool::new(false));
-        let mut session = Session {
+        let session = Session {
             interrupted,
             has_attached_stdout: false,
             start_time: Instant::now(),
@@ -4365,7 +4365,7 @@ mod tests {
             stop_at_expr_id: None,
         };
 
-        super::eval_exprs(exprs, env, &mut session)
+        super::eval_exprs(exprs, env, &session)
     }
 
     #[test]
@@ -4780,7 +4780,7 @@ mod tests {
     #[test]
     fn test_eval_empty_test() {
         let interrupted = Arc::new(AtomicBool::new(false));
-        let mut session = Session {
+        let session = Session {
             interrupted,
             has_attached_stdout: false,
             start_time: Instant::now(),
@@ -4793,7 +4793,7 @@ mod tests {
         let mut id_gen = SyntaxIdGenerator::default();
         let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut id_gen);
         assert!(errors.is_empty());
-        let eval_result = eval_toplevel_items(&defs, &mut env, &mut session);
+        let eval_result = eval_toplevel_items(&defs, &mut env, &session);
         assert!(eval_result.is_ok());
     }
 }

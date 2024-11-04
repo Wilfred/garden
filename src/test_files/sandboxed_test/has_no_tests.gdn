@@ -4,5 +4,6 @@ fun foo() {
 }
 
 // args: sandboxed-test
-// expected stdout: 0 passed
+// expected stdout: No tests
+
 

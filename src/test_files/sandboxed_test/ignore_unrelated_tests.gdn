@@ -10,3 +10,4 @@ test safe_test {
 // args: sandboxed-test
 // expected stdout: 1 passed
 
+

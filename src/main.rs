@@ -450,21 +450,28 @@ fn run_sandboxed_tests_in_file(
                 }
             }
 
-            print!("{} passed", summary.tests_passed);
+            let mut parts = vec![];
+            if summary.tests_passed > 0 {
+                parts.push(format!("{} passed", summary.tests_passed));
+            }
             if num_failed > 0 {
-                print!(", {} failed", num_failed);
+                parts.push(format!("{} failed", num_failed));
             }
             if num_errored > 0 {
-                print!(", {} errored", num_errored);
+                parts.push(format!("{} errored", num_errored));
             }
             if num_timed_out > 0 {
-                print!(", {} timed out", num_timed_out);
+                parts.push(format!("{} timed out", num_timed_out));
             }
             if num_sandboxed > 0 {
-                print!(", {} sandboxed", num_sandboxed);
+                parts.push(format!("{} sandboxed", num_sandboxed));
             }
 
-            println!();
+            if parts.is_empty() {
+                parts.push("No tests".to_owned());
+            }
+
+            println!("{}", parts.join(", "));
         }
         Err(EvalError::ResumableError(_, _)) => {
             println!("Error")

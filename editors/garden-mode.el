@@ -380,6 +380,12 @@ the user entering a value in the *garden* buffer."
     (garden--start))
   (garden--buffer))
 
+(defvar garden--id 0)
+
+(defun garden--id ()
+  "The next request ID to use."
+  (cl-incf garden--id))
+
 (defun garden--encode (args)
   (let* ((json-encoding-pretty-print t)
          (json-str (json-encode args))
@@ -393,7 +399,7 @@ the user entering a value in the *garden* buffer."
   (process-send-string proc s))
 
 (defun garden--send-run (proc string &optional path offset end-offset)
-  (let ((args `((method . "run") (input . ,string))))
+  (let ((args `((method . "run") (input . ,string) (id . ,(garden--id)))))
     (when path
       (setq args `(,@args (path . ,path))))
     (when offset
@@ -406,6 +412,7 @@ the user entering a value in the *garden* buffer."
   "Send STRING to the current garden session for loading."
   (let* ((buf (garden--active-buffer))
          (args `((method . "run")
+                 (id . ,(garden--id))
                  (input . ,string)
                  (path . ,path)
                  (offset . ,offset)

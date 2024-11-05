@@ -47,15 +47,15 @@ mod version;
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
-use std::thread::JoinHandle;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
 use eval::eval_up_to;
 use go_to_def::print_pos;
 use hover::show_type;
-use json_session::handle_request;
+use json_session::{handle_request, start_eval_thread};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
@@ -157,12 +157,10 @@ fn main() {
     })
     .expect("Error setting Ctrl-C handler");
 
-    let mut thread_handles: Vec<JoinHandle<()>> = vec![];
-
     let args = Cli::parse();
     match args.command {
         Commands::Repl => cli_session::repl(interrupted),
-        Commands::Json => json_session::json_session(interrupted, &mut thread_handles),
+        Commands::Json => json_session::json_session(interrupted),
         Commands::Run { path, arguments } => {
             let src = read_utf8_or_die(&path);
             run_file(&src, &path, &arguments, interrupted)
@@ -245,6 +243,11 @@ fn main() {
             let json_lines = src
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
+
+            let (sender, receiver) = channel::<(bool, Vec<ToplevelItem>)>();
+
+            let handle = start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
+
             for line in json_lines {
                 handle_request(
                     line,
@@ -252,9 +255,12 @@ fn main() {
                     Arc::clone(&env),
                     Arc::clone(&session),
                     Arc::clone(&interrupted),
-                    &mut thread_handles,
+                    sender.clone(),
                 );
             }
+
+            drop(sender);
+            handle.join().unwrap();
         }
         Commands::Rename {
             path,
@@ -271,10 +277,6 @@ fn main() {
             let src_path = override_path.unwrap_or(path);
             rename::rename(&src, &src_path, offset, &new_name)
         }
-    }
-
-    for handle in thread_handles {
-        handle.join().unwrap();
     }
 }
 

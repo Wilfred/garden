@@ -1,0 +1,46 @@
+{ "method": "run", "input": "while True {}" }
+{ "method": "run", "input": "1 + 2" }
+{ "method": "interrupt", "input": "" }
+{ "method": "run", "input": "2 + 3" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": "run_command",
+//   "value": {
+//     "Ok": "Interrupted"
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+// {
+//   "kind": "evaluate",
+//   "value": {
+//     "Err": [
+//       {
+//         "position": null,
+//         "message": "Interrupted",
+//         "stack": null
+//       }
+//     ]
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+// {
+//   "kind": "evaluate",
+//   "value": {
+//     "Ok": "3"
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+// {
+//   "kind": "evaluate",
+//   "value": {
+//     "Ok": "5"
+//   },
+//   "position": null,
+//   "warnings": []
+// }
+

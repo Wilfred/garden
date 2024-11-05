@@ -244,7 +244,7 @@ fn main() {
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
 
-            let (sender, receiver) = channel::<(bool, Vec<ToplevelItem>)>();
+            let (sender, receiver) = channel::<(bool, Option<usize>, Vec<ToplevelItem>)>();
 
             let handle = start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 

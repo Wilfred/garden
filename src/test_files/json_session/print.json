@@ -1,4 +1,4 @@
-{ "method": "run", "input": "println(\"hello world\")" }
+{ "method": "run", "input": "println(\"hello world\")", "id": 42 }
 
 // args: test-json
 // expected stdout:
@@ -9,6 +9,7 @@
 //     "Ok": "Unit"
 //   },
 //   "position": null,
-//   "warnings": []
+//   "warnings": [],
+//   "id": 42
 // }
 

@@ -1839,6 +1839,7 @@ fn eval_builtin_call(
                             value: Ok(Some(s.clone())),
                             position: None,
                             warnings: vec![],
+                            id: None,
                         };
                         let serialized = serde_json::to_string(&response).unwrap();
                         println!("{}", serialized);
@@ -1889,6 +1890,7 @@ fn eval_builtin_call(
                             value: Ok(Some(format!("{}\n", s))),
                             position: None,
                             warnings: vec![],
+                            id: None,
                         };
                         let serialized = serde_json::to_string(&response).unwrap();
                         println!("{}", serialized);

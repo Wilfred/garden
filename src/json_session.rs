@@ -41,6 +41,8 @@ enum Request {
         offset: Option<usize>,
         #[serde(skip_serializing_if = "Option::is_none")]
         end_offset: Option<usize>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        id: Option<usize>,
     },
     Load {
         input: String,
@@ -84,6 +86,8 @@ pub(crate) struct Response {
     pub(crate) value: Result<Option<String>, Vec<ResponseError>>,
     pub(crate) position: Option<Position>,
     pub(crate) warnings: Vec<Diagnostic>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) id: Option<usize>,
 }
 
 pub(crate) fn sample_request_as_json() -> String {
@@ -92,6 +96,7 @@ pub(crate) fn sample_request_as_json() -> String {
         path: Some(PathBuf::from("/foo/bar.gdn")),
         offset: Some(100),
         end_offset: Some(110),
+        id: Some(123),
     })
     .unwrap()
 }
@@ -159,6 +164,7 @@ fn handle_load_request(
         value: Ok(value_summary),
         position: None,
         warnings: eval_summary.diagnostics,
+        id: None,
     }
 }
 
@@ -167,9 +173,10 @@ fn handle_eval_request(
     input: &str,
     offset: Option<usize>,
     end_offset: Option<usize>,
+    request_id: Option<usize>,
     env: Arc<Mutex<Env>>,
     pretty_print: bool,
-    sender: Sender<(bool, Vec<ToplevelItem>)>,
+    sender: Sender<(bool, Option<usize>, Vec<ToplevelItem>)>,
 ) {
     let env_ref = &mut *env.lock().unwrap();
 
@@ -195,18 +202,18 @@ fn handle_eval_request(
         return;
     }
 
-    sender.send((pretty_print, items)).unwrap();
+    sender.send((pretty_print, request_id, items)).unwrap();
 }
 
 pub(crate) fn start_eval_thread(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
-    receiver: Receiver<(bool, Vec<ToplevelItem>)>,
+    receiver: Receiver<(bool, Option<usize>, Vec<ToplevelItem>)>,
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
         .spawn(move || {
-            while let Ok((pretty_print, items)) = receiver.recv() {
+            while let Ok((pretty_print, id, items)) = receiver.recv() {
                 let env = &mut *env.lock().unwrap();
                 let session = &mut *session.lock().unwrap();
 
@@ -260,6 +267,7 @@ pub(crate) fn start_eval_thread(
                             value: Ok(value_summary),
                             position: None,
                             warnings: eval_summary.diagnostics,
+                            id,
                         }
                     }
                     Err(EvalError::ResumableError(position, e)) => {
@@ -275,6 +283,7 @@ pub(crate) fn start_eval_thread(
                             }]),
                             position: None,
                             warnings: vec![],
+                            id,
                         }
                     }
                     Err(EvalError::AssertionFailed(position)) => {
@@ -290,6 +299,7 @@ pub(crate) fn start_eval_thread(
                             }]),
                             position: None,
                             warnings: vec![],
+                            id,
                         }
                     }
                     Err(EvalError::Interrupted) => Response {
@@ -301,6 +311,7 @@ pub(crate) fn start_eval_thread(
                         }]),
                         position: None,
                         warnings: vec![],
+                        id,
                     },
                     Err(EvalError::ReachedTickLimit) => Response {
                         kind: ResponseKind::Evaluate,
@@ -311,6 +322,7 @@ pub(crate) fn start_eval_thread(
                         }]),
                         position: None,
                         warnings: vec![],
+                        id,
                     },
                     Err(EvalError::ForbiddenInSandbox(position)) => Response {
                         kind: ResponseKind::Evaluate,
@@ -321,6 +333,7 @@ pub(crate) fn start_eval_thread(
                         }]),
                         position: None,
                         warnings: vec![],
+                        id,
                     },
                 };
 
@@ -374,6 +387,7 @@ fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
         value: Err(response_errors),
         position: None,
         warnings: vec![],
+        id: None,
     }
 }
 
@@ -417,6 +431,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 };
             }
             ParseError::Incomplete { message, .. } => {
@@ -429,6 +444,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 };
             }
         }
@@ -441,6 +457,7 @@ fn handle_eval_up_to_request(
                 value: Ok(Some(v.display(env))),
                 position: Some(pos),
                 warnings: vec![],
+                id: None,
             },
             Err(e) => match e {
                 EvalError::Interrupted => Response {
@@ -452,6 +469,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 },
                 EvalError::ResumableError(_, message) => Response {
                     kind: ResponseKind::Evaluate,
@@ -462,6 +480,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 },
                 EvalError::AssertionFailed(_) => Response {
                     kind: ResponseKind::Evaluate,
@@ -472,6 +491,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 },
                 EvalError::ReachedTickLimit => Response {
                     kind: ResponseKind::Evaluate,
@@ -482,6 +502,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 },
                 EvalError::ForbiddenInSandbox(position) => Response {
                     kind: ResponseKind::Evaluate,
@@ -492,6 +513,7 @@ fn handle_eval_up_to_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id: None,
                 },
             },
         },
@@ -500,6 +522,7 @@ fn handle_eval_up_to_request(
             value: Ok(Some("Did not find an expression to evaluate".to_owned())),
             position: None,
             warnings: vec![],
+            id: None,
         },
     }
 }
@@ -511,7 +534,7 @@ pub(crate) fn handle_request(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
     interrupted: Arc<AtomicBool>,
-    sender: Sender<(bool, Vec<ToplevelItem>)>,
+    sender: Sender<(bool, Option<usize>, Vec<ToplevelItem>)>,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
@@ -527,6 +550,7 @@ pub(crate) fn handle_request(
             }]),
             position: None,
             warnings: vec![],
+            id: None,
         };
 
         let serialized = if pretty_print {
@@ -556,6 +580,7 @@ pub(crate) fn handle_request(
                 value: Ok(Some("Interrupted".to_owned())),
                 position: None,
                 warnings: vec![],
+                id: None,
             }
         }
         Request::Run {
@@ -563,6 +588,7 @@ pub(crate) fn handle_request(
             input,
             offset,
             end_offset,
+            id,
         } => match Command::from_string(&input) {
             Ok(command) => {
                 let env = &mut *env.lock().unwrap();
@@ -575,12 +601,14 @@ pub(crate) fn handle_request(
                         value: Ok(Some(format!("{}", String::from_utf8_lossy(&out_buf)))),
                         position: None,
                         warnings: vec![],
+                        id,
                     },
                     Err(EvalAction::Abort) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok(Some("Aborted".to_owned())),
                         position: None,
                         warnings: vec![],
+                        id,
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
                     Err(EvalAction::RunTest(name)) => {
@@ -599,6 +627,7 @@ pub(crate) fn handle_request(
                                 }]),
                                 position: None,
                                 warnings: vec![],
+                                id,
                             },
                         }
                     }
@@ -638,6 +667,7 @@ pub(crate) fn handle_request(
                     }]),
                     position: None,
                     warnings: vec![],
+                    id,
                 }
             }
             Err(CommandParseError::NotCommandSyntax) => {
@@ -646,6 +676,7 @@ pub(crate) fn handle_request(
                     &input,
                     offset,
                     end_offset,
+                    id,
                     env,
                     pretty_print,
                     sender,
@@ -732,6 +763,7 @@ fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
         value,
         position: None,
         warnings: vec![],
+        id: None,
     }
 }
 
@@ -742,6 +774,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             value: Ok(Some(result.display(env))),
             position: None,
             warnings: vec![],
+            id: None,
         },
         Err(EvalError::ResumableError(position, e)) => Response {
             kind: ResponseKind::Evaluate,
@@ -752,6 +785,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             }]),
             position: None,
             warnings: vec![],
+            id: None,
         },
         Err(EvalError::AssertionFailed(position)) => Response {
             kind: ResponseKind::Evaluate,
@@ -762,6 +796,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             }]),
             position: None,
             warnings: vec![],
+            id: None,
         },
         Err(EvalError::Interrupted) => Response {
             kind: ResponseKind::Evaluate,
@@ -772,6 +807,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             }]),
             position: None,
             warnings: vec![],
+            id: None,
         },
         Err(EvalError::ReachedTickLimit) => Response {
             kind: ResponseKind::Evaluate,
@@ -782,6 +818,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             }]),
             position: None,
             warnings: vec![],
+            id: None,
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
             kind: ResponseKind::Evaluate,
@@ -792,6 +829,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             }]),
             position: None,
             warnings: vec![],
+            id: None,
         },
     }
 }
@@ -804,6 +842,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         )),
         position: None,
         warnings: vec![],
+        id: None,
     };
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
@@ -816,7 +855,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         trace_exprs: false,
     }));
 
-    let (sender, receiver) = channel::<(bool, Vec<ToplevelItem>)>();
+    let (sender, receiver) = channel::<(bool, Option<usize>, Vec<ToplevelItem>)>();
 
     start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 
@@ -866,6 +905,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
                 }]),
                         position: None,
                 warnings: vec![],
+                id: None,
             };
             let serialized = serde_json::to_string(&err_response).unwrap();
             println!("{}", serialized);

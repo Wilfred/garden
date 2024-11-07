@@ -28,6 +28,8 @@ use garden_lang_parser::ast::{SourceString, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
+type RequestId = usize;
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "method", rename_all = "snake_case")]
 enum Request {
@@ -42,7 +44,7 @@ enum Request {
         #[serde(skip_serializing_if = "Option::is_none")]
         end_offset: Option<usize>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        id: Option<usize>,
+        id: Option<RequestId>,
     },
     Load {
         input: String,
@@ -87,7 +89,7 @@ pub(crate) struct Response {
     pub(crate) position: Option<Position>,
     pub(crate) warnings: Vec<Diagnostic>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) id: Option<usize>,
+    pub(crate) id: Option<RequestId>,
 }
 
 pub(crate) fn sample_request_as_json() -> String {
@@ -173,10 +175,10 @@ fn handle_eval_request(
     input: &str,
     offset: Option<usize>,
     end_offset: Option<usize>,
-    request_id: Option<usize>,
+    request_id: Option<RequestId>,
     env: Arc<Mutex<Env>>,
     pretty_print: bool,
-    sender: Sender<(bool, Option<usize>, Vec<ToplevelItem>)>,
+    sender: Sender<(bool, Option<RequestId>, Vec<ToplevelItem>)>,
 ) {
     let env_ref = &mut *env.lock().unwrap();
 
@@ -208,7 +210,7 @@ fn handle_eval_request(
 pub(crate) fn start_eval_thread(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
-    receiver: Receiver<(bool, Option<usize>, Vec<ToplevelItem>)>,
+    receiver: Receiver<(bool, Option<RequestId>, Vec<ToplevelItem>)>,
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
@@ -534,7 +536,7 @@ pub(crate) fn handle_request(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
     interrupted: Arc<AtomicBool>,
-    sender: Sender<(bool, Option<usize>, Vec<ToplevelItem>)>,
+    sender: Sender<(bool, Option<RequestId>, Vec<ToplevelItem>)>,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
@@ -855,7 +857,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         trace_exprs: false,
     }));
 
-    let (sender, receiver) = channel::<(bool, Option<usize>, Vec<ToplevelItem>)>();
+    let (sender, receiver) = channel::<(bool, Option<RequestId>, Vec<ToplevelItem>)>();
 
     start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 

@@ -178,7 +178,15 @@ fn handle_eval_request(
     request_id: Option<RequestId>,
     env: Arc<Mutex<Env>>,
     pretty_print: bool,
-    sender: Sender<(bool, Option<RequestId>, Vec<ToplevelItem>)>,
+    sender: Sender<(
+        bool,
+        Option<RequestId>,
+        Vec<ToplevelItem>,
+        PathBuf,
+        String,
+        usize,
+        usize,
+    )>,
 ) {
     let env_ref = &mut *env.lock().unwrap();
 
@@ -197,18 +205,38 @@ fn handle_eval_request(
         return;
     }
 
-    sender.send((pretty_print, request_id, items)).unwrap();
+    sender
+        .send((
+            pretty_print,
+            request_id,
+            items,
+            path.to_path_buf(),
+            input.to_owned(),
+            offset,
+            end_offset,
+        ))
+        .unwrap();
 }
 
 pub(crate) fn start_eval_thread(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
-    receiver: Receiver<(bool, Option<RequestId>, Vec<ToplevelItem>)>,
+    receiver: Receiver<(
+        bool,
+        Option<RequestId>,
+        Vec<ToplevelItem>,
+        PathBuf,
+        String,
+        usize,
+        usize,
+    )>,
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
         .spawn(move || {
-            while let Ok((pretty_print, id, items)) = receiver.recv() {
+            while let Ok((pretty_print, id, items, _path, _input, _offset, _end_offset)) =
+                receiver.recv()
+            {
                 let env = &mut *env.lock().unwrap();
                 let session = &mut *session.lock().unwrap();
 
@@ -529,7 +557,15 @@ pub(crate) fn handle_request(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
     interrupted: Arc<AtomicBool>,
-    sender: Sender<(bool, Option<RequestId>, Vec<ToplevelItem>)>,
+    sender: Sender<(
+        bool,
+        Option<RequestId>,
+        Vec<ToplevelItem>,
+        PathBuf,
+        String,
+        usize,
+        usize,
+    )>,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
@@ -852,7 +888,15 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         trace_exprs: false,
     }));
 
-    let (sender, receiver) = channel::<(bool, Option<RequestId>, Vec<ToplevelItem>)>();
+    let (sender, receiver) = channel::<(
+        bool,
+        Option<RequestId>,
+        Vec<ToplevelItem>,
+        PathBuf,
+        String,
+        usize,
+        usize,
+    )>();
 
     start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 

@@ -171,10 +171,10 @@ fn handle_load_request(
 }
 
 fn handle_eval_request(
-    path: Option<&PathBuf>,
+    path: &Path,
     input: &str,
-    offset: Option<usize>,
-    end_offset: Option<usize>,
+    offset: usize,
+    end_offset: usize,
     request_id: Option<RequestId>,
     env: Arc<Mutex<Env>>,
     pretty_print: bool,
@@ -182,15 +182,8 @@ fn handle_eval_request(
 ) {
     let env_ref = &mut *env.lock().unwrap();
 
-    let (items, errors) = parse_toplevel_items_from_span(
-        &path
-            .cloned()
-            .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-        input,
-        &mut env_ref.id_gen,
-        offset.unwrap_or(0),
-        end_offset.unwrap_or(input.len()),
-    );
+    let (items, errors) =
+        parse_toplevel_items_from_span(path, input, &mut env_ref.id_gen, offset, end_offset);
 
     if !errors.is_empty() {
         let res = as_error_response(errors, input);
@@ -674,10 +667,12 @@ pub(crate) fn handle_request(
             }
             Err(CommandParseError::NotCommandSyntax) => {
                 handle_eval_request(
-                    path.as_ref(),
+                    &path
+                        .clone()
+                        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
                     &input,
-                    offset,
-                    end_offset,
+                    offset.unwrap_or(0),
+                    end_offset.unwrap_or(input.len()),
                     id,
                     env,
                     pretty_print,

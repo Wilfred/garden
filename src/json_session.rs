@@ -170,27 +170,6 @@ fn handle_load_request(
     }
 }
 
-fn handle_eval_request(
-    path: &Path,
-    input: &str,
-    offset: usize,
-    end_offset: usize,
-    request_id: Option<RequestId>,
-    pretty_print: bool,
-    sender: Sender<(bool, Option<RequestId>, PathBuf, String, usize, usize)>,
-) {
-    sender
-        .send((
-            pretty_print,
-            request_id,
-            path.to_path_buf(),
-            input.to_owned(),
-            offset,
-            end_offset,
-        ))
-        .unwrap();
-}
-
 pub(crate) fn start_eval_thread(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
@@ -676,17 +655,21 @@ pub(crate) fn handle_request(
                 }
             }
             Err(CommandParseError::NotCommandSyntax) => {
-                handle_eval_request(
-                    &path
+                {
+                    let path = path
                         .clone()
-                        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-                    &input,
-                    offset.unwrap_or(0),
-                    end_offset.unwrap_or(input.len()),
-                    id,
-                    pretty_print,
-                    sender,
-                );
+                        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__"));
+                    sender
+                        .send((
+                            pretty_print,
+                            id,
+                            path,
+                            input.to_owned(),
+                            offset.unwrap_or(0),
+                            end_offset.unwrap_or(input.len()),
+                        ))
+                        .unwrap();
+                };
                 return;
             }
         },

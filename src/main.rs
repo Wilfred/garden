@@ -244,15 +244,8 @@ fn main() {
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
 
-            let (sender, receiver) = channel::<(
-                bool,
-                Option<usize>,
-                Vec<ToplevelItem>,
-                PathBuf,
-                String,
-                usize,
-                usize,
-            )>();
+            let (sender, receiver) =
+                channel::<(bool, Option<usize>, PathBuf, String, usize, usize)>();
 
             let handle = start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 

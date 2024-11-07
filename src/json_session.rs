@@ -233,143 +233,153 @@ pub(crate) fn start_eval_thread(
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
-        .spawn(move || {
-            while let Ok((pretty_print, id, items, _path, _input, _offset, _end_offset)) =
-                receiver.recv()
-            {
-                let env = &mut *env.lock().unwrap();
-                let session = &mut *session.lock().unwrap();
+        .spawn(move || eval_worker(receiver, env, session))
+        .unwrap()
+}
 
-                let res = match eval_toplevel_items(&items, env, session) {
-                    Ok(eval_summary) => {
-                        let definition_summary = if eval_summary.new_syms.is_empty() {
-                            "".to_owned()
-                        } else if eval_summary.new_syms.len() == 1 {
-                            format!("Loaded {}", eval_summary.new_syms[0].0)
-                        } else {
-                            format!("Loaded {} definitions", eval_summary.new_syms.len())
-                        };
+fn eval_worker(
+    receiver: Receiver<(
+        bool,
+        Option<usize>,
+        Vec<ToplevelItem>,
+        PathBuf,
+        String,
+        usize,
+        usize,
+    )>,
+    env: Arc<Mutex<Env>>,
+    session: Arc<Mutex<Session>>,
+) {
+    while let Ok((pretty_print, id, items, _path, _input, _offset, _end_offset)) = receiver.recv() {
+        let env = &mut *env.lock().unwrap();
+        let session = &mut *session.lock().unwrap();
 
-                        let total_tests =
-                            eval_summary.tests_passed + eval_summary.tests_failed.len();
-                        let test_summary = if total_tests == 0 {
-                            "".to_owned()
-                        } else {
-                            format!(
-                                "{total_tests} {}",
-                                if total_tests == 1 { "test" } else { "tests" }
-                            )
-                        };
-
-                        let test_summary =
-                            match (test_summary.is_empty(), definition_summary.is_empty()) {
-                                (true, _) => "".to_owned(),
-                                (false, true) => format!("Ran {test_summary}"),
-                                (false, false) => format!(", ran {test_summary}"),
-                            };
-
-                        let summary = format!("{definition_summary}{test_summary}");
-
-                        let value_summary = if let Some(last_value) = eval_summary.values.last() {
-                            Some(if summary.is_empty() {
-                                last_value.display(env)
-                            } else {
-                                format!(
-                                    "{summary}, and the expression evaluated to {}.",
-                                    last_value.display(env)
-                                )
-                            })
-                        } else if summary.is_empty() {
-                            None
-                        } else {
-                            Some(format!("{summary}."))
-                        };
-
-                        Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Ok(value_summary),
-                            position: None,
-                            warnings: eval_summary.diagnostics,
-                            id,
-                        }
-                    }
-                    Err(EvalError::ResumableError(position, e)) => {
-                        // TODO: use the original SourceString rather than reconstructing.
-                        let stack = format_error_with_stack(&e, &position, &env.stack.0);
-
-                        Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Err(vec![ResponseError {
-                                position: Some(position),
-                                message: format!("Error: {}", e.0),
-                                stack: Some(stack),
-                            }]),
-                            position: None,
-                            warnings: vec![],
-                            id,
-                        }
-                    }
-                    Err(EvalError::AssertionFailed(position)) => {
-                        let message = ErrorMessage("Assertion failed".to_owned());
-                        let stack = format_error_with_stack(&message, &position, &env.stack.0);
-
-                        Response {
-                            kind: ResponseKind::Evaluate,
-                            value: Err(vec![ResponseError {
-                                position: Some(position),
-                                message: "Assertion failed".to_owned(),
-                                stack: Some(stack),
-                            }]),
-                            position: None,
-                            warnings: vec![],
-                            id,
-                        }
-                    }
-                    Err(EvalError::Interrupted) => Response {
-                        kind: ResponseKind::Evaluate,
-                        value: Err(vec![ResponseError {
-                            position: None,
-                            message: "Interrupted".to_owned(),
-                            stack: None,
-                        }]),
-                        position: None,
-                        warnings: vec![],
-                        id,
-                    },
-                    Err(EvalError::ReachedTickLimit) => Response {
-                        kind: ResponseKind::Evaluate,
-                        value: Err(vec![ResponseError {
-                            position: None,
-                            message: "Reached the tick limit.".to_owned(),
-                            stack: None,
-                        }]),
-                        position: None,
-                        warnings: vec![],
-                        id,
-                    },
-                    Err(EvalError::ForbiddenInSandbox(position)) => Response {
-                        kind: ResponseKind::Evaluate,
-                        value: Err(vec![ResponseError {
-                            position: Some(position),
-                            message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                            stack: None,
-                        }]),
-                        position: None,
-                        warnings: vec![],
-                        id,
-                    },
+        let res = match eval_toplevel_items(&items, env, session) {
+            Ok(eval_summary) => {
+                let definition_summary = if eval_summary.new_syms.is_empty() {
+                    "".to_owned()
+                } else if eval_summary.new_syms.len() == 1 {
+                    format!("Loaded {}", eval_summary.new_syms[0].0)
+                } else {
+                    format!("Loaded {} definitions", eval_summary.new_syms.len())
                 };
 
-                let serialized = if pretty_print {
-                    serde_json::to_string_pretty(&res)
+                let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
+                let test_summary = if total_tests == 0 {
+                    "".to_owned()
                 } else {
-                    serde_json::to_string(&res)
+                    format!(
+                        "{total_tests} {}",
+                        if total_tests == 1 { "test" } else { "tests" }
+                    )
+                };
+
+                let test_summary = match (test_summary.is_empty(), definition_summary.is_empty()) {
+                    (true, _) => "".to_owned(),
+                    (false, true) => format!("Ran {test_summary}"),
+                    (false, false) => format!(", ran {test_summary}"),
+                };
+
+                let summary = format!("{definition_summary}{test_summary}");
+
+                let value_summary = if let Some(last_value) = eval_summary.values.last() {
+                    Some(if summary.is_empty() {
+                        last_value.display(env)
+                    } else {
+                        format!(
+                            "{summary}, and the expression evaluated to {}.",
+                            last_value.display(env)
+                        )
+                    })
+                } else if summary.is_empty() {
+                    None
+                } else {
+                    Some(format!("{summary}."))
+                };
+
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Ok(value_summary),
+                    position: None,
+                    warnings: eval_summary.diagnostics,
+                    id,
                 }
-                .unwrap();
-                println!("{}", serialized);
             }
-        })
-        .unwrap()
+            Err(EvalError::ResumableError(position, e)) => {
+                // TODO: use the original SourceString rather than reconstructing.
+                let stack = format_error_with_stack(&e, &position, &env.stack.0);
+
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(vec![ResponseError {
+                        position: Some(position),
+                        message: format!("Error: {}", e.0),
+                        stack: Some(stack),
+                    }]),
+                    position: None,
+                    warnings: vec![],
+                    id,
+                }
+            }
+            Err(EvalError::AssertionFailed(position)) => {
+                let message = ErrorMessage("Assertion failed".to_owned());
+                let stack = format_error_with_stack(&message, &position, &env.stack.0);
+
+                Response {
+                    kind: ResponseKind::Evaluate,
+                    value: Err(vec![ResponseError {
+                        position: Some(position),
+                        message: "Assertion failed".to_owned(),
+                        stack: Some(stack),
+                    }]),
+                    position: None,
+                    warnings: vec![],
+                    id,
+                }
+            }
+            Err(EvalError::Interrupted) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(vec![ResponseError {
+                    position: None,
+                    message: "Interrupted".to_owned(),
+                    stack: None,
+                }]),
+                position: None,
+                warnings: vec![],
+                id,
+            },
+            Err(EvalError::ReachedTickLimit) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(vec![ResponseError {
+                    position: None,
+                    message: "Reached the tick limit.".to_owned(),
+                    stack: None,
+                }]),
+                position: None,
+                warnings: vec![],
+                id,
+            },
+            Err(EvalError::ForbiddenInSandbox(position)) => Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(vec![ResponseError {
+                    position: Some(position),
+                    message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
+                    stack: None,
+                }]),
+                position: None,
+                warnings: vec![],
+                id,
+            },
+        };
+
+        let serialized = if pretty_print {
+            serde_json::to_string_pretty(&res)
+        } else {
+            serde_json::to_string(&res)
+        }
+        .unwrap();
+        println!("{}", serialized);
+    }
 }
 
 fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {

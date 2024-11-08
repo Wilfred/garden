@@ -173,7 +173,7 @@ fn handle_load_request(
 pub(crate) fn start_eval_thread(
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
-    receiver: Receiver<(bool, Option<RequestId>, PathBuf, String, usize, usize)>,
+    receiver: Receiver<(bool, String)>,
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
@@ -182,154 +182,15 @@ pub(crate) fn start_eval_thread(
 }
 
 fn eval_worker(
-    receiver: Receiver<(bool, Option<usize>, PathBuf, String, usize, usize)>,
+    receiver: Receiver<(bool, String)>,
     env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
 ) {
-    while let Ok((pretty_print, id, path, input, offset, end_offset)) = receiver.recv() {
+    while let Ok((pretty_print, input)) = receiver.recv() {
         let env = &mut *env.lock().unwrap();
         let session = &mut *session.lock().unwrap();
 
-        let (items, errors) =
-            parse_toplevel_items_from_span(&path, &input, &mut env.id_gen, offset, end_offset);
-
-        if !errors.is_empty() {
-            let res = as_error_response(errors, &input);
-            let serialized = if pretty_print {
-                serde_json::to_string_pretty(&res)
-            } else {
-                serde_json::to_string(&res)
-            }
-            .unwrap();
-            println!("{}", serialized);
-            continue;
-        }
-
-        let res = match eval_toplevel_items(&items, env, session) {
-            Ok(eval_summary) => {
-                let definition_summary = if eval_summary.new_syms.is_empty() {
-                    "".to_owned()
-                } else if eval_summary.new_syms.len() == 1 {
-                    format!("Loaded {}", eval_summary.new_syms[0].0)
-                } else {
-                    format!("Loaded {} definitions", eval_summary.new_syms.len())
-                };
-
-                let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
-                let test_summary = if total_tests == 0 {
-                    "".to_owned()
-                } else {
-                    format!(
-                        "{total_tests} {}",
-                        if total_tests == 1 { "test" } else { "tests" }
-                    )
-                };
-
-                let test_summary = match (test_summary.is_empty(), definition_summary.is_empty()) {
-                    (true, _) => "".to_owned(),
-                    (false, true) => format!("Ran {test_summary}"),
-                    (false, false) => format!(", ran {test_summary}"),
-                };
-
-                let summary = format!("{definition_summary}{test_summary}");
-
-                let value_summary = if let Some(last_value) = eval_summary.values.last() {
-                    Some(if summary.is_empty() {
-                        last_value.display(env)
-                    } else {
-                        format!(
-                            "{summary}, and the expression evaluated to {}.",
-                            last_value.display(env)
-                        )
-                    })
-                } else if summary.is_empty() {
-                    None
-                } else {
-                    Some(format!("{summary}."))
-                };
-
-                Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Ok(value_summary),
-                    position: None,
-                    warnings: eval_summary.diagnostics,
-                    id,
-                }
-            }
-            Err(EvalError::ResumableError(position, e)) => {
-                // TODO: use the original SourceString rather than reconstructing.
-                let stack = format_error_with_stack(&e, &position, &env.stack.0);
-
-                Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: format!("Error: {}", e.0),
-                        stack: Some(stack),
-                    }]),
-                    position: None,
-                    warnings: vec![],
-                    id,
-                }
-            }
-            Err(EvalError::AssertionFailed(position)) => {
-                let message = ErrorMessage("Assertion failed".to_owned());
-                let stack = format_error_with_stack(&message, &position, &env.stack.0);
-
-                Response {
-                    kind: ResponseKind::Evaluate,
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: "Assertion failed".to_owned(),
-                        stack: Some(stack),
-                    }]),
-                    position: None,
-                    warnings: vec![],
-                    id,
-                }
-            }
-            Err(EvalError::Interrupted) => Response {
-                kind: ResponseKind::Evaluate,
-                value: Err(vec![ResponseError {
-                    position: None,
-                    message: "Interrupted".to_owned(),
-                    stack: None,
-                }]),
-                position: None,
-                warnings: vec![],
-                id,
-            },
-            Err(EvalError::ReachedTickLimit) => Response {
-                kind: ResponseKind::Evaluate,
-                value: Err(vec![ResponseError {
-                    position: None,
-                    message: "Reached the tick limit.".to_owned(),
-                    stack: None,
-                }]),
-                position: None,
-                warnings: vec![],
-                id,
-            },
-            Err(EvalError::ForbiddenInSandbox(position)) => Response {
-                kind: ResponseKind::Evaluate,
-                value: Err(vec![ResponseError {
-                    position: Some(position),
-                    message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                    stack: None,
-                }]),
-                position: None,
-                warnings: vec![],
-                id,
-            },
-        };
-
-        let serialized = if pretty_print {
-            serde_json::to_string_pretty(&res)
-        } else {
-            serde_json::to_string(&res)
-        }
-        .unwrap();
-        println!("{}", serialized);
+        handle_request_in_worker(&input, pretty_print, env, session);
     }
 }
 
@@ -515,10 +376,36 @@ fn handle_eval_up_to_request(
 pub(crate) fn handle_request(
     req_src: &str,
     pretty_print: bool,
-    env: Arc<Mutex<Env>>,
-    session: Arc<Mutex<Session>>,
     interrupted: Arc<AtomicBool>,
-    sender: Sender<(bool, Option<RequestId>, PathBuf, String, usize, usize)>,
+    sender: Sender<(bool, String)>,
+) {
+    if let Ok(Request::Interrupt) = serde_json::from_str::<Request>(req_src) {
+        interrupted.store(true, std::sync::atomic::Ordering::Relaxed);
+        let res = Response {
+            kind: ResponseKind::RunCommand,
+            value: Ok(Some("Interrupted".to_owned())),
+            position: None,
+            warnings: vec![],
+            id: None,
+        };
+        let serialized = if pretty_print {
+            serde_json::to_string_pretty(&res)
+        } else {
+            serde_json::to_string(&res)
+        }
+        .unwrap();
+        println!("{}", serialized);
+        return;
+    }
+
+    sender.send((pretty_print, req_src.to_owned())).unwrap();
+}
+
+fn handle_request_in_worker(
+    req_src: &str,
+    pretty_print: bool,
+    env: &mut Env,
+    session: &mut Session,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
@@ -553,19 +440,11 @@ pub(crate) fn handle_request(
             path,
             offset,
             end_offset,
-        } => {
-            let env = &mut *env.lock().unwrap();
-            handle_load_request(&path, &input, offset, end_offset, env)
-        }
+        } => handle_load_request(&path, &input, offset, end_offset, env),
         Request::Interrupt => {
-            interrupted.store(true, std::sync::atomic::Ordering::Relaxed);
-            Response {
-                kind: ResponseKind::RunCommand,
-                value: Ok(Some("Interrupted".to_owned())),
-                position: None,
-                warnings: vec![],
-                id: None,
-            }
+            // Nothing to do, handled outside this threaad so it
+            // doesn't require locking env.
+            return;
         }
         Request::Run {
             path,
@@ -575,9 +454,6 @@ pub(crate) fn handle_request(
             id,
         } => match Command::from_string(&input) {
             Ok(command) => {
-                let env = &mut *env.lock().unwrap();
-                let session = &mut *session.lock().unwrap();
-
                 let mut out_buf: Vec<u8> = vec![];
                 match run_command(&mut out_buf, &command, env, session) {
                     Ok(()) => Response {
@@ -655,31 +531,11 @@ pub(crate) fn handle_request(
                 }
             }
             Err(CommandParseError::NotCommandSyntax) => {
-                {
-                    let path = path
-                        .clone()
-                        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__"));
-                    sender
-                        .send((
-                            pretty_print,
-                            id,
-                            path,
-                            input.to_owned(),
-                            offset.unwrap_or(0),
-                            end_offset.unwrap_or(input.len()),
-                        ))
-                        .unwrap();
-                };
-                return;
+                handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
             }
         },
-        Request::FindDefinition { name } => {
-            let env = &mut *env.lock().unwrap();
-            handle_find_def_request(&name, env)
-        }
+        Request::FindDefinition { name } => handle_find_def_request(&name, env),
         Request::EvalUpToId { path, src, offset } => {
-            let env = &mut *env.lock().unwrap();
-            let session = &*session.lock().unwrap();
             handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
     };
@@ -692,6 +548,148 @@ pub(crate) fn handle_request(
     .unwrap();
 
     println!("{}", serialized);
+}
+
+fn handle_eval_request(
+    path: Option<&PathBuf>,
+    input: &str,
+    offset: Option<usize>,
+    end_offset: Option<usize>,
+    env: &mut Env,
+    session: &mut Session,
+    id: Option<RequestId>,
+) -> Response {
+    let (items, errors) = parse_toplevel_items_from_span(
+        &path
+            .cloned()
+            .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
+        input,
+        &mut env.id_gen,
+        offset.unwrap_or(0),
+        end_offset.unwrap_or(input.len()),
+    );
+
+    if !errors.is_empty() {
+        return as_error_response(errors, input);
+    }
+
+    match eval_toplevel_items(&items, env, session) {
+        Ok(eval_summary) => {
+            let definition_summary = if eval_summary.new_syms.is_empty() {
+                "".to_owned()
+            } else if eval_summary.new_syms.len() == 1 {
+                format!("Loaded {}", eval_summary.new_syms[0].0)
+            } else {
+                format!("Loaded {} definitions", eval_summary.new_syms.len())
+            };
+
+            let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
+            let test_summary = if total_tests == 0 {
+                "".to_owned()
+            } else {
+                format!(
+                    "{total_tests} {}",
+                    if total_tests == 1 { "test" } else { "tests" }
+                )
+            };
+
+            let test_summary = match (test_summary.is_empty(), definition_summary.is_empty()) {
+                (true, _) => "".to_owned(),
+                (false, true) => format!("Ran {test_summary}"),
+                (false, false) => format!(", ran {test_summary}"),
+            };
+
+            let summary = format!("{definition_summary}{test_summary}");
+
+            let value_summary = if let Some(last_value) = eval_summary.values.last() {
+                Some(if summary.is_empty() {
+                    last_value.display(env)
+                } else {
+                    format!(
+                        "{summary}, and the expression evaluated to {}.",
+                        last_value.display(env)
+                    )
+                })
+            } else if summary.is_empty() {
+                None
+            } else {
+                Some(format!("{summary}."))
+            };
+
+            Response {
+                kind: ResponseKind::Evaluate,
+                value: Ok(value_summary),
+                position: None,
+                warnings: eval_summary.diagnostics,
+                id,
+            }
+        }
+        Err(EvalError::ResumableError(position, e)) => {
+            // TODO: use the original SourceString rather than reconstructing.
+            let stack = format_error_with_stack(&e, &position, &env.stack.0);
+
+            Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(vec![ResponseError {
+                    position: Some(position),
+                    message: format!("Error: {}", e.0),
+                    stack: Some(stack),
+                }]),
+                position: None,
+                warnings: vec![],
+                id,
+            }
+        }
+        Err(EvalError::AssertionFailed(position)) => {
+            let message = ErrorMessage("Assertion failed".to_owned());
+            let stack = format_error_with_stack(&message, &position, &env.stack.0);
+
+            Response {
+                kind: ResponseKind::Evaluate,
+                value: Err(vec![ResponseError {
+                    position: Some(position),
+                    message: "Assertion failed".to_owned(),
+                    stack: Some(stack),
+                }]),
+                position: None,
+                warnings: vec![],
+                id,
+            }
+        }
+        Err(EvalError::Interrupted) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(vec![ResponseError {
+                position: None,
+                message: "Interrupted".to_owned(),
+                stack: None,
+            }]),
+            position: None,
+            warnings: vec![],
+            id,
+        },
+        Err(EvalError::ReachedTickLimit) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(vec![ResponseError {
+                position: None,
+                message: "Reached the tick limit.".to_owned(),
+                stack: None,
+            }]),
+            position: None,
+            warnings: vec![],
+            id,
+        },
+        Err(EvalError::ForbiddenInSandbox(position)) => Response {
+            kind: ResponseKind::Evaluate,
+            value: Err(vec![ResponseError {
+                position: Some(position),
+                message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
+                stack: None,
+            }]),
+            position: None,
+            warnings: vec![],
+            id,
+        },
+    }
 }
 
 fn position_of_name(name: &str, env: &Env) -> Result<Position, String> {
@@ -844,7 +842,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         trace_exprs: false,
     }));
 
-    let (sender, receiver) = channel::<(bool, Option<RequestId>, PathBuf, String, usize, usize)>();
+    let (sender, receiver) = channel::<(bool, String)>();
 
     start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 
@@ -872,14 +870,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            handle_request(
-                &buf_str,
-                false,
-                Arc::clone(&env),
-                Arc::clone(&session),
-                Arc::clone(&interrupted),
-                sender.clone(),
-            );
+            handle_request(&buf_str, false, Arc::clone(&interrupted), sender.clone());
         } else {
             let err_response = Response {
                 kind: ResponseKind::MalformedRequest,

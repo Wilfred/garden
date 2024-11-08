@@ -246,20 +246,12 @@ fn main() {
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
 
-            let (sender, receiver) =
-                channel::<(bool, Option<usize>, PathBuf, String, usize, usize)>();
+            let (sender, receiver) = channel::<(bool, String)>();
 
             let handle = start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
 
             for line in json_lines {
-                handle_request(
-                    line,
-                    true,
-                    Arc::clone(&env),
-                    Arc::clone(&session),
-                    Arc::clone(&interrupted),
-                    sender.clone(),
-                );
+                handle_request(line, true, Arc::clone(&interrupted), sender.clone());
             }
 
             drop(sender);

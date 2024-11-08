@@ -171,26 +171,21 @@ fn handle_load_request(
 }
 
 pub(crate) fn start_eval_thread(
-    env: Arc<Mutex<Env>>,
     session: Arc<Mutex<Session>>,
     receiver: Receiver<(bool, String)>,
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
-        .spawn(move || eval_worker(receiver, env, session))
+        .spawn(move || eval_worker(receiver, session))
         .unwrap()
 }
 
-fn eval_worker(
-    receiver: Receiver<(bool, String)>,
-    env: Arc<Mutex<Env>>,
-    session: Arc<Mutex<Session>>,
-) {
-    while let Ok((pretty_print, input)) = receiver.recv() {
-        let env = &mut *env.lock().unwrap();
-        let session = &mut *session.lock().unwrap();
+fn eval_worker(receiver: Receiver<(bool, String)>, session: Arc<Mutex<Session>>) {
+    let mut env = Env::default();
 
-        handle_request_in_worker(&input, pretty_print, env, session);
+    while let Ok((pretty_print, input)) = receiver.recv() {
+        let session = &mut *session.lock().unwrap();
+        handle_request_in_worker(&input, pretty_print, &mut env, session);
     }
 }
 
@@ -834,7 +829,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
 
-    let env = Arc::new(Mutex::new(Env::default()));
     let session = Arc::new(Mutex::new(Session {
         interrupted: Arc::clone(&interrupted),
         has_attached_stdout: false,
@@ -844,7 +838,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
     let (sender, receiver) = channel::<(bool, String)>();
 
-    start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
+    start_eval_thread(Arc::clone(&session), receiver);
 
     loop {
         let mut line = String::new();

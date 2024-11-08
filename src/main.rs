@@ -234,7 +234,6 @@ fn main() {
         Commands::TestJson { path } => {
             let src = read_utf8_or_die(&path);
 
-            let env = Arc::new(Mutex::new(Env::default()));
             let session = Arc::new(Mutex::new(Session {
                 interrupted: Arc::clone(&interrupted),
                 has_attached_stdout: true,
@@ -248,7 +247,7 @@ fn main() {
 
             let (sender, receiver) = channel::<(bool, String)>();
 
-            let handle = start_eval_thread(Arc::clone(&env), Arc::clone(&session), receiver);
+            let handle = start_eval_thread(Arc::clone(&session), receiver);
 
             for line in json_lines {
                 handle_request(line, true, Arc::clone(&interrupted), sender.clone());

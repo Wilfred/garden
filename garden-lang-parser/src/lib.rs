@@ -4,6 +4,8 @@
 #![allow(clippy::collapsible_else_if)]
 // Common in unfinished code.
 #![allow(clippy::if_same_then_else)]
+// TODO: fix this.
+#![allow(clippy::large_enum_variant)]
 
 pub mod ast;
 pub mod diagnostics;

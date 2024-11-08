@@ -23,6 +23,8 @@
 // Distracting when refactoring multithreaded code, and ultimately
 // harmless.
 #![allow(clippy::arc_with_non_send_sync)]
+// TODO: fix this.
+#![allow(clippy::result_large_err)]
 
 mod caret_finder;
 mod checks;

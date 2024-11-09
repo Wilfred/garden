@@ -265,75 +265,72 @@ the user entering a value in the *garden* buffer."
     (garden--log-json-to-buf output))
   (setq output (concat garden--output output))
 
-  (if (s-contains-p "\n" output)
-      (progn
-        (setq garden--output "")
-        (dolist (line (s-split "\n" (s-trim output)))
-          ;; Ignore things that don't look like JSON until we have separate
-          ;; stderr handling.
-          (when (s-starts-with-p "{" line)
-            (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
-                   (response-value (plist-get response :value))
-                   (response-position (plist-get response :position))
-                   (response-warnings (plist-get response :warnings))
-                   (response-kind (plist-get response :kind))
-                   (response-ok-value (plist-get response-value :Ok))
-                   (response-err-values (plist-get response-value :Err))
-                   (buf (current-buffer))
-                   error-buf)
-              (with-current-buffer (process-buffer proc)
-                (let ((s
-                       (cond
-                        (response-err-values
-                         (let (messages)
-                           (dolist (response-err-value (seq-into response-err-values #'list))
-                             (message "value: %S" response-err-value)
-                             (let* ((position (plist-get response-err-value :position))
-                                    (err-msg (plist-get response-err-value :message)))
-                               ;; TODO: find the buffer with the path which matches this position.
-                               (garden--flash-position buf position)
+  (let ((lines (s-split "\n" output)))
+    (setq garden--output (-last-item lines))
+    (dolist (line (butlast lines))
+      ;; Ignore things that don't look like JSON until we have separate
+      ;; stderr handling.
+      (when (s-starts-with-p "{" line)
+        (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
+               (response-value (plist-get response :value))
+               (response-position (plist-get response :position))
+               (response-warnings (plist-get response :warnings))
+               (response-kind (plist-get response :kind))
+               (response-ok-value (plist-get response-value :Ok))
+               (response-err-values (plist-get response-value :Err))
+               (buf (current-buffer))
+               error-buf)
+          (with-current-buffer (process-buffer proc)
+            (let ((s
+                   (cond
+                    (response-err-values
+                     (let (messages)
+                       (dolist (response-err-value (seq-into response-err-values #'list))
+                         (message "value: %S" response-err-value)
+                         (let* ((position (plist-get response-err-value :position))
+                                (err-msg (plist-get response-err-value :message)))
+                           ;; TODO: find the buffer with the path which matches this position.
+                           (garden--flash-position buf position)
 
-                               (message "%s" err-msg)
-                               (setq error-buf (garden--report-error response-err-value))
-                               (push (garden--fontify-error (concat err-msg "\n")) messages)))
-                           (s-join "\n" messages)))
-                        ((string= response-kind "ready")
-                         (garden--propertize-read-only (concat response-ok-value "\n")))
-                        ((string= response-kind "printed")
-                         (message "%s" response-ok-value)
-                         (garden--propertize-read-only response-ok-value))
-                        ((string= response-kind "run_command")
-                         (garden--fontify-command-output
-                          (concat response-ok-value "\n")))
-                        ((string= response-kind "found_definition")
-                         (garden--visit response-ok-value))
-                        ((string= response-kind "evaluate")
-                         (garden--flash-position buf response-position)
-                         (unless (or (null response-ok-value) (string= response-ok-value "void"))
-                           (message "%s" response-ok-value))
-                         (garden--fontify-value (concat response-ok-value "\n")))
-                        (t
-                         output))))
-                  (goto-char (point-max))
-                  (if (garden--prompt-empty-p)
-                      (let ((inhibit-read-only t))
-                        (forward-line -1)
-                        (beginning-of-line)
-                        (insert "\n" s)
-                        (goto-char (point-max)))
-                    (insert s (garden--fontify-prompt "\n>") " "))
-                  (set-marker (process-mark proc) (point))
+                           (message "%s" err-msg)
+                           (setq error-buf (garden--report-error response-err-value))
+                           (push (garden--fontify-error (concat err-msg "\n")) messages)))
+                       (s-join "\n" messages)))
+                    ((string= response-kind "ready")
+                     (garden--propertize-read-only (concat response-ok-value "\n")))
+                    ((string= response-kind "printed")
+                     (message "%s" response-ok-value)
+                     (garden--propertize-read-only response-ok-value))
+                    ((string= response-kind "run_command")
+                     (garden--fontify-command-output
+                      (concat response-ok-value "\n")))
+                    ((string= response-kind "found_definition")
+                     (garden--visit response-ok-value))
+                    ((string= response-kind "evaluate")
+                     (garden--flash-position buf response-position)
+                     (unless (or (null response-ok-value) (string= response-ok-value "void"))
+                       (message "%s" response-ok-value))
+                     (garden--fontify-value (concat response-ok-value "\n")))
+                    (t
+                     output))))
+              (goto-char (point-max))
+              (if (garden--prompt-empty-p)
+                  (let ((inhibit-read-only t))
+                    (forward-line -1)
+                    (beginning-of-line)
+                    (insert "\n" s)
+                    (goto-char (point-max)))
+                (insert s (garden--fontify-prompt "\n>") " "))
+              (set-marker (process-mark proc) (point))
 
-                  (when error-buf
-                    (pop-to-buffer error-buf))))
-              (unless (null response-warnings)
-                (seq-doseq (warning response-warnings)
-                  (display-warning
-                   'garden
-                   (plist-get warning :message)
-                   :warning)))))))
-    ;; No newline so far, we haven't seen the whole JSON line yet.
-    (setq garden--output output)))
+              (when error-buf
+                (pop-to-buffer error-buf))))
+          (unless (null response-warnings)
+            (seq-doseq (warning response-warnings)
+              (display-warning
+               'garden
+               (plist-get warning :message)
+               :warning))))))))
 
 (defun garden--visit-path (file-name)
   "Open or switch to the buffer named FILE-NAME."

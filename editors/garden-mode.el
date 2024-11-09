@@ -476,6 +476,7 @@ enclosing point and print the result."
 
 (defun garden-stop-session ()
   (interactive)
+  (setq garden--output "")
   (let ((buf (garden--buffer)))
     (kill-buffer buf)))
 

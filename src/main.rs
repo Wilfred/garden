@@ -50,7 +50,7 @@ mod version;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::channel;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
@@ -234,12 +234,12 @@ fn main() {
         Commands::TestJson { path } => {
             let src = read_utf8_or_die(&path);
 
-            let session = Arc::new(Mutex::new(Session {
+            let session = Session {
                 interrupted: Arc::clone(&interrupted),
                 has_attached_stdout: true,
                 start_time: Instant::now(),
                 trace_exprs: false,
-            }));
+            };
 
             let json_lines = src
                 .lines()
@@ -247,7 +247,7 @@ fn main() {
 
             let (sender, receiver) = channel::<(bool, String)>();
 
-            let handle = start_eval_thread(Arc::clone(&session), receiver);
+            let handle = start_eval_thread(session, receiver);
 
             for line in json_lines {
                 handle_request(line, true, Arc::clone(&interrupted), sender.clone());

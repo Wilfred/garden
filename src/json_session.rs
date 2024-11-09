@@ -1,7 +1,6 @@
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::Mutex;
 use std::thread::JoinHandle;
 use std::time::Instant;
 use std::{
@@ -171,7 +170,7 @@ fn handle_load_request(
 }
 
 pub(crate) fn start_eval_thread(
-    session: Arc<Mutex<Session>>,
+    session: Session,
     receiver: Receiver<(bool, String)>,
 ) -> JoinHandle<()> {
     std::thread::Builder::new()
@@ -180,12 +179,12 @@ pub(crate) fn start_eval_thread(
         .unwrap()
 }
 
-fn eval_worker(receiver: Receiver<(bool, String)>, session: Arc<Mutex<Session>>) {
+fn eval_worker(receiver: Receiver<(bool, String)>, session: Session) {
     let mut env = Env::default();
+    let mut session = session;
 
     while let Ok((pretty_print, input)) = receiver.recv() {
-        let session = &mut *session.lock().unwrap();
-        handle_request_in_worker(&input, pretty_print, &mut env, session);
+        handle_request_in_worker(&input, pretty_print, &mut env, &mut session);
     }
 }
 
@@ -829,16 +828,16 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
 
-    let session = Arc::new(Mutex::new(Session {
+    let session = Session {
         interrupted: Arc::clone(&interrupted),
         has_attached_stdout: false,
         start_time: Instant::now(),
         trace_exprs: false,
-    }));
+    };
 
     let (sender, receiver) = channel::<(bool, String)>();
 
-    start_eval_thread(Arc::clone(&session), receiver);
+    start_eval_thread(session, receiver);
 
     loop {
         let mut line = String::new();

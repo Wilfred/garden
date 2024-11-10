@@ -317,7 +317,7 @@ the user entering a value in the *garden* buffer."
                   (beginning-of-line)
                   (insert "\n" s)
                   (goto-char (point-max)))
-              (insert s (garden--fontify-prompt "\n>") " "))
+              (insert s (garden--fontify-prompt "\nTOP>") " "))
             (set-marker (process-mark proc) (point))
 
             (when error-buf

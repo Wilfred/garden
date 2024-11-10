@@ -1,0 +1,30 @@
+{ "method": "run", "input": "{ let x = 1 }", "id": 1 }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
+//   "value": {
+//     "Ok": "Unit"
+//   },
+//   "position": null,
+//   "warnings": [
+//     {
+//       "message": "`x` is unused.",
+//       "position": {
+//         "start_offset": 6,
+//         "end_offset": 7,
+//         "line_number": 0,
+//         "end_line_number": 0,
+//         "path": "__json_session_unnamed__"
+//       },
+//       "level": "Warning"
+//     }
+//   ],
+//   "id": 1
+// }
+

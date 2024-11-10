@@ -13,7 +13,11 @@
 //   "warnings": []
 // }
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Err": [
 //       {
@@ -27,7 +31,11 @@
 //   "warnings": []
 // }
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Ok": "5"
 //   },

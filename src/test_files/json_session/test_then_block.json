@@ -3,7 +3,11 @@
 // args: test-json
 // expected stdout:
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Ok": "Ran 1 test, and the expression evaluated to 3."
 //   },

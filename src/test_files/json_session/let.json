@@ -4,7 +4,11 @@
 // args: test-json
 // expected stdout:
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Ok": "Unit"
 //   },
@@ -12,7 +16,11 @@
 //   "warnings": []
 // }
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Ok": "6"
 //   },

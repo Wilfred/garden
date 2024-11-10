@@ -4,7 +4,11 @@
 // expected stdout:
 // hello world
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Ok": "Unit"
 //   },

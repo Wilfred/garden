@@ -3,7 +3,11 @@
 // args: test-json
 // expected stdout:
 // {
-//   "kind": "evaluate",
+//   "kind": {
+//     "evaluate": {
+//       "warnings": []
+//     }
+//   },
 //   "value": {
 //     "Ok": "Loaded foo."
 //   },

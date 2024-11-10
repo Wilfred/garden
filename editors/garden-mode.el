@@ -277,6 +277,10 @@ the user entering a value in the *garden* buffer."
              (response-err-values (plist-get response-value :Err))
              (buf (current-buffer))
              error-buf)
+        ;; Response kind can be a string or an object. Ensure it's
+        ;; always a string.
+        (when (consp response-kind)
+          (setq response-kind (substring (symbol-name (car response-kind)) 1)))
         (with-current-buffer (process-buffer proc)
           (let ((s
                  (cond

@@ -91,7 +91,6 @@ pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
     pub(crate) value: Result<Option<String>, Vec<ResponseError>>,
     pub(crate) position: Option<Position>,
-    pub(crate) warnings: Vec<Diagnostic>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) id: Option<RequestId>,
 }
@@ -166,10 +165,11 @@ fn handle_load_request(
     };
 
     Response {
-        kind: ResponseKind::Evaluate(EvalResponse { warnings: vec![] }),
+        kind: ResponseKind::Evaluate(EvalResponse {
+            warnings: eval_summary.diagnostics,
+        }),
         value: Ok(value_summary),
         position: None,
-        warnings: eval_summary.diagnostics,
         id: None,
     }
 }
@@ -230,7 +230,6 @@ fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
         kind: ResponseKind::Evaluate(EvalResponse { warnings: vec![] }),
         value: Err(response_errors),
         position: None,
-        warnings: vec![],
         id: None,
     }
 }
@@ -274,7 +273,6 @@ fn handle_eval_up_to_request(
                         stack,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 };
             }
@@ -287,7 +285,6 @@ fn handle_eval_up_to_request(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 };
             }
@@ -300,7 +297,6 @@ fn handle_eval_up_to_request(
                 kind: ResponseKind::Evaluate(EvalResponse { warnings: vec![] }),
                 value: Ok(Some(v.display(env))),
                 position: Some(pos),
-                warnings: vec![],
                 id: None,
             },
             Err(e) => match e {
@@ -312,7 +308,6 @@ fn handle_eval_up_to_request(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 },
                 EvalError::ResumableError(_, message) => Response {
@@ -323,7 +318,6 @@ fn handle_eval_up_to_request(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 },
                 EvalError::AssertionFailed(_) => Response {
@@ -334,7 +328,6 @@ fn handle_eval_up_to_request(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 },
                 EvalError::ReachedTickLimit => Response {
@@ -345,7 +338,6 @@ fn handle_eval_up_to_request(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 },
                 EvalError::ForbiddenInSandbox(position) => Response {
@@ -356,7 +348,6 @@ fn handle_eval_up_to_request(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id: None,
                 },
             },
@@ -365,7 +356,6 @@ fn handle_eval_up_to_request(
             kind: ResponseKind::Evaluate(EvalResponse { warnings: vec![] }),
             value: Ok(Some("Did not find an expression to evaluate".to_owned())),
             position: None,
-            warnings: vec![],
             id: None,
         },
     }
@@ -384,7 +374,6 @@ pub(crate) fn handle_request(
             kind: ResponseKind::RunCommand,
             value: Ok(Some("Interrupted".to_owned())),
             position: None,
-            warnings: vec![],
             id: None,
         };
         let serialized = if pretty_print {
@@ -419,8 +408,7 @@ fn handle_request_in_worker(
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
-            id: None,
+                        id: None,
         };
 
         let serialized = if pretty_print {
@@ -459,14 +447,12 @@ fn handle_request_in_worker(
                         kind: ResponseKind::RunCommand,
                         value: Ok(Some(format!("{}", String::from_utf8_lossy(&out_buf)))),
                         position: None,
-                        warnings: vec![],
                         id,
                     },
                     Err(EvalAction::Abort) => Response {
                         kind: ResponseKind::RunCommand,
                         value: Ok(Some("Aborted".to_owned())),
                         position: None,
-                        warnings: vec![],
                         id,
                     },
                     Err(EvalAction::Resume) => eval_to_response(env, session),
@@ -485,7 +471,6 @@ fn handle_request_in_worker(
                                     stack: None,
                                 }]),
                                 position: None,
-                                warnings: vec![],
                                 id,
                             },
                         }
@@ -525,7 +510,6 @@ fn handle_request_in_worker(
                         stack: None,
                     }]),
                     position: None,
-                    warnings: vec![],
                     id,
                 }
             }
@@ -616,10 +600,11 @@ fn handle_eval_request(
             };
 
             Response {
-                kind: ResponseKind::Evaluate(EvalResponse { warnings: vec![] }),
+                kind: ResponseKind::Evaluate(EvalResponse {
+                    warnings: eval_summary.diagnostics,
+                }),
                 value: Ok(value_summary),
                 position: None,
-                warnings: eval_summary.diagnostics,
                 id,
             }
         }
@@ -635,7 +620,6 @@ fn handle_eval_request(
                     stack: Some(stack),
                 }]),
                 position: None,
-                warnings: vec![],
                 id,
             }
         }
@@ -651,7 +635,6 @@ fn handle_eval_request(
                     stack: Some(stack),
                 }]),
                 position: None,
-                warnings: vec![],
                 id,
             }
         }
@@ -663,7 +646,6 @@ fn handle_eval_request(
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id,
         },
         Err(EvalError::ReachedTickLimit) => Response {
@@ -674,7 +656,6 @@ fn handle_eval_request(
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id,
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
@@ -685,7 +666,6 @@ fn handle_eval_request(
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id,
         },
     }
@@ -748,7 +728,6 @@ fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
         kind: ResponseKind::FoundDefinition,
         value,
         position: None,
-        warnings: vec![],
         id: None,
     }
 }
@@ -759,7 +738,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             kind: ResponseKind::Evaluate(EvalResponse { warnings: vec![] }),
             value: Ok(Some(result.display(env))),
             position: None,
-            warnings: vec![],
             id: None,
         },
         Err(EvalError::ResumableError(position, e)) => Response {
@@ -770,7 +748,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id: None,
         },
         Err(EvalError::AssertionFailed(position)) => Response {
@@ -781,7 +758,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id: None,
         },
         Err(EvalError::Interrupted) => Response {
@@ -792,7 +768,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id: None,
         },
         Err(EvalError::ReachedTickLimit) => Response {
@@ -803,7 +778,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id: None,
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
@@ -814,7 +788,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 stack: None,
             }]),
             position: None,
-            warnings: vec![],
             id: None,
         },
     }
@@ -827,7 +800,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
             "The Garden: Good programs take time to grow.".to_owned(),
         )),
         position: None,
-        warnings: vec![],
         id: None,
     };
     let serialized = serde_json::to_string(&response).unwrap();
@@ -881,8 +853,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
                     ),
                     stack: None,
                 }]),
-                        position: None,
-                warnings: vec![],
+                position: None,
                 id: None,
             };
             let serialized = serde_json::to_string(&err_response).unwrap();

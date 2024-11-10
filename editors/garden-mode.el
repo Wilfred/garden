@@ -271,16 +271,17 @@ the user entering a value in the *garden* buffer."
       (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
              (response-value (plist-get response :value))
              (response-position (plist-get response :position))
-             (response-warnings (plist-get response :warnings))
+             (response-warnings nil)
              (response-kind (plist-get response :kind))
              (response-ok-value (plist-get response-value :Ok))
              (response-err-values (plist-get response-value :Err))
              (buf (current-buffer))
              error-buf)
-        ;; Response kind can be a string or an object. Ensure it's
-        ;; always a string.
-        (when (consp response-kind)
-          (setq response-kind (substring (symbol-name (car response-kind)) 1)))
+        ;; Response kind is an object for evaluate responses, handle that case.
+        (let ((eval-response (plist-get response-kind :evaluate)))
+          (when eval-response
+            (setq response-kind "evaluate")
+            (setq response-warnings (plist-get eval-response :warnings))))
         (with-current-buffer (process-buffer proc)
           (let ((s
                  (cond

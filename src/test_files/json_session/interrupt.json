@@ -9,8 +9,7 @@
 //   "value": {
 //     "Ok": "Interrupted"
 //   },
-//   "position": null,
-//   "warnings": []
+//   "position": null
 // }
 // {
 //   "kind": {
@@ -27,8 +26,7 @@
 //       }
 //     ]
 //   },
-//   "position": null,
-//   "warnings": []
+//   "position": null
 // }
 // {
 //   "kind": {
@@ -39,7 +37,6 @@
 //   "value": {
 //     "Ok": "5"
 //   },
-//   "position": null,
-//   "warnings": []
+//   "position": null
 // }
 

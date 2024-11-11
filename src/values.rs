@@ -29,8 +29,8 @@ pub(crate) enum Value {
         items: Vec<Value>,
         item_types: Vec<Type>,
     },
-    /// A value in a user-defined enum.
-    Enum {
+    /// A value in a user-defined enum, such as `True` or `Some(123)`.
+    EnumVariant {
         type_name: TypeName,
         runtime_type: Type,
         variant_idx: usize,
@@ -57,7 +57,7 @@ impl Value {
     pub(crate) fn unit() -> Self {
         // We can assume that Unit is always defined because it's in the
         // prelude.
-        Value::Enum {
+        Value::EnumVariant {
             type_name: TypeName {
                 name: "Unit".to_owned(),
             },
@@ -70,7 +70,7 @@ impl Value {
     pub(crate) fn bool(b: bool) -> Self {
         // We can assume that Bool is always defined because it's in the
         // prelude.
-        Value::Enum {
+        Value::EnumVariant {
             type_name: TypeName {
                 name: "Bool".to_owned(),
             },
@@ -82,7 +82,7 @@ impl Value {
 
     pub(crate) fn as_rust_bool(&self) -> Option<bool> {
         match self {
-            Value::Enum {
+            Value::EnumVariant {
                 runtime_type,
                 variant_idx,
                 ..
@@ -96,7 +96,7 @@ impl Value {
 
         // We can assume that Result is always defined because it's in the
         // prelude.
-        Value::Enum {
+        Value::EnumVariant {
             type_name: TypeName {
                 name: "Result".to_owned(),
             },
@@ -117,7 +117,7 @@ impl Value {
 
         // We can assume that Result is always defined because it's in the
         // prelude.
-        Value::Enum {
+        Value::EnumVariant {
             type_name: TypeName {
                 name: "Result".to_owned(),
             },
@@ -144,7 +144,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value::String(_) => "String",
             Value::List { .. } => "List",
             Value::Tuple { .. } => "Tuple",
-            Value::Enum { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
+            Value::EnumVariant { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
                 &type_name.name
             }
             Value::Struct { type_name, .. } => &type_name.name,
@@ -233,7 +233,7 @@ impl Value {
 
                 s
             }
-            Value::Enum {
+            Value::EnumVariant {
                 type_name,
                 variant_idx,
                 payload,
@@ -320,7 +320,7 @@ impl Value {
 
     pub(crate) fn display_unless_unit(&self, env: &Env) -> Option<String> {
         match self {
-            Value::Enum {
+            Value::EnumVariant {
                 type_name,
                 variant_idx,
                 ..

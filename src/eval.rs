@@ -852,7 +852,7 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
                         )
                         .unwrap_or(Type::no_value());
 
-                        Value::Enum {
+                        Value::EnumVariant {
                             type_name: enum_info.name_sym.name.clone(),
                             runtime_type,
                             variant_idx,
@@ -2497,7 +2497,7 @@ fn eval_call(
             )
             .unwrap_or(Type::no_value());
 
-            let value = Value::Enum {
+            let value = Value::EnumVariant {
                 type_name: type_name.clone(),
                 variant_idx: *variant_idx,
                 // TODO: check type of arg_values[0] is compatible
@@ -4176,7 +4176,7 @@ fn eval_match_cases(
         .pop()
         .expect("Popped an empty value stack for match");
 
-    let Value::Enum {
+    let Value::EnumVariant {
         type_name: value_type_name,
         variant_idx: value_variant_idx,
         payload: value_payload,
@@ -4221,7 +4221,7 @@ fn eval_match_cases(
         };
 
         let (pattern_type_name, pattern_variant_idx) = match value {
-            Value::Enum {
+            Value::EnumVariant {
                 type_name,
                 variant_idx,
                 ..

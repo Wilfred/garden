@@ -338,7 +338,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     };
 
                     let pattern_type_name = match value {
-                        Value::Enum { type_name, .. } => type_name,
+                        Value::EnumVariant { type_name, .. } => type_name,
                         Value::EnumConstructor { type_name, .. } => type_name,
                         _ => {
                             self.diagnostics.push(Diagnostic {

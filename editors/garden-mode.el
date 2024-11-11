@@ -290,7 +290,7 @@ the user entering a value in the *garden* buffer."
           (when ready-response
             (setq response-kind "ready")
             (setq response-value (plist-get ready-response :message))))
-        (when (string= response-kind "interrupted")
+        (when (equal response-kind "interrupted")
           (setq response-value "Interrupted"))
 
         (with-current-buffer (process-buffer proc)

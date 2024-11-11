@@ -322,6 +322,8 @@ the user entering a value in the *garden* buffer."
                   ((string= response-kind "printed")
                    (message "%s" response-value)
                    (garden--propertize-read-only response-value))
+                  ((string= response-kind "interrupted")
+                   (garden--propertize-read-only response-value))
                   ((string= response-kind "run_command")
                    (garden--fontify-command-output
                     (concat response-value "\n")))

@@ -314,7 +314,7 @@ the user entering a value in the *garden* buffer."
                          (push (garden--fontify-error (concat err-msg "\n")) messages)))
                      (s-join "\n" messages)))
                   ((string= response-kind "ready")
-                   (garden--propertize-read-only (concat response-ok-value "\n")))
+                   (garden--propertize-read-only (concat response-value "\n")))
                   ((string= response-kind "printed")
                    (message "%s" response-value)
                    (garden--propertize-read-only response-value))

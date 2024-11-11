@@ -61,7 +61,10 @@ enum Request {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum ResponseKind {
-    Evaluate(EvalResponse),
+    Evaluate {
+        warnings: Vec<Diagnostic>,
+        value: Result<Option<String>, Vec<ResponseError>>,
+    },
     RunCommand {
         message: String,
     },
@@ -78,12 +81,6 @@ pub(crate) enum ResponseKind {
     /// We received an interrupt request. The current (or next)
     /// evaluate request will return an error of "Interrupted".
     Interrupted,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub(crate) struct EvalResponse {
-    warnings: Vec<Diagnostic>,
-    value: Result<Option<String>, Vec<ResponseError>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -176,10 +173,10 @@ fn handle_load_request(
     };
 
     Response {
-        kind: ResponseKind::Evaluate(EvalResponse {
+        kind: ResponseKind::Evaluate {
             warnings: eval_summary.diagnostics,
             value: Ok(value_summary),
-        }),
+        },
         position: None,
         id: None,
     }
@@ -235,10 +232,10 @@ fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
         .collect();
 
     Response {
-        kind: ResponseKind::Evaluate(EvalResponse {
+        kind: ResponseKind::Evaluate {
             warnings: vec![],
             value: Err(response_errors),
-        }),
+        },
         position: None,
         id: None,
     }
@@ -276,28 +273,28 @@ fn handle_eval_up_to_request(
                     },
                 ));
                 return Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: Some(position),
                             message: message.0,
                             stack,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 };
             }
             ParseError::Incomplete { message, .. } => {
                 return Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
                             message: message.0,
                             stack: None,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 };
@@ -308,81 +305,81 @@ fn handle_eval_up_to_request(
     match eval_up_to(env, session, &items, offset) {
         Some(eval_res) => match eval_res {
             Ok((v, pos)) => Response {
-                kind: ResponseKind::Evaluate(EvalResponse {
+                kind: ResponseKind::Evaluate {
                     warnings: vec![],
                     value: Ok(Some(v.display(env))),
-                }),
+                },
                 position: Some(pos),
                 id: None,
             },
             Err(e) => match e {
                 EvalError::Interrupted => Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
                             message: "Interrupted.".to_owned(),
                             stack: None,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 },
                 EvalError::ResumableError(_, message) => Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
                             message: message.0,
                             stack: None,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 },
                 EvalError::AssertionFailed(_) => Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
                             message: "Assertion failed".to_owned(),
                             stack: None,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 },
                 EvalError::ReachedTickLimit => Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
                             message: "Reached the tick limit.".to_owned(),
                             stack: None,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 },
                 EvalError::ForbiddenInSandbox(position) => Response {
-                    kind: ResponseKind::Evaluate(EvalResponse {
+                    kind: ResponseKind::Evaluate {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: Some(position),
                             message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                             stack: None,
                         }]),
-                    }),
+                    },
                     position: None,
                     id: None,
                 },
             },
         },
         None => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Ok(Some("Did not find an expression to evaluate".to_owned())),
-            }),
+            },
             position: None,
             id: None,
         },
@@ -605,10 +602,10 @@ fn handle_eval_request(
             };
 
             Response {
-                kind: ResponseKind::Evaluate(EvalResponse {
+                kind: ResponseKind::Evaluate {
                     warnings: eval_summary.diagnostics,
                     value: Ok(value_summary),
-                }),
+                },
                 position: None,
                 id,
             }
@@ -618,14 +615,14 @@ fn handle_eval_request(
             let stack = format_error_with_stack(&e, &position, &env.stack.0);
 
             Response {
-                kind: ResponseKind::Evaluate(EvalResponse {
+                kind: ResponseKind::Evaluate {
                     warnings: vec![],
                     value: Err(vec![ResponseError {
                         position: Some(position),
                         message: format!("Error: {}", e.0),
                         stack: Some(stack),
                     }]),
-                }),
+                },
                 position: None,
                 id,
             }
@@ -635,51 +632,51 @@ fn handle_eval_request(
             let stack = format_error_with_stack(&message, &position, &env.stack.0);
 
             Response {
-                kind: ResponseKind::Evaluate(EvalResponse {
+                kind: ResponseKind::Evaluate {
                     warnings: vec![],
                     value: Err(vec![ResponseError {
                         position: Some(position),
                         message: "Assertion failed".to_owned(),
                         stack: Some(stack),
                     }]),
-                }),
+                },
                 position: None,
                 id,
             }
         }
         Err(EvalError::Interrupted) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: None,
                     message: "Interrupted".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id,
         },
         Err(EvalError::ReachedTickLimit) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: None,
                     message: "Reached the tick limit.".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id,
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: Some(position),
                     message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id,
         },
@@ -689,70 +686,70 @@ fn handle_eval_request(
 fn eval_to_response(env: &mut Env, session: &Session) -> Response {
     match eval(env, session) {
         Ok(result) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Ok(Some(result.display(env))),
-            }),
+            },
             position: None,
             id: None,
         },
         Err(EvalError::ResumableError(position, e)) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: Some(position),
                     message: format!("Error: {}", e.0),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id: None,
         },
         Err(EvalError::AssertionFailed(position)) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: Some(position),
                     message: "Assertion failed".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id: None,
         },
         Err(EvalError::Interrupted) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: None,
                     message: "Interrupted".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id: None,
         },
         Err(EvalError::ReachedTickLimit) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: None,
                     message: "Reached the tick limit.".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id: None,
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {
-            kind: ResponseKind::Evaluate(EvalResponse {
+            kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: Some(position),
                     message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                     stack: None,
                 }]),
-            }),
+            },
             position: None,
             id: None,
         },

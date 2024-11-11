@@ -335,7 +335,7 @@ the user entering a value in the *garden* buffer."
                      (message "%s" response-ok-value))
                    (garden--fontify-value (concat response-ok-value "\n")))
                   (t
-                   output))))
+                   (format "Unknown response kind: %S" output)))))
             (goto-char (point-max))
             (if (garden--prompt-empty-p)
                 (let ((inhibit-read-only t))

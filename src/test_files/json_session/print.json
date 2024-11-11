@@ -2,7 +2,13 @@
 
 // args: test-json
 // expected stdout:
-// hello world
+// {
+//   "kind": "printed",
+//   "value": {
+//     "Ok": "hello world\n"
+//   },
+//   "position": null
+// }
 // {
 //   "kind": {
 //     "evaluate": {

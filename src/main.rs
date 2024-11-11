@@ -236,7 +236,7 @@ fn main() {
 
             let session = Session {
                 interrupted: Arc::clone(&interrupted),
-                has_attached_stdout: true,
+                has_attached_stdout: false,
                 start_time: Instant::now(),
                 trace_exprs: false,
                 pretty_print_json: true,

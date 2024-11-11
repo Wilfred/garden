@@ -282,6 +282,12 @@ the user entering a value in the *garden* buffer."
           (when eval-response
             (setq response-kind "evaluate")
             (setq response-warnings (plist-get eval-response :warnings))))
+        ;; Response kind is an object for Ready too.
+        (let ((ready-response (plist-get response-kind :ready)))
+          (when ready-response
+            (setq response-kind "ready")
+            (setq response-value (plist-get ready-response :message))))
+
         (with-current-buffer (process-buffer proc)
           (let ((s
                  (cond

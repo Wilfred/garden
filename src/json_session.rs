@@ -68,7 +68,7 @@ enum Request {
 pub(crate) enum ResponseKind {
     Evaluate(EvalResponse),
     RunCommand,
-    Ready,
+    Ready { message: String },
     MalformedRequest,
     Printed,
     FoundDefinition,
@@ -77,6 +77,11 @@ pub(crate) enum ResponseKind {
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct EvalResponse {
     warnings: Vec<Diagnostic>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct ReadyResponse {
+    message: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -795,7 +800,9 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
 
 pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let response = Response {
-        kind: ResponseKind::Ready,
+        kind: ResponseKind::Ready {
+            message: "The Garden: Good programs take time to grow.".to_owned(),
+        },
         value: Ok(Some(
             "The Garden: Good programs take time to grow.".to_owned(),
         )),

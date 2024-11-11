@@ -294,6 +294,10 @@ the user entering a value in the *garden* buffer."
           (when printed-response
             (setq response-kind "printed")
             (setq response-value (plist-get printed-response :s))))
+        (let ((run-command-response (plist-get response-kind :run_command)))
+          (when run-command-response
+            (setq response-kind "run_command")
+            (setq response-value (plist-get run-command-response :message))))
         (when (equal response-kind "interrupted")
           (setq response-value "Interrupted"))
 
@@ -320,7 +324,7 @@ the user entering a value in the *garden* buffer."
                    (garden--propertize-read-only response-value))
                   ((string= response-kind "run_command")
                    (garden--fontify-command-output
-                    (concat response-ok-value "\n")))
+                    (concat response-value "\n")))
                   ((string= response-kind "found_definition")
                    (garden--visit response-ok-value))
                   ((string= response-kind "evaluate")

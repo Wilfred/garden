@@ -3,7 +3,11 @@
 // args: test-json
 // expected stdout:
 // {
-//   "kind": "run_command",
+//   "kind": {
+//     "run_command": {
+//       "message": "String::split(_: String): List<String>\nString::split_once(_: String): Option<(String, String)>\nString::starts_with(_: String): Bool\nString::strip_prefix(_: String): String\nString::strip_suffix(_: String): String\nString::substring(_: Int, _: Int): String"
+//     }
+//   },
 //   "value": {
 //     "Ok": "String::split(_: String): List<String>\nString::split_once(_: String): Option<(String, String)>\nString::starts_with(_: String): Bool\nString::strip_prefix(_: String): String\nString::strip_suffix(_: String): String\nString::substring(_: Int, _: Int): String"
 //   },

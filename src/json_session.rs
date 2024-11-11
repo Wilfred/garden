@@ -62,7 +62,9 @@ enum Request {
 #[serde(rename_all = "snake_case")]
 pub(crate) enum ResponseKind {
     Evaluate(EvalResponse),
-    RunCommand,
+    RunCommand {
+        message: String,
+    },
     Ready {
         message: String,
     },
@@ -509,13 +511,17 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                 let mut out_buf: Vec<u8> = vec![];
                 match run_command(&mut out_buf, &command, env, session) {
                     Ok(()) => Response {
-                        kind: ResponseKind::RunCommand,
+                        kind: ResponseKind::RunCommand {
+                            message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                        },
                         value: Ok(Some(format!("{}", String::from_utf8_lossy(&out_buf)))),
                         position: None,
                         id,
                     },
                     Err(EvalAction::Abort) => Response {
-                        kind: ResponseKind::RunCommand,
+                        kind: ResponseKind::RunCommand {
+                            message: "Aborted".to_owned(),
+                        },
                         value: Ok(Some("Aborted".to_owned())),
                         position: None,
                         id,
@@ -570,7 +576,9 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                 print_available_commands(&mut out_buf);
 
                 Response {
-                    kind: ResponseKind::RunCommand,
+                    kind: ResponseKind::RunCommand {
+                        message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                    },
                     value: Err(vec![ResponseError {
                         position: None,
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),

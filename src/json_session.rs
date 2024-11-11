@@ -428,6 +428,16 @@ fn handle_eval_up_to_request(
     }
 }
 
+pub(crate) fn print_as_json(res: &Response, pretty_print_json: bool) {
+    let serialized = if pretty_print_json {
+        serde_json::to_string_pretty(&res)
+    } else {
+        serde_json::to_string(&res)
+    }
+    .unwrap();
+    println!("{}", serialized);
+}
+
 /// Process a request and print the response as JSON on stdout.
 pub(crate) fn handle_request(
     req_src: &str,
@@ -443,13 +453,7 @@ pub(crate) fn handle_request(
             position: None,
             id: None,
         };
-        let serialized = if pretty_print {
-            serde_json::to_string_pretty(&res)
-        } else {
-            serde_json::to_string(&res)
-        }
-        .unwrap();
-        println!("{}", serialized);
+        print_as_json(&res, pretty_print);
         return;
     }
 
@@ -473,13 +477,7 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
             id: None,
         };
 
-        let serialized = if session.pretty_print_json {
-            serde_json::to_string_pretty(&res)
-        } else {
-            serde_json::to_string(&res)
-        }
-        .unwrap();
-        println!("{}", serialized);
+        print_as_json(&res, session.pretty_print_json);
         return;
     };
 
@@ -585,14 +583,7 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
         }
     };
 
-    let serialized = if session.pretty_print_json {
-        serde_json::to_string_pretty(&res)
-    } else {
-        serde_json::to_string(&res)
-    }
-    .unwrap();
-
-    println!("{}", serialized);
+    print_as_json(&res, session.pretty_print_json);
 }
 
 fn handle_eval_request(
@@ -940,8 +931,9 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         position: None,
         id: None,
     };
-    let serialized = serde_json::to_string(&response).unwrap();
-    println!("{}", serialized);
+    let pretty_print_json = false;
+
+    print_as_json(&response, pretty_print_json);
 
     let pretty_print_json = false;
     let session = Session {
@@ -1001,8 +993,8 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
                 position: None,
                 id: None,
             };
-            let serialized = serde_json::to_string(&err_response).unwrap();
-            println!("{}", serialized);
+
+            print_as_json(&err_response, pretty_print_json);
         }
     }
 }

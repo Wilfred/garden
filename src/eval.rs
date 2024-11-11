@@ -16,7 +16,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
-use crate::json_session::{Response, ResponseKind};
+use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
@@ -1841,8 +1841,7 @@ fn eval_builtin_call(
                             position: None,
                             id: None,
                         };
-                        let serialized = serde_json::to_string(&response).unwrap();
-                        println!("{}", serialized);
+                        print_as_json(&response, session.pretty_print_json);
                     }
                 }
                 v => {
@@ -1891,8 +1890,7 @@ fn eval_builtin_call(
                             position: None,
                             id: None,
                         };
-                        let serialized = serde_json::to_string(&response).unwrap();
-                        println!("{}", serialized);
+                        print_as_json(&response, session.pretty_print_json);
                     }
                 }
                 v => {

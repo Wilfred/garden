@@ -14,7 +14,8 @@
 //             "stack": null
 //           }
 //         ]
-//       }
+//       },
+//       "stack_frame_name": null
 //     }
 //   },
 //   "position": null

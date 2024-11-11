@@ -16,7 +16,8 @@
 //       "warnings": [],
 //       "value": {
 //         "Ok": "Unit"
-//       }
+//       },
+//       "stack_frame_name": "TOP"
 //     }
 //   },
 //   "position": null,

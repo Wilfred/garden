@@ -8,7 +8,8 @@
 //       "warnings": [],
 //       "value": {
 //         "Ok": "Loaded foo."
-//       }
+//       },
+//       "stack_frame_name": "TOP"
 //     }
 //   },
 //   "position": null

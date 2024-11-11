@@ -21,7 +21,8 @@
 //             "stack": null
 //           }
 //         ]
-//       }
+//       },
+//       "stack_frame_name": "TOP"
 //     }
 //   },
 //   "position": null
@@ -32,7 +33,8 @@
 //       "warnings": [],
 //       "value": {
 //         "Ok": "3"
-//       }
+//       },
+//       "stack_frame_name": "TOP"
 //     }
 //   },
 //   "position": null
@@ -43,7 +45,8 @@
 //       "warnings": [],
 //       "value": {
 //         "Ok": "5"
-//       }
+//       },
+//       "stack_frame_name": "TOP"
 //     }
 //   },
 //   "position": null

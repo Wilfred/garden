@@ -8,7 +8,8 @@
 //       "warnings": [],
 //       "value": {
 //         "Ok": "Ran 1 test, and the expression evaluated to 3."
-//       }
+//       },
+//       "stack_frame_name": "TOP"
 //     }
 //   },
 //   "position": null

@@ -311,6 +311,17 @@ impl Default for Env {
 }
 
 impl Env {
+    pub(crate) fn top_frame_name(&self) -> String {
+        let top_stack = self.stack.0.last().unwrap();
+        match &top_stack.enclosing_name {
+            EnclosingSymbol::Fun(symbol) => format!("{}", symbol.name),
+            EnclosingSymbol::Method(type_name, symbol) => format!("{}::{}", type_name, symbol.name),
+            EnclosingSymbol::Test(symbol) => format!("test {}", symbol.name),
+            EnclosingSymbol::Closure => "closure".to_owned(),
+            EnclosingSymbol::Toplevel => "TOP".to_owned(),
+        }
+    }
+
     pub(crate) fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value);
     }

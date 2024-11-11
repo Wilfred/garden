@@ -5,7 +5,16 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": []
+//       "warnings": [],
+//       "value": {
+//         "Err": [
+//           {
+//             "position": null,
+//             "message": "Expected an expression.",
+//             "stack": null
+//           }
+//         ]
+//       }
 //     }
 //   },
 //   "value": {

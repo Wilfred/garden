@@ -5,7 +5,10 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": []
+//       "warnings": [],
+//       "value": {
+//         "Ok": "3"
+//       }
 //     }
 //   },
 //   "value": {

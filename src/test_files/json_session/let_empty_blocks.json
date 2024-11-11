@@ -6,7 +6,10 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": []
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Unit"
+//       }
 //     }
 //   },
 //   "value": {
@@ -17,7 +20,10 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": []
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Unit"
+//       }
 //     }
 //   },
 //   "value": {

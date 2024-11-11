@@ -269,19 +269,22 @@ the user entering a value in the *garden* buffer."
     (setq garden--output (-last-item lines))
     (dolist (line (butlast lines))
       (let* ((response (json-parse-string line :object-type 'plist :null-object nil))
-             (response-value (plist-get response :value))
              (response-position (plist-get response :position))
-             (response-warnings nil)
              (response-kind (plist-get response :kind))
-             (response-ok-value (plist-get response-value :Ok))
-             (response-err-values (plist-get response-value :Err))
              (buf (current-buffer))
+             (response-value nil)
+             (response-warnings nil)
+             (response-ok-value nil)
+             (response-err-values nil)
              error-buf)
         ;; Response kind is an object for evaluate responses, handle that case.
         (let ((eval-response (plist-get response-kind :evaluate)))
           (when eval-response
             (setq response-kind "evaluate")
-            (setq response-warnings (plist-get eval-response :warnings))))
+            (setq response-warnings (plist-get eval-response :warnings))
+            (setq response-value (plist-get eval-response :value))
+            (setq response-ok-value (plist-get response-value :Ok))
+            (setq response-err-values (plist-get response-value :Err))))
         ;; Response kind is an object for Ready too.
         (let ((ready-response (plist-get response-kind :ready)))
           (when ready-response

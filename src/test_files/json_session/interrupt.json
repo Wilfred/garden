@@ -14,7 +14,16 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": []
+//       "warnings": [],
+//       "value": {
+//         "Err": [
+//           {
+//             "position": null,
+//             "message": "Interrupted",
+//             "stack": null
+//           }
+//         ]
+//       }
 //     }
 //   },
 //   "value": {
@@ -31,7 +40,10 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": []
+//       "warnings": [],
+//       "value": {
+//         "Ok": "5"
+//       }
 //     }
 //   },
 //   "value": {

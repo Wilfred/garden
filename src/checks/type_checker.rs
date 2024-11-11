@@ -159,6 +159,30 @@ impl<'a> TypeCheckVisitor<'a> {
         ty
     }
 
+    /// Update `id_to_pos` for this occurrence of an enum variant,
+    /// e.g. an instance of the literal `True`.
+    fn save_enum_variant_id(&mut self, occurrence_sym: &Symbol, value: &Value) {
+        let Value::EnumVariant { type_name, .. } = value else {
+            return;
+        };
+        let Some(TypeDef::Enum(enum_info)) = self.env.get_type_def(type_name) else {
+            return;
+        };
+
+        for variant in &enum_info.variants {
+            if variant.name_sym.name == occurrence_sym.name {
+                self.id_to_pos
+                    .insert(occurrence_sym.id, variant.name_sym.position.clone());
+                return;
+            }
+        }
+
+        // We found the enum, but not this variant. Go to the start of
+        // the enum definition so we at least give the user a hint.
+        self.id_to_pos
+            .insert(occurrence_sym.id, enum_info.name_sym.position.clone());
+    }
+
     /// Update `id_to_pos` for this type hint.
     fn save_hint_ty_id(&mut self, hint: &TypeHint, param_ty: &Type) {
         // Recurse on hint arguments.
@@ -790,6 +814,10 @@ impl<'a> TypeCheckVisitor<'a> {
                             if let Some(doc_comment) = &fun_info.doc_comment {
                                 self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
                             }
+                        }
+
+                        if matches!(value, Value::EnumVariant { .. }) {
+                            self.save_enum_variant_id(sym, value);
                         }
 
                         Type::from_value(value, self.env, type_bindings)

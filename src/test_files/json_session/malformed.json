@@ -1,0 +1,18 @@
+{}
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": "malformed_request",
+//   "value": {
+//     "Err": [
+//       {
+//         "position": null,
+//         "message": "Invalid request (JSON decode failed). A valid request looks like: {\"method\":\"run\",\"input\":\"1 + 2\",\"path\":\"/foo/bar.gdn\",\"offset\":100,\"end_offset\":110,\"id\":123}. The request received was:\n\n{}",
+//         "stack": null
+//       }
+//     ]
+//   },
+//   "position": null
+// }
+

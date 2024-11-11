@@ -79,7 +79,7 @@ pub(crate) struct EvalResponse {
     warnings: Vec<Diagnostic>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub(crate) struct ResponseError {
     position: Option<Position>,
     message: String,

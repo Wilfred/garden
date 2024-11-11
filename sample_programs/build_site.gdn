@@ -135,6 +135,11 @@ test render_backtick {
     assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
 }
 
+// TODO: currently failing
+test render_link {
+    assert(render_markdown("[foo](example.com)") == "<p><code>foo</code></p>")
+}
+
 {
     render_markdown("# foo\n\nbar.")
 }

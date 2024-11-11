@@ -17,13 +17,11 @@ use crate::eval::{
     eval, eval_toplevel_items, eval_up_to, load_toplevel_items, push_test_stackframe,
     EvaluatedState,
 };
-use crate::types::TypeDef;
-use crate::values::Value;
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SymbolName, TypeName};
+use garden_lang_parser::ast::SourceString;
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -53,9 +51,6 @@ enum Request {
     },
     /// Stop the current evaluation, as if we'd pressed Ctrl-c.
     Interrupt,
-    FindDefinition {
-        name: String,
-    },
     EvalUpToId {
         path: Option<PathBuf>,
         src: String,
@@ -589,7 +584,6 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                 handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
             }
         },
-        Request::FindDefinition { name } => handle_find_def_request(&name, env),
         Request::EvalUpToId { path, src, offset } => {
             handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
         }
@@ -769,67 +763,6 @@ fn handle_eval_request(
             position: None,
             id,
         },
-    }
-}
-
-fn position_of_name(name: &str, env: &Env) -> Result<Position, String> {
-    if let Some(type_) = env.get_type_def(&TypeName {
-        name: name.to_owned(),
-    }) {
-        let pos = match type_ {
-            TypeDef::Builtin(_, Some(struct_info)) => &struct_info.name_sym.position,
-            TypeDef::Builtin(_, None) => return Err(format!("`{}` is a built-in type.", name)),
-            TypeDef::Enum(enum_info) => &enum_info.name_sym.position,
-            TypeDef::Struct(struct_info) => &struct_info.name_sym.position,
-        };
-
-        return Ok(pos.clone());
-    }
-
-    if let Some(v) = env.file_scope.get(&SymbolName(name.to_owned())) {
-        return position_of_fun(name, v);
-    }
-
-    Err(format!("`{}` is not a function or type.", name))
-}
-
-fn position_of_fun(name: &str, v: &Value) -> Result<Position, String> {
-    let fun_info = match v {
-        Value::Fun { fun_info, .. } => Some(fun_info),
-        Value::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
-        _ => {
-            return Err(format!("`{}` is not a function.", name));
-        }
-    };
-
-    let Some(fun_info) = fun_info else {
-        return Err(format!("`{}` does not have any function information (closure or undocumented built-in function).", name));
-    };
-    let Some(name) = &fun_info.name_sym else {
-        return Err(format!(
-            "`{}` does not have a name symbol (it's a closure).",
-            name
-        ));
-    };
-
-    Ok(name.position.clone())
-}
-
-fn handle_find_def_request(name: &str, env: &mut Env) -> Response {
-    let value = match position_of_name(name, env) {
-        Ok(pos) => Ok(Some(pos.as_ide_string())),
-        Err(message) => Err(vec![ResponseError {
-            position: None,
-            message,
-            stack: None,
-        }]),
-    };
-
-    Response {
-        kind: ResponseKind::FoundDefinition,
-        value,
-        position: None,
-        id: None,
     }
 }
 

@@ -239,13 +239,14 @@ fn main() {
                 has_attached_stdout: true,
                 start_time: Instant::now(),
                 trace_exprs: false,
+                pretty_print_json: true,
             };
 
             let json_lines = src
                 .lines()
                 .filter(|line| !line.starts_with("//") && !line.is_empty());
 
-            let (sender, receiver) = channel::<(bool, String)>();
+            let (sender, receiver) = channel::<String>();
 
             let handle = start_eval_thread(session, receiver);
 
@@ -282,6 +283,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         has_attached_stdout: true,
         start_time: Instant::now(),
         trace_exprs: false,
+        pretty_print_json: true,
     };
 
     let items = parse_toplevel_items_or_die(path, src, &mut env);
@@ -397,6 +399,7 @@ fn run_sandboxed_tests_in_file(
         has_attached_stdout: true,
         start_time: Instant::now(),
         trace_exprs: false,
+        pretty_print_json: false,
     };
 
     // TODO: for real IDE usage we'll want to use the environment of
@@ -495,6 +498,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
         has_attached_stdout: true,
         start_time: Instant::now(),
         trace_exprs: false,
+        pretty_print_json: false,
     };
 
     load_toplevel_items(&items, &mut env);
@@ -587,6 +591,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         has_attached_stdout: true,
         start_time: Instant::now(),
         trace_exprs: false,
+        pretty_print_json: false,
     };
 
     load_toplevel_items(&items, &mut env);

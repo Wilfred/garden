@@ -270,6 +270,7 @@ pub(crate) struct Session {
     pub(crate) has_attached_stdout: bool,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
+    pub(crate) pretty_print_json: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -4357,6 +4358,7 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
+            pretty_print_json: true,
         };
 
         super::eval_exprs(exprs, env, &session)
@@ -4779,6 +4781,7 @@ mod tests {
             has_attached_stdout: false,
             start_time: Instant::now(),
             trace_exprs: false,
+            pretty_print_json: true,
         };
 
         let mut env = Env::default();

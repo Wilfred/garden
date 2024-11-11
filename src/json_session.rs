@@ -186,22 +186,19 @@ fn handle_load_request(
     }
 }
 
-pub(crate) fn start_eval_thread(
-    session: Session,
-    receiver: Receiver<(bool, String)>,
-) -> JoinHandle<()> {
+pub(crate) fn start_eval_thread(session: Session, receiver: Receiver<String>) -> JoinHandle<()> {
     std::thread::Builder::new()
         .name("eval".to_owned())
         .spawn(move || eval_worker(receiver, session))
         .unwrap()
 }
 
-fn eval_worker(receiver: Receiver<(bool, String)>, session: Session) {
+fn eval_worker(receiver: Receiver<String>, session: Session) {
     let mut env = Env::default();
     let mut session = session;
 
-    while let Ok((pretty_print, input)) = receiver.recv() {
-        handle_request_in_worker(&input, pretty_print, &mut env, &mut session);
+    while let Ok(input) = receiver.recv() {
+        handle_request_in_worker(&input, &mut env, &mut session);
     }
 }
 
@@ -436,7 +433,7 @@ pub(crate) fn handle_request(
     req_src: &str,
     pretty_print: bool,
     interrupted: Arc<AtomicBool>,
-    sender: Sender<(bool, String)>,
+    sender: Sender<String>,
 ) {
     if let Ok(Request::Interrupt) = serde_json::from_str::<Request>(req_src) {
         interrupted.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -456,15 +453,10 @@ pub(crate) fn handle_request(
         return;
     }
 
-    sender.send((pretty_print, req_src.to_owned())).unwrap();
+    sender.send(req_src.to_owned()).unwrap();
 }
 
-fn handle_request_in_worker(
-    req_src: &str,
-    pretty_print: bool,
-    env: &mut Env,
-    session: &mut Session,
-) {
+fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
             kind: ResponseKind::MalformedRequest,
@@ -478,10 +470,10 @@ fn handle_request_in_worker(
                 stack: None,
             }]),
             position: None,
-                        id: None,
+            id: None,
         };
 
-        let serialized = if pretty_print {
+        let serialized = if session.pretty_print_json {
             serde_json::to_string_pretty(&res)
         } else {
             serde_json::to_string(&res)
@@ -593,7 +585,7 @@ fn handle_request_in_worker(
         }
     };
 
-    let serialized = if pretty_print {
+    let serialized = if session.pretty_print_json {
         serde_json::to_string_pretty(&res)
     } else {
         serde_json::to_string(&res)
@@ -951,14 +943,16 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let serialized = serde_json::to_string(&response).unwrap();
     println!("{}", serialized);
 
+    let pretty_print_json = false;
     let session = Session {
         interrupted: Arc::clone(&interrupted),
         has_attached_stdout: false,
         start_time: Instant::now(),
         trace_exprs: false,
+        pretty_print_json,
     };
 
-    let (sender, receiver) = channel::<(bool, String)>();
+    let (sender, receiver) = channel::<String>();
 
     start_eval_thread(session, receiver);
 
@@ -986,7 +980,12 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
 
             let buf_str = String::from_utf8(buf).unwrap();
 
-            handle_request(&buf_str, false, Arc::clone(&interrupted), sender.clone());
+            handle_request(
+                &buf_str,
+                pretty_print_json,
+                Arc::clone(&interrupted),
+                sender.clone(),
+            );
         } else {
             let err_response = Response {
                 kind: ResponseKind::MalformedRequest,

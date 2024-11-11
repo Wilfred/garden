@@ -101,7 +101,6 @@ pub(crate) struct ResponseError {
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
-    pub(crate) value: Result<Option<String>, Vec<ResponseError>>,
     pub(crate) position: Option<Position>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) id: Option<RequestId>,
@@ -179,9 +178,8 @@ fn handle_load_request(
     Response {
         kind: ResponseKind::Evaluate(EvalResponse {
             warnings: eval_summary.diagnostics,
-            value: Ok(value_summary.clone()),
+            value: Ok(value_summary),
         }),
-        value: Ok(value_summary),
         position: None,
         id: None,
     }
@@ -239,9 +237,8 @@ fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
     Response {
         kind: ResponseKind::Evaluate(EvalResponse {
             warnings: vec![],
-            value: Err(response_errors.clone()),
+            value: Err(response_errors),
         }),
-        value: Err(response_errors),
         position: None,
         id: None,
     }
@@ -282,16 +279,11 @@ fn handle_eval_up_to_request(
                     kind: ResponseKind::Evaluate(EvalResponse {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
-                            position: Some(position.clone()),
-                            message: message.0.clone(),
-                            stack: stack.clone(),
+                            position: Some(position),
+                            message: message.0,
+                            stack,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: message.0,
-                        stack,
-                    }]),
                     position: None,
                     id: None,
                 };
@@ -302,15 +294,10 @@ fn handle_eval_up_to_request(
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
-                            message: message.0.clone(),
+                            message: message.0,
                             stack: None,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: message.0,
-                        stack: None,
-                    }]),
                     position: None,
                     id: None,
                 };
@@ -325,7 +312,6 @@ fn handle_eval_up_to_request(
                     warnings: vec![],
                     value: Ok(Some(v.display(env))),
                 }),
-                value: Ok(Some(v.display(env))),
                 position: Some(pos),
                 id: None,
             },
@@ -339,11 +325,6 @@ fn handle_eval_up_to_request(
                             stack: None,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: "Interrupted.".to_owned(),
-                        stack: None,
-                    }]),
                     position: None,
                     id: None,
                 },
@@ -352,15 +333,10 @@ fn handle_eval_up_to_request(
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
-                            message: message.0.clone(),
+                            message: message.0,
                             stack: None,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: message.0,
-                        stack: None,
-                    }]),
                     position: None,
                     id: None,
                 },
@@ -373,11 +349,6 @@ fn handle_eval_up_to_request(
                             stack: None,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: "Assertion failed".to_owned(),
-                        stack: None,
-                    }]),
                     position: None,
                     id: None,
                 },
@@ -390,11 +361,6 @@ fn handle_eval_up_to_request(
                             stack: None,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: "Reached the tick limit.".to_owned(),
-                        stack: None,
-                    }]),
                     position: None,
                     id: None,
                 },
@@ -402,16 +368,11 @@ fn handle_eval_up_to_request(
                     kind: ResponseKind::Evaluate(EvalResponse {
                         warnings: vec![],
                         value: Err(vec![ResponseError {
-                            position: Some(position.clone()),
+                            position: Some(position),
                             message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                             stack: None,
                         }]),
                     }),
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                        stack: None,
-                    }]),
                     position: None,
                     id: None,
                 },
@@ -422,7 +383,6 @@ fn handle_eval_up_to_request(
                 warnings: vec![],
                 value: Ok(Some("Did not find an expression to evaluate".to_owned())),
             }),
-            value: Ok(Some("Did not find an expression to evaluate".to_owned())),
             position: None,
             id: None,
         },
@@ -450,7 +410,6 @@ pub(crate) fn handle_request(
         interrupted.store(true, std::sync::atomic::Ordering::Relaxed);
         let res = Response {
             kind: ResponseKind::Interrupted,
-            value: Ok(Some("Interrupted".to_owned())),
             position: None,
             id: None,
         };
@@ -471,15 +430,6 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                     req_src,
                 )
             },
-            value: Err(vec![ResponseError {
-                position: None,
-                message: format!(
-                    "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
-                    sample_request_as_json(),
-                    req_src,
-                ),
-                stack: None,
-            }]),
             position: None,
             id: None,
         };
@@ -514,7 +464,6 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                         kind: ResponseKind::RunCommand {
                             message: format!("{}", String::from_utf8_lossy(&out_buf)),
                         },
-                        value: Ok(Some(format!("{}", String::from_utf8_lossy(&out_buf)))),
                         position: None,
                         id,
                     },
@@ -522,7 +471,6 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                         kind: ResponseKind::RunCommand {
                             message: "Aborted".to_owned(),
                         },
-                        value: Ok(Some("Aborted".to_owned())),
                         position: None,
                         id,
                     },
@@ -538,11 +486,6 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                                 kind: ResponseKind::MalformedRequest {
                                     message: format!("No such test: {}", name),
                                 },
-                                value: Err(vec![ResponseError {
-                                    position: None,
-                                    message: format!("No such test: {}", name),
-                                    stack: None,
-                                }]),
                                 position: None,
                                 id,
                             },
@@ -579,11 +522,6 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                     kind: ResponseKind::RunCommand {
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),
                     },
-                    value: Err(vec![ResponseError {
-                        position: None,
-                        message: format!("{}", String::from_utf8_lossy(&out_buf)),
-                        stack: None,
-                    }]),
                     position: None,
                     id,
                 }
@@ -669,9 +607,8 @@ fn handle_eval_request(
             Response {
                 kind: ResponseKind::Evaluate(EvalResponse {
                     warnings: eval_summary.diagnostics,
-                    value: Ok(value_summary.clone()),
+                    value: Ok(value_summary),
                 }),
-                value: Ok(value_summary),
                 position: None,
                 id,
             }
@@ -684,16 +621,11 @@ fn handle_eval_request(
                 kind: ResponseKind::Evaluate(EvalResponse {
                     warnings: vec![],
                     value: Err(vec![ResponseError {
-                        position: Some(position.clone()),
+                        position: Some(position),
                         message: format!("Error: {}", e.0),
-                        stack: Some(stack.clone()),
+                        stack: Some(stack),
                     }]),
                 }),
-                value: Err(vec![ResponseError {
-                    position: Some(position),
-                    message: format!("Error: {}", e.0),
-                    stack: Some(stack),
-                }]),
                 position: None,
                 id,
             }
@@ -706,16 +638,11 @@ fn handle_eval_request(
                 kind: ResponseKind::Evaluate(EvalResponse {
                     warnings: vec![],
                     value: Err(vec![ResponseError {
-                        position: Some(position.clone()),
+                        position: Some(position),
                         message: "Assertion failed".to_owned(),
-                        stack: Some(stack.clone()),
+                        stack: Some(stack),
                     }]),
                 }),
-                value: Err(vec![ResponseError {
-                    position: Some(position),
-                    message: "Assertion failed".to_owned(),
-                    stack: Some(stack),
-                }]),
                 position: None,
                 id,
             }
@@ -729,11 +656,6 @@ fn handle_eval_request(
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: None,
-                message: "Interrupted".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id,
         },
@@ -746,11 +668,6 @@ fn handle_eval_request(
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: None,
-                message: "Reached the tick limit.".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id,
         },
@@ -758,16 +675,11 @@ fn handle_eval_request(
             kind: ResponseKind::Evaluate(EvalResponse {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    position: Some(position.clone()),
+                    position: Some(position),
                     message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: Some(position),
-                message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id,
         },
@@ -781,7 +693,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 warnings: vec![],
                 value: Ok(Some(result.display(env))),
             }),
-            value: Ok(Some(result.display(env))),
             position: None,
             id: None,
         },
@@ -789,16 +700,11 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             kind: ResponseKind::Evaluate(EvalResponse {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    position: Some(position.clone()),
+                    position: Some(position),
                     message: format!("Error: {}", e.0),
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: Some(position),
-                message: format!("Error: {}", e.0),
-                stack: None,
-            }]),
             position: None,
             id: None,
         },
@@ -806,16 +712,11 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             kind: ResponseKind::Evaluate(EvalResponse {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    position: Some(position.clone()),
+                    position: Some(position),
                     message: "Assertion failed".to_owned(),
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: Some(position),
-                message: "Assertion failed".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id: None,
         },
@@ -828,11 +729,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: None,
-                message: "Interrupted".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id: None,
         },
@@ -845,11 +741,6 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: None,
-                message: "Reached the tick limit.".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id: None,
         },
@@ -857,16 +748,11 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             kind: ResponseKind::Evaluate(EvalResponse {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    position: Some(position.clone()),
+                    position: Some(position),
                     message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
                     stack: None,
                 }]),
             }),
-            value: Err(vec![ResponseError {
-                position: Some(position),
-                message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                stack: None,
-            }]),
             position: None,
             id: None,
         },
@@ -878,9 +764,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
         kind: ResponseKind::Ready {
             message: "The Garden: Good programs take time to grow.".to_owned(),
         },
-        value: Ok(Some(
-            "The Garden: Good programs take time to grow.".to_owned(),
-        )),
         position: None,
         id: None,
     };
@@ -940,15 +823,6 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
                         line,
                     )
                 },
-                value: Err(vec![ResponseError {
-                    position: None,
-                    message: format!(
-                        "Invalid request (header missing). A valid request looks like: {}. The request received was:\n\n{}",
-                        sample_request_as_json(),
-                        line,
-                    ),
-                    stack: None,
-                }]),
                 position: None,
                 id: None,
             };

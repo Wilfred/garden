@@ -7,9 +7,6 @@
 // expected stdout:
 // {
 //   "kind": "interrupted",
-//   "value": {
-//     "Ok": "Interrupted"
-//   },
 //   "position": null
 // }
 // {
@@ -27,15 +24,6 @@
 //       }
 //     }
 //   },
-//   "value": {
-//     "Err": [
-//       {
-//         "position": null,
-//         "message": "Interrupted",
-//         "stack": null
-//       }
-//     ]
-//   },
 //   "position": null
 // }
 // {
@@ -47,9 +35,6 @@
 //       }
 //     }
 //   },
-//   "value": {
-//     "Ok": "3"
-//   },
 //   "position": null
 // }
 // {
@@ -60,9 +45,6 @@
 //         "Ok": "5"
 //       }
 //     }
-//   },
-//   "value": {
-//     "Ok": "5"
 //   },
 //   "position": null
 // }

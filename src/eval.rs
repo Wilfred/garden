@@ -1837,7 +1837,6 @@ fn eval_builtin_call(
                     } else {
                         let response = Response {
                             kind: ResponseKind::Printed { s: s.clone() },
-                            value: Ok(Some(s.clone())),
                             position: None,
                             id: None,
                         };
@@ -1888,7 +1887,6 @@ fn eval_builtin_call(
                             kind: ResponseKind::Printed {
                                 s: format!("{}\n", s),
                             },
-                            value: Ok(Some(format!("{}\n", s))),
                             position: None,
                             id: None,
                         };

@@ -17,15 +17,6 @@
 //       }
 //     }
 //   },
-//   "value": {
-//     "Err": [
-//       {
-//         "position": null,
-//         "message": "Expected an expression.",
-//         "stack": null
-//       }
-//     ]
-//   },
 //   "position": null
 // }
 

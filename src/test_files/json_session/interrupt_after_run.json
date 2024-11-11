@@ -6,7 +6,7 @@
 // args: test-json
 // expected stdout:
 // {
-//   "kind": "run_command",
+//   "kind": "interrupted",
 //   "value": {
 //     "Ok": "Interrupted"
 //   },

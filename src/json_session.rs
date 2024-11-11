@@ -68,10 +68,15 @@ enum Request {
 pub(crate) enum ResponseKind {
     Evaluate(EvalResponse),
     RunCommand,
-    Ready { message: String },
+    Ready {
+        message: String,
+    },
     MalformedRequest,
     Printed,
     FoundDefinition,
+    /// We received an interrupt request. The current (or next)
+    /// evaluate request will return an error of "Interrupted".
+    Interrupted,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -436,7 +441,7 @@ pub(crate) fn handle_request(
     if let Ok(Request::Interrupt) = serde_json::from_str::<Request>(req_src) {
         interrupted.store(true, std::sync::atomic::Ordering::Relaxed);
         let res = Response {
-            kind: ResponseKind::RunCommand,
+            kind: ResponseKind::Interrupted,
             value: Ok(Some("Interrupted".to_owned())),
             position: None,
             id: None,

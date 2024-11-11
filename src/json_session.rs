@@ -71,7 +71,9 @@ pub(crate) enum ResponseKind {
     Ready {
         message: String,
     },
-    MalformedRequest,
+    MalformedRequest {
+        message: String,
+    },
     Printed {
         s: String,
     },
@@ -465,7 +467,13 @@ pub(crate) fn handle_request(
 fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
-            kind: ResponseKind::MalformedRequest,
+            kind: ResponseKind::MalformedRequest {
+                message: format!(
+                    "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
+                    sample_request_as_json(),
+                    req_src,
+                )
+            },
             value: Err(vec![ResponseError {
                 position: None,
                 message: format!(
@@ -526,7 +534,9 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                                 eval_to_response(env, session)
                             }
                             None => Response {
-                                kind: ResponseKind::MalformedRequest,
+                                kind: ResponseKind::MalformedRequest {
+                                    message: format!("No such test: {}", name),
+                                },
                                 value: Err(vec![ResponseError {
                                     position: None,
                                     message: format!("No such test: {}", name),
@@ -982,7 +992,13 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
             );
         } else {
             let err_response = Response {
-                kind: ResponseKind::MalformedRequest,
+                kind: ResponseKind::MalformedRequest {
+                    message: format!(
+                        "Invalid request (header missing). A valid request looks like: {}. The request received was:\n\n{}",
+                        sample_request_as_json(),
+                        line,
+                    )
+                },
                 value: Err(vec![ResponseError {
                     position: None,
                     message: format!(

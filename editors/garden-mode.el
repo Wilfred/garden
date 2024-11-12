@@ -260,6 +260,9 @@ the user entering a value in the *garden* buffer."
         ;; Convert to one-indexed Emacs point positions.
         (garden--flash-region (1+ position-offset) (1+ end-offset))))))
 
+(defvar garden--top-stack-name "TOP"
+  "The nmae of the innermost stack frame that we're currently in.")
+
 (defun garden-process-filter (proc output)
   (when garden-log-json
     (garden--log-json-to-buf output))
@@ -284,7 +287,9 @@ the user entering a value in the *garden* buffer."
             (setq response-warnings (plist-get eval-response :warnings))
             (setq response-value (plist-get eval-response :value))
             (setq response-ok-value (plist-get response-value :Ok))
-            (setq response-err-values (plist-get response-value :Err))))
+            (setq response-err-values (plist-get response-value :Err))
+            (when-let ((stack-name (plist-get eval-response :stack_frame_name)))
+              (setq garden--top-stack-name stack-name))))
         ;; Response kind is an object for Ready too.
         (let ((ready-response (plist-get response-kind :ready)))
           (when ready-response
@@ -343,7 +348,10 @@ the user entering a value in the *garden* buffer."
                   (beginning-of-line)
                   (insert "\n" s)
                   (goto-char (point-max)))
-              (insert s (garden--fontify-prompt "\nTOP>") " "))
+              (insert s
+                      (garden--fontify-prompt
+                       (format "\n%s>" garden--top-stack-name))
+                      " "))
             (set-marker (process-mark proc) (point))
 
             (when error-buf

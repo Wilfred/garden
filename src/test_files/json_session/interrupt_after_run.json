@@ -15,17 +15,7 @@
 // }
 // {
 //   "kind": {
-//     "evaluate": {
-//       "warnings": [],
-//       "value": {
-//         "Err": [
-//           {
-//             "position": null,
-//             "message": "Interrupted",
-//             "stack": null
-//           }
-//         ]
-//       },
+//     "interrupted": {
 //       "stack_frame_name": "TOP"
 //     }
 //   },

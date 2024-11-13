@@ -322,13 +322,7 @@ fn handle_eval_up_to_request(
             },
             Err(e) => match e {
                 EvalError::Interrupted => Response {
-                    kind: ResponseKind::Evaluate {
-                        warnings: vec![],
-                        value: Err(vec![ResponseError {
-                            position: None,
-                            message: "Interrupted.".to_owned(),
-                            stack: None,
-                        }]),
+                    kind: ResponseKind::Interrupted {
                         stack_frame_name: Some(env.top_frame_name()),
                     },
                     position: None,
@@ -664,17 +658,11 @@ fn handle_eval_request(
             }
         }
         Err(EvalError::Interrupted) => Response {
-            kind: ResponseKind::Evaluate {
-                warnings: vec![],
-                value: Err(vec![ResponseError {
-                    position: None,
-                    message: "Interrupted".to_owned(),
-                    stack: None,
-                }]),
+            kind: ResponseKind::Interrupted {
                 stack_frame_name: Some(env.top_frame_name()),
             },
             position: None,
-            id,
+            id: None,
         },
         Err(EvalError::ReachedTickLimit) => Response {
             kind: ResponseKind::Evaluate {

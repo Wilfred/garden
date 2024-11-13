@@ -252,6 +252,7 @@ fn handle_eval_up_to_request(
     offset: usize,
     env: &mut Env,
     session: &Session,
+    id: Option<RequestId>,
 ) -> Response {
     let (items, mut errors) = parse_toplevel_items(
         &path
@@ -320,67 +321,7 @@ fn handle_eval_up_to_request(
                 position: Some(pos),
                 id: None,
             },
-            Err(e) => match e {
-                EvalError::Interrupted => Response {
-                    kind: ResponseKind::Interrupted {
-                        stack_frame_name: Some(env.top_frame_name()),
-                    },
-                    position: None,
-                    id: None,
-                },
-                EvalError::ResumableError(_, message) => Response {
-                    kind: ResponseKind::Evaluate {
-                        warnings: vec![],
-                        value: Err(vec![ResponseError {
-                            position: None,
-                            message: message.0,
-                            stack: None,
-                        }]),
-                        stack_frame_name: Some(env.top_frame_name()),
-                    },
-                    position: None,
-                    id: None,
-                },
-                EvalError::AssertionFailed(_) => Response {
-                    kind: ResponseKind::Evaluate {
-                        warnings: vec![],
-                        value: Err(vec![ResponseError {
-                            position: None,
-                            message: "Assertion failed".to_owned(),
-                            stack: None,
-                        }]),
-                        stack_frame_name: Some(env.top_frame_name()),
-                    },
-                    position: None,
-                    id: None,
-                },
-                EvalError::ReachedTickLimit => Response {
-                    kind: ResponseKind::Evaluate {
-                        warnings: vec![],
-                        value: Err(vec![ResponseError {
-                            position: None,
-                            message: "Reached the tick limit.".to_owned(),
-                            stack: None,
-                        }]),
-                        stack_frame_name: Some(env.top_frame_name()),
-                    },
-                    position: None,
-                    id: None,
-                },
-                EvalError::ForbiddenInSandbox(position) => Response {
-                    kind: ResponseKind::Evaluate {
-                        warnings: vec![],
-                        value: Err(vec![ResponseError {
-                            position: Some(position),
-                            message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                            stack: None,
-                        }]),
-                        stack_frame_name: Some(env.top_frame_name()),
-                    },
-                    position: None,
-                    id: None,
-                },
-            },
+            Err(e) => err_to_response(e, env, id),
         },
         None => Response {
             kind: ResponseKind::Evaluate {
@@ -390,6 +331,80 @@ fn handle_eval_up_to_request(
             },
             position: None,
             id: None,
+        },
+    }
+}
+
+fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
+    match e {
+        EvalError::ResumableError(position, e) => {
+            // TODO: use the original SourceString rather than reconstructing.
+            let stack = format_error_with_stack(&e, &position, &env.stack.0);
+
+            Response {
+                kind: ResponseKind::Evaluate {
+                    warnings: vec![],
+                    value: Err(vec![ResponseError {
+                        position: Some(position),
+                        message: format!("Error: {}", e.0),
+                        stack: Some(stack),
+                    }]),
+                    stack_frame_name: Some(env.top_frame_name()),
+                },
+                position: None,
+                id,
+            }
+        }
+        EvalError::AssertionFailed(position) => {
+            let message = ErrorMessage("Assertion failed".to_owned());
+            let stack = format_error_with_stack(&message, &position, &env.stack.0);
+
+            Response {
+                kind: ResponseKind::Evaluate {
+                    warnings: vec![],
+                    value: Err(vec![ResponseError {
+                        position: Some(position),
+                        message: "Assertion failed".to_owned(),
+                        stack: Some(stack),
+                    }]),
+                    stack_frame_name: Some(env.top_frame_name()),
+                },
+                position: None,
+                id,
+            }
+        }
+        EvalError::Interrupted => Response {
+            kind: ResponseKind::Interrupted {
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: None,
+            id: None,
+        },
+        EvalError::ReachedTickLimit => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Err(vec![ResponseError {
+                    position: None,
+                    message: "Reached the tick limit.".to_owned(),
+                    stack: None,
+                }]),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: None,
+            id,
+        },
+        EvalError::ForbiddenInSandbox(position) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Err(vec![ResponseError {
+                    position: Some(position),
+                    message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
+                    stack: None,
+                }]),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: None,
+            id,
         },
     }
 }
@@ -538,7 +553,8 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
             }
         },
         Request::EvalUpToId { path, src, offset } => {
-            handle_eval_up_to_request(path.as_ref(), &src, offset, env, session)
+            // TODO: pass an ID in the client for eval-up-to as well.
+            handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, None)
         }
     };
 
@@ -621,75 +637,7 @@ fn handle_eval_request(
                 id,
             }
         }
-        Err(EvalError::ResumableError(position, e)) => {
-            // TODO: use the original SourceString rather than reconstructing.
-            let stack = format_error_with_stack(&e, &position, &env.stack.0);
-
-            Response {
-                kind: ResponseKind::Evaluate {
-                    warnings: vec![],
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: format!("Error: {}", e.0),
-                        stack: Some(stack),
-                    }]),
-                    stack_frame_name: Some(env.top_frame_name()),
-                },
-                position: None,
-                id,
-            }
-        }
-        Err(EvalError::AssertionFailed(position)) => {
-            let message = ErrorMessage("Assertion failed".to_owned());
-            let stack = format_error_with_stack(&message, &position, &env.stack.0);
-
-            Response {
-                kind: ResponseKind::Evaluate {
-                    warnings: vec![],
-                    value: Err(vec![ResponseError {
-                        position: Some(position),
-                        message: "Assertion failed".to_owned(),
-                        stack: Some(stack),
-                    }]),
-                    stack_frame_name: Some(env.top_frame_name()),
-                },
-                position: None,
-                id,
-            }
-        }
-        Err(EvalError::Interrupted) => Response {
-            kind: ResponseKind::Interrupted {
-                stack_frame_name: Some(env.top_frame_name()),
-            },
-            position: None,
-            id: None,
-        },
-        Err(EvalError::ReachedTickLimit) => Response {
-            kind: ResponseKind::Evaluate {
-                warnings: vec![],
-                value: Err(vec![ResponseError {
-                    position: None,
-                    message: "Reached the tick limit.".to_owned(),
-                    stack: None,
-                }]),
-                stack_frame_name: Some(env.top_frame_name()),
-            },
-            position: None,
-            id,
-        },
-        Err(EvalError::ForbiddenInSandbox(position)) => Response {
-            kind: ResponseKind::Evaluate {
-                warnings: vec![],
-                value: Err(vec![ResponseError {
-                    position: Some(position),
-                    message: "Tried to execute unsafe code in sandboxed mode.".to_owned(),
-                    stack: None,
-                }]),
-                stack_frame_name: Some(env.top_frame_name()),
-            },
-            position: None,
-            id,
-        },
+        Err(e) => err_to_response(e, env, id),
     }
 }
 

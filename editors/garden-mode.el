@@ -303,8 +303,13 @@ the user entering a value in the *garden* buffer."
           (when run-command-response
             (setq response-kind "run_command")
             (setq response-value (plist-get run-command-response :message))))
-        (when (equal response-kind "interrupted")
-          (setq response-value "Interrupted"))
+        (let ((interrupted-response (plist-get response-kind :interrupted)))
+          (when interrupted-response
+            (setq response-kind "interrupted")
+            (setq response-value "Interrupted")
+            (when-let ((stack-name (plist-get interrupted-response :stack_frame_name)))
+              (setq garden--top-stack-name stack-name))))
+
 
         (with-current-buffer (process-buffer proc)
           (let ((s

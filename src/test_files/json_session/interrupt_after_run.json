@@ -6,7 +6,11 @@
 // args: test-json
 // expected stdout:
 // {
-//   "kind": "interrupted",
+//   "kind": {
+//     "interrupted": {
+//       "stack_frame_name": null
+//     }
+//   },
 //   "position": null
 // }
 // {

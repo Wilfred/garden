@@ -186,7 +186,7 @@ impl std::fmt::Display for EnclosingSymbol {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) enum EvaluatedState {
+pub(crate) enum ExpressionState {
     /// This expression has not been evaluated at all.
     NotEvaluated,
     /// We have evaluated some of the subexpressions, but not
@@ -200,9 +200,9 @@ pub(crate) enum EvaluatedState {
     EvaluatedSubexpressions,
 }
 
-impl EvaluatedState {
+impl ExpressionState {
     pub(crate) fn done_children(&self) -> bool {
-        matches!(self, EvaluatedState::EvaluatedSubexpressions)
+        matches!(self, ExpressionState::EvaluatedSubexpressions)
     }
 }
 
@@ -233,7 +233,7 @@ pub(crate) struct StackFrame {
     /// We want `y` to be bound, but only in the block.
     pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
     /// A stack of expressions to evaluate.
-    pub(crate) exprs_to_eval: Vec<(EvaluatedState, Expression)>,
+    pub(crate) exprs_to_eval: Vec<(ExpressionState, Expression)>,
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
 }
@@ -712,7 +712,7 @@ pub(crate) fn eval_toplevel_call(
     };
     stack_frame
         .exprs_to_eval
-        .push((EvaluatedState::EvaluatedSubexpressions, call_expr));
+        .push((ExpressionState::EvaluatedSubexpressions, call_expr));
 
     eval(env, session)
 }
@@ -766,7 +766,7 @@ pub(crate) fn eval_toplevel_method_call(
     };
     stack_frame
         .exprs_to_eval
-        .push((EvaluatedState::EvaluatedSubexpressions, call_expr));
+        .push((ExpressionState::EvaluatedSubexpressions, call_expr));
 
     eval(env, session)
 }
@@ -774,7 +774,7 @@ pub(crate) fn eval_toplevel_method_call(
 pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let mut exprs_to_eval = vec![];
     for expr in test.body.exprs.iter().rev() {
-        exprs_to_eval.push((EvaluatedState::NotEvaluated, expr.clone()));
+        exprs_to_eval.push((ExpressionState::NotEvaluated, expr.clone()));
     }
 
     let stack_frame = StackFrame {
@@ -1088,7 +1088,7 @@ fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
 fn restore_stack_frame(
     env: &mut Env,
     mut stack_frame: StackFrame,
-    expr_to_eval: (EvaluatedState, Expression),
+    expr_to_eval: (ExpressionState, Expression),
     evalled_values: &[Value],
 ) {
     for value in evalled_values {
@@ -1122,7 +1122,7 @@ fn eval_if(
     if let Some(b) = condition_value.as_rust_bool() {
         if b {
             stack_frame.exprs_to_eval.push((
-                EvaluatedState::NotEvaluated,
+                ExpressionState::NotEvaluated,
                 Expression {
                     pos: position.clone(),
                     expr_: Expression_::Block(then_body.clone()),
@@ -1134,7 +1134,7 @@ fn eval_if(
             match else_body {
                 Some(else_body) => {
                     stack_frame.exprs_to_eval.push((
-                        EvaluatedState::NotEvaluated,
+                        ExpressionState::NotEvaluated,
                         Expression {
                             pos: position.clone(),
                             expr_: Expression_::Block(else_body.clone()),
@@ -1202,7 +1202,7 @@ fn eval_while_body(
         // After the loop body, we will want to evaluate the expression again.
         stack_frame
             .exprs_to_eval
-            .push((EvaluatedState::NotEvaluated, expr.clone()));
+            .push((ExpressionState::NotEvaluated, expr.clone()));
 
         // Evaluate the body.
         stack_frame.bindings.push_block();
@@ -1211,7 +1211,7 @@ fn eval_while_body(
         // We're done.
         stack_frame
             .exprs_to_eval
-            .push((EvaluatedState::EvaluatedSubexpressions, expr.clone()));
+            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
     }
 
     Ok(())
@@ -1268,7 +1268,7 @@ fn eval_for_in(
     // re-evaluate the iteree expression though.
     stack_frame
         .exprs_to_eval
-        .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+        .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
     stack_frame
         .evalled_values
@@ -1282,7 +1282,7 @@ fn eval_for_in(
 
     stack_frame.bindings_next_block = bindings;
     stack_frame.exprs_to_eval.push((
-        EvaluatedState::NotEvaluated,
+        ExpressionState::NotEvaluated,
         Expression {
             pos: outer_expr.pos,
             expr_: Expression_::Block(body.clone()),
@@ -2358,7 +2358,7 @@ fn eval_call(
 
             let mut fun_subexprs = vec![];
             for expr in fun_info.body.exprs.iter().rev() {
-                fun_subexprs.push((EvaluatedState::NotEvaluated, expr.clone()));
+                fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
             }
 
             let mut fun_bindings = HashMap::new();
@@ -2442,7 +2442,7 @@ fn eval_call(
 
             let mut fun_subexprs = vec![];
             for expr in body.exprs.iter().rev() {
-                fun_subexprs.push((EvaluatedState::NotEvaluated, expr.clone()));
+                fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
             }
 
             let mut fun_bindings = HashMap::new();
@@ -2766,7 +2766,7 @@ fn eval_method_call(
 
     let mut method_subexprs = vec![];
     for expr in fun_info.body.exprs.iter().rev() {
-        method_subexprs.push((EvaluatedState::NotEvaluated, expr.clone()));
+        method_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
     }
 
     // TODO: use a fully qualified method name here?
@@ -3255,10 +3255,10 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *scrutinee.clone()));
+                            .push((ExpressionState::NotEvaluated, *scrutinee.clone()));
                     }
                 }
                 Expression_::If(condition, ref then_body, ref else_body) => {
@@ -3283,25 +3283,25 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *condition.clone()));
+                            .push((ExpressionState::NotEvaluated, *condition.clone()));
                     }
                 }
                 Expression_::While(condition, ref body) => {
                     match expr_eval_state {
-                        EvaluatedState::NotEvaluated => {
+                        ExpressionState::NotEvaluated => {
                             // Once we've evaluated the condition, we can consider evaluating the body.
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::PartiallyEvaluated, outer_expr.clone()));
+                                .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
                             // Evaluate the loop condition first.
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, *condition.clone()));
+                                .push((ExpressionState::NotEvaluated, *condition.clone()));
                         }
-                        EvaluatedState::PartiallyEvaluated => {
+                        ExpressionState::PartiallyEvaluated => {
                             // Evaluated condition, can possibly evaluate body.
                             if let Err((RestoreValues(restore_values), eval_err)) = eval_while_body(
                                 env,
@@ -3320,7 +3320,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                                 return Err(eval_err);
                             }
                         }
-                        EvaluatedState::EvaluatedSubexpressions => {
+                        ExpressionState::EvaluatedSubexpressions => {
                             // Done condition and body, nothing left to do.
                             if expr_value_is_used {
                                 stack_frame.evalled_values.push(Value::unit());
@@ -3353,10 +3353,10 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                            .push((ExpressionState::NotEvaluated, *expr.clone()));
                     }
                 }
                 Expression_::Return(expr) => {
@@ -3366,12 +3366,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
                         if let Some(expr) = expr {
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                                .push((ExpressionState::NotEvaluated, *expr.clone()));
                         } else {
                             // `return` is the same as `return Unit`.
                             stack_frame.evalled_values.push(Value::unit());
@@ -3394,10 +3394,10 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                            .push((ExpressionState::NotEvaluated, *expr.clone()));
                     }
                 }
                 Expression_::AssignUpdate(variable, op, expr) => {
@@ -3421,10 +3421,10 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                            .push((ExpressionState::NotEvaluated, *expr.clone()));
                     }
                 }
                 Expression_::Let(destination, hint, expr) => {
@@ -3448,20 +3448,20 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *expr.clone()));
+                            .push((ExpressionState::NotEvaluated, *expr.clone()));
                     }
                 }
                 Expression_::IntLiteral(i) => {
-                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = ExpressionState::EvaluatedSubexpressions;
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(Value::Integer(*i));
                     }
                 }
                 Expression_::StringLiteral(s) => {
-                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = ExpressionState::EvaluatedSubexpressions;
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(Value::String(s.clone()));
                     }
@@ -3491,12 +3491,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
                         for item in items.iter() {
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, item.clone()));
+                                .push((ExpressionState::NotEvaluated, item.clone()));
                         }
                     }
                 }
@@ -3527,12 +3527,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
                         for item in items.iter() {
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, item.clone()));
+                                .push((ExpressionState::NotEvaluated, item.clone()));
                         }
                     }
                 }
@@ -3556,18 +3556,18 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
                         for (_, field_expr) in field_exprs.iter() {
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, field_expr.clone()));
+                                .push((ExpressionState::NotEvaluated, field_expr.clone()));
                         }
                     }
                 }
                 Expression_::Variable(name_sym) => {
                     if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
-                        expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
+                        expr_eval_state = ExpressionState::EvaluatedSubexpressions;
 
                         if expr_value_is_used {
                             stack_frame.evalled_values.push(value);
@@ -3629,13 +3629,13 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *rhs.clone()));
+                            .push((ExpressionState::NotEvaluated, *rhs.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *lhs.clone()));
+                            .push((ExpressionState::NotEvaluated, *lhs.clone()));
                     }
                 }
                 Expression_::BinaryOperator(
@@ -3648,13 +3648,13 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *rhs.clone()));
+                            .push((ExpressionState::NotEvaluated, *rhs.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *lhs.clone()));
+                            .push((ExpressionState::NotEvaluated, *lhs.clone()));
                     }
                 }
                 Expression_::BinaryOperator(
@@ -3683,17 +3683,17 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         // TODO: do short-circuit evaluation of && and ||.
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *rhs.clone()));
+                            .push((ExpressionState::NotEvaluated, *rhs.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *lhs.clone()));
+                            .push((ExpressionState::NotEvaluated, *lhs.clone()));
                     }
                 }
                 Expression_::FunLiteral(fun_info) => {
-                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = ExpressionState::EvaluatedSubexpressions;
 
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(Value::Closure(
@@ -3749,12 +3749,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
                         for arg in &paren_args.arguments {
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, arg.clone()));
+                                .push((ExpressionState::NotEvaluated, arg.clone()));
                         }
                         // Push the receiver after arguments, so
                         // we evaluate it before arguments. This
@@ -3762,7 +3762,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         // functions.
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *receiver.clone()));
+                            .push((ExpressionState::NotEvaluated, *receiver.clone()));
                     }
                 }
                 Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
@@ -3794,18 +3794,18 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
                         for arg in &paren_args.arguments {
                             stack_frame
                                 .exprs_to_eval
-                                .push((EvaluatedState::NotEvaluated, arg.clone()));
+                                .push((ExpressionState::NotEvaluated, arg.clone()));
                         }
                         // Push the receiver after arguments, so
                         // we evaluate it before arguments.
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *receiver_expr.clone()));
+                            .push((ExpressionState::NotEvaluated, *receiver_expr.clone()));
                     }
                 }
                 Expression_::Block(block) => {
@@ -3840,18 +3840,18 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     } else {
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *recv.clone()));
+                            .push((ExpressionState::NotEvaluated, *recv.clone()));
                     }
                 }
                 Expression_::Break => {
-                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = ExpressionState::EvaluatedSubexpressions;
                     eval_break(&mut stack_frame, expr_value_is_used);
                 }
                 Expression_::Continue => {
-                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = ExpressionState::EvaluatedSubexpressions;
                     eval_continue(&mut stack_frame);
                 }
                 Expression_::Invalid => {
@@ -3970,7 +3970,7 @@ fn eval_block(
 ) {
     stack_frame
         .exprs_to_eval
-        .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
+        .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
     let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
     for (sym, expr) in bindings_next_block {
@@ -3991,7 +3991,7 @@ fn eval_block(
 
         stack_frame
             .exprs_to_eval
-            .push((EvaluatedState::NotEvaluated, expr));
+            .push((ExpressionState::NotEvaluated, expr));
     }
 }
 
@@ -4004,7 +4004,7 @@ fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
             Expression_::While(_, _) | Expression_::ForIn(_, _, _)
         ) && matches!(
             expr_state,
-            EvaluatedState::NotEvaluated | EvaluatedState::PartiallyEvaluated
+            ExpressionState::NotEvaluated | ExpressionState::PartiallyEvaluated
         ) {
             break;
         }
@@ -4218,7 +4218,7 @@ fn eval_match_cases(
         if pattern.symbol.name.is_underscore() {
             stack_frame
                 .exprs_to_eval
-                .push((EvaluatedState::NotEvaluated, (**case_expr).clone()));
+                .push((ExpressionState::NotEvaluated, (**case_expr).clone()));
             return Ok(());
         }
 
@@ -4283,7 +4283,7 @@ fn eval_match_cases(
             stack_frame.bindings_next_block = bindings;
 
             stack_frame.exprs_to_eval.push((
-                EvaluatedState::NotEvaluated,
+                ExpressionState::NotEvaluated,
                 Expression {
                     pos: case_expr_pos.clone(),
                     expr_: case_block,
@@ -4310,7 +4310,7 @@ pub(crate) fn eval_toplevel_exprs(
 
     let mut exprs_to_eval = vec![];
     for expr in exprs.iter().rev() {
-        exprs_to_eval.push((EvaluatedState::NotEvaluated, expr.clone()));
+        exprs_to_eval.push((ExpressionState::NotEvaluated, expr.clone()));
     }
 
     let top_stack = env

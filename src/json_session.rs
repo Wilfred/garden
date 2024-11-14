@@ -15,7 +15,7 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic,
 use crate::env::Env;
 use crate::eval::{
     eval, eval_toplevel_items, eval_up_to, load_toplevel_items, push_test_stackframe,
-    EvaluatedState,
+    ExpressionState,
 };
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
@@ -521,7 +521,7 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                         stack_frame.evalled_values.pop();
                         stack_frame
                             .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, expr));
+                            .push((ExpressionState::NotEvaluated, expr));
 
                         eval_to_response(env, session)
                     }

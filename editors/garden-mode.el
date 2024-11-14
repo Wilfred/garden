@@ -281,35 +281,29 @@ the user entering a value in the *garden* buffer."
              (response-err-values nil)
              error-buf)
         ;; Response kind is an object for evaluate responses, handle that case.
-        (let ((eval-response (plist-get response-kind :evaluate)))
-          (when eval-response
-            (setq response-kind "evaluate")
-            (setq response-warnings (plist-get eval-response :warnings))
-            (setq response-value (plist-get eval-response :value))
-            (setq response-ok-value (plist-get response-value :Ok))
-            (setq response-err-values (plist-get response-value :Err))
-            (when-let ((stack-name (plist-get eval-response :stack_frame_name)))
-              (setq garden--top-stack-name stack-name))))
+        (when-let ((eval-response (plist-get response-kind :evaluate)))
+          (setq response-kind "evaluate")
+          (setq response-warnings (plist-get eval-response :warnings))
+          (setq response-value (plist-get eval-response :value))
+          (setq response-ok-value (plist-get response-value :Ok))
+          (setq response-err-values (plist-get response-value :Err))
+          (when-let ((stack-name (plist-get eval-response :stack_frame_name)))
+            (setq garden--top-stack-name stack-name)))
         ;; Response kind is an object for Ready too.
-        (let ((ready-response (plist-get response-kind :ready)))
-          (when ready-response
-            (setq response-kind "ready")
-            (setq response-value (plist-get ready-response :message))))
-        (let ((printed-response (plist-get response-kind :printed)))
-          (when printed-response
-            (setq response-kind "printed")
-            (setq response-value (plist-get printed-response :s))))
-        (let ((run-command-response (plist-get response-kind :run_command)))
-          (when run-command-response
-            (setq response-kind "run_command")
-            (setq response-value (plist-get run-command-response :message))))
-        (let ((interrupted-response (plist-get response-kind :interrupted)))
-          (when interrupted-response
-            (setq response-kind "interrupted")
-            (setq response-value "Interrupted")
-            (when-let ((stack-name (plist-get interrupted-response :stack_frame_name)))
-              (setq garden--top-stack-name stack-name))))
-
+        (when-let ((ready-response (plist-get response-kind :ready)))
+          (setq response-kind "ready")
+          (setq response-value (plist-get ready-response :message)))
+        (when-let ((printed-response (plist-get response-kind :printed)))
+          (setq response-kind "printed")
+          (setq response-value (plist-get printed-response :s)))
+        (when-let ((run-command-response (plist-get response-kind :run_command)))
+          (setq response-kind "run_command")
+          (setq response-value (plist-get run-command-response :message)))
+        (when-let ((interrupted-response (plist-get response-kind :interrupted)))
+          (setq response-kind "interrupted")
+          (setq response-value "Interrupted")
+          (when-let ((stack-name (plist-get interrupted-response :stack_frame_name)))
+            (setq garden--top-stack-name stack-name)))
 
         (with-current-buffer (process-buffer proc)
           (let ((s

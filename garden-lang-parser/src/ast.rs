@@ -277,7 +277,7 @@ pub enum Expression_ {
     /// ```
     If(Box<Expression>, Block, Option<Block>),
     /// ```garden
-    /// while x { y z }
+    /// while x { y }
     /// ```
     While(Box<Expression>, Block),
     /// ```garden

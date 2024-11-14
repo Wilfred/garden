@@ -527,6 +527,7 @@ pub(crate) fn eval_up_to(
 
                 env.stop_at_expr_id = Some(expr_id);
                 let res = eval_toplevel_call(&name_sym.name, &args, env, session);
+                env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
@@ -546,6 +547,7 @@ pub(crate) fn eval_up_to(
                     env,
                     session,
                 );
+                env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
@@ -555,6 +557,7 @@ pub(crate) fn eval_up_to(
 
                 push_test_stackframe(test, env);
                 let res = eval(env, session);
+                env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
                 Some(res.map(|v| (v, position)))
@@ -568,6 +571,7 @@ pub(crate) fn eval_up_to(
             env.stop_at_expr_id = Some(expr_id);
 
             let res = eval_toplevel_items(&[item.clone()], env, session);
+            env.stack.pop_to_toplevel();
             env.stop_at_expr_id = None;
 
             match res {
@@ -3862,8 +3866,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         )
                     }
                 };
-
-                env.stack.pop_to_toplevel();
                 return Ok(v);
             }
         }

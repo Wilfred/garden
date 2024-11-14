@@ -3986,15 +3986,8 @@ fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
     while let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
-            Expression_::Block(Block {
-                is_loop_body: true,
-                ..
-            })
+            Expression_::While(_, _) | Expression_::ForIn(_, _, _)
         ) {
-            // `while` and `for` loops are implemented as a copy of
-            // the loop after the body, so pop that too.
-            stack_frame.exprs_to_eval.pop();
-
             break;
         }
     }

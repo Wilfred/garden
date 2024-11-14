@@ -505,6 +505,7 @@ enclosing point and print the result."
 (defun garden-stop-session ()
   (interactive)
   (setq garden--output "")
+  (setq garden--top-stack-name "TOP")
   (let ((buf (garden--buffer)))
     (kill-buffer buf)))
 
@@ -523,6 +524,8 @@ enclosing point and print the result."
 (defun garden--start ()
   (let* ((buf (garden--buffer))
          (proc (garden--start-process "garden" buf garden-executable "json")))
+    (setq garden--output "")
+    (setq garden--top-stack-name "TOP")
     (set-process-filter proc #'garden-process-filter)))
 
 (defun garden-start-session ()

@@ -48,7 +48,7 @@ fun split_inline_punct(src: String): Option<(String, String)> {
     while (i + 1) < src.len() {
         let char = src.substring(i, i + 1)
         if (char == "`") || (char == "[") {
-            return Some((src.substring(0, i), src.substring(i, src.len())))
+            return Some((src.substring(i, i + 1), src.substring(i + 1, src.len())))
         }
 
         i += 1

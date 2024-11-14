@@ -3999,8 +3999,8 @@ fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
 }
 
 fn eval_continue(stack_frame: &mut StackFrame) {
-    // Pop all the currently evaluating expressions until we are no
-    // longer inside the innermost loop.
+    // Pop all the currently evaluating expressions until we are back
+    // at the loop.
     while let Some((expr_state, expr)) = stack_frame.exprs_to_eval.pop() {
         if matches!(
             expr.expr_,

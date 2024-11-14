@@ -187,7 +187,16 @@ impl std::fmt::Display for EnclosingSymbol {
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum EvaluatedState {
+    /// This expression has not been evaluated at all.
     NotEvaluated,
+    /// We have evaluated some of the subexpressions, but not
+    /// all. This occurs in conditionally evaluated expressions,
+    /// e.g. in `while foo() { bar() }` we have evaluated `foo()` but
+    /// not yet `bar()`.
+    PartiallyEvaluated,
+    /// This expression has had its children evaluated, but hasn't
+    /// been evaluated itself. For example, in `foo(bar())` we have
+    /// evaluated `bar()` but not yet called `foo()` with the result.
     EvaluatedSubexpressions,
 }
 
@@ -1160,7 +1169,7 @@ fn eval_if(
     Ok(())
 }
 
-fn eval_while(
+fn eval_while_body(
     env: &mut Env,
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
@@ -1196,19 +1205,13 @@ fn eval_while(
             .push((EvaluatedState::NotEvaluated, expr.clone()));
 
         // Evaluate the body.
-        stack_frame.exprs_to_eval.push((
-            EvaluatedState::NotEvaluated,
-            Expression {
-                pos: expr.pos,
-                expr_: Expression_::Block(body.clone()),
-                value_is_used: false,
-                id: env.id_gen.next(),
-            },
-        ))
+        stack_frame.bindings.push_block();
+        eval_block(stack_frame, expr_value_is_used, &expr, body);
     } else {
-        if expr_value_is_used {
-            stack_frame.evalled_values.push(Value::unit());
-        }
+        // We're done.
+        stack_frame
+            .exprs_to_eval
+            .push((EvaluatedState::EvaluatedSubexpressions, expr.clone()));
     }
 
     Ok(())
@@ -3287,30 +3290,42 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::While(condition, ref body) => {
-                    if expr_eval_state.done_children() {
-                        if let Err((RestoreValues(restore_values), eval_err)) = eval_while(
-                            env,
-                            &mut stack_frame,
-                            expr_value_is_used,
-                            &condition.pos,
-                            outer_expr.clone(),
-                            body,
-                        ) {
-                            restore_stack_frame(
-                                env,
-                                stack_frame,
-                                (expr_eval_state, outer_expr.clone()),
-                                &restore_values,
-                            );
-                            return Err(eval_err);
+                    match expr_eval_state {
+                        EvaluatedState::NotEvaluated => {
+                            // Once we've evaluated the condition, we can consider evaluating the body.
+                            stack_frame
+                                .exprs_to_eval
+                                .push((EvaluatedState::PartiallyEvaluated, outer_expr.clone()));
+                            // Evaluate the loop condition first.
+                            stack_frame
+                                .exprs_to_eval
+                                .push((EvaluatedState::NotEvaluated, *condition.clone()));
                         }
-                    } else {
-                        stack_frame
-                            .exprs_to_eval
-                            .push((EvaluatedState::EvaluatedSubexpressions, outer_expr.clone()));
-                        stack_frame
-                            .exprs_to_eval
-                            .push((EvaluatedState::NotEvaluated, *condition.clone()));
+                        EvaluatedState::PartiallyEvaluated => {
+                            // Evaluated condition, can possibly evaluate body.
+                            if let Err((RestoreValues(restore_values), eval_err)) = eval_while_body(
+                                env,
+                                &mut stack_frame,
+                                expr_value_is_used,
+                                &condition.pos,
+                                outer_expr.clone(),
+                                body,
+                            ) {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (expr_eval_state, outer_expr.clone()),
+                                    &restore_values,
+                                );
+                                return Err(eval_err);
+                            }
+                        }
+                        EvaluatedState::EvaluatedSubexpressions => {
+                            // Done condition and body, nothing left to do.
+                            if expr_value_is_used {
+                                stack_frame.evalled_values.push(Value::unit());
+                            }
+                        }
                     }
                 }
                 Expression_::ForIn(sym, expr, body) => {
@@ -3983,10 +3998,13 @@ fn eval_block(
 fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
-    while let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+    while let Some((expr_state, expr)) = stack_frame.exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
             Expression_::While(_, _) | Expression_::ForIn(_, _, _)
+        ) && matches!(
+            expr_state,
+            EvaluatedState::NotEvaluated | EvaluatedState::PartiallyEvaluated
         ) {
             break;
         }

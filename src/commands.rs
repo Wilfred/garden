@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
-use crate::eval::eval_exprs;
+use crate::eval::eval_toplevel_exprs;
 use crate::garden_type::Type;
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::Value;
@@ -635,7 +635,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Type(expr) => {
             if let Some(expr) = expr {
-                match eval_exprs(&[expr.clone()], env, session) {
+                match eval_toplevel_exprs(&[expr.clone()], env, session) {
                     Ok(value) => {
                         write!(
                             buf,

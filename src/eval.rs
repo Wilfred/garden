@@ -347,12 +347,10 @@ pub(crate) fn eval_toplevel_items(
     summary.tests_passed = test_summary.tests_passed;
     summary.tests_failed = test_summary.tests_failed;
 
-    if exprs.is_empty() {
-        return Ok(summary);
+    if !exprs.is_empty() {
+        let value = eval_toplevel_exprs(&exprs, env, session)?;
+        summary.values = vec![value];
     }
-
-    let value = eval_toplevel_exprs(&exprs, env, session)?;
-    summary.values = vec![value];
 
     Ok(summary)
 }

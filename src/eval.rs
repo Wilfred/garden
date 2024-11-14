@@ -4291,6 +4291,10 @@ pub(crate) fn eval_toplevel_exprs(
     env: &mut Env,
     session: &Session,
 ) -> Result<Value, EvalError> {
+    if exprs.is_empty() {
+        return Ok(Value::unit());
+    }
+
     let mut exprs_to_eval = vec![];
     for expr in exprs.iter().rev() {
         exprs_to_eval.push((EvaluatedState::NotEvaluated, expr.clone()));

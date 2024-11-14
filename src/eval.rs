@@ -4001,14 +4001,12 @@ fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
 fn eval_continue(stack_frame: &mut StackFrame) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
-    while let Some((_, expr)) = stack_frame.exprs_to_eval.pop() {
+    while let Some((expr_state, expr)) = stack_frame.exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
-            Expression_::Block(Block {
-                is_loop_body: true,
-                ..
-            })
+            Expression_::While(_, _) | Expression_::ForIn(_, _, _)
         ) {
+            stack_frame.exprs_to_eval.push((expr_state, expr));
             break;
         }
     }

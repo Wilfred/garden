@@ -3215,7 +3215,7 @@ fn eval_builtin_method_call(
 /// Execute the expressions in the stack on `env`.
 pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {
     while let Some(mut stack_frame) = env.stack.0.pop() {
-        if let Some((mut done_children, outer_expr)) = stack_frame.exprs_to_eval.pop() {
+        if let Some((mut expr_eval_state, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             env.ticks += 1;
 
             let expr_position = outer_expr.pos.clone();
@@ -3225,23 +3225,23 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
-                restore_stack_frame(env, stack_frame, (done_children, outer_expr), &[]);
+                restore_stack_frame(env, stack_frame, (expr_eval_state, outer_expr), &[]);
                 return Err(EvalError::Interrupted);
             }
 
             if let Some(tick_limit) = env.tick_limit {
                 if env.ticks >= tick_limit {
-                    restore_stack_frame(env, stack_frame, (done_children, outer_expr), &[]);
+                    restore_stack_frame(env, stack_frame, (expr_eval_state, outer_expr), &[]);
                     return Err(EvalError::ReachedTickLimit);
                 }
             }
 
             if session.trace_exprs {
-                println!("{:?} {:?}\n", &outer_expr.expr_, done_children);
+                println!("{:?} {:?}\n", &outer_expr.expr_, expr_eval_state);
             }
             match &outer_expr.expr_ {
                 Expression_::Match(scrutinee, cases) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         eval_match_cases(
                             env,
                             &mut stack_frame,
@@ -3259,7 +3259,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::If(condition, ref then_body, ref else_body) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_if(
                             env,
                             &mut stack_frame,
@@ -3272,7 +3272,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr),
+                                (expr_eval_state, outer_expr),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3287,7 +3287,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::While(condition, ref body) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_while(
                             env,
                             &mut stack_frame,
@@ -3299,7 +3299,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3314,7 +3314,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::ForIn(sym, expr, body) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_for_in(
                             env,
                             &mut stack_frame,
@@ -3327,7 +3327,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3345,7 +3345,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::Return(expr) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         // No more expressions to evaluate in this function, we're returning.
                         stack_frame.exprs_to_eval.clear();
                     } else {
@@ -3364,14 +3364,14 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::Assign(variable, expr) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) =
                             eval_assign(&mut stack_frame, expr_value_is_used, variable)
                         {
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3386,7 +3386,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::AssignUpdate(variable, op, expr) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_assign_update(
                             env,
                             &mut stack_frame,
@@ -3398,7 +3398,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3413,7 +3413,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::Let(destination, hint, expr) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_let(
                             env,
                             &mut stack_frame,
@@ -3425,7 +3425,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3440,19 +3440,19 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::IntLiteral(i) => {
-                    done_children = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(Value::Integer(*i));
                     }
                 }
                 Expression_::StringLiteral(s) => {
-                    done_children = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(Value::String(s.clone()));
                     }
                 }
                 Expression_::ListLiteral(items) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
                         let mut element_type = Type::no_value();
 
@@ -3486,7 +3486,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::TupleLiteral(items) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         let mut items_values: Vec<Value> = Vec::with_capacity(items.len());
                         let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
 
@@ -3522,7 +3522,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::StructLiteral(type_sym, field_exprs) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_struct_value(
                             env,
                             &mut stack_frame,
@@ -3533,7 +3533,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3552,7 +3552,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 }
                 Expression_::Variable(name_sym) => {
                     if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
-                        done_children = EvaluatedState::EvaluatedSubexpressions;
+                        expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
 
                         if expr_value_is_used {
                             stack_frame.evalled_values.push(value);
@@ -3568,7 +3568,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         restore_stack_frame(
                             env,
                             stack_frame,
-                            (done_children, outer_expr.clone()),
+                            (expr_eval_state, outer_expr.clone()),
                             &[],
                         );
 
@@ -3593,7 +3593,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     | BinaryOperatorKind::GreaterThanOrEqual),
                     rhs,
                 ) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_integer_binop(
                             env,
                             &mut stack_frame,
@@ -3606,7 +3606,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3628,7 +3628,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     op @ (BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual),
                     rhs,
                 ) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         eval_equality_binop(&mut stack_frame, expr_value_is_used, *op)
                     } else {
                         stack_frame
@@ -3647,7 +3647,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     op @ (BinaryOperatorKind::And | BinaryOperatorKind::Or),
                     rhs,
                 ) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_boolean_binop(
                             env,
                             &mut stack_frame,
@@ -3659,7 +3659,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3678,7 +3678,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::FunLiteral(fun_info) => {
-                    done_children = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
 
                     if expr_value_is_used {
                         stack_frame.evalled_values.push(Value::Closure(
@@ -3688,7 +3688,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::Call(receiver, paren_args) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         let mut arg_values = vec![];
                         let mut arg_positions = vec![];
                         for arg in &paren_args.arguments {
@@ -3725,7 +3725,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, outer_expr.clone()),
+                                    (expr_eval_state, outer_expr.clone()),
                                     &restore_values,
                                 );
                                 return Err(eval_error);
@@ -3751,7 +3751,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         match eval_method_call(
                             env,
                             &mut stack_frame,
@@ -3770,7 +3770,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                                 restore_stack_frame(
                                     env,
                                     stack_frame,
-                                    (done_children, outer_expr.clone()),
+                                    (expr_eval_state, outer_expr.clone()),
                                     &restore_values,
                                 );
                                 return Err(eval_err);
@@ -3794,7 +3794,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::Block(block) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         stack_frame.bindings.pop_block();
 
                         if block.exprs.is_empty() && expr_value_is_used {
@@ -3806,7 +3806,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::DotAccess(recv, sym) => {
-                    if done_children.done_children() {
+                    if expr_eval_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_dot_access(
                             env,
                             &mut stack_frame,
@@ -3817,7 +3817,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             restore_stack_frame(
                                 env,
                                 stack_frame,
-                                (done_children, outer_expr.clone()),
+                                (expr_eval_state, outer_expr.clone()),
                                 &restore_values,
                             );
                             return Err(eval_err);
@@ -3832,15 +3832,20 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::Break => {
-                    done_children = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
                     eval_break(&mut stack_frame, expr_value_is_used);
                 }
                 Expression_::Continue => {
-                    done_children = EvaluatedState::EvaluatedSubexpressions;
+                    expr_eval_state = EvaluatedState::EvaluatedSubexpressions;
                     eval_continue(&mut stack_frame);
                 }
                 Expression_::Invalid => {
-                    restore_stack_frame(env, stack_frame, (done_children, outer_expr.clone()), &[]);
+                    restore_stack_frame(
+                        env,
+                        stack_frame,
+                        (expr_eval_state, outer_expr.clone()),
+                        &[],
+                    );
                     return Err(EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())));
                 }
             }
@@ -3853,7 +3858,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // evaluation is fully done. For evaluations that don't
             // recurse (e.g. variable lookup), we set done_children in
             // the match above.
-            if done_children.done_children()
+            if expr_eval_state.done_children()
                 && env.stop_at_expr_id.is_some()
                 && env.stop_at_expr_id.as_ref() == Some(&expr_id)
             {

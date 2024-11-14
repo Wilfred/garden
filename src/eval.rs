@@ -1089,7 +1089,8 @@ fn restore_stack_frame(
     env.stack.0.push(stack_frame);
 }
 
-/// Values to push back to the evalled_values stack if we encounter an error, so we can resume.
+/// Values to push back to the evalled_values stack if we encounter an
+/// error, so we can resume.
 #[derive(Debug, Clone)]
 struct RestoreValues(Vec<Value>);
 

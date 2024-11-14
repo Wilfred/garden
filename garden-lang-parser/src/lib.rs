@@ -302,7 +302,6 @@ fn parse_if(
                 open_brace: if_expr.pos.clone(),
                 close_brace: if_expr.pos.clone(),
                 exprs: vec![if_expr],
-                is_loop_body: false,
             })
         } else {
             Some(parse_block(src, tokens, id_gen, diagnostics, false))
@@ -1572,7 +1571,6 @@ fn parse_block(
             open_brace: open_brace.position.clone(),
             exprs: vec![],
             close_brace: open_brace.position,
-            is_loop_body,
         };
     }
 
@@ -1616,7 +1614,6 @@ fn parse_block(
         open_brace: open_brace.position,
         exprs,
         close_brace: close_brace.position,
-        is_loop_body,
     }
 }
 

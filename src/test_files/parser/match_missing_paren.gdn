@@ -16,7 +16,6 @@ fun foo() {
 //         params: [],
 //         return_hint: None,
 //         body: Block {
-//             is_loop_body: false,
 //             open_brace: Position { ... },
 //             exprs: [
 //                 Expression {

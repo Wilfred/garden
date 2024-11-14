@@ -1,0 +1,22 @@
+fun main(_: List<String>) {
+    let i = 0
+    while i < 5 {
+        i = i + 1
+
+        if i == 3 {
+            continue
+        }
+
+        dbg(i)
+    }
+
+    dbg("done")
+}
+
+// args: run
+// expected stdout:
+// 1
+// 2
+// 4
+// 5
+// "done"

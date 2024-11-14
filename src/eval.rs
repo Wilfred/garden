@@ -3237,7 +3237,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             }
 
             if session.trace_exprs {
-                println!("{:?} {:?}", &outer_expr.expr_, done_children);
+                println!("{:?} {:?}\n", &outer_expr.expr_, done_children);
             }
             match &outer_expr.expr_ {
                 Expression_::Match(scrutinee, cases) => {

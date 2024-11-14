@@ -479,6 +479,7 @@ enclosing point and print the result."
          ;; Zero-based offset.
          (offset (1- (point)))
          (args `((method . "eval_up_to_id")
+                 (id . ,(garden--id))
                  (path . ,(buffer-file-name))
                  (src . ,(buffer-string))
                  (offset . ,offset))))

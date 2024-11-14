@@ -55,6 +55,8 @@ enum Request {
         path: Option<PathBuf>,
         src: String,
         offset: usize,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        id: Option<RequestId>,
     },
 }
 
@@ -289,7 +291,7 @@ fn handle_eval_up_to_request(
                         stack_frame_name: None,
                     },
                     position: None,
-                    id: None,
+                    id,
                 };
             }
             ParseError::Incomplete { message, .. } => {
@@ -304,7 +306,7 @@ fn handle_eval_up_to_request(
                         stack_frame_name: None,
                     },
                     position: None,
-                    id: None,
+                    id,
                 };
             }
         }
@@ -330,7 +332,7 @@ fn handle_eval_up_to_request(
                 stack_frame_name: Some(env.top_frame_name()),
             },
             position: None,
-            id: None,
+            id,
         },
     }
 }
@@ -552,10 +554,12 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                 handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
             }
         },
-        Request::EvalUpToId { path, src, offset } => {
-            // TODO: pass an ID in the client for eval-up-to as well.
-            handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, None)
-        }
+        Request::EvalUpToId {
+            path,
+            src,
+            offset,
+            id,
+        } => handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, id),
     };
 
     print_as_json(&res, session.pretty_print_json);

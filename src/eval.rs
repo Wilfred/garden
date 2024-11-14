@@ -3991,8 +3991,8 @@ fn eval_break(stack_frame: &mut StackFrame, expr_value_is_used: bool) {
                 ..
             })
         ) {
-            // While loops are implemented as a copy of the loop after
-            // the body, so pop that too.
+            // `while` and `for` loops are implemented as a copy of
+            // the loop after the body, so pop that too.
             stack_frame.exprs_to_eval.pop();
 
             break;

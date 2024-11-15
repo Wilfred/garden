@@ -3975,7 +3975,7 @@ fn eval_block(
     for expr in block.exprs.iter().rev() {
         let mut expr = expr.clone();
 
-        // Mark this expresison as unused. This ensures we recursively
+        // Mark this expression as unused. This ensures we recursively
         // mark blocks as unused inside e.g. if expressions, unlike
         // the parser.
         //

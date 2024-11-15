@@ -1,6 +1,6 @@
 fun foo(b: Bool): Int {
     if b {
-        // Type error, but shoud also error at runtime.
+        // Type error, but should also error at runtime.
         123
     }
 }

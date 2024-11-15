@@ -1942,7 +1942,7 @@ fn parse_let(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let let_token = require_token(tokens, diagnostics, "let");
-    let desination = parse_let_destination(tokens, id_gen, diagnostics);
+    let destination = parse_let_destination(tokens, id_gen, diagnostics);
 
     let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
@@ -1951,7 +1951,7 @@ fn parse_let(
 
     Expression::new(
         Position::merge(&let_token.position, &expr.pos),
-        Expression_::Let(desination, hint, Box::new(expr)),
+        Expression_::Let(destination, hint, Box::new(expr)),
         id_gen.next(),
     )
 }

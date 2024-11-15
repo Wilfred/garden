@@ -261,7 +261,7 @@ the user entering a value in the *garden* buffer."
         (garden--flash-region (1+ position-offset) (1+ end-offset))))))
 
 (defvar garden--top-stack-name "TOP"
-  "The nmae of the innermost stack frame that we're currently in.")
+  "The name of the innermost stack frame that we're currently in.")
 
 (defun garden-process-filter (proc output)
   (when garden-log-json

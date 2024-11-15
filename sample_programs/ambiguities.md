@@ -1,7 +1,7 @@
 ## return
 
 Garden now requires return to always have a value to avoid ambiguity
-with expresssions immediately after.
+with expressions immediately after.
 
 ```
 return 1

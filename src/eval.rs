@@ -3243,8 +3243,19 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 println!("{:?} {:?}\n", &outer_expr.expr_, expr_state);
             }
             match &outer_expr.expr_ {
-                Expression_::Match(scrutinee, cases) => {
-                    if expr_state.done_children() {
+                Expression_::Match(scrutinee, cases) => match expr_state {
+                    ExpressionState::NotEvaluated => {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::NotEvaluated, *scrutinee.clone()));
+                    }
+                    ExpressionState::PartiallyEvaluated => {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
                         eval_match_cases(
                             env,
                             &mut stack_frame,
@@ -3252,15 +3263,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             &scrutinee.pos,
                             cases,
                         )?;
-                    } else {
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::NotEvaluated, *scrutinee.clone()));
                     }
-                }
+                    ExpressionState::EvaluatedSubexpressions => {}
+                },
                 Expression_::If(condition, ref then_body, ref else_body) => {
                     if expr_state.done_children() {
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_if(

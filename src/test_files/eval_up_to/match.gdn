@@ -1,0 +1,12 @@
+fun main(_) {
+    let x = Some(123)
+    match x {
+    //  ^
+        Some(i) => i * 10,
+        None => -45
+    }
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/match.gdn:3: 1230
+

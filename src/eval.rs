@@ -2577,36 +2577,33 @@ fn enum_value_runtime_type(
 
     let variant_info = enum_info.variants.get(variant_idx)?;
 
-    match &variant_info.payload_hint {
-        Some(hint) => {
-            // If this variant has a payload whose type is a type
-            // parameter, fill in that type argument accordingly.
-            let mut args = vec![];
-            for type_param in &enum_info.type_params {
-                if type_param.name == hint.sym.name {
-                    args.push(payload_value_type.clone());
-                } else {
-                    args.push(Type::no_value());
-                }
+    if let Some(hint) = &variant_info.payload_hint {
+        // If this variant has a payload whose type is a type
+        // parameter, fill in that type argument accordingly.
+        let mut args = vec![];
+        for type_param in &enum_info.type_params {
+            if type_param.name == hint.sym.name {
+                args.push(payload_value_type.clone());
+            } else {
+                args.push(Type::no_value());
             }
-
-            Some(Type::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: enum_info.name_sym.name.clone(),
-                args,
-            })
         }
-        None => {
-            let args = vec![Type::no_value(); enum_info.type_params.len()];
 
-            // This variant does not have a payload. Resolve all the
-            // type parameters in this enum definition to NoValue.
-            Some(Type::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: enum_info.name_sym.name.clone(),
-                args,
-            })
-        }
+        Some(Type::UserDefined {
+            kind: TypeDefKind::Enum,
+            name: enum_info.name_sym.name.clone(),
+            args,
+        })
+    } else {
+        let args = vec![Type::no_value(); enum_info.type_params.len()];
+
+        // This variant does not have a payload. Resolve all the
+        // type parameters in this enum definition to NoValue.
+        Some(Type::UserDefined {
+            kind: TypeDefKind::Enum,
+            name: enum_info.name_sym.name.clone(),
+            args,
+        })
     }
 }
 
@@ -2696,42 +2693,37 @@ fn eval_method_call(
         );
     }
 
-    let receiver_method = match env.methods.get(&receiver_type_name) {
-        Some(receiver_methods) => {
-            if let Some(method) = receiver_methods.get(&meth_name.name) {
-                method
-            } else {
-                let mut saved_values = vec![receiver_value.clone()];
-                for value in arg_values.iter().rev() {
-                    saved_values.push(value.clone());
-                }
-
-                return Err((
-                    RestoreValues(saved_values),
-                    EvalError::ResumableError(
-                        meth_name.position.clone(),
-                        ErrorMessage(format!(
-                            "No method named `{}` on `{}`.",
-                            meth_name.name, receiver_type_name
-                        )),
-                    ),
-                ));
-            }
+    let Some(receiver_methods) = env.methods.get(&receiver_type_name) else {
+        let mut saved_values = vec![receiver_value.clone()];
+        for value in arg_values.iter().rev() {
+            saved_values.push(value.clone());
         }
-        None => {
-            let mut saved_values = vec![receiver_value.clone()];
-            for value in arg_values.iter().rev() {
-                saved_values.push(value.clone());
-            }
 
-            return Err((
-                RestoreValues(saved_values),
-                EvalError::ResumableError(
-                    meth_name.position.clone(),
-                    ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name)),
-                ),
-            ));
+        return Err((
+            RestoreValues(saved_values),
+            EvalError::ResumableError(
+                meth_name.position.clone(),
+                ErrorMessage(format!("No methods defined on `{}`.", receiver_type_name)),
+            ),
+        ));
+    };
+
+    let Some(receiver_method) = receiver_methods.get(&meth_name.name) else {
+        let mut saved_values = vec![receiver_value.clone()];
+        for value in arg_values.iter().rev() {
+            saved_values.push(value.clone());
         }
+
+        return Err((
+            RestoreValues(saved_values),
+            EvalError::ResumableError(
+                meth_name.position.clone(),
+                ErrorMessage(format!(
+                    "No method named `{}` on `{}`.",
+                    meth_name.name, receiver_type_name
+                )),
+            ),
+        ));
     };
 
     let fun_info = match &receiver_method.kind {
@@ -3885,14 +3877,11 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 && env.stop_at_expr_id.is_some()
                 && env.stop_at_expr_id.as_ref() == Some(&expr_id)
             {
-                let v = match stack_frame.evalled_values.last() {
-                    Some(value) => value.clone(),
-                    None => {
-                        // TODO: this should probably be an Err() case.
-                        Value::String(
-                            "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
-                        )
-                    }
+                let v = if let Some(value) = stack_frame.evalled_values.last() {
+                    value.clone()
+                } else {
+                    // TODO: this should probably be an Err() case.
+                    Value::String("__ERROR: no expressions evaluated. This is a bug.".to_owned())
                 };
                 return Ok(v);
             }
@@ -4203,14 +4192,11 @@ fn eval_match_cases(
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
-    let _type = match env.get_type_def(&value_type_name) {
-        Some(type_) => type_,
-        None => {
-            let msg = ErrorMessage(format!(
-                "Could not find an enum type named {value_type_name}"
-            ));
-            return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
-        }
+    let Some(_type) = env.get_type_def(&value_type_name) else {
+        let msg = ErrorMessage(format!(
+            "Could not find an enum type named {value_type_name}"
+        ));
+        return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
     for (pattern, case_expr) in cases {

@@ -1204,9 +1204,13 @@ fn eval_while_body(
             .exprs_to_eval
             .push((ExpressionState::NotEvaluated, expr.clone()));
 
+        stack_frame
+            .exprs_to_eval
+            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
+
         // Evaluate the body.
         stack_frame.bindings.push_block();
-        eval_block(stack_frame, expr_value_is_used, &expr, body);
+        eval_block(stack_frame, expr_value_is_used, body);
     } else {
         // We're done.
         stack_frame
@@ -3833,8 +3837,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             stack_frame.evalled_values.push(Value::unit());
                         }
                     } else {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
+
                         stack_frame.bindings.push_block();
-                        eval_block(&mut stack_frame, expr_value_is_used, &outer_expr, block);
+                        eval_block(&mut stack_frame, expr_value_is_used, block);
                     }
                 }
                 Expression_::DotAccess(recv, sym) => {
@@ -3974,16 +3982,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
         .expect("Should have a value from the last expression"))
 }
 
-fn eval_block(
-    stack_frame: &mut StackFrame,
-    expr_value_is_used: bool,
-    outer_expr: &Expression,
-    block: &Block,
-) {
-    stack_frame
-        .exprs_to_eval
-        .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
-
+fn eval_block(stack_frame: &mut StackFrame, expr_value_is_used: bool, block: &Block) {
     let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
     for (sym, expr) in bindings_next_block {
         stack_frame.bindings.add_new(&sym.name, expr);

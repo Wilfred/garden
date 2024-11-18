@@ -1220,7 +1220,6 @@ fn eval_while_body(
 fn eval_for_in(
     env: &mut Env,
     stack_frame: &mut StackFrame,
-    expr_value_is_used: bool,
     iter_symbol: &Symbol,
     iteree_pos: &Position,
     outer_expr: Expression,
@@ -1229,7 +1228,7 @@ fn eval_for_in(
     let iteree_value = stack_frame
         .evalled_values
         .pop()
-        .expect("Popped an empty value stack for `for` loop iteree");
+        .expect("Popped an empty value stack for `for` loop iterated value");
 
     let iteree_idx = match stack_frame
         .evalled_values
@@ -1257,10 +1256,6 @@ fn eval_for_in(
     };
 
     if iteree_idx as usize >= items.len() {
-        // We're done with this for loop.
-        if expr_value_is_used {
-            stack_frame.evalled_values.push(Value::unit());
-        }
         return Ok(());
     }
 
@@ -1268,7 +1263,7 @@ fn eval_for_in(
     // re-evaluate the iteree expression though.
     stack_frame
         .exprs_to_eval
-        .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
+        .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
 
     stack_frame
         .evalled_values
@@ -3340,34 +3335,45 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                 }
                 Expression_::ForIn(sym, expr, body) => {
-                    if expr_state.done_children() {
-                        if let Err((RestoreValues(restore_values), eval_err)) = eval_for_in(
-                            env,
-                            &mut stack_frame,
-                            expr_value_is_used,
-                            sym,
-                            &expr.pos,
-                            outer_expr.clone(),
-                            body,
-                        ) {
-                            restore_stack_frame(
-                                env,
-                                stack_frame,
-                                (expr_state, outer_expr.clone()),
-                                &restore_values,
-                            );
-                            return Err(eval_err);
-                        }
-                    } else {
-                        // The initial value of the loop index.
-                        stack_frame.evalled_values.push(Value::Integer(0));
+                    match expr_state {
+                        ExpressionState::NotEvaluated => {
+                            // The initial value of the loop index.
+                            stack_frame.evalled_values.push(Value::Integer(0));
 
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::NotEvaluated, *expr.clone()));
+                            stack_frame
+                                .exprs_to_eval
+                                .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
+
+                            // Next, we're going to evaluate the value
+                            // that we want to iterate over.
+                            stack_frame
+                                .exprs_to_eval
+                                .push((ExpressionState::NotEvaluated, *expr.clone()));
+                        }
+                        ExpressionState::PartiallyEvaluated => {
+                            if let Err((RestoreValues(restore_values), eval_err)) = eval_for_in(
+                                env,
+                                &mut stack_frame,
+                                sym,
+                                &expr.pos,
+                                outer_expr.clone(),
+                                body,
+                            ) {
+                                restore_stack_frame(
+                                    env,
+                                    stack_frame,
+                                    (expr_state, outer_expr.clone()),
+                                    &restore_values,
+                                );
+                                return Err(eval_err);
+                            }
+                        }
+                        ExpressionState::EvaluatedSubexpressions => {
+                            // We've finished this `for` loop.
+                            if expr_value_is_used {
+                                stack_frame.evalled_values.push(Value::unit());
+                            }
+                        }
                     }
                 }
                 Expression_::Return(expr) => {

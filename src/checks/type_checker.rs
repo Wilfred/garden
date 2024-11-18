@@ -403,7 +403,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             .expect("Type errors should require at least one match case.");
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
-                            message: "`match` cases have different types..".to_owned(),
+                            message: "`match` cases have different types.".to_owned(),
                             position: last_case.1.pos.clone(),
                         });
 

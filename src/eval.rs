@@ -3266,8 +3266,20 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     }
                     ExpressionState::EvaluatedSubexpressions => {}
                 },
-                Expression_::If(condition, ref then_body, ref else_body) => {
-                    if expr_state.done_children() {
+                Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
+                    ExpressionState::NotEvaluated => {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::NotEvaluated, *condition.clone()));
+                    }
+                    ExpressionState::PartiallyEvaluated => {
+                        stack_frame
+                            .exprs_to_eval
+                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
+
                         if let Err((RestoreValues(restore_values), eval_err)) = eval_if(
                             env,
                             &mut stack_frame,
@@ -3285,15 +3297,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             );
                             return Err(eval_err);
                         }
-                    } else {
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::NotEvaluated, *condition.clone()));
                     }
-                }
+                    ExpressionState::EvaluatedSubexpressions => {}
+                },
                 Expression_::While(condition, ref body) => {
                     match expr_state {
                         ExpressionState::NotEvaluated => {

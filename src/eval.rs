@@ -1789,8 +1789,7 @@ fn eval_builtin_call(
             saved_values.push(receiver_value.clone());
 
             if let Some(b) = arg_values[0].as_rust_bool() {
-                if b {
-                } else {
+                if !b {
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::AssertionFailed(position.clone()),
@@ -1808,6 +1807,10 @@ fn eval_builtin_call(
                     RestoreValues(saved_values),
                     EvalError::ResumableError(arg_positions[0].clone(), message),
                 ));
+            }
+
+            if expr_value_is_used {
+                stack_frame.evalled_values.push(Value::unit());
             }
         }
         BuiltinFunctionKind::Print => {

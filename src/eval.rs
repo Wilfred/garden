@@ -1203,7 +1203,6 @@ fn eval_while_body(
             .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
 
         // Evaluate the body.
-        stack_frame.bindings.push_block();
         eval_block(stack_frame, expr_value_is_used, body);
     } else {
         // We're done.
@@ -3821,7 +3820,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             .exprs_to_eval
                             .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
-                        stack_frame.bindings.push_block();
                         eval_block(&mut stack_frame, expr_value_is_used, block);
                     }
                 }
@@ -3960,6 +3958,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 }
 
 fn eval_block(stack_frame: &mut StackFrame, expr_value_is_used: bool, block: &Block) {
+    stack_frame.bindings.push_block();
+
     let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
     for (sym, expr) in bindings_next_block {
         stack_frame.bindings.add_new(&sym.name, expr);

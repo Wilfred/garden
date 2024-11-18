@@ -496,19 +496,16 @@ pub(crate) fn eval_up_to(
         }
     }
 
-    let expr_id = match expr_id {
-        Some(id) => id,
-        None => {
-            // We didn't find an expression with this ID, try to
-            // evaluate a parameter with the ID.
-            if let Some(AstId::Sym(syn_id)) = syn_ids.last() {
-                if let Some((value, pos)) = eval_up_to_param(env, items, *syn_id) {
-                    return Some(Ok((value, pos)));
-                }
+    let Some(expr_id) = expr_id else {
+        // We didn't find an expression with this ID, try to
+        // evaluate a parameter with the ID.
+        if let Some(AstId::Sym(syn_id)) = syn_ids.last() {
+            if let Some((value, pos)) = eval_up_to_param(env, items, *syn_id) {
+                return Some(Ok((value, pos)));
             }
-
-            return None;
         }
+
+        return None;
     };
 
     let position = position?;
@@ -1131,22 +1128,19 @@ fn eval_if(
                 },
             ));
         } else {
-            match else_body {
-                Some(else_body) => {
-                    stack_frame.exprs_to_eval.push((
-                        ExpressionState::NotEvaluated,
-                        Expression {
-                            pos: position.clone(),
-                            expr_: Expression_::Block(else_body.clone()),
-                            value_is_used: expr_value_is_used,
-                            id: env.id_gen.next(),
-                        },
-                    ));
-                }
-                None => {
-                    if expr_value_is_used {
-                        stack_frame.evalled_values.push(Value::unit());
-                    }
+            if let Some(else_body) = else_body {
+                stack_frame.exprs_to_eval.push((
+                    ExpressionState::NotEvaluated,
+                    Expression {
+                        pos: position.clone(),
+                        expr_: Expression_::Block(else_body.clone()),
+                        value_is_used: expr_value_is_used,
+                        id: env.id_gen.next(),
+                    },
+                ));
+            } else {
+                if expr_value_is_used {
+                    stack_frame.evalled_values.push(Value::unit());
                 }
             }
         }
@@ -1511,42 +1505,36 @@ fn eval_boolean_binop(
             .pop()
             .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_bool = match lhs_value.as_rust_bool() {
-            Some(b) => b,
-            None => {
-                return Err((
-                    RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                    EvalError::ResumableError(
-                        lhs_position.clone(),
-                        format_type_error(
-                            &TypeName {
-                                name: "Bool".into(),
-                            },
-                            &lhs_value,
-                            env,
-                        ),
+        let Some(lhs_bool) = lhs_value.as_rust_bool() else {
+            return Err((
+                RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                EvalError::ResumableError(
+                    lhs_position.clone(),
+                    format_type_error(
+                        &TypeName {
+                            name: "Bool".into(),
+                        },
+                        &lhs_value,
+                        env,
                     ),
-                ));
-            }
+                ),
+            ));
         };
 
-        let rhs_bool = match rhs_value.as_rust_bool() {
-            Some(b) => b,
-            None => {
-                return Err((
-                    RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                    EvalError::ResumableError(
-                        rhs_position.clone(),
-                        format_type_error(
-                            &TypeName {
-                                name: "Bool".into(),
-                            },
-                            &rhs_value,
-                            env,
-                        ),
+        let Some(rhs_bool) = rhs_value.as_rust_bool() else {
+            return Err((
+                RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                EvalError::ResumableError(
+                    rhs_position.clone(),
+                    format_type_error(
+                        &TypeName {
+                            name: "Bool".into(),
+                        },
+                        &rhs_value,
+                        env,
                     ),
-                ));
-            }
+                ),
+            ));
         };
 
         if expr_value_is_used {
@@ -1800,29 +1788,26 @@ fn eval_builtin_call(
             }
             saved_values.push(receiver_value.clone());
 
-            match arg_values[0].as_rust_bool() {
-                Some(b) => {
-                    if b {
-                    } else {
-                        return Err((
-                            RestoreValues(saved_values),
-                            EvalError::AssertionFailed(position.clone()),
-                        ));
-                    }
-                }
-                None => {
-                    let message = format_type_error(
-                        &TypeName {
-                            name: "Bool".into(),
-                        },
-                        &arg_values[0],
-                        env,
-                    );
+            if let Some(b) = arg_values[0].as_rust_bool() {
+                if b {
+                } else {
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::AssertionFailed(position.clone()),
                     ));
                 }
+            } else {
+                let message = format_type_error(
+                    &TypeName {
+                        name: "Bool".into(),
+                    },
+                    &arg_values[0],
+                    env,
+                );
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ResumableError(arg_positions[0].clone(), message),
+                ));
             }
         }
         BuiltinFunctionKind::Print => {

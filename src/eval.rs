@@ -4170,7 +4170,7 @@ fn eval_match_cases(
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
     scrutinee_pos: &Position,
-    cases: &[(Pattern, Box<Expression>)],
+    cases: &[(Pattern, Block)],
 ) -> Result<(), EvalError> {
     let scrutinee_value = stack_frame
         .evalled_values
@@ -4201,9 +4201,7 @@ fn eval_match_cases(
 
     for (pattern, case_expr) in cases {
         if pattern.symbol.name.is_underscore() {
-            stack_frame
-                .exprs_to_eval
-                .push((ExpressionState::NotEvaluated, (**case_expr).clone()));
+            eval_block(stack_frame, expr_value_is_used, case_expr);
             return Ok(());
         }
 
@@ -4258,24 +4256,8 @@ fn eval_match_cases(
                 }
             }
 
-            let case_expr_pos = &case_expr.pos;
-            let case_block = Expression_::Block(Block {
-                open_brace: case_expr_pos.clone(),
-                exprs: vec![(**case_expr).clone()],
-                close_brace: case_expr_pos.clone(),
-            });
-
             stack_frame.bindings_next_block = bindings;
-
-            stack_frame.exprs_to_eval.push((
-                ExpressionState::NotEvaluated,
-                Expression {
-                    pos: case_expr_pos.clone(),
-                    expr_: case_block,
-                    value_is_used: expr_value_is_used,
-                    id: env.id_gen.next(),
-                },
-            ));
+            eval_block(stack_frame, expr_value_is_used, case_expr);
             return Ok(());
         }
     }

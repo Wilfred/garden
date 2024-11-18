@@ -343,7 +343,7 @@ impl<'a> TypeCheckVisitor<'a> {
                         }
                     }
 
-                    case_tys.push(self.check_expr(case_expr, type_bindings, expected_return_ty));
+                    case_tys.push(self.check_block(case_expr, type_bindings, expected_return_ty));
 
                     self.bindings.exit_block();
 
@@ -404,7 +404,7 @@ impl<'a> TypeCheckVisitor<'a> {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: "`match` cases have different types.".to_owned(),
-                            position: last_case.1.pos.clone(),
+                            position: last_case.1.open_brace.clone(),
                         });
 
                         Type::error("Cases had incompatible types.")

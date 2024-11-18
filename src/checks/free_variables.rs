@@ -231,7 +231,7 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.pop_scope();
     }
 
-    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Box<Expression>)]) {
+    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Block)]) {
         self.visit_expr(scrutinee);
         for (pattern, case_expr) in cases {
             // TODO: add a check that there's an enum with this
@@ -242,7 +242,7 @@ impl Visitor for FreeVariableVisitor<'_> {
                 self.add_binding(pattern_arg);
             }
 
-            self.visit_expr(case_expr);
+            self.visit_block(case_expr);
             self.pop_scope();
         }
     }

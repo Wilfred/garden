@@ -212,7 +212,7 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Box<Expression>)]) {
+    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(Pattern, Block)]) {
         self.visit_expr(scrutinee);
         for (pattern, case_expr) in cases {
             self.visit_symbol(&pattern.symbol);
@@ -220,7 +220,7 @@ pub trait Visitor {
                 self.visit_symbol(payload);
             }
 
-            self.visit_expr(case_expr);
+            self.visit_block(case_expr);
         }
     }
 

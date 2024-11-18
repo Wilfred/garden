@@ -644,7 +644,7 @@ fn parse_match(
         let start_idx = tokens.idx;
         let pattern = parse_pattern(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, "=>");
-        let case_expr = parse_case_expr(src, tokens, id_gen, diagnostics);
+        let case_block = parse_case_block(src, tokens, id_gen, diagnostics);
 
         if tokens.idx <= start_idx {
             break;
@@ -655,7 +655,7 @@ fn parse_match(
             "The parser should always make forward progress."
         );
 
-        cases.push((pattern, Box::new(case_expr)));
+        cases.push((pattern, case_block));
     }
 
     let close_paren = require_token(tokens, diagnostics, "}");
@@ -667,18 +667,27 @@ fn parse_match(
     )
 }
 
-fn parse_case_expr(
+fn parse_case_block(
     src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Expression {
-    let case_expr = parse_expression(src, tokens, id_gen, diagnostics);
-    if peeked_symbol_is(tokens, ",") {
-        tokens.pop().unwrap();
-    }
+) -> Block {
+    if peeked_symbol_is(tokens, "(") {
+        parse_block(src, tokens, id_gen, diagnostics, false)
+    } else {
+        let case_expr = parse_expression(src, tokens, id_gen, diagnostics);
+        if peeked_symbol_is(tokens, ",") {
+            tokens.pop().unwrap();
+        }
 
-    case_expr
+        let pos = case_expr.pos.clone();
+        Block {
+            open_brace: pos.clone(),
+            exprs: vec![case_expr],
+            close_brace: pos,
+        }
+    }
 }
 
 fn parse_pattern(

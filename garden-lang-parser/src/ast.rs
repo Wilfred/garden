@@ -270,7 +270,11 @@ pub enum Expression_ {
     ///     _ => error("yikes"),
     /// }
     /// ```
-    Match(Box<Expression>, Vec<(Pattern, Box<Expression>)>),
+    ///
+    /// Note that we always treat the expression after `=>`as a block,
+    /// because it has additional bindings and it simplifies
+    /// evaluation.
+    Match(Box<Expression>, Vec<(Pattern, Block)>),
     /// ```garden
     /// if x { y }
     /// if x { y } else { z }

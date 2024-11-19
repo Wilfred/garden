@@ -1191,6 +1191,8 @@ fn eval_while_body(
         // Evaluate the body.
         eval_block(stack_frame, expr_value_is_used, body);
     } else {
+        stack_frame.bindings.push_block();
+
         // We're done.
         stack_frame
             .exprs_to_eval
@@ -3299,6 +3301,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             }
                         }
                         ExpressionState::EvaluatedSubexpressions => {
+                            stack_frame.bindings.pop_block();
+
                             // Done condition and body, nothing left to do.
                             if expr_value_is_used {
                                 stack_frame.evalled_values.push(Value::unit());

@@ -32,6 +32,7 @@ fn read_expr(
     session: &mut Session,
     rl: &mut Editor<()>,
     is_stopped: bool,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
@@ -60,7 +61,7 @@ fn read_expr(
                     }
                 }
 
-                match read_multiline_syntax(&input, rl) {
+                match read_multiline_syntax(&input, rl, id_gen) {
                     Ok((src, items)) => {
                         log_src(&src).unwrap();
                         return Ok((src, items));
@@ -83,6 +84,7 @@ fn read_expr(
 pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     print_repl_header();
 
+    let mut id_gen = SyntaxIdGenerator::default();
     let mut env = Env::default();
     let mut session = Session {
         interrupted,
@@ -99,7 +101,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     loop {
         println!();
 
-        match read_expr(&mut env, &mut session, &mut rl, is_stopped) {
+        match read_expr(&mut env, &mut session, &mut rl, is_stopped, &mut id_gen) {
             Ok((src, items)) => {
                 last_src = src;
 
@@ -248,14 +250,13 @@ fn print_repl_header() {
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_owned();
-    // TODO: this shouldn't start at 0 each time.
-    let mut id_gen = SyntaxIdGenerator::default();
 
     loop {
         let (items, errors) =
-            parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src, &mut id_gen);
+            parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src, id_gen);
 
         // TODO: return all errors.
         match errors.into_iter().next() {

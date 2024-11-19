@@ -3228,7 +3228,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             cases,
                         )?;
                     }
-                    ExpressionState::EvaluatedSubexpressions => {}
+                    ExpressionState::EvaluatedSubexpressions => {
+                        stack_frame.bindings.pop_block();
+                    }
                 },
                 Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
                     ExpressionState::NotEvaluated => {

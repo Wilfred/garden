@@ -1261,15 +1261,7 @@ fn eval_for_in(
     }
 
     stack_frame.bindings_next_block = bindings;
-    stack_frame.exprs_to_eval.push((
-        ExpressionState::NotEvaluated,
-        Expression {
-            pos: outer_expr.pos,
-            expr_: Expression_::Block(body.clone()),
-            value_is_used: false,
-            id: env.id_gen.next(),
-        },
-    ));
+    eval_block(stack_frame, false, body);
 
     Ok(())
 }
@@ -3345,6 +3337,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             }
                         }
                         ExpressionState::EvaluatedSubexpressions => {
+                            stack_frame.bindings.pop_block();
+
                             // We've finished this `for` loop.
                             if expr_value_is_used {
                                 stack_frame.evalled_values.push(Value::unit());

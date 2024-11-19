@@ -1106,7 +1106,6 @@ fn eval_if(
     env: &mut Env,
     stack_frame: &mut StackFrame,
     expr_value_is_used: bool,
-    position: &Position,
     bool_position: &Position,
     then_body: &Block,
     else_body: Option<&Block>,
@@ -1118,27 +1117,14 @@ fn eval_if(
 
     if let Some(b) = condition_value.as_rust_bool() {
         if b {
-            stack_frame.exprs_to_eval.push((
-                ExpressionState::NotEvaluated,
-                Expression {
-                    pos: position.clone(),
-                    expr_: Expression_::Block(then_body.clone()),
-                    value_is_used: expr_value_is_used,
-                    id: env.id_gen.next(),
-                },
-            ));
+            eval_block(stack_frame, expr_value_is_used, then_body);
         } else {
             if let Some(else_body) = else_body {
-                stack_frame.exprs_to_eval.push((
-                    ExpressionState::NotEvaluated,
-                    Expression {
-                        pos: position.clone(),
-                        expr_: Expression_::Block(else_body.clone()),
-                        value_is_used: expr_value_is_used,
-                        id: env.id_gen.next(),
-                    },
-                ));
+                eval_block(stack_frame, expr_value_is_used, else_body);
             } else {
+                // Ensure we always push a bindings block.
+                stack_frame.bindings.push_block();
+
                 if expr_value_is_used {
                     stack_frame.evalled_values.push(Value::unit());
                 }
@@ -3262,7 +3248,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             env,
                             &mut stack_frame,
                             expr_value_is_used,
-                            &expr_position,
                             &condition.pos,
                             then_body,
                             else_body.as_ref(),
@@ -3276,7 +3261,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                             return Err(eval_err);
                         }
                     }
-                    ExpressionState::EvaluatedSubexpressions => {}
+                    ExpressionState::EvaluatedSubexpressions => {
+                        stack_frame.bindings.pop_block();
+                    }
                 },
                 Expression_::While(condition, ref body) => {
                     match expr_state {

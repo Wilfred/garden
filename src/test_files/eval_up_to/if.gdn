@@ -1,0 +1,12 @@
+fun main(_) {
+    if True {
+//  ^
+        5
+    } else {
+        6
+    }
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/if.gdn:2: 5
+

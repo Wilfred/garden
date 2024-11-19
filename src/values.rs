@@ -352,11 +352,15 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use garden_lang_parser::ast::SyntaxIdGenerator;
+
     use super::*;
 
     #[test]
     fn test_display_value_for_string_with_doublequote() {
-        let env = Env::default();
+        let mut id_gen = SyntaxIdGenerator::default();
+        let env = Env::new(&mut id_gen);
+
         let value = Value::String("foo \\ \" \n bar".into());
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }

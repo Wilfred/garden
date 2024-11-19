@@ -85,7 +85,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     print_repl_header();
 
     let mut id_gen = SyntaxIdGenerator::default();
-    let mut env = Env::default();
+    let mut env = Env::new(&mut id_gen);
     let mut session = Session {
         interrupted,
         has_attached_stdout: true,

@@ -92,13 +92,6 @@ pub(crate) struct Env {
     pub(crate) enforce_sandbox: bool,
 }
 
-impl Default for Env {
-    fn default() -> Self {
-        let mut id_gen = SyntaxIdGenerator::default();
-        Env::new(&mut id_gen)
-    }
-}
-
 impl Env {
     pub(crate) fn new(id_gen: &mut SyntaxIdGenerator) -> Self {
         let mut file_scope = HashMap::new();

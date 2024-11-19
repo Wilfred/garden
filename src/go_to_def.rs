@@ -9,8 +9,9 @@ use crate::{
 /// Print the position of the definition associated with the
 /// expression at `offset`.
 pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
-    let mut env = Env::default();
     let mut id_gen = SyntaxIdGenerator::default();
+    let mut env = Env::new(&mut id_gen);
+
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     load_toplevel_items(&items, &mut env);

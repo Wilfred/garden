@@ -9,7 +9,7 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
     let mut id_gen = SyntaxIdGenerator::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
-    let mut env = Env::default();
+    let mut env = Env::new(&mut id_gen);
     load_toplevel_items(&items, &mut env);
 
     let (_, id_to_ty, id_to_doc_comment, _) = check_types(&items, &env);

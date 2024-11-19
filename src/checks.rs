@@ -8,7 +8,7 @@ pub mod type_checker;
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
-use garden_lang_parser::ast::{Definition, ToplevelItem};
+use garden_lang_parser::ast::{Definition, SyntaxIdGenerator, ToplevelItem};
 use loops::check_loops;
 
 use self::duplicates::check_duplicates;
@@ -18,7 +18,9 @@ use self::{free_variables::check_free_variables, struct_fields::check_struct_fie
 
 /// Check toplevel items in a fresh environment, without any definitions from the current session.
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Diagnostic> {
-    let mut env = Env::default();
+    let mut id_gen = SyntaxIdGenerator::default();
+    let mut env = Env::new(&mut id_gen);
+
     load_toplevel_items(items, &mut env);
 
     check_toplevel_items_in_env(items, &env)

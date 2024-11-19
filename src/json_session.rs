@@ -196,9 +196,10 @@ pub(crate) fn start_eval_thread(session: Session, receiver: Receiver<String>) ->
 }
 
 fn eval_worker(receiver: Receiver<String>, session: Session) {
-    let mut env = Env::default();
     let mut session = session;
+
     let mut id_gen = SyntaxIdGenerator::default();
+    let mut env = Env::new(&mut id_gen);
 
     while let Ok(input) = receiver.recv() {
         handle_request_in_worker(&input, &mut env, &mut session, &mut id_gen);

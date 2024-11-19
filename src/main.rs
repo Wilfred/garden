@@ -280,7 +280,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     let mut id_gen = SyntaxIdGenerator::default();
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
 
-    let mut env = Env::default();
+    let mut env = Env::new(&mut id_gen);
     let session = Session {
         interrupted,
         has_attached_stdout: true,
@@ -388,8 +388,8 @@ fn run_sandboxed_tests_in_file(
     offset: usize,
     interrupted: Arc<AtomicBool>,
 ) {
-    let mut env = Env::default();
     let mut id_gen = SyntaxIdGenerator::default();
+    let mut env = Env::new(&mut id_gen);
 
     let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
     if !errors.is_empty() {
@@ -493,8 +493,8 @@ fn run_sandboxed_tests_in_file(
 fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
     let mut succeeded = false;
 
-    let mut env = Env::default();
     let mut id_gen = SyntaxIdGenerator::default();
+    let mut env = Env::new(&mut id_gen);
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
 
     let session = Session {
@@ -594,7 +594,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     let mut id_gen = SyntaxIdGenerator::default();
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
 
-    let mut env = Env::default();
+    let mut env = Env::new(&mut id_gen);
     let session = Session {
         interrupted,
         has_attached_stdout: true,

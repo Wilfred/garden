@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
-    ast::{AstId, Expression_},
+    ast::{AstId, Expression_, SyntaxIdGenerator},
     parse_toplevel_items,
 };
 use serde::Serialize;
@@ -16,9 +16,10 @@ use crate::{
 };
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
-    let mut env = Env::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
+    let mut env = Env::default();
     load_toplevel_items(&items, &mut env);
 
     let ids_at_pos = find_item_at(&items, offset);

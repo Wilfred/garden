@@ -3,12 +3,13 @@ use std::path::Path;
 use crate::{
     checks::type_checker::check_types, env::Env, eval::load_toplevel_items, pos_to_id::find_item_at,
 };
-use garden_lang_parser::parse_toplevel_items;
+use garden_lang_parser::{ast::SyntaxIdGenerator, parse_toplevel_items};
 
 pub fn show_type(src: &str, path: &Path, offset: usize) {
-    let mut env = Env::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
+    let mut env = Env::default();
     load_toplevel_items(&items, &mut env);
 
     let (_, id_to_ty, id_to_doc_comment, _) = check_types(&items, &env);

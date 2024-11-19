@@ -609,8 +609,10 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
+                let mut id_gen = SyntaxIdGenerator::default();
+
                 let (items, errors) =
-                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut env.id_gen);
+                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut id_gen);
                 for error in errors {
                     let msg = match error {
                         ParseError::Invalid { message, .. } => message,

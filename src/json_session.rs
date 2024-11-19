@@ -21,7 +21,7 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::SourceString;
+use garden_lang_parser::ast::{SourceString, SyntaxIdGenerator};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -125,9 +125,9 @@ fn handle_load_request(
     offset: usize,
     end_offset: usize,
     env: &mut Env,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Response {
-    let (items, errors) =
-        parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
+    let (items, errors) = parse_toplevel_items_from_span(path, input, id_gen, offset, end_offset);
 
     if !errors.is_empty() {
         return as_error_response(errors, input);
@@ -198,9 +198,10 @@ pub(crate) fn start_eval_thread(session: Session, receiver: Receiver<String>) ->
 fn eval_worker(receiver: Receiver<String>, session: Session) {
     let mut env = Env::default();
     let mut session = session;
+    let mut id_gen = SyntaxIdGenerator::default();
 
     while let Ok(input) = receiver.recv() {
-        handle_request_in_worker(&input, &mut env, &mut session);
+        handle_request_in_worker(&input, &mut env, &mut session, &mut id_gen);
     }
 }
 
@@ -255,13 +256,14 @@ fn handle_eval_up_to_request(
     env: &mut Env,
     session: &Session,
     id: Option<RequestId>,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Response {
     let (items, mut errors) = parse_toplevel_items(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         src,
-        &mut env.id_gen,
+        id_gen,
     );
 
     if let Some(e) = errors.pop() {
@@ -312,7 +314,7 @@ fn handle_eval_up_to_request(
         }
     }
 
-    match eval_up_to(env, session, &items, offset) {
+    match eval_up_to(env, session, &items, offset, id_gen) {
         Some(eval_res) => match eval_res {
             Ok((v, pos)) => Response {
                 kind: ResponseKind::Evaluate {
@@ -444,7 +446,12 @@ pub(crate) fn handle_request(
     sender.send(req_src.to_owned()).unwrap();
 }
 
-fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session) {
+fn handle_request_in_worker(
+    req_src: &str,
+    env: &mut Env,
+    session: &mut Session,
+    id_gen: &mut SyntaxIdGenerator,
+) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let res = Response {
             kind: ResponseKind::MalformedRequest {
@@ -468,7 +475,7 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
             path,
             offset,
             end_offset,
-        } => handle_load_request(&path, &input, offset, end_offset, env),
+        } => handle_load_request(&path, &input, offset, end_offset, env, id_gen),
         Request::Interrupt => {
             // Nothing to do, handled outside this threaad so it
             // doesn't require locking env.
@@ -550,16 +557,23 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
                     id,
                 }
             }
-            Err(CommandParseError::NotCommandSyntax) => {
-                handle_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
-            }
+            Err(CommandParseError::NotCommandSyntax) => handle_eval_request(
+                path.as_ref(),
+                &input,
+                offset,
+                end_offset,
+                env,
+                session,
+                id_gen,
+                id,
+            ),
         },
         Request::EvalUpToId {
             path,
             src,
             offset,
             id,
-        } => handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, id),
+        } => handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, id, id_gen),
     };
 
     print_as_json(&res, session.pretty_print_json);
@@ -572,6 +586,7 @@ fn handle_eval_request(
     end_offset: Option<usize>,
     env: &mut Env,
     session: &mut Session,
+    id_gen: &mut SyntaxIdGenerator,
     id: Option<RequestId>,
 ) -> Response {
     let (items, errors) = parse_toplevel_items_from_span(
@@ -579,7 +594,7 @@ fn handle_eval_request(
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         input,
-        &mut env.id_gen,
+        id_gen,
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),
     );

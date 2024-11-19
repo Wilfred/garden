@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
-    ast::{AstId, Symbol, SyntaxId},
+    ast::{AstId, Symbol, SyntaxId, SyntaxIdGenerator},
     parse_toplevel_items,
     position::Position,
     visitor::Visitor,
@@ -12,9 +12,10 @@ use crate::{
 };
 
 pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
-    let mut env = Env::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut env.id_gen);
+    let mut id_gen = SyntaxIdGenerator::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
+    let mut env = Env::default();
     load_toplevel_items(&items, &mut env);
     let (_, _, _, id_to_pos) = check_types(&items, &env);
 

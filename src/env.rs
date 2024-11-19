@@ -66,7 +66,6 @@ pub(crate) struct Env {
     pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
     pub(crate) types: HashMap<TypeName, TypeDef>,
-    pub(crate) id_gen: SyntaxIdGenerator,
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
     pub(crate) prev_call_args: HashMap<SymbolName, Vec<Value>>,
@@ -293,7 +292,6 @@ impl Default for Env {
             methods,
             tests: HashMap::new(),
             types,
-            id_gen,
             prev_call_args: HashMap::new(),
             prev_method_call_args: HashMap::new(),
             stack: Stack::default(),

@@ -23,8 +23,8 @@ use crate::values::{escape_string_literal, type_representation, BuiltinFunctionK
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
     LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern, SourceString,
-    StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
-    TypeSymbol,
+    StructInfo, Symbol, SymbolWithHint, SyntaxId, SyntaxIdGenerator, TestInfo, ToplevelItem,
+    TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -424,10 +424,11 @@ pub(crate) fn eval_call_main(
     cli_args: &[String],
     env: &mut Env,
     session: &Session,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
-        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut env.id_gen);
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, id_gen);
     assert!(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."
@@ -482,6 +483,7 @@ pub(crate) fn eval_up_to(
     session: &Session,
     items: &[ToplevelItem],
     offset: usize,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Option<Result<(Value, Position), EvalError>> {
     let syn_ids = find_item_at(items, offset);
 
@@ -532,7 +534,7 @@ pub(crate) fn eval_up_to(
                 };
 
                 env.stop_at_expr_id = Some(expr_id);
-                let res = eval_toplevel_call(&name_sym.name, &args, env, session);
+                let res = eval_toplevel_call(&name_sym.name, &args, env, session, id_gen);
                 env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
@@ -552,6 +554,7 @@ pub(crate) fn eval_up_to(
                     prev_args,
                     env,
                     session,
+                    id_gen,
                 );
                 env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
@@ -670,6 +673,7 @@ pub(crate) fn eval_toplevel_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Result<Value, EvalError> {
     let stack_frame = env
         .stack
@@ -690,14 +694,14 @@ pub(crate) fn eval_toplevel_call(
 
     let recv_expr = Expression {
         pos: Position::todo(),
-        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, env.id_gen.next())),
+        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, id_gen.next())),
         value_is_used: true,
-        id: env.id_gen.next(),
+        id: id_gen.next(),
     };
 
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(env.id_gen.next()); args.len()],
+        arguments: vec![Expression::invalid(id_gen.next()); args.len()],
         close_paren: Position::todo(),
     };
 
@@ -705,7 +709,7 @@ pub(crate) fn eval_toplevel_call(
         pos: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
         value_is_used: true,
-        id: env.id_gen.next(),
+        id: id_gen.next(),
     };
     stack_frame
         .exprs_to_eval
@@ -722,6 +726,7 @@ pub(crate) fn eval_toplevel_method_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
+    id_gen: &mut SyntaxIdGenerator,
 ) -> Result<Value, EvalError> {
     let stack_frame = env
         .stack
@@ -738,20 +743,20 @@ pub(crate) fn eval_toplevel_method_call(
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
         pos: Position::todo(),
-        expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
+        expr_: Expression_::Variable(placeholder_symbol(Position::todo(), id_gen)),
         value_is_used: true,
-        id: env.id_gen.next(),
+        id: id_gen.next(),
     };
 
     let meth_sym = Symbol {
         position: Position::todo(),
         name: meth_name.clone(),
-        id: env.id_gen.next(),
+        id: id_gen.next(),
     };
 
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(env.id_gen.next()); args.len()],
+        arguments: vec![Expression::invalid(id_gen.next()); args.len()],
         close_paren: Position::todo(),
     };
 
@@ -759,7 +764,7 @@ pub(crate) fn eval_toplevel_method_call(
         pos: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
-        id: env.id_gen.next(),
+        id: id_gen.next(),
     };
     stack_frame
         .exprs_to_eval

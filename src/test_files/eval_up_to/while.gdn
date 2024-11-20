@@ -1,0 +1,15 @@
+fun main(_) {
+    123
+    let cond = True
+    while cond {
+    //  ^
+        5
+        break
+    }
+
+    6
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/while.gdn:4: Unit
+

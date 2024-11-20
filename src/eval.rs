@@ -1184,14 +1184,14 @@ fn eval_while_body(
     };
 
     if b {
+        stack_frame
+            .exprs_to_eval
+            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
+
         // After the loop body, we will want to evaluate the expression again.
         stack_frame
             .exprs_to_eval
             .push((ExpressionState::NotEvaluated, expr.clone()));
-
-        stack_frame
-            .exprs_to_eval
-            .push((ExpressionState::EvaluatedSubexpressions, expr.clone()));
 
         // Evaluate the body.
         eval_block(stack_frame, expr_value_is_used, body);

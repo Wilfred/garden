@@ -4750,7 +4750,7 @@ mod tests {
         eval_defs(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
-        assert!(dbg!(eval_toplevel_exprs(&exprs, &mut env)).is_err());
+        assert!(eval_toplevel_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

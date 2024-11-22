@@ -3851,12 +3851,14 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 && env.stop_at_expr_id.is_some()
                 && env.stop_at_expr_id.as_ref() == Some(&expr_id)
             {
-                let v = if let Some(value) = stack_frame.evalled_values.last() {
-                    value.clone()
+                let v = if let Some(value) = stack_frame.evalled_values.last().cloned() {
+                    value
                 } else {
                     // TODO: this should probably be an Err() case.
                     Value::String("__ERROR: no expressions evaluated. This is a bug.".to_owned())
                 };
+
+                env.stack.0.push(stack_frame);
                 return Ok(v);
             }
         }

@@ -558,7 +558,7 @@ fn handle_request_in_worker(
                     id,
                 }
             }
-            Err(CommandParseError::NotCommandSyntax) => handle_eval_request(
+            Err(CommandParseError::NotCommandSyntax) => handle_run_eval_request(
                 path.as_ref(),
                 &input,
                 offset,
@@ -580,7 +580,7 @@ fn handle_request_in_worker(
     print_as_json(&res, session.pretty_print_json);
 }
 
-fn handle_eval_request(
+fn handle_run_eval_request(
     path: Option<&PathBuf>,
     input: &str,
     offset: Option<usize>,

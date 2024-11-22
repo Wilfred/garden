@@ -7,7 +7,7 @@ jobs:
     name: Test
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.78.0
 
       - name: Build binary for assert_cmd
@@ -19,14 +19,14 @@ jobs:
     name: Actionlint
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: ls
       - uses: raven-actions/actionlint@v1
 
   # dry_run_publish:
   #   runs-on: ubuntu-20.04
   #   steps:
-  #     - uses: actions/checkout@v3
+  #     - uses: actions/checkout@v4
   #     - uses: katyo/publish-crates@v2
   #       with:
   #         dry-run: true

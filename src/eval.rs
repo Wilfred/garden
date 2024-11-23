@@ -3162,13 +3162,15 @@ fn eval_builtin_method_call(
     Ok(())
 }
 
+/// Evaluate `outer_expr`. If it's a function call, return the new
+/// stack frame.
 fn eval_expr(
     env: &mut Env,
     session: &Session,
-    mut stack_frame: StackFrame,
+    stack_frame: &mut StackFrame,
     outer_expr: &Expression,
     expr_state: &mut ExpressionState,
-) -> Result<(StackFrame, Option<StackFrame>), EvalError> {
+) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     let expr_position = outer_expr.pos.clone();
     let expr_value_is_used =
         outer_expr.value_is_used || env.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
@@ -3187,13 +3189,8 @@ fn eval_expr(
                 stack_frame
                     .exprs_to_eval
                     .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
-                eval_match_cases(
-                    env,
-                    &mut stack_frame,
-                    expr_value_is_used,
-                    &scrutinee.pos,
-                    cases,
-                )?;
+                eval_match_cases(env, stack_frame, expr_value_is_used, &scrutinee.pos, cases)
+                    .map_err(|e| (RestoreValues(vec![]), e))?;
             }
             ExpressionState::EvaluatedSubexpressions => {
                 stack_frame.bindings.pop_block();
@@ -3213,22 +3210,14 @@ fn eval_expr(
                     .exprs_to_eval
                     .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
-                if let Err((RestoreValues(restore_values), eval_err)) = eval_if(
+                eval_if(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     &condition.pos,
                     then_body,
                     else_body.as_ref(),
-                ) {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                )?;
             }
             ExpressionState::EvaluatedSubexpressions => {
                 stack_frame.bindings.pop_block();
@@ -3248,22 +3237,14 @@ fn eval_expr(
                 }
                 ExpressionState::PartiallyEvaluated => {
                     // Evaluated condition, can possibly evaluate body.
-                    if let Err((RestoreValues(restore_values), eval_err)) = eval_while_body(
+                    eval_while_body(
                         env,
-                        &mut stack_frame,
+                        stack_frame,
                         expr_value_is_used,
                         &condition.pos,
                         outer_expr.clone(),
                         body,
-                    ) {
-                        restore_stack_frame(
-                            env,
-                            stack_frame,
-                            (*expr_state, outer_expr.clone()),
-                            &restore_values,
-                        );
-                        return Err(eval_err);
-                    }
+                    )?;
                 }
                 ExpressionState::EvaluatedSubexpressions => {
                     stack_frame.bindings.pop_block();
@@ -3292,22 +3273,7 @@ fn eval_expr(
                         .push((ExpressionState::NotEvaluated, *expr.clone()));
                 }
                 ExpressionState::PartiallyEvaluated => {
-                    if let Err((RestoreValues(restore_values), eval_err)) = eval_for_in(
-                        env,
-                        &mut stack_frame,
-                        sym,
-                        &expr.pos,
-                        outer_expr.clone(),
-                        body,
-                    ) {
-                        restore_stack_frame(
-                            env,
-                            stack_frame,
-                            (*expr_state, outer_expr.clone()),
-                            &restore_values,
-                        );
-                        return Err(eval_err);
-                    }
+                    eval_for_in(env, stack_frame, sym, &expr.pos, outer_expr.clone(), body)?;
                 }
                 ExpressionState::EvaluatedSubexpressions => {
                     stack_frame.bindings.pop_block();
@@ -3340,17 +3306,7 @@ fn eval_expr(
         }
         Expression_::Assign(variable, expr) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) =
-                    eval_assign(&mut stack_frame, expr_value_is_used, variable)
-                {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                eval_assign(stack_frame, expr_value_is_used, variable)?;
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3362,22 +3318,14 @@ fn eval_expr(
         }
         Expression_::AssignUpdate(variable, op, expr) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) = eval_assign_update(
+                eval_assign_update(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     &expr_position,
                     variable,
                     *op,
-                ) {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                )?;
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3389,22 +3337,14 @@ fn eval_expr(
         }
         Expression_::Let(destination, hint, expr) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) = eval_let(
+                eval_let(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     destination,
                     &expr_position,
                     hint,
-                ) {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                )?;
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3495,21 +3435,13 @@ fn eval_expr(
         }
         Expression_::StructLiteral(type_sym, field_exprs) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) = eval_struct_value(
+                eval_struct_value(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     type_sym.clone(),
                     field_exprs,
-                ) {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                )?;
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3523,28 +3455,29 @@ fn eval_expr(
             }
         }
         Expression_::Variable(name_sym) => {
-            if let Some(value) = get_var(&name_sym.name, &stack_frame, env) {
+            if let Some(value) = get_var(&name_sym.name, stack_frame, env) {
                 *expr_state = ExpressionState::EvaluatedSubexpressions;
 
                 if expr_value_is_used {
                     stack_frame.evalled_values.push(value);
                 }
             } else {
-                let suggestion = match most_similar_var(&name_sym.name, &stack_frame, env) {
+                let suggestion = match most_similar_var(&name_sym.name, stack_frame, env) {
                     Some(closest_name) => {
                         format!(" Did you mean {}?", closest_name)
                     }
                     None => "".to_owned(),
                 };
 
-                restore_stack_frame(env, stack_frame, (*expr_state, outer_expr.clone()), &[]);
-
-                return Err(EvalError::ResumableError(
-                    name_sym.position.clone(),
-                    ErrorMessage(format!(
-                        "Undefined variable: {}.{}",
-                        name_sym.name, suggestion
-                    )),
+                return Err((
+                    RestoreValues(vec![]),
+                    EvalError::ResumableError(
+                        name_sym.position.clone(),
+                        ErrorMessage(format!(
+                            "Undefined variable: {}.{}",
+                            name_sym.name, suggestion
+                        )),
+                    ),
                 ));
             }
         }
@@ -3561,23 +3494,15 @@ fn eval_expr(
             rhs,
         ) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) = eval_integer_binop(
+                eval_integer_binop(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     &expr_position,
                     &lhs.pos,
                     &rhs.pos,
                     *op,
-                ) {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                )?;
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3596,7 +3521,7 @@ fn eval_expr(
             rhs,
         ) => {
             if expr_state.done_children() {
-                eval_equality_binop(&mut stack_frame, expr_value_is_used, *op)
+                eval_equality_binop(stack_frame, expr_value_is_used, *op)
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3615,22 +3540,14 @@ fn eval_expr(
             rhs,
         ) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) = eval_boolean_binop(
+                eval_boolean_binop(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     &lhs.pos,
                     &rhs.pos,
                     *op,
-                ) {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                )?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
                 stack_frame
@@ -3674,27 +3591,18 @@ fn eval_expr(
 
                 match eval_call(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     outer_expr,
                     &arg_positions,
                     &arg_values,
                     &receiver_value,
                     session,
-                ) {
-                    Ok(Some(new_stack_frame)) => {
-                        return Ok((stack_frame, Some(new_stack_frame)));
+                )? {
+                    Some(new_stack_frame) => {
+                        return Ok(Some(new_stack_frame));
                     }
-                    Ok(None) => {}
-                    Err((RestoreValues(restore_values), eval_error)) => {
-                        restore_stack_frame(
-                            env,
-                            stack_frame,
-                            (*expr_state, outer_expr.clone()),
-                            &restore_values,
-                        );
-                        return Err(eval_error);
-                    }
+                    None => {}
                 }
             } else {
                 stack_frame
@@ -3719,25 +3627,16 @@ fn eval_expr(
             if expr_state.done_children() {
                 match eval_method_call(
                     env,
-                    &mut stack_frame,
+                    stack_frame,
                     expr_value_is_used,
                     outer_expr,
                     meth_name,
                     paren_args,
-                ) {
-                    Ok(Some(new_stack_frame)) => {
-                        return Ok((stack_frame, Some(new_stack_frame)));
+                )? {
+                    Some(new_stack_frame) => {
+                        return Ok(Some(new_stack_frame));
                     }
-                    Ok(None) => {}
-                    Err((RestoreValues(restore_values), eval_err)) => {
-                        restore_stack_frame(
-                            env,
-                            stack_frame,
-                            (*expr_state, outer_expr.clone()),
-                            &restore_values,
-                        );
-                        return Err(eval_err);
-                    }
+                    None => {}
                 }
             } else {
                 stack_frame
@@ -3768,22 +3667,12 @@ fn eval_expr(
                     .exprs_to_eval
                     .push((ExpressionState::EvaluatedSubexpressions, outer_expr.clone()));
 
-                eval_block(&mut stack_frame, expr_value_is_used, block);
+                eval_block(stack_frame, expr_value_is_used, block);
             }
         }
         Expression_::DotAccess(recv, sym) => {
             if expr_state.done_children() {
-                if let Err((RestoreValues(restore_values), eval_err)) =
-                    eval_dot_access(env, &mut stack_frame, expr_value_is_used, sym, &recv.pos)
-                {
-                    restore_stack_frame(
-                        env,
-                        stack_frame,
-                        (*expr_state, outer_expr.clone()),
-                        &restore_values,
-                    );
-                    return Err(eval_err);
-                }
+                eval_dot_access(env, stack_frame, expr_value_is_used, sym, &recv.pos)?;
             } else {
                 stack_frame
                     .exprs_to_eval
@@ -3795,19 +3684,18 @@ fn eval_expr(
         }
         Expression_::Break => {
             *expr_state = ExpressionState::EvaluatedSubexpressions;
-            eval_break(&mut stack_frame, expr_value_is_used);
+            eval_break(stack_frame, expr_value_is_used);
         }
         Expression_::Continue => {
             *expr_state = ExpressionState::EvaluatedSubexpressions;
-            eval_continue(&mut stack_frame);
+            eval_continue(stack_frame);
         }
         Expression_::Invalid => {
-            restore_stack_frame(env, stack_frame, (*expr_state, outer_expr.clone()), &[]);
-            return Err(EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())));
+            return Err((RestoreValues(vec![]), (EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())))));
         }
     }
 
-    Ok((stack_frame, None))
+    Ok(None)
 }
 
 /// Execute the expressions in the stack on `env`.
@@ -3835,15 +3723,24 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 println!("{:?} {:?}\n", &outer_expr.expr_, expr_state);
             }
 
-            stack_frame = match eval_expr(env, session, stack_frame, &outer_expr, &mut expr_state)?
-            {
-                (stack_frame, Some(new_stack_frame)) => {
+            match eval_expr(env, session, &mut stack_frame, &outer_expr, &mut expr_state) {
+                Err((RestoreValues(restore_values), eval_err)) => {
+                    restore_stack_frame(
+                        env,
+                        stack_frame,
+                        (expr_state, outer_expr.clone()),
+                        &restore_values,
+                    );
+
+                    return Err(eval_err);
+                }
+                Ok(Some(new_stack_frame)) => {
                     env.stack.0.push(stack_frame);
                     env.stack.0.push(new_stack_frame);
                     continue;
                 }
-                (stack_frame, None) => stack_frame,
-            };
+                Ok(None) => {}
+            }
 
             // If we've just finished evaluating the expression that
             // we were requested to stop at, return that value

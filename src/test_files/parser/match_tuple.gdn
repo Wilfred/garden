@@ -1,0 +1,95 @@
+match foo {
+  Some(_) => (1, 2)
+  None => { (3, 4) }
+}
+
+// args: dump-ast
+// expected stdout:
+// Match(
+//     Expression {
+//         pos: Position { ... },
+//         expr_: Variable(
+//             Symbol"foo",
+//         ),
+//         value_is_used: true,
+//         id: SyntaxId(1),
+//     },
+//     [
+//         (
+//             Pattern {
+//                 symbol: Symbol"Some",
+//                 argument: Some(
+//                     Symbol"_",
+//                 ),
+//             },
+//             Block {
+//                 open_brace: Position { ... },
+//                 exprs: [
+//                     Expression {
+//                         pos: Position { ... },
+//                         expr_: TupleLiteral(
+//                             [
+//                                 Expression {
+//                                     pos: Position { ... },
+//                                     expr_: IntLiteral(
+//                                         1,
+//                                     ),
+//                                     value_is_used: true,
+//                                     id: SyntaxId(4),
+//                                 },
+//                                 Expression {
+//                                     pos: Position { ... },
+//                                     expr_: IntLiteral(
+//                                         2,
+//                                     ),
+//                                     value_is_used: true,
+//                                     id: SyntaxId(5),
+//                                 },
+//                             ],
+//                         ),
+//                         value_is_used: true,
+//                         id: SyntaxId(6),
+//                     },
+//                 ],
+//                 close_brace: Position { ... },
+//             },
+//         ),
+//         (
+//             Pattern {
+//                 symbol: Symbol"None",
+//                 argument: None,
+//             },
+//             Block {
+//                 open_brace: Position { ... },
+//                 exprs: [
+//                     Expression {
+//                         pos: Position { ... },
+//                         expr_: TupleLiteral(
+//                             [
+//                                 Expression {
+//                                     pos: Position { ... },
+//                                     expr_: IntLiteral(
+//                                         3,
+//                                     ),
+//                                     value_is_used: true,
+//                                     id: SyntaxId(8),
+//                                 },
+//                                 Expression {
+//                                     pos: Position { ... },
+//                                     expr_: IntLiteral(
+//                                         4,
+//                                     ),
+//                                     value_is_used: true,
+//                                     id: SyntaxId(9),
+//                                 },
+//                             ],
+//                         ),
+//                         value_is_used: true,
+//                         id: SyntaxId(10),
+//                     },
+//                 ],
+//                 close_brace: Position { ... },
+//             },
+//         ),
+//     ],
+// )

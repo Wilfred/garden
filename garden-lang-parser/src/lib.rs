@@ -673,7 +673,7 @@ fn parse_case_block(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Block {
-    if peeked_symbol_is(tokens, "(") {
+    if peeked_symbol_is(tokens, "{") {
         parse_block(src, tokens, id_gen, diagnostics, false)
     } else {
         let case_expr = parse_expression(src, tokens, id_gen, diagnostics);

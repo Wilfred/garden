@@ -3168,7 +3168,7 @@ fn eval_expr(
     mut stack_frame: StackFrame,
     outer_expr: &Expression,
     expr_state: &mut ExpressionState,
-) -> Result<Option<StackFrame>, EvalError> {
+) -> Result<(StackFrame, Option<StackFrame>), EvalError> {
     let expr_position = outer_expr.pos.clone();
     let expr_value_is_used =
         outer_expr.value_is_used || env.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
@@ -3683,11 +3683,7 @@ fn eval_expr(
                     session,
                 ) {
                     Ok(Some(new_stack_frame)) => {
-                        env.stack.0.push(stack_frame);
-                        env.stack.0.push(new_stack_frame);
-                        // TODO: this existed before we factored out this function.
-                        return Ok(None);
-                        // continue;
+                        return Ok((stack_frame, Some(new_stack_frame)));
                     }
                     Ok(None) => {}
                     Err((RestoreValues(restore_values), eval_error)) => {
@@ -3730,10 +3726,7 @@ fn eval_expr(
                     paren_args,
                 ) {
                     Ok(Some(new_stack_frame)) => {
-                        env.stack.0.push(stack_frame);
-                        env.stack.0.push(new_stack_frame);
-                        // TODO: possibly unnecessary after factoring out this function?
-                        return Ok(None);
+                        return Ok((stack_frame, Some(new_stack_frame)));
                     }
                     Ok(None) => {}
                     Err((RestoreValues(restore_values), eval_err)) => {
@@ -3814,7 +3807,7 @@ fn eval_expr(
         }
     }
 
-    Ok(Some(stack_frame))
+    Ok((stack_frame, None))
 }
 
 /// Execute the expressions in the stack on `env`.
@@ -3844,8 +3837,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
             stack_frame = match eval_expr(env, session, stack_frame, &outer_expr, &mut expr_state)?
             {
-                Some(sf) => sf,
-                None => continue,
+                (stack_frame, Some(new_stack_frame)) => {
+                    env.stack.0.push(stack_frame);
+                    env.stack.0.push(new_stack_frame);
+                    continue;
+                }
+                (stack_frame, None) => stack_frame,
             };
 
             // If we've just finished evaluating the expression that

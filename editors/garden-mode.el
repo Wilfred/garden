@@ -97,7 +97,7 @@ evaluate, and display the result."
   "A Garden major mode."
   :group 'languages)
 
-(defcustom garden-indent-offset 4
+(defcustom garden-indent-offset 2
   "Indentation amount (in spaces) for Garden files."
   :type 'integer
   :safe #'integerp

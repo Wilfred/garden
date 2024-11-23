@@ -1,16 +1,16 @@
 // A Unicode string, such as "hello world".
 struct String {
-    __BUILTIN_IMPLEMENTATION: NoValue,
+  __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
 // A 64-bit integer, such as 1234.
 struct Int {
-    __BUILTIN_IMPLEMENTATION: NoValue,
+  __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
 // A sequence of values of type T, such as [1, 2, 3].
 struct List<T> {
-    __BUILTIN_IMPLEMENTATION: NoValue,
+  __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
 // Stop the program immediately, and report the error message given.
@@ -19,7 +19,7 @@ struct List<T> {
 // error("Computer is melting!")
 // ```
 fun error(message: String): NoValue {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Stop the program if `condition` is `False`.
@@ -31,7 +31,7 @@ fun error(message: String): NoValue {
 // This is intended for writing tests. See `error` for reporting other
 // issues.
 fun assert(condition: Bool): Unit {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // List the contents of the specified directory.
@@ -40,7 +40,7 @@ fun assert(condition: Bool): Unit {
 // list_directory("/")
 // ```
 fun list_directory(path: String): Result<List<String>, String> {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return True if this path exists.
@@ -53,7 +53,7 @@ fun list_directory(path: String): Result<List<String>, String> {
 // Note that a path may exist without the current user having
 // permission to read it.
 fun path_exists(path: String): Bool {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Write a string to stdout.
@@ -62,7 +62,7 @@ fun path_exists(path: String): Bool {
 // print("hello world\n")
 // ```
 fun print(_: String): Unit {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Write a string to stdout, with a newline appended.
@@ -71,7 +71,7 @@ fun print(_: String): Unit {
 // println("hello world")
 // ```
 fun println(_: String): Unit {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Execute the given string as a shell command, and return stdout
@@ -81,7 +81,7 @@ fun println(_: String): Unit {
 // shell("ls", ["-l", "/"])
 // ```
 fun shell(command: String, args: List<String>): Result<String, String> {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Pretty print a value.
@@ -90,7 +90,7 @@ fun shell(command: String, args: List<String>): Result<String, String> {
 // string_repr(123) // "123"
 // ```
 fun<T> string_repr(value: T): String {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Read the contents of `path` as a string.
@@ -99,7 +99,7 @@ fun<T> string_repr(value: T): String {
 // read_file("/tmp/foo.txt")
 // ```
 fun read_file(path: String): Result<String, String> {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Write `content` to file `path`.
@@ -110,7 +110,7 @@ fun read_file(path: String): Result<String, String> {
 // write_file("hello world", "/tmp/foo.txt")
 // ```
 fun write_file(content: String, path: String): Result<Unit, String> {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return the path of the current working directory.
@@ -119,7 +119,7 @@ fun write_file(content: String, path: String): Result<Unit, String> {
 // working_directory() // "/home/yourname/awesome_garden_project"
 // ```
 fun working_directory(): String {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return a new list with the value added to the end.
@@ -128,7 +128,7 @@ fun working_directory(): String {
 // [10].append(11) // [10, 11]
 // ```
 fun<T> (this: List<T>) append(value: T): List<T> {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Get the item in the list at the index specified.
@@ -138,7 +138,7 @@ fun<T> (this: List<T>) append(value: T): List<T> {
 // [4, 5, 6].get(1) // 5
 // ```
 fun<T> (this: List<T>) get(index: Int): T {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return the length of the list.
@@ -147,7 +147,7 @@ fun<T> (this: List<T>) get(index: Int): T {
 // [10, 11, 12].len() // 3
 // ```
 fun<T> (this: List<T>) len(): Int {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return a new string with the string argument concatenated.
@@ -156,7 +156,7 @@ fun<T> (this: List<T>) len(): Int {
 // "foo".concat("bar") // "foobar"
 // ```
 fun (this: String) concat(value: String): String {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return the number of characters (codepoints) in the string.
@@ -165,7 +165,7 @@ fun (this: String) concat(value: String): String {
 // "abc".len() // 3
 // ```
 fun (this: String) len(): Int {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return the substring of the string between the indexes specified.
@@ -175,7 +175,7 @@ fun (this: String) len(): Int {
 // "abc".substring(1, 99) // "bc"
 // ```
 fun (this: String) substring(from_index: Int, to_index: Int): String {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }
 
 // Return a new string with this suffix appended.
@@ -184,5 +184,5 @@ fun (this: String) substring(from_index: Int, to_index: Int): String {
 // "ab".append("cd") // "abcd"
 // ```
 fun (this: String) append(suffix: String): String {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
 }

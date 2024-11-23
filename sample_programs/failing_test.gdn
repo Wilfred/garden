@@ -1,12 +1,11 @@
-
 fun add_one(i: Int): Int {
-    i + 1
+  i + 1
 }
 
 test passing_example {
-    assert(add_one(1) == 2)
+  assert(add_one(1) == 2)
 }
 
 test failing_example {
-    assert(add_one(1) == 99)
+  assert(add_one(1) == 99)
 }

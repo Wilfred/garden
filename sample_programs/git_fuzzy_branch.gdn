@@ -1,46 +1,46 @@
 #!/usr/bin/env -S garden run
 
 fun in_git_repo(): Bool {
-    let git_dir_path = working_directory().append("/.git")
-    path_exists(git_dir_path)
+  let git_dir_path = working_directory().append("/.git")
+  path_exists(git_dir_path)
 }
 
 fun check_out(branch_name: String): Unit {
-    print(shell("git", ["checkout", branch_name]).or_error())
+  print(shell("git", ["checkout", branch_name]).or_error())
 }
 
 fun main(args: List<String>): Unit {
-    if args.len() != 1 {
-        println("Usage: git_fuzzy_branch <name substring>")
-        return
-    }
-    let needle = args.get(0)
+  if args.len() != 1 {
+    println("Usage: git_fuzzy_branch <name substring>")
+    return
+  }
+  let needle = args.get(0)
 
-    if in_git_repo() == False {
-        println("Not in a git repository.")
-        return
-    }
+  if in_git_repo() == False {
+    println("Not in a git repository.")
+    return
+  }
 
-    let all_branches = shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
-        .or_error()
-        .lines()
-    if all_branches.contains(needle) {
-        // If there's a branch with this name exactly, use it.
-        check_out(needle)
-        return
-    }
+  let all_branches = shell("git", ["for-each-ref", "--format=%(refname:short)", "refs/heads/"])
+    .or_error()
+    .lines()
+  if all_branches.contains(needle) {
+    // If there's a branch with this name exactly, use it.
+    check_out(needle)
+    return
+  }
 
-    let branches = all_branches.filter(fun(name: String) { name.contains(needle) })
-    match branches.first() {
-        Some(name) => {
-            if branches.len() == 1 {
-                check_out(name)
-            } else {
-                let formatted_branches = ", ".join(branches)
-                let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches])
-                println(msg)
-            }
-        }
-        None => println("No branches found matching: ".append(needle))
+  let branches = all_branches.filter(fun(name: String) { name.contains(needle) })
+  match branches.first() {
+    Some(name) => {
+      if branches.len() == 1 {
+        check_out(name)
+      } else {
+        let formatted_branches = ", ".join(branches)
+        let msg = "".join(["Found ", string_repr(branches.len()), " branches: ", formatted_branches])
+        println(msg)
+      }
     }
+    None => println("No branches found matching: ".append(needle))
+  }
 }

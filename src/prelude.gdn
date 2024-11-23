@@ -3,56 +3,56 @@
 // The boolean type. This type represents when something is true or
 // false, such as predicates.
 enum Bool {
-    True,
-    False,
+  True,
+  False,
 }
 
 fun (this: Bool) not(): Bool {
-    match this {
-        True => False,
-        False => True,
-    }
+  match this {
+    True => False,
+    False => True,
+  }
 }
 
 test not {
-    assert(True.not() == False)
-    assert(False.not() == True)
+  assert(True.not() == False)
+  assert(False.not() == True)
 }
 
 // The unit type. Use this when your function doesn't have any useful
 // value to return, such as side-effecting functions.
 enum Unit {
-    Unit
+  Unit
 }
 
 // The option type. Use this when you might have a value, but might
 // not.
 enum Option<T> {
-    Some(T),
-    None,
+  Some(T),
+  None,
 }
 
 /// Return True if this value is `Some`.
 fun<T> (this: Option<T>) is_some(): Bool {
-    match this {
-        Some(_) => True,
-        None => False,
-    }
+  match this {
+    Some(_) => True,
+    None => False,
+  }
 }
 
 /// Return True if this value is `None`.
 fun<T> (this: Option<T>) is_none(): Bool {
-    match this {
-        Some(_) => False,
-        None => True,
-    }
+  match this {
+    Some(_) => False,
+    None => True,
+  }
 }
 
 // `Result` represents a value that succeeded, with `Ok(...)`, or
 // failed, with `Err(...)`.
 enum Result<T, E> {
-    Ok(T),
-    Err(E),
+  Ok(T),
+  Err(E),
 }
 
 // Write an arbitrary value to stdout, along with debugging metadata.
@@ -64,8 +64,8 @@ enum Result<T, E> {
 // dbg([1, 2])
 // ```
 fun<T> dbg(value: T): T {
-    println(string_repr(value))
-    value
+  println(string_repr(value))
+  value
 }
 
 // Raise an error.
@@ -73,19 +73,19 @@ fun<T> dbg(value: T): T {
 // You can use this function for code that you haven't implemented
 // yet.
 fun todo(): NoValue {
-    error("Not yet implemented")
+  error("Not yet implemented")
 }
 
 // If this value is `Ok`, unwrap it, otherwise error.
 fun<T, E> (this: Result<T, E>) or_error(): T {
-    match this {
-        Ok(v) => v
-        Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
-    }
+  match this {
+    Ok(v) => v
+    Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
+  }
 }
 
 test or_error {
-    assert(Ok("foo").or_error() == "foo")
+  assert(Ok("foo").or_error() == "foo")
 }
 
 enum NoValue {}
@@ -94,70 +94,70 @@ enum NoValue {}
 
 // Does this string start with `s`?
 fun (this: String) starts_with(s: String): Bool {
-    if s.len() > this.len() {
-        return False
-    }
+  if s.len() > this.len() {
+    return False
+  }
 
-    this.substring(0, s.len()) == s
+  this.substring(0, s.len()) == s
 }
 
 test starts_with {
-    assert("abc".starts_with("ab") == True)
-    assert("abc".starts_with("") == True)
+  assert("abc".starts_with("ab") == True)
+  assert("abc".starts_with("") == True)
 
-    assert("abc".starts_with("x") == False)
-    assert("abc".starts_with("b") == False)
-    assert("abc".starts_with("abcaa") == False)
+  assert("abc".starts_with("x") == False)
+  assert("abc".starts_with("b") == False)
+  assert("abc".starts_with("abcaa") == False)
 }
 
 // Does this string end with `s`?
 fun (this: String) ends_with(s: String): Bool {
-    if s.len() > this.len() {
-        return False
-    }
+  if s.len() > this.len() {
+    return False
+  }
 
-    this.substring(this.len() - s.len(), this.len()) == s
+  this.substring(this.len() - s.len(), this.len()) == s
 }
 
 test ends_with {
-    assert("abc".ends_with("bc") == True)
-    assert("abc".ends_with("") == True)
+  assert("abc".ends_with("bc") == True)
+  assert("abc".ends_with("") == True)
 
-    assert("abc".ends_with("x") == False)
-    assert("abc".ends_with("b") == False)
-    assert("abc".ends_with("aabc") == False)
+  assert("abc".ends_with("x") == False)
+  assert("abc".ends_with("b") == False)
+  assert("abc".ends_with("aabc") == False)
 }
 
 // Split this string into a list of lines.
 fun (this: String) lines(): List<String> {
-    let parts: List<String> = []
+  let parts: List<String> = []
 
-    let line_start = 0
-    let i = 0
-    while i < this.len() {
-        let char = this.substring(i, i + 1)
+  let line_start = 0
+  let i = 0
+  while i < this.len() {
+    let char = this.substring(i, i + 1)
 
-        if char == "\n" {
-            parts = parts.append(this.substring(line_start, i))
-            line_start = i + 1
-        }
-
-        i = i + 1
+    if char == "\n" {
+      parts = parts.append(this.substring(line_start, i))
+      line_start = i + 1
     }
 
-    // Append last line if it wasn't terminated with a newline.
-    if line_start != this.len() {
-        parts = parts.append(this.substring(line_start, this.len()))
-    }
+    i = i + 1
+  }
 
-    parts
+  // Append last line if it wasn't terminated with a newline.
+  if line_start != this.len() {
+    parts = parts.append(this.substring(line_start, this.len()))
+  }
+
+  parts
 }
 
 test lines {
-    assert("".lines() == [])
-    assert("a".lines() == ["a"])
-    assert("a\nb".lines() == ["a", "b"])
-    assert("a\nb\n".lines() == ["a", "b"])
+  assert("".lines() == [])
+  assert("a".lines() == ["a"])
+  assert("a\nb".lines() == ["a", "b"])
+  assert("a\nb\n".lines() == ["a", "b"])
 }
 
 // Split this string on the first occurrence of `needle`, and return
@@ -167,28 +167,28 @@ test lines {
 // "abcd".split_once("b") // Some(["a", "cd"])
 // ```
 fun (this: String) split_once(needle: String): Option<(String, String)> {
-    let i = 0
-    while (i + needle.len()) <= this.len() {
-        let substring = this.substring(i, i + needle.len())
-        if substring == needle {
-            return Some((
-                this.substring(0, i),
-                this.substring(i + needle.len(), this.len()),
-            ))
-        }
-
-        i = i + 1
+  let i = 0
+  while (i + needle.len()) <= this.len() {
+    let substring = this.substring(i, i + needle.len())
+    if substring == needle {
+      return Some((
+        this.substring(0, i),
+        this.substring(i + needle.len(), this.len()),
+      ))
     }
 
-    return None
+    i = i + 1
+  }
+
+  return None
 }
 
 test split_once {
-    assert("abc".split_once("x") == None)
+  assert("abc".split_once("x") == None)
 
-    assert("abc".split_once("b") == Some(("a", "c")))
-    assert("abc".split_once("c") == Some(("ab", "")))
-    assert("abcbe".split_once("b") == Some(("a", "cbe")))
+  assert("abc".split_once("b") == Some(("a", "c")))
+  assert("abc".split_once("c") == Some(("ab", "")))
+  assert("abcbe".split_once("b") == Some(("a", "cbe")))
 }
 
 // Find the first index of `needle` in `this`.
@@ -197,27 +197,27 @@ test split_once {
 // "abc".index_of("c") // 2
 // ```
 fun (this: String) index_of(needle: String): Option<Int> {
-    let i = 0
-    while (i + needle.len()) <= this.len() {
-        let substring = this.substring(i, i + needle.len())
+  let i = 0
+  while (i + needle.len()) <= this.len() {
+    let substring = this.substring(i, i + needle.len())
 
-        if substring == needle {
-            return Some(i)
-        }
-
-        i = i + 1
+    if substring == needle {
+      return Some(i)
     }
 
-    None
+    i = i + 1
+  }
+
+  None
 }
 
 test string_index_of {
-    assert("abc".index_of("x") == None)
+  assert("abc".index_of("x") == None)
 
-    assert("abc".index_of("a") == Some(0))
-    assert("abca".index_of("a") == Some(0))
+  assert("abc".index_of("a") == Some(0))
+  assert("abca".index_of("a") == Some(0))
 
-    assert("abc".index_of("c") == Some(2))
+  assert("abc".index_of("c") == Some(2))
 }
 
 // Join `items` (a list of strings) with this string as a separator.
@@ -226,92 +226,92 @@ test string_index_of {
 // ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
 fun (this: String) join(items: List<String>): String {
-    if items.is_empty() {
-        return ""
-    }
-    if items.len() == 1 {
-        return items.get(0)
-    }
+  if items.is_empty() {
+    return ""
+  }
+  if items.len() == 1 {
+    return items.get(0)
+  }
 
-    let res = items.get(0)
-    let i = 1
-    while i < items.len() {
-        res = res.append(this)
-        res = res.append(items.get(i))
-        i = i + 1
-    }
-    res
+  let res = items.get(0)
+  let i = 1
+  while i < items.len() {
+    res = res.append(this)
+    res = res.append(items.get(i))
+    i = i + 1
+  }
+  res
 }
 
 test join {
-    assert(" ".join(["x"]) == "x")
+  assert(" ".join(["x"]) == "x")
 
-    // TODO: should .join() exist on String or on List?
-    assert(" ".join(["x", "y"]) == "x y")
+  // TODO: should .join() exist on String or on List?
+  assert(" ".join(["x", "y"]) == "x y")
 }
 
 // Does this string contain `substring`?
 fun (this: String) contains(substring: String): Bool {
-    if substring.len() > this.len() {
-        return False
+  if substring.len() > this.len() {
+    return False
+  }
+
+  // TODO: better parse error if this last parenthesis is missing.
+  // dbg(string_length(haystack) - string_length(substring))
+
+  let i = 0
+  while i <= (this.len() - substring.len()) {
+    let section = this.substring(i, i + substring.len())
+    if section == substring {
+      return True
     }
 
-    // TODO: better parse error if this last parenthesis is missing.
-    // dbg(string_length(haystack) - string_length(substring))
+    i = i + 1
+  }
 
-    let i = 0
-    while i <= (this.len() - substring.len()) {
-        let section = this.substring(i, i + substring.len())
-        if section == substring {
-            return True
-        }
-
-        i = i + 1
-    }
-
-    False
+  False
 }
 
 fun (this: String) trim_left(): String {
-    let i = 0
-    while i < this.len() {
-        let char = this.substring(i, i + 1)
-        if char != " " {
-            break
-        }
-
-        i = i + 1
+  let i = 0
+  while i < this.len() {
+    let char = this.substring(i, i + 1)
+    if char != " " {
+      break
     }
 
-    this.substring(i, this.len())
+    i = i + 1
+  }
+
+  this.substring(i, this.len())
 }
 
 test trim_left {
-    assert("a".trim_left() == "a")
-    assert("a b".trim_left() == "a b")
-    assert("  a".trim_left() == "a")
-    assert("a ".trim_left() == "a ")
+  assert("a".trim_left() == "a")
+  assert("a b".trim_left() == "a b")
+  assert("  a".trim_left() == "a")
+  assert("a ".trim_left() == "a ")
 }
 
 fun (this: String) trim_right(): String {
-    let i = this.len() - 1
-    while i >= 0 {
-        let char = this.substring(i, i + 1)
-        if char != " " {
-            break
-        }
-
-        i = i - 1
+  let i = this.len() - 1
+  while i >= 0 {
+    let char = this.substring(i, i + 1)
+    if char != " " {
+      break
     }
 
-    this.substring(0, i + 1)
+    i = i - 1
+  }
+
+  this.substring(0, i + 1)
 }
 
 test trim_right {
-    assert("a".trim_right() == "a")
-    assert("a b".trim_right() == "a b")
-    assert(" a".trim_right() == " a")
-    assert("a  ".trim_right() == "a")
+  assert("a".trim_right() == "a")
+  assert("a b".trim_right() == "a b")
+  assert(" a".trim_right() == " a")
+  assert("a  ".trim_right() == "a")
 }
 
 // Returns this string without the suffix specified. If this string
@@ -322,16 +322,16 @@ test trim_right {
 // "bar".strip_suffix("o") // "bar"
 // ```
 fun (this: String) strip_suffix(suffix: String): String {
-    if this.ends_with(suffix) {
-        return this.substring(0, this.len() - suffix.len())
-    }
+  if this.ends_with(suffix) {
+    return this.substring(0, this.len() - suffix.len())
+  }
 
-    this
+  this
 }
 
 test strip_suffix {
-    assert("abcdef".strip_suffix("ef") == "abcd")
-    assert("abcdef".strip_suffix("xyz") == "abcdef")
+  assert("abcdef".strip_suffix("ef") == "abcd")
+  assert("abcdef".strip_suffix("xyz") == "abcdef")
 }
 
 // Returns this string without the prefix specified. If this string
@@ -343,17 +343,17 @@ test strip_suffix {
 // "ffoo".strip_prefix("f") // "foo"
 // ```
 fun (this: String) strip_prefix(prefix: String): String {
-    if this.starts_with(prefix) {
-        // return this.substring(prefix.len(), this.len(), 1)
-        return this.substring(prefix.len(), this.len())
-    }
+  if this.starts_with(prefix) {
+    // return this.substring(prefix.len(), this.len(), 1)
+    return this.substring(prefix.len(), this.len())
+  }
 
-    this
+  this
 }
 
 test strip_prefix {
-    assert("abcdef".strip_prefix("ab") == "cdef")
-    assert("abcdef".strip_prefix("xyz") == "abcdef")
+  assert("abcdef".strip_prefix("ab") == "cdef")
+  assert("abcdef".strip_prefix("xyz") == "abcdef")
 }
 
 // Split this string on occurrences of `needle`.
@@ -364,130 +364,130 @@ test strip_prefix {
 // "a,,b,".split(",") // ["a", "", "b", ""]
 // ```
 fun (this: String) split(needle: String): List<String> {
-    let s = this
+  let s = this
 
-    let parts: List<String> = []
-    while s != "" {
-        match s.index_of(needle) {
-            Some(i) => {
-                parts = parts.append(s.substring(0, i))
-                s = s.substring(i + needle.len(), s.len())
-            }
-            None => {
-                parts = parts.append(s)
-                break
-            }
-        }
-
+  let parts: List<String> = []
+  while s != "" {
+    match s.index_of(needle) {
+      Some(i) => {
+        parts = parts.append(s.substring(0, i))
+        s = s.substring(i + needle.len(), s.len())
+      }
+      None => {
+        parts = parts.append(s)
+        break
+      }
     }
 
+  }
 
-    parts
+
+  parts
 }
 
 test split {
-    assert("ab".split(",") == ["ab"])
-    assert("a,b".split(",") == ["a", "b"])
-    assert("a,,b".split(",") == ["a", "", "b"])
+  assert("ab".split(",") == ["ab"])
+  assert("a,b".split(",") == ["a", "b"])
+  assert("a,,b".split(",") == ["a", "", "b"])
 }
 
 fun (this: String) chars(): List<String> {
-    let cs: List<String> = []
+  let cs: List<String> = []
 
-    let i = 0
-    while i < this.len() {
-        cs = cs.append(this.substring(i, i + 1))
-        i = i + 1
-    }
+  let i = 0
+  while i < this.len() {
+    cs = cs.append(this.substring(i, i + 1))
+    i = i + 1
+  }
 
-    cs
+  cs
 }
 
 test string_chars {
-    assert("abc".chars() == ["a", "b", "c"])
+  assert("abc".chars() == ["a", "b", "c"])
 }
 
 // List methods.
 
 // Get the first item in this list, if the list is not empty.
 fun<T> (this: List<T>) first(): Option<T> {
-    if this.is_empty() {
-        None
-    } else {
-        Some(this.get(0))
-    }
+  if this.is_empty() {
+    None
+  } else {
+    Some(this.get(0))
+  }
 }
 
 test first {
-    assert([].first() == None)
-    assert([123].first() == Some(123))
+  assert([].first() == None)
+  assert([123].first() == Some(123))
 }
 
 // Get the last item in this list, if the list is not empty.
 fun<T> (this: List<T>) last(): Option<T> {
-    if this.is_empty() {
-        None
-    } else {
-        Some(this.get(this.len() - 1))
-    }
+  if this.is_empty() {
+    None
+  } else {
+    Some(this.get(this.len() - 1))
+  }
 }
 
 test last {
-    assert([].last() == None)
-    assert([123].last() == Some(123))
+  assert([].last() == None)
+  assert([123].last() == Some(123))
 }
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
 fun<T> (this: List<T>) filter(f: Fun<(T), Bool>): List<T> {
-    let result: List<T> = []
+  let result: List<T> = []
 
-    for item in this {
-        if f(item) {
-            result = result.append(item)
-        }
+  for item in this {
+    if f(item) {
+      result = result.append(item)
     }
+  }
 
-    result
+  result
 }
 
 test filter {
-    assert([1, 2].filter(fun(_) { True }) == [1, 2])
+  assert([1, 2].filter(fun(_) { True }) == [1, 2])
 }
 
 // Is this list empty?
 fun<T> (this: List<T>) is_empty(): Bool {
-    this.len() == 0
+  this.len() == 0
 }
 
 test is_empty {
-    assert([].is_empty())
-    assert([1].is_empty().not())
+  assert([].is_empty())
+  assert([1].is_empty().not())
 }
 
 // Is this list non-empty?
 fun<T> (this: List<T>) is_non_empty(): Bool {
-    this.len() != 0
+  this.len() != 0
 }
 
 test is_non_empty {
-    assert([].is_non_empty().not())
-    assert([1].is_non_empty())
+  assert([].is_non_empty().not())
+  assert([1].is_non_empty())
 }
 
 // Does this list contain `item`?
 fun<T> (this: List<T>) contains(item: T): Bool {
-    for this_item in this {
-        if this_item == item {
-            return True
-        }
+  for this_item in this {
+    if this_item == item {
+      return True
     }
+  }
 
-    False
+  False
 }
 
 test contains {
-    assert([10, 11].contains(10) == True)
+  assert([10, 11].contains(10) == True)
 }
 
 // Call `f` on every item in this list, and return a list of the
@@ -497,29 +497,29 @@ test contains {
 // [1, 2].map(fun(x) { x + 1 }) // [2, 3]
 // ```
 fun<T, U> (this: List<T>) map(f: Fun<(T), U>): List<U> {
-    let items: List<U> = []
-    for item in this {
-        items = items.append(f(item))
-    }
+  let items: List<U> = []
+  for item in this {
+    items = items.append(f(item))
+  }
 
-    items
+  items
 }
 
 test list_map {
-    let incremented = [1, 2, 3].map(fun(x: Int) { x + 1 })
-    assert(incremented == [2, 3, 4])
+  let incremented = [1, 2, 3].map(fun(x: Int) { x + 1 })
+  assert(incremented == [2, 3, 4])
 }
 
 // Option methods.
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
 fun<T> (this: Option<T>) or_exception(): T {
-    match this {
-        Some(v) => v,
-        None => error("Called or_exception on a `None` value.")
-    }
+  match this {
+    Some(v) => v,
+    None => error("Called or_exception on a `None` value.")
+  }
 }
 
 test option_or_exception {
-    assert(Some(123).or_exception() == 123)
+  assert(Some(123).or_exception() == 123)
 }

@@ -1,204 +1,204 @@
 fun render_markdown_header(src: String): String {
-    let h_count = 0
+  let h_count = 0
 
-    while src.starts_with("#") {
-        h_count = h_count + 1
-        src = src.strip_prefix("#")
-    }
+  while src.starts_with("#") {
+    h_count = h_count + 1
+    src = src.strip_prefix("#")
+  }
 
-    let open_tag = "".join(["<h", string_repr(h_count), ">"])
-    let close_tag = "".join(["</h", string_repr(h_count), ">"])
+  let open_tag = "".join(["<h", string_repr(h_count), ">"])
+  let close_tag = "".join(["</h", string_repr(h_count), ">"])
 
-    "".join([open_tag, src.strip_prefix(" "), close_tag])
+  "".join([open_tag, src.strip_prefix(" "), close_tag])
 }
 
 fun render_inline(src: String): String {
-    let parts: List<String> = []
+  let parts: List<String> = []
 
-    while True {
-        match split_inline_punct(src) {
-            Some(src_parts) => {
-                let (before, after) = src_parts
-                parts = parts.append(before)
+  while True {
+    match split_inline_punct(src) {
+      Some(src_parts) => {
+        let (before, after) = src_parts
+        parts = parts.append(before)
 
-                if after.starts_with("`") {
-                    let (rendered, new_src) = render_backtick(after)
-                    parts = parts.append(rendered)
-                    src = new_src
-                } else if after.ends_with("[") {
-                    let (rendered, new_src) = render_link(after)
-                    parts = parts.append(rendered)
-                    src = new_src
-                } else {
-                    assert(False)
-                }
-            }
-            None => {
-                parts = parts.append(src)
-                break
-            }
+        if after.starts_with("`") {
+          let (rendered, new_src) = render_backtick(after)
+          parts = parts.append(rendered)
+          src = new_src
+        } else if after.ends_with("[") {
+          let (rendered, new_src) = render_link(after)
+          parts = parts.append(rendered)
+          src = new_src
+        } else {
+          assert(False)
         }
+      }
+      None => {
+        parts = parts.append(src)
+        break
+      }
     }
+  }
 
-    "".join(parts)
+  "".join(parts)
 }
 
 fun split_inline_punct(src: String): Option<(String, String)> {
-    let i = 0
-    while (i + 1) < src.len() {
-        let char = src.substring(i, i + 1)
-        if (char == "`") || (char == "[") {
-            return Some((src.substring(i, i + 1), src.substring(i + 1, src.len())))
-        }
-
-        i += 1
+  let i = 0
+  while (i + 1) < src.len() {
+    let char = src.substring(i, i + 1)
+    if (char == "`") || (char == "[") {
+      return Some((src.substring(i, i + 1), src.substring(i + 1, src.len())))
     }
 
-    None
+    i += 1
+  }
+
+  None
 }
 
 // Render the next backtick text as code, and return the remainder of
 // the text to process.
 fun render_backtick(src: String): (String, String) {
-    assert(src.starts_with("`"))
-    src = src.substring(1, src.len())
+  assert(src.starts_with("`"))
+  src = src.substring(1, src.len())
 
-    match src.split_once("`") {
-        Some(parts) => {
-            let (before, after) = parts
-            ("".join(["<code>", before, "</code>"]), after)
-        }
-        None => {
-            ("", src)
-        }
+  match src.split_once("`") {
+    Some(parts) => {
+      let (before, after) = parts
+      ("".join(["<code>", before, "</code>"]), after)
     }
+    None => {
+      ("", src)
+    }
+  }
 }
 
 fun render_link(src: String): (String, String) {
-    assert(src.starts_with("["))
-    src = src.substring(1, src.len())
+  assert(src.starts_with("["))
+  src = src.substring(1, src.len())
 
-    src.split_once("](")
-    match src.split_once("](") {
+  src.split_once("](")
+  match src.split_once("](") {
+    Some(parts) => {
+      let (url_text, after_paren) = parts
+      match after_paren.split_once(")") {
         Some(parts) => {
-            let (url_text, after_paren) = parts
-            match after_paren.split_once(")") {
-                Some(parts) => {
-                    let (url, after) = parts
-                    ("".join(["<a href=\"", url, "\">", url_text, "</a>"]), after)
-                }
-                None => (src, "")
-            }
+          let (url, after) = parts
+          ("".join(["<a href=\"", url, "\">", url_text, "</a>"]), after)
         }
-        None => {
-            ("", src)
-        }
+        None => (src, "")
+      }
     }
+    None => {
+      ("", src)
+    }
+  }
 }
 
 {
-    render_link("[click me](example.com) b")
+  render_link("[click me](example.com) b")
 }
 
 fun render_markdown_paragraph(src: String): String {
-    "".join(["<p>", render_inline(src), "</p>"])
+  "".join(["<p>", render_inline(src), "</p>"])
 }
 
 fun render_markdown(src: String): String {
-    let lines = src.lines()
-    let parts: List<String> = lines.map(fun(line: String) {
-        if line.starts_with("#") {
-            render_markdown_header(line)
-        } else if line != "" {
-            render_markdown_paragraph(line)
-        } else {
-            line
-        }
-    })
+  let lines = src.lines()
+  let parts: List<String> = lines.map(fun(line: String) {
+    if line.starts_with("#") {
+      render_markdown_header(line)
+    } else if line != "" {
+      render_markdown_paragraph(line)
+    } else {
+      line
+    }
+  })
 
-    "\n".join(parts)
+  "\n".join(parts)
 }
 
 test render_h1 {
-    assert(render_markdown("# foo") == "<h1>foo</h1>")
+  assert(render_markdown("# foo") == "<h1>foo</h1>")
 }
 
 test render_h2 {
-    assert(render_markdown("## foo") == "<h2>foo</h2>")
+  assert(render_markdown("## foo") == "<h2>foo</h2>")
 }
 
 test render_markdown_paragraph {
-    assert(render_markdown("foo bar") == "<p>foo bar</p>")
+  assert(render_markdown("foo bar") == "<p>foo bar</p>")
 }
 
 test render_backtick {
-    assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
+  assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
 }
 
 // TODO: currently failing
 test render_link {
-    assert(render_markdown("[foo](example.com)") == "<p><code>foo</code></p>")
+  assert(render_markdown("[foo](example.com)") == "<p><code>foo</code></p>")
 }
 
 {
-    render_markdown("# foo\n\nbar.")
+  render_markdown("# foo\n\nbar.")
 }
 
 fun file_name(path: String): String {
-    let parts = path.split("/")
-    parts.last().or_exception()
+  let parts = path.split("/")
+  parts.last().or_exception()
 }
 
 // A list of all the files in `website_dir` that are templates.
 //
 // Returns absolute paths.
 fun template_files(website_dir: String): List<String> {
-    // TODO: a ? syntax.
-    let dir_files = list_directory(website_dir).or_error()
-    dir_files.filter(fun (p: String) {p.ends_with(".tmpl.html") })
+  // TODO: a ? syntax.
+  let dir_files = list_directory(website_dir).or_error()
+  dir_files.filter(fun (p: String) {p.ends_with(".tmpl.html") })
 }
 
 // Convert "foo.tmpl.html" to "foo.html".
 fun output_path(template_path: String): String {
-    template_path.strip_suffix(".tmpl.html").append(".html")
+  template_path.strip_suffix(".tmpl.html").append(".html")
 }
 
 {
-    template_files("/home/wilfred/projects/garden/website")
+  template_files("/home/wilfred/projects/garden/website")
 }
 
 fun build_site(): Unit {
-    let website_dir = "/home/wilfred/projects/garden/website"
+  let website_dir = "/home/wilfred/projects/garden/website"
 
-    let base_tmpl_path = "/".join([website_dir, "template.html"])
-    let tmpl_paths = template_files(website_dir)
+  let base_tmpl_path = "/".join([website_dir, "template.html"])
+  let tmpl_paths = template_files(website_dir)
 
-    for tmpl_path in tmpl_paths {
-        let dest_path = output_path(tmpl_path)
-        write_website_file(base_tmpl_path, tmpl_path, dest_path)
-    }
+  for tmpl_path in tmpl_paths {
+    let dest_path = output_path(tmpl_path)
+    write_website_file(base_tmpl_path, tmpl_path, dest_path)
+  }
 }
 
 fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {
-    let base_tmpl_src = read_file(base_tmpl_path).or_error()
-    let parts: List<String> = match base_tmpl_src.split_once("MAIN_CONTENT") {
-        Some(s) => {
-            let (before, after) = s
-            [before, after]
-        },
-        None => ["", ""]
-    }
+  let base_tmpl_src = read_file(base_tmpl_path).or_error()
+  let parts: List<String> = match base_tmpl_src.split_once("MAIN_CONTENT") {
+    Some(s) => {
+      let (before, after) = s
+      [before, after]
+    },
+    None => ["", ""]
+  }
 
-    let tmpl = read_file(page_path).or_error()
+  let tmpl = read_file(page_path).or_error()
 
-    let src = "".join([parts.get(0).trim_right(), tmpl, parts.get(1).trim_left()])
-    write_file(src, dest_path).or_error()
+  let src = "".join([parts.get(0).trim_right(), tmpl, parts.get(1).trim_left()])
+  write_file(src, dest_path).or_error()
 }
 
 {
-    build_site()
+  build_site()
 }
 
 fun main(_: List<String>) {
-    build_site()
+  build_site()
 }

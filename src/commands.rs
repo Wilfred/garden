@@ -792,7 +792,19 @@ fn command_help(command: Command) -> &'static str {
 pub(crate) fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.0.iter().rev().enumerate() {
         let name = &stack_frame.enclosing_name;
-        write!(buf, "{}In {}", if i == 0 { "" } else { "\n" }, name).unwrap();
+        let formatted_pos = match &stack_frame.caller_pos {
+            Some(pos) => format!("{} ", pos.as_ide_string()),
+            None => "".to_owned(),
+        };
+
+        write!(
+            buf,
+            "{}{}{}",
+            if i == 0 { "" } else { "\n" },
+            formatted_pos,
+            name
+        )
+        .unwrap();
     }
 }
 

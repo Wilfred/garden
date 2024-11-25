@@ -4151,21 +4151,28 @@ fn eval_match_cases(
 /// had previously interrupted execution, we should still be
 /// interrupted at the same place.
 pub(crate) fn eval_toplevel_exprs_then_stop(
-    exprs: &[Expression],
+    items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
-) -> Result<Value, EvalError> {
+) -> Result<Option<Value>, EvalError> {
+    let mut exprs = vec![];
+    for item in items {
+        if let ToplevelItem::Expr(expr) = item {
+            exprs.push(expr.0.clone());
+        }
+    }
+
     let Some(last_expr) = exprs.last() else {
-        return Ok(Value::unit());
+        return Ok(None);
     };
 
     let old_stop_at_expr_id = env.stop_at_expr_id;
     env.stop_at_expr_id = Some(last_expr.id);
 
-    let eval_result = eval_exprs(exprs, env, session);
+    let eval_result = eval_exprs(&exprs, env, session);
     env.stop_at_expr_id = old_stop_at_expr_id;
 
-    eval_result
+    eval_result.map(Some)
 }
 
 pub(crate) fn eval_exprs(

@@ -11,11 +11,12 @@ use std::{
 use garden_lang_parser::diagnostics::ErrorMessage;
 use serde::{Deserialize, Serialize};
 
+use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
-    eval, eval_toplevel_items, eval_up_to, load_toplevel_items, push_test_stackframe,
-    ExpressionState,
+    eval, eval_tests, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
+    push_test_stackframe, ExpressionState,
 };
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
@@ -604,8 +605,14 @@ fn handle_run_eval_request(
         return as_error_response(errors, input);
     }
 
-    match eval_toplevel_items(&items, env, session) {
-        Ok(eval_summary) => {
+    let mut eval_summary = load_toplevel_items(&items, env);
+    eval_summary
+        .diagnostics
+        .extend(check_toplevel_items_in_env(&items, env));
+
+    let test_summary = eval_tests(&items, env, session);
+    match eval_toplevel_exprs_then_stop(&items, env, session) {
+        Ok(value) => {
             let definition_summary = if eval_summary.new_syms.is_empty() {
                 "".to_owned()
             } else if eval_summary.new_syms.len() == 1 {
@@ -614,7 +621,7 @@ fn handle_run_eval_request(
                 format!("Loaded {} definitions", eval_summary.new_syms.len())
             };
 
-            let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
+            let total_tests = test_summary.tests_passed + test_summary.tests_failed.len();
             let test_summary = if total_tests == 0 {
                 "".to_owned()
             } else {
@@ -632,7 +639,7 @@ fn handle_run_eval_request(
 
             let summary = format!("{definition_summary}{test_summary}");
 
-            let value_summary = if let Some(last_value) = eval_summary.values.last() {
+            let value_summary = if let Some(last_value) = value {
                 Some(if summary.is_empty() {
                     last_value.display(env)
                 } else {

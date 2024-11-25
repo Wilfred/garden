@@ -336,7 +336,7 @@ pub(crate) fn eval_toplevel_items(
         .diagnostics
         .extend(check_toplevel_items_in_env(items, env));
 
-    let test_summary = eval_tests(items, env, session)?;
+    let test_summary = eval_tests(items, env, session);
     summary.tests_passed = test_summary.tests_passed;
     summary.tests_failed = test_summary.tests_failed;
 
@@ -353,7 +353,7 @@ pub(crate) fn eval_tests(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
-) -> Result<ToplevelEvalSummary, EvalError> {
+) -> ToplevelEvalSummary {
     let mut tests_passed = 0;
     let mut tests_failed = vec![];
 
@@ -389,13 +389,13 @@ pub(crate) fn eval_tests(
         env.stack.pop_to_toplevel();
     }
 
-    Ok(ToplevelEvalSummary {
+    ToplevelEvalSummary {
         values: vec![],
         new_syms: vec![],
         diagnostics: vec![],
         tests_passed,
         tests_failed,
-    })
+    }
 }
 
 fn call_to_main_src(cli_args: &[String]) -> String {

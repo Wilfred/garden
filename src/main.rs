@@ -432,67 +432,47 @@ fn run_sandboxed_tests_in_file(
         contained_items
     };
 
-    match eval_tests(&relevant_items, &mut env, &session) {
-        Ok(summary) => {
-            let mut num_failed = 0;
-            let mut num_errored = 0;
-            let mut num_sandboxed = 0;
-            let mut num_timed_out = 0;
+    let summary = eval_tests(&relevant_items, &mut env, &session);
+    let mut num_failed = 0;
+    let mut num_errored = 0;
+    let mut num_sandboxed = 0;
+    let mut num_timed_out = 0;
 
-            for err in &summary.tests_failed {
-                match err {
-                    EvalError::Interrupted => num_errored += 1,
-                    EvalError::ResumableError(_, _) => num_errored += 1,
-                    EvalError::AssertionFailed(_) => num_failed += 1,
-                    EvalError::ReachedTickLimit => num_timed_out += 1,
-                    EvalError::ForbiddenInSandbox(_) => num_sandboxed += 1,
-                }
-            }
-
-            let mut parts = vec![];
-            if summary.tests_passed > 0 {
-                parts.push(format!("{} passed", summary.tests_passed));
-            }
-            if num_failed > 0 {
-                parts.push(format!("{} failed", num_failed));
-            }
-            if num_errored > 0 {
-                parts.push(format!("{} errored", num_errored));
-            }
-            if num_timed_out > 0 {
-                parts.push(format!("{} timed out", num_timed_out));
-            }
-            if num_sandboxed > 0 {
-                parts.push(format!("{} sandboxed", num_sandboxed));
-            }
-
-            if parts.is_empty() {
-                parts.push("No tests".to_owned());
-            }
-
-            println!("{}", parts.join(", "));
-        }
-        Err(EvalError::ResumableError(_, _)) => {
-            println!("Error")
-        }
-        Err(EvalError::AssertionFailed(_)) => {
-            println!("Failed")
-        }
-        Err(EvalError::Interrupted) => {
-            println!("Interrupted");
-        }
-        Err(EvalError::ReachedTickLimit) => {
-            println!("Timeout");
-        }
-        Err(EvalError::ForbiddenInSandbox(_)) => {
-            println!("Sandbox");
+    for err in &summary.tests_failed {
+        match err {
+            EvalError::Interrupted => num_errored += 1,
+            EvalError::ResumableError(_, _) => num_errored += 1,
+            EvalError::AssertionFailed(_) => num_failed += 1,
+            EvalError::ReachedTickLimit => num_timed_out += 1,
+            EvalError::ForbiddenInSandbox(_) => num_sandboxed += 1,
         }
     }
+
+    let mut parts = vec![];
+    if summary.tests_passed > 0 {
+        parts.push(format!("{} passed", summary.tests_passed));
+    }
+    if num_failed > 0 {
+        parts.push(format!("{} failed", num_failed));
+    }
+    if num_errored > 0 {
+        parts.push(format!("{} errored", num_errored));
+    }
+    if num_timed_out > 0 {
+        parts.push(format!("{} timed out", num_timed_out));
+    }
+    if num_sandboxed > 0 {
+        parts.push(format!("{} sandboxed", num_sandboxed));
+    }
+
+    if parts.is_empty() {
+        parts.push("No tests".to_owned());
+    }
+
+    println!("{}", parts.join(", "));
 }
 
 fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
-    let mut succeeded = false;
-
     let mut id_gen = SyntaxIdGenerator::default();
     let mut env = Env::new(&mut id_gen);
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
@@ -507,47 +487,21 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
 
     load_toplevel_items(&items, &mut env);
 
-    match eval_tests(&items, &mut env, &session) {
-        Ok(summary) => {
-            if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
-                println!("No tests found.");
-            } else {
-                println!(
-                    "{} passed, {} failed.",
-                    summary.tests_passed,
-                    summary.tests_failed.len()
-                );
-            }
-
-            // TODO: support printing back traces from every test failure.
-            // TODO: print incremental progress as tests run.
-            succeeded = true;
-        }
-        Err(EvalError::ResumableError(position, e)) => {
-            eprintln!("{}", &format_error_with_stack(&e, &position, &env.stack.0));
-        }
-        Err(EvalError::AssertionFailed(position)) => {
-            let msg = ErrorMessage("Assertion failed".to_owned());
-            eprintln!(
-                "{}",
-                &format_error_with_stack(&msg, &position, &env.stack.0)
-            );
-        }
-        Err(EvalError::Interrupted) => {
-            eprintln!("Interrupted");
-        }
-        Err(EvalError::ReachedTickLimit) => {
-            eprintln!("Reached the tick limit.");
-        }
-        Err(EvalError::ForbiddenInSandbox(position)) => {
-            eprintln!(
-                "{}: Tried to execute unsafe code in sandboxed mode.",
-                position.as_ide_string()
-            );
-        }
+    let summary = eval_tests(&items, &mut env, &session);
+    if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
+        println!("No tests found.");
+    } else {
+        println!(
+            "{} passed, {} failed.",
+            summary.tests_passed,
+            summary.tests_failed.len()
+        );
     }
 
-    if !succeeded {
+    // TODO: support printing back traces from every test failure.
+    // TODO: print incremental progress as tests run.
+
+    if !summary.tests_failed.is_empty() {
         std::process::exit(1);
     }
 }

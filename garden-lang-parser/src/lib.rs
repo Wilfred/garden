@@ -673,13 +673,12 @@ fn parse_case_block(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Block {
-    if peeked_symbol_is(tokens, "{") {
+    let block = if peeked_symbol_is(tokens, "{") {
         parse_block(src, tokens, id_gen, diagnostics, false)
     } else {
+        // To simplify evaluation, we treat case expressions as
+        // blocks, because they can have new bindings.
         let case_expr = parse_expression(src, tokens, id_gen, diagnostics);
-        if peeked_symbol_is(tokens, ",") {
-            tokens.pop().unwrap();
-        }
 
         let pos = case_expr.pos.clone();
         Block {
@@ -687,7 +686,13 @@ fn parse_case_block(
             exprs: vec![case_expr],
             close_brace: pos,
         }
+    };
+
+    // Allow trailing comma after both expression and block syntax.
+    if peeked_symbol_is(tokens, ",") {
+        tokens.pop().unwrap();
     }
+    block
 }
 
 fn parse_pattern(

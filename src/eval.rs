@@ -4147,6 +4147,27 @@ fn eval_match_cases(
     Err(EvalError::ResumableError(scrutinee_pos.clone(), msg))
 }
 
+/// Evaluate the toplevel expressions provided, and then stop. If we
+/// had previously interrupted execution, we should still be
+/// interrupted at the same place.
+pub(crate) fn eval_toplevel_exprs_then_stop(
+    exprs: &[Expression],
+    env: &mut Env,
+    session: &Session,
+) -> Result<Value, EvalError> {
+    let Some(last_expr) = exprs.last() else {
+        return Ok(Value::unit());
+    };
+
+    let old_stop_at_expr_id = env.stop_at_expr_id;
+    env.stop_at_expr_id = Some(last_expr.id);
+
+    let eval_result = eval_toplevel_exprs(exprs, env, session);
+    env.stop_at_expr_id = old_stop_at_expr_id;
+
+    eval_result
+}
+
 pub(crate) fn eval_toplevel_exprs(
     exprs: &[Expression],
     env: &mut Env,

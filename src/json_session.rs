@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::JoinHandle;
@@ -546,10 +546,9 @@ fn handle_request_in_worker(
                     }
                 }
             }
-            Err(CommandParseError::NoSuchCommand) => {
+            Err(CommandParseError::NoSuchCommand(s)) => {
                 let mut out_buf: Vec<u8> = vec![];
-                write!(&mut out_buf, "No such command. ").unwrap();
-                print_available_commands(&mut out_buf);
+                print_available_commands(&s, &mut out_buf);
 
                 Response {
                     kind: ResponseKind::RunCommand {

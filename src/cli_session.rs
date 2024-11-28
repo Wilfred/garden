@@ -51,8 +51,8 @@ fn read_expr(
                             return Err(ReadError::NeedsEval(e));
                         }
                     },
-                    Err(CommandParseError::NoSuchCommand) => {
-                        print_available_commands(&mut std::io::stdout());
+                    Err(CommandParseError::NoSuchCommand(s)) => {
+                        print_available_commands(&s, &mut std::io::stdout());
                         println!();
                         continue;
                     }

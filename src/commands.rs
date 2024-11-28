@@ -59,7 +59,7 @@ fn parse_command(s: &str) -> (&str, Option<&str>) {
 
 #[derive(Debug)]
 pub(crate) enum CommandParseError {
-    NoSuchCommand,
+    NoSuchCommand(String),
     NotCommandSyntax,
 }
 
@@ -155,7 +155,7 @@ impl Command {
             ":version" => Ok(Command::Version),
             _ => {
                 if s.starts_with(':') {
-                    Err(CommandParseError::NoSuchCommand)
+                    Err(CommandParseError::NoSuchCommand(s.to_owned()))
                 } else {
                     Err(CommandParseError::NotCommandSyntax)
                 }
@@ -164,7 +164,10 @@ impl Command {
     }
 }
 
-pub(crate) fn print_available_commands<T: Write>(buf: &mut T) {
+pub(crate) fn print_available_commands<T: Write>(attempted: &str, buf: &mut T) {
+    if !attempted.is_empty() {
+        writeln!(buf, "No such command `{attempted}`.").unwrap();
+    }
     write!(buf, "The available commands are").unwrap();
 
     let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string()).collect();
@@ -364,8 +367,8 @@ pub(crate) fn run_command<T: Write>(
                 Ok(command) => {
                     write!(buf, "{}", command_help(command)).unwrap();
                 }
-                Err(CommandParseError::NoSuchCommand) => {
-                    print_available_commands(buf);
+                Err(CommandParseError::NoSuchCommand(s)) => {
+                    print_available_commands(&s, buf);
                 }
                 // TODO: suggest :doc if user writes `:help foo`
                 Err(CommandParseError::NotCommandSyntax) => {
@@ -374,7 +377,7 @@ pub(crate) fn run_command<T: Write>(
                         "This is the help command for interacting with Garden programs. Welcome.\n\n"
                     )
                     .unwrap();
-                    print_available_commands(buf);
+                    print_available_commands("", buf);
                 }
             }
         }

@@ -650,7 +650,7 @@ pub(crate) fn run_command<T: Write>(
                         write!(
                             buf,
                             "{}",
-                            Type::from_value(&value, &env.types, env, &env.stack.type_bindings())
+                            Type::from_value(&value, &env.types, &env.stack.type_bindings())
                         )
                         .unwrap();
                     }

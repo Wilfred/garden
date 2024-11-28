@@ -5,7 +5,6 @@ use itertools::Itertools as _;
 use garden_lang_parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 
 use crate::{
-    env::Env,
     types::{BuiltinType, TypeDef},
     values::Value,
 };
@@ -136,7 +135,6 @@ impl Type {
     pub(crate) fn from_hint(
         hint: &TypeHint,
         global_tys: &HashMap<TypeName, TypeDef>,
-        env: &Env,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let name = &hint.sym.name;
@@ -144,7 +142,7 @@ impl Type {
         let args = hint
             .args
             .iter()
-            .map(|hint_arg| Self::from_hint(hint_arg, global_tys, env, type_bindings))
+            .map(|hint_arg| Self::from_hint(hint_arg, global_tys, type_bindings))
             .collect::<Result<Vec<_>, _>>()?;
 
         if let Some(type_var_value) = type_bindings.get(name) {
@@ -209,17 +207,16 @@ impl Type {
     pub(crate) fn from_value(
         value: &Value,
         global_tys: &HashMap<TypeName, TypeDef>,
-        env: &Env,
         type_bindings: &TypeVarEnv,
     ) -> Self {
         match value {
             Value::Integer(_) => Type::int(),
             Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
-                Self::from_fun_info(fun_info, global_tys, env, type_bindings).unwrap_or_err_ty()
+                Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()
             }
             Value::BuiltinFunction(_, fun_info) => match fun_info {
                 Some(fun_info) => {
-                    Self::from_fun_info(fun_info, global_tys, env, type_bindings).unwrap_or_err_ty()
+                    Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()
                 }
                 None => Self::error("No fun_info for built-in function"),
             },
@@ -235,7 +232,6 @@ impl Type {
     pub(crate) fn from_fun_info(
         fun_info: &FunInfo,
         global_tys: &HashMap<TypeName, TypeDef>,
-        env: &Env,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let mut type_bindings = type_bindings.clone();
@@ -254,14 +250,14 @@ impl Type {
         let mut param_types = vec![];
         for param in &fun_info.params {
             let type_ = match &param.hint {
-                Some(hint) => Self::from_hint(hint, global_tys, env, &type_bindings)?,
+                Some(hint) => Self::from_hint(hint, global_tys, &type_bindings)?,
                 None => Type::Top,
             };
             param_types.push(type_);
         }
 
         let return_ = match &fun_info.return_hint {
-            Some(hint) => Self::from_hint(hint, global_tys, env, &type_bindings)?,
+            Some(hint) => Self::from_hint(hint, global_tys, &type_bindings)?,
             None => Type::Top,
         };
 

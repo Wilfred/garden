@@ -1016,7 +1016,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
             message: format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
-                Type::from_value(value, &env.types, env, &env.stack.type_bindings()),
+                Type::from_value(value, &env.types, &env.stack.type_bindings()),
             ),
             position: symbol.position.clone(),
         });
@@ -1359,7 +1359,7 @@ fn eval_let(
         .expect("Popped an empty value stack for let value");
 
     if let Some(hint) = hint {
-        let expected_ty = match Type::from_hint(hint, &env.types, env, &stack_frame.type_bindings) {
+        let expected_ty = match Type::from_hint(hint, &env.types, &stack_frame.type_bindings) {
             Ok(ty) => ty,
             Err(e) => {
                 return Err((
@@ -1436,7 +1436,7 @@ fn eval_let(
 }
 
 fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &Env) -> ErrorMessage {
-    let actual_ty = Type::from_value(value, &env.types, env, &env.stack.type_bindings());
+    let actual_ty = Type::from_value(value, &env.types, &env.stack.type_bindings());
 
     let msg = if actual_ty.is_unit() {
         format!("Expected `{}`, but got `Unit`", expected.to_string(),)
@@ -1444,7 +1444,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
         format!(
             "Expected `{}`, but got `{}`: {}",
             expected.to_string(),
-            Type::from_value(value, &env.types, env, &env.stack.type_bindings()),
+            Type::from_value(value, &env.types, &env.stack.type_bindings()),
             value.display(env)
         )
     };
@@ -1676,7 +1676,7 @@ fn check_arity(
 
 /// Check that `value` has `expected` type.
 fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = Type::from_value(value, &env.types, env, &env.stack.type_bindings());
+    let value_type = Type::from_value(value, &env.types, &env.stack.type_bindings());
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -2449,7 +2449,7 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &Type::from_value(&arg_values[0], &env.types, env, &stack_frame.type_bindings),
+                &Type::from_value(&arg_values[0], &env.types, &stack_frame.type_bindings),
             )
             .unwrap_or(Type::no_value());
 
@@ -2507,8 +2507,7 @@ fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHin
         Type::TypeParameter(payload_hint.sym.name.clone())
     } else {
         // Enum variant payload is a concrete type.
-        Type::from_hint(payload_hint, &env.types, env, &env.stack.type_bindings())
-            .unwrap_or_err_ty()
+        Type::from_hint(payload_hint, &env.types, &env.stack.type_bindings()).unwrap_or_err_ty()
     };
 
     let type_args: Vec<Type> = enum_info
@@ -2583,7 +2582,7 @@ fn check_param_types(
 ) -> Result<(), (RestoreValues, EvalError)> {
     for (i, (param, arg_value)) in params.iter().zip(arg_values).enumerate() {
         if let Some(param_hint) = &param.hint {
-            let param_ty = match Type::from_hint(param_hint, &env.types, env, type_bindings) {
+            let param_ty = match Type::from_hint(param_hint, &env.types, type_bindings) {
                 Ok(ty) => ty,
                 Err(e) => {
                     return Err((
@@ -2788,7 +2787,6 @@ fn eval_builtin_method_call(
                             elem_type: Type::from_value(
                                 &arg_values[0],
                                 &env.types,
-                                env,
                                 &stack_frame.type_bindings,
                             ),
                         });
@@ -3378,7 +3376,7 @@ fn eval_expr(
                     // TODO: check that all elements are of a compatible type.
                     // [1, None] should be an error.
                     element_type =
-                        Type::from_value(&element, &env.types, env, &stack_frame.type_bindings);
+                        Type::from_value(&element, &env.types, &stack_frame.type_bindings);
                     list_values.push(element);
                 }
 
@@ -3414,7 +3412,6 @@ fn eval_expr(
                     item_types.push(Type::from_value(
                         &element,
                         &env.types,
-                        env,
                         &stack_frame.type_bindings,
                     ));
                     items_values.push(element);
@@ -3794,7 +3791,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     let return_ty = match Type::from_hint(
                         return_hint,
                         &env.types,
-                        env,
                         &stack_frame.type_bindings,
                     ) {
                         Ok(ty) => ty,
@@ -4023,7 +4019,7 @@ fn eval_struct_value(
         if type_params.contains(&field_info.hint.sym.name) {
             type_arg_bindings.insert(
                 field_info.hint.sym.name.clone(),
-                Type::from_value(&field_value, &env.types, env, &env.stack.type_bindings()),
+                Type::from_value(&field_value, &env.types, &env.stack.type_bindings()),
             );
         }
 
@@ -4078,12 +4074,7 @@ fn eval_match_cases(
     else {
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
-            Type::from_value(
-                &scrutinee_value,
-                &env.types,
-                env,
-                &stack_frame.type_bindings
-            ),
+            Type::from_value(&scrutinee_value, &env.types, &stack_frame.type_bindings),
             scrutinee_value.display(env)
         ));
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

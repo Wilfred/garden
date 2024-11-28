@@ -102,13 +102,8 @@ impl Visitor for TypeCheckVisitor<'_> {
             }
         }
 
-        let self_ty = Type::from_hint(
-            &method_info.receiver_hint,
-            &self.env.types,
-            self.env,
-            &type_bindings,
-        )
-        .unwrap_or_err_ty();
+        let self_ty = Type::from_hint(&method_info.receiver_hint, &self.env.types, &type_bindings)
+            .unwrap_or_err_ty();
         self.bindings.set(&method_info.receiver_sym, self_ty);
 
         // TODO: generic variables are bound here.
@@ -233,8 +228,8 @@ impl<'a> TypeCheckVisitor<'a> {
         for param in &fun_info.params {
             let param_ty = match &param.hint {
                 Some(hint) => {
-                    let param_ty = Type::from_hint(hint, &self.env.types, self.env, type_bindings)
-                        .unwrap_or_err_ty();
+                    let param_ty =
+                        Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty();
                     self.save_hint_ty_id(hint, &param_ty);
                     param_ty
                 }
@@ -245,8 +240,7 @@ impl<'a> TypeCheckVisitor<'a> {
 
         let expected_return_ty = match &fun_info.return_hint {
             Some(hint) => {
-                let ty = Type::from_hint(hint, &self.env.types, self.env, type_bindings)
-                    .unwrap_or_err_ty();
+                let ty = Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty();
                 self.save_hint_ty_id(hint, &ty);
                 Some(ty)
             }
@@ -261,8 +255,9 @@ impl<'a> TypeCheckVisitor<'a> {
         let mut param_tys = vec![];
         for param in &fun_info.params {
             let param_ty = match &param.hint {
-                Some(hint) => Type::from_hint(hint, &self.env.types, self.env, type_bindings)
-                    .unwrap_or_err_ty(),
+                Some(hint) => {
+                    Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty()
+                }
                 None => Type::Top,
             };
             param_tys.push(param_ty);
@@ -270,8 +265,8 @@ impl<'a> TypeCheckVisitor<'a> {
 
         let return_ty = match &fun_info.return_hint {
             Some(hint) => {
-                let return_ty = Type::from_hint(hint, &self.env.types, self.env, type_bindings)
-                    .unwrap_or_err_ty();
+                let return_ty =
+                    Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty();
 
                 let position = match fun_info.body.exprs.last() {
                     Some(expr) => expr.pos.clone(),
@@ -587,9 +582,8 @@ impl<'a> TypeCheckVisitor<'a> {
 
                 let ty = match hint {
                     Some(hint) => {
-                        let hint_ty =
-                            Type::from_hint(hint, &self.env.types, self.env, type_bindings)
-                                .unwrap_or_err_ty();
+                        let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
+                            .unwrap_or_err_ty();
                         self.save_hint_ty_id(hint, &hint_ty);
 
                         if !is_subtype(&expr_ty, &hint_ty) {
@@ -829,7 +823,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             self.save_enum_variant_id(sym, value);
                         }
 
-                        Type::from_value(value, &self.env.types, self.env, type_bindings)
+                        Type::from_value(value, &self.env.types, type_bindings)
                     }
                     None => Type::Error("Unbound variable".to_owned()),
                 }
@@ -1014,7 +1008,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                 continue;
                             };
                             let Ok(param_ty) =
-                                Type::from_hint(param_hint, &self.env.types, self.env, &ty_var_env)
+                                Type::from_hint(param_hint, &self.env.types, &ty_var_env)
                             else {
                                 continue;
                             };
@@ -1075,7 +1069,6 @@ impl<'a> TypeCheckVisitor<'a> {
                                     let field_ty = Type::from_hint(
                                         &field.hint,
                                         &self.env.types,
-                                        self.env,
                                         type_bindings,
                                     )
                                     .unwrap_or_err_ty();
@@ -1180,7 +1173,7 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Ty
 
     // The payload is not a generic type, so the type hint is
     // referring to a defined type.
-    Type::from_hint(&payload_hint, &env.types, env, &env.stack.type_bindings()).unwrap_or_err_ty()
+    Type::from_hint(&payload_hint, &env.types, &env.stack.type_bindings()).unwrap_or_err_ty()
 }
 
 /// Solve the type variables in this method, and return the resolved
@@ -1244,7 +1237,7 @@ fn subst_type_vars_in_fun_info_return_ty(
                     }
                 }
             } else {
-                Type::from_hint(return_hint, &env.types, env, ty_var_env).unwrap_or_err_ty()
+                Type::from_hint(return_hint, &env.types, ty_var_env).unwrap_or_err_ty()
             }
         }
         None => Type::Top,

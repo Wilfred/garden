@@ -1072,8 +1072,7 @@ fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
 /// This enables evaluation to halt in a state where the user can
 /// choose to try again if they wish.
 fn restore_stack_frame(
-    env: &mut Env,
-    mut stack_frame: StackFrame,
+    stack_frame: &mut StackFrame,
     expr_to_eval: (ExpressionState, Expression),
     evalled_values: &[Value],
 ) {
@@ -1082,8 +1081,6 @@ fn restore_stack_frame(
     }
 
     stack_frame.exprs_to_eval.push(expr_to_eval);
-
-    env.stack.0.push(stack_frame);
 }
 
 /// Values to push back to the evalled_values stack if we encounter an
@@ -3708,13 +3705,15 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
-                restore_stack_frame(env, stack_frame, (expr_state, outer_expr), &[]);
+                restore_stack_frame(&mut stack_frame, (expr_state, outer_expr), &[]);
+                env.stack.0.push(stack_frame);
                 return Err(EvalError::Interrupted);
             }
 
             if let Some(tick_limit) = env.tick_limit {
                 if env.ticks >= tick_limit {
-                    restore_stack_frame(env, stack_frame, (expr_state, outer_expr), &[]);
+                    restore_stack_frame(&mut stack_frame, (expr_state, outer_expr), &[]);
+                    env.stack.0.push(stack_frame);
                     return Err(EvalError::ReachedTickLimit);
                 }
             }
@@ -3726,11 +3725,11 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             match eval_expr(env, session, &mut stack_frame, &outer_expr, &mut expr_state) {
                 Err((RestoreValues(restore_values), eval_err)) => {
                     restore_stack_frame(
-                        env,
-                        stack_frame,
+                        &mut stack_frame,
                         (expr_state, outer_expr.clone()),
                         &restore_values,
                     );
+                    env.stack.0.push(stack_frame);
 
                     return Err(eval_err);
                 }

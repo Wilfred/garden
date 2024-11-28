@@ -10,9 +10,11 @@ fun main(args: List<String>): Unit {
 // expected stderr:
 // Error: No such type: NoSuchType
 // 
-// --> src/test_files/runtime/nonexistent_type_return_type_arg.gdn:1[2m[1m	 fun main()[0m[0m
-// fun main(args: List<String>): Unit {
-// 
+// --> src/test_files/runtime/nonexistent_type_return_type_arg.gdn:1[2m[1m	 fun foo()[0m[0m
+// fun foo(): Option<NoSuchType> {
+//            ^^^^^^^^^^^^^^^^^^
+// --> src/test_files/runtime/nonexistent_type_return_type_arg.gdn:6[2m[1m	 fun main()[0m[0m
+//     foo()
 // --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__
 

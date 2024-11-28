@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
 
-use crate::eval::EnclosingSymbol;
+use crate::eval::{EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
 use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
@@ -10,8 +10,8 @@ use crate::{
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, MethodInfo, MethodKind, SourceString, Symbol, SymbolName, SyntaxId,
-    SyntaxIdGenerator, TestInfo, TypeHint, TypeName, TypeSymbol,
+    BuiltinMethodKind, Expression, MethodInfo, MethodKind, SourceString, Symbol, SymbolName,
+    SyntaxId, SyntaxIdGenerator, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
@@ -342,5 +342,15 @@ impl Env {
 
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name, type_);
+    }
+
+    pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Expression) {
+        let stack_frame = self.stack.0.last_mut().unwrap();
+        stack_frame.exprs_to_eval.push((state, expr));
+    }
+
+    pub(crate) fn push_evalled(&mut self, value: Value) {
+        let stack_frame = self.stack.0.last_mut().unwrap();
+        stack_frame.evalled_values.push(value);
     }
 }

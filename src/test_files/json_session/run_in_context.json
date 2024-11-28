@@ -10,10 +10,10 @@
 //     "evaluate": {
 //       "warnings": [
 //         {
-//           "message": "`y` is unused.",
+//           "message": "`x` is unused.",
 //           "position": {
-//             "start_offset": 26,
-//             "end_offset": 27,
+//             "start_offset": 16,
+//             "end_offset": 17,
 //             "line_number": 0,
 //             "end_line_number": 0,
 //             "path": "__json_session_unnamed__"
@@ -21,10 +21,10 @@
 //           "level": "Warning"
 //         },
 //         {
-//           "message": "`x` is unused.",
+//           "message": "`y` is unused.",
 //           "position": {
-//             "start_offset": 16,
-//             "end_offset": 17,
+//             "start_offset": 26,
+//             "end_offset": 27,
 //             "line_number": 0,
 //             "end_line_number": 0,
 //             "path": "__json_session_unnamed__"

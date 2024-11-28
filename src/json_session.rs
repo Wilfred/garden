@@ -548,7 +548,7 @@ fn handle_request_in_worker(
             }
             Err(CommandParseError::NoSuchCommand(s)) => {
                 let mut out_buf: Vec<u8> = vec![];
-                print_available_commands(&s, &mut out_buf);
+                print_available_commands(&s, &mut out_buf).unwrap();
 
                 Response {
                     kind: ResponseKind::RunCommand {

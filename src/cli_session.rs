@@ -52,7 +52,7 @@ fn read_expr(
                         }
                     },
                     Err(CommandParseError::NoSuchCommand(s)) => {
-                        print_available_commands(&s, &mut std::io::stdout());
+                        print_available_commands(&s, &mut std::io::stdout()).unwrap();
                         println!();
                         continue;
                     }

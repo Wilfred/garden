@@ -164,24 +164,29 @@ impl Command {
     }
 }
 
-pub(crate) fn print_available_commands<T: Write>(attempted: &str, buf: &mut T) {
+pub(crate) fn print_available_commands<T: Write>(
+    attempted: &str,
+    buf: &mut T,
+) -> Result<(), std::io::Error> {
     if !attempted.is_empty() {
-        writeln!(buf, "No such command `{attempted}`.").unwrap();
+        writeln!(buf, "No such command `{attempted}`.")?;
     }
-    write!(buf, "The available commands are").unwrap();
+    write!(buf, "The available commands are")?;
 
     let mut command_names: Vec<String> = Command::iter().map(|c| c.to_string()).collect();
     command_names.sort();
 
     for (i, name) in command_names.iter().enumerate() {
         if i == command_names.len() - 1 {
-            write!(buf, " and {}.", green(name)).unwrap();
+            write!(buf, " and {}.", green(name))?;
         } else if i == command_names.len() - 2 {
-            write!(buf, " {}", green(name)).unwrap();
+            write!(buf, " {}", green(name))?;
         } else {
-            write!(buf, " {},", green(name)).unwrap();
+            write!(buf, " {},", green(name))?;
         }
     }
+
+    Ok(())
 }
 
 /// Actions that require an evaluation loop, and can't be run during command handling.
@@ -368,7 +373,7 @@ pub(crate) fn run_command<T: Write>(
                     write!(buf, "{}", command_help(command)).unwrap();
                 }
                 Err(CommandParseError::NoSuchCommand(s)) => {
-                    print_available_commands(&s, buf);
+                    print_available_commands(&s, buf).unwrap();
                 }
                 // TODO: suggest :doc if user writes `:help foo`
                 Err(CommandParseError::NotCommandSyntax) => {
@@ -377,7 +382,7 @@ pub(crate) fn run_command<T: Write>(
                         "This is the help command for interacting with Garden programs. Welcome.\n\n"
                     )
                     .unwrap();
-                    print_available_commands("", buf);
+                    print_available_commands("", buf).unwrap();
                 }
             }
         }

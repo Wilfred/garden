@@ -519,7 +519,7 @@ enclosing point and print the result."
   (let ((process-connection-type nil)
         (process-environment (cons "RUST_BACKTRACE=full" process-environment)))
     (make-process :name name :buffer buffer :command (cons program program-args)
-                  :stderr (get-buffer-create "*garden-stderr"))))
+                  :stderr (get-buffer-create "*garden-stderr*"))))
 
 (defun garden--start ()
   (let* ((buf (garden--buffer))

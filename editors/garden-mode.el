@@ -517,7 +517,7 @@ enclosing point and print the result."
   ;; process, which means we cannot send Garden files larger than 4096
   ;; bytes.
   (let ((process-connection-type nil)
-        (process-environment (cons "RUST_BACKTRACE=full" process-environment)))
+        (process-environment (cons "RUST_BACKTRACE=1" process-environment)))
     (make-process :name name :buffer buffer :command (cons program program-args)
                   :stderr (get-buffer-create "*garden-stderr*"))))
 

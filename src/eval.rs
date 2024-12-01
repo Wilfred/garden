@@ -1051,12 +1051,7 @@ fn eval_if(
     else_body: Option<&Block>,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let condition_value = env
-        .stack
-        .0
-        .last_mut()
-        .unwrap()
-        .evalled_values
-        .pop()
+        .pop_value()
         .expect("Popped an empty value stack for if condition");
 
     if let Some(b) = condition_value.as_rust_bool() {
@@ -1100,10 +1095,8 @@ fn eval_while_body(
     expr: Expression,
     body: &Block,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.current_frame_mut();
-    let condition_value = stack_frame
-        .evalled_values
-        .pop()
+    let condition_value = env
+        .pop_value()
         .expect("Popped an empty value stack for while loop");
 
     let Some(b) = condition_value.as_rust_bool() else {
@@ -1122,6 +1115,7 @@ fn eval_while_body(
         ));
     };
 
+    let stack_frame = env.current_frame_mut();
     if b {
         stack_frame
             .exprs_to_eval
@@ -1153,15 +1147,12 @@ fn eval_for_in(
     outer_expr: Expression,
     body: &Block,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.current_frame_mut();
-    let iteree_value = stack_frame
-        .evalled_values
-        .pop()
+    let iteree_value = env
+        .pop_value()
         .expect("Popped an empty value stack for `for` loop iterated value");
 
-    let iteree_idx = match stack_frame
-        .evalled_values
-        .pop()
+    let iteree_idx = match env
+        .pop_value()
         .expect("Popped an empty value stack for `for` loop index")
     {
         Value::Integer(i) => i,
@@ -1190,6 +1181,7 @@ fn eval_for_in(
 
     // After an iteration the loop body, evaluate again. We don't
     // re-evaluate the iteree expression though.
+    let stack_frame = env.current_frame_mut();
     stack_frame
         .exprs_to_eval
         .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
@@ -1320,11 +1312,10 @@ fn eval_let(
     position: &Position,
     hint: &Option<TypeHint>,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.current_frame_mut();
-    let expr_value = stack_frame
-        .evalled_values
-        .pop()
+    let expr_value = env
+        .pop_value()
         .expect("Popped an empty value stack for let value");
+    let stack_frame = env.current_frame_mut();
     let type_bindings = stack_frame.type_bindings.clone();
 
     if let Some(hint) = hint {
@@ -1430,15 +1421,11 @@ fn eval_boolean_binop(
     op: BinaryOperatorKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
     {
-        let stack_frame = env.current_frame_mut();
-
-        let rhs_value = stack_frame
-            .evalled_values
-            .pop()
+        let rhs_value = env
+            .pop_value()
             .expect("Popped an empty value stack for RHS of binary operator");
-        let lhs_value = stack_frame
-            .evalled_values
-            .pop()
+        let lhs_value = env
+            .pop_value()
             .expect("Popped an empty value stack for LHS of binary operator");
 
         let Some(lhs_bool) = lhs_value.as_rust_bool() else {
@@ -1474,6 +1461,7 @@ fn eval_boolean_binop(
         };
 
         if expr_value_is_used {
+            let stack_frame = env.current_frame_mut();
             match op {
                 BinaryOperatorKind::And => {
                     stack_frame
@@ -1493,17 +1481,15 @@ fn eval_boolean_binop(
 }
 
 fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperatorKind) {
-    let stack_frame = env.current_frame_mut();
-    let rhs_value = stack_frame
-        .evalled_values
-        .pop()
+    let rhs_value = env
+        .pop_value()
         .expect("Popped an empty value stack for RHS of binary operator");
-    let lhs_value = stack_frame
-        .evalled_values
-        .pop()
+    let lhs_value = env
+        .pop_value()
         .expect("Popped an empty value stack for LHS of binary operator");
 
     if expr_value_is_used {
+        let stack_frame = env.current_frame_mut();
         match op {
             BinaryOperatorKind::Equal => {
                 stack_frame
@@ -1529,14 +1515,11 @@ fn eval_integer_binop(
     op: BinaryOperatorKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
     {
-        let stack_frame = env.current_frame_mut();
-        let rhs_value = stack_frame
-            .evalled_values
-            .pop()
+        let rhs_value = env
+            .pop_value()
             .expect("Popped an empty value stack for RHS of binary operator");
-        let lhs_value = stack_frame
-            .evalled_values
-            .pop()
+        let lhs_value = env
+            .pop_value()
             .expect("Popped an empty value stack for LHS of binary operator");
 
         let lhs_num = match lhs_value {
@@ -2596,19 +2579,15 @@ fn eval_method_call(
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     let mut arg_values: Vec<Value> = vec![];
     let mut arg_positions: Vec<Position> = vec![];
-    let stack_frame = env.current_frame_mut();
     for arg in &paren_args.arguments {
         arg_values.push(
-            stack_frame
-                .evalled_values
-                .pop()
+            env.pop_value()
                 .expect("Popped an empty value for stack for method call arguments."),
         );
         arg_positions.push(arg.pos.clone());
     }
-    let receiver_value = stack_frame
-        .evalled_values
-        .pop()
+    let receiver_value = env
+        .pop_value()
         .expect("Popped an empty value stack for method call receiver.");
 
     let receiver_type_name = type_representation(&receiver_value);
@@ -3287,16 +3266,14 @@ fn eval_expr(
                 let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
                 let mut element_type = Type::no_value();
 
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let type_bindings = env.current_frame().type_bindings.clone();
                 for _ in 0..items.len() {
-                    let element = stack_frame
-                        .evalled_values
-                        .pop()
+                    let element = env
+                        .pop_value()
                         .expect("Value stack should have sufficient items for the list literal");
                     // TODO: check that all elements are of a compatible type.
                     // [1, None] should be an error.
-                    element_type =
-                        Type::from_value(&element, &env.types, &stack_frame.type_bindings);
+                    element_type = Type::from_value(&element, &env.types, &type_bindings);
                     list_values.push(element);
                 }
 
@@ -3319,18 +3296,13 @@ fn eval_expr(
                 let mut items_values: Vec<Value> = Vec::with_capacity(items.len());
                 let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
 
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let type_bindings = env.current_frame().type_bindings.clone();
                 for _ in 0..items.len() {
-                    let element = stack_frame
-                        .evalled_values
-                        .pop()
+                    let element = env
+                        .pop_value()
                         .expect("Value stack should have sufficient items for the tuple literal");
 
-                    item_types.push(Type::from_value(
-                        &element,
-                        &env.types,
-                        &stack_frame.type_bindings,
-                    ));
+                    item_types.push(Type::from_value(&element, &env.types, &type_bindings));
                     items_values.push(element);
                 }
 
@@ -3455,19 +3427,15 @@ fn eval_expr(
                 let mut arg_values = vec![];
                 let mut arg_positions = vec![];
 
-                let stack_frame = env.current_frame_mut();
                 for arg in &paren_args.arguments {
                     arg_values.push(
-                        stack_frame
-                            .evalled_values
-                            .pop()
+                        env.pop_value()
                             .expect("Popped an empty value for stack for call arguments"),
                     );
                     arg_positions.push(arg.pos.clone());
                 }
-                let receiver_value = stack_frame
-                    .evalled_values
-                    .pop()
+                let receiver_value = env
+                    .pop_value()
                     .expect("Popped an empty value stack for call receiver");
 
                 match eval_call(
@@ -3914,10 +3882,8 @@ fn eval_match_cases(
     scrutinee_pos: &Position,
     cases: &[(Pattern, Block)],
 ) -> Result<(), EvalError> {
-    let stack_frame = env.current_frame_mut();
-    let scrutinee_value = stack_frame
-        .evalled_values
-        .pop()
+    let scrutinee_value = env
+        .pop_value()
         .expect("Popped an empty value stack for match");
 
     let Value::EnumVariant {

@@ -354,6 +354,11 @@ impl Env {
         stack_frame.evalled_values.push(value);
     }
 
+    pub(crate) fn pop_value(&mut self) -> Option<Value> {
+        let stack_frame = self.stack.0.last_mut().unwrap();
+        stack_frame.evalled_values.pop()
+    }
+
     pub(crate) fn current_frame(&self) -> &StackFrame {
         self.stack.0.last().unwrap()
     }

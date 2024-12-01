@@ -489,86 +489,7 @@ fn handle_request_in_worker(
             offset,
             end_offset,
             id,
-        } => match Command::from_string(&input) {
-            Ok(command) => {
-                let mut out_buf: Vec<u8> = vec![];
-                match run_command(&mut out_buf, &command, env, session) {
-                    Ok(()) => Response {
-                        kind: ResponseKind::RunCommand {
-                            message: format!("{}", String::from_utf8_lossy(&out_buf)),
-                        },
-                        position: None,
-                        id,
-                    },
-                    Err(EvalAction::Abort) => Response {
-                        kind: ResponseKind::RunCommand {
-                            message: "Aborted".to_owned(),
-                        },
-                        position: None,
-                        id,
-                    },
-                    Err(EvalAction::Resume) => eval_to_response(env, session),
-                    Err(EvalAction::RunTest(name)) => {
-                        let test_opt = env.tests.get(&name).cloned();
-                        match test_opt {
-                            Some(test) => {
-                                push_test_stackframe(&test, env);
-                                eval_to_response(env, session)
-                            }
-                            None => Response {
-                                kind: ResponseKind::MalformedRequest {
-                                    message: format!("No such test: {}", name),
-                                },
-                                position: None,
-                                id,
-                            },
-                        }
-                    }
-                    Err(EvalAction::Replace(expr)) => {
-                        let stack_frame = env.stack.0.last_mut().unwrap();
-
-                        stack_frame.evalled_values.pop();
-                        stack_frame
-                            .exprs_to_eval
-                            .push((ExpressionState::NotEvaluated, expr));
-
-                        eval_to_response(env, session)
-                    }
-                    Err(EvalAction::Skip) => {
-                        let stack_frame = env.stack.0.last_mut().unwrap();
-
-                        stack_frame
-                            .exprs_to_eval
-                            .pop()
-                            .expect("Tried to skip an expression, but none in this frame.");
-
-                        eval_to_response(env, session)
-                    }
-                }
-            }
-            Err(CommandParseError::NoSuchCommand(s)) => {
-                let mut out_buf: Vec<u8> = vec![];
-                print_available_commands(&s, &mut out_buf).unwrap();
-
-                Response {
-                    kind: ResponseKind::RunCommand {
-                        message: format!("{}", String::from_utf8_lossy(&out_buf)),
-                    },
-                    position: None,
-                    id,
-                }
-            }
-            Err(CommandParseError::NotCommandSyntax) => handle_run_eval_request(
-                path.as_ref(),
-                &input,
-                offset,
-                end_offset,
-                env,
-                session,
-                id_gen,
-                id,
-            ),
-        },
+        } => handle_run_request(input, env, session, id, path, offset, end_offset, id_gen),
         Request::EvalUpToId {
             path,
             src,
@@ -578,6 +499,98 @@ fn handle_request_in_worker(
     };
 
     print_as_json(&res, session.pretty_print_json);
+}
+
+fn handle_run_request(
+    input: String,
+    env: &mut Env,
+    session: &mut Session,
+    id: Option<usize>,
+    path: Option<PathBuf>,
+    offset: Option<usize>,
+    end_offset: Option<usize>,
+    id_gen: &mut SyntaxIdGenerator,
+) -> Response {
+    match Command::from_string(&input) {
+        Ok(command) => {
+            let mut out_buf: Vec<u8> = vec![];
+            match run_command(&mut out_buf, &command, env, session) {
+                Ok(()) => Response {
+                    kind: ResponseKind::RunCommand {
+                        message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                    },
+                    position: None,
+                    id,
+                },
+                Err(EvalAction::Abort) => Response {
+                    kind: ResponseKind::RunCommand {
+                        message: "Aborted".to_owned(),
+                    },
+                    position: None,
+                    id,
+                },
+                Err(EvalAction::Resume) => eval_to_response(env, session),
+                Err(EvalAction::RunTest(name)) => {
+                    let test_opt = env.tests.get(&name).cloned();
+                    match test_opt {
+                        Some(test) => {
+                            push_test_stackframe(&test, env);
+                            eval_to_response(env, session)
+                        }
+                        None => Response {
+                            kind: ResponseKind::MalformedRequest {
+                                message: format!("No such test: {}", name),
+                            },
+                            position: None,
+                            id,
+                        },
+                    }
+                }
+                Err(EvalAction::Replace(expr)) => {
+                    let stack_frame = env.stack.0.last_mut().unwrap();
+
+                    stack_frame.evalled_values.pop();
+                    stack_frame
+                        .exprs_to_eval
+                        .push((ExpressionState::NotEvaluated, expr));
+
+                    eval_to_response(env, session)
+                }
+                Err(EvalAction::Skip) => {
+                    let stack_frame = env.stack.0.last_mut().unwrap();
+
+                    stack_frame
+                        .exprs_to_eval
+                        .pop()
+                        .expect("Tried to skip an expression, but none in this frame.");
+
+                    eval_to_response(env, session)
+                }
+            }
+        }
+        Err(CommandParseError::NoSuchCommand(s)) => {
+            let mut out_buf: Vec<u8> = vec![];
+            print_available_commands(&s, &mut out_buf).unwrap();
+
+            Response {
+                kind: ResponseKind::RunCommand {
+                    message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                },
+                position: None,
+                id,
+            }
+        }
+        Err(CommandParseError::NotCommandSyntax) => handle_run_eval_request(
+            path.as_ref(),
+            &input,
+            offset,
+            end_offset,
+            env,
+            session,
+            id_gen,
+            id,
+        ),
+    }
 }
 
 fn handle_run_eval_request(

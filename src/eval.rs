@@ -3591,7 +3591,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
     loop {
         let is_toplevel = env.stack.0.len() == 1;
         let stack_frame = env.stack.0.last_mut().unwrap();
-        let type_bindings = stack_frame.type_bindings.clone();
 
         if let Some((mut expr_state, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             env.ticks += 1;
@@ -3668,6 +3667,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 .pop()
                 .expect("Should have a value");
 
+            let type_bindings = env.stack.0.last().unwrap().type_bindings.clone();
             if let Some(ref fun) = env.stack.0.last_mut().unwrap().enclosing_fun {
                 if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();

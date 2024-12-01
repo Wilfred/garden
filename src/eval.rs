@@ -666,10 +666,10 @@ pub(crate) fn eval_toplevel_call(
     let recv_value = env.file_scope.get(name).cloned().unwrap_or_else(|| {
         Value::String("ERROR: Tried to call a function that isn't defined".to_owned())
     });
-    env.push_evalled(recv_value);
+    env.push_value(recv_value);
 
     for value in args.iter().rev() {
-        env.push_evalled(value.clone());
+        env.push_value(value.clone());
     }
 
     let recv_expr = Expression {
@@ -706,9 +706,9 @@ pub(crate) fn eval_toplevel_method_call(
     session: &Session,
     id_gen: &mut SyntaxIdGenerator,
 ) -> Result<Value, EvalError> {
-    env.push_evalled(recv_value.clone());
+    env.push_value(recv_value.clone());
     for value in args.iter().rev() {
-        env.push_evalled(value.clone());
+        env.push_value(value.clone());
     }
 
     // Just create a placeholder symbol for the receiver. Since we
@@ -1063,7 +1063,7 @@ fn restore_stack_frame(
     evalled_values: &[Value],
 ) {
     for value in evalled_values {
-        env.push_evalled(value.clone());
+        env.push_value(value.clone());
     }
 
     let (state, expr) = expr_to_eval;
@@ -1102,7 +1102,7 @@ fn eval_if(
                 env.current_frame_mut().bindings.push_block();
 
                 if expr_value_is_used {
-                    env.push_evalled(Value::unit());
+                    env.push_value(Value::unit());
                 }
             }
         }
@@ -1229,7 +1229,7 @@ fn eval_for_in(
     stack_frame
         .evalled_values
         .push(Value::Integer(iteree_idx + 1));
-    env.push_evalled(iteree_value.clone());
+    env.push_value(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
     if !iter_symbol.name.is_underscore() {
@@ -1297,7 +1297,7 @@ fn eval_assign_update(
         .set_existing(var_name, Value::Integer(num));
 
     if expr_value_is_used {
-        env.push_evalled(Value::unit());
+        env.push_value(Value::unit());
     }
 
     Ok(())
@@ -1338,7 +1338,7 @@ fn eval_assign(
         .set_existing(var_name, expr_value);
 
     if expr_value_is_used {
-        env.push_evalled(Value::unit());
+        env.push_value(Value::unit());
     }
 
     Ok(())
@@ -1431,7 +1431,7 @@ fn eval_let(
     //
     // It's annoying if the type checker complains here.
     if expr_value_is_used {
-        env.push_evalled(Value::unit());
+        env.push_value(Value::unit());
     }
 
     Ok(())
@@ -1627,7 +1627,7 @@ fn eval_integer_binop(
         };
 
         if expr_value_is_used {
-            env.push_evalled(value);
+            env.push_value(value);
         }
     }
     Ok(())
@@ -1774,7 +1774,7 @@ fn eval_builtin_call(
             }
 
             if expr_value_is_used {
-                env.push_evalled(Value::unit());
+                env.push_value(Value::unit());
             }
         }
         BuiltinFunctionKind::Print => {
@@ -1822,7 +1822,7 @@ fn eval_builtin_call(
             }
 
             if expr_value_is_used {
-                env.push_evalled(Value::unit());
+                env.push_value(Value::unit());
             }
         }
         BuiltinFunctionKind::Println => {
@@ -1872,7 +1872,7 @@ fn eval_builtin_call(
             }
 
             if expr_value_is_used {
-                env.push_evalled(Value::unit());
+                env.push_value(Value::unit());
             }
         }
         BuiltinFunctionKind::Shell => {
@@ -1930,7 +1930,7 @@ fn eval_builtin_call(
                             };
 
                             if expr_value_is_used {
-                                env.push_evalled(v);
+                                env.push_value(v);
                             }
                         }
                         Err(v) => {
@@ -1986,7 +1986,7 @@ fn eval_builtin_call(
             )?;
 
             if expr_value_is_used {
-                env.push_evalled(Value::String(arg_values[0].display(env)));
+                env.push_value(Value::String(arg_values[0].display(env)));
             }
         }
         BuiltinFunctionKind::PathExists => {
@@ -2039,7 +2039,7 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             if expr_value_is_used {
-                env.push_evalled(Value::bool(path.exists()));
+                env.push_value(Value::bool(path.exists()));
             }
         }
         BuiltinFunctionKind::ListDirectory => {
@@ -2116,7 +2116,7 @@ fn eval_builtin_call(
             };
 
             if expr_value_is_used {
-                env.push_evalled(value);
+                env.push_value(value);
             }
         }
         BuiltinFunctionKind::ReadFile => {
@@ -2174,7 +2174,7 @@ fn eval_builtin_call(
             };
 
             if expr_value_is_used {
-                env.push_evalled(v);
+                env.push_value(v);
             }
         }
         BuiltinFunctionKind::WorkingDirectory => {
@@ -2262,7 +2262,7 @@ fn eval_builtin_call(
             };
 
             if expr_value_is_used {
-                env.push_evalled(v);
+                env.push_value(v);
             }
         }
     }
@@ -2462,7 +2462,7 @@ fn eval_call(
             };
 
             if expr_value_is_used {
-                env.push_evalled(value);
+                env.push_value(value);
             }
         }
         v => {
@@ -2786,7 +2786,7 @@ fn eval_builtin_method_call(
 
                         // TODO: check that the new value has the same
                         // type as the existing list items.
-                        env.push_evalled(Value::List {
+                        env.push_value(Value::List {
                             items: new_items,
                             elem_type,
                         });
@@ -2853,7 +2853,7 @@ fn eval_builtin_method_call(
                     };
 
                     if expr_value_is_used {
-                        env.push_evalled(items[index].clone());
+                        env.push_value(items[index].clone());
                     }
                 }
                 (v, Value::Integer(_)) => {
@@ -2998,7 +2998,7 @@ fn eval_builtin_method_call(
             arg1.push_str(arg2);
 
             if expr_value_is_used {
-                env.push_evalled(Value::String(arg1));
+                env.push_value(Value::String(arg1));
             }
         }
         BuiltinMethodKind::StringLen => {
@@ -3147,7 +3147,7 @@ fn eval_builtin_method_call(
             }
 
             if expr_value_is_used {
-                env.push_evalled(Value::String(
+                env.push_value(Value::String(
                     s_arg
                         .chars()
                         .skip(*from_arg as usize)
@@ -3231,7 +3231,7 @@ fn eval_expr(
 
                     // Done condition and body, nothing left to do.
                     if expr_value_is_used {
-                        env.push_evalled(Value::unit());
+                        env.push_value(Value::unit());
                     }
                 }
             }
@@ -3240,7 +3240,7 @@ fn eval_expr(
             match expr_state {
                 ExpressionState::NotEvaluated => {
                     // The initial value of the loop index.
-                    env.push_evalled(Value::Integer(0));
+                    env.push_value(Value::Integer(0));
 
                     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
@@ -3257,7 +3257,7 @@ fn eval_expr(
 
                     // We've finished this `for` loop.
                     if expr_value_is_used {
-                        env.push_evalled(Value::unit());
+                        env.push_value(Value::unit());
                     }
                 }
             }
@@ -3274,7 +3274,7 @@ fn eval_expr(
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
                 } else {
                     // `return` is the same as `return Unit`.
-                    env.push_evalled(Value::unit());
+                    env.push_value(Value::unit());
                 }
             }
         }
@@ -3305,13 +3305,13 @@ fn eval_expr(
         Expression_::IntLiteral(i) => {
             *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
-                env.push_evalled(Value::Integer(*i));
+                env.push_value(Value::Integer(*i));
             }
         }
         Expression_::StringLiteral(s) => {
             *expr_state = ExpressionState::EvaluatedSubexpressions;
             if expr_value_is_used {
-                env.push_evalled(Value::String(s.clone()));
+                env.push_value(Value::String(s.clone()));
             }
         }
         Expression_::ListLiteral(items) => {
@@ -3333,7 +3333,7 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_evalled(Value::List {
+                    env.push_value(Value::List {
                         items: list_values,
                         elem_type: element_type,
                     });
@@ -3367,7 +3367,7 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_evalled(Value::Tuple {
+                    env.push_value(Value::Tuple {
                         items: items_values,
                         item_types,
                     });
@@ -3396,7 +3396,7 @@ fn eval_expr(
                 *expr_state = ExpressionState::EvaluatedSubexpressions;
 
                 if expr_value_is_used {
-                    env.push_evalled(value);
+                    env.push_value(value);
                 }
             } else {
                 let suggestion = match most_similar_var(&name_sym.name, env) {
@@ -3479,7 +3479,7 @@ fn eval_expr(
                 let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
 
-                env.push_evalled(Value::Closure(bindings, fun_info.clone()));
+                env.push_value(Value::Closure(bindings, fun_info.clone()));
             }
         }
         Expression_::Call(receiver, paren_args) => {
@@ -3555,7 +3555,7 @@ fn eval_expr(
                 stack_frame.bindings.pop_block();
 
                 if block.exprs.is_empty() && expr_value_is_used {
-                    env.push_evalled(Value::unit());
+                    env.push_value(Value::unit());
                 }
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
@@ -3680,7 +3680,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     };
 
                     if let Err(msg) = check_type(&return_value, &return_ty, env) {
-                        env.push_evalled(return_value.clone());
+                        env.push_value(return_value.clone());
                         return Err(EvalError::ResumableError(err_pos, msg));
                     }
                 }
@@ -3770,7 +3770,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
 
     // Loops always evaluate to unit.
     if expr_value_is_used {
-        env.push_evalled(Value::unit());
+        env.push_value(Value::unit());
     }
 }
 
@@ -3810,7 +3810,7 @@ fn eval_dot_access(
             for (field_name, field_value) in fields {
                 if *field_name == symbol.name {
                     if expr_value_is_used {
-                        env.push_evalled(field_value.clone());
+                        env.push_value(field_value.clone());
                     }
 
                     found = true;
@@ -3930,7 +3930,7 @@ fn eval_struct_value(
     };
 
     if expr_value_is_used {
-        env.push_evalled(Value::Struct {
+        env.push_value(Value::Struct {
             type_name: type_symbol.name,
             fields,
             runtime_type,

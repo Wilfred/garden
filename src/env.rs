@@ -349,7 +349,7 @@ impl Env {
         stack_frame.exprs_to_eval.push((state, expr));
     }
 
-    pub(crate) fn push_evalled(&mut self, value: Value) {
+    pub(crate) fn push_value(&mut self, value: Value) {
         let stack_frame = self.stack.0.last_mut().unwrap();
         stack_frame.evalled_values.push(value);
     }

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 /// A position is an offset into source code.
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct Position {
     /// The start of this position, relative to the start of the file.
     pub start_offset: usize,

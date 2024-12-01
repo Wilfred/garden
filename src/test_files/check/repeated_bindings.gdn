@@ -29,19 +29,19 @@ fun bar(_: Int, _: Int, _: String) {
 // --> src/test_files/check/repeated_bindings.gdn:4
 //     let _f = fun(z, z) {}
 //                     ^
-// Warning: `z` is unused.
-// 
-// --> src/test_files/check/repeated_bindings.gdn:4
-//     let _f = fun(z, z) {}
-//                     ^
-// Warning: `y` is unused.
-// 
-// --> src/test_files/check/repeated_bindings.gdn:2
-//     let (y, y) = (1, 2)
-//             ^
 // Warning: `x` is unused.
 // 
 // --> src/test_files/check/repeated_bindings.gdn:1
 // fun foo(x: Int, x: Int) {
 //                 ^
+// Warning: `y` is unused.
+// 
+// --> src/test_files/check/repeated_bindings.gdn:2
+//     let (y, y) = (1, 2)
+//             ^
+// Warning: `z` is unused.
+// 
+// --> src/test_files/check/repeated_bindings.gdn:4
+//     let _f = fun(z, z) {}
+//                     ^
 

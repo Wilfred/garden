@@ -57,7 +57,10 @@ impl FreeVariableVisitor<'_> {
             });
         }
 
-        for (name, position) in &self.unused {
+        let mut unused = self.unused.clone();
+        unused.sort_by_key(|(_, position)| position.clone());
+
+        for (name, position) in unused {
             diagnostics.push(Diagnostic {
                 level: Level::Warning,
                 message: format!("`{name}` is unused."),

@@ -7,7 +7,8 @@ use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 
-use crate::eval::{EnclosingSymbol, StackFrame};
+use crate::env::StackFrame;
+use crate::eval::EnclosingSymbol;
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{ast::SourceString, diagnostics::ErrorMessage};
 

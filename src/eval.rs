@@ -14,7 +14,7 @@ use ordered_float::OrderedFloat;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
-use crate::env::Env;
+use crate::env::{Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
@@ -22,9 +22,9 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
-    LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern, SourceString,
-    StructInfo, Symbol, SymbolWithHint, SyntaxId, SyntaxIdGenerator, TestInfo, ToplevelItem,
-    TypeHint, TypeName, TypeSymbol,
+    LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern, StructInfo, Symbol,
+    SymbolWithHint, SyntaxId, SyntaxIdGenerator, TestInfo, ToplevelItem, TypeHint, TypeName,
+    TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -188,38 +188,6 @@ impl ExpressionState {
     pub(crate) fn done_children(&self) -> bool {
         matches!(self, ExpressionState::EvaluatedSubexpressions)
     }
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct StackFrame {
-    pub(crate) src: SourceString,
-    // The name of the function, method or test that we're evaluating.
-    pub(crate) enclosing_name: EnclosingSymbol,
-    pub(crate) enclosing_fun: Option<FunInfo>,
-    /// The position of the call site.
-    pub(crate) caller_pos: Option<Position>,
-    /// The ID of the call site expression.
-    pub(crate) caller_expr_id: Option<SyntaxId>,
-    /// Does the call site use the return value? If this is false,
-    /// we're only called for side effects.
-    pub(crate) caller_uses_value: bool,
-    pub(crate) bindings: Bindings,
-    /// Types bound in this stack frame, due to generic parameters.
-    pub(crate) type_bindings: TypeVarEnv,
-    /// If we are entering a block with extra bindings that are only
-    /// defined for the duration of the block, pass them here.
-    ///
-    /// For example:
-    /// ```garden
-    /// match x { Some(y) => { y + 1 } _ => {}}
-    /// ```
-    ///
-    /// We want `y` to be bound, but only in the block.
-    pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
-    /// A stack of expressions to evaluate.
-    pub(crate) exprs_to_eval: Vec<(ExpressionState, Expression)>,
-    /// The values of subexpressions that we've evaluated so far.
-    pub(crate) evalled_values: Vec<Value>,
 }
 
 pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {

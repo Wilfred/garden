@@ -6,12 +6,12 @@ use crate::eval::{EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
 use crate::values::{BuiltinFunctionKind, Value};
 use crate::{
-    eval::{load_toplevel_items, Bindings, StackFrame},
+    eval::{load_toplevel_items, Bindings},
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, Expression, MethodInfo, MethodKind, SourceString, Symbol, SymbolName,
-    SyntaxId, SyntaxIdGenerator, TestInfo, TypeHint, TypeName, TypeSymbol,
+    BuiltinMethodKind, Expression, FunInfo, MethodInfo, MethodKind, SourceString, Symbol,
+    SymbolName, SyntaxId, SyntaxIdGenerator, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
@@ -361,4 +361,36 @@ impl Env {
     pub(crate) fn current_frame_mut(&mut self) -> &mut StackFrame {
         self.stack.0.last_mut().unwrap()
     }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct StackFrame {
+    pub(crate) src: SourceString,
+    // The name of the function, method or test that we're evaluating.
+    pub(crate) enclosing_name: EnclosingSymbol,
+    pub(crate) enclosing_fun: Option<FunInfo>,
+    /// The position of the call site.
+    pub(crate) caller_pos: Option<Position>,
+    /// The ID of the call site expression.
+    pub(crate) caller_expr_id: Option<SyntaxId>,
+    /// Does the call site use the return value? If this is false,
+    /// we're only called for side effects.
+    pub(crate) caller_uses_value: bool,
+    pub(crate) bindings: Bindings,
+    /// Types bound in this stack frame, due to generic parameters.
+    pub(crate) type_bindings: TypeVarEnv,
+    /// If we are entering a block with extra bindings that are only
+    /// defined for the duration of the block, pass them here.
+    ///
+    /// For example:
+    /// ```garden
+    /// match x { Some(y) => { y + 1 } _ => {}}
+    /// ```
+    ///
+    /// We want `y` to be bound, but only in the block.
+    pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
+    /// A stack of expressions to evaluate.
+    pub(crate) exprs_to_eval: Vec<(ExpressionState, Expression)>,
+    /// The values of subexpressions that we've evaluated so far.
+    pub(crate) evalled_values: Vec<Value>,
 }

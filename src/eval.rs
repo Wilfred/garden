@@ -3524,6 +3524,13 @@ fn eval_expr(
 }
 
 pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {
+    if env.stack.0.len() == 1 && env.current_frame().exprs_to_eval.is_empty() {
+        // We expect to evaluate a non-zero number of expressions, so
+        // we have values pushed to the value stack. This isn't true
+        // when running :resume at the toplevel, so return early.
+        return Ok(Value::unit());
+    }
+
     loop {
         let is_toplevel = env.stack.0.len() == 1;
         let stack_frame = env.current_frame_mut();

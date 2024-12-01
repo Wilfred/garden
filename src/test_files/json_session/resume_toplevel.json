@@ -1,0 +1,30 @@
+{ "method": "run", "input": ":resume" }
+{ "method": "run", "input": ":resume" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Unit"
+//       },
+//       "stack_frame_name": "TOP"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Unit"
+//       },
+//       "stack_frame_name": "TOP"
+//     }
+//   },
+//   "position": null
+// }
+

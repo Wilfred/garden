@@ -236,7 +236,7 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
 }
 
 fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
-    let stack_frame = env.stack.0.last().unwrap();
+    let stack_frame = env.current_frame();
     let all_bindings = stack_frame.bindings.all();
 
     let mut names: Vec<_> = all_bindings.iter().map(|(n, _)| n).collect();
@@ -247,7 +247,7 @@ fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
 }
 
 fn get_var(name: &SymbolName, env: &Env) -> Option<Value> {
-    let stack_frame = env.stack.0.last().unwrap();
+    let stack_frame = env.current_frame();
     if let Some(value) = stack_frame.bindings.get(name) {
         return Some(value.clone());
     }
@@ -1099,7 +1099,7 @@ fn eval_if(
                 eval_block(env, expr_value_is_used, else_body);
             } else {
                 // Ensure we always push a bindings block.
-                env.stack.0.last_mut().unwrap().bindings.push_block();
+                env.current_frame_mut().bindings.push_block();
 
                 if expr_value_is_used {
                     env.push_evalled(Value::unit());
@@ -1132,7 +1132,7 @@ fn eval_while_body(
     expr: Expression,
     body: &Block,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let condition_value = stack_frame
         .evalled_values
         .pop()
@@ -1185,7 +1185,7 @@ fn eval_for_in(
     outer_expr: Expression,
     body: &Block,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let iteree_value = stack_frame
         .evalled_values
         .pop()
@@ -1236,7 +1236,7 @@ fn eval_for_in(
         bindings.push((iter_symbol.clone(), items[iteree_idx as usize].clone()));
     }
 
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     stack_frame.bindings_next_block = bindings;
     eval_block(env, false, body);
 
@@ -1250,7 +1250,7 @@ fn eval_assign_update(
     variable: &Symbol,
     op: AssignUpdateKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let var_name = &variable.name;
     if !stack_frame.bindings.has(var_name) {
         return Err((
@@ -1309,7 +1309,7 @@ fn eval_assign(
     variable: &Symbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let var_name = &variable.name;
-    if !env.stack.0.last_mut().unwrap().bindings.has(var_name) {
+    if !env.current_frame_mut().bindings.has(var_name) {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(
@@ -1352,7 +1352,7 @@ fn eval_let(
     position: &Position,
     hint: &Option<TypeHint>,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let expr_value = stack_frame
         .evalled_values
         .pop()
@@ -1384,7 +1384,7 @@ fn eval_let(
         };
     }
 
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     match destination {
         LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(&symbol.name, expr_value),
         LetDestination::Destructure(symbols) => match &expr_value {
@@ -1462,7 +1462,7 @@ fn eval_boolean_binop(
     op: BinaryOperatorKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
     {
-        let stack_frame = env.stack.0.last_mut().unwrap();
+        let stack_frame = env.current_frame_mut();
 
         let rhs_value = stack_frame
             .evalled_values
@@ -1525,7 +1525,7 @@ fn eval_boolean_binop(
 }
 
 fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperatorKind) {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let rhs_value = stack_frame
         .evalled_values
         .pop()
@@ -1561,7 +1561,7 @@ fn eval_integer_binop(
     op: BinaryOperatorKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
     {
-        let stack_frame = env.stack.0.last_mut().unwrap();
+        let stack_frame = env.current_frame_mut();
         let rhs_value = stack_frame
             .evalled_values
             .pop()
@@ -2191,7 +2191,7 @@ fn eval_builtin_call(
             let path = std::env::current_dir().unwrap_or_default();
 
             if expr_value_is_used {
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let stack_frame = env.current_frame_mut();
                 stack_frame
                     .evalled_values
                     .push(Value::String(path.display().to_string()));
@@ -2283,7 +2283,7 @@ fn eval_call(
     receiver_value: &Value,
     session: &Session,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let frame_type_bindings = stack_frame.type_bindings.clone();
 
     match &receiver_value {
@@ -2628,7 +2628,7 @@ fn eval_method_call(
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
     let mut arg_values: Vec<Value> = vec![];
     let mut arg_positions: Vec<Position> = vec![];
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     for arg in &paren_args.arguments {
         arg_values.push(
             stack_frame
@@ -2777,7 +2777,7 @@ fn eval_builtin_method_call(
                     new_items.push(arg_values[0].clone());
 
                     if expr_value_is_used {
-                        let stack_frame = env.stack.0.last_mut().unwrap();
+                        let stack_frame = env.current_frame();
                         let elem_type = Type::from_value(
                             &arg_values[0],
                             &env.types,
@@ -2907,7 +2907,7 @@ fn eval_builtin_method_call(
             match &receiver_value {
                 Value::List { items, .. } => {
                     if expr_value_is_used {
-                        let stack_frame = env.stack.0.last_mut().unwrap();
+                        let stack_frame = env.current_frame_mut();
                         stack_frame
                             .evalled_values
                             .push(Value::Integer(items.len() as i64));
@@ -3014,7 +3014,7 @@ fn eval_builtin_method_call(
             match &receiver_value {
                 Value::String(s) => {
                     if expr_value_is_used {
-                        let stack_frame = env.stack.0.last_mut().unwrap();
+                        let stack_frame = env.current_frame_mut();
                         stack_frame
                             .evalled_values
                             .push(Value::Integer(s.chars().count() as i64));
@@ -3185,7 +3185,7 @@ fn eval_expr(
                     .map_err(|e| (RestoreValues(vec![]), e))?;
             }
             ExpressionState::EvaluatedSubexpressions => {
-                env.stack.0.last_mut().unwrap().bindings.pop_block();
+                env.current_frame_mut().bindings.pop_block();
             }
         },
         Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
@@ -3205,7 +3205,7 @@ fn eval_expr(
                 )?;
             }
             ExpressionState::EvaluatedSubexpressions => {
-                env.stack.0.last_mut().unwrap().bindings.pop_block();
+                env.current_frame_mut().bindings.pop_block();
             }
         },
         Expression_::While(condition, ref body) => {
@@ -3227,7 +3227,7 @@ fn eval_expr(
                     )?;
                 }
                 ExpressionState::EvaluatedSubexpressions => {
-                    env.stack.0.last_mut().unwrap().bindings.pop_block();
+                    env.current_frame_mut().bindings.pop_block();
 
                     // Done condition and body, nothing left to do.
                     if expr_value_is_used {
@@ -3252,7 +3252,7 @@ fn eval_expr(
                     eval_for_in(env, sym, &expr.pos, outer_expr.clone(), body)?;
                 }
                 ExpressionState::EvaluatedSubexpressions => {
-                    let stack_frame = env.stack.0.last_mut().unwrap();
+                    let stack_frame = env.current_frame_mut();
                     stack_frame.bindings.pop_block();
 
                     // We've finished this `for` loop.
@@ -3265,7 +3265,7 @@ fn eval_expr(
         Expression_::Return(expr) => {
             if expr_state.done_children() {
                 // No more expressions to evaluate in this function, we're returning.
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let stack_frame = env.current_frame_mut();
                 stack_frame.exprs_to_eval.clear();
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
@@ -3476,7 +3476,7 @@ fn eval_expr(
             *expr_state = ExpressionState::EvaluatedSubexpressions;
 
             if expr_value_is_used {
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
 
                 env.push_evalled(Value::Closure(bindings, fun_info.clone()));
@@ -3487,7 +3487,7 @@ fn eval_expr(
                 let mut arg_values = vec![];
                 let mut arg_positions = vec![];
 
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let stack_frame = env.current_frame_mut();
                 for arg in &paren_args.arguments {
                     arg_values.push(
                         stack_frame
@@ -3551,7 +3551,7 @@ fn eval_expr(
         }
         Expression_::Block(block) => {
             if expr_state.done_children() {
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let stack_frame = env.current_frame_mut();
                 stack_frame.bindings.pop_block();
 
                 if block.exprs.is_empty() && expr_value_is_used {
@@ -3590,7 +3590,7 @@ fn eval_expr(
 pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {
     loop {
         let is_toplevel = env.stack.0.len() == 1;
-        let stack_frame = env.stack.0.last_mut().unwrap();
+        let stack_frame = env.current_frame_mut();
 
         if let Some((mut expr_state, outer_expr)) = stack_frame.exprs_to_eval.pop() {
             env.ticks += 1;
@@ -3638,7 +3638,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 && env.stop_at_expr_id.is_some()
                 && env.stop_at_expr_id.as_ref() == Some(&expr_id)
             {
-                let stack_frame = env.stack.0.last_mut().unwrap();
+                let stack_frame = env.current_frame_mut();
                 let v = if let Some(value) = stack_frame.evalled_values.last().cloned() {
                     value
                 } else {
@@ -3650,7 +3650,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             }
         }
 
-        if env.stack.0.last_mut().unwrap().exprs_to_eval.is_empty() {
+        if env.current_frame_mut().exprs_to_eval.is_empty() {
             // No more statements in this stack frame.
             if is_toplevel {
                 // Don't pop the outer scope: that's for the top level environment. We're done.
@@ -3667,8 +3667,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 .pop()
                 .expect("Should have a value");
 
-            let type_bindings = env.stack.0.last().unwrap().type_bindings.clone();
-            if let Some(ref fun) = env.stack.0.last_mut().unwrap().enclosing_fun {
+            let type_bindings = env.current_frame().type_bindings.clone();
+            if let Some(ref fun) = env.current_frame().enclosing_fun {
                 if let Some(return_hint) = &fun.return_hint {
                     let err_pos = return_hint.position.clone();
 
@@ -3689,14 +3689,14 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // We've just finished evaluating a call and we were
             // requested to stop at this call expression and return
             // that result.
-            if env.stack.0.last().unwrap().caller_expr_id.is_some()
-                && env.stop_at_expr_id == env.stack.0.last_mut().unwrap().caller_expr_id
+            if env.current_frame().caller_expr_id.is_some()
+                && env.stop_at_expr_id == env.current_frame().caller_expr_id
             {
                 env.stack.pop_to_toplevel();
                 return Ok(return_value);
             }
 
-            let caller_uses_value = env.stack.0.last_mut().unwrap().caller_uses_value;
+            let caller_uses_value = env.current_frame().caller_uses_value;
 
             // Stack frame is now done.
             env.stack.0.pop();
@@ -3728,7 +3728,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 }
 
 fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     stack_frame.bindings.push_block();
 
     let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
@@ -3755,7 +3755,7 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
 fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     while let Some((expr_state, expr)) = stack_frame.exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
@@ -3777,7 +3777,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
 fn eval_continue(env: &mut Env) {
     // Pop all the currently evaluating expressions until we are back
     // at the loop.
-    while let Some((expr_state, expr)) = env.stack.0.last_mut().unwrap().exprs_to_eval.pop() {
+    while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
             Expression_::While(_, _) | Expression_::ForIn(_, _, _)
@@ -3879,10 +3879,11 @@ fn eval_struct_value(
 
     let mut fields = vec![];
 
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame();
     let type_bindings = stack_frame.type_bindings.clone();
     for (field_sym, _) in field_exprs {
-        let field_value = stack_frame
+        let field_value = env
+            .current_frame_mut()
             .evalled_values
             .pop()
             .expect("Value stack should have sufficient items for the struct literal");
@@ -3945,7 +3946,7 @@ fn eval_match_cases(
     scrutinee_pos: &Position,
     cases: &[(Pattern, Block)],
 ) -> Result<(), EvalError> {
-    let stack_frame = env.stack.0.last_mut().unwrap();
+    let stack_frame = env.current_frame_mut();
     let scrutinee_value = stack_frame
         .evalled_values
         .pop()
@@ -3958,6 +3959,7 @@ fn eval_match_cases(
         ..
     } = scrutinee_value
     else {
+        let stack_frame = env.current_frame();
         let msg = ErrorMessage(format!(
             "Expected an enum value, but got {}: {}",
             Type::from_value(&scrutinee_value, &env.types, &stack_frame.type_bindings),
@@ -4030,7 +4032,7 @@ fn eval_match_cases(
                 }
             }
 
-            let stack_frame = env.stack.0.last_mut().unwrap();
+            let stack_frame = env.current_frame_mut();
             stack_frame.bindings_next_block = bindings;
             eval_block(env, expr_value_is_used, case_expr);
             return Ok(());

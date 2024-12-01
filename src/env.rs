@@ -353,4 +353,12 @@ impl Env {
         let stack_frame = self.stack.0.last_mut().unwrap();
         stack_frame.evalled_values.push(value);
     }
+
+    pub(crate) fn current_frame(&self) -> &StackFrame {
+        self.stack.0.last().unwrap()
+    }
+
+    pub(crate) fn current_frame_mut(&mut self) -> &mut StackFrame {
+        self.stack.0.last_mut().unwrap()
+    }
 }

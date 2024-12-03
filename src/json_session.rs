@@ -73,6 +73,7 @@ pub(crate) enum ResponseKind {
     },
     RunCommand {
         message: String,
+        stack_frame_name: Option<String>,
     },
     Ready {
         message: String,
@@ -522,6 +523,7 @@ fn handle_run_request(
                 Ok(()) => Response {
                     kind: ResponseKind::RunCommand {
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                        stack_frame_name: Some(env.top_frame_name()),
                     },
                     position: None,
                     id,
@@ -529,6 +531,7 @@ fn handle_run_request(
                 Err(EvalAction::Abort) => Response {
                     kind: ResponseKind::RunCommand {
                         message: "Aborted".to_owned(),
+                        stack_frame_name: Some(env.top_frame_name()),
                     },
                     position: None,
                     id,
@@ -579,6 +582,7 @@ fn handle_run_request(
             Response {
                 kind: ResponseKind::RunCommand {
                     message: format!("{}", String::from_utf8_lossy(&out_buf)),
+                    stack_frame_name: Some(env.top_frame_name()),
                 },
                 position: None,
                 id,

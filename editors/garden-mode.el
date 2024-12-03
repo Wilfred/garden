@@ -438,7 +438,7 @@ the user entering a value in the *garden* buffer."
 (defun garden--load (string path offset end-offset)
   "Send STRING to the current garden session for loading."
   (let* ((buf (garden--active-buffer))
-         (args `((method . "run")
+         (args `((method . "load")
                  (id . ,(garden--id))
                  (input . ,string)
                  (path . ,path)

@@ -49,6 +49,8 @@ enum Request {
         path: PathBuf,
         offset: usize,
         end_offset: usize,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        id: Option<RequestId>,
     },
     /// Stop the current evaluation, as if we'd pressed Ctrl-c.
     Interrupt,
@@ -121,6 +123,7 @@ pub(crate) fn sample_request_as_json() -> String {
 }
 
 fn handle_load_request(
+    id: Option<usize>,
     path: &Path,
     input: &str,
     offset: usize,
@@ -185,7 +188,7 @@ fn handle_load_request(
             stack_frame_name: Some(env.top_frame_name()),
         },
         position: None,
-        id: None,
+        id: id.clone(),
     }
 }
 
@@ -477,7 +480,8 @@ fn handle_request_in_worker(
             path,
             offset,
             end_offset,
-        } => handle_load_request(&path, &input, offset, end_offset, env, id_gen),
+            id,
+        } => handle_load_request(id, &path, &input, offset, end_offset, env, id_gen),
         Request::Interrupt => {
             // Nothing to do, handled outside this threaad so it
             // doesn't require locking env.

@@ -188,7 +188,7 @@ fn handle_load_request(
             stack_frame_name: Some(env.top_frame_name()),
         },
         position: None,
-        id: id.clone(),
+        id,
     }
 }
 

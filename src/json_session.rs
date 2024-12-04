@@ -643,12 +643,14 @@ fn handle_run_eval_request(
                 format!("Loaded {} definitions", eval_summary.new_syms.len())
             };
 
-            let total_tests = test_summary.tests_passed + test_summary.tests_failed.len();
+            let tests_passed = test_summary.tests_passed;
+            let tests_failed = test_summary.tests_failed.len();
+            let total_tests = tests_passed + tests_failed;
             let test_summary = if total_tests == 0 {
                 "".to_owned()
             } else {
                 format!(
-                    "{total_tests} {}",
+                    "{total_tests} {} ({tests_passed} passed, {tests_failed} failed)",
                     if total_tests == 1 { "test" } else { "tests" }
                 )
             };

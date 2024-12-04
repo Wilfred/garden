@@ -142,7 +142,7 @@ fun (this: String) lines(): List<String> {
       line_start = i + 1
     }
 
-    i = i + 1
+    i += 1
   }
 
   // Append last line if it wasn't terminated with a newline.
@@ -177,7 +177,7 @@ fun (this: String) split_once(needle: String): Option<(String, String)> {
       ))
     }
 
-    i = i + 1
+    i += 1
   }
 
   return None
@@ -205,7 +205,7 @@ fun (this: String) index_of(needle: String): Option<Int> {
       return Some(i)
     }
 
-    i = i + 1
+    i += 1
   }
 
   None
@@ -238,7 +238,7 @@ fun (this: String) join(items: List<String>): String {
   while i < items.len() {
     res = res.append(this)
     res = res.append(items.get(i))
-    i = i + 1
+    i += 1
   }
   res
 }
@@ -266,7 +266,7 @@ fun (this: String) contains(substring: String): Bool {
       return True
     }
 
-    i = i + 1
+    i += 1
   }
 
   False
@@ -280,7 +280,7 @@ fun (this: String) trim_left(): String {
       break
     }
 
-    i = i + 1
+    i += 1
   }
 
   this.substring(i, this.len())
@@ -301,7 +301,7 @@ fun (this: String) trim_right(): String {
       break
     }
 
-    i = i - 1
+    i -= 1
   }
 
   this.substring(0, i + 1)
@@ -397,7 +397,7 @@ fun (this: String) chars(): List<String> {
   let i = 0
   while i < this.len() {
     cs = cs.append(this.substring(i, i + 1))
-    i = i + 1
+    i += 1
   }
 
   cs

@@ -1,0 +1,10 @@
+fun main(_: List<String>): Unit {
+  let i = 5
+  i += 10
+  dbg(i)
+  Unit
+}
+
+// args: run
+// expected stdout: 15
+

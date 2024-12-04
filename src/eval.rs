@@ -1250,7 +1250,8 @@ fn eval_assign_update(
     op: AssignUpdateKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let var_name = &variable.name;
-    if !env.current_frame().bindings.has(var_name) {
+
+    let Some(var_value) = get_var(var_name, env) else {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(
@@ -1261,39 +1262,38 @@ fn eval_assign_update(
                 )),
             ),
         ));
-    }
+    };
+    let Value::Integer(var_value_num) = var_value else {
+        return Err((
+            RestoreValues(vec![]),
+            EvalError::ResumableError(
+                position.clone(),
+                format_type_error(&TypeName { name: "Int".into() }, &var_value, env),
+            ),
+        ));
+    };
 
-    let expr_value = env.pop_value().expect(&format!(
+    let rhs_value = env.pop_value().expect(&format!(
         "Popped an empty value stack for `{}`",
         op.as_src()
     ));
-
-    let mut num = match expr_value {
-        Value::Integer(i) => i,
-        _ => {
-            return Err((
-                RestoreValues(vec![expr_value.clone()]),
-                EvalError::ResumableError(
-                    position.clone(),
-                    format_type_error(&TypeName { name: "Int".into() }, &expr_value, env),
-                ),
-            ));
-        }
+    let Value::Integer(rhs_num) = rhs_value else {
+        return Err((
+            RestoreValues(vec![rhs_value.clone()]),
+            EvalError::ResumableError(
+                position.clone(),
+                format_type_error(&TypeName { name: "Int".into() }, &rhs_value, env),
+            ),
+        ));
     };
 
-    match op {
-        AssignUpdateKind::Add => {
-            num += 1;
-        }
-        AssignUpdateKind::Subtract => {
-            num -= 1;
-        }
-    }
-
-    let stack_frame = env.current_frame_mut();
-    stack_frame
+    let new_value_num = match op {
+        AssignUpdateKind::Add => var_value_num + rhs_num,
+        AssignUpdateKind::Subtract => var_value_num - rhs_num,
+    };
+    env.current_frame_mut()
         .bindings
-        .set_existing(var_name, Value::Integer(num));
+        .set_existing(var_name, Value::Integer(new_value_num));
 
     if expr_value_is_used {
         env.push_value(Value::unit());

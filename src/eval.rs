@@ -1194,7 +1194,10 @@ fn eval_for_in(
         .expect("Popped an empty value stack for `for` loop index")
     {
         Value::Integer(i) => i,
-        _ => unreachable!("`for` loop index should always be an integer"),
+        _ => unreachable!(
+            "`for` loop index should always be an integer: {}",
+            outer_expr.pos.as_ide_string()
+        ),
     };
 
     let Value::List { items, .. } = &iteree_value else {

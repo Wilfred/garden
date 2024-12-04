@@ -1325,8 +1325,6 @@ fn eval_assign(
         .pop_value()
         .expect("Popped an empty value stack for let value");
 
-    env.pop_value();
-
     env.stack
         .0
         .last_mut()

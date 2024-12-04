@@ -1,0 +1,67 @@
+{ "method": "run", "input": "fun f() { error(\"x\") }" }
+{ "method": "run", "input": "f()" }
+{ "method": "run", "input": ":resume" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Loaded f."
+//       },
+//       "stack_frame_name": "TOP"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Err": [
+//           {
+//             "position": {
+//               "start_offset": 10,
+//               "end_offset": 20,
+//               "line_number": 0,
+//               "end_line_number": 0,
+//               "path": "__json_session_unnamed__"
+//             },
+//             "message": "Error: x",
+//             "stack": "Error: x\n\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t fun f()\u001b[0m\u001b[0m\nfun f() { error(\"x\") }\n          ^^^^^^^^^^\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t __toplevel__\u001b[0m\u001b[0m\n// __toplevel__"
+//           }
+//         ]
+//       },
+//       "stack_frame_name": "f"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Err": [
+//           {
+//             "position": {
+//               "start_offset": 10,
+//               "end_offset": 20,
+//               "line_number": 0,
+//               "end_line_number": 0,
+//               "path": "__json_session_unnamed__"
+//             },
+//             "message": "Error: x",
+//             "stack": null
+//           }
+//         ]
+//       },
+//       "stack_frame_name": "f"
+//     }
+//   },
+//   "position": null
+// }
+

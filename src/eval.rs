@@ -1696,11 +1696,10 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let mut saved_values = vec![];
+            let mut saved_values = vec![receiver_value.clone()];
             for value in arg_values.iter().rev() {
                 saved_values.push(value.clone());
             }
-            saved_values.push(receiver_value.clone());
 
             match &arg_values[0] {
                 Value::String(msg) => {

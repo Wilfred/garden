@@ -459,14 +459,16 @@ fn handle_request_in_worker(
     id_gen: &mut SyntaxIdGenerator,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
+        let info = match serde_json::from_str::<serde_json::Value>(req_src) {
+            Ok(_) => "valid JSON, but not a valid request",
+            Err(_) => "malformed JSON",
+        };
+
         let res = Response {
-            kind: ResponseKind::MalformedRequest {
-                message: format!(
-                    "Invalid request (JSON decode failed). A valid request looks like: {}. The request received was:\n\n{}",
-                    sample_request_as_json(),
-                    req_src,
-                )
-            },
+            kind: ResponseKind::MalformedRequest { message: format!(
+                "Invalid request ({info}). A valid request looks like: {}. The request received was:\n\n{req_src}",
+            sample_request_as_json(),
+        ) },
             position: None,
             id: None,
         };

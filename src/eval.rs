@@ -1219,14 +1219,9 @@ fn eval_for_in(
 
     // After an iteration the loop body, evaluate again. We don't
     // re-evaluate the iteree expression though.
-    let stack_frame = env.current_frame_mut();
-    stack_frame
-        .exprs_to_eval
-        .push((ExpressionState::PartiallyEvaluated, outer_expr.clone()));
+    env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
-    stack_frame
-        .evalled_values
-        .push(Value::Integer(iteree_idx + 1));
+    env.push_value(Value::Integer(iteree_idx + 1));
     env.push_value(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
@@ -1263,7 +1258,7 @@ fn eval_assign_update(
         ));
     }
 
-    let expr_value = stack_frame.evalled_values.pop().expect(&format!(
+    let expr_value = env.pop_value().expect(&format!(
         "Popped an empty value stack for `{}`",
         op.as_src()
     ));
@@ -1290,6 +1285,7 @@ fn eval_assign_update(
         }
     }
 
+    let stack_frame = env.current_frame_mut();
     stack_frame
         .bindings
         .set_existing(var_name, Value::Integer(num));
@@ -1321,13 +1317,11 @@ fn eval_assign(
     }
 
     let expr_value = env
-        .stack
-        .0
-        .last_mut()
-        .unwrap()
-        .evalled_values
-        .pop()
+        .pop_value()
         .expect("Popped an empty value stack for let value");
+
+    env.pop_value();
+
     env.stack
         .0
         .last_mut()
@@ -1499,17 +1493,12 @@ fn eval_boolean_binop(
         };
 
         if expr_value_is_used {
-            let stack_frame = env.current_frame_mut();
             match op {
                 BinaryOperatorKind::And => {
-                    stack_frame
-                        .evalled_values
-                        .push(Value::bool(lhs_bool && rhs_bool));
+                    env.push_value(Value::bool(lhs_bool && rhs_bool));
                 }
                 BinaryOperatorKind::Or => {
-                    stack_frame
-                        .evalled_values
-                        .push(Value::bool(lhs_bool || rhs_bool));
+                    env.push_value(Value::bool(lhs_bool || rhs_bool));
                 }
                 _ => unreachable!(),
             }
@@ -1527,17 +1516,12 @@ fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperat
         .expect("Popped an empty value stack for LHS of binary operator");
 
     if expr_value_is_used {
-        let stack_frame = env.current_frame_mut();
         match op {
             BinaryOperatorKind::Equal => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_value == rhs_value));
+                env.push_value(Value::bool(lhs_value == rhs_value));
             }
             BinaryOperatorKind::NotEqual => {
-                stack_frame
-                    .evalled_values
-                    .push(Value::bool(lhs_value != rhs_value));
+                env.push_value(Value::bool(lhs_value != rhs_value));
             }
             _ => unreachable!(),
         }
@@ -2179,10 +2163,7 @@ fn eval_builtin_call(
             let path = std::env::current_dir().unwrap_or_default();
 
             if expr_value_is_used {
-                let stack_frame = env.current_frame_mut();
-                stack_frame
-                    .evalled_values
-                    .push(Value::String(path.display().to_string()));
+                env.push_value(Value::String(path.display().to_string()));
             }
         }
         BuiltinFunctionKind::WriteFile => {
@@ -2891,10 +2872,7 @@ fn eval_builtin_method_call(
             match &receiver_value {
                 Value::List { items, .. } => {
                     if expr_value_is_used {
-                        let stack_frame = env.current_frame_mut();
-                        stack_frame
-                            .evalled_values
-                            .push(Value::Integer(items.len() as i64));
+                        env.push_value(Value::Integer(items.len() as i64));
                     }
                 }
                 v => {
@@ -2998,10 +2976,7 @@ fn eval_builtin_method_call(
             match &receiver_value {
                 Value::String(s) => {
                     if expr_value_is_used {
-                        let stack_frame = env.current_frame_mut();
-                        stack_frame
-                            .evalled_values
-                            .push(Value::Integer(s.chars().count() as i64));
+                        env.push_value(Value::Integer(s.chars().count() as i64));
                     }
                 }
                 v => {
@@ -3638,14 +3613,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             }
 
             // Check that the value matches the return type.
-            let return_value = env
-                .stack
-                .0
-                .last_mut()
-                .unwrap()
-                .evalled_values
-                .pop()
-                .expect("Should have a value");
+            let return_value = env.pop_value().expect("Should have a value");
 
             let type_bindings = env.current_frame().type_bindings.clone();
             if let Some(ref fun) = env.current_frame().enclosing_fun {
@@ -3685,12 +3653,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // call should be used in the previous stack
             // frame.
             if caller_uses_value {
-                env.stack
-                    .0
-                    .last_mut()
-                    .unwrap()
-                    .evalled_values
-                    .push(return_value);
+                env.push_value(return_value);
             }
         } else {
             // Keep going on this stack frame.
@@ -3698,12 +3661,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
     }
 
     Ok(env
-        .stack
-        .0
-        .last_mut()
-        .expect("toplevel stack frame should exist")
-        .evalled_values
-        .pop()
+        .pop_value()
         .expect("Should have a value from the last expression"))
 }
 
@@ -3775,12 +3733,7 @@ fn eval_dot_access(
     recv_pos: &Position,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let recv_value = env
-        .stack
-        .0
-        .last_mut()
-        .unwrap()
-        .evalled_values
-        .pop()
+        .pop_value()
         .expect("Popped an empty value when evaluating dot access");
 
     match recv_value {
@@ -3863,9 +3816,7 @@ fn eval_struct_value(
     let type_bindings = stack_frame.type_bindings.clone();
     for (field_sym, _) in field_exprs {
         let field_value = env
-            .current_frame_mut()
-            .evalled_values
-            .pop()
+            .pop_value()
             .expect("Value stack should have sufficient items for the struct literal");
 
         let Some(field_info) = expected_fields_by_name.remove(&field_sym.name) else {

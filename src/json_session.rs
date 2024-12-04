@@ -366,7 +366,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             }
         }
         EvalError::AssertionFailed(position) => {
-            let message = ErrorMessage("Assertion failed".to_owned());
+            let message = ErrorMessage(format!("Assertion failed: {}", position.as_ide_string()));
             let stack = format_error_with_stack(&message, &position, &env.stack.0);
 
             Response {
@@ -724,8 +724,8 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
+                    message: format!("Assertion failed: {}", position.as_ide_string()),
                     position: Some(position),
-                    message: "Assertion failed".to_owned(),
                     stack: None,
                 }]),
                 stack_frame_name: Some(env.top_frame_name()),

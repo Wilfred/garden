@@ -294,7 +294,9 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-            EvalError::AssertionFailed(_) => eprintln!("Assertion failed"),
+            EvalError::AssertionFailed(pos) => {
+                eprintln!("Assertion failed: {}", pos.as_ide_string())
+            }
             EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
@@ -309,7 +311,9 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
             Err(e) => match e {
                 EvalError::Interrupted => eprintln!("Interrupted."),
                 EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-                EvalError::AssertionFailed(_) => eprintln!("Assertion failed"),
+                EvalError::AssertionFailed(pos) => {
+                    eprintln!("Assertion failed: {}", pos.as_ide_string())
+                }
                 EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
                 EvalError::ForbiddenInSandbox(_) => {
                     eprintln!("Tried to execute unsafe code in sandboxed mode.")

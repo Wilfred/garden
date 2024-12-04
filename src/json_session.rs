@@ -15,7 +15,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
-    eval, eval_tests, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
+    eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
     push_test_stackframe, ExpressionState,
 };
 use crate::{
@@ -632,7 +632,11 @@ fn handle_run_eval_request(
         .diagnostics
         .extend(check_toplevel_items_in_env(&items, env));
 
-    let test_summary = eval_tests(&items, env, session);
+    let test_summary = match eval_tests_until_error(&items, env, session) {
+        Ok(s) => s,
+        Err(e) => return err_to_response(e, env, id),
+    };
+
     match eval_toplevel_exprs_then_stop(&items, env, session) {
         Ok(value) => {
             let definition_summary = if eval_summary.new_syms.is_empty() {

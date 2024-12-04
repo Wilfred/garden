@@ -318,6 +318,44 @@ pub(crate) fn eval_toplevel_items(
     Ok(summary)
 }
 
+pub(crate) fn eval_tests_until_error(
+    items: &[ToplevelItem],
+    env: &mut Env,
+    session: &Session,
+) -> Result<ToplevelEvalSummary, EvalError> {
+    let mut test_defs = vec![];
+    for item in items {
+        if let ToplevelItem::Def(Definition(_, _, Definition_::Test(test))) = item {
+            test_defs.push(test);
+        }
+    }
+
+    // Update all the test definitions in the environment before
+    // evaluating anything.
+    for test in &test_defs {
+        env.tests
+            .insert(test.name_sym.name.clone(), (*test).clone());
+    }
+
+    let mut tests_passed = 0;
+    for test in test_defs {
+        push_test_stackframe(test, env);
+
+        eval(env, session)?;
+        tests_passed += 1;
+
+        env.stack.pop_to_toplevel();
+    }
+
+    Ok(ToplevelEvalSummary {
+        values: vec![],
+        new_syms: vec![],
+        diagnostics: vec![],
+        tests_passed,
+        tests_failed: vec![],
+    })
+}
+
 /// Evaluate these tests.
 pub(crate) fn eval_tests(
     items: &[ToplevelItem],

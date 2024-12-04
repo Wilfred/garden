@@ -1,0 +1,29 @@
+{ "method": "run", "input": "test foo { error(\"foo\") }" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Err": [
+//           {
+//             "position": {
+//               "start_offset": 11,
+//               "end_offset": 23,
+//               "line_number": 0,
+//               "end_line_number": 0,
+//               "path": "__json_session_unnamed__"
+//             },
+//             "message": "Error: foo",
+//             "stack": "Error: foo\n\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t test foo\u001b[0m\u001b[0m\ntest foo { error(\"foo\") }\n           ^^^^^^^^^^^^"
+//           }
+//         ]
+//       },
+//       "stack_frame_name": "test foo"
+//     }
+//   },
+//   "position": null
+// }
+

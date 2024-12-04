@@ -1243,9 +1243,8 @@ fn eval_assign_update(
     variable: &Symbol,
     op: AssignUpdateKind,
 ) -> Result<(), (RestoreValues, EvalError)> {
-    let stack_frame = env.current_frame_mut();
     let var_name = &variable.name;
-    if !stack_frame.bindings.has(var_name) {
+    if !env.current_frame().bindings.has(var_name) {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(

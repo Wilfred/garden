@@ -43,6 +43,8 @@ fun render_inline(src: String): String {
   "".join(parts)
 }
 
+// If `src` contains punctuation, return the punctuation itself and
+// the text afterwards.
 fun split_inline_punct(src: String): Option<(String, String)> {
   let i = 0
   while (i + 1) < src.len() {

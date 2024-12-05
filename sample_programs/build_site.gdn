@@ -25,7 +25,7 @@ fun render_inline(src: String): String {
           let (rendered, new_src) = render_backtick(after)
           parts = parts.append(rendered)
           src = new_src
-        } else if after.ends_with("[") {
+        } else if after.starts_with("[") {
           let (rendered, new_src) = render_link(after)
           parts = parts.append(rendered)
           src = new_src
@@ -43,14 +43,14 @@ fun render_inline(src: String): String {
   "".join(parts)
 }
 
-// If `src` contains punctuation, return the punctuation itself and
-// the text afterwards.
+// If `src` contains punctuation, return the text before the
+// punctuation and the substring including the punctuation to the end.
 fun split_inline_punct(src: String): Option<(String, String)> {
   let i = 0
   while (i + 1) < src.len() {
     let char = src.substring(i, i + 1)
     if (char == "`") || (char == "[") {
-      return Some((src.substring(i, i + 1), src.substring(i + 1, src.len())))
+      return Some((src.substring(0, i), src.substring(i, src.len())))
     }
 
     i += 1
@@ -139,7 +139,7 @@ test render_backtick {
 
 // TODO: currently failing
 test render_link {
-  assert(render_markdown("[foo](example.com)") == "<p><code>foo</code></p>")
+  assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
 }
 
 {

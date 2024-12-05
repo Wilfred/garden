@@ -3600,10 +3600,8 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
                 return Ok(v);
             }
-        }
-
-        if env.current_frame().exprs_to_eval.is_empty() {
-            // No more statements in this stack frame.
+        } else {
+            // No more expressions in this stack frame.
             if env.stack.0.len() == 1 {
                 // Don't pop the outer scope: that's for the top level environment. We're done.
                 break;
@@ -3652,8 +3650,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             if caller_uses_value {
                 env.push_value(return_value);
             }
-        } else {
-            // Keep going on this stack frame.
         }
     }
 

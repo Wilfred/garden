@@ -204,8 +204,7 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
 }
 
 fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
-    let stack_frame = env.current_frame();
-    let all_bindings = stack_frame.bindings.all();
+    let all_bindings = env.current_frame().bindings.all();
 
     let mut names: Vec<_> = all_bindings.iter().map(|(n, _)| n).collect();
     let local_names: Vec<_> = env.file_scope.keys().collect();
@@ -215,8 +214,7 @@ fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
 }
 
 fn get_var(name: &SymbolName, env: &Env) -> Option<Value> {
-    let stack_frame = env.current_frame();
-    if let Some(value) = stack_frame.bindings.get(name) {
+    if let Some(value) = env.current_frame().bindings.get(name) {
         return Some(value.clone());
     }
 
@@ -3547,10 +3545,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
     }
 
     loop {
-        let is_toplevel = env.stack.0.len() == 1;
-        let stack_frame = env.current_frame_mut();
-
-        if let Some((mut expr_state, outer_expr)) = stack_frame.exprs_to_eval.pop() {
+        if let Some((mut expr_state, outer_expr)) = env.current_frame_mut().exprs_to_eval.pop() {
             env.ticks += 1;
 
             let expr_id = outer_expr.id;
@@ -3596,8 +3591,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 && env.stop_at_expr_id.is_some()
                 && env.stop_at_expr_id.as_ref() == Some(&expr_id)
             {
-                let stack_frame = env.current_frame_mut();
-                let v = if let Some(value) = stack_frame.evalled_values.last().cloned() {
+                let v = if let Some(value) = env.current_frame().evalled_values.last().cloned() {
                     value
                 } else {
                     // TODO: this should probably be an Err() case.
@@ -3608,9 +3602,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             }
         }
 
-        if env.current_frame_mut().exprs_to_eval.is_empty() {
+        if env.current_frame().exprs_to_eval.is_empty() {
             // No more statements in this stack frame.
-            if is_toplevel {
+            if env.stack.0.len() == 1 {
                 // Don't pop the outer scope: that's for the top level environment. We're done.
                 break;
             }
@@ -3696,8 +3690,7 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
 fn eval_break(env: &mut Env, expr_value_is_used: bool) {
     // Pop all the currently evaluating expressions until we are no
     // longer inside the innermost loop.
-    let stack_frame = env.current_frame_mut();
-    while let Some((expr_state, expr)) = stack_frame.exprs_to_eval.pop() {
+    while let Some((expr_state, expr)) = env.current_frame_mut().exprs_to_eval.pop() {
         if matches!(
             expr.expr_,
             Expression_::While(_, _) | Expression_::ForIn(_, _, _)
@@ -3815,8 +3808,7 @@ fn eval_struct_value(
 
     let mut fields = vec![];
 
-    let stack_frame = env.current_frame();
-    let type_bindings = stack_frame.type_bindings.clone();
+    let type_bindings = env.current_frame().type_bindings.clone();
     for (field_sym, _) in field_exprs {
         let field_value = env
             .pop_value()

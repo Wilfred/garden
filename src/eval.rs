@@ -3633,7 +3633,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             if env.current_frame().caller_expr_id.is_some()
                 && env.stop_at_expr_id == env.current_frame().caller_expr_id
             {
-                env.stack.pop_to_toplevel();
+                env.stack.0.pop();
                 return Ok(return_value);
             }
 

@@ -1,0 +1,75 @@
+{ "method": "run", "input": "fun foo() { let x = 1 error(\"oh no\") }" }
+{ "method": "run", "input": "foo()" }
+{ "method": "run", "input": "dbg(x)" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [
+//         {
+//           "message": "`x` is unused.",
+//           "position": {
+//             "start_offset": 16,
+//             "end_offset": 17,
+//             "line_number": 0,
+//             "end_line_number": 0,
+//             "path": "__json_session_unnamed__"
+//           },
+//           "level": "Warning"
+//         }
+//       ],
+//       "value": {
+//         "Ok": "Loaded foo."
+//       },
+//       "stack_frame_name": "TOP"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Err": [
+//           {
+//             "position": {
+//               "start_offset": 22,
+//               "end_offset": 36,
+//               "line_number": 0,
+//               "end_line_number": 0,
+//               "path": "__json_session_unnamed__"
+//             },
+//             "message": "Error: oh no",
+//             "stack": "Error: oh no\n\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t fun foo()\u001b[0m\u001b[0m\nfun foo() { let x = 1 error(\"oh no\") }\n                      ^^^^^^^^^^^^^^\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t __toplevel__\u001b[0m\u001b[0m\n// __toplevel__"
+//           }
+//         ]
+//       },
+//       "stack_frame_name": "foo"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "printed": {
+//       "s": "1\n"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "1"
+//       },
+//       "stack_frame_name": "foo"
+//     }
+//   },
+//   "position": null
+// }
+

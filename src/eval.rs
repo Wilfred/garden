@@ -3548,8 +3548,6 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
         if let Some((mut expr_state, outer_expr)) = env.current_frame_mut().exprs_to_eval.pop() {
             env.ticks += 1;
 
-            let expr_id = outer_expr.id;
-
             if session.interrupted.load(Ordering::SeqCst) {
                 session.interrupted.store(false, Ordering::SeqCst);
                 restore_stack_frame(env, (expr_state, outer_expr), &[]);
@@ -3589,7 +3587,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // the match above.
             if expr_state.done_children()
                 && env.stop_at_expr_id.is_some()
-                && env.stop_at_expr_id.as_ref() == Some(&expr_id)
+                && env.stop_at_expr_id.as_ref() == Some(&outer_expr.id)
             {
                 let v = if let Some(value) = env.current_frame().evalled_values.last().cloned() {
                     value

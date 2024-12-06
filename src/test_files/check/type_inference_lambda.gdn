@@ -1,6 +1,9 @@
 {
-    [1, 2].filter(fun(_) { True })
-    [1, 2, 3].map(fun(x) { x + 1 })
+  [1, 2].filter(fun(_) { True })
+  // This doesn't type check because we check the lambda before seeing
+  // the value it is used with, so we cannot tell that x is an integer
+  // when checking addition.
+  [1, 2, 3].map(fun(x) { x + 1 })
 }
 
 // args: check
@@ -8,7 +11,7 @@
 // expected stdout:
 // Error: Expected `Int`, but got `_`.
 // 
-// --> src/test_files/check/type_inference_lambda.gdn:3
-//     [1, 2, 3].map(fun(x) { x + 1 })
-//                            ^
+// --> src/test_files/check/type_inference_lambda.gdn:6
+//   [1, 2, 3].map(fun(x) { x + 1 })
+//                          ^
 

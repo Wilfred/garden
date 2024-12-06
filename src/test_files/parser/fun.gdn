@@ -1,4 +1,4 @@
-fun<T> foo(): Unit {}
+fun foo<T>(): Unit {}
 
 // args: dump-ast
 // expected stdout:

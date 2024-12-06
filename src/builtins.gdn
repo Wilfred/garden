@@ -89,7 +89,7 @@ fun shell(command: String, args: List<String>): Result<String, String> {
 // ```
 // string_repr(123) // "123"
 // ```
-fun<T> string_repr(value: T): String {
+fun string_repr<T>(value: T): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -127,7 +127,7 @@ fun working_directory(): String {
 // ```
 // [10].append(11) // [10, 11]
 // ```
-fun<T> (this: List<T>) append(value: T): List<T> {
+fun (this: List<T>) append<T>(value: T): List<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -137,7 +137,7 @@ fun<T> (this: List<T>) append(value: T): List<T> {
 // ```
 // [4, 5, 6].get(1) // 5
 // ```
-fun<T> (this: List<T>) get(index: Int): T {
+fun (this: List<T>) get<T>(index: Int): T {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -146,7 +146,7 @@ fun<T> (this: List<T>) get(index: Int): T {
 // ```
 // [10, 11, 12].len() // 3
 // ```
-fun<T> (this: List<T>) len(): Int {
+fun (this: List<T>) len<T>(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 

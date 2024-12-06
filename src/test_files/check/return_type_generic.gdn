@@ -1,4 +1,4 @@
-fun<T> foo(): T {
+fun foo<T>(): T {
     error("")
 }
 

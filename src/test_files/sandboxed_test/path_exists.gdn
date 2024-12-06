@@ -6,4 +6,3 @@ test path_exists_is_unsafe {
 // args: sandboxed-test
 // expected stdout: 1 sandboxed
 
-

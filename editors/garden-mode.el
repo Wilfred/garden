@@ -593,11 +593,6 @@ enclosing point and print the result."
        "fun"
        symbol-end
 
-       ;; Generics, if present.
-       (? "<"
-          (* (not (any ">")))
-          ">")
-
        (+ space)
        ;; Method receiver, if present
        (? "("
@@ -608,7 +603,12 @@ enclosing point and print the result."
        (group
         symbol-start
         (+ (or (syntax word) (syntax symbol)))
-        symbol-end))
+        symbol-end)
+
+       ;; Generics, if present.
+       (? "<"
+          (* (not (any ">")))
+          ">"))
      (1 font-lock-function-name-face))
 
     (,(rx

@@ -1658,28 +1658,20 @@ fn parse_function_or_method(
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     let fun_token = require_token(tokens, diagnostics, "fun");
-    let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
     // We can distinguish between functions and methods based on the
-    // token after the type parameters.
+    // token after the fun keyword.
     //
     // ```
-    // fun<T> i_am_a_fun() {}
-    // fun<T> (this: String) i_am_a_method() {}
+    // fun i_am_a_fun<T>() {}
+    // fun (this: String) i_am_a_method<T>() {}
     // ```
     match tokens.peek() {
         Some(token) => {
             if token.text == "(" {
-                Some(parse_method(
-                    src,
-                    tokens,
-                    id_gen,
-                    diagnostics,
-                    fun_token,
-                    type_params,
-                ))
+                Some(parse_method(src, tokens, id_gen, diagnostics, fun_token))
             } else {
-                parse_function(src, tokens, id_gen, diagnostics, fun_token, type_params)
+                parse_function(src, tokens, id_gen, diagnostics, fun_token)
             }
         }
         None => {
@@ -1698,7 +1690,6 @@ fn parse_method(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
-    type_params: Vec<TypeSymbol>,
 ) -> Definition {
     let doc_comment = parse_doc_comment(&fun_token);
 
@@ -1729,6 +1720,7 @@ fn parse_method(
 
     let name_sym = parse_symbol(tokens, id_gen, diagnostics);
 
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
@@ -1773,7 +1765,6 @@ fn parse_function(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
-    type_params: Vec<TypeSymbol>,
 ) -> Option<Definition> {
     let doc_comment = parse_doc_comment(&fun_token);
 
@@ -1785,6 +1776,7 @@ fn parse_function(
         return None;
     }
 
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 

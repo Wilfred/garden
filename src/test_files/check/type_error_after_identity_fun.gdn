@@ -1,4 +1,4 @@
-fun<T> id(v: T): T {
+fun id<T>(v: T): T {
     v
 }
 

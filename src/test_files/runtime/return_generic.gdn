@@ -1,4 +1,4 @@
-fun<T> option_identity(value: Option<T>): Option<T> {
+fun option_identity<T>(value: Option<T>): Option<T> {
     value
 }
 

@@ -33,7 +33,7 @@ enum Option<T> {
 }
 
 /// Return True if this value is `Some`.
-fun<T> (this: Option<T>) is_some(): Bool {
+fun (this: Option<T>) is_some<T>(): Bool {
   match this {
     Some(_) => True,
     None => False,
@@ -41,7 +41,7 @@ fun<T> (this: Option<T>) is_some(): Bool {
 }
 
 /// Return True if this value is `None`.
-fun<T> (this: Option<T>) is_none(): Bool {
+fun (this: Option<T>) is_none<T>(): Bool {
   match this {
     Some(_) => False,
     None => True,
@@ -63,7 +63,7 @@ enum Result<T, E> {
 // ```
 // dbg([1, 2])
 // ```
-fun<T> dbg(value: T): T {
+fun dbg<T>(value: T): T {
   println(string_repr(value))
   value
 }
@@ -77,7 +77,7 @@ fun todo(): NoValue {
 }
 
 // If this value is `Ok`, unwrap it, otherwise error.
-fun<T, E> (this: Result<T, E>) or_error(): T {
+fun (this: Result<T, E>) or_error<T, E>(): T {
   match this {
     Ok(v) => v
     Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
@@ -410,7 +410,7 @@ test string_chars {
 // List methods.
 
 // Get the first item in this list, if the list is not empty.
-fun<T> (this: List<T>) first(): Option<T> {
+fun (this: List<T>) first<T>(): Option<T> {
   if this.is_empty() {
     None
   } else {
@@ -424,7 +424,7 @@ test first {
 }
 
 // Get the last item in this list, if the list is not empty.
-fun<T> (this: List<T>) last(): Option<T> {
+fun (this: List<T>) last<T>(): Option<T> {
   if this.is_empty() {
     None
   } else {
@@ -439,7 +439,7 @@ test last {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-fun<T> (this: List<T>) filter(f: Fun<(T), Bool>): List<T> {
+fun (this: List<T>) filter<T>(f: Fun<(T), Bool>): List<T> {
   let result: List<T> = []
 
   for item in this {
@@ -456,7 +456,7 @@ test filter {
 }
 
 // Is this list empty?
-fun<T> (this: List<T>) is_empty(): Bool {
+fun (this: List<T>) is_empty<T>(): Bool {
   this.len() == 0
 }
 
@@ -466,7 +466,7 @@ test is_empty {
 }
 
 // Is this list non-empty?
-fun<T> (this: List<T>) is_non_empty(): Bool {
+fun (this: List<T>) is_non_empty<T>(): Bool {
   this.len() != 0
 }
 
@@ -476,7 +476,7 @@ test is_non_empty {
 }
 
 // Does this list contain `item`?
-fun<T> (this: List<T>) contains(item: T): Bool {
+fun (this: List<T>) contains<T>(item: T): Bool {
   for this_item in this {
     if this_item == item {
       return True
@@ -496,7 +496,7 @@ test contains {
 // ```
 // [1, 2].map(fun(x) { x + 1 }) // [2, 3]
 // ```
-fun<T, U> (this: List<T>) map(f: Fun<(T), U>): List<U> {
+fun (this: List<T>) map<T, U>(f: Fun<(T), U>): List<U> {
   let items: List<U> = []
   for item in this {
     items = items.append(f(item))
@@ -513,7 +513,7 @@ test list_map {
 // Option methods.
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
-fun<T> (this: Option<T>) or_exception(): T {
+fun (this: Option<T>) or_exception<T>(): T {
   match this {
     Some(v) => v,
     None => error("Called or_exception on a `None` value.")

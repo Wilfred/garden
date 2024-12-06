@@ -1,5 +1,5 @@
-fun<T> (self: List<T>) foo(): String {
-    self.get(1)
+fun (this: List<T>) foo<T>(): String {
+  this.get(1)
 }
 
 // args: check
@@ -8,6 +8,6 @@ fun<T> (self: List<T>) foo(): String {
 // Error: Expected to return `String` but got `T`.
 // 
 // --> src/test_files/check/type_error_generic_method_receiver.gdn:2
-//     self.get(1)
-//     ^^^^^^^^^^^
+//   this.get(1)
+//   ^^^^^^^^^^^
 

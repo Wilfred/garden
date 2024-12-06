@@ -4,6 +4,17 @@
 
 ## Syntax
 
+Type parameters now occur after function or method names, so Garden
+programs are more easily searched with `grep` or `rg`.
+
+```
+// Old
+fun<T> foo(items: List<T>) {}
+
+// New
+fun foo<T>(items: List<T>) {}
+```
+
 Tests now require a name, so `test {}` is no longer legal. Use `test
 some_name {}` instead.
 

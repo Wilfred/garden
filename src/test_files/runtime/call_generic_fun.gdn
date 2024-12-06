@@ -1,4 +1,4 @@
-fun<T> foo(x: T): Unit {}
+fun foo<T>(x: T): Unit {}
 
 fun main(args: List<String>): Unit {
     foo(1)

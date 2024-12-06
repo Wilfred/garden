@@ -21,10 +21,12 @@ pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Type {
-    /// The top type, which includes all values.
+    /// The top type, which includes all values. This is rendered as
+    /// `_` when printing types.
     Top,
     /// Tuples, e.g. `(Int, String)`.
     Tuple(Vec<Type>),
+    /// Function type, e.g. `Fun<(Int, String), Unit>`
     Fun {
         /// If this function has a defined name (i.e. not a closure),
         /// the name used.
@@ -35,11 +37,13 @@ pub(crate) enum Type {
         params: Vec<Type>,
         return_: Box<Type>,
     },
+    /// A user-defined type, e.g. `Foo<Bar>`.
     UserDefined {
         kind: TypeDefKind,
         name: TypeName,
         args: Vec<Type>,
     },
+    /// An unsolved type parameter, e.g. `T` in `List<T>`.
     #[allow(clippy::enum_variant_names)]
     TypeParameter(TypeName),
     /// Represents a type checker error. The string is the internal

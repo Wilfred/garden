@@ -11,6 +11,8 @@ use crate::{
     checks::type_checker::check_types, env::Env, eval::load_toplevel_items, pos_to_id::find_item_at,
 };
 
+/// Rename the symbol at `offset` to `new_name`, both the definition
+/// and use sites, then print the new source code.
 pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     let mut id_gen = SyntaxIdGenerator::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);

@@ -1,0 +1,9 @@
+fun foo() {
+  let x = 1 + 2
+  //      ^^^^^
+  let _ = x + 3
+}
+
+// args: extract-function --name bar
+// expected stdout: todo extract
+

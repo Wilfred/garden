@@ -35,6 +35,7 @@ mod completions;
 mod diagnostics;
 mod env;
 mod eval;
+mod extract_function;
 mod garden_type;
 mod go_to_def;
 mod hover;
@@ -108,6 +109,17 @@ enum Commands {
         override_path: Option<PathBuf>,
         #[clap(long)]
         new_name: String,
+    },
+    /// Rename the local variable at this offset to the new name
+    /// specified.
+    ExtractFunction {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+        #[clap(long)]
+        name: String,
     },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
@@ -271,6 +283,23 @@ fn main() {
 
             let src_path = override_path.unwrap_or(path);
             rename::rename(&src, &src_path, offset, &new_name)
+        }
+        Commands::ExtractFunction {
+            path,
+            offset,
+            end_offset,
+            override_path,
+            name,
+        } => {
+            let src = read_utf8_or_die(&path);
+            let (offset, end_offset) = match (offset, end_offset) {
+                (Some(offset), Some(end_offset)) => (offset, end_offset),
+                _ => caret_finder::find_caret_region(&src)
+                    .expect("Could not find comment region containing `^^` in source."),
+            };
+
+            let src_path = override_path.unwrap_or(path);
+            extract_function::extract_function(&src, &src_path, offset, end_offset, &name);
         }
     }
 }

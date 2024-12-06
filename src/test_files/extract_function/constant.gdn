@@ -1,9 +1,26 @@
-fun foo() {
+fun before() {}
+
+fun contains_expr() {
   let x = 1 + 2
   //      ^^^^^
   let _ = x + 3
 }
 
+fun after() {}
+
 // args: extract-function --name bar
-// expected stdout: todo extract
+// expected stdout:
+// fun before() {}
+// 
+// fun bar() {
+//   1 + 2
+// }
+// 
+// fun contains_expr() {
+//   let x = bar()
+//   //      ^^^^^
+//   let _ = x + 3
+// }
+// 
+// fun after() {}
 

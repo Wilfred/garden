@@ -293,11 +293,14 @@ fn main() {
             override_path,
             name,
         } => {
-            let src = read_utf8_or_die(&path);
+            let mut src = read_utf8_or_die(&path);
             let (offset, end_offset) = match (offset, end_offset) {
                 (Some(offset), Some(end_offset)) => (offset, end_offset),
-                _ => caret_finder::find_caret_region(&src)
-                    .expect("Could not find comment region containing `^^` in source."),
+                _ => {
+                    src = remove_testing_footer(&src);
+                    caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.")
+                }
             };
 
             let src_path = override_path.unwrap_or(path);
@@ -360,7 +363,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
 fn remove_testing_footer(src: &str) -> String {
     let mut new_src = String::with_capacity(src.len());
     for line in src.lines() {
-        if line.starts_with("// args: rename ") {
+        if line.starts_with("// args: ") {
             break;
         }
         new_src.push_str(line);

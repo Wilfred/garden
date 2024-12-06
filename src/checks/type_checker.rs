@@ -1291,42 +1291,45 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     }
 }
 
-fn unify_and_solve_ty(expected_ty: &Type, actual_ty: &Type, ty_var_env: &mut TypeVarEnv) {
-    match (expected_ty, actual_ty) {
+/// Solve type parameters in `decl_ty` (a type in a declaration
+/// position, e.g. `List<T>`) so that the type matches the fully
+/// solved type (e.g. `List<Int>`).
+fn unify_and_solve_ty(decl_ty: &Type, solved_ty: &Type, ty_var_env: &mut TypeVarEnv) {
+    match (decl_ty, solved_ty) {
         (Type::TypeParameter(n), _) => {
-            ty_var_env.insert(n.clone(), Some(actual_ty.clone()));
+            ty_var_env.insert(n.clone(), Some(solved_ty.clone()));
         }
         (
             Type::Fun {
-                params: expected_params,
-                return_: expected_return,
+                params: decl_params,
+                return_: decl_return,
                 ..
             },
             Type::Fun {
-                params: actual_params,
-                return_: actual_return,
+                params: solved_params,
+                return_: solved_return,
                 ..
             },
         ) => {
-            unify_and_solve_ty(expected_return, actual_return, ty_var_env);
-            for (expected_param, actual_param) in expected_params.iter().zip(actual_params.iter()) {
-                unify_and_solve_ty(expected_param, actual_param, ty_var_env);
+            unify_and_solve_ty(decl_return, solved_return, ty_var_env);
+            for (decl_param, solved_param) in decl_params.iter().zip(solved_params.iter()) {
+                unify_and_solve_ty(decl_param, solved_param, ty_var_env);
             }
         }
         (
             Type::UserDefined {
-                kind: expected_kind,
-                name: expected_name,
-                args: expected_args,
+                kind: decl_kind,
+                name: decl_name,
+                args: decl_args,
             },
             Type::UserDefined {
-                kind: actual_kind,
-                name: actual_name,
-                args: actual_args,
+                kind: solved_kind,
+                name: solved_name,
+                args: solved_args,
             },
-        ) if expected_kind == actual_kind && expected_name.name == actual_name.name => {
-            for (expected_arg, actual_arg) in expected_args.iter().zip(actual_args.iter()) {
-                unify_and_solve_ty(expected_arg, actual_arg, ty_var_env);
+        ) if decl_kind == solved_kind && decl_name.name == solved_name.name => {
+            for (decl_arg, solved_arg) in decl_args.iter().zip(solved_args.iter()) {
+                unify_and_solve_ty(decl_arg, solved_arg, ty_var_env);
             }
         }
         _ => {}

@@ -21,7 +21,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     load_toplevel_items(&items, &mut env);
     let (_, _, _, id_to_pos) = check_types(&items, &env);
 
-    let ids_at_pos = find_item_at(&items, offset);
+    let ids_at_pos = find_item_at(&items, offset, offset);
 
     let Some(AstId::Sym(id)) = ids_at_pos.last() else {
         eprintln!("No symbol found at offset {}", offset);

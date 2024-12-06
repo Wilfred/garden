@@ -5,10 +5,11 @@ use garden_lang_parser::ast::{
 use garden_lang_parser::visitor::Visitor;
 
 /// All the items (expressions, symbols) whose position includes
-/// `offset`, outermost first.
-pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize) -> Vec<AstId> {
+/// `offset` and `end_offset`, outermost first.
+pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize, end_offset: usize) -> Vec<AstId> {
     let mut visitor = IdFinder {
         offset,
+        end_offset,
         found_ids: vec![],
     };
     for item in items {
@@ -30,17 +31,18 @@ pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Ex
 }
 
 /// Stores a vec of all the expressions whose expression includes
-/// `offset`.
+/// both `offset` and `end_offset`.
 #[derive(Debug, Default, Clone)]
 struct IdFinder {
     offset: usize,
+    end_offset: usize,
     found_ids: Vec<AstId>,
 }
 
 impl Visitor for IdFinder {
     fn visit_expr(&mut self, expr: &Expression) {
         let pos = &expr.pos;
-        if !pos.contains_offset(self.offset) {
+        if !(pos.contains_offset(self.offset) && pos.contains_offset(self.end_offset)) {
             return;
         }
 
@@ -49,13 +51,17 @@ impl Visitor for IdFinder {
     }
 
     fn visit_symbol(&mut self, symbol: &Symbol) {
-        if symbol.position.contains_offset(self.offset) {
+        if symbol.position.contains_offset(self.offset)
+            && symbol.position.contains_offset(self.end_offset)
+        {
             self.found_ids.push(AstId::Sym(symbol.id));
         }
     }
 
     fn visit_type_symbol(&mut self, type_symbol: &TypeSymbol) {
-        if type_symbol.position.contains_offset(self.offset) {
+        if type_symbol.position.contains_offset(self.offset)
+            && type_symbol.position.contains_offset(self.end_offset)
+        {
             self.found_ids.push(AstId::TypeSym(type_symbol.id));
         }
     }

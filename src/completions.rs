@@ -22,7 +22,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let mut env = Env::new(&mut id_gen);
     load_toplevel_items(&items, &mut env);
 
-    let ids_at_pos = find_item_at(&items, offset);
+    let ids_at_pos = find_item_at(&items, offset, offset);
 
     let (_, id_to_ty, _, _) = check_types(&items, &env);
 

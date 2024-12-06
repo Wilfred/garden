@@ -17,7 +17,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     load_toplevel_items(&items, &mut env);
     let (_, _, _, id_to_pos) = check_types(&items, &env);
 
-    let ids_at_query_pos = find_item_at(&items, offset);
+    let ids_at_query_pos = find_item_at(&items, offset, offset);
 
     for id in ids_at_query_pos.iter().rev() {
         if let Some(pos) = id_to_pos.get(&id.id()) {

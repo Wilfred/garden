@@ -475,7 +475,7 @@ pub(crate) fn eval_up_to(
     offset: usize,
     id_gen: &mut SyntaxIdGenerator,
 ) -> Option<Result<(Value, Position), EvalError>> {
-    let syn_ids = find_item_at(items, offset);
+    let syn_ids = find_item_at(items, offset, offset);
 
     let mut expr_id: Option<SyntaxId> = None;
     let mut position = None;

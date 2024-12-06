@@ -174,6 +174,10 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.push_scope();
         if let Definition_::Method(method_info) = &def.2 {
             self.add_binding(&method_info.receiver_sym);
+            // Always treat the method receiver as used, because we
+            // can't avoid defining this parameter even when we don't
+            // use it.
+            self.mark_used(&method_info.receiver_sym.name);
         }
 
         self.visit_def_(&def.2);

@@ -5,11 +5,6 @@ fun (this: List<NoSuchType>) foo<T>() {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Warning: `this` is unused.
-// 
-// --> src/test_files/check/missing_type_receiver_param.gdn:1
-// fun (this: List<NoSuchType>) foo<T>() {
-//      ^^^^
 // Error: No such type: NoSuchType
 // 
 // --> src/test_files/check/missing_type_receiver_param.gdn:1

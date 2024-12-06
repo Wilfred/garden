@@ -523,3 +523,23 @@ fun (this: Option<T>) or_exception<T>(): T {
 test option_or_exception {
   assert(Some(123).or_exception() == 123)
 }
+
+// If this value is `Some(x)`, return `x`, otherwise return `value`.
+//
+// ```
+// Some(1).or_value(5) // 1
+// None.or_value(5) // 5
+// ```
+fun (this: Option<T>) or_value<T>(value: T): T {
+  match this {
+    Some(v) => v,
+    None => value
+  }
+}
+
+test option_or_value {
+  assert(Some(1).or_value(5) == 1)
+
+  let n: Option<Int> = None
+  assert(n.or_value(5) == 5)
+}

@@ -24,7 +24,7 @@ Added `+=` and `-=` operators.
 
 Added `assert()` and removed `should_equal()`.
 
-Added `Option::is_some()` and `Option::is_none()`.
+Added `Option::is_some()`, `Option::is_none()` and `Option::or_value()`.
 
 Removed `List::for_each` (use `for x in y` loops instead).
 

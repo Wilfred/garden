@@ -886,7 +886,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             });
                         }
 
-                        let mut ty_var_env = HashMap::default();
+                        let mut ty_var_env = TypeVarEnv::default();
 
                         for (param_ty, (arg_ty, _arg_pos)) in params.iter().zip(arg_tys.iter()) {
                             unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);

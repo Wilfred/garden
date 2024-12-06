@@ -43,7 +43,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     }
 
     let new_src = apply_renames(src, new_name, &visitor.replace_positions);
-    print!("{}", remove_testing_footer(&new_src));
+    print!("{}", new_src);
 }
 
 struct RenameLocalVisitor {
@@ -77,21 +77,6 @@ fn apply_renames(src: &str, new_name: &str, positions: &[Position]) -> String {
         i = position.end_offset;
     }
     new_src.push_str(&src[i..]);
-
-    new_src
-}
-
-/// Drop the `// args: ` and `// expected stdout:` footer, otherwise
-/// we make the comment longer on every run of the test suite.
-fn remove_testing_footer(src: &str) -> String {
-    let mut new_src = String::with_capacity(src.len());
-    for line in src.lines() {
-        if line.starts_with("// args: rename ") {
-            break;
-        }
-        new_src.push_str(line);
-        new_src.push('\n');
-    }
 
     new_src
 }

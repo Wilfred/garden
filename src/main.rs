@@ -275,8 +275,10 @@ fn main() {
             offset,
             override_path,
         } => {
-            let src = read_utf8_or_die(&path);
+            let mut src = read_utf8_or_die(&path);
+
             let offset = offset.unwrap_or_else(|| {
+                src = remove_testing_footer(&src);
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
@@ -351,6 +353,21 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         },
         None => eprintln!("Could not find anything to execute"),
     }
+}
+
+/// Drop the `// args: ` and `// expected stdout:` footer, otherwise
+/// we make the comment longer on every run of the test suite.
+fn remove_testing_footer(src: &str) -> String {
+    let mut new_src = String::with_capacity(src.len());
+    for line in src.lines() {
+        if line.starts_with("// args: rename ") {
+            break;
+        }
+        new_src.push_str(line);
+        new_src.push('\n');
+    }
+
+    new_src
 }
 
 fn read_utf8_or_die(path: &Path) -> String {

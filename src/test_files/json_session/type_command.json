@@ -1,0 +1,14 @@
+{ "method": "run", "input": ":type fun() {}" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "run_command": {
+//       "message": "Fun<(), Unit>",
+//       "stack_frame_name": "TOP"
+//     }
+//   },
+//   "position": null
+// }
+

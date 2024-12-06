@@ -262,7 +262,16 @@ impl Type {
 
         let return_ = match &fun_info.return_hint {
             Some(hint) => Self::from_hint(hint, global_tys, &type_bindings)?,
-            None => Type::Top,
+            None => {
+                if fun_info.body.exprs.is_empty() {
+                    Self::unit()
+                } else {
+                    // We don't necessarily know what values are being
+                    // passed in to this closure, so conservatively
+                    // use Top.
+                    Type::Top
+                }
+            }
         };
 
         Ok(Type::Fun {

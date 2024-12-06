@@ -993,27 +993,35 @@ impl<'a> TypeCheckVisitor<'a> {
                             ty_var_env.insert(type_param.name.clone(), None);
                         }
 
-                        let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
-                            self.env,
-                            method_info,
-                            &recv.pos,
-                            &receiver_ty,
-                            &arg_tys,
-                            &mut ty_var_env,
-                        );
-                        self.diagnostics.extend(more_diagnostics);
+                        let params: Vec<Type> = fun_info
+                            .params
+                            .iter()
+                            .map(|sym_with_hint| match &sym_with_hint.hint {
+                                Some(hint) => Type::from_hint(hint, &self.env.types, &ty_var_env)
+                                    .unwrap_or_err_ty(),
+                                None => Type::Top,
+                            })
+                            .collect();
 
-                        for (param, (arg_ty, arg_pos)) in fun_info.params.iter().zip(&arg_tys) {
-                            let Some(param_hint) = &param.hint else {
-                                continue;
-                            };
-                            let Ok(param_ty) =
-                                Type::from_hint(param_hint, &self.env.types, &ty_var_env)
-                            else {
-                                continue;
-                            };
+                        let recv_decl_ty = Type::from_hint(
+                            &method_info.receiver_hint,
+                            &self.env.types,
+                            &ty_var_env,
+                        )
+                        .unwrap_or_err_ty();
+                        unify_and_solve_ty(&recv_decl_ty, &receiver_ty, &mut ty_var_env);
 
-                            if !is_subtype(arg_ty, &param_ty) {
+                        for (param_ty, (arg_ty, _arg_pos)) in params.iter().zip(arg_tys.iter()) {
+                            unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                        }
+
+                        let params = params
+                            .iter()
+                            .map(|p| subst_ty_vars(p, &ty_var_env))
+                            .collect::<Vec<_>>();
+
+                        for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(&arg_tys) {
+                            if !is_subtype(arg_ty, param_ty) {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
                                     message: format!(
@@ -1024,6 +1032,16 @@ impl<'a> TypeCheckVisitor<'a> {
                                 });
                             }
                         }
+
+                        let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
+                            self.env,
+                            method_info,
+                            &recv.pos,
+                            &receiver_ty,
+                            &arg_tys,
+                            &mut ty_var_env,
+                        );
+                        self.diagnostics.extend(more_diagnostics);
 
                         subst_ty_vars(&ret_ty, &ty_var_env)
                     }

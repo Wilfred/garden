@@ -1,0 +1,20 @@
+fun (this: String) foo<T>(_: List<T>, value: T): T {
+  value
+}
+
+fun bar<T>(_: List<T>, value: T): T {
+  value
+}
+
+{
+  // Solve type parameters on functions.
+  bar([], 1)
+
+  // Solve type parameters across arguments to methods.
+  "".foo([], 1)
+
+  // Solve type parameters between arguments and `this` on methods.
+  let _: Int = None.or_value(5)
+}
+
+// args: check

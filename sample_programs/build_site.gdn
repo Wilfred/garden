@@ -9,7 +9,7 @@ fun render_markdown_header(src: String): String {
   let open_tag = "".join(["<h", string_repr(h_count), ">"])
   let close_tag = "".join(["</h", string_repr(h_count), ">"])
 
-  "".join([open_tag, src.strip_prefix(" "), close_tag])
+  "".join([open_tag, render_inline(src.strip_prefix(" ")), close_tag])
 }
 
 fun render_inline(src: String): String {
@@ -98,10 +98,6 @@ fun render_link(src: String): (String, String) {
   }
 }
 
-{
-  render_link("[click me](example.com) b")
-}
-
 fun render_markdown_paragraph(src: String): String {
   "".join(["<p>", render_inline(src), "</p>"])
 }
@@ -137,13 +133,12 @@ test render_backtick {
   assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
 }
 
-// TODO: currently failing
-test render_link {
-  assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
+test render_backtick_in_heading {
+  assert(render_markdown("# `foo`") == "<h1><code>foo</code></h1>")
 }
 
-{
-  render_markdown("# foo\n\nbar.")
+test render_link {
+  assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
 }
 
 fun file_name(path: String): String {

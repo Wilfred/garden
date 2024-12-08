@@ -1,0 +1,18 @@
+fun contains_expr() {
+  let x = 1
+  x.no_such_meth()
+//^^^^^^^^^^^^^^^^
+}
+
+// args: extract-function --name extracted_fun
+// expected stdout:
+// fun extracted_fun() {
+//   x.no_such_meth()
+// }
+// 
+// fun contains_expr() {
+//   let x = 1
+//   extracted_fun()
+// //^^^^^^^^^^^^^^^^
+// }
+

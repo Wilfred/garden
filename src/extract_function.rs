@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{AstId, SyntaxIdGenerator},
+    ast::{AstId, Expression, SyntaxIdGenerator},
     parse_toplevel_items,
 };
 
@@ -9,6 +9,7 @@ use crate::{
     checks::type_checker::check_types,
     env::Env,
     eval::load_toplevel_items,
+    garden_type::Type,
     pos_to_id::{find_expr_of_id, find_item_at},
 };
 
@@ -44,11 +45,6 @@ pub(crate) fn extract_function(
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
-    let return_ty = if let Some(ty) = id_to_ty.get(expr_id) {
-        format!(": {}", ty)
-    } else {
-        "".to_owned()
-    };
 
     for item in items {
         let item_pos = item.position();
@@ -56,12 +52,9 @@ pub(crate) fn extract_function(
             // All the items before this one.
             print!("{}", &src[..item_pos.start_offset]);
 
-            // The extracted function.
             println!(
-                "fun {}(){} {{\n  {}\n}}\n",
-                name,
-                return_ty,
-                &src[expr.pos.start_offset..expr.pos.end_offset]
+                "{}",
+                extracted_fun_src(src, name, id_to_ty.get(expr_id), &expr)
             );
 
             // The item, with the expression replaced by a call.
@@ -75,4 +68,18 @@ pub(crate) fn extract_function(
             break;
         }
     }
+}
+
+fn extracted_fun_src(src: &str, name: &str, return_ty: Option<&Type>, expr: &Expression) -> String {
+    let return_signatuure = match return_ty {
+        Some(Type::Top | Type::Error(_)) | None => "".to_owned(),
+        Some(ty) => format!(": {}", ty),
+    };
+
+    format!(
+        "fun {}(){} {{\n  {}\n}}\n",
+        name,
+        return_signatuure,
+        &src[expr.pos.start_offset..expr.pos.end_offset]
+    )
 }

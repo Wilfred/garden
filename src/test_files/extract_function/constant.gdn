@@ -12,7 +12,7 @@ fun after() {}
 // expected stdout:
 // fun before() {}
 // 
-// fun bar() {
+// fun bar(): Int {
 //   1 + 2
 // }
 // 

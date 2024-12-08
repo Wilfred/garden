@@ -6,6 +6,7 @@ use garden_lang_parser::{
 };
 
 use crate::{
+    checks::type_checker::check_types,
     env::Env,
     eval::load_toplevel_items,
     pos_to_id::{find_expr_of_id, find_item_at},
@@ -23,6 +24,7 @@ pub(crate) fn extract_function(
 
     let mut env = Env::new(&mut id_gen);
     load_toplevel_items(&items, &mut env);
+    let (_, id_to_ty, _, _) = check_types(&items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 
@@ -42,6 +44,11 @@ pub(crate) fn extract_function(
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
+    let return_ty = if let Some(ty) = id_to_ty.get(expr_id) {
+        format!(": {}", ty)
+    } else {
+        "".to_owned()
+    };
 
     for item in items {
         let item_pos = item.position();
@@ -51,8 +58,9 @@ pub(crate) fn extract_function(
 
             // The extracted function.
             println!(
-                "fun {}() {{\n  {}\n}}\n",
+                "fun {}(){} {{\n  {}\n}}\n",
                 name,
+                return_ty,
                 &src[expr.pos.start_offset..expr.pos.end_offset]
             );
 

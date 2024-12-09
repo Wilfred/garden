@@ -766,7 +766,7 @@ and return its path."
     result))
 
 (defun garden--async-command (command-name callback &optional extra-args)
-  "Run CLI command COMMAND with the position of point, and call CALLBACK with
+  "Run CLI command COMMAND-NAME with the position of point, and call CALLBACK with
 the result."
   (let* ((tmp-file-of-src (garden--buf-as-tmp-file))
          (output-buffer (generate-new-buffer (format "*garden-%s-async*" command-name)))

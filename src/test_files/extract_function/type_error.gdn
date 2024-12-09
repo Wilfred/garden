@@ -6,13 +6,13 @@ fun contains_expr() {
 
 // args: extract-function --name extracted_fun
 // expected stdout:
-// fun extracted_fun() {
+// fun extracted_fun(x) {
 //   x.no_such_meth()
 // }
 // 
 // fun contains_expr() {
 //   let x = 1
-//   extracted_fun()
+//   extracted_fun(x)
 // //^^^^^^^^^^^^^^^^
 // }
 

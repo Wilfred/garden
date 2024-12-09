@@ -838,6 +838,24 @@ the result."
      (list
       "--new-name" new-name "--override-path" (buffer-file-name)))))
 
+(defun garden-extract-function (name)
+  "Extract the current region as a new function."
+  (interactive "sName: ")
+  (let ((buf (current-buffer))
+        (start (region-beginning))
+        (end (region-end)))
+    (deactivate-mark)
+    (garden--async-command
+     "extract-function"
+     (lambda (src)
+       (with-current-buffer buf
+         (delete-region (point-min) (point-max))
+         (insert src)
+         (goto-char start)))
+     (list
+      (format "%s" (1- end))
+      "--name" name "--override-path" (buffer-file-name)))))
+
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-z") #'garden-toggle-session)

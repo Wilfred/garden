@@ -22,7 +22,7 @@ Added `+=` and `-=` operators.
 
 ## Standard Library
 
-Added `assert()` and removed `should_equal()`.
+Added `source_directory()`, `assert()` and removed `should_equal()`.
 
 Added `Option::is_some()`, `Option::is_none()` and `Option::or_value()`.
 

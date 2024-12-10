@@ -2150,6 +2150,23 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::SourceDirectory => {
+            check_arity(
+                &SymbolName("source_directory".to_owned()),
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let path = position.path.clone();
+
+            if expr_value_is_used {
+                let v = Value::some(Value::String(path.display().to_string()), env);
+                env.push_value(v);
+            }
+        }
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(
                 &SymbolName("working_directory".to_owned()),

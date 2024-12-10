@@ -122,6 +122,16 @@ fun working_directory(): String {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Return the path of the directory that contains the current source
+// file. Returns None when run directly in a CLI or JSON session.
+//
+// ```
+// source_directory() // "/home/yourname/awesome_garden_project"
+// ```
+fun source_directory(): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
 // Return a new list with the value added to the end.
 //
 // ```

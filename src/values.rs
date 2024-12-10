@@ -91,6 +91,27 @@ impl Value {
         }
     }
 
+    pub(crate) fn some(v: Value, env: &Env) -> Self {
+        let value_type = Type::from_value(&v, &env.types, &env.stack.type_bindings());
+
+        // We can assume that Option is always defined because it's in the
+        // prelude.
+        Value::EnumVariant {
+            type_name: TypeName {
+                name: "Option".to_owned(),
+            },
+            variant_idx: 0,
+            payload: Some(Box::new(v)),
+            runtime_type: Type::UserDefined {
+                kind: TypeDefKind::Enum,
+                name: TypeName {
+                    name: "Option".to_owned(),
+                },
+                args: vec![value_type],
+            },
+        }
+    }
+
     pub(crate) fn ok(v: Value, env: &Env) -> Self {
         let value_type = Type::from_value(&v, &env.types, &env.stack.type_bindings());
 
@@ -164,6 +185,7 @@ pub(crate) enum BuiltinFunctionKind {
     Print,
     Println,
     ReadFile,
+    SourceDirectory,
     WorkingDirectory,
     WriteFile,
 }
@@ -180,6 +202,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
             BuiltinFunctionKind::ReadFile => "read_file",
+            BuiltinFunctionKind::SourceDirectory => "source_directory",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
             BuiltinFunctionKind::WriteFile => "write_file",
         };

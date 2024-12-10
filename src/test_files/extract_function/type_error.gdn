@@ -6,7 +6,7 @@ fun contains_expr() {
 
 // args: extract-function --name extracted_fun
 // expected stdout:
-// fun extracted_fun(x) {
+// fun extracted_fun(x: Int) {
 //   x.no_such_meth()
 // }
 // 

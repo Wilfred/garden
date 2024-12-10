@@ -1,7 +1,7 @@
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
-    ast::{AstId, Expression, Symbol, SymbolName, SyntaxIdGenerator},
+    ast::{AstId, Expression, Expression_, SymbolName, SyntaxId, SyntaxIdGenerator},
     parse_toplevel_items,
     visitor::Visitor,
 };
@@ -46,7 +46,7 @@ pub(crate) fn extract_function(
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
-    let params = locals_outside_expr(&env, &expr);
+    let params = locals_outside_expr(&env, &id_to_ty, &expr);
 
     for item in items {
         let item_pos = item.position();
@@ -64,7 +64,7 @@ pub(crate) fn extract_function(
 
             let arguments_src = params
                 .iter()
-                .map(|param| param.0.clone())
+                .map(|(param, _)| param.0.clone())
                 .collect::<Vec<String>>()
                 .join(", ");
 
@@ -84,7 +84,7 @@ fn extracted_fun_src(
     name: &str,
     return_ty: Option<&Type>,
     expr: &Expression,
-    params: &[SymbolName],
+    params: &[(SymbolName, Option<Type>)],
 ) -> String {
     let return_signatuure = match return_ty {
         Some(Type::Top | Type::Error(_)) | None => "".to_owned(),
@@ -93,8 +93,11 @@ fn extracted_fun_src(
 
     let params_signature = params
         .iter()
-        .map(|param| param.0.clone())
-        .collect::<Vec<String>>()
+        .map(|(param, ty)| match ty {
+            Some(ty) => format!("{}: {}", param.0, ty),
+            None => param.0.to_owned(),
+        })
+        .collect::<Vec<_>>()
         .join(", ");
 
     format!(
@@ -106,9 +109,14 @@ fn extracted_fun_src(
     )
 }
 
-fn locals_outside_expr(env: &Env, expr: &Expression) -> Vec<SymbolName> {
+fn locals_outside_expr(
+    env: &Env,
+    id_to_ty: &HashMap<SyntaxId, Type>,
+    expr: &Expression,
+) -> Vec<(SymbolName, Option<Type>)> {
     let mut visitor = OutsideVarsVisitor {
         env,
+        id_to_ty: id_to_ty.clone(),
         vars_outside: vec![],
     };
 
@@ -121,13 +129,19 @@ fn locals_outside_expr(env: &Env, expr: &Expression) -> Vec<SymbolName> {
 
 struct OutsideVarsVisitor<'a> {
     env: &'a Env,
-    vars_outside: Vec<SymbolName>,
+    vars_outside: Vec<(SymbolName, Option<Type>)>,
+    id_to_ty: HashMap<SyntaxId, Type>,
 }
 
 impl Visitor for OutsideVarsVisitor<'_> {
-    fn visit_expr_variable(&mut self, symbol: &Symbol) {
-        if !self.env.file_scope.contains_key(&symbol.name) {
-            self.vars_outside.push(symbol.name.clone());
+    fn visit_expr(&mut self, expr: &Expression) {
+        self.visit_expr_(&expr.expr_);
+
+        if let Expression_::Variable(symbol) = &expr.expr_ {
+            if !self.env.file_scope.contains_key(&symbol.name) {
+                self.vars_outside
+                    .push((symbol.name.clone(), self.id_to_ty.get(&expr.id).cloned()));
+            }
         }
     }
 }

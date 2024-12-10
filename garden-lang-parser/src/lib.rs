@@ -2055,7 +2055,7 @@ fn parse_toplevel_items_from_tokens(
             Some(item) => {
                 let was_invalid = match &item {
                     ToplevelItem::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
-                    _ => false,
+                    ToplevelItem::Def(definition) => definition.2.is_invalid_or_placeholder(),
                 };
 
                 items.push(item);

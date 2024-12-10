@@ -90,6 +90,13 @@ impl Display for TypeSymbol {
     }
 }
 
+impl TypeSymbol {
+    pub fn is_placeholder(&self) -> bool {
+        // TODO: Prevent users from writing this symbol in userland code.
+        self.name.name == "__placeholder" || self.name.name == "__reserved_word_placeholder"
+    }
+}
+
 /// Represents a type name in source code. This might be a concrete
 /// type, such as `List<Int>`, or may refer to generics
 /// e.g. `List<T>`.
@@ -609,6 +616,18 @@ pub enum Definition_ {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Definition(pub SourceString, pub Position, pub Definition_);
+
+impl Definition_ {
+    pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
+        match self {
+            Definition_::Fun(symbol, _) => symbol.is_placeholder(),
+            Definition_::Method(method_info) => method_info.name_sym.is_placeholder(),
+            Definition_::Test(test_info) => test_info.name_sym.is_placeholder(),
+            Definition_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
+            Definition_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToplevelItem {

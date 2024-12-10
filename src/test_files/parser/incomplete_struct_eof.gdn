@@ -1,0 +1,47 @@
+fun bar() {}
+
+struct
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"bar",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"bar",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+// Struct(
+//     StructInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: TypeSymbol"__reserved_word_placeholder",
+//         type_params: [],
+//         fields: [],
+//     },
+// )
+
+// expected stderr:
+// Parse error (incomplete input): Expected variable name, got EOF
+// Error: Parse error: 'struct' is a reserved word that cannot be used as a name
+// 
+// --> src/test_files/parser/incomplete_struct_eof.gdn:3
+// struct
+// ^^^^^^
+// Error: Parse error: Expected `{`, got `struct`
+// 
+// --> src/test_files/parser/incomplete_struct_eof.gdn:3
+// struct
+// ^^^^^^
+

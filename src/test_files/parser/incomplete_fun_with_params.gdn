@@ -1,0 +1,50 @@
+fun foo()
+
+fun bar() {}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"foo",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+// Fun(
+//     Symbol"bar",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"bar",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: Expected `{`, got `fun`
+// 
+// --> src/test_files/parser/incomplete_fun_with_params.gdn:3
+// fun bar() {}
+// ^^^
+

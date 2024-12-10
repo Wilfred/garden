@@ -1139,24 +1139,29 @@ fn parse_struct(
     let name_sym = parse_type_symbol(tokens, id_gen, diagnostics);
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
+    let error_count = diagnostics.len();
     let _open_brace = require_token(tokens, diagnostics, "{");
 
-    let fields = parse_struct_fields(tokens, id_gen, diagnostics);
-
-    let close_brace = require_token(tokens, diagnostics, "}");
+    let (fields, close_brace_pos) = if diagnostics.len() > error_count {
+        (vec![], name_sym.position.clone())
+    } else {
+        let fields = parse_struct_fields(tokens, id_gen, diagnostics);
+        let close_brace = require_token(tokens, diagnostics, "}");
+        (fields, close_brace.position)
+    };
 
     let mut start_offset = struct_token.position.start_offset;
     if let Some((comment_pos, _)) = struct_token.preceding_comments.first() {
         start_offset = comment_pos.start_offset;
     }
-    let end_offset = close_brace.position.end_offset;
+    let end_offset = close_brace_pos.end_offset;
 
     let src_string = SourceString {
         offset: start_offset,
         src: src[start_offset..end_offset].to_owned(),
     };
 
-    let position = Position::merge(&struct_token.position, &close_brace.position);
+    let position = Position::merge(&struct_token.position, &close_brace_pos);
 
     Definition(
         src_string.clone(),

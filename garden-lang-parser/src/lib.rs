@@ -1091,24 +1091,29 @@ fn parse_enum(
     let name_symbol = parse_type_symbol(tokens, id_gen, diagnostics);
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
+    let error_count = diagnostics.len();
     let _open_brace = require_token(tokens, diagnostics, "{");
 
-    let variants = parse_enum_body(tokens, id_gen, diagnostics);
-
-    let close_brace = require_token(tokens, diagnostics, "}");
+    let (variants, close_brace_pos) = if diagnostics.len() > error_count {
+        (vec![], name_symbol.position.clone())
+    } else {
+        let variants = parse_enum_body(tokens, id_gen, diagnostics);
+        let close_brace = require_token(tokens, diagnostics, "}");
+        (variants, close_brace.position)
+    };
 
     let mut start_offset = enum_token.position.start_offset;
     if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
         start_offset = comment_pos.start_offset;
     }
-    let end_offset = close_brace.position.end_offset;
+    let end_offset = close_brace_pos.end_offset;
 
     let src_string = SourceString {
         offset: start_offset,
         src: src[start_offset..end_offset].to_owned(),
     };
 
-    let position = Position::merge(&enum_token.position, &close_brace.position);
+    let position = Position::merge(&enum_token.position, &close_brace_pos);
 
     Definition(
         src_string.clone(),

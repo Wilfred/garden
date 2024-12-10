@@ -1,0 +1,41 @@
+enum Foo
+
+fun bar() {}
+
+// args: dump-ast
+// expected stdout:
+// Enum(
+//     EnumInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: TypeSymbol"Foo",
+//         type_params: [],
+//         variants: [],
+//     },
+// )
+// Fun(
+//     Symbol"bar",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"bar",
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+// )
+
+// expected stderr:
+// Error: Parse error: Expected `{`, got `fun`
+// 
+// --> src/test_files/parser/incomplete_enum.gdn:3
+// fun bar() {}
+// ^^^
+

@@ -1769,7 +1769,7 @@ fn parse_function(
     let doc_comment = parse_doc_comment(&fun_token);
 
     let name_sym = parse_symbol(tokens, id_gen, diagnostics);
-    if is_keyword_placeholder(&name_sym) {
+    if is_reserved_word_placeholder(&name_sym) {
         // The next name is a keyword, it's probably the beginning of
         // a whole new definition. Give up on this definition having
         // only consumed our own keyword.
@@ -1827,16 +1827,16 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) ->
     }
 }
 
-fn keyword_placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
+fn reserved_word_placeholer(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
     Symbol {
         position,
-        name: SymbolName("__keyword_placeholder".to_string()),
+        name: SymbolName("__reserved_word_placeholder".to_string()),
         id: id_gen.next(),
     }
 }
 
-fn is_keyword_placeholder(symbol: &Symbol) -> bool {
-    symbol.name.0 == "__keyword_placeholder"
+fn is_reserved_word_placeholder(symbol: &Symbol) -> bool {
+    symbol.name.0 == "__reserved_word_placeholder"
 }
 
 fn parse_let_destination(
@@ -1930,7 +1930,7 @@ fn parse_symbol(
                 additional: vec![],
             });
             tokens.unpop();
-            return keyword_placeholder_symbol(variable_token.position, id_gen);
+            return reserved_word_placeholer(variable_token.position, id_gen);
         }
     }
 

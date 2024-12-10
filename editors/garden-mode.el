@@ -823,9 +823,18 @@ the result."
    #'garden--go-to-position
    (list "--override-path" (buffer-file-name))))
 
+(defun garden--read-symbol (prompt)
+  "Read a symbol from the minibuffer, defaulting to the one at point."
+  (let* ((sym (symbol-at-point))
+         (sym-name (when sym
+                     (substring-no-properties (symbol-name sym)))))
+    (read-from-minibuffer prompt sym-name)))
+
+(garden--read-symbol "foo ")
+
 (defun garden-rename (new-name)
   "Rename the variable at point."
-  (interactive "sNew name: ")
+  (interactive (list (garden--read-symbol "New name: ")))
   (let ((buf (current-buffer))
         (start-pos (point)))
     (garden--async-command

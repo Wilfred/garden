@@ -1,0 +1,11 @@
+fun (this: String) foo(xyz: Int) {
+    //                  ^
+}
+
+fun main(_) {
+    "abc".foo(123)
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/meth_param.gdn:1: 123
+

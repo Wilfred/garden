@@ -455,8 +455,34 @@ pub(crate) fn eval_up_to_param(
                     }
                 }
             }
-            Definition_::Method(_) => {
-                // TODO
+            Definition_::Method(meth_info) => {
+                let Some(prev_calls_on_type) = env
+                    .prev_method_call_args
+                    .get(&meth_info.receiver_hint.sym.name)
+                else {
+                    continue;
+                };
+
+                let Some(fun_info) = meth_info.fun_info() else {
+                    continue;
+                };
+
+                let (_prev_receiver, prev_args) = match prev_calls_on_type
+                    .get(&meth_info.name_sym.name)
+                {
+                    Some((prev_receiver, prev_args)) => (prev_receiver.clone(), prev_args.clone()),
+                    None => continue,
+                };
+
+                for (i, param) in fun_info.params.iter().enumerate() {
+                    if param.symbol.id != id {
+                        continue;
+                    }
+
+                    if let Some(value) = prev_args.get(i) {
+                        return Some((value.clone(), param.symbol.position.clone()));
+                    }
+                }
             }
             _ => {}
         }

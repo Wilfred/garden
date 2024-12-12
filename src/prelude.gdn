@@ -510,6 +510,39 @@ test list_map {
   assert(incremented == [2, 3, 4])
 }
 
+// Return a new list consisting of the items from index i (inclusive)
+// to index j (exclusive). If `j` is negative, count backwards from
+// the end.
+//
+// [10, 11, 12].slice(0, 2) // [10, 11]
+// [10, 11, 12].slice(1, -1) // [11, 12]
+fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
+  if (j < 0) {
+    j = this.len() + j
+  }
+
+  let items: List<T> = []
+
+  let index = 0
+  for item in this {
+    if (index >= i) && (index < j) {
+      items = items.append(item)
+    }
+
+    index += 1
+  }
+
+  items
+}
+
+test list_slice {
+  assert([10, 11, 12].slice(0, 1) == [10])
+  assert([10, 11, 12].slice(1, 2) == [11])
+  assert([10, 11, 12].slice(0, 2) == [10, 11])
+
+  assert([10, 11, 12].slice(0, -1) == [10, 11])
+}
+
 // Option methods.
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.

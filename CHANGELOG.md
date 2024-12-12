@@ -24,7 +24,8 @@ Added `+=` and `-=` operators.
 
 Added `source_directory()`, `assert()` and removed `should_equal()`.
 
-Added `Option::is_some()`, `Option::is_none()` and `Option::or_value()`.
+Added `List::slice`, `Option::is_some()`, `Option::is_none()` and
+`Option::or_value()`.
 
 Removed `List::for_each` (use `for x in y` loops instead).
 

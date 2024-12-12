@@ -16,4 +16,5 @@ fun foo() {
 // {"name":"last()","suffix":": Option<T>"}
 // {"name":"len()","suffix":": Int"}
 // {"name":"map","suffix":"(Fun<(T), U>): List<U>"}
+// {"name":"slice","suffix":"(Int, Int): List<T>"}
 

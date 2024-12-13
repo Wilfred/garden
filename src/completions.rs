@@ -26,7 +26,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
 
     let (_, id_to_ty, _, _) = check_types(&items, &env);
 
-    if let Some(AstId::Expr(id)) = ids_at_pos.last() {
+    if let Some(AstId::Expr(id)) = ids_at_pos.first() {
         if let Some(expr) = find_expr_of_id(&items, *id) {
             match &expr.expr_ {
                 Expression_::DotAccess(recv, meth_sym) => {

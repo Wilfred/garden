@@ -1,0 +1,11 @@
+fun (this: String) foo(x: Int) {
+    //  ^
+}
+
+fun main(_) {
+    "abc".foo(123)
+}
+
+// args: test-eval-up-to
+// expected stderr: Could not find anything to execute
+

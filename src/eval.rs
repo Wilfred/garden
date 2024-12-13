@@ -467,12 +467,19 @@ pub(crate) fn eval_up_to_param(
                     continue;
                 };
 
-                let (_prev_receiver, prev_args) = match prev_calls_on_type
+                let (prev_receiver, prev_args) = match prev_calls_on_type
                     .get(&meth_info.name_sym.name)
                 {
                     Some((prev_receiver, prev_args)) => (prev_receiver.clone(), prev_args.clone()),
                     None => continue,
                 };
+
+                if meth_info.receiver_sym.id == id {
+                    return Some((
+                        prev_receiver.clone(),
+                        meth_info.receiver_sym.position.clone(),
+                    ));
+                }
 
                 for (i, param) in fun_info.params.iter().enumerate() {
                     if param.symbol.id != id {

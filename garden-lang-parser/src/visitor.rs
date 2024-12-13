@@ -36,6 +36,7 @@ pub trait Visitor {
 
     fn visit_method_info_default(&mut self, method_info: &MethodInfo) {
         self.visit_type_hint(&method_info.receiver_hint);
+        self.visit_symbol(&method_info.receiver_sym);
 
         if let Some(fun_info) = method_info.fun_info() {
             self.visit_fun_info(fun_info);

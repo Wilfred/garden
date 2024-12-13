@@ -7,7 +7,7 @@ pub(crate) fn find_caret_offset(src: &str) -> Option<usize> {
     let re = Regex::new("// *\\^").unwrap();
 
     let comment_match = re.find(src)?;
-    let end_comment_offset = comment_match.end();
+    let end_comment_offset = comment_match.end() - 1;
 
     let prev_line_end = src[..end_comment_offset].rfind('\n')?;
     let column = end_comment_offset - prev_line_end;

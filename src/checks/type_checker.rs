@@ -700,11 +700,44 @@ impl<'a> TypeCheckVisitor<'a> {
                 Type::Tuple(item_tys)
             }
             Expression_::StructLiteral(name_sym, fields) => {
-                for (_, expr) in fields {
-                    self.check_expr(expr, type_bindings, expected_return_ty);
-                }
+                let field_tys: Vec<_> = fields
+                    .iter()
+                    .map(|(sym, expr)| {
+                        let ty = self.check_expr(expr, type_bindings, expected_return_ty);
+                        (sym, expr.pos.clone(), ty)
+                    })
+                    .collect();
 
-                if let Some(TypeDef::Struct(_)) = self.env.get_type_def(&name_sym.name) {
+                if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym.name) {
+                    let mut ty_var_env = TypeVarEnv::default();
+                    for type_param in &struct_info.type_params {
+                        ty_var_env.insert(type_param.name.clone(), None);
+                    }
+
+                    let mut sym_to_expected_ty = HashMap::new();
+                    for field in &struct_info.fields {
+                        let ty = Type::from_hint(&field.hint, &self.env.types, &ty_var_env)
+                            .unwrap_or_err_ty();
+                        sym_to_expected_ty.insert(field.sym.name.clone(), ty);
+                    }
+
+                    for (sym, expr_pos, ty) in field_tys {
+                        let Some(field_ty) = sym_to_expected_ty.get(&sym.name) else {
+                            continue;
+                        };
+
+                        if !is_subtype(&ty, field_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected `{}` for this field but got `{}`.",
+                                    field_ty, ty
+                                ),
+                                position: expr_pos,
+                            });
+                        }
+                    }
+
                     Type::UserDefined {
                         kind: TypeDefKind::Struct,
                         name: name_sym.name.clone(),

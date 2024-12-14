@@ -1,5 +1,6 @@
 fun (this: String) foo(x: Int) {
-    //  ^
+  this
+  //^
 }
 
 fun main(_) {
@@ -7,5 +8,5 @@ fun main(_) {
 }
 
 // args: test-eval-up-to
-// expected stdout: src/test_files/eval_up_to/meth_receiver.gdn:1: "abc"
+// expected stdout: src/test_files/eval_up_to/meth_receiver_in_body.gdn:2: "abc"
 

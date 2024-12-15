@@ -2,7 +2,7 @@ fun render_markdown_header(src: String): String {
   let h_count = 0
 
   while src.starts_with("#") {
-    h_count = h_count + 1
+    h_count += 1
     src = src.strip_prefix("#")
   }
 

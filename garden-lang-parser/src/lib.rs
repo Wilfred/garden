@@ -597,13 +597,13 @@ fn parse_struct_literal(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let name = parse_type_symbol(tokens, id_gen, diagnostics);
-    let open_brace = require_token(tokens, diagnostics, "{");
+    require_token(tokens, diagnostics, "{");
     let fields = parse_struct_literal_fields(src, tokens, id_gen, diagnostics);
 
     let close_brace = require_token(tokens, diagnostics, "}");
 
     Expression::new(
-        Position::merge(&open_brace.position, &close_brace.position),
+        Position::merge(&name.position, &close_brace.position),
         Expression_::StructLiteral(name, fields),
         id_gen.next(),
     )

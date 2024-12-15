@@ -13,7 +13,7 @@ fun main(args: List<String>): Unit {
 // 
 // --> src/test_files/runtime/struct_create_missing_fields.gdn:6[2m[1m	 fun main()[0m[0m
 //     dbg(Foo{})
-//            ^^
+//         ^^^^^
 // --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
 // // __toplevel__
 

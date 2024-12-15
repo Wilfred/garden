@@ -269,7 +269,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty();
 
                 let position = match fun_info.body.exprs.last() {
-                    Some(expr) => expr.pos.clone(),
+                    Some(expr) => expr.position.clone(),
                     None => hint.position.clone(),
                 };
 
@@ -303,7 +303,12 @@ impl<'a> TypeCheckVisitor<'a> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
-        let ty = self.check_expr_(&expr.expr_, &expr.pos, type_bindings, expected_return_ty);
+        let ty = self.check_expr_(
+            &expr.expr_,
+            &expr.position,
+            type_bindings,
+            expected_return_ty,
+        );
         self.id_to_ty.insert(expr.id, ty.clone());
 
         ty
@@ -327,7 +332,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
                     check_match_exhaustive(
                         self.env,
-                        &scrutinee.pos,
+                        &scrutinee.position,
                         scrutinee_ty_name,
                         &patterns,
                         &mut self.diagnostics,
@@ -423,7 +428,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             "Expected `Bool` inside an `if` condition, but got `{}`.",
                             cond_ty
                         ),
-                        position: cond_expr.pos.clone(),
+                        position: cond_expr.position.clone(),
                     });
                 }
 
@@ -452,8 +457,8 @@ impl<'a> TypeCheckVisitor<'a> {
                         };
 
                         let position = match then_block.exprs.last() {
-                            Some(last_expr) => last_expr.pos.clone(),
-                            None => cond_expr.pos.clone(),
+                            Some(last_expr) => last_expr.position.clone(),
+                            None => cond_expr.position.clone(),
                         };
 
                         self.diagnostics.push(Diagnostic {
@@ -475,7 +480,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             "Expected `Bool` inside an `while` condition, but got `{}`.",
                             cond_ty
                         ),
-                        position: cond_expr.pos.clone(),
+                        position: cond_expr.position.clone(),
                     });
                 }
 
@@ -503,7 +508,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                 "Expected `List` for a `for` loop, but got `{}`.",
                                 expr_ty
                             ),
-                            position: expr.pos.clone(),
+                            position: expr.position.clone(),
                         });
                         Type::error("For loop expression that isn't a list")
                     }
@@ -536,7 +541,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                 "`{}` has type `{}`, but tried to assign a value of type `{}`.",
                                 sym.name, sym_ty, expr_ty
                             ),
-                            position: expr.pos.clone(),
+                            position: expr.position.clone(),
                         });
                     }
                 }
@@ -570,7 +575,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                 op.as_src(),
                                 expr_ty
                             ),
-                            position: expr.pos.clone(),
+                            position: expr.position.clone(),
                         });
                     }
                 }
@@ -593,7 +598,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                     "Expected `{}` for this let expression, but got `{}`.",
                                     hint_ty, expr_ty
                                 ),
-                                position: expr.pos.clone(),
+                                position: expr.position.clone(),
                             });
                         }
 
@@ -614,7 +619,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                         symbols.len(),
                                         item_tys.len()
                                     ),
-                                    position: expr.pos.clone(),
+                                    position: expr.position.clone(),
                                 });
                             }
 
@@ -635,7 +640,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected a tuple, but got `{}`.", ty),
-                                position: expr.pos.clone(),
+                                position: expr.position.clone(),
                             });
                         }
                     },
@@ -647,7 +652,7 @@ impl<'a> TypeCheckVisitor<'a> {
                 let (ty, position) = if let Some(inner_expr) = inner_expr {
                     (
                         self.check_expr(inner_expr, type_bindings, expected_return_ty),
-                        inner_expr.pos.clone(),
+                        inner_expr.position.clone(),
                     )
                 } else {
                     (Type::unit(), pos.clone())
@@ -704,7 +709,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     .iter()
                     .map(|(sym, expr)| {
                         let ty = self.check_expr(expr, type_bindings, expected_return_ty);
-                        (sym, expr.pos.clone(), ty)
+                        (sym, expr.position.clone(), ty)
                     })
                     .collect();
 
@@ -760,14 +765,14 @@ impl<'a> TypeCheckVisitor<'a> {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
-                                position: lhs.pos.clone(),
+                                position: lhs.position.clone(),
                             });
                         }
                         if !is_subtype(&rhs_ty, &Type::int()) {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
-                                position: rhs.pos.clone(),
+                                position: rhs.position.clone(),
                             });
                         }
 
@@ -781,14 +786,14 @@ impl<'a> TypeCheckVisitor<'a> {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", lhs_ty),
-                                position: lhs.pos.clone(),
+                                position: lhs.position.clone(),
                             });
                         }
                         if !is_subtype(&rhs_ty, &Type::int()) {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected `Int`, but got `{}`.", rhs_ty),
-                                position: rhs.pos.clone(),
+                                position: rhs.position.clone(),
                             });
                         }
 
@@ -813,14 +818,14 @@ impl<'a> TypeCheckVisitor<'a> {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected `Bool`, but got `{}`.", lhs_ty),
-                                position: lhs.pos.clone(),
+                                position: lhs.position.clone(),
                             });
                         }
                         if !is_subtype(&rhs_ty, &Type::bool()) {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!("Expected `Bool`, but got `{}`.", rhs_ty),
-                                position: rhs.pos.clone(),
+                                position: rhs.position.clone(),
                             });
                         }
 
@@ -869,7 +874,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     .map(|arg| {
                         (
                             self.check_expr(arg, type_bindings, expected_return_ty),
-                            arg.pos.clone(),
+                            arg.position.clone(),
                         )
                     })
                     .collect::<Vec<_>>();
@@ -891,7 +896,8 @@ impl<'a> TypeCheckVisitor<'a> {
                             let first_excess_arg = &paren_args.arguments[params.len()];
                             let last_arg = paren_args.arguments.last().unwrap();
 
-                            let position = Position::merge(&first_excess_arg.pos, &last_arg.pos);
+                            let position =
+                                Position::merge(&first_excess_arg.position, &last_arg.position);
 
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
@@ -915,7 +921,7 @@ impl<'a> TypeCheckVisitor<'a> {
                                     if params.len() == 1 { "" } else { "s" },
                                     paren_args.arguments.len()
                                 ),
-                                position: recv.pos.clone(),
+                                position: recv.position.clone(),
                             });
                         }
 
@@ -954,7 +960,7 @@ impl<'a> TypeCheckVisitor<'a> {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: format!("Expected a function, but got a `{}`.", recv_ty),
-                            position: recv.pos.clone(),
+                            position: recv.position.clone(),
                         });
 
                         Type::Error("Calling something that isn't a function".to_owned())
@@ -968,7 +974,7 @@ impl<'a> TypeCheckVisitor<'a> {
                     .map(|arg| {
                         (
                             self.check_expr(arg, type_bindings, expected_return_ty),
-                            arg.pos.clone(),
+                            arg.position.clone(),
                         )
                     })
                     .collect::<Vec<_>>();
@@ -986,7 +992,7 @@ impl<'a> TypeCheckVisitor<'a> {
                             "Expected a type with a `{}` method, but got a `{}`.",
                             &sym.name, receiver_ty
                         ),
-                        position: recv.pos.clone(),
+                        position: recv.position.clone(),
                     });
                     return Type::error("No type name for this method receiver");
                 };
@@ -1069,7 +1075,7 @@ impl<'a> TypeCheckVisitor<'a> {
                         let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
                             self.env,
                             method_info,
-                            &recv.pos,
+                            &recv.position,
                             &receiver_ty,
                             &arg_tys,
                             &mut ty_var_env,

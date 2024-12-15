@@ -455,7 +455,7 @@ impl SyntaxIdGenerator {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Expression {
-    pub pos: Position,
+    pub position: Position,
     pub expr_: Expression_,
     /// Is this expression in a position where its value is used?
     /// This is only false in blocks, e.g. in `{ foo() bar() }`,
@@ -467,7 +467,7 @@ pub struct Expression {
 impl Expression {
     pub(crate) fn new(position: Position, expr_: Expression_, id: SyntaxId) -> Self {
         Self {
-            pos: position,
+            position,
             expr_,
             value_is_used: true,
             id,
@@ -477,7 +477,7 @@ impl Expression {
     /// Helper for creating Invalid expressions.
     pub fn invalid(id: SyntaxId) -> Self {
         Self {
-            pos: Position::todo(),
+            position: Position::todo(),
             expr_: Expression_::Invalid,
             value_is_used: true,
             id,
@@ -639,7 +639,7 @@ impl ToplevelItem {
     pub fn position(&self) -> &Position {
         match self {
             ToplevelItem::Def(definition) => &definition.1,
-            ToplevelItem::Expr(toplevel_expression) => &toplevel_expression.0.pos,
+            ToplevelItem::Expr(toplevel_expression) => &toplevel_expression.0.position,
         }
     }
 }

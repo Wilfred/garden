@@ -19,10 +19,10 @@ fun foo() {
 //             open_brace: Position { ... },
 //             exprs: [
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: Match(
 //                         Expression {
-//                             pos: Position { ... },
+//                             position: Position { ... },
 //                             expr_: Variable(
 //                                 Symbol"x",
 //                             ),

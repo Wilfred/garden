@@ -60,7 +60,10 @@ pub(crate) fn extract_function(
             );
 
             // The item, with the expression replaced by a call.
-            print!("{}", &src[item_pos.start_offset..expr.pos.start_offset]);
+            print!(
+                "{}",
+                &src[item_pos.start_offset..expr.position.start_offset]
+            );
 
             let arguments_src = params
                 .iter()
@@ -69,7 +72,7 @@ pub(crate) fn extract_function(
                 .join(", ");
 
             print!("{}({})", name, arguments_src);
-            print!("{}", &src[expr.pos.end_offset..item_pos.end_offset]);
+            print!("{}", &src[expr.position.end_offset..item_pos.end_offset]);
 
             // Items after.
             print!("{}", &src[item_pos.end_offset..]);
@@ -105,7 +108,7 @@ fn extracted_fun_src(
         name,
         params_signature,
         return_signatuure,
-        &src[expr.pos.start_offset..expr.pos.end_offset]
+        &src[expr.position.start_offset..expr.position.end_offset]
     )
 }
 

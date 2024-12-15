@@ -174,7 +174,7 @@ fn parse_tuple_literal_or_parentheses(
     }
 
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
-    let expr_pos = expr.pos.clone();
+    let expr_pos = expr.position.clone();
 
     if peeked_symbol_is(tokens, ",") {
         let mut exprs = vec![expr];
@@ -299,8 +299,8 @@ fn parse_if(
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
                 // is an ugly hack.
-                open_brace: if_expr.pos.clone(),
-                close_brace: if_expr.pos.clone(),
+                open_brace: if_expr.position.clone(),
+                close_brace: if_expr.position.clone(),
                 exprs: vec![if_expr],
             })
         } else {
@@ -414,7 +414,7 @@ fn parse_return(
     if let Some(next_token) = tokens.peek() {
         if return_token.position.end_line_number == next_token.position.line_number {
             let returned_expr = parse_expression(src, tokens, id_gen, diagnostics);
-            pos = Position::merge(&pos, &returned_expr.pos);
+            pos = Position::merge(&pos, &returned_expr.position);
             expr = Some(Box::new(returned_expr));
         }
     }
@@ -621,7 +621,7 @@ fn parse_match(
     let open_brace = require_token(tokens, diagnostics, "{");
     if open_brace.text != "{" {
         return Expression::new(
-            scrutinee_expr.pos.clone(),
+            scrutinee_expr.position.clone(),
             Expression_::Match(Box::new(scrutinee_expr), vec![]),
             id_gen.next(),
         );
@@ -680,7 +680,7 @@ fn parse_case_block(
         // blocks, because they can have new bindings.
         let case_expr = parse_expression(src, tokens, id_gen, diagnostics);
 
-        let pos = case_expr.pos.clone();
+        let pos = case_expr.position.clone();
         Block {
             open_brace: pos.clone(),
             exprs: vec![case_expr],
@@ -803,7 +803,7 @@ fn parse_simple_expression_with_trailing(
         let start_idx = tokens.idx;
         match tokens.peek() {
             Some(token)
-                if token.text == "(" && expr.pos.end_offset == token.position.start_offset =>
+                if token.text == "(" && expr.position.end_offset == token.position.start_offset =>
             {
                 // Require parentheses to touch when we're parsing a
                 // function call. This allows us to disambiguabe
@@ -812,7 +812,7 @@ fn parse_simple_expression_with_trailing(
                 let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
 
                 expr = Expression::new(
-                    Position::merge(&expr.pos, &arguments.close_paren),
+                    Position::merge(&expr.position, &arguments.close_paren),
                     Expression_::Call(Box::new(expr), arguments),
                     id_gen.next(),
                 );
@@ -836,13 +836,13 @@ fn parse_simple_expression_with_trailing(
                         let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
 
                         expr = Expression::new(
-                            Position::merge(&expr.pos, &arguments.close_paren),
+                            Position::merge(&expr.position, &arguments.close_paren),
                             Expression_::MethodCall(Box::new(expr), variable, arguments),
                             id_gen.next(),
                         );
                     } else {
                         expr = Expression::new(
-                            Position::merge(&expr.pos, &variable.position),
+                            Position::merge(&expr.position, &variable.position),
                             Expression_::DotAccess(Box::new(expr), variable),
                             id_gen.next(),
                         );
@@ -851,7 +851,7 @@ fn parse_simple_expression_with_trailing(
                     let variable = placeholder_symbol(token.position, id_gen);
 
                     expr = Expression::new(
-                        Position::merge(&expr.pos, &variable.position),
+                        Position::merge(&expr.position, &variable.position),
                         Expression_::DotAccess(Box::new(expr), variable),
                         id_gen.next(),
                     );
@@ -969,7 +969,7 @@ fn parse_simple_expression_or_binop(
             let rhs_expr = parse_simple_expression_with_trailing(src, tokens, id_gen, diagnostics);
 
             expr = Expression::new(
-                Position::merge(&expr.pos, &rhs_expr.pos),
+                Position::merge(&expr.position, &rhs_expr.position),
                 Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
                 id_gen.next(),
             );
@@ -1966,7 +1966,7 @@ fn parse_let(
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
-        Position::merge(&let_token.position, &expr.pos),
+        Position::merge(&let_token.position, &expr.position),
         Expression_::Let(destination, hint, Box::new(expr)),
         id_gen.next(),
     )
@@ -1990,7 +1990,7 @@ fn parse_assign(
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
-        Position::merge(&variable.position, &expr.pos),
+        Position::merge(&variable.position, &expr.position),
         Expression_::Assign(variable, Box::new(expr)),
         id_gen.next(),
     )
@@ -2025,7 +2025,7 @@ fn parse_assign_update(
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     Expression::new(
-        Position::merge(&variable.position, &expr.pos),
+        Position::merge(&variable.position, &expr.position),
         Expression_::AssignUpdate(variable, op, Box::new(expr)),
         id_gen.next(),
     )

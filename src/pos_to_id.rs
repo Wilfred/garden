@@ -41,7 +41,7 @@ struct IdFinder {
 
 impl Visitor for IdFinder {
     fn visit_expr(&mut self, expr: &Expression) {
-        let pos = &expr.pos;
+        let pos = &expr.position;
         if !(pos.contains_offset(self.offset) && pos.contains_offset(self.end_offset)) {
             return;
         }

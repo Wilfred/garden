@@ -516,7 +516,7 @@ pub(crate) fn eval_up_to(
         // TODO: this is iterating items twice, which will be slower.
         if let Some(expr) = find_expr_of_id(items, syn_id.id()) {
             expr_id = Some(expr.id);
-            position = Some(expr.pos.clone());
+            position = Some(expr.position.clone());
             break;
         }
     }
@@ -710,7 +710,7 @@ pub(crate) fn eval_toplevel_call(
     }
 
     let recv_expr = Expression {
-        pos: Position::todo(),
+        position: Position::todo(),
         expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, id_gen.next())),
         value_is_used: true,
         id: id_gen.next(),
@@ -723,7 +723,7 @@ pub(crate) fn eval_toplevel_call(
     };
 
     let call_expr = Expression {
-        pos: Position::todo(),
+        position: Position::todo(),
         expr_: Expression_::Call(Box::new(recv_expr), paren_args),
         value_is_used: true,
         id: id_gen.next(),
@@ -751,7 +751,7 @@ pub(crate) fn eval_toplevel_method_call(
     // Just create a placeholder symbol for the receiver. Since we
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
-        pos: Position::todo(),
+        position: Position::todo(),
         expr_: Expression_::Variable(placeholder_symbol(Position::todo(), id_gen)),
         value_is_used: true,
         id: id_gen.next(),
@@ -770,7 +770,7 @@ pub(crate) fn eval_toplevel_method_call(
     };
 
     let call_expr = Expression {
-        pos: Position::todo(),
+        position: Position::todo(),
         expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
         id: id_gen.next(),
@@ -1229,7 +1229,7 @@ fn eval_for_in(
             unreachable!(
                 "`for` loop index should always be an `Int`, got `{}`: {}",
                 v.display(env),
-                outer_expr.pos.as_ide_string()
+                outer_expr.position.as_ide_string()
             )
         }
     };
@@ -2324,7 +2324,7 @@ fn eval_call(
                 ));
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(caller_expr.pos.clone(), message),
+                    EvalError::ResumableError(caller_expr.position.clone(), message),
                 ));
             }
 
@@ -2352,7 +2352,7 @@ fn eval_call(
             });
 
             return Ok(Some(StackFrame {
-                caller_pos: Some(caller_expr.pos.clone()),
+                caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
                 bindings: Bindings {
                     block_bindings: bindings,
@@ -2376,7 +2376,7 @@ fn eval_call(
             check_arity(
                 &name_sym.name,
                 receiver_value,
-                &caller_expr.pos,
+                &caller_expr.position,
                 params.len(),
                 arg_positions,
                 arg_values,
@@ -2428,7 +2428,7 @@ fn eval_call(
             return Ok(Some(StackFrame {
                 enclosing_fun: Some(fi.clone()),
                 src: fi.src_string.clone(),
-                caller_pos: Some(caller_expr.pos.clone()),
+                caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
                 enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
                 bindings: Bindings::new_with(fun_bindings),
@@ -2443,11 +2443,11 @@ fn eval_call(
             env,
             *kind,
             receiver_value,
-            &caller_expr.pos,
+            &caller_expr.position,
             arg_positions,
             arg_values,
             expr_value_is_used,
-            &caller_expr.pos,
+            &caller_expr.position,
             session,
         )?,
         Value::EnumConstructor {
@@ -2458,7 +2458,7 @@ fn eval_call(
             check_arity(
                 &SymbolName(type_name.name.clone()),
                 receiver_value,
-                &caller_expr.pos,
+                &caller_expr.position,
                 1,
                 arg_positions,
                 arg_values,
@@ -2501,7 +2501,7 @@ fn eval_call(
             );
             return Err((
                 RestoreValues(saved_values),
-                EvalError::ResumableError(caller_expr.pos.clone(), message),
+                EvalError::ResumableError(caller_expr.position.clone(), message),
             ));
         }
     }
@@ -2653,7 +2653,7 @@ fn eval_method_call(
             env.pop_value()
                 .expect("Popped an empty value for stack for method call arguments."),
         );
-        arg_positions.push(arg.pos.clone());
+        arg_positions.push(arg.position.clone());
     }
     let receiver_value = env
         .pop_value()
@@ -2712,7 +2712,7 @@ fn eval_method_call(
                 env,
                 *kind,
                 &receiver_value,
-                &caller_expr.pos,
+                &caller_expr.position,
                 &arg_positions,
                 &arg_values,
                 expr_value_is_used,
@@ -2731,7 +2731,7 @@ fn eval_method_call(
     check_arity(
         &meth_name.name,
         &receiver_value,
-        &caller_expr.pos,
+        &caller_expr.position,
         fun_info.params.len(),
         &arg_positions,
         &arg_values,
@@ -2756,7 +2756,7 @@ fn eval_method_call(
         enclosing_fun: Some(fun_info.clone()),
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
-        caller_pos: Some(caller_expr.pos.clone()),
+        caller_pos: Some(caller_expr.position.clone()),
         caller_expr_id: Some(caller_expr.id),
         bindings: Bindings::new_with(fun_bindings),
         type_bindings,
@@ -3179,7 +3179,7 @@ fn eval_expr(
     outer_expr: &Expression,
     expr_state: &mut ExpressionState,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
-    let expr_position = outer_expr.pos.clone();
+    let expr_position = outer_expr.position.clone();
     let expr_value_is_used =
         outer_expr.value_is_used || env.stop_at_expr_id.as_ref() == Some(&outer_expr.id);
 
@@ -3191,7 +3191,7 @@ fn eval_expr(
             }
             ExpressionState::PartiallyEvaluated => {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                eval_match_cases(env, expr_value_is_used, &scrutinee.pos, cases)
+                eval_match_cases(env, expr_value_is_used, &scrutinee.position, cases)
                     .map_err(|e| (RestoreValues(vec![]), e))?;
             }
             ExpressionState::EvaluatedSubexpressions => {
@@ -3209,7 +3209,7 @@ fn eval_expr(
                 eval_if(
                     env,
                     expr_value_is_used,
-                    &condition.pos,
+                    &condition.position,
                     then_body,
                     else_body.as_ref(),
                 )?;
@@ -3231,7 +3231,7 @@ fn eval_expr(
                     eval_while_body(
                         env,
                         expr_value_is_used,
-                        &condition.pos,
+                        &condition.position,
                         outer_expr.clone(),
                         body,
                     )?;
@@ -3259,7 +3259,7 @@ fn eval_expr(
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
                 }
                 ExpressionState::PartiallyEvaluated => {
-                    eval_for_in(env, sym, &expr.pos, outer_expr.clone(), body)?;
+                    eval_for_in(env, sym, &expr.position, outer_expr.clone(), body)?;
                 }
                 ExpressionState::EvaluatedSubexpressions => {
                     let stack_frame = env.current_frame_mut();
@@ -3387,7 +3387,7 @@ fn eval_expr(
             if expr_state.done_children() {
                 eval_struct_value(
                     env,
-                    &outer_expr.pos,
+                    &outer_expr.position,
                     expr_value_is_used,
                     type_sym.clone(),
                     field_exprs,
@@ -3444,8 +3444,8 @@ fn eval_expr(
                     env,
                     expr_value_is_used,
                     &expr_position,
-                    &lhs.pos,
-                    &rhs.pos,
+                    &lhs.position,
+                    &rhs.position,
                     *op,
                 )?;
             } else {
@@ -3473,7 +3473,7 @@ fn eval_expr(
             rhs,
         ) => {
             if expr_state.done_children() {
-                eval_boolean_binop(env, expr_value_is_used, &lhs.pos, &rhs.pos, *op)?;
+                eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, *op)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
@@ -3501,7 +3501,7 @@ fn eval_expr(
                         env.pop_value()
                             .expect("Popped an empty value for stack for call arguments"),
                     );
-                    arg_positions.push(arg.pos.clone());
+                    arg_positions.push(arg.position.clone());
                 }
                 let receiver_value = env
                     .pop_value()
@@ -3570,7 +3570,7 @@ fn eval_expr(
         }
         Expression_::DotAccess(recv, sym) => {
             if expr_state.done_children() {
-                eval_dot_access(env, expr_value_is_used, sym, &recv.pos)?;
+                eval_dot_access(env, expr_value_is_used, sym, &recv.position)?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, *recv.clone());
@@ -3893,7 +3893,7 @@ fn eval_struct_value(
             return Err((
                 RestoreValues(vec![]), // TODO
                 EvalError::ResumableError(
-                    field_expr.pos.clone(),
+                    field_expr.position.clone(),
                     ErrorMessage(format!("Incorrect type for field: {}", msg.0)),
                 ),
             ));

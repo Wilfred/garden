@@ -4,7 +4,7 @@ foo(a b)
 // expected stdout:
 // Call(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
@@ -15,7 +15,7 @@ foo(a b)
 //         open_paren: Position { ... },
 //         arguments: [
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"a",
 //                 ),
@@ -23,7 +23,7 @@ foo(a b)
 //                 id: SyntaxId(3),
 //             },
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"b",
 //                 ),

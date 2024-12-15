@@ -26,10 +26,10 @@ fun foo(src) {
 //             open_brace: Position { ... },
 //             exprs: [
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: Match(
 //                         Expression {
-//                             pos: Position { ... },
+//                             position: Position { ... },
 //                             expr_: Variable(
 //                                 Symbol"src",
 //                             ),
@@ -42,7 +42,7 @@ fun foo(src) {
 //                     id: SyntaxId(4),
 //                 },
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: StringLiteral(
 //                         "",
 //                     ),

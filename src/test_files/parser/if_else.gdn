@@ -4,7 +4,7 @@ if True {} else {}
 // expected stdout:
 // If(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: Variable(
 //             Symbol"True",
 //         ),

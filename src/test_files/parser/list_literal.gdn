@@ -5,7 +5,7 @@
 // ListLiteral(
 //     [
 //         Expression {
-//             pos: Position { ... },
+//             position: Position { ... },
 //             expr_: IntLiteral(
 //                 1,
 //             ),
@@ -13,7 +13,7 @@
 //             id: SyntaxId(0),
 //         },
 //         Expression {
-//             pos: Position { ... },
+//             position: Position { ... },
 //             expr_: IntLiteral(
 //                 2,
 //             ),

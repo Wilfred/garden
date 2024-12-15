@@ -19,7 +19,7 @@ fun foo() {
 //             open_brace: Position { ... },
 //             exprs: [
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: Variable(
 //                         Symbol"dbg",
 //                     ),
@@ -27,7 +27,7 @@ fun foo() {
 //                     id: SyntaxId(2),
 //                 },
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: IntLiteral(
 //                         1,
 //                     ),

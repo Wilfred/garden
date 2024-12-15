@@ -12,14 +12,14 @@ f{
 //         (
 //             Symbol"__reserved_word_placeholder",
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Let(
 //                     Symbol(
 //                         Symbol"xx",
 //                     ),
 //                     None,
 //                     Expression {
-//                         pos: Position { ... },
+//                         position: Position { ... },
 //                         expr_: IntLiteral(
 //                             99,
 //                         ),
@@ -34,17 +34,17 @@ f{
 //         (
 //             Symbol"__reserved_word_placeholder",
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Let(
 //                     Symbol(
 //                         Symbol"yy",
 //                     ),
 //                     None,
 //                     Expression {
-//                         pos: Position { ... },
+//                         position: Position { ... },
 //                         expr_: BinaryOperator(
 //                             Expression {
-//                                 pos: Position { ... },
+//                                 position: Position { ... },
 //                                 expr_: Variable(
 //                                     Symbol"xx",
 //                                 ),
@@ -53,7 +53,7 @@ f{
 //                             },
 //                             Add,
 //                             Expression {
-//                                 pos: Position { ... },
+//                                 position: Position { ... },
 //                                 expr_: IntLiteral(
 //                                     1,
 //                                 ),
@@ -72,17 +72,17 @@ f{
 //         (
 //             Symbol"yy",
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: BinaryOperator(
 //                     Expression {
-//                         pos: Position { ... },
+//                         position: Position { ... },
 //                         expr_: Invalid,
 //                         value_is_used: true,
 //                         id: SyntaxId(14),
 //                     },
 //                     Add,
 //                     Expression {
-//                         pos: Position { ... },
+//                         position: Position { ... },
 //                         expr_: IntLiteral(
 //                             10,
 //                         ),

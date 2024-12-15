@@ -4,7 +4,7 @@ match 1 {}
 // expected stdout:
 // Match(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: IntLiteral(
 //             1,
 //         ),

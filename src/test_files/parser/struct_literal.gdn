@@ -8,7 +8,7 @@ Foo{ x: 1, y: 2 }
 //         (
 //             Symbol"x",
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: IntLiteral(
 //                     1,
 //                 ),
@@ -19,7 +19,7 @@ Foo{ x: 1, y: 2 }
 //         (
 //             Symbol"y",
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: IntLiteral(
 //                     2,
 //                 ),

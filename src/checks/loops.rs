@@ -50,7 +50,7 @@ impl Visitor for LoopVisitor {
                 if !self.in_loop {
                     self.diagnostics.push(Diagnostic {
                         message: "`break` can only be used inside loops.".to_owned(),
-                        position: expr.pos.clone(),
+                        position: expr.position.clone(),
                         level: Level::Error,
                     });
                 }
@@ -60,7 +60,7 @@ impl Visitor for LoopVisitor {
                     self.diagnostics.push(Diagnostic {
                         // TODO: Add an example of valid usage.
                         message: "`continue` can only be used inside loops.".to_owned(),
-                        position: expr.pos.clone(),
+                        position: expr.position.clone(),
                         level: Level::Error,
                     });
                 }

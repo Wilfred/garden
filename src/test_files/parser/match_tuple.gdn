@@ -7,7 +7,7 @@ match foo {
 // expected stdout:
 // Match(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
@@ -26,11 +26,11 @@ match foo {
 //                 open_brace: Position { ... },
 //                 exprs: [
 //                     Expression {
-//                         pos: Position { ... },
+//                         position: Position { ... },
 //                         expr_: TupleLiteral(
 //                             [
 //                                 Expression {
-//                                     pos: Position { ... },
+//                                     position: Position { ... },
 //                                     expr_: IntLiteral(
 //                                         1,
 //                                     ),
@@ -38,7 +38,7 @@ match foo {
 //                                     id: SyntaxId(4),
 //                                 },
 //                                 Expression {
-//                                     pos: Position { ... },
+//                                     position: Position { ... },
 //                                     expr_: IntLiteral(
 //                                         2,
 //                                     ),
@@ -63,11 +63,11 @@ match foo {
 //                 open_brace: Position { ... },
 //                 exprs: [
 //                     Expression {
-//                         pos: Position { ... },
+//                         position: Position { ... },
 //                         expr_: TupleLiteral(
 //                             [
 //                                 Expression {
-//                                     pos: Position { ... },
+//                                     position: Position { ... },
 //                                     expr_: IntLiteral(
 //                                         3,
 //                                     ),
@@ -75,7 +75,7 @@ match foo {
 //                                     id: SyntaxId(8),
 //                                 },
 //                                 Expression {
-//                                     pos: Position { ... },
+//                                     position: Position { ... },
 //                                     expr_: IntLiteral(
 //                                         4,
 //                                     ),
@@ -93,3 +93,4 @@ match foo {
 //         ),
 //     ],
 // )
+

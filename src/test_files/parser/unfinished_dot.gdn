@@ -30,10 +30,10 @@ fun foo(s: String) {
 //             open_brace: Position { ... },
 //             exprs: [
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: DotAccess(
 //                         Expression {
-//                             pos: Position { ... },
+//                             position: Position { ... },
 //                             expr_: Variable(
 //                                 Symbol"s",
 //                             ),

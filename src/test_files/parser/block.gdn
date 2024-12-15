@@ -10,7 +10,7 @@
 //         open_brace: Position { ... },
 //         exprs: [
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"x",
 //                 ),
@@ -18,7 +18,7 @@
 //                 id: SyntaxId(1),
 //             },
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"y",
 //                 ),

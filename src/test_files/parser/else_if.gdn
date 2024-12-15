@@ -4,7 +4,7 @@ if x {} else if y {}
 // expected stdout:
 // If(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: Variable(
 //             Symbol"x",
 //         ),
@@ -21,10 +21,10 @@ if x {} else if y {}
 //             open_brace: Position { ... },
 //             exprs: [
 //                 Expression {
-//                     pos: Position { ... },
+//                     position: Position { ... },
 //                     expr_: If(
 //                         Expression {
-//                             pos: Position { ... },
+//                             position: Position { ... },
 //                             expr_: Variable(
 //                                 Symbol"y",
 //                             ),

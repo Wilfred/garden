@@ -14,7 +14,7 @@ let foo: Int = 1
 //         },
 //     ),
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: IntLiteral(
 //             1,
 //         ),

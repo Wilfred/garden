@@ -4,10 +4,10 @@ foo()()
 // expected stdout:
 // Call(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: Call(
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"foo",
 //                 ),

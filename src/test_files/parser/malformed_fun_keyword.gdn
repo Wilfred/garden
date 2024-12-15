@@ -9,7 +9,7 @@ ffun foo(_: Bool) {
 // )
 // Call(
 //     Expression {
-//         pos: Position { ... },
+//         position: Position { ... },
 //         expr_: Variable(
 //             Symbol"foo",
 //         ),
@@ -20,7 +20,7 @@ ffun foo(_: Bool) {
 //         open_paren: Position { ... },
 //         arguments: [
 //             Expression {
-//                 pos: Position { ... },
+//                 position: Position { ... },
 //                 expr_: Variable(
 //                     Symbol"_",
 //                 ),

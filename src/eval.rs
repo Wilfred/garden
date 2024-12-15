@@ -3385,7 +3385,13 @@ fn eval_expr(
         }
         Expression_::StructLiteral(type_sym, field_exprs) => {
             if expr_state.done_children() {
-                eval_struct_value(env, expr_value_is_used, type_sym.clone(), field_exprs)?;
+                eval_struct_value(
+                    env,
+                    &outer_expr.pos,
+                    expr_value_is_used,
+                    type_sym.clone(),
+                    field_exprs,
+                )?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
@@ -3817,6 +3823,7 @@ fn eval_dot_access(
 
 fn eval_struct_value(
     env: &mut Env,
+    outer_expr_pos: &Position,
     expr_value_is_used: bool,
     type_symbol: TypeSymbol,
     field_exprs: &[(Symbol, Expression)],
@@ -3882,6 +3889,24 @@ fn eval_struct_value(
 
         // TODO: check that all field values are of a compatible type.
         fields.push((field_sym.name.clone(), field_value));
+    }
+
+    if !expected_fields_by_name.is_empty() {
+        // TODO: print the missing field names too.
+        let missing: Vec<_> = expected_fields_by_name
+            .into_keys()
+            .map(|sn| format!("`{}`", sn.0))
+            .collect();
+        let message = ErrorMessage(format!(
+            "Missing fields from `{}`: {}.",
+            type_symbol.name,
+            missing.join(", ")
+        ));
+
+        return Err((
+            RestoreValues(vec![]), // TODO
+            EvalError::ResumableError(outer_expr_pos.clone(), message),
+        ));
     }
 
     let mut type_args = vec![];

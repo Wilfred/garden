@@ -1,0 +1,10 @@
+fun foo (abc: Int) {
+  let _ = abc + 1
+  //       ^
+}
+
+fun main(_) {}
+
+// args: test-eval-up-to
+// expected stderr: No previous value saved for this expression
+

@@ -55,7 +55,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use eval::eval_up_to;
+use eval::{eval_up_to, EvalUpToErr};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
@@ -340,21 +340,22 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     }
 
     match eval_up_to(&mut env, &session, &items, offset, &mut id_gen) {
-        Some(eval_res) => match eval_res {
-            Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
-            Err(e) => match e {
-                EvalError::Interrupted => eprintln!("Interrupted."),
-                EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-                EvalError::AssertionFailed(pos) => {
-                    eprintln!("Assertion failed: {}", pos.as_ide_string())
-                }
-                EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
-                EvalError::ForbiddenInSandbox(_) => {
-                    eprintln!("Tried to execute unsafe code in sandboxed mode.")
-                }
-            },
+        Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
+        Err(EvalUpToErr::EvalError(e)) => match e {
+            EvalError::Interrupted => eprintln!("Interrupted."),
+            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
+            EvalError::AssertionFailed(pos) => {
+                eprintln!("Assertion failed: {}", pos.as_ide_string())
+            }
+            EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
+            EvalError::ForbiddenInSandbox(_) => {
+                eprintln!("Tried to execute unsafe code in sandboxed mode.")
+            }
         },
-        None => eprintln!("Could not find anything to execute"),
+        Err(EvalUpToErr::NoExpressionFound) => eprintln!("Could not find anything to execute"),
+        Err(EvalUpToErr::NoValueAvailable) => {
+            eprintln!("No previous value saved for this expression")
+        }
     }
 }
 

@@ -16,7 +16,7 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic,
 use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
-    push_test_stackframe, ExpressionState,
+    push_test_stackframe, EvalUpToErr, ExpressionState,
 };
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
@@ -321,22 +321,31 @@ fn handle_eval_up_to_request(
     }
 
     match eval_up_to(env, session, &items, offset, id_gen) {
-        Some(eval_res) => match eval_res {
-            Ok((v, pos)) => Response {
-                kind: ResponseKind::Evaluate {
-                    warnings: vec![],
-                    value: Ok(Some(v.display(env))),
-                    stack_frame_name: Some(env.top_frame_name()),
-                },
-                position: Some(pos),
-                id: None,
-            },
-            Err(e) => err_to_response(e, env, id),
-        },
-        None => Response {
+        Ok((v, pos)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
-                value: Ok(Some("Did not find an expression to evaluate".to_owned())),
+                value: Ok(Some(v.display(env))),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: Some(pos),
+            id: None,
+        },
+        Err(EvalUpToErr::EvalError(e)) => err_to_response(e, env, id),
+        Err(EvalUpToErr::NoExpressionFound) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Ok(Some("Did not find an expression to evaluate.".to_owned())),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: None,
+            id,
+        },
+        Err(EvalUpToErr::NoValueAvailable) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Ok(Some(
+                    "No previous value saved for this expression".to_owned(),
+                )),
                 stack_frame_name: Some(env.top_frame_name()),
             },
             position: None,

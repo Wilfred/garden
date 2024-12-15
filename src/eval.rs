@@ -498,6 +498,12 @@ pub(crate) fn eval_up_to_param(
     None
 }
 
+pub(crate) enum EvalUpToErr {
+    EvalError(EvalError),
+    NoExpressionFound,
+    NoValueAvailable,
+}
+
 /// Try to evaluate items up to the syntax ID specified.
 ///
 /// Returns None if we couldn't find anything to evaluate (not an error).
@@ -507,7 +513,7 @@ pub(crate) fn eval_up_to(
     items: &[ToplevelItem],
     offset: usize,
     id_gen: &mut SyntaxIdGenerator,
-) -> Option<Result<(Value, Position), EvalError>> {
+) -> Result<(Value, Position), EvalUpToErr> {
     let syn_ids = find_item_at(items, offset, offset);
 
     let mut expr_id: Option<SyntaxId> = None;
@@ -526,24 +532,29 @@ pub(crate) fn eval_up_to(
         // evaluate a parameter with the ID.
         if let Some(AstId::Sym(syn_id)) = syn_ids.last() {
             if let Some((value, pos)) = eval_up_to_param(env, items, *syn_id) {
-                return Some(Ok((value, pos)));
+                return Ok((value, pos));
             }
         }
 
-        return None;
+        return Err(EvalUpToErr::NoExpressionFound);
     };
 
-    let position = position?;
+    let Some(position) = position else {
+        return Err(EvalUpToErr::NoExpressionFound);
+    };
 
-    let item = items
+    let Some(item) = items
         .iter()
-        .find(|&item| item.position().contains_offset(offset))?;
+        .find(|&item| item.position().contains_offset(offset))
+    else {
+        return Err(EvalUpToErr::NoExpressionFound);
+    };
 
     // TODO: this evaluates to the innermost enclosing expr. For
     // destructuring tuple, we want to return the tuple element and
     // position.
 
-    let mut res = match item {
+    let mut res: Result<_, EvalError> = match item {
         ToplevelItem::Def(def) => match &def.2 {
             Definition_::Fun(name_sym, fun_info) => {
                 load_toplevel_items(&[item.clone()], env);
@@ -552,7 +563,7 @@ pub(crate) fn eval_up_to(
                     Some(prev_args) => prev_args.clone(),
                     None => {
                         // We don't have any known values that we can use, give up.
-                        return None;
+                        return Err(EvalUpToErr::NoValueAvailable);
                     }
                 };
 
@@ -561,14 +572,21 @@ pub(crate) fn eval_up_to(
                 env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
-                Some(res.map(|v| (v, position)))
+                res.map(|v| (v, position))
             }
             Definition_::Method(method_info) => {
                 load_toplevel_items(&[item.clone()], env);
                 let type_name = &method_info.receiver_hint.sym.name;
 
-                let prev_calls_for_type = env.prev_method_call_args.get(type_name)?.clone();
-                let (prev_recv, prev_args) = prev_calls_for_type.get(&method_info.name_sym.name)?;
+                let Some(prev_calls_for_type) = env.prev_method_call_args.get(type_name).cloned()
+                else {
+                    return Err(EvalUpToErr::NoValueAvailable);
+                };
+                let Some((prev_recv, prev_args)) =
+                    prev_calls_for_type.get(&method_info.name_sym.name)
+                else {
+                    return Err(EvalUpToErr::NoValueAvailable);
+                };
 
                 env.stop_at_expr_id = Some(expr_id);
                 let res = eval_toplevel_method_call(
@@ -582,7 +600,7 @@ pub(crate) fn eval_up_to(
                 env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
-                Some(res.map(|v| (v, position)))
+                res.map(|v| (v, position))
             }
             Definition_::Test(test) => {
                 env.stop_at_expr_id = Some(expr_id);
@@ -592,11 +610,11 @@ pub(crate) fn eval_up_to(
                 env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
-                Some(res.map(|v| (v, position)))
+                res.map(|v| (v, position))
             }
             Definition_::Enum(_) | Definition_::Struct(_) => {
                 // nothing to do
-                None
+                return Err(EvalUpToErr::NoExpressionFound);
             }
         },
         ToplevelItem::Expr(_) => {
@@ -608,24 +626,26 @@ pub(crate) fn eval_up_to(
 
             match res {
                 Ok(mut eval_summary) => {
-                    let value = eval_summary.values.pop()?;
-                    Some(Ok((value, position)))
+                    let Some(value) = eval_summary.values.pop() else {
+                        return Err(EvalUpToErr::NoExpressionFound);
+                    };
+                    Ok((value, position))
                 }
-                Err(e) => Some(Err(e)),
+                Err(e) => Err(e),
             }
         }
     };
 
     // If the user asked for a single position in a tuple
     // destructuring, handle it here.
-    if let Some(Ok((value, pos))) = &mut res {
+    if let Ok((value, pos)) = &mut res {
         if let Some((var_value, var_pos)) = let_var_pos(value, items, &syn_ids) {
             *value = var_value;
             *pos = var_pos;
         }
     }
 
-    res
+    res.map_err(EvalUpToErr::EvalError)
 }
 
 /// If the AstId corresponded to a let variable or a destructuring let

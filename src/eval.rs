@@ -3860,7 +3860,7 @@ fn eval_struct_value(
     let mut fields = vec![];
 
     let type_bindings = env.current_frame().type_bindings.clone();
-    for (field_sym, _) in field_exprs {
+    for (field_sym, field_expr) in field_exprs {
         let field_value = env
             .pop_value()
             .expect("Value stack should have sufficient items for the struct literal");
@@ -3887,7 +3887,18 @@ fn eval_struct_value(
             );
         }
 
-        // TODO: check that all field values are of a compatible type.
+        let expected_ty =
+            Type::from_hint(&field_info.hint, &env.types, &type_bindings).unwrap_or_err_ty();
+        if let Err(msg) = check_type(&field_value, &expected_ty, env) {
+            return Err((
+                RestoreValues(vec![]), // TODO
+                EvalError::ResumableError(
+                    field_expr.pos.clone(),
+                    ErrorMessage(format!("Incorrect type for field: {}", msg.0)),
+                ),
+            ));
+        }
+
         fields.push((field_sym.name.clone(), field_value));
     }
 

@@ -1,0 +1,19 @@
+struct Foo {
+    x: Int,
+}
+
+fun main(args: List<String>): Unit {
+    dbg(Foo{ x: "abc" })
+    Unit
+}
+
+// args: run
+// expected stderr:
+// Error: Incorrect type for field: Expected `Int`, but got `String`: "abc"
+// 
+// --> src/test_files/runtime/struct_create_invalid_types.gdn:6[2m[1m	 fun main()[0m[0m
+//     dbg(Foo{ x: "abc" })
+//                 ^^^^^
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// // __toplevel__
+

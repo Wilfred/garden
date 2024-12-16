@@ -633,10 +633,19 @@ pub(crate) fn eval_up_to(
         }
     };
 
-    // If the user asked for a single position in a let or a let with
-    // tuple destructuring, handle it here.
     if let Ok((value, pos)) = &mut res {
+        // If the user asked for a single position in a let or a let with
+        // tuple destructuring, handle it here.
         if let Some((var_value, var_pos)) = let_var_pos(value, items, &syn_ids) {
+            *value = var_value;
+            *pos = var_pos;
+        }
+
+        // For assignments and update assignments, return the newly
+        // assigned value. E.g. for `foo += bar` we want the new value
+        // for `foo`, not `Unit` (which is the value of the assignment
+        // expression).
+        if let Some((var_value, var_pos)) = assign_var_pos(env, items, &syn_ids) {
             *value = var_value;
             *pos = var_pos;
         }
@@ -703,6 +712,31 @@ fn let_var_pos(
                 }
             }
         };
+    }
+
+    None
+}
+
+fn assign_var_pos(
+    env: &Env,
+    items: &[ToplevelItem],
+    ast_ids: &[AstId],
+) -> Option<(Value, Position)> {
+    for syn_id in ast_ids.iter().rev() {
+        let Some(expr) = find_expr_of_id(items, syn_id.id()) else {
+            continue;
+        };
+
+        let symbol = match &expr.expr_ {
+            Expression_::Assign(symbol, _) => symbol,
+            Expression_::AssignUpdate(symbol, _, _) => symbol,
+            _ => {
+                continue;
+            }
+        };
+
+        let value = get_var(&symbol.name, env)?;
+        return Some((value, symbol.position.clone()));
     }
 
     None

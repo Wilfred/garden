@@ -141,7 +141,7 @@ impl Visitor for TypeCheckVisitor<'_> {
     }
 }
 
-impl<'a> TypeCheckVisitor<'a> {
+impl TypeCheckVisitor<'_> {
     fn check_block(
         &mut self,
         block: &Block,

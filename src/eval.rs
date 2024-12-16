@@ -569,7 +569,6 @@ pub(crate) fn eval_up_to(
 
                 env.stop_at_expr_id = Some(expr_id);
                 let res = eval_toplevel_call(&name_sym.name, &args, env, session, id_gen);
-                env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
                 res.map(|v| (v, position))
@@ -597,7 +596,6 @@ pub(crate) fn eval_up_to(
                     session,
                     id_gen,
                 );
-                env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
                 res.map(|v| (v, position))
@@ -607,7 +605,6 @@ pub(crate) fn eval_up_to(
 
                 push_test_stackframe(test, env);
                 let res = eval(env, session);
-                env.stack.pop_to_toplevel();
                 env.stop_at_expr_id = None;
 
                 res.map(|v| (v, position))
@@ -621,12 +618,12 @@ pub(crate) fn eval_up_to(
             env.stop_at_expr_id = Some(expr_id);
 
             let res = eval_toplevel_items(&[item.clone()], env, session);
-            env.stack.pop_to_toplevel();
             env.stop_at_expr_id = None;
 
             match res {
                 Ok(mut eval_summary) => {
                     let Some(value) = eval_summary.values.pop() else {
+                        env.stack.pop_to_toplevel();
                         return Err(EvalUpToErr::NoExpressionFound);
                     };
                     Ok((value, position))
@@ -644,6 +641,8 @@ pub(crate) fn eval_up_to(
             *pos = var_pos;
         }
     }
+
+    env.stack.pop_to_toplevel();
 
     res.map_err(EvalUpToErr::EvalError)
 }

@@ -636,8 +636,8 @@ pub(crate) fn eval_up_to(
         }
     };
 
-    // If the user asked for a single position in a tuple
-    // destructuring, handle it here.
+    // If the user asked for a single position in a let or a let with
+    // tuple destructuring, handle it here.
     if let Ok((value, pos)) = &mut res {
         if let Some((var_value, var_pos)) = let_var_pos(value, items, &syn_ids) {
             *value = var_value;

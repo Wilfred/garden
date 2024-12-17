@@ -1,0 +1,12 @@
+struct Person {
+  name: String,
+}
+
+fun foo() {
+  Person{ name: "".join }
+  //                 ^
+}
+
+// args: complete
+// expected stdout: {"name":"join","suffix":"(List<String>): String"}
+

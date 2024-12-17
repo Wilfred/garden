@@ -23,25 +23,28 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     load_toplevel_items(&items, &mut env);
 
     let ids_at_pos = find_item_at(&items, offset, offset);
-
     let (_, id_to_ty, _, _) = check_types(&items, &env);
 
-    if let Some(AstId::Expr(id)) = ids_at_pos.first() {
-        if let Some(expr) = find_expr_of_id(&items, *id) {
-            match &expr.expr_ {
-                Expression_::DotAccess(recv, meth_sym) => {
-                    let recv_id = recv.id;
-                    let recv_ty = &id_to_ty[&recv_id];
+    for id in ids_at_pos.iter().rev() {
+        let AstId::Expr(expr_id) = id else {
+            continue;
+        };
+        let Some(expr) = find_expr_of_id(&items, *expr_id) else {
+            break;
+        };
+        match &expr.expr_ {
+            Expression_::DotAccess(recv, meth_sym) => {
+                let recv_id = recv.id;
+                let recv_ty = &id_to_ty[&recv_id];
 
-                    let prefix = if meth_sym.name.is_placeholder() {
-                        ""
-                    } else {
-                        &meth_sym.name.0
-                    };
-                    print_methods(&env, recv_ty, prefix);
-                }
-                _ => {}
+                let prefix = if meth_sym.name.is_placeholder() {
+                    ""
+                } else {
+                    &meth_sym.name.0
+                };
+                print_methods(&env, recv_ty, prefix);
             }
+            _ => {}
         }
     }
 }

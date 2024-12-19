@@ -276,14 +276,12 @@ the user entering a value in the *garden* buffer."
              (response-kind (plist-get response :kind))
              (buf (current-buffer))
              (response-value nil)
-             (response-warnings nil)
              (response-ok-value nil)
              (response-err-values nil)
              error-buf)
         ;; Response kind is an object for evaluate responses, handle that case.
         (when-let ((eval-response (plist-get response-kind :evaluate)))
           (setq response-kind "evaluate")
-          (setq response-warnings (plist-get eval-response :warnings))
           (setq response-value (plist-get eval-response :value))
           (setq response-ok-value (plist-get response-value :Ok))
           (setq response-err-values (plist-get response-value :Err))
@@ -356,13 +354,7 @@ the user entering a value in the *garden* buffer."
             (set-marker (process-mark proc) (point))
 
             (when error-buf
-              (pop-to-buffer error-buf))))
-        (unless (null response-warnings)
-          (seq-doseq (warning response-warnings)
-            (display-warning
-             'garden
-             (plist-get warning :message)
-             :warning)))))))
+              (pop-to-buffer error-buf))))))))
 
 (defun garden--visit-path (file-name)
   "Open or switch to the buffer named FILE-NAME."

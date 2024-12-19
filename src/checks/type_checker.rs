@@ -14,15 +14,15 @@ use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrT
 use crate::types::TypeDef;
 use crate::values::Value;
 
-pub(crate) fn check_types(
-    items: &[ToplevelItem],
-    env: &Env,
-) -> (
-    Vec<Diagnostic>,
-    HashMap<SyntaxId, Type>,
-    HashMap<SyntaxId, String>,
-    HashMap<SyntaxId, Position>,
-) {
+#[derive(Debug)]
+pub(crate) struct TCSummary {
+    pub diagnostics: Vec<Diagnostic>,
+    pub id_to_ty: HashMap<SyntaxId, Type>,
+    pub id_to_doc_comment: HashMap<SyntaxId, String>,
+    pub id_to_pos: HashMap<SyntaxId, Position>,
+}
+
+pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
     let mut visitor = TypeCheckVisitor {
         env,
         diagnostics: vec![],
@@ -35,12 +35,12 @@ pub(crate) fn check_types(
         visitor.visit_toplevel_item(item);
     }
 
-    (
-        visitor.diagnostics,
-        visitor.id_to_ty,
-        visitor.id_to_doc_comment,
-        visitor.id_to_pos,
-    )
+    TCSummary {
+        diagnostics: visitor.diagnostics,
+        id_to_ty: visitor.id_to_ty,
+        id_to_doc_comment: visitor.id_to_doc_comment,
+        id_to_pos: visitor.id_to_pos,
+    }
 }
 
 #[derive(Debug)]

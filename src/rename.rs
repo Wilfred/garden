@@ -19,7 +19,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
 
     let mut env = Env::new(&mut id_gen);
     load_toplevel_items(&items, &mut env);
-    let (_, _, _, id_to_pos) = check_types(&items, &env);
+    let summary = check_types(&items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, offset);
 
@@ -27,14 +27,14 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
         eprintln!("No symbol found at offset {}", offset);
         return;
     };
-    let Some(def_pos) = id_to_pos.get(id) else {
+    let Some(def_pos) = summary.id_to_pos.get(id) else {
         eprintln!("No definition found for id {:?}", id);
         return;
     };
 
     let mut visitor = RenameLocalVisitor {
         definition_pos: def_pos.clone(),
-        id_to_pos: id_to_pos.clone(),
+        id_to_pos: summary.id_to_pos.clone(),
         replace_positions: vec![],
     };
 

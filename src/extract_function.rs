@@ -26,7 +26,7 @@ pub(crate) fn extract_function(
 
     let mut env = Env::new(&mut id_gen);
     load_toplevel_items(&items, &mut env);
-    let (_, id_to_ty, _, _) = check_types(&items, &env);
+    let summary = check_types(&items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 
@@ -46,7 +46,7 @@ pub(crate) fn extract_function(
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
-    let params = locals_outside_expr(&env, &id_to_ty, &expr);
+    let params = locals_outside_expr(&env, &summary.id_to_ty, &expr);
 
     for item in items {
         let item_pos = item.position();
@@ -56,7 +56,7 @@ pub(crate) fn extract_function(
 
             println!(
                 "{}",
-                extracted_fun_src(src, name, id_to_ty.get(expr_id), &expr, &params)
+                extracted_fun_src(src, name, summary.id_to_ty.get(expr_id), &expr, &params)
             );
 
             // The item, with the expression replaced by a call.

@@ -15,12 +15,12 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     load_toplevel_items(&items, &mut env);
-    let (_, _, _, id_to_pos) = check_types(&items, &env);
+    let summary = check_types(&items, &env);
 
     let ids_at_query_pos = find_item_at(&items, offset, offset);
 
     for id in ids_at_query_pos.iter().rev() {
-        if let Some(pos) = id_to_pos.get(&id.id()) {
+        if let Some(pos) = summary.id_to_pos.get(&id.id()) {
             println!("{}", serde_json::to_string(pos).unwrap());
             return;
         }

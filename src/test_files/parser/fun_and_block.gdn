@@ -25,6 +25,7 @@ fun foo(): Unit {} {}
 //             close_brace: Position { ... },
 //         },
 //     },
+//     CurrentFile,
 // )
 // Block(
 //     Block {

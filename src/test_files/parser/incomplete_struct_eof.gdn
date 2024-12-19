@@ -21,6 +21,7 @@ struct
 //             close_brace: Position { ... },
 //         },
 //     },
+//     CurrentFile,
 // )
 // Struct(
 //     StructInfo {

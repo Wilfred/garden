@@ -21,6 +21,7 @@ fun bar() {}
 //             close_brace: Position { ... },
 //         },
 //     },
+//     CurrentFile,
 // )
 // Fun(
 //     Symbol"bar",
@@ -39,6 +40,7 @@ fun bar() {}
 //             close_brace: Position { ... },
 //         },
 //     },
+//     CurrentFile,
 // )
 
 // expected stderr:

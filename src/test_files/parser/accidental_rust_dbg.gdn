@@ -38,6 +38,7 @@ fun foo() {
 //             close_brace: Position { ... },
 //         },
 //     },
+//     CurrentFile,
 // )
 
 // expected stderr:

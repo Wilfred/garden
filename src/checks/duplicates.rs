@@ -23,7 +23,7 @@ struct DuplicatesVisitor {
 impl Visitor for DuplicatesVisitor {
     fn visit_def(&mut self, def: &Definition) {
         match &def.2 {
-            Definition_::Fun(sym, _) => {
+            Definition_::Fun(sym, _, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
                     self.diagnostics.push(Diagnostic {
                         message: format!(

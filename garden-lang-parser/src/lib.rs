@@ -1820,6 +1820,7 @@ fn parse_function(
                 body,
                 return_hint,
             },
+            Visibility::CurrentFile,
         ),
     ))
 }

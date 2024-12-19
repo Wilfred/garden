@@ -436,7 +436,7 @@ pub(crate) fn eval_up_to_param(
             continue;
         };
         match &def.2 {
-            Definition_::Fun(name_sym, fun_info) => {
+            Definition_::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
@@ -556,7 +556,7 @@ pub(crate) fn eval_up_to(
 
     let mut res: Result<_, EvalError> = match item {
         ToplevelItem::Def(def) => match &def.2 {
-            Definition_::Fun(name_sym, fun_info) => {
+            Definition_::Fun(name_sym, fun_info, _) => {
                 load_toplevel_items(&[item.clone()], env);
                 let args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.is_empty() => vec![],
@@ -861,7 +861,7 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
 
     for definition in definitions {
         match &definition.2 {
-            Definition_::Fun(name_symbol, fun_info) => {
+            Definition_::Fun(name_symbol, fun_info, _) => {
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, &mut diagnostics);
                 } else {

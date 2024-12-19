@@ -49,5 +49,6 @@ fun foo(s: String) {
 //             close_brace: Position { ... },
 //         },
 //     },
+//     CurrentFile,
 // )
 

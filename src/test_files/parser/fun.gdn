@@ -1,4 +1,4 @@
-fun foo<T>(): Unit {}
+export fun foo<T>(): Unit {}
 
 // args: dump-ast
 // expected stdout:
@@ -27,6 +27,8 @@ fun foo<T>(): Unit {}
 //             close_brace: Position { ... },
 //         },
 //     },
-//     CurrentFile,
+//     Exported(
+//         Position { ... },
+//     ),
 // )
 

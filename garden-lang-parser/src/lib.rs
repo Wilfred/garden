@@ -986,7 +986,7 @@ fn parse_definition(
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     if let Some(token) = tokens.peek() {
-        if token.text == "fun" {
+        if token.text == "fun" || token.text == "export" {
             return parse_function_or_method(src, tokens, id_gen, diagnostics);
         }
         if token.text == "test" {
@@ -1667,6 +1667,14 @@ fn parse_function_or_method(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
+    let mut visibility = Visibility::CurrentFile;
+    if let Some(token) = tokens.peek() {
+        if token.text == "export" {
+            let token = tokens.pop().unwrap();
+            visibility = Visibility::Exported(token.position);
+        }
+    }
+
     let fun_token = require_token(tokens, diagnostics, "fun");
 
     // We can distinguish between functions and methods based on the
@@ -1679,9 +1687,16 @@ fn parse_function_or_method(
     match tokens.peek() {
         Some(token) => {
             if token.text == "(" {
-                Some(parse_method(src, tokens, id_gen, diagnostics, fun_token))
+                Some(parse_method(
+                    src,
+                    tokens,
+                    id_gen,
+                    diagnostics,
+                    fun_token,
+                    visibility,
+                ))
             } else {
-                parse_function(src, tokens, id_gen, diagnostics, fun_token)
+                parse_function(src, tokens, id_gen, diagnostics, fun_token, visibility)
             }
         }
         None => {
@@ -1700,6 +1715,7 @@ fn parse_method(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
+    visibility: Visibility,
 ) -> Definition {
     let doc_comment = parse_doc_comment(&fun_token);
 
@@ -1766,7 +1782,11 @@ fn parse_method(
 
     let position = Position::merge(&fun_token.position, &close_brace_pos);
 
-    Definition(src_string.clone(), position, Definition_::Method(meth_info))
+    Definition(
+        src_string.clone(),
+        position,
+        Definition_::Method(meth_info, visibility),
+    )
 }
 
 fn parse_function(
@@ -1775,6 +1795,7 @@ fn parse_function(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
     fun_token: Token,
+    visibility: Visibility,
 ) -> Option<Definition> {
     let doc_comment = parse_doc_comment(&fun_token);
 
@@ -1820,14 +1841,14 @@ fn parse_function(
                 body,
                 return_hint,
             },
-            Visibility::CurrentFile,
+            visibility,
         ),
     ))
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "enum", "struct", "if", "else", "while", "return", "test", "match", "break",
-    "continue", "for", "in",
+    "let", "fun", "enum", "struct", "export", "if", "else", "while", "return", "test", "match",
+    "break", "continue", "for", "in",
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
@@ -2086,6 +2107,7 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "test"
             || token.text == "enum"
             || token.text == "struct"
+            || token.text == "export"
         {
             return parse_definition(src, tokens, id_gen, diagnostics).map(ToplevelItem::Def);
         }

@@ -38,7 +38,7 @@ impl Visitor for DuplicatesVisitor {
                         .insert(sym.name.clone(), sym.position.clone());
                 }
             }
-            Definition_::Method(method_info) => {
+            Definition_::Method(method_info, _) => {
                 let meth_sym = &method_info.name_sym;
 
                 let mut is_repeat = false;

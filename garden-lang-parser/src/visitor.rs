@@ -23,7 +23,7 @@ pub trait Visitor {
     fn visit_def_(&mut self, def_: &Definition_) {
         match &def_ {
             Definition_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
-            Definition_::Method(method_info) => self.visit_method_info(method_info),
+            Definition_::Method(method_info, _) => self.visit_method_info(method_info),
             Definition_::Test(test_info) => self.visit_test_info(test_info),
             Definition_::Enum(enum_info) => self.visit_enum_info(enum_info),
             Definition_::Struct(struct_info) => self.visit_struct_info(struct_info),

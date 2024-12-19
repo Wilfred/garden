@@ -172,7 +172,7 @@ impl FreeVariableVisitor<'_> {
 impl Visitor for FreeVariableVisitor<'_> {
     fn visit_def(&mut self, def: &Definition) {
         self.push_scope();
-        if let Definition_::Method(method_info) = &def.2 {
+        if let Definition_::Method(method_info, _) = &def.2 {
             self.add_binding(&method_info.receiver_sym);
             // Always treat the method receiver as used, because we
             // can't avoid defining this parameter even when we don't

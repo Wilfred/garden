@@ -1,4 +1,4 @@
-fun (self: List) foo() {}
+export fun (self: List<T>) foo<T>() {}
 
 // args: dump-ast
 // expected stdout:
@@ -6,7 +6,13 @@ fun (self: List) foo() {}
 //     MethodInfo {
 //         receiver_hint: TypeHint {
 //             sym: TypeSymbol"List",
-//             args: [],
+//             args: [
+//                 TypeHint {
+//                     sym: TypeSymbol"T",
+//                     args: [],
+//                     position: Position { ... },
+//                 },
+//             ],
 //             position: Position { ... },
 //         },
 //         receiver_sym: Symbol"self",
@@ -18,7 +24,9 @@ fun (self: List) foo() {}
 //                 name_sym: Some(
 //                     Symbol"foo",
 //                 ),
-//                 type_params: [],
+//                 type_params: [
+//                     TypeSymbol"T",
+//                 ],
 //                 params: [],
 //                 return_hint: None,
 //                 body: Block {
@@ -29,5 +37,8 @@ fun (self: List) foo() {}
 //             },
 //         ),
 //     },
+//     Exported(
+//         Position { ... },
+//     ),
 // )
 

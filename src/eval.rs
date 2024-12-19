@@ -455,7 +455,7 @@ pub(crate) fn eval_up_to_param(
                     }
                 }
             }
-            Definition_::Method(meth_info) => {
+            Definition_::Method(meth_info, _) => {
                 let Some(prev_calls_on_type) = env
                     .prev_method_call_args
                     .get(&meth_info.receiver_hint.sym.name)
@@ -573,7 +573,7 @@ pub(crate) fn eval_up_to(
 
                 res.map(|v| (v, position))
             }
-            Definition_::Method(method_info) => {
+            Definition_::Method(method_info, _) => {
                 load_toplevel_items(&[item.clone()], env);
                 let type_name = &method_info.receiver_hint.sym.name;
 
@@ -876,7 +876,7 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
 
                 new_syms.push(name_symbol.name.clone());
             }
-            Definition_::Method(meth_info) => {
+            Definition_::Method(meth_info, _) => {
                 if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
                     if is_builtin_stub(fun_info) {
                         update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);

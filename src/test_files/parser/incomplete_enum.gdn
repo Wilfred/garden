@@ -31,6 +31,9 @@ fun bar() {}
 //         },
 //     },
 //     CurrentFile,
+//     DefinitionId(
+//         3,
+//     ),
 // )
 
 // expected stderr:

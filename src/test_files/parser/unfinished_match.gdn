@@ -54,6 +54,9 @@ fun foo(src) {
 //         },
 //     },
 //     CurrentFile,
+//     DefinitionId(
+//         6,
+//     ),
 // )
 
 // expected stderr:

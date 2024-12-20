@@ -1842,6 +1842,7 @@ fn parse_function(
                 return_hint,
             },
             visibility,
+            DefinitionId(id_gen.next().0),
         ),
     ))
 }

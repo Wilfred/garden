@@ -26,6 +26,9 @@ fun foo(): Unit {} {}
 //         },
 //     },
 //     CurrentFile,
+//     DefinitionId(
+//         3,
+//     ),
 // )
 // Block(
 //     Block {

@@ -50,5 +50,8 @@ fun foo(s: String) {
 //         },
 //     },
 //     CurrentFile,
+//     DefinitionId(
+//         8,
+//     ),
 // )
 

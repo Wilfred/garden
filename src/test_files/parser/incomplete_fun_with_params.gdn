@@ -22,6 +22,9 @@ fun bar() {}
 //         },
 //     },
 //     CurrentFile,
+//     DefinitionId(
+//         1,
+//     ),
 // )
 // Fun(
 //     Symbol"bar",
@@ -41,6 +44,9 @@ fun bar() {}
 //         },
 //     },
 //     CurrentFile,
+//     DefinitionId(
+//         3,
+//     ),
 // )
 
 // expected stderr:

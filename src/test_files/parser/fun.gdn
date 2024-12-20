@@ -30,5 +30,8 @@ export fun foo<T>(): Unit {}
 //     Exported(
 //         Position { ... },
 //     ),
+//     DefinitionId(
+//         5,
+//     ),
 // )
 

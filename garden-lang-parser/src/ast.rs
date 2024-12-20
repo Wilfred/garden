@@ -605,13 +605,16 @@ impl MethodInfo {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub struct DefinitionId(pub usize);
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Definition_ {
     /// ```garden
     /// fun foo() {}
     /// export fun bar() {}
     /// ```
-    Fun(Symbol, FunInfo, Visibility),
+    Fun(Symbol, FunInfo, Visibility, DefinitionId),
     /// ```garden
     /// fun (this: MyType) foo() {}
     /// export fun (this: MyType) baz() {}
@@ -628,7 +631,7 @@ pub struct Definition(pub SourceString, pub Position, pub Definition_);
 impl Definition_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
         match self {
-            Definition_::Fun(symbol, _, _) => symbol.is_placeholder(),
+            Definition_::Fun(symbol, _, _, _) => symbol.is_placeholder(),
             Definition_::Method(method_info, _) => method_info.name_sym.is_placeholder(),
             Definition_::Test(test_info) => test_info.name_sym.is_placeholder(),
             Definition_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),

@@ -17,10 +17,16 @@ use crate::values::Value;
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {
+    /// Warnings and errors emitting during type checking.
     pub diagnostics: Vec<Diagnostic>,
+    /// A mapping of syntax IDs to their inferred types, used for
+    /// hover information.
     pub id_to_ty: HashMap<SyntaxId, Type>,
+    /// A mapping of syntax IDs to the doc comment of their
+    /// definitions.
     pub id_to_doc_comment: HashMap<SyntaxId, String>,
-    pub id_to_pos: HashMap<SyntaxId, Position>,
+    /// A mapping of syntax IDs to their definition positions.
+    pub id_to_def_pos: HashMap<SyntaxId, Position>,
 }
 
 pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
@@ -30,7 +36,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         bindings: LocalBindings::default(),
         id_to_ty: HashMap::default(),
         id_to_doc_comment: HashMap::default(),
-        id_to_pos: HashMap::default(),
+        id_to_def_pos: HashMap::default(),
         callees: HashMap::default(),
         current_def: None,
     };
@@ -42,7 +48,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         diagnostics: visitor.diagnostics,
         id_to_ty: visitor.id_to_ty,
         id_to_doc_comment: visitor.id_to_doc_comment,
-        id_to_pos: visitor.id_to_pos,
+        id_to_def_pos: visitor.id_to_def_pos,
     }
 }
 
@@ -91,7 +97,7 @@ struct TypeCheckVisitor<'a> {
     bindings: LocalBindings,
     id_to_ty: HashMap<SyntaxId, Type>,
     id_to_doc_comment: HashMap<SyntaxId, String>,
-    id_to_pos: HashMap<SyntaxId, Position>,
+    id_to_def_pos: HashMap<SyntaxId, Position>,
     current_def: Option<DefinitionId>,
     callees: HashMap<DefinitionId, HashSet<DefinitionId>>,
 }
@@ -191,7 +197,7 @@ impl TypeCheckVisitor<'_> {
 
         for variant in &enum_info.variants {
             if variant.name_sym.name == occurrence_sym.name {
-                self.id_to_pos
+                self.id_to_def_pos
                     .insert(occurrence_sym.id, variant.name_sym.position.clone());
                 return;
             }
@@ -199,7 +205,7 @@ impl TypeCheckVisitor<'_> {
 
         // We found the enum, but not this variant. Go to the start of
         // the enum definition so we at least give the user a hint.
-        self.id_to_pos
+        self.id_to_def_pos
             .insert(occurrence_sym.id, enum_info.name_sym.position.clone());
     }
 
@@ -236,7 +242,7 @@ impl TypeCheckVisitor<'_> {
             };
 
             let hint_id = hint.sym.id;
-            self.id_to_pos
+            self.id_to_def_pos
                 .insert(hint_id, def_name_sym.position.clone());
         }
     }
@@ -552,7 +558,7 @@ impl TypeCheckVisitor<'_> {
 
                 // TODO: also enforce the type of an assignment at runtime.
                 if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
-                    self.id_to_pos.insert(sym.id, position.clone());
+                    self.id_to_def_pos.insert(sym.id, position.clone());
 
                     if !is_subtype(&expr_ty, sym_ty) {
                         self.diagnostics.push(Diagnostic {
@@ -573,7 +579,7 @@ impl TypeCheckVisitor<'_> {
 
                 // TODO: also enforce the type of an assignment at runtime.
                 if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
-                    self.id_to_pos.insert(sym.id, position.clone());
+                    self.id_to_def_pos.insert(sym.id, position.clone());
 
                     if !is_subtype(sym_ty, &Type::int()) {
                         self.diagnostics.push(Diagnostic {
@@ -855,7 +861,7 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::Variable(sym) => {
                 if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
-                    self.id_to_pos.insert(sym.id, position.clone());
+                    self.id_to_def_pos.insert(sym.id, position.clone());
                     return value_ty.clone();
                 }
 
@@ -869,7 +875,7 @@ impl TypeCheckVisitor<'_> {
                         };
                         if let Some(fun_info) = fun_info {
                             if let Some(fun_sym) = &fun_info.name_sym {
-                                self.id_to_pos.insert(sym.id, fun_sym.position.clone());
+                                self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
                             }
 
                             if let Some(doc_comment) = &fun_info.doc_comment {
@@ -1026,7 +1032,7 @@ impl TypeCheckVisitor<'_> {
 
                 match methods.get(&sym.name) {
                     Some(method_info) => {
-                        self.id_to_pos
+                        self.id_to_def_pos
                             .insert(sym.id, method_info.name_sym.position.clone());
 
                         let Some(fun_info) = method_info.fun_info() else {
@@ -1197,7 +1203,8 @@ impl TypeCheckVisitor<'_> {
     fn set_binding(&mut self, symbol: &Symbol, ty: Type) {
         self.bindings.set(symbol, ty.clone());
         self.id_to_ty.insert(symbol.id, ty);
-        self.id_to_pos.insert(symbol.id, symbol.position.clone());
+        self.id_to_def_pos
+            .insert(symbol.id, symbol.position.clone());
     }
 }
 

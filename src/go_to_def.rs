@@ -20,7 +20,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     let ids_at_query_pos = find_item_at(&items, offset, offset);
 
     for id in ids_at_query_pos.iter().rev() {
-        if let Some(pos) = summary.id_to_pos.get(&id.id()) {
+        if let Some(pos) = summary.id_to_def_pos.get(&id.id()) {
             println!("{}", serde_json::to_string(pos).unwrap());
             return;
         }

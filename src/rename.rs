@@ -27,14 +27,14 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
         eprintln!("No symbol found at offset {}", offset);
         return;
     };
-    let Some(def_pos) = summary.id_to_pos.get(id) else {
+    let Some(def_pos) = summary.id_to_def_pos.get(id) else {
         eprintln!("No definition found for id {:?}", id);
         return;
     };
 
     let mut visitor = RenameLocalVisitor {
         definition_pos: def_pos.clone(),
-        id_to_pos: summary.id_to_pos.clone(),
+        id_to_pos: summary.id_to_def_pos.clone(),
         replace_positions: vec![],
     };
 

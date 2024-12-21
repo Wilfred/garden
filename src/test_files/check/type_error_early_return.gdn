@@ -1,4 +1,4 @@
-fun takes_int(b: Bool): Int {
+export fun takes_int(b: Bool): Int {
     if b {
         return "foo"
     }

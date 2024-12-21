@@ -1,4 +1,4 @@
-fun foo(x: Int) {
+export fun foo(x: Int) {
     // We should not complain about unused variables in built-in signatures.
     __BUILTIN_IMPLEMENTATION
 }

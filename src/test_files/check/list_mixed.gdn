@@ -1,4 +1,4 @@
-fun takes_bools(_: List<Bool>) {}
+export fun takes_bools(_: List<Bool>) {}
 
 {
     let x = [1, True]

@@ -1,8 +1,8 @@
-fun get_tuple(): (Int, String) {
+export fun get_tuple(): (Int, String) {
     (1, "abc")
 }
 
-fun destructure() {
+export fun destructure() {
     // good destructure, bad usage
     let (x, y) = get_tuple()
     let _ = x + y

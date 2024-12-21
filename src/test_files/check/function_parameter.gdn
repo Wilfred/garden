@@ -1,4 +1,4 @@
-fun foo(f: Fun<(Int, Int), Int>): Int {
+export fun foo(f: Fun<(Int, Int), Int>): Int {
     f(1, 2)
 }
 

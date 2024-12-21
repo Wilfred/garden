@@ -1,4 +1,4 @@
-fun (self: Option<NoSuchType>) foo() {
+export fun (self: Option<NoSuchType>) foo() {
 }
 
 // args: check
@@ -7,6 +7,6 @@ fun (self: Option<NoSuchType>) foo() {
 // Error: No such type: NoSuchType
 // 
 // --> src/test_files/check/unbound_type_in_method_receiver_generic.gdn:1
-// fun (self: Option<NoSuchType>) foo() {
-//                   ^^^^^^^^^^
+// export fun (self: Option<NoSuchType>) foo() {
+//                          ^^^^^^^^^^
 

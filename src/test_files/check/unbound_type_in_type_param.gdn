@@ -1,4 +1,4 @@
-fun foo(): Option<NoSuchType> {
+export fun foo(): Option<NoSuchType> {
     None
 }
 
@@ -8,6 +8,6 @@ fun foo(): Option<NoSuchType> {
 // Error: No such type: NoSuchType
 // 
 // --> src/test_files/check/unbound_type_in_type_param.gdn:1
-// fun foo(): Option<NoSuchType> {
-//                   ^^^^^^^^^^
+// export fun foo(): Option<NoSuchType> {
+//                          ^^^^^^^^^^
 

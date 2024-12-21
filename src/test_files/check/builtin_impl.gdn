@@ -1,4 +1,4 @@
-fun foo(_: String): NoValue {
+export fun foo(_: String): NoValue {
     __BUILTIN_IMPLEMENTATION
 }
 

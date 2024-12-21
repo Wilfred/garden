@@ -18,6 +18,17 @@
 //             "path": "__json_session_unnamed__"
 //           },
 //           "level": "Warning"
+//         },
+//         {
+//           "message": "`foo` is never called.",
+//           "position": {
+//             "start_offset": 4,
+//             "end_offset": 7,
+//             "line_number": 0,
+//             "end_line_number": 0,
+//             "path": "__json_session_unnamed__"
+//           },
+//           "level": "Warning"
 //         }
 //       ],
 //       "value": {

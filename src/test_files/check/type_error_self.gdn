@@ -1,4 +1,4 @@
-fun (self: String) bad(): Bool {
+export fun (self: String) bad(): Bool {
     self.no_such_meth()
 }
 

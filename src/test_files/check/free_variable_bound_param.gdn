@@ -1,4 +1,4 @@
-fun foo(x) {
+export fun foo(x) {
     x
 }
 

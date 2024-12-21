@@ -4,7 +4,7 @@ enum Color {
     Blue,
 }
 
-fun foo() {
+export fun foo() {
     Color{}
 }
 

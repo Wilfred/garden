@@ -1,4 +1,4 @@
-fun foo(x: Int) {}
+export fun foo(x: Int) {}
 
 // args: check
 // expected exit status: 1
@@ -6,6 +6,6 @@ fun foo(x: Int) {}
 // Warning: `x` is unused.
 // 
 // --> src/test_files/check/bound_but_unused.gdn:1
-// fun foo(x: Int) {}
-//         ^
+// export fun foo(x: Int) {}
+//                ^
 

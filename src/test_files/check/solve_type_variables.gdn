@@ -1,8 +1,8 @@
-fun (this: String) foo<T>(_: List<T>, value: T): T {
+export fun (this: String) foo<T>(_: List<T>, value: T): T {
   value
 }
 
-fun bar<T>(_: List<T>, value: T): T {
+export fun bar<T>(_: List<T>, value: T): T {
   value
 }
 

@@ -1,4 +1,4 @@
-fun (this: List<T>) foo<T>(): String {
+export fun (this: List<T>) foo<T>(): String {
   this.get(1)
 }
 

@@ -7,7 +7,19 @@
 // {
 //   "kind": {
 //     "evaluate": {
-//       "warnings": [],
+//       "warnings": [
+//         {
+//           "message": "`f` is never called.",
+//           "position": {
+//             "start_offset": 4,
+//             "end_offset": 5,
+//             "line_number": 0,
+//             "end_line_number": 0,
+//             "path": "__json_session_unnamed__"
+//           },
+//           "level": "Warning"
+//         }
+//       ],
 //       "value": {
 //         "Ok": "Loaded f."
 //       },

@@ -1,4 +1,4 @@
-fun foo(b: Bool): Int {
+export fun foo(b: Bool): Int {
     if b {
         123
     }

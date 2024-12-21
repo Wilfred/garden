@@ -1,4 +1,4 @@
-fun main(_args: List<String>): Unit {
+export fun main(_args: List<String>): Unit {
     // This is unused.
     let x = "a"
 

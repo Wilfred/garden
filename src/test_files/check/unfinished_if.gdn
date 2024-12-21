@@ -1,4 +1,4 @@
-fun foo(i: Option<Int>) {
+export fun foo(i: Option<Int>) {
     match i {
         Some(_) => {
             if True 

@@ -1,4 +1,4 @@
-fun foo<T>(): T {
+export fun foo<T>(): T {
     error("")
 }
 

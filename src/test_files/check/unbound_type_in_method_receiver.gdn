@@ -1,4 +1,4 @@
-fun (self: NoSuchType) foo() {
+export fun (self: NoSuchType) foo() {
 }
 
 // args: check
@@ -7,6 +7,6 @@ fun (self: NoSuchType) foo() {
 // Error: No such type: NoSuchType
 // 
 // --> src/test_files/check/unbound_type_in_method_receiver.gdn:1
-// fun (self: NoSuchType) foo() {
-//            ^^^^^^^^^^
+// export fun (self: NoSuchType) foo() {
+//                   ^^^^^^^^^^
 

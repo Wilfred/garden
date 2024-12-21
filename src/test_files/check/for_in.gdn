@@ -1,4 +1,4 @@
-fun foo(items: List<Int>) {
+export fun foo(items: List<Int>) {
     for x in (items) {
         x + 1
     }

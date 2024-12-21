@@ -1,4 +1,4 @@
-fun foo(b: Bool): Option<Int> {
+export fun foo(b: Bool): Option<Int> {
     if b {
         None
     } else {

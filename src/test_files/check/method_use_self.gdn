@@ -1,4 +1,4 @@
-fun (self: String) doStuff(): String {
+export fun (self: String) doStuff(): String {
     self
 }
 

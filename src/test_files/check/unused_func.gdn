@@ -1,0 +1,64 @@
+// We don't want to warn here, the problem needs to be fixed by
+// calling not_called() somewhere.
+fun called_from_uncalled() {}
+
+fun not_called() {
+  called_from_uncalled()
+}
+
+fun called() {}
+
+export fun foo() {
+  called()
+}
+
+// We do want to warn here, we have non-zero callers but they're not
+// reachable from an exported function.
+fun unreachable_cycle_1() {
+  unreachable_cycle_2()
+}
+
+fun unreachable_cycle_2() {
+  unreachable_cycle_1()
+}
+
+fun unreachable_cycle() {
+  unreachable_cycle()
+}
+
+fun called_via_block() {}
+
+{
+  called_via_block()
+}
+
+fun called_via_method() {}
+
+export fun (this: String) foo(): Unit {
+  called_via_method()
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `not_called` is never called.
+// 
+// --> src/test_files/check/unused_func.gdn:5
+// fun not_called() {
+//     ^^^^^^^^^^
+// Warning: `unreachable_cycle` is never called.
+// 
+// --> src/test_files/check/unused_func.gdn:25
+// fun unreachable_cycle() {
+//     ^^^^^^^^^^^^^^^^^
+// Warning: `unreachable_cycle_1` is never called.
+// 
+// --> src/test_files/check/unused_func.gdn:17
+// fun unreachable_cycle_1() {
+//     ^^^^^^^^^^^^^^^^^^^
+// Warning: `unreachable_cycle_2` is never called.
+// 
+// --> src/test_files/check/unused_func.gdn:21
+// fun unreachable_cycle_2() {
+//     ^^^^^^^^^^^^^^^^^^^
+

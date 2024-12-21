@@ -1,4 +1,4 @@
-fun (self String) doStuff() {}
+export fun (self String) doStuff() {}
 
 // args: check
 // expected exit status: 1
@@ -6,6 +6,6 @@ fun (self String) doStuff() {}
 // Error: Expected `:`, got `String`
 // 
 // --> src/test_files/check/missing_colon_method_receiver.gdn:1
-// fun (self String) doStuff() {}
-//           ^^^^^^
+// export fun (self String) doStuff() {}
+//                  ^^^^^^
 

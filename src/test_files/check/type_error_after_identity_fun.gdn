@@ -1,4 +1,4 @@
-fun id<T>(v: T): T {
+export fun id<T>(v: T): T {
     v
 }
 

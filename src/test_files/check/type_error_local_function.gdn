@@ -1,4 +1,4 @@
-fun takes_int(_v: Int) {}
+export fun takes_int(_v: Int) {}
 
 {
     takes_int("foo")

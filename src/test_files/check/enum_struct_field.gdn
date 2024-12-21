@@ -1,4 +1,4 @@
-fun foo(b: Bool) {
+export fun foo(b: Bool) {
     b.some_field
 }
 

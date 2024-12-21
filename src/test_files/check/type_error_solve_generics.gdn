@@ -1,4 +1,4 @@
-fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
+export fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 
 {
     takes_options(None, None)

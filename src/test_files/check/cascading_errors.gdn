@@ -1,4 +1,4 @@
-fun foo() {
+export fun foo() {
     let x = no_such_fun()
     // Calling methods on an error type is fine.
     x.len()

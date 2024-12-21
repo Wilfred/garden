@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Definition, DefinitionId, Definition_, Expression, Expression_,
-    FunInfo, LetDestination, MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, ToplevelItem,
-    TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, Block, DefinitionId, Expression, Expression_, FunInfo, LetDestination,
+    MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName,
+    VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -27,6 +27,9 @@ pub(crate) struct TCSummary {
     pub id_to_doc_comment: HashMap<SyntaxId, String>,
     /// A mapping of syntax IDs to their definition positions.
     pub id_to_def_pos: HashMap<SyntaxId, Position>,
+    /// A mapping from each toplevel function to the other functions
+    /// it calls.
+    pub callees: HashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
 }
 
 pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
@@ -49,6 +52,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         id_to_ty: visitor.id_to_ty,
         id_to_doc_comment: visitor.id_to_doc_comment,
         id_to_def_pos: visitor.id_to_def_pos,
+        callees: visitor.callees,
     }
 }
 
@@ -99,25 +103,10 @@ struct TypeCheckVisitor<'a> {
     id_to_doc_comment: HashMap<SyntaxId, String>,
     id_to_def_pos: HashMap<SyntaxId, Position>,
     current_def: Option<DefinitionId>,
-    callees: HashMap<DefinitionId, HashSet<DefinitionId>>,
+    callees: HashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
-    fn visit_def(&mut self, def: &Definition) {
-        match &def.2 {
-            Definition_::Fun(_symbol, _fun_info, _visibility, definition_id) => {
-                self.current_def = Some(*definition_id);
-            }
-            Definition_::Method(_method_info, _visibility) => {}
-            Definition_::Test(_test_info) => {}
-            Definition_::Enum(_enum_info) => {}
-            Definition_::Struct(_struct_info) => {}
-        }
-
-        self.visit_def_(&def.2);
-        self.current_def = None;
-    }
-
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
@@ -153,12 +142,18 @@ impl Visitor for TypeCheckVisitor<'_> {
             }
         }
 
+        let old_def_id = self.current_def;
+        if let Some(def_id) = fun_info.def_id {
+            self.current_def = Some(def_id);
+        }
+
         let mut type_bindings = self.env.stack.type_bindings();
         for type_param in &fun_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);
         }
 
         self.check_fun_info(fun_info, &type_bindings);
+        self.current_def = old_def_id;
     }
 
     fn visit_block(&mut self, block: &Block) {
@@ -874,6 +869,13 @@ impl TypeCheckVisitor<'_> {
                             _ => None,
                         };
                         if let Some(fun_info) = fun_info {
+                            if let Some(def_id) = fun_info.def_id {
+                                self.callees
+                                    .entry(self.current_def)
+                                    .or_default()
+                                    .insert(def_id);
+                            }
+
                             if let Some(fun_sym) = &fun_info.name_sym {
                                 self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
                             }

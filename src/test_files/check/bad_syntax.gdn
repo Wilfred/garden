@@ -1,4 +1,4 @@
-fun foo(): Int {
+export fun foo(): Int {
     1 +
 }
 

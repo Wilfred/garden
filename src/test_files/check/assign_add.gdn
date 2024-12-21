@@ -1,4 +1,4 @@
-fun foo() {
+export fun foo() {
     let x = 0
     x += 1 // OK
 

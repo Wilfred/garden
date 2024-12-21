@@ -1,4 +1,4 @@
-fun foo(s: String) {
+export fun foo(s: String) {
     s.no_such_meth()
 }
 

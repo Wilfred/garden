@@ -2,7 +2,7 @@ struct Foo {
   x: Int,
 }
 
-fun main(_args: List<String>): Unit {
+export fun main(_args: List<String>): Unit {
   let _f = Foo{ x: "abc" }
 }
 

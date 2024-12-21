@@ -12,6 +12,11 @@ fun bar() {}
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 1,
+//             ),
+//         ),
 //         type_params: [],
 //         params: [],
 //         return_hint: None,
@@ -33,6 +38,11 @@ fun bar() {}
 //         doc_comment: None,
 //         name_sym: Some(
 //             Symbol"bar",
+//         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 3,
+//             ),
 //         ),
 //         type_params: [],
 //         params: [],

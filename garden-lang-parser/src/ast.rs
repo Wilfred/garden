@@ -507,6 +507,8 @@ pub struct FunInfo {
     pub doc_comment: Option<String>,
     /// The name of the function. This is `None` for closures.
     pub name_sym: Option<Symbol>,
+    /// If this is a toplevel function, the ID of the definition.
+    pub def_id: Option<DefinitionId>,
     pub type_params: Vec<TypeSymbol>,
     pub params: Vec<SymbolWithHint>,
     pub return_hint: Option<TypeHint>,

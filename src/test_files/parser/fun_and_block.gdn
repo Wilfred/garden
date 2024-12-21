@@ -10,6 +10,11 @@ fun foo(): Unit {} {}
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 3,
+//             ),
+//         ),
 //         type_params: [],
 //         params: [],
 //         return_hint: Some(

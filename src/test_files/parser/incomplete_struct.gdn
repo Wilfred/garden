@@ -21,6 +21,11 @@ fun bar() {}
 //         name_sym: Some(
 //             Symbol"bar",
 //         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 3,
+//             ),
+//         ),
 //         type_params: [],
 //         params: [],
 //         return_hint: None,

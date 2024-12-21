@@ -10,6 +10,11 @@ export fun foo<T>(): Unit {}
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 5,
+//             ),
+//         ),
 //         type_params: [
 //             TypeSymbol"T",
 //         ],

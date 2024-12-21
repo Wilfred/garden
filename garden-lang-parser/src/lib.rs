@@ -272,6 +272,7 @@ fn parse_lambda(
             body,
             doc_comment: None,
             name_sym: None,
+            def_id: None,
             type_params,
             return_hint,
         }),
@@ -1768,6 +1769,7 @@ fn parse_method(
         src_string: src_string.clone(),
         doc_comment,
         name_sym: Some(name_sym.clone()),
+        def_id: None,
         type_params,
         params,
         body,
@@ -1827,6 +1829,7 @@ fn parse_function(
 
     let position = Position::merge(&fun_token.position, &close_brace_pos);
 
+    let def_id = DefinitionId(id_gen.next().0);
     Some(Definition(
         src_string.clone(),
         position,
@@ -1836,13 +1839,14 @@ fn parse_function(
                 src_string,
                 doc_comment,
                 name_sym: Some(name_sym),
+                def_id: Some(def_id),
                 type_params,
                 params,
                 body,
                 return_hint,
             },
             visibility,
-            DefinitionId(id_gen.next().0),
+            def_id,
         ),
     ))
 }

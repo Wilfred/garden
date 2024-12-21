@@ -12,6 +12,11 @@ struct
 //         name_sym: Some(
 //             Symbol"bar",
 //         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 1,
+//             ),
+//         ),
 //         type_params: [],
 //         params: [],
 //         return_hint: None,

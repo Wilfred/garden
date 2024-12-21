@@ -12,6 +12,11 @@ fun foo() {
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 4,
+//             ),
+//         ),
 //         type_params: [],
 //         params: [],
 //         return_hint: None,

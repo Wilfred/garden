@@ -1,8 +1,9 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
-    Pattern, Symbol, SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, Block, Definition, DefinitionId, Definition_, Expression, Expression_,
+    FunInfo, LetDestination, MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, ToplevelItem,
+    TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -30,6 +31,8 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         id_to_ty: HashMap::default(),
         id_to_doc_comment: HashMap::default(),
         id_to_pos: HashMap::default(),
+        callees: HashMap::default(),
+        current_def: None,
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -89,9 +92,26 @@ struct TypeCheckVisitor<'a> {
     id_to_ty: HashMap<SyntaxId, Type>,
     id_to_doc_comment: HashMap<SyntaxId, String>,
     id_to_pos: HashMap<SyntaxId, Position>,
+    current_def: Option<DefinitionId>,
+    callees: HashMap<DefinitionId, HashSet<DefinitionId>>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
+    fn visit_def(&mut self, def: &Definition) {
+        match &def.2 {
+            Definition_::Fun(_symbol, _fun_info, _visibility, definition_id) => {
+                self.current_def = Some(*definition_id);
+            }
+            Definition_::Method(_method_info, _visibility) => {}
+            Definition_::Test(_test_info) => {}
+            Definition_::Enum(_enum_info) => {}
+            Definition_::Struct(_struct_info) => {}
+        }
+
+        self.visit_def_(&def.2);
+        self.current_def = None;
+    }
+
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 

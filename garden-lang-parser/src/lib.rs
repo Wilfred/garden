@@ -1475,7 +1475,9 @@ fn parse_parameters(
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<SymbolWithHint> {
-    require_token(tokens, diagnostics, "(");
+    if !required_token_ok(tokens, diagnostics, "(") {
+        return vec![];
+    }
 
     let mut params = vec![];
     loop {

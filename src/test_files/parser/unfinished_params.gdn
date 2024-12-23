@@ -1,0 +1,61 @@
+export fun foo: Option<Int> {
+  None
+}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: None,
+//         name_sym: Some(
+//             Symbol"foo",
+//         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 7,
+//             ),
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: Some(
+//             TypeHint {
+//                 sym: TypeSymbol"Option",
+//                 args: [
+//                     TypeHint {
+//                         sym: TypeSymbol"Int",
+//                         args: [],
+//                         position: Position { ... },
+//                     },
+//                 ],
+//                 position: Position { ... },
+//             },
+//         ),
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [
+//                 Expression {
+//                     position: Position { ... },
+//                     expr_: Variable(
+//                         Symbol"None",
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(6),
+//                 },
+//             ],
+//             close_brace: Position { ... },
+//         },
+//     },
+//     Exported(
+//         Position { ... },
+//     ),
+// )
+
+// expected stderr:
+// Error: Parse error: Expected `(`, got `:`
+// 
+// --> src/test_files/parser/unfinished_params.gdn:1
+// export fun foo: Option<Int> {
+//               ^
+

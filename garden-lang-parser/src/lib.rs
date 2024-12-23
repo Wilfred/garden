@@ -1769,7 +1769,7 @@ fn parse_method(
         src_string: src_string.clone(),
         doc_comment,
         name_sym: Some(name_sym.clone()),
-        def_id: None,
+        def_id: Some(DefinitionId(id_gen.next().0)),
         type_params,
         params,
         body,

@@ -24,7 +24,11 @@ export fun (self: List<T>) foo<T>() {}
 //                 name_sym: Some(
 //                     Symbol"foo",
 //                 ),
-//                 def_id: None,
+//                 def_id: Some(
+//                     DefinitionId(
+//                         8,
+//                     ),
+//                 ),
 //                 type_params: [
 //                     TypeSymbol"T",
 //                 ],

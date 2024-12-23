@@ -77,13 +77,23 @@ fn require_a_token<'a>(
     }
 }
 
-fn require_token<'a>(
+fn required_token_ok(
+    tokens: &mut TokenStream<'_>,
+    diagnostics: &mut Vec<ParseError>,
+    expected: &str,
+) -> bool {
+    let (ok, _) = check_required_token(tokens, diagnostics, expected);
+    ok
+}
+
+fn check_required_token<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
-) -> Token<'a> {
+) -> (bool, Token<'a>) {
     match tokens.pop() {
         Some(token) => {
+            let mut ok = true;
             if token.text != expected {
                 let position = token.position.clone();
 
@@ -92,6 +102,7 @@ fn require_token<'a>(
                     message: ErrorMessage(format!("Expected `{}`, got `{}`", expected, token.text)),
                     additional: vec![],
                 });
+                ok = false;
 
                 // Undo the pop. We saw an unexpected token, so it
                 // might be e.g. a close brace so we shouldn't just
@@ -99,7 +110,7 @@ fn require_token<'a>(
                 tokens.unpop();
             }
 
-            token
+            (ok, token)
         }
         None => {
             diagnostics.push(ParseError::Incomplete {
@@ -107,9 +118,21 @@ fn require_token<'a>(
                 position: Position::todo(),
             });
 
-            tokens.prev().expect("TODO: handle empty file properly")
+            (
+                false,
+                tokens.prev().expect("TODO: handle empty file properly"),
+            )
         }
     }
+}
+
+fn require_token<'a>(
+    tokens: &mut TokenStream<'a>,
+    diagnostics: &mut Vec<ParseError>,
+    expected: &str,
+) -> Token<'a> {
+    let (_, token) = check_required_token(tokens, diagnostics, expected);
+    token
 }
 
 fn parse_integer(
@@ -1092,10 +1115,8 @@ fn parse_enum(
     let name_symbol = parse_type_symbol(tokens, id_gen, diagnostics);
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
-    let error_count = diagnostics.len();
-    let _open_brace = require_token(tokens, diagnostics, "{");
-
-    let (variants, close_brace_pos) = if diagnostics.len() > error_count {
+    let saw_open_brace = required_token_ok(tokens, diagnostics, "{");
+    let (variants, close_brace_pos) = if !saw_open_brace {
         (vec![], name_symbol.position.clone())
     } else {
         let variants = parse_enum_body(tokens, id_gen, diagnostics);
@@ -1140,10 +1161,9 @@ fn parse_struct(
     let name_sym = parse_type_symbol(tokens, id_gen, diagnostics);
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
-    let error_count = diagnostics.len();
-    let _open_brace = require_token(tokens, diagnostics, "{");
+    let saw_open_brace = required_token_ok(tokens, diagnostics, "{");
 
-    let (fields, close_brace_pos) = if diagnostics.len() > error_count {
+    let (fields, close_brace_pos) = if !saw_open_brace {
         (vec![], name_sym.position.clone())
     } else {
         let fields = parse_struct_fields(tokens, id_gen, diagnostics);

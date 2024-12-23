@@ -36,7 +36,12 @@ fun called_via_method() {}
 
 export fun (this: String) foo(): Unit {
   called_via_method()
+  this.used_meth()
 }
+
+fun (this: String) unused_meth(): Unit {}
+
+fun (this: String) used_meth(): Unit {}
 
 // args: check
 // expected exit status: 1
@@ -51,6 +56,11 @@ export fun (this: String) foo(): Unit {
 // --> src/test_files/check/unused_func.gdn:25
 // fun unreachable_cycle() {
 //     ^^^^^^^^^^^^^^^^^
+// Warning: `unused_meth` is never called.
+// 
+// --> src/test_files/check/unused_func.gdn:42
+// fun (this: String) unused_meth(): Unit {}
+//                    ^^^^^^^^^^^
 // Warning: `unreachable_cycle_1` is never called.
 // 
 // --> src/test_files/check/unused_func.gdn:17

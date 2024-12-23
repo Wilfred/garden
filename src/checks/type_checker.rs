@@ -1040,6 +1040,14 @@ impl TypeCheckVisitor<'_> {
                         let Some(fun_info) = method_info.fun_info() else {
                             return Type::error("This method has no fun_info");
                         };
+
+                        if let Some(def_id) = fun_info.def_id {
+                            self.callees
+                                .entry(self.current_def)
+                                .or_default()
+                                .insert(def_id);
+                        }
+
                         if fun_info.params.len() != paren_args.arguments.len() {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,

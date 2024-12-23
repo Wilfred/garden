@@ -29,27 +29,32 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
             continue;
         };
 
-        match &definition.2 {
-            Definition_::Fun(symbol, fun_info, visibility) => {
-                let Some(definition_id) = fun_info.def_id else {
-                    continue;
-                };
-                if matches!(visibility, Visibility::Exported(_)) {
-                    already_covered_ids.insert(definition_id);
-                    continue;
-                }
+        let (visibility, symbol, definition_id) = match &definition.2 {
+            Definition_::Fun(symbol, fun_info, visibility) => (visibility, symbol, fun_info.def_id),
+            Definition_::Method(method_info, visibility) => (
+                visibility,
+                &method_info.name_sym,
+                method_info.fun_info().and_then(|fun_info| fun_info.def_id),
+            ),
+            _ => continue,
+        };
+        let Some(definition_id) = definition_id else {
+            continue;
+        };
 
-                // Report unreachable functions that have no callers at all.
-                if !all_called_defs.contains(&definition_id) {
-                    diagnostics.push(Diagnostic {
-                        message: format!("`{}` is never called.", &symbol.name),
-                        position: symbol.position.clone(),
-                        level: Level::Warning,
-                    });
-                    already_covered_ids.insert(definition_id);
-                }
-            }
-            _ => {}
+        if matches!(visibility, Visibility::Exported(_)) {
+            already_covered_ids.insert(definition_id);
+            continue;
+        }
+
+        // Report unreachable functions that have no callers at all.
+        if !all_called_defs.contains(&definition_id) {
+            diagnostics.push(Diagnostic {
+                message: format!("`{}` is never called.", &symbol.name),
+                position: symbol.position.clone(),
+                level: Level::Warning,
+            });
+            already_covered_ids.insert(definition_id);
         }
     }
 

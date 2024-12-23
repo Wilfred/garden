@@ -7,7 +7,7 @@ enum Bool {
   False,
 }
 
-fun (this: Bool) not(): Bool {
+export fun (this: Bool) not(): Bool {
   match this {
     True => False,
     False => True,
@@ -33,7 +33,7 @@ enum Option<T> {
 }
 
 /// Return True if this value is `Some`.
-fun (this: Option<T>) is_some<T>(): Bool {
+export fun (this: Option<T>) is_some<T>(): Bool {
   match this {
     Some(_) => True,
     None => False,
@@ -41,7 +41,7 @@ fun (this: Option<T>) is_some<T>(): Bool {
 }
 
 /// Return True if this value is `None`.
-fun (this: Option<T>) is_none<T>(): Bool {
+export fun (this: Option<T>) is_none<T>(): Bool {
   match this {
     Some(_) => False,
     None => True,
@@ -63,7 +63,7 @@ enum Result<T, E> {
 // ```
 // dbg([1, 2])
 // ```
-fun dbg<T>(value: T): T {
+export fun dbg<T>(value: T): T {
   println(string_repr(value))
   value
 }
@@ -72,12 +72,12 @@ fun dbg<T>(value: T): T {
 //
 // You can use this function for code that you haven't implemented
 // yet.
-fun todo(): NoValue {
+export fun todo(): NoValue {
   error("Not yet implemented")
 }
 
 // If this value is `Ok`, unwrap it, otherwise error.
-fun (this: Result<T, E>) or_error<T, E>(): T {
+export fun (this: Result<T, E>) or_error<T, E>(): T {
   match this {
     Ok(v) => v
     Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
@@ -93,7 +93,7 @@ enum NoValue {}
 // String methods.
 
 // Does this string start with `s`?
-fun (this: String) starts_with(s: String): Bool {
+export fun (this: String) starts_with(s: String): Bool {
   if s.len() > this.len() {
     return False
   }
@@ -111,7 +111,7 @@ test starts_with {
 }
 
 // Does this string end with `s`?
-fun (this: String) ends_with(s: String): Bool {
+export fun (this: String) ends_with(s: String): Bool {
   if s.len() > this.len() {
     return False
   }
@@ -129,7 +129,7 @@ test ends_with {
 }
 
 // Split this string into a list of lines.
-fun (this: String) lines(): List<String> {
+export fun (this: String) lines(): List<String> {
   let parts: List<String> = []
 
   let line_start = 0
@@ -166,7 +166,7 @@ test lines {
 // ```
 // "abcd".split_once("b") // Some(["a", "cd"])
 // ```
-fun (this: String) split_once(needle: String): Option<(String, String)> {
+export fun (this: String) split_once(needle: String): Option<(String, String)> {
   let i = 0
   while (i + needle.len()) <= this.len() {
     let substring = this.substring(i, i + needle.len())
@@ -196,7 +196,7 @@ test split_once {
 // ```
 // "abc".index_of("c") // 2
 // ```
-fun (this: String) index_of(needle: String): Option<Int> {
+export fun (this: String) index_of(needle: String): Option<Int> {
   let i = 0
   while (i + needle.len()) <= this.len() {
     let substring = this.substring(i, i + needle.len())
@@ -225,7 +225,7 @@ test string_index_of {
 // ```
 // ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
-fun (this: String) join(items: List<String>): String {
+export fun (this: String) join(items: List<String>): String {
   if items.is_empty() {
     return ""
   }
@@ -251,7 +251,7 @@ test join {
 }
 
 // Does this string contain `substring`?
-fun (this: String) contains(substring: String): Bool {
+export fun (this: String) contains(substring: String): Bool {
   if substring.len() > this.len() {
     return False
   }
@@ -272,7 +272,7 @@ fun (this: String) contains(substring: String): Bool {
   False
 }
 
-fun (this: String) trim_left(): String {
+export fun (this: String) trim_left(): String {
   let i = 0
   while i < this.len() {
     let char = this.substring(i, i + 1)
@@ -293,7 +293,7 @@ test trim_left {
   assert("a ".trim_left() == "a ")
 }
 
-fun (this: String) trim_right(): String {
+export fun (this: String) trim_right(): String {
   let i = this.len() - 1
   while i >= 0 {
     let char = this.substring(i, i + 1)
@@ -321,7 +321,7 @@ test trim_right {
 // "foo".strip_suffix("o") // "fo"
 // "bar".strip_suffix("o") // "bar"
 // ```
-fun (this: String) strip_suffix(suffix: String): String {
+export fun (this: String) strip_suffix(suffix: String): String {
   if this.ends_with(suffix) {
     return this.substring(0, this.len() - suffix.len())
   }
@@ -342,7 +342,7 @@ test strip_suffix {
 // "bar".strip_prefix("f") // "bar"
 // "ffoo".strip_prefix("f") // "foo"
 // ```
-fun (this: String) strip_prefix(prefix: String): String {
+export fun (this: String) strip_prefix(prefix: String): String {
   if this.starts_with(prefix) {
     // return this.substring(prefix.len(), this.len(), 1)
     return this.substring(prefix.len(), this.len())
@@ -363,7 +363,7 @@ test strip_prefix {
 // "ab".split(",") // ["ab"]
 // "a,,b,".split(",") // ["a", "", "b", ""]
 // ```
-fun (this: String) split(needle: String): List<String> {
+export fun (this: String) split(needle: String): List<String> {
   let s = this
 
   let parts: List<String> = []
@@ -391,7 +391,7 @@ test split {
   assert("a,,b".split(",") == ["a", "", "b"])
 }
 
-fun (this: String) chars(): List<String> {
+export fun (this: String) chars(): List<String> {
   let cs: List<String> = []
 
   let i = 0
@@ -410,7 +410,7 @@ test string_chars {
 // List methods.
 
 // Get the first item in this list, if the list is not empty.
-fun (this: List<T>) first<T>(): Option<T> {
+export fun (this: List<T>) first<T>(): Option<T> {
   if this.is_empty() {
     None
   } else {
@@ -424,7 +424,7 @@ test first {
 }
 
 // Get the last item in this list, if the list is not empty.
-fun (this: List<T>) last<T>(): Option<T> {
+export fun (this: List<T>) last<T>(): Option<T> {
   if this.is_empty() {
     None
   } else {
@@ -439,7 +439,7 @@ test last {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-fun (this: List<T>) filter<T>(f: Fun<(T), Bool>): List<T> {
+export fun (this: List<T>) filter<T>(f: Fun<(T), Bool>): List<T> {
   let result: List<T> = []
 
   for item in this {
@@ -456,7 +456,7 @@ test filter {
 }
 
 // Is this list empty?
-fun (this: List<T>) is_empty<T>(): Bool {
+export fun (this: List<T>) is_empty<T>(): Bool {
   this.len() == 0
 }
 
@@ -466,7 +466,7 @@ test is_empty {
 }
 
 // Is this list non-empty?
-fun (this: List<T>) is_non_empty<T>(): Bool {
+export fun (this: List<T>) is_non_empty<T>(): Bool {
   this.len() != 0
 }
 
@@ -476,7 +476,7 @@ test is_non_empty {
 }
 
 // Does this list contain `item`?
-fun (this: List<T>) contains<T>(item: T): Bool {
+export fun (this: List<T>) contains<T>(item: T): Bool {
   for this_item in this {
     if this_item == item {
       return True
@@ -496,7 +496,7 @@ test contains {
 // ```
 // [1, 2].map(fun(x) { x + 1 }) // [2, 3]
 // ```
-fun (this: List<T>) map<T, U>(f: Fun<(T), U>): List<U> {
+export fun (this: List<T>) map<T, U>(f: Fun<(T), U>): List<U> {
   let items: List<U> = []
   for item in this {
     items = items.append(f(item))
@@ -516,7 +516,7 @@ test list_map {
 //
 // [10, 11, 12].slice(0, 2) // [10, 11]
 // [10, 11, 12].slice(1, -1) // [11, 12]
-fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
+export fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
   if (j < 0) {
     j = this.len() + j
   }
@@ -546,7 +546,7 @@ test list_slice {
 // Option methods.
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
-fun (this: Option<T>) or_exception<T>(): T {
+export fun (this: Option<T>) or_exception<T>(): T {
   match this {
     Some(v) => v,
     None => error("Called or_exception on a `None` value.")
@@ -563,7 +563,7 @@ test option_or_exception {
 // Some(1).or_value(5) // 1
 // None.or_value(5) // 5
 // ```
-fun (this: Option<T>) or_value<T>(value: T): T {
+export fun (this: Option<T>) or_value<T>(value: T): T {
   match this {
     Some(v) => v,
     None => value

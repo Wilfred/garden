@@ -34,8 +34,5 @@ fun foo() {}
 //         },
 //     },
 //     CurrentFile,
-//     DefinitionId(
-//         2,
-//     ),
 // )
 

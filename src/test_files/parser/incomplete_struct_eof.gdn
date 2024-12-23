@@ -27,9 +27,6 @@ struct
 //         },
 //     },
 //     CurrentFile,
-//     DefinitionId(
-//         1,
-//     ),
 // )
 // Struct(
 //     StructInfo {

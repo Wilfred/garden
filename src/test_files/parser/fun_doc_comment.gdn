@@ -29,8 +29,5 @@ fun foo() {}
 //         },
 //     },
 //     CurrentFile,
-//     DefinitionId(
-//         1,
-//     ),
 // )
 

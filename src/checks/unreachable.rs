@@ -30,20 +30,23 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
         };
 
         match &definition.2 {
-            Definition_::Fun(symbol, _, visibility, definition_id) => {
+            Definition_::Fun(symbol, fun_info, visibility) => {
+                let Some(definition_id) = fun_info.def_id else {
+                    continue;
+                };
                 if matches!(visibility, Visibility::Exported(_)) {
-                    already_covered_ids.insert(*definition_id);
+                    already_covered_ids.insert(definition_id);
                     continue;
                 }
 
                 // Report unreachable functions that have no callers at all.
-                if !all_called_defs.contains(definition_id) {
+                if !all_called_defs.contains(&definition_id) {
                     diagnostics.push(Diagnostic {
                         message: format!("`{}` is never called.", &symbol.name),
                         position: symbol.position.clone(),
                         level: Level::Warning,
                     });
-                    already_covered_ids.insert(*definition_id);
+                    already_covered_ids.insert(definition_id);
                 }
             }
             _ => {}
@@ -59,12 +62,15 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
         };
 
         match &definition.2 {
-            Definition_::Fun(symbol, _, visibility, definition_id) => {
+            Definition_::Fun(symbol, fun_info, visibility) => {
                 if matches!(visibility, Visibility::Exported(_)) {
                     continue;
                 }
 
-                let Some(reachable_from_def_ids) = reachable_from.get(definition_id) else {
+                let Some(definition_id) = fun_info.def_id else {
+                    continue;
+                };
+                let Some(reachable_from_def_ids) = reachable_from.get(&definition_id) else {
                     continue;
                 };
 

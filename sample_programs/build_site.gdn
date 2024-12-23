@@ -189,7 +189,7 @@ fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: Str
   build_site()
 }
 
-fun main(_: List<String>) {
+export fun main(_: List<String>) {
   build_site()
 }
 

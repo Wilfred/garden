@@ -28,6 +28,11 @@ export fun foo(x: Option<Int>) {
 // args: check
 // expected exit status: 1
 // expected stdout:
+// Warning: Unfinished code.
+// 
+// --> src/test_files/check/type_error_missing_case.gdn:9
+//     match todo() {
+//           ^^^^^^
 // Error: This match expression does not cover all the cases of `Option`. It's missing `None`.
 // 
 // --> src/test_files/check/type_error_missing_case.gdn:15

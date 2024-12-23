@@ -895,6 +895,17 @@ impl TypeCheckVisitor<'_> {
                 }
             }
             Expression_::Call(recv, paren_args) => {
+                if let Expression_::Variable(s) = &recv.expr_ {
+                    if s.name.0 == "todo" && self.bindings.get(&SymbolName::from("todo")).is_none()
+                    {
+                        self.diagnostics.push(Diagnostic {
+                            message: "Unfinished code.".to_owned(),
+                            position: pos.clone(),
+                            level: Level::Warning,
+                        });
+                    }
+                }
+
                 let recv_ty = self.check_expr(recv, type_bindings, expected_return_ty);
                 let arg_tys = paren_args
                     .arguments

@@ -159,7 +159,7 @@ impl Value {
             type_name: TypeName {
                 name: "Path".to_owned(),
             },
-            fields: vec![(SymbolName::from("inner"), Value::String(inner))],
+            fields: vec![(SymbolName::from("p"), Value::String(inner))],
             runtime_type: Type::path(),
         }
     }

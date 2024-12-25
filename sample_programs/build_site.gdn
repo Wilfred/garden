@@ -152,7 +152,7 @@ fun file_name(path: String): String {
 fun template_files(website_dir: String): List<String> {
   // TODO: a ? syntax.
   let dir_files = list_directory(website_dir).or_error()
-  dir_files.filter(fun (p: String) {p.ends_with(".tmpl.html") })
+  dir_files.map(fun(p: Path) {p.p}).filter(fun(s: String) {s.ends_with(".tmpl.html") })
 }
 
 // Convert "foo.tmpl.html" to "foo.html".
@@ -161,7 +161,7 @@ fun output_path(template_path: String): String {
 }
 
 fun build_site(): Unit {
-  let website_dir = source_dir_path().parent().parent().join("website").inner
+  let website_dir = source_dir_path().parent().parent().join("website").p
 
   let base_tmpl_path = "/".join([website_dir, "template.html"])
   let tmpl_paths = template_files(website_dir)
@@ -194,6 +194,6 @@ export fun main(_: List<String>) {
 }
 
 fun source_dir_path(): Path {
-  Path{ inner: source_directory().or_exception() }
+  Path{ p: source_directory().or_exception() }
 }
 

@@ -1691,14 +1691,18 @@ fn parse_function_or_method(
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     let mut visibility = Visibility::CurrentFile;
+    let mut first_token = None;
+
     if let Some(token) = tokens.peek() {
         if token.text == "export" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::Exported(token.position);
+            visibility = Visibility::Exported(token.position.clone());
+            first_token = Some(token);
         }
     }
 
     let fun_token = require_token(tokens, diagnostics, "fun");
+    let first_token = first_token.unwrap_or_else(|| fun_token.clone());
 
     // We can distinguish between functions and methods based on the
     // token after the fun keyword.
@@ -1715,11 +1719,11 @@ fn parse_function_or_method(
                     tokens,
                     id_gen,
                     diagnostics,
-                    fun_token,
+                    first_token,
                     visibility,
                 ))
             } else {
-                parse_function(src, tokens, id_gen, diagnostics, fun_token, visibility)
+                parse_function(src, tokens, id_gen, diagnostics, first_token, visibility)
             }
         }
         None => {
@@ -1737,10 +1741,10 @@ fn parse_method(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
-    fun_token: Token,
+    first_token: Token,
     visibility: Visibility,
 ) -> Definition {
-    let doc_comment = parse_doc_comment(&fun_token);
+    let doc_comment = parse_doc_comment(&first_token);
 
     require_token(tokens, diagnostics, "(");
     let receiver_param = parse_parameter(tokens, id_gen, diagnostics, true);
@@ -1775,8 +1779,8 @@ fn parse_method(
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
-    let mut start_offset = fun_token.position.start_offset;
-    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
+    let mut start_offset = first_token.position.start_offset;
+    if let Some((comment_pos, _)) = first_token.preceding_comments.first() {
         start_offset = comment_pos.start_offset;
     }
     let end_offset = body.close_brace.end_offset;
@@ -1804,7 +1808,7 @@ fn parse_method(
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
-    let position = Position::merge(&fun_token.position, &close_brace_pos);
+    let position = Position::merge(&first_token.position, &close_brace_pos);
 
     Definition(
         src_string.clone(),
@@ -1818,10 +1822,10 @@ fn parse_function(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
-    fun_token: Token,
+    first_token: Token,
     visibility: Visibility,
 ) -> Option<Definition> {
-    let doc_comment = parse_doc_comment(&fun_token);
+    let doc_comment = parse_doc_comment(&first_token);
 
     let name_sym = parse_symbol(tokens, id_gen, diagnostics);
     if is_reserved_word_placeholder(&name_sym) {
@@ -1837,8 +1841,8 @@ fn parse_function(
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
-    let mut start_offset = fun_token.position.start_offset;
-    if let Some((comment_pos, _)) = fun_token.preceding_comments.first() {
+    let mut start_offset = first_token.position.start_offset;
+    if let Some((comment_pos, _)) = first_token.preceding_comments.first() {
         start_offset = comment_pos.start_offset;
     }
     let end_offset = body.close_brace.end_offset;
@@ -1849,7 +1853,7 @@ fn parse_function(
         src: src[start_offset..end_offset].to_owned(),
     };
 
-    let position = Position::merge(&fun_token.position, &close_brace_pos);
+    let position = Position::merge(&first_token.position, &close_brace_pos);
 
     Some(Definition(
         src_string.clone(),

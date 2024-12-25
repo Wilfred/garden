@@ -2,6 +2,10 @@
 // World
 fun foo() {}
 
+// Hello
+// World
+export fun bar() {}
+
 // args: dump-ast
 // expected stdout:
 // Fun(
@@ -29,5 +33,33 @@ fun foo() {}
 //         },
 //     },
 //     CurrentFile,
+// )
+// Fun(
+//     Symbol"bar",
+//     FunInfo {
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "Hello\nWorld",
+//         ),
+//         name_sym: Some(
+//             Symbol"bar",
+//         ),
+//         def_id: Some(
+//             DefinitionId(
+//                 3,
+//             ),
+//         ),
+//         type_params: [],
+//         params: [],
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+//     Exported(
+//         Position { ... },
+//     ),
 // )
 

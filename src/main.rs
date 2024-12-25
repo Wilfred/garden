@@ -674,4 +674,13 @@ mod tests {
         cmd.arg("check").arg("src/prelude.gdn");
         cmd.assert().success();
     }
+
+    #[test]
+    fn test_builtins_check() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("check").arg("src/builtins.gdn");
+        cmd.assert().success();
+    }
 }

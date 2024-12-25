@@ -576,3 +576,37 @@ test option_or_value {
   let n: Option<Int> = None
   assert(n.or_value(5) == 5)
 }
+
+// A filesytsem path.
+struct Path {
+  inner: String,
+}
+
+// The parent directory of this path.
+export fun (this: Path) parent(): Path {
+  let parts = this.inner.split("/")
+  let parent_s = "/".join(parts.slice(0, -1))
+  Path{ inner: parent_s }
+}
+
+// Append `component` to this path.
+export fun (this: Path) join(component: String): Path {
+  Path{ inner: "/".join([this.inner, component]) }
+}
+
+// The extension of this path, if this path is a file whose name
+// includes a ".".
+export fun (this: Path) extension(): Option<String> {
+  let name = match this.file_name() {
+    Some(name) => name
+    None => return None
+  }
+
+  name.split(".").last()
+}
+
+// The file name of this path, if this path is a file (i.e. not a
+// directory).
+export fun (this: Path) file_name(): Option<String> {
+  this.inner.split("/").last()
+}

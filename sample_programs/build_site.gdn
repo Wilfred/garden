@@ -193,37 +193,7 @@ export fun main(_: List<String>) {
   build_site()
 }
 
-struct Path {
-  inner: String,
-}
-
 fun source_dir_path(): Path {
   Path{ inner: source_directory().or_exception() }
 }
 
-fun (this: Path) parent(): Path {
-  let parts = this.inner.split("/")
-  let parent_s = "/".join(parts.slice(0, -1))
-  Path{ inner: parent_s }
-}
-
-fun (this: Path) join(component: String): Path {
-  Path{ inner: "/".join([this.inner, component]) }
-}
-
-// The extension of this path, if this path is a file whose name
-// includes a ".".
-fun (this: Path) extension(): Option<String> {
-  let name = match this.file_name() {
-    Some(name) => name
-    None => return None
-  }
-
-  name.split(".").last()
-}
-
-// The file name of this path, if this path is a file (i.e. not a
-// directory).
-fun (this: Path) file_name(): Option<String> {
-  this.inner.split("/").last()
-}

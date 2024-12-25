@@ -2,6 +2,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
+## Standard Library
+
+Added a `Path` type.
+
 ## Syntax
 
 Type parameters now occur after function or method names, so Garden

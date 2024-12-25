@@ -39,7 +39,7 @@ export fun assert(condition: Bool): Unit {
 // ```
 // list_directory("/")
 // ```
-export fun list_directory(path: String): Result<List<String>, String> {
+export fun list_directory(path: String): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 

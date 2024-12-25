@@ -153,6 +153,16 @@ impl Value {
             payload: Some(Box::new(v)),
         }
     }
+
+    pub(crate) fn path(inner: String) -> Self {
+        Value::Struct {
+            type_name: TypeName {
+                name: "Path".to_owned(),
+            },
+            fields: vec![(SymbolName::from("inner"), Value::String(inner))],
+            runtime_type: Type::path(),
+        }
+    }
 }
 
 pub(crate) fn type_representation(value: &Value) -> TypeName {

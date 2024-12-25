@@ -2156,14 +2156,14 @@ fn eval_builtin_call(
                     for entry in dir_iter {
                         // TODO: don't silently discard errors.
                         if let Ok(entry) = entry {
-                            items.push(Value::String(entry.path().display().to_string()));
+                            items.push(Value::path(entry.path().display().to_string()));
                         }
                     }
 
                     Value::ok(
                         Value::List {
                             items,
-                            elem_type: Type::list(Type::string()),
+                            elem_type: Type::list(Type::path()),
                         },
                         env,
                     )

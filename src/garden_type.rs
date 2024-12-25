@@ -126,6 +126,16 @@ impl Type {
         }
     }
 
+    pub(crate) fn path() -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                name: "Path".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn list(ty: Type) -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Struct,

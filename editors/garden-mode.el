@@ -550,7 +550,8 @@ enclosing point and print the result."
     (,(regexp-opt
        '("assert" "error" "list_directory" "path_exists" "print" "println"
          "read_file" "shell" "string_repr" "todo"
-         "working_directory" "write_file")
+         "working_directory" "source_directory"
+         "write_file")
        'symbols)
      . font-lock-builtin-face)
 

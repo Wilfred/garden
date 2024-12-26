@@ -2048,59 +2048,6 @@ fn eval_builtin_call(
                 env.push_value(Value::String(arg_values[0].display(env)));
             }
         }
-        BuiltinFunctionKind::PathExists => {
-            if env.enforce_sandbox {
-                let mut saved_values = vec![];
-                for value in arg_values.iter().rev() {
-                    saved_values.push(value.clone());
-                }
-                saved_values.push(receiver_value.clone());
-
-                return Err((
-                    RestoreValues(saved_values),
-                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
-                ));
-            }
-
-            check_arity(
-                &SymbolName("path_exists".to_owned()),
-                receiver_value,
-                receiver_pos,
-                1,
-                arg_positions,
-                arg_values,
-            )?;
-
-            // TODO: define a separate path type in Garden.
-            let path_s = match &arg_values[0] {
-                Value::String(s) => s,
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                        saved_values.push(receiver_value.clone());
-                    }
-
-                    let message = format_type_error(
-                        &TypeName {
-                            name: "String".into(),
-                        },
-                        v,
-                        env,
-                    );
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
-                    ));
-                }
-            };
-
-            let path = PathBuf::from(path_s);
-
-            if expr_value_is_used {
-                env.push_value(Value::bool(path.exists()));
-            }
-        }
         BuiltinFunctionKind::ListDirectory => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
@@ -2993,6 +2940,87 @@ fn eval_builtin_method_call(
                             format_type_error(
                                 &TypeName {
                                     name: "List".into(),
+                                },
+                                v,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
+        BuiltinMethodKind::PathExists => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName("Path::exists".to_owned()),
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match &receiver_value {
+                Value::Struct {
+                    type_name, fields, ..
+                } if type_name.name == "Path" => {
+                    // TODO: this panics if the user redefines Path.
+                    let (_, field_value) = &fields[0];
+
+                    let path_s = match field_value {
+                        Value::String(s) => s,
+                        v => {
+                            let mut saved_values = vec![];
+                            for value in arg_values.iter().rev() {
+                                saved_values.push(value.clone());
+                                saved_values.push(receiver_value.clone());
+                            }
+
+                            let message = format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            );
+                            return Err((
+                                RestoreValues(saved_values),
+                                EvalError::ResumableError(receiver_pos.clone(), message),
+                            ));
+                        }
+                    };
+
+                    if expr_value_is_used {
+                        let path = PathBuf::from(path_s);
+                        env.push_value(Value::bool(path.exists()));
+                    }
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "Path".into(),
                                 },
                                 v,
                                 env,

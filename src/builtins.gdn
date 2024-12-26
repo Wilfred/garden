@@ -43,19 +43,6 @@ export fun list_directory(path: String): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
-// Return True if this path exists.
-//
-// ```
-// path_exists("/") // True
-// path_exists("/no_such_dir") // False
-// ```
-//
-// Note that a path may exist without the current user having
-// permission to read it.
-export fun path_exists(path: String): Bool {
-  __BUILTIN_IMPLEMENTATION
-}
-
 // Write a string to stdout.
 //
 // ```
@@ -194,5 +181,18 @@ export fun (this: String) substring(from_index: Int, to_index: Int): String {
 // "ab".append("cd") // "abcd"
 // ```
 export fun (this: String) append(suffix: String): String {
+  __BUILTIN_IMPLEMENTATION
+}
+
+// Return True if this path exists.
+//
+// ```
+// Path{ p: "/" }.exists() // True
+// Path{ p: "/no_such_file" }.exists() // False
+// ```
+//
+// Note that a path may exist without the current user having
+// permission to read it.
+export fun (this: Path) exists(): Bool {
   __BUILTIN_IMPLEMENTATION
 }

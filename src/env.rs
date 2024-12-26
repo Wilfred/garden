@@ -106,6 +106,34 @@ impl Env {
 
         let mut methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>> = HashMap::new();
 
+        let mut path_methods = HashMap::new();
+        path_methods.insert(
+            SymbolName("exists".to_owned()),
+            MethodInfo {
+                receiver_hint: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "Path".into(),
+                        },
+                        id: id_gen.next(),
+                    },
+                    position: Position::todo(),
+                },
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen.next()),
+                name_sym: Symbol::new(Position::todo(), "exists", id_gen.next()),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
+            },
+        );
+
+        methods.insert(
+            TypeName {
+                name: "Path".into(),
+            },
+            path_methods,
+        );
+
         let mut string_methods = HashMap::new();
         string_methods.insert(
             SymbolName("len".to_owned()),

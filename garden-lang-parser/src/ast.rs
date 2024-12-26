@@ -566,6 +566,7 @@ pub enum BuiltinMethodKind {
     ListAppend,
     ListGet,
     ListLen,
+    PathExists,
     StringAppend,
     StringLen,
     StringSubstring,

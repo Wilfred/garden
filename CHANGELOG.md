@@ -4,10 +4,13 @@
 
 ## Standard Library
 
-Added a `Path` type.
+Added a `Path` type, with methods `Path::exists`, `Path::extension`,
+`Path::file_name`, `Path::join` and `Path::parent`.
 
 `list_directory`, `working_directory` and `source_directory` now
 return `Path` values.
+
+Removed `path_exists` (use `Path::exists` instead).
 
 ## Syntax
 

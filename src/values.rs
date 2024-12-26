@@ -112,6 +112,25 @@ impl Value {
         }
     }
 
+    pub(crate) fn none(value_ty: Type) -> Self {
+        // We can assume that Option is always defined because it's in the
+        // prelude.
+        Value::EnumVariant {
+            type_name: TypeName {
+                name: "Option".to_owned(),
+            },
+            variant_idx: 1,
+            payload: None,
+            runtime_type: Type::UserDefined {
+                kind: TypeDefKind::Enum,
+                name: TypeName {
+                    name: "Option".to_owned(),
+                },
+                args: vec![value_ty],
+            },
+        }
+    }
+
     pub(crate) fn ok(v: Value, env: &Env) -> Self {
         let value_type = Type::from_value(&v, &env.types, &env.stack.type_bindings());
 

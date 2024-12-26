@@ -43,6 +43,7 @@ strsim = "0.10.0"
 strum = "0.24.1"
 strum_macros = "0.24.1"
 garden-lang-parser = { version = "0.18.0", path = "garden-lang-parser" }
+rustc-hash = "2.1.0"
 
 [[bin]]
 name = "garden"

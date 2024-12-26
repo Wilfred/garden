@@ -11,6 +11,7 @@ use std::time::Instant;
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
+use rustc_hash::FxHashMap;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
@@ -39,7 +40,7 @@ use garden_lang_parser::position::Position;
 pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
-    pub(crate) values: HashMap<SymbolName, Value>,
+    pub(crate) values: FxHashMap<SymbolName, Value>,
 }
 
 /// Use reference equality for block bindings, so closures have
@@ -69,7 +70,7 @@ impl Bindings {
         assert!(!self.block_bindings.is_empty());
     }
 
-    fn new_with(outer_scope: HashMap<SymbolName, Value>) -> Self {
+    fn new_with(outer_scope: FxHashMap<SymbolName, Value>) -> Self {
         Self {
             block_bindings: vec![BlockBindings {
                 values: outer_scope,
@@ -2278,7 +2279,7 @@ fn eval_call(
                 fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
             }
 
-            let mut fun_bindings = HashMap::new();
+            let mut fun_bindings = FxHashMap::default();
             for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
                 let param_name = &param.symbol.name;
                 if !param_name.is_underscore() {
@@ -2362,7 +2363,7 @@ fn eval_call(
                 fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
             }
 
-            let mut fun_bindings = HashMap::new();
+            let mut fun_bindings = FxHashMap::default();
             for (param, value) in params.iter().zip(arg_values.iter()) {
                 let param_name = &param.symbol.name;
                 if !param_name.is_underscore() {
@@ -2684,7 +2685,7 @@ fn eval_method_call(
 
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
-    let mut fun_bindings: HashMap<SymbolName, Value> = HashMap::new();
+    let mut fun_bindings: FxHashMap<SymbolName, Value> = FxHashMap::default();
     for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
         let param_name = &param.symbol.name;
         fun_bindings.insert(param_name.clone(), value.clone());

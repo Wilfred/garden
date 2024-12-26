@@ -811,7 +811,7 @@ fn parse_call_arguments(
     let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {
-        arguments,
+        arguments: arguments.into_iter().map(Rc::new).collect(),
         open_paren: open_paren_token.position,
         close_paren: close_paren_token.position,
     }

@@ -252,7 +252,7 @@ pub struct ParenthesizedExpression {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParenthesizedArguments {
     pub open_paren: Position,
-    pub arguments: Vec<Expression>,
+    pub arguments: Vec<Rc<Expression>>,
     pub close_paren: Position,
 }
 

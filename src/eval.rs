@@ -771,9 +771,14 @@ pub(crate) fn eval_toplevel_call(
         id: id_gen.next(),
     };
 
+    let mut arguments = vec![];
+    for _ in 0..args.len() {
+        arguments.push(Rc::new(Expression::invalid(id_gen.next())));
+    }
+
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(id_gen.next()); args.len()],
+        arguments,
         close_paren: Position::todo(),
     };
 
@@ -818,9 +823,14 @@ pub(crate) fn eval_toplevel_method_call(
         id: id_gen.next(),
     };
 
+    let mut arguments = vec![];
+    for _ in 0..args.len() {
+        arguments.push(Rc::new(Expression::invalid(id_gen.next())));
+    }
+
     let paren_args = ParenthesizedArguments {
         open_paren: Position::todo(),
-        arguments: vec![Expression::invalid(id_gen.next()); args.len()],
+        arguments,
         close_paren: Position::todo(),
     };
 
@@ -3612,7 +3622,7 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for arg in &paren_args.arguments {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.as_ref().clone());
                 }
                 // Push the receiver after arguments, so
                 // we evaluate it before arguments. This
@@ -3634,7 +3644,7 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for arg in &paren_args.arguments {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.as_ref().clone());
                 }
                 // Push the receiver after arguments, so
                 // we evaluate it before arguments.

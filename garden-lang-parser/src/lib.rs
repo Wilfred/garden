@@ -262,7 +262,7 @@ fn parse_list_literal(
 
     Expression::new(
         Position::merge(&open_bracket.position, &close_bracket.position),
-        Expression_::ListLiteral(items),
+        Expression_::ListLiteral(items.into_iter().map(Rc::new).collect()),
         id_gen.next(),
     )
 }

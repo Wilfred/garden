@@ -334,7 +334,7 @@ pub enum Expression_ {
     /// ```garden
     /// [x, y]
     /// ```
-    ListLiteral(Vec<Expression>),
+    ListLiteral(Vec<Rc<Expression>>),
     /// ```garden
     /// ()
     /// (x,)

@@ -3447,7 +3447,7 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for item in items.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, item.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, item.as_ref().clone());
                 }
             }
         }

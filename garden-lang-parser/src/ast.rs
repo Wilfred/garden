@@ -1,6 +1,6 @@
 //! Syntax tree definitions for Garden.
 
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 use crate::position::Position;
 
@@ -281,7 +281,7 @@ pub enum Expression_ {
     /// Note that we always treat the expression after `=>`as a block,
     /// because it has additional bindings and it simplifies
     /// evaluation.
-    Match(Box<Expression>, Vec<(Pattern, Block)>),
+    Match(Rc<Expression>, Vec<(Pattern, Block)>),
     /// ```garden
     /// if x { y }
     /// if x { y } else { z }

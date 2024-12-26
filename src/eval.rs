@@ -3270,7 +3270,7 @@ fn eval_expr(
         Expression_::Match(scrutinee, cases) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *scrutinee.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, scrutinee.as_ref().clone());
             }
             ExpressionState::PartiallyEvaluated => {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());

@@ -15,6 +15,7 @@ pub mod visitor;
 
 use std::collections::HashSet;
 use std::path::Path;
+use std::rc::Rc;
 
 use ast::FieldInfo;
 use ast::StructInfo;
@@ -646,7 +647,7 @@ fn parse_match(
     if open_brace.text != "{" {
         return Expression::new(
             scrutinee_expr.position.clone(),
-            Expression_::Match(Box::new(scrutinee_expr), vec![]),
+            Expression_::Match(Rc::new(scrutinee_expr), vec![]),
             id_gen.next(),
         );
     }
@@ -686,7 +687,7 @@ fn parse_match(
 
     Expression::new(
         Position::merge(&match_keyword.position, &close_paren.position),
-        Expression_::Match(Box::new(scrutinee_expr), cases),
+        Expression_::Match(Rc::new(scrutinee_expr), cases),
         id_gen.next(),
     )
 }

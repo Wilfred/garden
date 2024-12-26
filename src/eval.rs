@@ -2767,6 +2767,51 @@ fn eval_method_call(
     }))
 }
 
+fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
+    let Value::Struct {
+        type_name, fields, ..
+    } = value
+    else {
+        return Err(format_type_error(
+            &TypeName {
+                name: "Path".into(),
+            },
+            value,
+            env,
+        ));
+    };
+
+    if type_name.name != "Path" {
+        return Err(format_type_error(
+            &TypeName {
+                name: "Path".into(),
+            },
+            value,
+            env,
+        ));
+    }
+
+    let Some((field_name, field_value)) = fields.first() else {
+        return Err(ErrorMessage(
+            "Malformed `Path` struct (expected some fields).".to_owned(),
+        ));
+    };
+    if field_name.0 != "p" {
+        return Err(ErrorMessage(format!(
+            "Malformed `Path` struct (expected a field named `p`, got `{}`).",
+            field_name,
+        )));
+    }
+
+    match field_value {
+        Value::String(s) => Ok(s.clone()),
+        _ => Err(ErrorMessage(format!(
+            "Malformed `Path` struct (expected `p` to contain a string, got `{}`).",
+            field_value.display(env),
+        ))),
+    }
+}
+
 fn eval_builtin_method_call(
     env: &mut Env,
     kind: BuiltinMethodKind,
@@ -2972,62 +3017,24 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match &receiver_value {
-                Value::Struct {
-                    type_name, fields, ..
-                } if type_name.name == "Path" => {
-                    // TODO: this panics if the user redefines Path.
-                    let (_, field_value) = &fields[0];
-
-                    let path_s = match field_value {
-                        Value::String(s) => s,
-                        v => {
-                            let mut saved_values = vec![];
-                            for value in arg_values.iter().rev() {
-                                saved_values.push(value.clone());
-                                saved_values.push(receiver_value.clone());
-                            }
-
-                            let message = format_type_error(
-                                &TypeName {
-                                    name: "String".into(),
-                                },
-                                v,
-                                env,
-                            );
-                            return Err((
-                                RestoreValues(saved_values),
-                                EvalError::ResumableError(receiver_pos.clone(), message),
-                            ));
-                        }
-                    };
-
-                    if expr_value_is_used {
-                        let path = PathBuf::from(path_s);
-                        env.push_value(Value::bool(path.exists()));
-                    }
-                }
-                v => {
+            let path_s = match unwrap_path(receiver_value, env) {
+                Ok(s) => s,
+                Err(msg) => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
                     }
-                    saved_values.push(receiver_value.clone());
-
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
-                            arg_positions[0].clone(),
-                            format_type_error(
-                                &TypeName {
-                                    name: "Path".into(),
-                                },
-                                v,
-                                env,
-                            ),
-                        ),
+                        EvalError::ResumableError(receiver_pos.clone(), msg),
                     ));
                 }
+            };
+
+            if expr_value_is_used {
+                let path = PathBuf::from(path_s);
+                env.push_value(Value::bool(path.exists()));
             }
         }
         BuiltinMethodKind::StringAppend => {

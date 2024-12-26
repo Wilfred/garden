@@ -2116,7 +2116,7 @@ fn eval_builtin_call(
                     )
                 }
                 Err(e) => {
-                    let s = Value::String(format!("{}", e));
+                    let s = Value::String(format!("{e} {path_s}"));
                     Value::err(s, env)
                 }
             };
@@ -3075,11 +3075,11 @@ fn eval_builtin_method_call(
                 }
             };
 
-            let path = PathBuf::from(path_s);
+            let path = PathBuf::from(path_s.clone());
 
             let v = match std::fs::read_to_string(path) {
                 Ok(s) => Value::ok(Value::String(s), env),
-                Err(e) => Value::err(Value::String(e.to_string()), env),
+                Err(e) => Value::err(Value::String(format!("{e} {path_s}")), env),
             };
 
             if expr_value_is_used {

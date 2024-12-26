@@ -196,3 +196,12 @@ export fun (this: String) append(suffix: String): String {
 export fun (this: Path) exists(): Bool {
   __BUILTIN_IMPLEMENTATION
 }
+
+// Read the contents of `path` as a string.
+//
+// ```
+// Path{ p: "/tmp/foo.txt" }.read()
+// ```
+export fun (this: Path) read(): Result<String, String> {
+  __BUILTIN_IMPLEMENTATION
+}

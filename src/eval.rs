@@ -3037,6 +3037,55 @@ fn eval_builtin_method_call(
                 env.push_value(Value::bool(path.exists()));
             }
         }
+        BuiltinMethodKind::PathRead => {
+            if env.enforce_sandbox {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
+                ));
+            }
+
+            check_arity(
+                &SymbolName("Path::read".to_owned()),
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let path_s = match unwrap_path(receiver_value, env) {
+                Ok(s) => s,
+                Err(msg) => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
+                    }
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(receiver_pos.clone(), msg),
+                    ));
+                }
+            };
+
+            let path = PathBuf::from(path_s);
+
+            let v = match std::fs::read_to_string(path) {
+                Ok(s) => Value::ok(Value::String(s), env),
+                Err(e) => Value::err(Value::String(e.to_string()), env),
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltinMethodKind::StringAppend => {
             check_arity(
                 &SymbolName("String::append".to_owned()),

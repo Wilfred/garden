@@ -126,6 +126,25 @@ impl Env {
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
             },
         );
+        path_methods.insert(
+            SymbolName("read".to_owned()),
+            MethodInfo {
+                receiver_hint: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "Path".into(),
+                        },
+                        id: id_gen.next(),
+                    },
+                    position: Position::todo(),
+                },
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen.next()),
+                name_sym: Symbol::new(Position::todo(), "read", id_gen.next()),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
+            },
+        );
 
         methods.insert(
             TypeName {

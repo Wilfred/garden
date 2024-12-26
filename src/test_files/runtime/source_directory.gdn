@@ -1,7 +1,7 @@
 export fun main(_) {
-  dbg(source_directory())
+  dbg(source_directory().or_exception().file_name())
 }
 
 // args: run
-// expected stdout: Some(Path { p: "src/test_files/runtime/source_directory.gdn" })
+// expected stdout: Some("source_directory.gdn")
 

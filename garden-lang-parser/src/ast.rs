@@ -488,7 +488,7 @@ impl Expression {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
     pub open_brace: Position,
-    pub exprs: Vec<Expression>,
+    pub exprs: Vec<Rc<Expression>>,
     pub close_brace: Position,
 }
 

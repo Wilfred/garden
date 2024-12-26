@@ -326,7 +326,7 @@ fn parse_if(
                 // is an ugly hack.
                 open_brace: if_expr.position.clone(),
                 close_brace: if_expr.position.clone(),
-                exprs: vec![if_expr],
+                exprs: vec![if_expr.into()],
             })
         } else {
             Some(parse_block(src, tokens, id_gen, diagnostics, false))
@@ -338,9 +338,16 @@ fn parse_if(
     if else_body.is_none() {
         // We have no else block, so we're not using any values from
         // the then block.
-        for expr in then_body.exprs.iter_mut() {
-            expr.value_is_used = false;
-        }
+        let then_body_exprs: Vec<_> = then_body
+            .exprs
+            .iter()
+            .map(|e| {
+                let mut e = e.as_ref().clone();
+                e.value_is_used = false;
+                Rc::new(e)
+            })
+            .collect();
+        then_body.exprs = then_body_exprs;
     }
 
     let last_brace_pos = match &else_body {
@@ -708,7 +715,7 @@ fn parse_case_block(
         let pos = case_expr.position.clone();
         Block {
             open_brace: pos.clone(),
-            exprs: vec![case_expr],
+            exprs: vec![case_expr.into()],
             close_brace: pos,
         }
     };
@@ -1622,7 +1629,7 @@ fn parse_block(
         };
     }
 
-    let mut exprs = vec![];
+    let mut exprs: Vec<Expression> = vec![];
     loop {
         if let Some(token) = tokens.peek() {
             if token.text == "}" {
@@ -1656,6 +1663,8 @@ fn parse_block(
             expr.value_is_used = false;
         }
     }
+
+    let exprs: Vec<Rc<Expression>> = exprs.into_iter().map(Rc::new).collect();
 
     let close_brace = require_token(tokens, diagnostics, "}");
     Block {

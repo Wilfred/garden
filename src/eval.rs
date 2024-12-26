@@ -838,7 +838,7 @@ pub(crate) fn eval_toplevel_method_call(
 pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let mut exprs_to_eval = vec![];
     for expr in test.body.exprs.iter().rev() {
-        exprs_to_eval.push((ExpressionState::NotEvaluated, expr.clone()));
+        exprs_to_eval.push((ExpressionState::NotEvaluated, expr.as_ref().clone()));
     }
 
     let stack_frame = StackFrame {
@@ -2277,7 +2277,7 @@ fn eval_call(
 
             let mut fun_subexprs = vec![];
             for expr in fun_info.body.exprs.iter().rev() {
-                fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
+                fun_subexprs.push((ExpressionState::NotEvaluated, expr.as_ref().clone()));
             }
 
             let mut fun_bindings = FxHashMap::default();
@@ -2361,7 +2361,7 @@ fn eval_call(
 
             let mut fun_subexprs = vec![];
             for expr in body.exprs.iter().rev() {
-                fun_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
+                fun_subexprs.push((ExpressionState::NotEvaluated, expr.as_ref().clone()));
             }
 
             let mut fun_bindings = FxHashMap::default();
@@ -2671,7 +2671,7 @@ fn eval_method_call(
 
     let mut method_subexprs = vec![];
     for expr in fun_info.body.exprs.iter().rev() {
-        method_subexprs.push((ExpressionState::NotEvaluated, expr.clone()));
+        method_subexprs.push((ExpressionState::NotEvaluated, expr.as_ref().clone()));
     }
 
     // TODO: use a fully qualified method name here?
@@ -3812,13 +3812,8 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
     }
 
     for expr in block.exprs.iter().rev() {
-        let mut expr = expr.clone();
+        let mut expr = expr.as_ref().clone();
 
-        // Mark this expression as unused. This ensures we recursively
-        // mark blocks as unused inside e.g. if expressions, unlike
-        // the parser.
-        //
-        // TODO: do we still need this in the parser?
         if !expr_value_is_used {
             expr.value_is_used = false;
         }

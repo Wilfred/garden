@@ -3379,7 +3379,7 @@ fn eval_expr(
                 eval_assign(env, expr_value_is_used, variable)?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.as_ref().clone());
             }
         }
         Expression_::AssignUpdate(variable, op, expr) => {
@@ -3387,7 +3387,7 @@ fn eval_expr(
                 eval_assign_update(env, expr_value_is_used, &expr_position, variable, *op)?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.as_ref().clone());
             }
         }
         Expression_::Let(destination, hint, expr) => {
@@ -3395,7 +3395,7 @@ fn eval_expr(
                 eval_let(env, expr_value_is_used, destination, &expr_position, hint)?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.as_ref().clone());
             }
         }
         Expression_::IntLiteral(i) => {

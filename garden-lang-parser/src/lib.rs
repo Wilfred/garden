@@ -2019,7 +2019,7 @@ fn parse_let(
 
     Expression::new(
         Position::merge(&let_token.position, &expr.position),
-        Expression_::Let(destination, hint, Box::new(expr)),
+        Expression_::Let(destination, hint, Rc::new(expr)),
         id_gen.next(),
     )
 }
@@ -2043,7 +2043,7 @@ fn parse_assign(
 
     Expression::new(
         Position::merge(&variable.position, &expr.position),
-        Expression_::Assign(variable, Box::new(expr)),
+        Expression_::Assign(variable, Rc::new(expr)),
         id_gen.next(),
     )
 }
@@ -2078,7 +2078,7 @@ fn parse_assign_update(
 
     Expression::new(
         Position::merge(&variable.position, &expr.position),
-        Expression_::AssignUpdate(variable, op, Box::new(expr)),
+        Expression_::AssignUpdate(variable, op, Rc::new(expr)),
         id_gen.next(),
     )
 }

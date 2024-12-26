@@ -306,18 +306,18 @@ pub enum Expression_ {
     /// ```garden
     /// x = y
     /// ```
-    Assign(Symbol, Box<Expression>),
+    Assign(Symbol, Rc<Expression>),
     /// ```garden
     /// x += y
     /// x -= y
     /// ```
-    AssignUpdate(Symbol, AssignUpdateKind, Box<Expression>),
+    AssignUpdate(Symbol, AssignUpdateKind, Rc<Expression>),
     /// ```garden
     /// let x = y
     /// let x: T = y
     /// let (x, y) = z
     /// ```
-    Let(LetDestination, Option<TypeHint>, Box<Expression>),
+    Let(LetDestination, Option<TypeHint>, Rc<Expression>),
     /// ```garden
     /// return x
     /// return // equivalent to `return Unit`

@@ -116,9 +116,9 @@ export fun write_file(content: String, path: String): Result<Unit, String> {
 // Return the path of the current working directory.
 //
 // ```
-// working_directory() // "/home/yourname/awesome_garden_project"
+// working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
 // ```
-export fun working_directory(): String {
+export fun working_directory(): Path {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -126,9 +126,9 @@ export fun working_directory(): String {
 // file. Returns None when run directly in a CLI or JSON session.
 //
 // ```
-// source_directory() // "/home/yourname/awesome_garden_project"
+// source_directory() // Some(Path{ p: "/home/yourname/awesome_garden_project" })
 // ```
-export fun source_directory(): Option<String> {
+export fun source_directory(): Option<Path> {
   __BUILTIN_IMPLEMENTATION
 }
 

@@ -6,6 +6,9 @@
 
 Added a `Path` type.
 
+`list_directory`, `working_directory` and `source_directory` now
+return `Path` values.
+
 ## Syntax
 
 Type parameters now occur after function or method names, so Garden

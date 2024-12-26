@@ -2249,7 +2249,7 @@ fn eval_builtin_call(
             let path = position.path.clone();
 
             if expr_value_is_used {
-                let v = Value::some(Value::String(path.display().to_string()), env);
+                let v = Value::some(Value::path(path.display().to_string()), env);
                 env.push_value(v);
             }
         }
@@ -2267,7 +2267,7 @@ fn eval_builtin_call(
             let path = std::env::current_dir().unwrap_or_default();
 
             if expr_value_is_used {
-                env.push_value(Value::String(path.display().to_string()));
+                env.push_value(Value::path(path.display().to_string()));
             }
         }
         BuiltinFunctionKind::WriteFile => {

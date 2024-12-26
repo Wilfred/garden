@@ -194,6 +194,6 @@ export fun main(_: List<String>) {
 }
 
 fun source_dir_path(): Path {
-  Path{ p: source_directory().or_exception() }
+  source_directory().or_exception()
 }
 

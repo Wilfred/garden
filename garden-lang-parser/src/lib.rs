@@ -350,7 +350,7 @@ fn parse_if(
 
     Expression::new(
         Position::merge(&if_token.position, last_brace_pos),
-        Expression_::If(Box::new(cond_expr), then_body, else_body),
+        Expression_::If(Rc::new(cond_expr), then_body, else_body),
         id_gen.next(),
     )
 }
@@ -368,7 +368,7 @@ fn parse_while(
 
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
-        Expression_::While(Box::new(cond_expr), body),
+        Expression_::While(Rc::new(cond_expr), body),
         id_gen.next(),
     )
 }
@@ -389,7 +389,7 @@ fn parse_for_in(
 
     Expression::new(
         Position::merge(&for_token.position, &body.close_brace),
-        Expression_::ForIn(symbol, Box::new(expr), body),
+        Expression_::ForIn(symbol, Rc::new(expr), body),
         id_gen.next(),
     )
 }

@@ -286,15 +286,15 @@ pub enum Expression_ {
     /// if x { y }
     /// if x { y } else { z }
     /// ```
-    If(Box<Expression>, Block, Option<Block>),
+    If(Rc<Expression>, Block, Option<Block>),
     /// ```garden
     /// while x { y }
     /// ```
-    While(Box<Expression>, Block),
+    While(Rc<Expression>, Block),
     /// ```garden
     /// for x in y { z }
     /// ```
-    ForIn(Symbol, Box<Expression>, Block),
+    ForIn(Symbol, Rc<Expression>, Block),
     /// ```garden
     /// break
     /// ```

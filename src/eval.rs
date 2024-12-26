@@ -3284,7 +3284,7 @@ fn eval_expr(
         Expression_::If(condition, ref then_body, ref else_body) => match expr_state {
             ExpressionState::NotEvaluated => {
                 env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *condition.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, condition.as_ref().clone());
             }
             ExpressionState::PartiallyEvaluated => {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
@@ -3307,7 +3307,10 @@ fn eval_expr(
                     // Once we've evaluated the condition, we can consider evaluating the body.
                     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
                     // Evaluate the loop condition first.
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, *condition.clone());
+                    env.push_expr_to_eval(
+                        ExpressionState::NotEvaluated,
+                        condition.as_ref().clone(),
+                    );
                 }
                 ExpressionState::PartiallyEvaluated => {
                     // Evaluated condition, can possibly evaluate body.
@@ -3339,7 +3342,7 @@ fn eval_expr(
 
                     // Next, we're going to evaluate the value
                     // that we want to iterate over.
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.as_ref().clone());
                 }
                 ExpressionState::PartiallyEvaluated => {
                     eval_for_in(env, sym, &expr.position, outer_expr.clone(), body)?;

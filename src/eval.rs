@@ -2125,64 +2125,6 @@ fn eval_builtin_call(
                 env.push_value(value);
             }
         }
-        BuiltinFunctionKind::ReadFile => {
-            if env.enforce_sandbox {
-                let mut saved_values = vec![];
-                for value in arg_values.iter().rev() {
-                    saved_values.push(value.clone());
-                }
-                saved_values.push(receiver_value.clone());
-
-                return Err((
-                    RestoreValues(saved_values),
-                    EvalError::ForbiddenInSandbox(receiver_pos.clone()),
-                ));
-            }
-
-            check_arity(
-                &SymbolName("read_file".to_owned()),
-                receiver_value,
-                receiver_pos,
-                1,
-                arg_positions,
-                arg_values,
-            )?;
-
-            // TODO: define a separate path type in Garden.
-            let path_s = match &arg_values[0] {
-                Value::String(s) => s,
-                v => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
-                    let message = format_type_error(
-                        &TypeName {
-                            name: "String".into(),
-                        },
-                        v,
-                        env,
-                    );
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
-                    ));
-                }
-            };
-
-            let path = PathBuf::from(path_s);
-
-            let v = match std::fs::read_to_string(path) {
-                Ok(s) => Value::ok(Value::String(s), env),
-                Err(e) => Value::err(Value::String(e.to_string()), env),
-            };
-
-            if expr_value_is_used {
-                env.push_value(v);
-            }
-        }
         BuiltinFunctionKind::SourceDirectory => {
             check_arity(
                 &SymbolName("source_directory".to_owned()),

@@ -1,6 +1,6 @@
 test read_file_is_unsafe {
-    read_file("/tmp/foo.txt")
-    // ^
+  Path{ p: "/tmp/foo.txt" }.read()
+  //                          ^
 }
 
 // args: sandboxed-test

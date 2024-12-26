@@ -549,7 +549,7 @@ enclosing point and print the result."
 
     (,(regexp-opt
        '("assert" "error" "list_directory" "print" "println"
-         "read_file" "shell" "string_repr" "todo"
+         "shell" "string_repr" "todo"
          "working_directory" "source_directory"
          "write_file")
        'symbols)

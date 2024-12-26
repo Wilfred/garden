@@ -80,15 +80,6 @@ export fun string_repr<T>(value: T): String {
   __BUILTIN_IMPLEMENTATION
 }
 
-// Read the contents of `path` as a string.
-//
-// ```
-// read_file("/tmp/foo.txt")
-// ```
-export fun read_file(path: String): Result<String, String> {
-  __BUILTIN_IMPLEMENTATION
-}
-
 // Write `content` to file `path`.
 //
 // If `path` already exists, its content is replaced with `content`.

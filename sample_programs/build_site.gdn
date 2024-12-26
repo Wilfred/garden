@@ -173,13 +173,13 @@ fun build_site(): Unit {
 }
 
 fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {
-  let base_tmpl_src = read_file(base_tmpl_path).or_error()
+  let base_tmpl_src = Path{ p: base_tmpl_path }.read().or_error()
   let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {
     Some(s) => s,
     None => ("", "")
   }
 
-  let content_src = read_file(page_path).or_error()
+  let content_src = Path{ p: page_path }.read().or_error()
   let src = "".join([header.trim_right(), content_src, footer.trim_left()])
 
   write_file(src, dest_path).or_error()

@@ -10,7 +10,8 @@ Added a `Path` type, with methods `Path::exists`, `Path::extension`,
 `list_directory`, `working_directory` and `source_directory` now
 return absolute `Path` values.
 
-Removed `path_exists` (use `Path::exists` instead).
+Removed `path_exists` (use `Path::exists` instead) and `read_file`
+(use `Path::read` instead).
 
 ## Syntax
 

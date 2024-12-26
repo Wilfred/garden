@@ -1,6 +1,6 @@
 {
-    let s = read_file("/foo").or_error()
-    s.split_once(",")
+  let s = Path{ p: "/foo" }.read().or_error()
+  s.split_once(",")
 }
 
 // args: check

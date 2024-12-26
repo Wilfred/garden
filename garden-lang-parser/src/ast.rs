@@ -340,14 +340,14 @@ pub enum Expression_ {
     /// (x,)
     /// (x, y)
     /// ```
-    TupleLiteral(Vec<Expression>),
+    TupleLiteral(Vec<Rc<Expression>>),
     /// ```garden
     /// Foo { x: 1, y: bar() }
     /// ```
     ///
     /// Field values are executed in the order they occur in source
     /// code, so we want an ordered data type here.
-    StructLiteral(TypeSymbol, Vec<(Symbol, Expression)>),
+    StructLiteral(TypeSymbol, Vec<(Symbol, Rc<Expression>)>),
     /// ```garden
     /// x + y
     /// x < y

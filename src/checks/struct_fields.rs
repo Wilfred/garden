@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
 use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
 use garden_lang_parser::visitor::Visitor;
@@ -15,7 +16,7 @@ impl Visitor for StructFieldVisitor<'_> {
     fn visit_expr_struct_literal(
         &mut self,
         name_sym: &TypeSymbol,
-        field_exprs: &[(Symbol, Expression)],
+        field_exprs: &[(Symbol, Rc<Expression>)],
     ) {
         for (_, expr) in field_exprs {
             self.visit_expr(expr);

@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
     MethodInfo, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
@@ -205,7 +207,7 @@ pub trait Visitor {
     fn visit_expr_struct_literal(
         &mut self,
         type_symbol: &TypeSymbol,
-        field_exprs: &[(Symbol, Expression)],
+        field_exprs: &[(Symbol, Rc<Expression>)],
     ) {
         self.visit_type_symbol(type_symbol);
         for (_, expr) in field_exprs {

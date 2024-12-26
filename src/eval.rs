@@ -3476,7 +3476,7 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for item in items.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, item.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, item.as_ref().clone());
                 }
             }
         }
@@ -3493,7 +3493,10 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 for (_, field_expr) in field_exprs.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, field_expr.clone());
+                    env.push_expr_to_eval(
+                        ExpressionState::NotEvaluated,
+                        field_expr.as_ref().clone(),
+                    );
                 }
             }
         }
@@ -3921,7 +3924,7 @@ fn eval_struct_value(
     outer_expr_pos: &Position,
     expr_value_is_used: bool,
     type_symbol: TypeSymbol,
-    field_exprs: &[(Symbol, Expression)],
+    field_exprs: &[(Symbol, Rc<Expression>)],
 ) -> Result<(), (RestoreValues, EvalError)> {
     let Some(type_info) = env.get_type_def(&type_symbol.name) else {
         return Err((

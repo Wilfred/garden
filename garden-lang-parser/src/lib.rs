@@ -239,7 +239,7 @@ fn parse_tuple_literal_or_parentheses(
 
         return Expression::new(
             Position::merge(&open_paren.position, &close_paren.position),
-            Expression_::TupleLiteral(exprs),
+            Expression_::TupleLiteral(exprs.into_iter().map(Rc::new).collect()),
             id_gen.next(),
         );
     }
@@ -576,8 +576,8 @@ fn parse_struct_literal_fields(
     tokens: &mut TokenStream,
     id_gen: &mut SyntaxIdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Vec<(Symbol, Expression)> {
-    let mut fields = vec![];
+) -> Vec<(Symbol, Rc<Expression>)> {
+    let mut fields: Vec<(Symbol, Rc<Expression>)> = vec![];
     loop {
         if peeked_symbol_is(tokens, "}") {
             break;
@@ -602,7 +602,7 @@ fn parse_struct_literal_fields(
             break;
         }
 
-        fields.push((sym, expr));
+        fields.push((sym, Rc::new(expr)));
 
         let Some(token) = tokens.peek() else {
             diagnostics.push(ParseError::Incomplete {

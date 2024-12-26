@@ -245,7 +245,7 @@ pub struct Pattern {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParenthesizedExpression {
     pub open_paren: Position,
-    pub expr: Box<Expression>,
+    pub expr: Rc<Expression>,
     pub close_paren: Position,
 }
 
@@ -361,15 +361,15 @@ pub enum Expression_ {
     /// ```garden
     /// x()
     /// ```
-    Call(Box<Expression>, ParenthesizedArguments),
+    Call(Rc<Expression>, ParenthesizedArguments),
     /// ```garden
     /// foo.bar(x, y)
     /// ```
-    MethodCall(Box<Expression>, Symbol, ParenthesizedArguments),
+    MethodCall(Rc<Expression>, Symbol, ParenthesizedArguments),
     /// ```garden
     /// foo.bar
     /// ```
-    DotAccess(Box<Expression>, Symbol),
+    DotAccess(Rc<Expression>, Symbol),
     /// ```garden
     /// fun(x, y) { x + y }
     /// ```

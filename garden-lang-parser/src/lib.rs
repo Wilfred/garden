@@ -838,7 +838,7 @@ fn parse_simple_expression_with_trailing(
 
                 expr = Expression::new(
                     Position::merge(&expr.position, &arguments.close_paren),
-                    Expression_::Call(Box::new(expr), arguments),
+                    Expression_::Call(Rc::new(expr), arguments),
                     id_gen.next(),
                 );
             }
@@ -862,13 +862,13 @@ fn parse_simple_expression_with_trailing(
 
                         expr = Expression::new(
                             Position::merge(&expr.position, &arguments.close_paren),
-                            Expression_::MethodCall(Box::new(expr), variable, arguments),
+                            Expression_::MethodCall(Rc::new(expr), variable, arguments),
                             id_gen.next(),
                         );
                     } else {
                         expr = Expression::new(
                             Position::merge(&expr.position, &variable.position),
-                            Expression_::DotAccess(Box::new(expr), variable),
+                            Expression_::DotAccess(Rc::new(expr), variable),
                             id_gen.next(),
                         );
                     }
@@ -877,7 +877,7 @@ fn parse_simple_expression_with_trailing(
 
                     expr = Expression::new(
                         Position::merge(&expr.position, &variable.position),
-                        Expression_::DotAccess(Box::new(expr), variable),
+                        Expression_::DotAccess(Rc::new(expr), variable),
                         id_gen.next(),
                     );
                 }

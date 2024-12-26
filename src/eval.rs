@@ -4,6 +4,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -778,7 +779,7 @@ pub(crate) fn eval_toplevel_call(
 
     let call_expr = Expression {
         position: Position::todo(),
-        expr_: Expression_::Call(Box::new(recv_expr), paren_args),
+        expr_: Expression_::Call(Rc::new(recv_expr), paren_args),
         value_is_used: true,
         id: id_gen.next(),
     };
@@ -825,7 +826,7 @@ pub(crate) fn eval_toplevel_method_call(
 
     let call_expr = Expression {
         position: Position::todo(),
-        expr_: Expression_::MethodCall(Box::new(recv_expr), meth_sym, paren_args),
+        expr_: Expression_::MethodCall(Rc::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
         id: id_gen.next(),
     };
@@ -3617,7 +3618,7 @@ fn eval_expr(
                 // we evaluate it before arguments. This
                 // makes it easier to use :replace on bad
                 // functions.
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *receiver.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, receiver.as_ref().clone());
             }
         }
         Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
@@ -3637,7 +3638,10 @@ fn eval_expr(
                 }
                 // Push the receiver after arguments, so
                 // we evaluate it before arguments.
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *receiver_expr.clone());
+                env.push_expr_to_eval(
+                    ExpressionState::NotEvaluated,
+                    receiver_expr.as_ref().clone(),
+                );
             }
         }
         Expression_::Block(block) => {
@@ -3659,7 +3663,7 @@ fn eval_expr(
                 eval_dot_access(env, expr_value_is_used, sym, &recv.position)?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *recv.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, recv.as_ref().clone());
             }
         }
         Expression_::Break => {

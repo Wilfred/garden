@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::{collections::HashMap, path::PathBuf};
 
 use strum::IntoEnumIterator;
@@ -391,7 +392,7 @@ impl Env {
         self.types.insert(name, type_);
     }
 
-    pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Expression) {
+    pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {
         let stack_frame = self.stack.0.last_mut().unwrap();
         stack_frame.exprs_to_eval.push((state, expr));
     }
@@ -442,7 +443,7 @@ pub(crate) struct StackFrame {
     /// We want `y` to be bound, but only in the block.
     pub(crate) bindings_next_block: Vec<(Symbol, Value)>,
     /// A stack of expressions to evaluate.
-    pub(crate) exprs_to_eval: Vec<(ExpressionState, Expression)>,
+    pub(crate) exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)>,
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
 }

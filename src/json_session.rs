@@ -570,7 +570,7 @@ fn handle_run_request(
                     stack_frame.evalled_values.pop();
                     stack_frame
                         .exprs_to_eval
-                        .push((ExpressionState::NotEvaluated, expr));
+                        .push((ExpressionState::NotEvaluated, expr.into()));
 
                     eval_to_response(env, session)
                 }

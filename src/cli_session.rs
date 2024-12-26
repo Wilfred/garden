@@ -133,7 +133,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 for expr in exprs.iter().rev() {
                     stack_frame
                         .exprs_to_eval
-                        .push((ExpressionState::NotEvaluated, expr.0.clone()));
+                        .push((ExpressionState::NotEvaluated, expr.0.clone().into()));
                 }
             }
             Err(ReadError::NeedsEval(EvalAction::Abort)) => {
@@ -151,7 +151,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 stack_frame.evalled_values.pop();
                 stack_frame
                     .exprs_to_eval
-                    .push((ExpressionState::NotEvaluated, expr));
+                    .push((ExpressionState::NotEvaluated, expr.into()));
 
                 // TODO: Prevent :replace when we've not just halted.
             }

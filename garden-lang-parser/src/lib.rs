@@ -440,7 +440,7 @@ fn parse_return(
         if return_token.position.end_line_number == next_token.position.line_number {
             let returned_expr = parse_expression(src, tokens, id_gen, diagnostics);
             pos = Position::merge(&pos, &returned_expr.position);
-            expr = Some(Box::new(returned_expr));
+            expr = Some(Rc::new(returned_expr));
         }
     }
 
@@ -995,7 +995,7 @@ fn parse_simple_expression_or_binop(
 
             expr = Expression::new(
                 Position::merge(&expr.position, &rhs_expr.position),
-                Expression_::BinaryOperator(Box::new(expr), op, Box::new(rhs_expr)),
+                Expression_::BinaryOperator(Rc::new(expr), op, Rc::new(rhs_expr)),
                 id_gen.next(),
             );
         }

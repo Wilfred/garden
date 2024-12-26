@@ -322,7 +322,7 @@ pub enum Expression_ {
     /// return x
     /// return // equivalent to `return Unit`
     /// ```
-    Return(Option<Box<Expression>>),
+    Return(Option<Rc<Expression>>),
     /// ```garden
     /// 123
     /// ```
@@ -353,7 +353,7 @@ pub enum Expression_ {
     /// x < y
     /// x && y
     /// ```
-    BinaryOperator(Box<Expression>, BinaryOperatorKind, Box<Expression>),
+    BinaryOperator(Rc<Expression>, BinaryOperatorKind, Rc<Expression>),
     /// ```garden
     /// x
     /// ```

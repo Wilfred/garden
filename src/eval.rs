@@ -3367,7 +3367,7 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
 
                 if let Some(expr) = expr {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, *expr.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.as_ref().clone());
                 } else {
                     // `return` is the same as `return Unit`.
                     env.push_value(Value::unit());
@@ -3536,8 +3536,8 @@ fn eval_expr(
                 )?;
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *rhs.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *lhs.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.as_ref().clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.as_ref().clone());
             }
         }
         Expression_::BinaryOperator(
@@ -3549,8 +3549,8 @@ fn eval_expr(
                 eval_equality_binop(env, expr_value_is_used, *op)
             } else {
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *rhs.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *lhs.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.as_ref().clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.as_ref().clone());
             }
         }
         Expression_::BinaryOperator(
@@ -3563,8 +3563,8 @@ fn eval_expr(
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
                 env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *rhs.clone());
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, *lhs.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.as_ref().clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.as_ref().clone());
             }
         }
         Expression_::FunLiteral(fun_info) => {

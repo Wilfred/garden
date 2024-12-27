@@ -144,10 +144,10 @@ test render_link {
 // A list of all the files in `website_dir` that are templates.
 //
 // Returns absolute paths.
-fun template_files(website_dir: String): List<String> {
+fun template_files(website_dir: Path): List<Path> {
   // TODO: a ? syntax.
-  let dir_files = list_directory(Path{ p: website_dir }).or_error()
-  dir_files.map(fun(p: Path) {p.p}).filter(fun(s: String) {s.ends_with(".tmpl.html") })
+  let dir_files = list_directory(website_dir).or_error()
+  dir_files.filter(fun(p: Path) { p.p.ends_with(".tmpl.html") })
 }
 
 // Convert "foo.tmpl.html" to "foo.html".
@@ -156,25 +156,25 @@ fun output_path(template_path: String): String {
 }
 
 fun build_site(): Unit {
-  let website_dir = source_dir_path().parent().parent().join("website").p
-
-  let base_tmpl_path = "/".join([website_dir, "template.html"])
+  let website_dir = source_dir_path().parent().parent().join("website")
   let tmpl_paths = template_files(website_dir)
 
+  let base_tmpl_path = website_dir.join("template.html")
+
   for tmpl_path in tmpl_paths {
-    let dest_path = output_path(tmpl_path)
+    let dest_path = output_path(tmpl_path.p)
     write_website_file(base_tmpl_path, tmpl_path, dest_path)
   }
 }
 
-fun write_website_file(base_tmpl_path: String, page_path: String, dest_path: String): Unit {
-  let base_tmpl_src = Path{ p: base_tmpl_path }.read().or_error()
+fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: String): Unit {
+  let base_tmpl_src = base_tmpl_path.read().or_error()
   let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {
     Some(s) => s,
     None => ("", "")
   }
 
-  let content_src = Path{ p: page_path }.read().or_error()
+  let content_src = page_path.read().or_error()
   let src = "".join([header.trim_right(), content_src, footer.trim_left()])
 
   write_file(src, dest_path).or_error()

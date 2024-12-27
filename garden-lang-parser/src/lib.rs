@@ -138,7 +138,7 @@ fn require_token<'a>(
 
 fn parse_integer(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let token = require_a_token(tokens, diagnostics, "integer literal");
@@ -165,7 +165,7 @@ fn parse_integer(
 
 fn parse_variable(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, id_gen, diagnostics);
@@ -182,7 +182,7 @@ fn parse_variable(
 fn parse_tuple_literal_or_parentheses(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_paren = require_token(tokens, diagnostics, "(");
@@ -253,7 +253,7 @@ fn parse_tuple_literal_or_parentheses(
 fn parse_list_literal(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
@@ -270,7 +270,7 @@ fn parse_list_literal(
 fn parse_lambda(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let fun_keyword = require_token(tokens, diagnostics, "fun");
@@ -307,7 +307,7 @@ fn parse_lambda(
 fn parse_if(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
@@ -365,7 +365,7 @@ fn parse_if(
 fn parse_while(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let while_token = require_token(tokens, diagnostics, "while");
@@ -383,7 +383,7 @@ fn parse_while(
 fn parse_for_in(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let for_token = require_token(tokens, diagnostics, "for");
@@ -402,7 +402,7 @@ fn parse_for_in(
 }
 fn parse_break(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let break_token = require_token(tokens, diagnostics, "break");
@@ -411,7 +411,7 @@ fn parse_break(
 
 fn parse_continue(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let continue_token = require_token(tokens, diagnostics, "continue");
@@ -425,7 +425,7 @@ fn parse_continue(
 fn parse_return(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let return_token = require_token(tokens, diagnostics, "return");
@@ -498,7 +498,7 @@ fn unescape_string(src: &str) -> String {
 fn parse_simple_expression(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     if let Some(token) = tokens.peek() {
@@ -574,7 +574,7 @@ fn parse_simple_expression(
 fn parse_struct_literal_fields(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<(Symbol, Rc<Expression>)> {
     let mut fields: Vec<(Symbol, Rc<Expression>)> = vec![];
@@ -625,7 +625,7 @@ fn parse_struct_literal_fields(
 fn parse_struct_literal(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let name = parse_type_symbol(tokens, id_gen, diagnostics);
@@ -644,7 +644,7 @@ fn parse_struct_literal(
 fn parse_match(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let match_keyword = require_token(tokens, diagnostics, "match");
@@ -702,7 +702,7 @@ fn parse_match(
 fn parse_case_block(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Block {
     let block = if peeked_symbol_is(tokens, "{") {
@@ -729,7 +729,7 @@ fn parse_case_block(
 
 fn parse_pattern(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Pattern {
     let symbol = parse_symbol(tokens, id_gen, diagnostics);
@@ -749,7 +749,7 @@ fn parse_pattern(
 fn parse_comma_separated_exprs(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
     terminator: &str,
 ) -> Vec<Expression> {
@@ -803,7 +803,7 @@ fn parse_comma_separated_exprs(
 fn parse_call_arguments(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ParenthesizedArguments {
     let open_paren_token = require_token(tokens, diagnostics, "(");
@@ -826,7 +826,7 @@ fn parse_call_arguments(
 fn parse_simple_expression_with_trailing(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let mut expr = parse_simple_expression(src, tokens, id_gen, diagnostics);
@@ -931,7 +931,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 fn parse_expression(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     // TODO: Matching on tokens will prevent us from doing more
@@ -989,7 +989,7 @@ fn parse_expression(
 fn parse_simple_expression_or_binop(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let mut expr = parse_simple_expression_with_trailing(src, tokens, id_gen, diagnostics);
@@ -1014,7 +1014,7 @@ fn parse_simple_expression_or_binop(
 fn parse_definition(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     if let Some(token) = tokens.peek() {
@@ -1049,7 +1049,7 @@ fn parse_definition(
 
 fn parse_enum_body(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<VariantInfo> {
     let mut variants = vec![];
@@ -1094,7 +1094,7 @@ fn parse_enum_body(
 /// Parse enum variant, e.g. `Some(T)`.
 fn parse_variant(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> VariantInfo {
     let name_symbol = parse_symbol(tokens, id_gen, diagnostics);
@@ -1115,7 +1115,7 @@ fn parse_variant(
 fn parse_enum(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
     let enum_token = require_token(tokens, diagnostics, "enum");
@@ -1161,7 +1161,7 @@ fn parse_enum(
 fn parse_struct(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
     let struct_token = require_token(tokens, diagnostics, "struct");
@@ -1208,7 +1208,7 @@ fn parse_struct(
 fn parse_test(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
     let test_token = require_token(tokens, diagnostics, "test");
@@ -1244,7 +1244,7 @@ fn parse_test(
 
 fn parse_type_symbol(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeSymbol {
     let name = parse_symbol(tokens, id_gen, diagnostics);
@@ -1258,7 +1258,7 @@ fn parse_type_symbol(
 /// Parse (possibly nested) type arguments, e.g. `<Int, T, Option<String>>`.
 fn parse_type_arguments(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> (Vec<TypeHint>, Option<Position>) {
     if !peeked_symbol_is(tokens, "<") {
@@ -1312,7 +1312,7 @@ fn parse_type_arguments(
 /// Parse type parameters for this definition, e.g. `<T, E>`.
 fn parse_type_params(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<TypeSymbol> {
     if !peeked_symbol_is(tokens, "<") {
@@ -1366,7 +1366,7 @@ fn parse_type_params(
 /// syntactic sugar for `Tuple<Int, String, Unit>`.
 fn parse_tuple_type_hint(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeHint {
     let open_paren = require_token(tokens, diagnostics, "(");
@@ -1412,7 +1412,7 @@ fn parse_tuple_type_hint(
 /// Parse a type hint, such as `String`, `List<Foo>` or `(Int, T)`.
 fn parse_type_hint(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeHint {
     if peeked_symbol_is(tokens, "(") {
@@ -1437,7 +1437,7 @@ fn parse_type_hint(
 /// Parse a colon and a type hint, e.g. `: Int`.
 fn parse_colon_and(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeHint {
     require_token(tokens, diagnostics, ":");
@@ -1447,7 +1447,7 @@ fn parse_colon_and(
 /// Parse a type annotation, if present.
 fn parse_colon_and_hint_opt(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<TypeHint> {
     if peeked_symbol_is(tokens, ":") {
@@ -1460,7 +1460,7 @@ fn parse_colon_and_hint_opt(
 
 fn parse_parameter(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
     require_type_hint: bool,
 ) -> SymbolWithHint {
@@ -1480,7 +1480,7 @@ fn parse_parameter(
 
 fn parse_parameters(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<SymbolWithHint> {
     if !required_token_ok(tokens, diagnostics, "(") {
@@ -1550,7 +1550,7 @@ fn parse_parameters(
 
 fn parse_struct_fields(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<FieldInfo> {
     let mut fields = vec![];
@@ -1614,7 +1614,7 @@ fn parse_struct_fields(
 fn parse_block(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
     is_loop_body: bool,
 ) -> Block {
@@ -1697,7 +1697,7 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
 fn parse_function_or_method(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
     let mut visibility = Visibility::CurrentFile;
@@ -1749,7 +1749,7 @@ fn parse_function_or_method(
 fn parse_method(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
     first_token: Token,
     visibility: Visibility,
@@ -1830,7 +1830,7 @@ fn parse_method(
 fn parse_function(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
     first_token: Token,
     visibility: Visibility,
@@ -1890,7 +1890,7 @@ const RESERVED_WORDS: &[&str] = &[
     "break", "continue", "for", "in",
 ];
 
-pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
+pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     Symbol {
         position,
         name: SymbolName("__placeholder".to_string()),
@@ -1898,7 +1898,7 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut SyntaxIdGenerator) ->
     }
 }
 
-fn reserved_word_placeholer(position: Position, id_gen: &mut SyntaxIdGenerator) -> Symbol {
+fn reserved_word_placeholer(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     Symbol {
         position,
         name: SymbolName("__reserved_word_placeholder".to_string()),
@@ -1912,7 +1912,7 @@ fn is_reserved_word_placeholder(symbol: &Symbol) -> bool {
 
 fn parse_let_destination(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> LetDestination {
     if peeked_symbol_is(tokens, "(") {
@@ -1976,7 +1976,7 @@ fn parse_let_destination(
 
 fn parse_symbol(
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Symbol {
     let variable_token = require_a_token(tokens, diagnostics, "variable name");
@@ -2015,7 +2015,7 @@ fn parse_symbol(
 fn parse_let(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let let_token = require_token(tokens, diagnostics, "let");
@@ -2036,7 +2036,7 @@ fn parse_let(
 fn parse_assign(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, id_gen, diagnostics);
@@ -2060,7 +2060,7 @@ fn parse_assign(
 fn parse_assign_update(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let variable = parse_symbol(tokens, id_gen, diagnostics);
@@ -2095,7 +2095,7 @@ fn parse_assign_update(
 fn parse_toplevel_expr(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
@@ -2105,7 +2105,7 @@ fn parse_toplevel_expr(
 fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Vec<ToplevelItem> {
     let mut items: Vec<ToplevelItem> = vec![];
@@ -2138,7 +2138,7 @@ fn parse_toplevel_items_from_tokens(
 fn parse_toplevel_item_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     if let Some(token) = tokens.peek() {
@@ -2158,7 +2158,7 @@ fn parse_toplevel_item_from_tokens(
 pub fn parse_inline_expr_from_str(
     path: &Path,
     src: &str,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
@@ -2174,7 +2174,7 @@ pub fn parse_inline_expr_from_str(
 pub fn parse_toplevel_items(
     path: &Path,
     src: &str,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
@@ -2192,7 +2192,7 @@ pub fn parse_toplevel_items(
 pub fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
@@ -2218,7 +2218,7 @@ mod tests {
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "1 + ",
-            &mut SyntaxIdGenerator::default(),
+            &mut IdGenerator::default(),
         );
         assert!(!errors.is_empty())
     }
@@ -2228,7 +2228,7 @@ mod tests {
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "fun f(x, x) {} ",
-            &mut SyntaxIdGenerator::default(),
+            &mut IdGenerator::default(),
         );
         assert!(!errors.is_empty())
     }
@@ -2238,7 +2238,7 @@ mod tests {
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "fun f(_, _) {} ",
-            &mut SyntaxIdGenerator::default(),
+            &mut IdGenerator::default(),
         );
         assert!(errors.is_empty())
     }

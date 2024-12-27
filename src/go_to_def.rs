@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use garden_lang_parser::{ast::SyntaxIdGenerator, parse_toplevel_items};
+use garden_lang_parser::{ast::IdGenerator, parse_toplevel_items};
 
 use crate::{
     checks::type_checker::check_types, env::Env, eval::load_toplevel_items, pos_to_id::find_item_at,
@@ -9,7 +9,7 @@ use crate::{
 /// Print the position of the definition associated with the
 /// expression at `offset`.
 pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
-    let mut id_gen = SyntaxIdGenerator::default();
+    let mut id_gen = IdGenerator::default();
     let mut env = Env::new(&mut id_gen);
 
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);

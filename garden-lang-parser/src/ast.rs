@@ -432,11 +432,11 @@ impl AstId {
 }
 
 #[derive(Debug)]
-pub struct SyntaxIdGenerator {
+pub struct IdGenerator {
     pub next_id: SyntaxId,
 }
 
-impl Default for SyntaxIdGenerator {
+impl Default for IdGenerator {
     fn default() -> Self {
         Self {
             next_id: SyntaxId(0),
@@ -444,7 +444,7 @@ impl Default for SyntaxIdGenerator {
     }
 }
 
-impl SyntaxIdGenerator {
+impl IdGenerator {
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> SyntaxId {
         let next_id = self.next_id;

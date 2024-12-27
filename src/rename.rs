@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
-    ast::{AstId, Symbol, SyntaxId, SyntaxIdGenerator},
+    ast::{AstId, IdGenerator, Symbol, SyntaxId},
     parse_toplevel_items,
     position::Position,
     visitor::Visitor,
@@ -14,7 +14,7 @@ use crate::{
 /// Rename the symbol at `offset` to `new_name`, both the definition
 /// and use sites, then print the new source code.
 pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
-    let mut id_gen = SyntaxIdGenerator::default();
+    let mut id_gen = IdGenerator::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     let mut env = Env::new(&mut id_gen);

@@ -11,8 +11,8 @@ use crate::{
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, Expression, FunInfo, MethodInfo, MethodKind, SourceString, Symbol,
-    SymbolName, SyntaxId, SyntaxIdGenerator, TestInfo, TypeHint, TypeName, TypeSymbol,
+    BuiltinMethodKind, Expression, FunInfo, IdGenerator, MethodInfo, MethodKind, SourceString,
+    Symbol, SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
@@ -94,7 +94,7 @@ pub(crate) struct Env {
 }
 
 impl Env {
-    pub(crate) fn new(id_gen: &mut SyntaxIdGenerator) -> Self {
+    pub(crate) fn new(id_gen: &mut IdGenerator) -> Self {
         let mut file_scope = HashMap::new();
 
         // Insert all the built-in functions.

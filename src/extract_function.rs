@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::Path};
 
 use garden_lang_parser::{
-    ast::{AstId, Expression, Expression_, SymbolName, SyntaxId, SyntaxIdGenerator},
+    ast::{AstId, Expression, Expression_, IdGenerator, SymbolName, SyntaxId},
     parse_toplevel_items,
     visitor::Visitor,
 };
@@ -21,7 +21,7 @@ pub(crate) fn extract_function(
     end_offset: usize,
     name: &str,
 ) {
-    let mut id_gen = SyntaxIdGenerator::default();
+    let mut id_gen = IdGenerator::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     let mut env = Env::new(&mut id_gen);

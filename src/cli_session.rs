@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::{eval, load_toplevel_items, ExpressionState, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use garden_lang_parser::ast::{SyntaxIdGenerator, ToplevelItem};
+use garden_lang_parser::ast::{IdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -32,7 +32,7 @@ fn read_expr(
     session: &mut Session,
     rl: &mut Editor<()>,
     is_stopped: bool,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
@@ -84,7 +84,7 @@ fn read_expr(
 pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     print_repl_header();
 
-    let mut id_gen = SyntaxIdGenerator::default();
+    let mut id_gen = IdGenerator::default();
     let mut env = Env::new(&mut id_gen);
     let mut session = Session {
         interrupted,
@@ -250,7 +250,7 @@ fn print_repl_header() {
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_owned();
 

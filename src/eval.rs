@@ -24,8 +24,8 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
-    LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern, StructInfo, Symbol,
-    SymbolWithHint, SyntaxId, SyntaxIdGenerator, TestInfo, ToplevelItem, TypeHint, TypeName,
+    IdGenerator, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern,
+    StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
     TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
@@ -416,7 +416,7 @@ pub(crate) fn eval_call_main(
     cli_args: &[String],
     env: &mut Env,
     session: &Session,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
@@ -514,7 +514,7 @@ pub(crate) fn eval_up_to(
     session: &Session,
     items: &[ToplevelItem],
     offset: usize,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<(Value, Position), EvalUpToErr> {
     let syn_ids = find_item_at(items, offset, offset);
 
@@ -751,7 +751,7 @@ pub(crate) fn eval_toplevel_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<Value, EvalError> {
     // TODO: return an Err() rather than kludging a string and letting
     // eval_env() return a type error.
@@ -801,7 +801,7 @@ pub(crate) fn eval_toplevel_method_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<Value, EvalError> {
     env.push_value(recv_value.clone());
     for value in args.iter().rev() {
@@ -4189,10 +4189,10 @@ pub(crate) fn eval_exprs(
 mod tests {
     use std::path::PathBuf;
 
-    use garden_lang_parser::ast::SyntaxIdGenerator;
+    use garden_lang_parser::ast::IdGenerator;
     use garden_lang_parser::parse_toplevel_items;
 
-    fn parse_defs_from_str(src: &str, id_gen: &mut SyntaxIdGenerator) -> Vec<Definition> {
+    fn parse_defs_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<Definition> {
         let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, id_gen);
         assert!(errors.is_empty());
 
@@ -4209,7 +4209,7 @@ mod tests {
         defs
     }
 
-    fn parse_exprs_from_str(src: &str, id_gen: &mut SyntaxIdGenerator) -> Vec<Expression> {
+    fn parse_exprs_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<Expression> {
         let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, id_gen);
         assert!(errors.is_empty());
 
@@ -4241,10 +4241,10 @@ mod tests {
 
     #[test]
     fn test_eval_equality() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("\"a\" == \"b\"", &mut id_gen);
 
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(false));
@@ -4252,7 +4252,7 @@ mod tests {
 
     #[test]
     fn test_eval_persist_env() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let exprs = parse_exprs_from_str("let foo = 123", &mut id_gen);
@@ -4264,7 +4264,7 @@ mod tests {
 
     #[test]
     fn test_eval_multiple_exprs() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("True False", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4274,7 +4274,7 @@ mod tests {
 
     #[test]
     fn test_eval_add() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("1 + 2", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4284,7 +4284,7 @@ mod tests {
 
     #[test]
     fn test_eval_less_than() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("1 < 2", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4294,7 +4294,7 @@ mod tests {
 
     #[test]
     fn test_eval_less_than_or_equal() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("3 <= 2", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4304,7 +4304,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_literal() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[1 + 2, 3 * 4]", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4320,7 +4320,7 @@ mod tests {
 
     #[test]
     fn test_eval_block() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("{ let x = 1 x + 1 }", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4330,7 +4330,7 @@ mod tests {
 
     #[test]
     fn test_eval_block_scope_should_not_leak() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("{ let x = 1 } x", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4339,7 +4339,7 @@ mod tests {
 
     #[test]
     fn test_eval_let() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("let foo = True foo", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4349,7 +4349,7 @@ mod tests {
 
     #[test]
     fn test_eval_if() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("let foo = if True { 1 } else { 2 } foo", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4359,7 +4359,7 @@ mod tests {
 
     #[test]
     fn test_eval_if_block_scope() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("if True { let x = 1 } x", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4368,7 +4368,7 @@ mod tests {
 
     #[test]
     fn test_eval_empty() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
         let value = eval_exprs(&[], &mut env).unwrap();
         assert_eq!(value, Value::unit());
@@ -4376,7 +4376,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_append() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[1, 2].append(3)", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4392,7 +4392,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_get() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[10, 11].get(1)", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4402,7 +4402,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_get_out_of_bounds() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[10, 11].get(2)", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4411,7 +4411,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_get_empty() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[].get(0)", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4420,7 +4420,7 @@ mod tests {
 
     #[test]
     fn test_eval_list_length() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[0, 1].len()", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4430,7 +4430,7 @@ mod tests {
 
     #[test]
     fn test_eval_string_length() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("\"abc\".len()", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4440,7 +4440,7 @@ mod tests {
 
     #[test]
     fn test_eval_string_substring() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("\"abcdef\".substring(1, 3)", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4450,7 +4450,7 @@ mod tests {
 
     #[test]
     fn test_eval_call() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { True }", &mut id_gen);
@@ -4463,7 +4463,7 @@ mod tests {
 
     #[test]
     fn test_eval_call_with_arg() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x) { x }", &mut id_gen);
@@ -4476,7 +4476,7 @@ mod tests {
 
     #[test]
     fn test_eval_call_second_arg() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x, y) { y }", &mut id_gen);
@@ -4489,7 +4489,7 @@ mod tests {
 
     #[test]
     fn test_eval_call_closure_immediately() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs =
@@ -4503,7 +4503,7 @@ mod tests {
 
     #[test]
     fn test_eval_call_bad_arity() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x) { }", &mut id_gen);
@@ -4515,7 +4515,7 @@ mod tests {
 
     #[test]
     fn test_eval_return_closure_and_call() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { let x = 1 fun() { x } }", &mut id_gen);
@@ -4528,7 +4528,7 @@ mod tests {
 
     #[test]
     fn test_eval_method_call() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut id_gen);
@@ -4541,7 +4541,7 @@ mod tests {
 
     #[test]
     fn test_eval_method_call_bad_airty() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut id_gen);
@@ -4553,7 +4553,7 @@ mod tests {
 
     #[test]
     fn test_eval_while() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("let i = 0 while i < 5 { i = i + 1 }", &mut id_gen);
 
         let mut env = Env::new(&mut id_gen);
@@ -4563,7 +4563,7 @@ mod tests {
 
     #[test]
     fn test_eval_while_block_scope_does_not_leak() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs =
             parse_exprs_from_str("let i = 0 while i < 5 { i = i + 1 let x = 1 }", &mut id_gen);
 
@@ -4573,7 +4573,7 @@ mod tests {
 
     #[test]
     fn test_eval_env_after_call() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun id(x) { x }", &mut id_gen);
@@ -4586,7 +4586,7 @@ mod tests {
 
     #[test]
     fn test_eval_return() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { return 1 2 }", &mut id_gen);
@@ -4599,7 +4599,7 @@ mod tests {
 
     #[test]
     fn test_eval_correct_return_type() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(): Int { 1 }", &mut id_gen);
@@ -4611,7 +4611,7 @@ mod tests {
 
     #[test]
     fn test_eval_wrong_argument_type() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x: Int) { }", &mut id_gen);
@@ -4623,7 +4623,7 @@ mod tests {
 
     #[test]
     fn test_eval_wrong_return_type() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(): String { 1 }", &mut id_gen);
@@ -4635,7 +4635,7 @@ mod tests {
 
     #[test]
     fn test_eval_wrong_return_type_early_return() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(): String { return 1 }", &mut id_gen);
@@ -4647,7 +4647,7 @@ mod tests {
 
     #[test]
     fn test_eval_underscore_param_not_bound() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(_) { _ }", &mut id_gen);
@@ -4659,7 +4659,7 @@ mod tests {
 
     #[test]
     fn test_eval_local_underscore_not_bound() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { let _ = 1 xy }", &mut id_gen);
@@ -4671,7 +4671,7 @@ mod tests {
 
     #[test]
     fn test_eval_local_underscore_repeated() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { let _ = 1 let _ = 2 }", &mut id_gen);
@@ -4683,7 +4683,7 @@ mod tests {
 
     #[test]
     fn test_eval_match() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str(
             "let x = Some(1) match x { Some(i) => i + 1 _ => {} }",
             &mut id_gen,
@@ -4705,7 +4705,7 @@ mod tests {
             pretty_print_json: true,
         };
 
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let mut env = Env::new(&mut id_gen);
 
         let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut id_gen);

@@ -22,7 +22,7 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{SourceString, SyntaxIdGenerator};
+use garden_lang_parser::ast::{IdGenerator, SourceString};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -130,7 +130,7 @@ fn handle_load_request(
     offset: usize,
     end_offset: usize,
     env: &mut Env,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Response {
     let (items, errors) = parse_toplevel_items_from_span(path, input, id_gen, offset, end_offset);
 
@@ -203,7 +203,7 @@ pub(crate) fn start_eval_thread(session: Session, receiver: Receiver<String>) ->
 fn eval_worker(receiver: Receiver<String>, session: Session) {
     let mut session = session;
 
-    let mut id_gen = SyntaxIdGenerator::default();
+    let mut id_gen = IdGenerator::default();
     let mut env = Env::new(&mut id_gen);
 
     while let Ok(input) = receiver.recv() {
@@ -262,7 +262,7 @@ fn handle_eval_up_to_request(
     env: &mut Env,
     session: &Session,
     id: Option<RequestId>,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Response {
     let (items, mut errors) = parse_toplevel_items(
         &path
@@ -465,7 +465,7 @@ fn handle_request_in_worker(
     req_src: &str,
     env: &mut Env,
     session: &mut Session,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let info = match serde_json::from_str::<serde_json::Value>(req_src) {
@@ -525,7 +525,7 @@ fn handle_run_request(
     path: Option<PathBuf>,
     offset: Option<usize>,
     end_offset: Option<usize>,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Response {
     match Command::from_string(&input) {
         Ok(command) => {
@@ -619,7 +619,7 @@ fn handle_run_eval_request(
     end_offset: Option<usize>,
     env: &mut Env,
     session: &mut Session,
-    id_gen: &mut SyntaxIdGenerator,
+    id_gen: &mut IdGenerator,
     id: Option<RequestId>,
 ) -> Response {
     let (items, errors) = parse_toplevel_items_from_span(

@@ -15,7 +15,7 @@ use crate::values::Value;
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{
-    self, MethodKind, SourceString, SymbolName, SyntaxIdGenerator, TypeHint, TypeName,
+    self, IdGenerator, MethodKind, SourceString, SymbolName, TypeHint, TypeName,
 };
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
@@ -116,7 +116,7 @@ impl Command {
             ":quit" => Ok(Command::Quit),
             ":replace" => {
                 // TODO: this should continue from the last SyntaxId.
-                let mut id_gen = SyntaxIdGenerator::default();
+                let mut id_gen = IdGenerator::default();
 
                 // TODO: find a better name for this.
                 let (expr, errors) = parse_inline_expr_from_str(
@@ -138,7 +138,7 @@ impl Command {
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
             ":type" => {
-                let mut id_gen = SyntaxIdGenerator::default();
+                let mut id_gen = IdGenerator::default();
                 let (expr, errors) = parse_inline_expr_from_str(
                     &PathBuf::from("__interactive_inline__"),
                     &args.unwrap_or_default(),
@@ -617,7 +617,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
-                let mut id_gen = SyntaxIdGenerator::default();
+                let mut id_gen = IdGenerator::default();
 
                 let (items, errors) =
                     parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut id_gen);

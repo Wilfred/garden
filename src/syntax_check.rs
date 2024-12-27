@@ -2,7 +2,7 @@ use serde::Serialize;
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{SourceString, SyntaxIdGenerator},
+    ast::{IdGenerator, SourceString},
     diagnostics::ErrorMessage,
     parse_toplevel_items,
     position::Position,
@@ -35,7 +35,7 @@ struct CheckDiagnostic {
 pub(crate) fn check(path: &Path, src: &str, json: bool) {
     let mut diagnostics = vec![];
 
-    let mut id_gen = SyntaxIdGenerator::default();
+    let mut id_gen = IdGenerator::default();
     let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
 
     for e in errors.into_iter() {

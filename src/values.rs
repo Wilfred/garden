@@ -400,13 +400,13 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use garden_lang_parser::ast::SyntaxIdGenerator;
+    use garden_lang_parser::ast::IdGenerator;
 
     use super::*;
 
     #[test]
     fn test_display_value_for_string_with_doublequote() {
-        let mut id_gen = SyntaxIdGenerator::default();
+        let mut id_gen = IdGenerator::default();
         let env = Env::new(&mut id_gen);
 
         let value = Value::String("foo \\ \" \n bar".into());

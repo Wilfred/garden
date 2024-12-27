@@ -1,5 +1,5 @@
+use std::path::PathBuf;
 use std::rc::Rc;
-use std::{collections::HashMap, path::PathBuf};
 
 use rustc_hash::FxHashMap;
 use strum::IntoEnumIterator;
@@ -66,14 +66,15 @@ impl Stack {
 pub(crate) struct Env {
     pub(crate) file_scope: FxHashMap<SymbolName, Value>,
     pub(crate) methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>>,
-    pub(crate) tests: HashMap<SymbolName, TestInfo>,
-    pub(crate) types: HashMap<TypeName, TypeDef>,
+    pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
+    pub(crate) types: FxHashMap<TypeName, TypeDef>,
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
-    pub(crate) prev_call_args: HashMap<SymbolName, Vec<Value>>,
+    pub(crate) prev_call_args: FxHashMap<SymbolName, Vec<Value>>,
     /// The receiver and arguments used the last time each method was
     /// called. Used for eval-up-to.
-    pub(crate) prev_method_call_args: HashMap<TypeName, HashMap<SymbolName, (Value, Vec<Value>)>>,
+    pub(crate) prev_method_call_args:
+        FxHashMap<TypeName, FxHashMap<SymbolName, (Value, Vec<Value>)>>,
     // TODO: should this be stored separately?
     pub(crate) stack: Stack,
 
@@ -307,7 +308,7 @@ impl Env {
         );
 
         // Insert all the built-in types.
-        let mut types = HashMap::new();
+        let mut types = FxHashMap::default();
         // TODO: String literals are duplicated with type_representation.
         types.insert(
             TypeName { name: "Int".into() },
@@ -356,10 +357,10 @@ impl Env {
         let mut env = Self {
             file_scope,
             methods,
-            tests: HashMap::new(),
+            tests: FxHashMap::default(),
             types,
-            prev_call_args: HashMap::new(),
-            prev_method_call_args: HashMap::new(),
+            prev_call_args: FxHashMap::default(),
+            prev_method_call_args: FxHashMap::default(),
             stack: Stack::default(),
             ticks: 0,
             tick_limit: None,

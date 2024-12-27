@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 
 use itertools::Itertools as _;
 
@@ -149,7 +149,7 @@ impl Type {
 
     pub(crate) fn from_hint(
         hint: &TypeHint,
-        global_tys: &HashMap<TypeName, TypeDef>,
+        global_tys: &FxHashMap<TypeName, TypeDef>,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let name = &hint.sym.name;
@@ -221,7 +221,7 @@ impl Type {
 
     pub(crate) fn from_value(
         value: &Value,
-        global_tys: &HashMap<TypeName, TypeDef>,
+        global_tys: &FxHashMap<TypeName, TypeDef>,
         type_bindings: &TypeVarEnv,
     ) -> Self {
         match value {
@@ -246,7 +246,7 @@ impl Type {
 
     pub(crate) fn from_fun_info(
         fun_info: &FunInfo,
-        global_tys: &HashMap<TypeName, TypeDef>,
+        global_tys: &FxHashMap<TypeName, TypeDef>,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let mut type_bindings = type_bindings.clone();

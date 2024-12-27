@@ -1,7 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -3979,9 +3979,9 @@ fn eval_struct_value(
     };
 
     let type_params: HashSet<_> = struct_info.type_params.iter().map(|p| &p.name).collect();
-    let mut type_arg_bindings = HashMap::new();
+    let mut type_arg_bindings = FxHashMap::default();
 
-    let mut expected_fields_by_name = HashMap::new();
+    let mut expected_fields_by_name = FxHashMap::default();
     for field_info in &struct_info.fields {
         expected_fields_by_name.insert(&field_info.sym.name, field_info.clone());
     }

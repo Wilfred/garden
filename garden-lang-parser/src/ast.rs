@@ -1,5 +1,7 @@
 //! Syntax tree definitions for Garden.
 
+use rustc_hash::FxHashMap;
+
 use std::{fmt::Display, rc::Rc};
 
 use crate::position::Position;
@@ -161,6 +163,9 @@ impl From<&str> for SymbolName {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub struct InternedSymbolId(pub usize);
+
 /// A symbol representing a value, such as a local variable, a
 /// function name or a method name.
 ///
@@ -170,16 +175,20 @@ pub struct Symbol {
     pub position: Position,
     pub name: SymbolName,
     pub id: SyntaxId,
+    pub interned_id: InternedSymbolId,
 }
 
 impl Symbol {
-    pub fn new<S: AsRef<str>>(position: Position, name: S, id: SyntaxId) -> Self {
+    pub fn new<S: AsRef<str>>(position: Position, name: S, id_gen: &mut IdGenerator) -> Self {
+        let name = SymbolName {
+            name: name.as_ref().to_owned(),
+        };
+
         Self {
+            interned_id: id_gen.intern_symbol(&name),
             position,
-            name: SymbolName {
-                name: name.as_ref().to_owned(),
-            },
-            id,
+            name,
+            id: id_gen.next(),
         }
     }
 
@@ -195,6 +204,7 @@ impl std::fmt::Debug for Symbol {
                 .field("name", &self.name)
                 .field("position", &self.position)
                 .field("id", &self.id)
+                .field("interned_id", &self.interned_id)
                 .finish()
         } else {
             write!(f, "Symbol\"{}\"", self.name.name)
@@ -438,12 +448,14 @@ impl AstId {
 #[derive(Debug)]
 pub struct IdGenerator {
     pub next_id: SyntaxId,
+    pub interned: FxHashMap<SymbolName, InternedSymbolId>,
 }
 
 impl Default for IdGenerator {
     fn default() -> Self {
         Self {
             next_id: SyntaxId(0),
+            interned: FxHashMap::default(),
         }
     }
 }
@@ -454,6 +466,17 @@ impl IdGenerator {
         let next_id = self.next_id;
         self.next_id = SyntaxId(next_id.0 + 1);
         next_id
+    }
+
+    pub fn intern_symbol(&mut self, name: &SymbolName) -> InternedSymbolId {
+        match self.interned.get(name) {
+            Some(id) => *id,
+            None => {
+                let id = InternedSymbolId(self.interned.len());
+                self.interned.insert(name.clone(), id);
+                id
+            }
+        }
     }
 }
 

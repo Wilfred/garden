@@ -332,6 +332,7 @@ dependencies = [
  "lazy_static",
  "line-numbers",
  "regex",
+ "rustc-hash",
  "serde",
  "strum",
  "strum_macros",

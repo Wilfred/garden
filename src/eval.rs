@@ -766,7 +766,7 @@ pub(crate) fn eval_toplevel_call(
 
     let recv_expr = Expression {
         position: Position::todo(),
-        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.name, id_gen.next())),
+        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.name, id_gen)),
         value_is_used: true,
         id: id_gen.next(),
     };
@@ -821,6 +821,7 @@ pub(crate) fn eval_toplevel_method_call(
         position: Position::todo(),
         name: meth_name.clone(),
         id: id_gen.next(),
+        interned_id: id_gen.intern_symbol(meth_name),
     };
 
     let mut arguments = vec![];

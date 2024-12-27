@@ -1893,21 +1893,25 @@ const RESERVED_WORDS: &[&str] = &[
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
+    let name = SymbolName {
+        name: "__placeholder".to_string(),
+    };
     Symbol {
+        interned_id: id_gen.intern_symbol(&name),
         position,
-        name: SymbolName {
-            name: "__placeholder".to_string(),
-        },
+        name,
         id: id_gen.next(),
     }
 }
 
 fn reserved_word_placeholer(position: Position, id_gen: &mut IdGenerator) -> Symbol {
+    let name = SymbolName {
+        name: "__reserved_word_placeholder".to_string(),
+    };
     Symbol {
+        interned_id: id_gen.intern_symbol(&name),
         position,
-        name: SymbolName {
-            name: "__reserved_word_placeholder".to_string(),
-        },
+        name,
         id: id_gen.next(),
     }
 }
@@ -2011,11 +2015,13 @@ fn parse_symbol(
         }
     }
 
+    let name = SymbolName {
+        name: variable_token.text.to_string(),
+    };
     Symbol {
+        interned_id: id_gen.intern_symbol(&name),
         position: variable_token.position,
-        name: SymbolName {
-            name: variable_token.text.to_string(),
-        },
+        name,
         id: id_gen.next(),
     }
 }

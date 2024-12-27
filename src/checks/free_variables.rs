@@ -154,7 +154,7 @@ impl FreeVariableVisitor<'_> {
                 // Already bound in this block. This only applies in JSON
                 // sessions where evaluating `let x = 1` means that all
                 // future inputs have `x` in scope.
-                if stack_frame.bindings.has(&var.name) {
+                if stack_frame.bindings.has(var.interned_id) {
                     return;
                 }
             }

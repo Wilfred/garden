@@ -363,7 +363,7 @@ pub(crate) fn run_command<T: Write>(
     cmd: &Command,
     env: &mut Env,
     session: &mut Session,
-    _id_gen: &mut IdGenerator,
+    id_gen: &mut IdGenerator,
 ) -> Result<(), EvalAction> {
     match cmd {
         Command::Help(text) => {
@@ -527,10 +527,12 @@ pub(crate) fn run_command<T: Write>(
                     .0
                     .last_mut()
                     .expect("Should always have at least one frame");
-                if stack_frame.bindings.has(&SymbolName { name: name.clone() }) {
-                    stack_frame
-                        .bindings
-                        .remove(&SymbolName { name: name.clone() });
+
+                let sym_name = SymbolName { name: name.clone() };
+                let sym_intern_id = id_gen.intern_symbol(&sym_name);
+
+                if stack_frame.bindings.has(sym_intern_id) {
+                    stack_frame.bindings.remove(sym_intern_id);
                 } else {
                     write!(
                         buf,
@@ -586,12 +588,17 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Locals => {
             if let Some(stack_frame) = env.stack.0.last() {
-                for (i, (var_name, value)) in stack_frame.bindings.all().iter().enumerate() {
+                for (i, (var_id, value)) in stack_frame.bindings.all().iter().enumerate() {
+                    let name = match id_gen.intern_id_to_name.get(var_id) {
+                        Some(SymbolName { name }) => name.clone(),
+                        None => "INTERNAL ERROR: Could not find var with this ID".to_owned(),
+                    };
+
                     write!(
                         buf,
                         "{}{}\t{}",
                         if i == 0 { "" } else { "\n" },
-                        var_name.name.bright_green(),
+                        name.bright_green(),
                         value.display(env)
                     )
                     .unwrap();

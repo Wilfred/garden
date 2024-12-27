@@ -449,6 +449,7 @@ impl AstId {
 pub struct IdGenerator {
     pub next_id: SyntaxId,
     pub interned: FxHashMap<SymbolName, InternedSymbolId>,
+    pub intern_id_to_name: FxHashMap<InternedSymbolId, SymbolName>,
 }
 
 impl Default for IdGenerator {
@@ -456,6 +457,7 @@ impl Default for IdGenerator {
         Self {
             next_id: SyntaxId(0),
             interned: FxHashMap::default(),
+            intern_id_to_name: FxHashMap::default(),
         }
     }
 }
@@ -474,6 +476,7 @@ impl IdGenerator {
             None => {
                 let id = InternedSymbolId(self.interned.len());
                 self.interned.insert(name.clone(), id);
+                self.intern_id_to_name.insert(id, name.clone());
                 id
             }
         }

@@ -24,9 +24,9 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
-    IdGenerator, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern,
-    StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
-    TypeSymbol,
+    IdGenerator, InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
+    Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint,
+    TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
 use garden_lang_parser::position::Position;
@@ -41,7 +41,7 @@ use garden_lang_parser::position::Position;
 pub(crate) struct BlockBindings {
     /// Values bound in this block, such as local variables or
     /// function parameters.
-    pub(crate) values: FxHashMap<SymbolName, Value>,
+    pub(crate) values: FxHashMap<InternedSymbolId, Value>,
 }
 
 /// Use reference equality for block bindings, so closures have
@@ -71,7 +71,7 @@ impl Bindings {
         assert!(!self.block_bindings.is_empty());
     }
 
-    fn new_with(outer_scope: FxHashMap<SymbolName, Value>) -> Self {
+    fn new_with(outer_scope: FxHashMap<InternedSymbolId, Value>) -> Self {
         Self {
             block_bindings: vec![BlockBindings {
                 values: outer_scope,
@@ -79,35 +79,35 @@ impl Bindings {
         }
     }
 
-    fn get(&self, name: &SymbolName) -> Option<Value> {
+    fn get(&self, interned_id: InternedSymbolId) -> Option<Value> {
         // TODO: this allows shadowing. Is that desirable -- does it
         // make REPL workflows less convenient when it's harder to inspect?
         //
         // (Probably not, as long as users can inspect everything.)
         for block_bindings in self.block_bindings.iter().rev() {
-            if let Some(value) = block_bindings.values.get(name) {
+            if let Some(value) = block_bindings.values.get(&interned_id) {
                 return Some(value.clone());
             }
         }
         None
     }
 
-    pub(crate) fn has(&self, name: &SymbolName) -> bool {
-        self.get(name).is_some()
+    pub(crate) fn has(&self, interned_id: InternedSymbolId) -> bool {
+        self.get(interned_id).is_some()
     }
 
-    /// Remove `name` from bindings. If this variable is shadowed,
+    /// Remove `sym` from bindings. If this variable is shadowed,
     /// remove the innermost binding.
-    pub(crate) fn remove(&mut self, name: &SymbolName) {
+    pub(crate) fn remove(&mut self, interned_id: InternedSymbolId) {
         for block_bindings in self.block_bindings.iter_mut().rev() {
-            if block_bindings.values.contains_key(name) {
-                block_bindings.values.remove(name);
+            if block_bindings.values.contains_key(&interned_id) {
+                block_bindings.values.remove(&interned_id);
             }
         }
     }
 
-    fn add_new(&mut self, name: &SymbolName, value: Value) {
-        if name.is_underscore() {
+    fn add_new(&mut self, sym: &Symbol, value: Value) {
+        if sym.name.is_underscore() {
             return;
         }
 
@@ -115,24 +115,24 @@ impl Bindings {
             .block_bindings
             .last_mut()
             .expect("Vec of bindings should always be non-empty");
-        block_bindings.values.insert(name.clone(), value);
+        block_bindings.values.insert(sym.interned_id, value);
     }
 
-    fn set_existing(&mut self, name: &SymbolName, value: Value) {
+    fn set_existing(&mut self, sym: &Symbol, value: Value) {
         for block_bindings in self.block_bindings.iter_mut().rev() {
-            if block_bindings.values.contains_key(name) {
-                block_bindings.values.insert(name.clone(), value);
+            if block_bindings.values.contains_key(&sym.interned_id) {
+                block_bindings.values.insert(sym.interned_id, value);
                 return;
             }
         }
         unreachable!()
     }
 
-    pub(crate) fn all(&self) -> Vec<(SymbolName, Value)> {
+    pub(crate) fn all(&self) -> Vec<(InternedSymbolId, Value)> {
         let mut res = vec![];
         for block_bindings in self.block_bindings.iter().rev() {
             for (k, v) in block_bindings.values.iter() {
-                res.push((k.clone(), v.clone()));
+                res.push((*k, v.clone()));
             }
         }
 
@@ -206,21 +206,18 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
 }
 
 fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
-    let all_bindings = env.current_frame().bindings.all();
+    let file_level_names: Vec<_> = env.file_scope.keys().collect();
 
-    let mut names: Vec<_> = all_bindings.iter().map(|(n, _)| n).collect();
-    let local_names: Vec<_> = env.file_scope.keys().collect();
-    names.extend_from_slice(&local_names);
-
-    most_similar(&names, name)
+    // TODO: suggest local variables too.
+    most_similar(&file_level_names, name)
 }
 
-fn get_var(name: &SymbolName, env: &Env) -> Option<Value> {
-    if let Some(value) = env.current_frame().bindings.get(name) {
+fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
+    if let Some(value) = env.current_frame().bindings.get(sym.interned_id) {
         return Some(value.clone());
     }
 
-    if let Some(value) = env.file_scope.get(name) {
+    if let Some(value) = env.file_scope.get(&sym.name) {
         return Some(value.clone());
     }
 
@@ -737,7 +734,7 @@ fn assign_var_pos(
             }
         };
 
-        let value = get_var(&symbol.name, env)?;
+        let value = get_var(&symbol, env)?;
         return Some((value, symbol.position.clone()));
     }
 
@@ -1354,7 +1351,7 @@ fn eval_assign_update(
 ) -> Result<(), (RestoreValues, EvalError)> {
     let var_name = &variable.name;
 
-    let Some(var_value) = get_var(var_name, env) else {
+    let Some(var_value) = get_var(variable, env) else {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(
@@ -1396,7 +1393,7 @@ fn eval_assign_update(
     };
     env.current_frame_mut()
         .bindings
-        .set_existing(var_name, Value::Integer(new_value_num));
+        .set_existing(variable, Value::Integer(new_value_num));
 
     if expr_value_is_used {
         env.push_value(Value::unit());
@@ -1411,7 +1408,7 @@ fn eval_assign(
     variable: &Symbol,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let var_name = &variable.name;
-    if !env.current_frame_mut().bindings.has(var_name) {
+    if !env.current_frame_mut().bindings.has(variable.interned_id) {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(
@@ -1433,7 +1430,7 @@ fn eval_assign(
         .last_mut()
         .unwrap()
         .bindings
-        .set_existing(var_name, expr_value);
+        .set_existing(variable, expr_value);
 
     if expr_value_is_used {
         env.push_value(Value::unit());
@@ -1483,7 +1480,7 @@ fn eval_let(
 
     let stack_frame = env.current_frame_mut();
     match destination {
-        LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(&symbol.name, expr_value),
+        LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(&symbol, expr_value),
         LetDestination::Destructure(symbols) => match &expr_value {
             Value::Tuple { items, .. } => {
                 if items.len() != symbols.len() {
@@ -1501,7 +1498,7 @@ fn eval_let(
                 }
 
                 for (symbol, item) in symbols.iter().zip(items) {
-                    stack_frame.bindings.add_new(&symbol.name, item.clone());
+                    stack_frame.bindings.add_new(&symbol, item.clone());
                 }
             }
             _ => {
@@ -2310,9 +2307,8 @@ fn eval_call(
 
             let mut fun_bindings = FxHashMap::default();
             for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-                let param_name = &param.symbol.name;
-                if !param_name.is_underscore() {
-                    fun_bindings.insert(param_name.clone(), value.clone());
+                if !param.symbol.name.is_underscore() {
+                    fun_bindings.insert(param.symbol.interned_id, value.clone());
                 }
             }
 
@@ -2394,9 +2390,8 @@ fn eval_call(
 
             let mut fun_bindings = FxHashMap::default();
             for (param, value) in params.iter().zip(arg_values.iter()) {
-                let param_name = &param.symbol.name;
-                if !param_name.is_underscore() {
-                    fun_bindings.insert(param_name.clone(), value.clone());
+                if !param.symbol.name.is_underscore() {
+                    fun_bindings.insert(param.symbol.interned_id, value.clone());
                 }
             }
 
@@ -2716,12 +2711,11 @@ fn eval_method_call(
 
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
-    let mut fun_bindings: FxHashMap<SymbolName, Value> = FxHashMap::default();
+    let mut fun_bindings: FxHashMap<InternedSymbolId, Value> = FxHashMap::default();
     for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
-        let param_name = &param.symbol.name;
-        fun_bindings.insert(param_name.clone(), value.clone());
+        fun_bindings.insert(param.symbol.interned_id, value.clone());
     }
-    fun_bindings.insert(receiver_method.receiver_sym.name.clone(), receiver_value);
+    fun_bindings.insert(receiver_method.receiver_sym.interned_id, receiver_value);
 
     let mut type_bindings = TypeVarEnv::default();
     for type_param in &fun_info.type_params {
@@ -3531,7 +3525,7 @@ fn eval_expr(
             }
         }
         Expression_::Variable(name_sym) => {
-            if let Some(value) = get_var(&name_sym.name, env) {
+            if let Some(value) = get_var(&name_sym, env) {
                 *expr_state = ExpressionState::EvaluatedSubexpressions;
 
                 if expr_value_is_used {
@@ -3853,7 +3847,7 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
 
     let bindings_next_block = std::mem::take(&mut stack_frame.bindings_next_block);
     for (sym, expr) in bindings_next_block {
-        stack_frame.bindings.add_new(&sym.name, expr);
+        stack_frame.bindings.add_new(&sym, expr);
     }
 
     for expr in block.exprs.iter().rev() {
@@ -4115,7 +4109,7 @@ fn eval_match_cases(
             return Ok(());
         }
 
-        let Some(value) = get_var(&pattern.symbol.name, env) else {
+        let Some(value) = get_var(&pattern.symbol, env) else {
             let msg = ErrorMessage(format!(
                 "No such value defined for pattern `{}`",
                 pattern.symbol.name

@@ -41,16 +41,18 @@ fn read_expr(
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
-                    Ok(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, session) {
-                        Ok(()) => {
-                            println!();
-                            println!();
-                            continue;
+                    Ok(cmd) => {
+                        match run_command(&mut std::io::stdout(), &cmd, env, session, id_gen) {
+                            Ok(()) => {
+                                println!();
+                                println!();
+                                continue;
+                            }
+                            Err(e) => {
+                                return Err(ReadError::NeedsEval(e));
+                            }
                         }
-                        Err(e) => {
-                            return Err(ReadError::NeedsEval(e));
-                        }
-                    },
+                    }
                     Err(CommandParseError::NoSuchCommand(s)) => {
                         print_available_commands(&s, &mut std::io::stdout()).unwrap();
                         println!();

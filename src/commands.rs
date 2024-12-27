@@ -363,6 +363,7 @@ pub(crate) fn run_command<T: Write>(
     cmd: &Command,
     env: &mut Env,
     session: &mut Session,
+    _id_gen: &mut IdGenerator,
 ) -> Result<(), EvalAction> {
     match cmd {
         Command::Help(text) => {

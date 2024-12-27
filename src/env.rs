@@ -100,7 +100,9 @@ impl Env {
         // Insert all the built-in functions.
         for fun_kind in BuiltinFunctionKind::iter() {
             file_scope.insert(
-                SymbolName(format!("{}", fun_kind)),
+                SymbolName {
+                    name: format!("{}", fun_kind),
+                },
                 Value::BuiltinFunction(fun_kind, None),
             );
         }
@@ -109,7 +111,9 @@ impl Env {
 
         let mut path_methods = HashMap::new();
         path_methods.insert(
-            SymbolName("exists".to_owned()),
+            SymbolName {
+                name: "exists".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -128,7 +132,9 @@ impl Env {
             },
         );
         path_methods.insert(
-            SymbolName("read".to_owned()),
+            SymbolName {
+                name: "read".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -156,7 +162,9 @@ impl Env {
 
         let mut string_methods = HashMap::new();
         string_methods.insert(
-            SymbolName("len".to_owned()),
+            SymbolName {
+                name: "len".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -175,7 +183,9 @@ impl Env {
             },
         );
         string_methods.insert(
-            SymbolName("substring".to_owned()),
+            SymbolName {
+                name: "substring".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -194,7 +204,9 @@ impl Env {
             },
         );
         string_methods.insert(
-            SymbolName("append".to_owned()),
+            SymbolName {
+                name: "append".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -222,7 +234,9 @@ impl Env {
 
         let mut list_methods = HashMap::new();
         list_methods.insert(
-            SymbolName("append".to_owned()),
+            SymbolName {
+                name: "append".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -241,7 +255,9 @@ impl Env {
             },
         );
         list_methods.insert(
-            SymbolName("len".to_owned()),
+            SymbolName {
+                name: "len".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],
@@ -260,7 +276,9 @@ impl Env {
             },
         );
         list_methods.insert(
-            SymbolName("get".to_owned()),
+            SymbolName {
+                name: "get".to_owned(),
+            },
             MethodInfo {
                 receiver_hint: TypeHint {
                     args: vec![],

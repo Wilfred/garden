@@ -1249,7 +1249,9 @@ fn parse_type_symbol(
 ) -> TypeSymbol {
     let name = parse_symbol(tokens, id_gen, diagnostics);
     TypeSymbol {
-        name: TypeName { name: name.name.0 },
+        name: TypeName {
+            name: name.name.name,
+        },
         position: name.position,
         id: id_gen.next(),
     }
@@ -1532,7 +1534,7 @@ fn parse_parameters(
             continue;
         }
 
-        let param_name = &param.symbol.name.0;
+        let param_name = &param.symbol.name.name;
         if seen.contains(param_name) {
             diagnostics.push(ParseError::Invalid {
                 position: param.symbol.position.clone(),
@@ -1893,7 +1895,9 @@ const RESERVED_WORDS: &[&str] = &[
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     Symbol {
         position,
-        name: SymbolName("__placeholder".to_string()),
+        name: SymbolName {
+            name: "__placeholder".to_string(),
+        },
         id: id_gen.next(),
     }
 }
@@ -1901,13 +1905,15 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbo
 fn reserved_word_placeholer(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     Symbol {
         position,
-        name: SymbolName("__reserved_word_placeholder".to_string()),
+        name: SymbolName {
+            name: "__reserved_word_placeholder".to_string(),
+        },
         id: id_gen.next(),
     }
 }
 
 fn is_reserved_word_placeholder(symbol: &Symbol) -> bool {
-    symbol.name.0 == "__reserved_word_placeholder"
+    symbol.name.name == "__reserved_word_placeholder"
 }
 
 fn parse_let_destination(
@@ -1955,7 +1961,7 @@ fn parse_let_destination(
                 continue;
             }
 
-            let name = &symbol.name.0;
+            let name = &symbol.name.name;
             if seen.contains(name) {
                 diagnostics.push(ParseError::Invalid {
                     position: symbol.position.clone(),
@@ -2007,7 +2013,9 @@ fn parse_symbol(
 
     Symbol {
         position: variable_token.position,
-        name: SymbolName(variable_token.text.to_string()),
+        name: SymbolName {
+            name: variable_token.text.to_string(),
+        },
         id: id_gen.next(),
     }
 }

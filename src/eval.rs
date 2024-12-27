@@ -194,10 +194,10 @@ impl ExpressionState {
 
 pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Option<SymbolName> {
     let mut res: Vec<_> = available.iter().collect();
-    res.sort_by_key(|n| OrderedFloat(strsim::sorensen_dice(&n.0, &name.0)));
+    res.sort_by_key(|n| OrderedFloat(strsim::sorensen_dice(&n.name, &name.name)));
 
     if let Some(closest) = res.last() {
-        if strsim::sorensen_dice(&closest.0, &name.0) > 0.2 {
+        if strsim::sorensen_dice(&closest.name, &name.name) > 0.2 {
             return Some((**closest).clone());
         }
     }
@@ -766,7 +766,7 @@ pub(crate) fn eval_toplevel_call(
 
     let recv_expr = Expression {
         position: Position::todo(),
-        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.0, id_gen.next())),
+        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.name, id_gen.next())),
         value_is_used: true,
         id: id_gen.next(),
     };
@@ -903,7 +903,9 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
                     }
                 }
 
-                new_syms.push(SymbolName(meth_info.full_name()));
+                new_syms.push(SymbolName {
+                    name: meth_info.full_name(),
+                });
             }
             Definition_::Test(test) => {
                 env.tests.insert(test.name_sym.name.clone(), test.clone());
@@ -951,7 +953,9 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
                     env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
                 }
 
-                let name_as_sym = SymbolName(enum_info.name_sym.name.name.clone());
+                let name_as_sym = SymbolName {
+                    name: enum_info.name_sym.name.name.clone(),
+                };
                 new_syms.push(name_as_sym);
             }
             Definition_::Struct(struct_info) => {
@@ -965,7 +969,9 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
                     );
                 }
 
-                let name_as_sym = SymbolName(struct_info.name_sym.name.name.clone());
+                let name_as_sym = SymbolName {
+                    name: struct_info.name_sym.name.name.clone(),
+                };
                 new_syms.push(name_as_sym);
             }
         }
@@ -1022,7 +1028,7 @@ fn is_builtin_type(struct_info: &StructInfo) -> bool {
         return false;
     };
 
-    field.sym.name.0 == "__BUILTIN_IMPLEMENTATION"
+    field.sym.name.name == "__BUILTIN_IMPLEMENTATION"
 }
 
 fn update_builtin_meth_info(
@@ -1125,7 +1131,7 @@ fn is_builtin_stub(fun_info: &FunInfo) -> bool {
 
     let expr_ = &exprs[0].expr_;
     match expr_ {
-        Expression_::Variable(variable) => variable.name.0 == "__BUILTIN_IMPLEMENTATION",
+        Expression_::Variable(variable) => variable.name.name == "__BUILTIN_IMPLEMENTATION",
         _ => false,
     }
 }
@@ -1771,7 +1777,9 @@ fn eval_builtin_call(
     match kind {
         BuiltinFunctionKind::Error => {
             check_arity(
-                &SymbolName("error".to_owned()),
+                &SymbolName {
+                    name: "error".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -1809,7 +1817,9 @@ fn eval_builtin_call(
         }
         BuiltinFunctionKind::Assert => {
             check_arity(
-                &SymbolName("assert".to_owned()),
+                &SymbolName {
+                    name: "assert".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -1850,7 +1860,9 @@ fn eval_builtin_call(
         }
         BuiltinFunctionKind::Print => {
             check_arity(
-                &SymbolName("print".to_owned()),
+                &SymbolName {
+                    name: "print".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -1898,7 +1910,9 @@ fn eval_builtin_call(
         }
         BuiltinFunctionKind::Println => {
             check_arity(
-                &SymbolName("println".to_owned()),
+                &SymbolName {
+                    name: "println".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -1961,7 +1975,9 @@ fn eval_builtin_call(
             }
 
             check_arity(
-                &SymbolName("shell".to_owned()),
+                &SymbolName {
+                    name: "shell".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 2,
@@ -2048,7 +2064,9 @@ fn eval_builtin_call(
         }
         BuiltinFunctionKind::StringRepr => {
             check_arity(
-                &SymbolName("string_repr".to_owned()),
+                &SymbolName {
+                    name: "string_repr".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2075,7 +2093,9 @@ fn eval_builtin_call(
             }
 
             check_arity(
-                &SymbolName("list_directory".to_owned()),
+                &SymbolName {
+                    name: "list_directory".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2130,7 +2150,9 @@ fn eval_builtin_call(
         }
         BuiltinFunctionKind::SourceDirectory => {
             check_arity(
-                &SymbolName("source_directory".to_owned()),
+                &SymbolName {
+                    name: "source_directory".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 0,
@@ -2150,7 +2172,9 @@ fn eval_builtin_call(
         }
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(
-                &SymbolName("working_directory".to_owned()),
+                &SymbolName {
+                    name: "working_directory".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 0,
@@ -2180,7 +2204,9 @@ fn eval_builtin_call(
             }
 
             check_arity(
-                &SymbolName("write_file".to_owned()),
+                &SymbolName {
+                    name: "write_file".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 2,
@@ -2404,7 +2430,9 @@ fn eval_call(
             ..
         } => {
             check_arity(
-                &SymbolName(type_name.name.clone()),
+                &SymbolName {
+                    name: type_name.name.clone(),
+                },
                 receiver_value,
                 &caller_expr.position,
                 1,
@@ -2744,7 +2772,7 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
             "Malformed `Path` struct (expected some fields).".to_owned(),
         ));
     };
-    if field_name.0 != "p" {
+    if field_name.name != "p" {
         return Err(ErrorMessage(format!(
             "Malformed `Path` struct (expected a field named `p`, got `{}`).",
             field_name,
@@ -2772,7 +2800,9 @@ fn eval_builtin_method_call(
     match kind {
         BuiltinMethodKind::ListAppend => {
             check_arity(
-                &SymbolName("List::append".to_owned()),
+                &SymbolName {
+                    name: "List::append".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2826,7 +2856,9 @@ fn eval_builtin_method_call(
         }
         BuiltinMethodKind::ListGet => {
             check_arity(
-                &SymbolName("List::get".to_owned()),
+                &SymbolName {
+                    name: "List::get".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -2905,7 +2937,9 @@ fn eval_builtin_method_call(
         }
         BuiltinMethodKind::ListLen => {
             check_arity(
-                &SymbolName("List::len".to_owned()),
+                &SymbolName {
+                    name: "List::len".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 0,
@@ -2957,7 +2991,9 @@ fn eval_builtin_method_call(
             }
 
             check_arity(
-                &SymbolName("Path::exists".to_owned()),
+                &SymbolName {
+                    name: "Path::exists".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3000,7 +3036,9 @@ fn eval_builtin_method_call(
             }
 
             check_arity(
-                &SymbolName("Path::read".to_owned()),
+                &SymbolName {
+                    name: "Path::read".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3036,7 +3074,9 @@ fn eval_builtin_method_call(
         }
         BuiltinMethodKind::StringAppend => {
             check_arity(
-                &SymbolName("String::append".to_owned()),
+                &SymbolName {
+                    name: "String::append".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 1,
@@ -3101,7 +3141,9 @@ fn eval_builtin_method_call(
         }
         BuiltinMethodKind::StringLen => {
             check_arity(
-                &SymbolName("String::len".to_owned()),
+                &SymbolName {
+                    name: "String::len".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 0,
@@ -3140,7 +3182,9 @@ fn eval_builtin_method_call(
         }
         BuiltinMethodKind::StringSubstring => {
             check_arity(
-                &SymbolName("String::substring".to_owned()),
+                &SymbolName {
+                    name: "String::substring".to_owned(),
+                },
                 receiver_value,
                 receiver_pos,
                 2,
@@ -3991,7 +4035,7 @@ fn eval_struct_value(
         // TODO: print the missing field names too.
         let missing: Vec<_> = expected_fields_by_name
             .into_keys()
-            .map(|sn| format!("`{}`", sn.0))
+            .map(|sn| format!("`{}`", sn.name))
             .collect();
         let message = ErrorMessage(format!(
             "Missing fields from `{}`: {}.",

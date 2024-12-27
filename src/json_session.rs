@@ -144,7 +144,7 @@ fn handle_load_request(
     let definition_summary = if eval_summary.new_syms.is_empty() {
         "".to_owned()
     } else if eval_summary.new_syms.len() == 1 {
-        format!("Loaded {}", eval_summary.new_syms[0].0)
+        format!("Loaded {}", eval_summary.new_syms[0].name)
     } else {
         format!("Loaded {} definitions", eval_summary.new_syms.len())
     };
@@ -651,7 +651,7 @@ fn handle_run_eval_request(
             let definition_summary = if eval_summary.new_syms.is_empty() {
                 "".to_owned()
             } else if eval_summary.new_syms.len() == 1 {
-                format!("Loaded {}", eval_summary.new_syms[0].0)
+                format!("Loaded {}", eval_summary.new_syms[0].name)
             } else {
                 format!("Loaded {} definitions", eval_summary.new_syms.len())
             };

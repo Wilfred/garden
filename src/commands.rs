@@ -396,7 +396,7 @@ pub(crate) fn run_command<T: Write>(
             for type_name in type_names {
                 let mut method_names: Vec<_> =
                     env.methods.get(type_name).unwrap().values().collect();
-                method_names.sort_by_key(|meth| &meth.name_sym.name.0);
+                method_names.sort_by_key(|meth| &meth.name_sym.name.name);
 
                 for meth_info in method_names {
                     let name = format!("{}::{}", type_name, &meth_info.name_sym.name);
@@ -462,7 +462,7 @@ pub(crate) fn run_command<T: Write>(
             // TODO: search doc comments too.
             let mut matching_defs = vec![];
             for (global_def, _) in env.file_scope.iter() {
-                if global_def.0.contains(&text) {
+                if global_def.name.contains(&text) {
                     matching_defs.push(global_def);
                 }
             }
@@ -509,7 +509,7 @@ pub(crate) fn run_command<T: Write>(
                 };
 
                 if is_fun {
-                    names.push(&name.0);
+                    names.push(&name.name);
                 }
             }
 
@@ -526,8 +526,10 @@ pub(crate) fn run_command<T: Write>(
                     .0
                     .last_mut()
                     .expect("Should always have at least one frame");
-                if stack_frame.bindings.has(&SymbolName(name.clone())) {
-                    stack_frame.bindings.remove(&SymbolName(name.clone()));
+                if stack_frame.bindings.has(&SymbolName { name: name.clone() }) {
+                    stack_frame
+                        .bindings
+                        .remove(&SymbolName { name: name.clone() });
                 } else {
                     write!(
                         buf,
@@ -546,7 +548,9 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Forget(name) => {
             if let Some(name) = name {
-                let sym = SymbolName(name.to_owned());
+                let sym = SymbolName {
+                    name: name.to_owned(),
+                };
 
                 match env.file_scope.get(&sym) {
                     Some(_) => {
@@ -586,7 +590,7 @@ pub(crate) fn run_command<T: Write>(
                         buf,
                         "{}{}\t{}",
                         if i == 0 { "" } else { "\n" },
-                        var_name.0.bright_green(),
+                        var_name.name.bright_green(),
                         value.display(env)
                     )
                     .unwrap();
@@ -598,7 +602,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Test(name) => match name {
             Some(name) => {
-                return Err(EvalAction::RunTest(SymbolName(name.clone())));
+                return Err(EvalAction::RunTest(SymbolName { name: name.clone() }));
             }
             None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.").unwrap(),
         },
@@ -683,7 +687,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         if let Some(type_methods) = env.methods.get(&TypeName {
             name: type_name.to_owned(),
         }) {
-            if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
+            if let Some(method_info) = type_methods.get(&SymbolName {
+                name: method_name.to_owned(),
+            }) {
                 Ok(method_info
                     .fun_info()
                     .map(|fun_info| fun_info.src_string.clone()))
@@ -703,7 +709,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             TypeDef::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
             TypeDef::Struct(struct_info) => Ok(Some(struct_info.src_string.clone())),
         }
-    } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
+    } else if let Some(value) = env.file_scope.get(&SymbolName {
+        name: name.to_owned(),
+    }) {
         match value {
             Value::Fun { fun_info, .. } => Ok(Some(fun_info.src_string.clone())),
             // TODO: Offer source of stub for built-in functions.
@@ -721,7 +729,9 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         if let Some(type_methods) = env.methods.get(&TypeName {
             name: type_name.to_owned(),
         }) {
-            if let Some(method_info) = type_methods.get(&SymbolName(method_name.to_owned())) {
+            if let Some(method_info) = type_methods.get(&SymbolName {
+                name: method_name.to_owned(),
+            }) {
                 Ok((
                     format!("Method `{method_name}`"),
                     format_method_info(method_info),
@@ -737,7 +747,9 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         name: name.to_owned(),
     }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))
-    } else if let Some(value) = env.file_scope.get(&SymbolName(name.to_owned())) {
+    } else if let Some(value) = env.file_scope.get(&SymbolName {
+        name: name.to_owned(),
+    }) {
         // TODO: Ideally we'd print both values and type if both are defined.
         match describe_fun(value) {
             Some(description) => Ok((format!("Function `{name}`"), Some(description))),

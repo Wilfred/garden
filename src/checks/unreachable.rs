@@ -1,6 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use garden_lang_parser::ast::{DefinitionId, Definition_, ToplevelItem, Visibility};
+use rustc_hash::FxHashMap;
 
 use crate::{
     checks::type_checker::check_types,
@@ -108,8 +109,8 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
 ///
 /// {A -> {B, C, D}, B -> {C, D}, C -> {D}}
 fn transitive_closure(
-    mut reachable: HashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
-) -> HashMap<Option<DefinitionId>, HashSet<DefinitionId>> {
+    mut reachable: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
+) -> FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>> {
     let mut changed = true;
 
     while changed {
@@ -137,9 +138,9 @@ fn transitive_closure(
 
 /// Useful for 'reachable from'.
 fn invert(
-    reachable: HashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
-) -> HashMap<DefinitionId, HashSet<Option<DefinitionId>>> {
-    let mut inverted: HashMap<DefinitionId, HashSet<Option<DefinitionId>>> = HashMap::new();
+    reachable: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
+) -> FxHashMap<DefinitionId, HashSet<Option<DefinitionId>>> {
+    let mut inverted: FxHashMap<DefinitionId, HashSet<Option<DefinitionId>>> = FxHashMap::default();
 
     for (def_id, reachable_def_ids) in reachable {
         for reachable_def_id in reachable_def_ids {

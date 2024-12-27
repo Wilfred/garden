@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use garden_lang_parser::ast::LetDestination;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
@@ -9,6 +7,7 @@ use garden_lang_parser::{
     },
     position::Position,
 };
+use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
@@ -32,8 +31,8 @@ struct FreeVariableVisitor<'a> {
     env: &'a Env,
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
-    bound_scopes: Vec<HashMap<SymbolName, UseState>>,
-    free: HashMap<SymbolName, Position>,
+    bound_scopes: Vec<FxHashMap<SymbolName, UseState>>,
+    free: FxHashMap<SymbolName, Position>,
     unused: Vec<(SymbolName, Position)>,
 }
 
@@ -41,8 +40,8 @@ impl FreeVariableVisitor<'_> {
     fn new(env: &Env) -> FreeVariableVisitor<'_> {
         FreeVariableVisitor {
             env,
-            bound_scopes: vec![HashMap::new()],
-            free: HashMap::new(),
+            bound_scopes: vec![FxHashMap::default()],
+            free: FxHashMap::default(),
             unused: vec![],
         }
     }
@@ -123,7 +122,7 @@ impl FreeVariableVisitor<'_> {
     }
 
     fn push_scope(&mut self) {
-        self.bound_scopes.push(HashMap::new());
+        self.bound_scopes.push(FxHashMap::default());
     }
 
     fn pop_scope(&mut self) {

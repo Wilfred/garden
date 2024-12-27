@@ -1,8 +1,9 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::rc::Rc;
 
 use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
 use garden_lang_parser::visitor::Visitor;
+use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env, types::TypeDef};
@@ -39,7 +40,7 @@ impl Visitor for StructFieldVisitor<'_> {
             return;
         };
 
-        let mut fields_by_name = HashMap::new();
+        let mut fields_by_name = FxHashMap::default();
         for field_info in &struct_info.fields {
             fields_by_name.insert(field_info.sym.name.clone(), field_info);
         }

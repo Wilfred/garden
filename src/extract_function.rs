@@ -1,10 +1,11 @@
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 
 use garden_lang_parser::{
     ast::{AstId, Expression, Expression_, IdGenerator, SymbolName, SyntaxId},
     parse_toplevel_items,
     visitor::Visitor,
 };
+use rustc_hash::FxHashMap;
 
 use crate::{
     checks::type_checker::check_types,
@@ -114,7 +115,7 @@ fn extracted_fun_src(
 
 fn locals_outside_expr(
     env: &Env,
-    id_to_ty: &HashMap<SyntaxId, Type>,
+    id_to_ty: &FxHashMap<SyntaxId, Type>,
     expr: &Expression,
 ) -> Vec<(SymbolName, Option<Type>)> {
     let mut visitor = OutsideVarsVisitor {
@@ -133,7 +134,7 @@ fn locals_outside_expr(
 struct OutsideVarsVisitor<'a> {
     env: &'a Env,
     vars_outside: Vec<(SymbolName, Option<Type>)>,
-    id_to_ty: HashMap<SyntaxId, Type>,
+    id_to_ty: FxHashMap<SyntaxId, Type>,
 }
 
 impl Visitor for OutsideVarsVisitor<'_> {

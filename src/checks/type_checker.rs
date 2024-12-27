@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, DefinitionId, Expression, Expression_, FunInfo, LetDestination,
@@ -7,6 +7,7 @@ use garden_lang_parser::ast::{
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
+use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
@@ -21,15 +22,15 @@ pub(crate) struct TCSummary {
     pub diagnostics: Vec<Diagnostic>,
     /// A mapping of syntax IDs to their inferred types, used for
     /// hover information.
-    pub id_to_ty: HashMap<SyntaxId, Type>,
+    pub id_to_ty: FxHashMap<SyntaxId, Type>,
     /// A mapping of syntax IDs to the doc comment of their
     /// definitions.
-    pub id_to_doc_comment: HashMap<SyntaxId, String>,
+    pub id_to_doc_comment: FxHashMap<SyntaxId, String>,
     /// A mapping of syntax IDs to their definition positions.
-    pub id_to_def_pos: HashMap<SyntaxId, Position>,
+    pub id_to_def_pos: FxHashMap<SyntaxId, Position>,
     /// A mapping from each toplevel function to the other functions
     /// it calls.
-    pub callees: HashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
+    pub callees: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
 }
 
 pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
@@ -37,10 +38,10 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         env,
         diagnostics: vec![],
         bindings: LocalBindings::default(),
-        id_to_ty: HashMap::default(),
-        id_to_doc_comment: HashMap::default(),
-        id_to_def_pos: HashMap::default(),
-        callees: HashMap::default(),
+        id_to_ty: FxHashMap::default(),
+        id_to_doc_comment: FxHashMap::default(),
+        id_to_def_pos: FxHashMap::default(),
+        callees: FxHashMap::default(),
         current_def: None,
     };
     for item in items {
@@ -58,20 +59,20 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
 
 #[derive(Debug)]
 struct LocalBindings {
-    blocks: Vec<HashMap<SymbolName, (Type, Position)>>,
+    blocks: Vec<FxHashMap<SymbolName, (Type, Position)>>,
 }
 
 impl Default for LocalBindings {
     fn default() -> Self {
         Self {
-            blocks: vec![HashMap::new()],
+            blocks: vec![FxHashMap::default()],
         }
     }
 }
 
 impl LocalBindings {
     fn enter_block(&mut self) {
-        self.blocks.push(HashMap::new());
+        self.blocks.push(FxHashMap::default());
     }
 
     fn exit_block(&mut self) {
@@ -99,11 +100,11 @@ struct TypeCheckVisitor<'a> {
     env: &'a Env,
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
-    id_to_ty: HashMap<SyntaxId, Type>,
-    id_to_doc_comment: HashMap<SyntaxId, String>,
-    id_to_def_pos: HashMap<SyntaxId, Position>,
+    id_to_ty: FxHashMap<SyntaxId, Type>,
+    id_to_doc_comment: FxHashMap<SyntaxId, String>,
+    id_to_def_pos: FxHashMap<SyntaxId, Position>,
     current_def: Option<DefinitionId>,
-    callees: HashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
+    callees: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
@@ -740,7 +741,7 @@ impl TypeCheckVisitor<'_> {
                         ty_var_env.insert(type_param.name.clone(), None);
                     }
 
-                    let mut sym_to_expected_ty = HashMap::new();
+                    let mut sym_to_expected_ty = FxHashMap::default();
                     for field in &struct_info.fields {
                         let ty = Type::from_hint(&field.hint, &self.env.types, &ty_var_env)
                             .unwrap_or_err_ty();
@@ -1621,7 +1622,7 @@ fn check_match_exhaustive(
         return;
     };
 
-    let mut variants_remaining: HashMap<SymbolName, VariantInfo> = HashMap::new();
+    let mut variants_remaining: FxHashMap<SymbolName, VariantInfo> = FxHashMap::default();
     for variant in &enum_info.variants {
         variants_remaining.insert(variant.name_sym.name.clone(), variant.clone());
     }

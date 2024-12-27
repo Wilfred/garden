@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 
 use garden_lang_parser::{
     ast::{AstId, IdGenerator, Symbol, SyntaxId},
@@ -6,6 +6,7 @@ use garden_lang_parser::{
     position::Position,
     visitor::Visitor,
 };
+use rustc_hash::FxHashMap;
 
 use crate::{
     checks::type_checker::check_types, env::Env, eval::load_toplevel_items, pos_to_id::find_item_at,
@@ -48,7 +49,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
 
 struct RenameLocalVisitor {
     definition_pos: Position,
-    id_to_pos: HashMap<SyntaxId, Position>,
+    id_to_pos: FxHashMap<SyntaxId, Position>,
     replace_positions: Vec<Position>,
 }
 

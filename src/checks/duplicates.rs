@@ -4,18 +4,19 @@
 //! mistake however.
 
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use garden_lang_parser::ast::{Definition, Definition_, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
+use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
 
 struct DuplicatesVisitor {
-    funs_seen: HashMap<SymbolName, Position>,
-    methods_seen: HashMap<TypeName, HashMap<SymbolName, Position>>,
+    funs_seen: FxHashMap<SymbolName, Position>,
+    methods_seen: FxHashMap<TypeName, FxHashMap<SymbolName, Position>>,
     types_seen: HashSet<TypeName>,
     diagnostics: Vec<Diagnostic>,
 }
@@ -48,7 +49,7 @@ impl Visitor for DuplicatesVisitor {
                         is_repeat = occupied.get().contains_key(&meth_sym.name);
                     }
                     Entry::Vacant(vacant) => {
-                        let mut items = HashMap::default();
+                        let mut items = FxHashMap::default();
                         items.insert(meth_sym.name.clone(), meth_sym.position.clone());
 
                         vacant.insert(items);
@@ -106,8 +107,8 @@ impl Visitor for DuplicatesVisitor {
 pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagnostic> {
     let mut visitor = DuplicatesVisitor {
         diagnostics: vec![],
-        funs_seen: HashMap::default(),
-        methods_seen: HashMap::default(),
+        funs_seen: FxHashMap::default(),
+        methods_seen: FxHashMap::default(),
         types_seen: HashSet::default(),
     };
     for item in items {

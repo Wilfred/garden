@@ -141,11 +141,6 @@ test render_link {
   assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
 }
 
-fun file_name(path: String): String {
-  let parts = path.split("/")
-  parts.last().or_exception()
-}
-
 // A list of all the files in `website_dir` that are templates.
 //
 // Returns absolute paths.

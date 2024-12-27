@@ -1,0 +1,5 @@
+fun main(_: List<String>) {
+  list_directory(Path{ p: "/" }).or_error()
+}
+
+// args: run

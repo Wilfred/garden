@@ -2083,31 +2083,22 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            // TODO: define a separate path type in Garden.
-            let path_s = match &arg_values[0] {
-                Value::String(s) => s,
-                v => {
+            let path_s = match unwrap_path(&arg_values[0], env) {
+                Ok(s) => s,
+                Err(msg) => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
                     }
-                    saved_values.push(receiver_value.clone());
-
-                    let message = format_type_error(
-                        &TypeName {
-                            name: "String".into(),
-                        },
-                        v,
-                        env,
-                    );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::ResumableError(receiver_pos.clone(), msg),
                     ));
                 }
             };
 
-            let path = PathBuf::from(path_s);
+            let path = PathBuf::from(path_s.clone());
 
             let value = match path.read_dir() {
                 Ok(dir_iter) => {

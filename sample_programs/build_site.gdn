@@ -146,7 +146,7 @@ test render_link {
 // Returns absolute paths.
 fun template_files(website_dir: String): List<String> {
   // TODO: a ? syntax.
-  let dir_files = list_directory(website_dir).or_error()
+  let dir_files = list_directory(Path{ p: website_dir }).or_error()
   dir_files.map(fun(p: Path) {p.p}).filter(fun(s: String) {s.ends_with(".tmpl.html") })
 }
 

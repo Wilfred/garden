@@ -13,6 +13,8 @@ return absolute `Path` values.
 Removed `path_exists` (use `Path::exists` instead) and `read_file`
 (use `Path::read` instead).
 
+`list_directory` now takes a `Path` argument.
+
 ## Syntax
 
 Type parameters now occur after function or method names, so Garden

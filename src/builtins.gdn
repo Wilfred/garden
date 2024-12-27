@@ -37,9 +37,9 @@ export fun assert(condition: Bool): Unit {
 // List the contents of the specified directory.
 //
 // ```
-// list_directory("/")
+// list_directory(Path{ p: "/" })
 // ```
-export fun list_directory(path: String): Result<List<Path>, String> {
+export fun list_directory(path: Path): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 

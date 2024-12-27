@@ -64,8 +64,8 @@ impl Stack {
 
 #[derive(Debug)]
 pub(crate) struct Env {
-    pub(crate) file_scope: HashMap<SymbolName, Value>,
-    pub(crate) methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>>,
+    pub(crate) file_scope: FxHashMap<SymbolName, Value>,
+    pub(crate) methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: HashMap<SymbolName, TestInfo>,
     pub(crate) types: HashMap<TypeName, TypeDef>,
     /// The arguments used the last time each function was
@@ -96,7 +96,7 @@ pub(crate) struct Env {
 
 impl Env {
     pub(crate) fn new(id_gen: &mut IdGenerator) -> Self {
-        let mut file_scope = HashMap::new();
+        let mut file_scope = FxHashMap::default();
 
         // Insert all the built-in functions.
         for fun_kind in BuiltinFunctionKind::iter() {
@@ -108,9 +108,10 @@ impl Env {
             );
         }
 
-        let mut methods: HashMap<TypeName, HashMap<SymbolName, MethodInfo>> = HashMap::new();
+        let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
+            FxHashMap::default();
 
-        let mut path_methods = HashMap::new();
+        let mut path_methods = FxHashMap::default();
         path_methods.insert(
             SymbolName {
                 name: "exists".to_owned(),
@@ -161,7 +162,7 @@ impl Env {
             path_methods,
         );
 
-        let mut string_methods = HashMap::new();
+        let mut string_methods = FxHashMap::default();
         string_methods.insert(
             SymbolName {
                 name: "len".to_owned(),
@@ -233,7 +234,7 @@ impl Env {
             string_methods,
         );
 
-        let mut list_methods = HashMap::new();
+        let mut list_methods = FxHashMap::default();
         list_methods.insert(
             SymbolName {
                 name: "append".to_owned(),

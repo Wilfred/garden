@@ -1,9 +1,10 @@
-use std::{collections::HashMap, path::Path};
+use std::path::Path;
 
 use garden_lang_parser::{
     ast::{AstId, Expression_, IdGenerator},
     parse_toplevel_items,
 };
+use rustc_hash::FxHashMap;
 use serde::Serialize;
 
 use crate::{
@@ -62,7 +63,7 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
         return;
     };
 
-    let empty_hashmap = HashMap::new();
+    let empty_hashmap = FxHashMap::default();
     let methods = env.methods.get(&type_name).unwrap_or(&empty_hashmap);
 
     let mut items: Vec<CompletionItem> = vec![];

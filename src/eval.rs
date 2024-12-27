@@ -858,7 +858,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         caller_pos: None,
         caller_expr_id: None,
         bindings: Bindings::default(),
-        type_bindings: HashMap::new(),
+        type_bindings: FxHashMap::default(),
         bindings_next_block: vec![],
         exprs_to_eval,
         evalled_values: vec![Value::unit()],
@@ -2315,7 +2315,7 @@ fn eval_call(
                 }
             }
 
-            let mut type_bindings = TypeVarEnv::new();
+            let mut type_bindings = TypeVarEnv::default();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
                 type_bindings.insert(type_param.name.clone(), Some(Type::Top));
@@ -2371,7 +2371,7 @@ fn eval_call(
                     .insert(name_sym.name.clone(), arg_values.to_vec());
             }
 
-            let mut type_bindings = TypeVarEnv::new();
+            let mut type_bindings = TypeVarEnv::default();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
                 type_bindings.insert(param_sym.name.clone(), Some(Type::Top));
@@ -2722,7 +2722,7 @@ fn eval_method_call(
     }
     fun_bindings.insert(receiver_method.receiver_sym.name.clone(), receiver_value);
 
-    let mut type_bindings = TypeVarEnv::new();
+    let mut type_bindings = TypeVarEnv::default();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
         type_bindings.insert(type_param.name.clone(), Some(Type::Top));

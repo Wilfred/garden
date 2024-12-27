@@ -1,6 +1,7 @@
 use std::rc::Rc;
 use std::{collections::HashMap, path::PathBuf};
 
+use rustc_hash::FxHashMap;
 use strum::IntoEnumIterator;
 
 use crate::eval::{EnclosingSymbol, ExpressionState};
@@ -35,7 +36,7 @@ impl Default for Stack {
                 offset: 0,
                 src: "// __toplevel__".to_owned(),
             },
-            type_bindings: HashMap::new(),
+            type_bindings: FxHashMap::default(),
             caller_uses_value: true,
         }])
     }
@@ -54,7 +55,7 @@ impl Stack {
 
     pub(crate) fn type_bindings(&self) -> TypeVarEnv {
         let Some(stack_frame) = self.0.last() else {
-            return HashMap::default();
+            return FxHashMap::default();
         };
 
         stack_frame.type_bindings.clone()

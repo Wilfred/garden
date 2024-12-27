@@ -3,6 +3,7 @@ use std::{collections::HashMap, fmt::Display};
 use itertools::Itertools as _;
 
 use garden_lang_parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
+use rustc_hash::FxHashMap;
 
 use crate::{
     types::{BuiltinType, TypeDef},
@@ -17,7 +18,7 @@ pub(crate) enum TypeDefKind {
 
 /// The current type variable environment. When new type variables are
 /// defined, they're added with a value of None.
-pub(crate) type TypeVarEnv = HashMap<TypeName, Option<Type>>;
+pub(crate) type TypeVarEnv = FxHashMap<TypeName, Option<Type>>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Type {

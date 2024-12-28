@@ -8,5 +8,8 @@ test bar {
 
 // args: test
 // expected exit status: 1
-// expected stdout: 0 passed, 2 failed.
+// expected stdout:
+// 0 passed, 2 failed.
+// Failed: foo
+// Failed: bar
 

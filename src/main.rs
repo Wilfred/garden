@@ -550,6 +550,10 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
             summary.tests_passed,
             summary.tests_failed.len()
         );
+
+        for (test_sym, _) in &summary.tests_failed {
+            println!("Failed: {}", test_sym.name);
+        }
     }
 
     // TODO: support printing back traces from every test failure.

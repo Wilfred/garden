@@ -4,8 +4,11 @@
 // This tends to trigger on larger tuples of simple types, and naming
 // them would probably be worse for readability.
 #![allow(clippy::type_complexity)]
+// Catch unfinished code.
 #![warn(clippy::todo)]
+// Catch unfinished code.
 #![warn(clippy::dbg_macro)]
+// Preferred style of making strings owned.
 #![warn(clippy::str_to_string)]
 // Garden is too much of a prototype for this to be an issue.
 #![allow(clippy::too_many_arguments)]

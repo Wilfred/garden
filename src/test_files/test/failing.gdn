@@ -6,5 +6,5 @@ test foo {
 // expected exit status: 1
 // expected stdout:
 // 0 passed, 1 failed.
-// Failed: foo
+// Failed: foo src/test_files/test/failing.gdn:2
 

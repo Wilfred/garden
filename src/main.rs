@@ -551,8 +551,20 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
             summary.tests_failed.len()
         );
 
-        for (test_sym, _) in &summary.tests_failed {
-            println!("Failed: {}", test_sym.name);
+        for (test_sym, err) in &summary.tests_failed {
+            print!("Failed: {}", test_sym.name);
+
+            let pos = match err {
+                EvalError::Interrupted => None,
+                EvalError::ResumableError(position, _) => Some(position),
+                EvalError::AssertionFailed(position) => Some(position),
+                EvalError::ReachedTickLimit => None,
+                EvalError::ForbiddenInSandbox(position) => Some(position),
+            };
+            match pos {
+                Some(pos) => println!(" {}", pos.as_ide_string()),
+                None => println!(),
+            }
         }
     }
 

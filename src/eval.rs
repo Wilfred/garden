@@ -3751,6 +3751,20 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 println!("{:?} {:?}\n", &outer_expr.expr_, expr_state);
             }
 
+            // Print the whole call stack every 1000 ticks if the
+            // environment variable GDN_PROFILE is set, to enable
+            // basic profiling.
+            if env.ticks % 1000 == 0 && std::env::var("GDN_PROFILE").is_ok() {
+                for (i, frame) in env.stack.0.iter().enumerate() {
+                    print!(
+                        "{}{}",
+                        if i == 0 { "" } else { " > " },
+                        frame.enclosing_name
+                    );
+                }
+                println!();
+            }
+
             match eval_expr(env, session, outer_expr.clone(), &mut expr_state) {
                 Err((RestoreValues(restore_values), eval_err)) => {
                     restore_stack_frame(env, (expr_state, outer_expr.clone()), &restore_values);

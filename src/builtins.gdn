@@ -166,6 +166,11 @@ export fun (this: String) substring(from_index: Int, to_index: Int): String {
   __BUILTIN_IMPLEMENTATION
 }
 
+test string_substring {
+  // Check we handle large end offsets gracefully
+  assert("abc".substring(1, 99) == "bc")
+}
+
 // Return a new string with this suffix appended.
 //
 // ```
@@ -173,6 +178,10 @@ export fun (this: String) substring(from_index: Int, to_index: Int): String {
 // ```
 export fun (this: String) append(suffix: String): String {
   __BUILTIN_IMPLEMENTATION
+}
+
+test string_substring {
+  assert("foo".append("bar") == "foobar")
 }
 
 // Find the first index of `needle` in `this`.
@@ -206,6 +215,11 @@ export fun (this: Path) exists(): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
+test path_exists {
+  assert(Path{ p: "/" }.exists() == True)
+  assert(Path{ p: "/no_such_dir_for_garden_test" }.exists() == False)
+}
+
 // Read the contents of `path` as a string.
 //
 // ```
@@ -214,3 +228,7 @@ export fun (this: Path) exists(): Bool {
 export fun (this: Path) read(): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// test path_read {
+//   assert(Path{ p: "/dev/null" }.read() == Ok(""))
+// }

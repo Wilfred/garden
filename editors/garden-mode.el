@@ -795,6 +795,7 @@ the result."
   (garden--async-command
    "show-type"
    (lambda (result)
+     ;; TODO: Only highlight the last line, not the doc comment.
      (funcall callback (garden--syntax-highlight result)))))
 
 (defun garden--go-to-position (pos-json)

@@ -175,6 +175,15 @@ export fun (this: String) append(suffix: String): String {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Find the first index of `needle` in `this`.
+//
+// ```
+// "abc".index_of("c") // Some(2)
+// ```
+export fun (this: String) index_of(needle: String): Option<Int> {
+  __BUILTIN_IMPLEMENTATION
+}
+
 // Return True if this path exists.
 //
 // ```

@@ -3136,6 +3136,76 @@ fn eval_builtin_method_call(
                 env.push_value(Value::String(arg1));
             }
         }
+        BuiltinMethodKind::StringIndexOf => {
+            check_arity(
+                &SymbolName {
+                    name: "String::index_of".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let receiver_s = match &receiver_value {
+                Value::String(s) => s.clone(),
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            };
+            let arg_s = match &arg_values[0] {
+                Value::String(s) => s,
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            };
+
+            let idx = receiver_s.find(arg_s);
+            if expr_value_is_used {
+                let value = match idx {
+                    Some(idx) => Value::some(Value::Integer(idx as i64), env),
+                    None => Value::none(),
+                };
+                env.push_value(value);
+            }
+        }
         BuiltinMethodKind::StringLen => {
             check_arity(
                 &SymbolName {

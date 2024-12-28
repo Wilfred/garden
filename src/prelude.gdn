@@ -191,26 +191,6 @@ test split_once {
   assert("abcbe".split_once("b") == Some(("a", "cbe")))
 }
 
-// Find the first index of `needle` in `this`.
-//
-// ```
-// "abc".index_of("c") // 2
-// ```
-export fun (this: String) index_of(needle: String): Option<Int> {
-  let i = 0
-  while (i + needle.len()) <= this.len() {
-    let substring = this.substring(i, i + needle.len())
-
-    if substring == needle {
-      return Some(i)
-    }
-
-    i += 1
-  }
-
-  None
-}
-
 test string_index_of {
   assert("abc".index_of("x") == None)
 

@@ -599,6 +599,7 @@ pub enum BuiltinMethodKind {
     PathExists,
     PathRead,
     StringAppend,
+    StringIndexOf,
     StringLen,
     StringSubstring,
 }

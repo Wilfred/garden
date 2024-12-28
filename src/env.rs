@@ -166,6 +166,27 @@ impl Env {
         let mut string_methods = FxHashMap::default();
         string_methods.insert(
             SymbolName {
+                name: "index_of".to_owned(),
+            },
+            MethodInfo {
+                receiver_hint: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(),
+                        name: TypeName {
+                            name: "String".into(),
+                        },
+                        id: id_gen.next(),
+                    },
+                    position: Position::todo(),
+                },
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
+                name_sym: Symbol::new(Position::todo(), "index_of", id_gen),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringIndexOf, None),
+            },
+        );
+        string_methods.insert(
+            SymbolName {
                 name: "len".to_owned(),
             },
             MethodInfo {

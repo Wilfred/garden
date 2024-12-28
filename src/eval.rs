@@ -256,7 +256,7 @@ pub(crate) struct ToplevelEvalSummary {
     pub(crate) diagnostics: Vec<Diagnostic>,
     // TODO: Report the names of tests that passed/failed.
     pub(crate) tests_passed: usize,
-    pub(crate) tests_failed: Vec<EvalError>,
+    pub(crate) tests_failed: Vec<(Symbol, EvalError)>,
 }
 
 /// Load, but do not evaluate, `items`.
@@ -385,7 +385,7 @@ pub(crate) fn eval_tests(
                 tests_passed += 1;
             }
             Err(e) => {
-                tests_failed.push(e.clone());
+                tests_failed.push((test.name_sym.clone(), e.clone()));
                 if matches!(e, EvalError::Interrupted) {
                     break;
                 }

@@ -492,7 +492,7 @@ fn run_sandboxed_tests_in_file(
     let mut num_sandboxed = 0;
     let mut num_timed_out = 0;
 
-    for err in &summary.tests_failed {
+    for (_test_sym, err) in &summary.tests_failed {
         match err {
             EvalError::Interrupted => num_errored += 1,
             EvalError::ResumableError(_, _) => num_errored += 1,

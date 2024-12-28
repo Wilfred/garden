@@ -191,15 +191,6 @@ test split_once {
   assert("abcbe".split_once("b") == Some(("a", "cbe")))
 }
 
-test string_index_of {
-  assert("abc".index_of("x") == None)
-
-  assert("abc".index_of("a") == Some(0))
-  assert("abca".index_of("a") == Some(0))
-
-  assert("abc".index_of("c") == Some(2))
-}
-
 // Join `items` (a list of strings) with this string as a separator.
 //
 // ```

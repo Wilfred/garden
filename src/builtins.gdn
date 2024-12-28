@@ -184,6 +184,15 @@ export fun (this: String) index_of(needle: String): Option<Int> {
   __BUILTIN_IMPLEMENTATION
 }
 
+test string_index_of {
+  assert("abc".index_of("x") == None)
+
+  assert("abc".index_of("a") == Some(0))
+  assert("abca".index_of("a") == Some(0))
+
+  assert("abc".index_of("c") == Some(2))
+}
+
 // Return True if this path exists.
 //
 // ```

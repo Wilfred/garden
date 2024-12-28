@@ -15,6 +15,8 @@ Removed `path_exists` (use `Path::exists` instead) and `read_file`
 
 `list_directory` now takes a `Path` argument.
 
+`String` methods are now substantially faster, 10x in common cases.
+
 ## Syntax
 
 Type parameters now occur after function or method names, so Garden

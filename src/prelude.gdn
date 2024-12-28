@@ -167,20 +167,15 @@ test lines {
 // "abcd".split_once("b") // Some(["a", "cd"])
 // ```
 export fun (this: String) split_once(needle: String): Option<(String, String)> {
-  let i = 0
-  while (i + needle.len()) <= this.len() {
-    let substring = this.substring(i, i + needle.len())
-    if substring == needle {
-      return Some((
+  match this.index_of(needle) {
+    None => None
+    Some(i) => {
+      Some((
         this.substring(0, i),
         this.substring(i + needle.len(), this.len()),
       ))
     }
-
-    i += 1
   }
-
-  return None
 }
 
 test split_once {

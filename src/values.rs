@@ -112,7 +112,7 @@ impl Value {
         }
     }
 
-    pub(crate) fn none(value_ty: Type) -> Self {
+    pub(crate) fn none() -> Self {
         // We can assume that Option is always defined because it's in the
         // prelude.
         Value::EnumVariant {
@@ -126,7 +126,7 @@ impl Value {
                 name: TypeName {
                     name: "Option".to_owned(),
                 },
-                args: vec![value_ty],
+                args: vec![Type::no_value()],
             },
         }
     }

@@ -2163,7 +2163,7 @@ fn eval_builtin_call(
             let path = position.path.clone();
             let v = match std::fs::canonicalize(path) {
                 Ok(abspath) => Value::some(Value::path(abspath.display().to_string()), env),
-                Err(_) => Value::none(Type::path()),
+                Err(_) => Value::none(),
             };
 
             if expr_value_is_used {

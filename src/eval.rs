@@ -1,6 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
+use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::fmt::Write;
 use std::path::PathBuf;
@@ -120,8 +121,8 @@ impl Bindings {
 
     fn set_existing(&mut self, sym: &Symbol, value: Value) {
         for block_bindings in self.block_bindings.iter_mut().rev() {
-            if block_bindings.values.contains_key(&sym.interned_id) {
-                block_bindings.values.insert(sym.interned_id, value);
+            if let Entry::Occupied(mut e) = block_bindings.values.entry(sym.interned_id) {
+                e.insert(value);
                 return;
             }
         }
@@ -734,7 +735,7 @@ fn assign_var_pos(
             }
         };
 
-        let value = get_var(&symbol, env)?;
+        let value = get_var(symbol, env)?;
         return Some((value, symbol.position.clone()));
     }
 
@@ -1480,7 +1481,7 @@ fn eval_let(
 
     let stack_frame = env.current_frame_mut();
     match destination {
-        LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(&symbol, expr_value),
+        LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(symbol, expr_value),
         LetDestination::Destructure(symbols) => match &expr_value {
             Value::Tuple { items, .. } => {
                 if items.len() != symbols.len() {
@@ -1498,7 +1499,7 @@ fn eval_let(
                 }
 
                 for (symbol, item) in symbols.iter().zip(items) {
-                    stack_frame.bindings.add_new(&symbol, item.clone());
+                    stack_frame.bindings.add_new(symbol, item.clone());
                 }
             }
             _ => {
@@ -3525,7 +3526,7 @@ fn eval_expr(
             }
         }
         Expression_::Variable(name_sym) => {
-            if let Some(value) = get_var(&name_sym, env) {
+            if let Some(value) = get_var(name_sym, env) {
                 *expr_state = ExpressionState::EvaluatedSubexpressions;
 
                 if expr_value_is_used {

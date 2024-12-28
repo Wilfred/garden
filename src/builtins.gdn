@@ -156,6 +156,11 @@ export fun (this: String) len(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
+test string_len {
+  assert("abc".len() == 3)
+  assert("☃".len() == 1)
+}
+
 // Return the substring of the string between the indexes
 // specified. Indexes are specified in character offsets, not bytes.
 //
@@ -185,7 +190,8 @@ test string_substring {
   assert("foo".append("bar") == "foobar")
 }
 
-// Find the first index of `needle` in `this`.
+// Find the first index of `needle` in `this`. Positions are in
+// character offsets, not bytes.
 //
 // ```
 // "abc".index_of("c") // Some(2)
@@ -201,6 +207,8 @@ test string_index_of {
   assert("abca".index_of("a") == Some(0))
 
   assert("abc".index_of("c") == Some(2))
+
+  assert("☃c".index_of("c") == Some(1))
 }
 
 // Return True if this path exists.

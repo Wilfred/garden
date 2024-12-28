@@ -3197,12 +3197,17 @@ fn eval_builtin_method_call(
                 }
             };
 
-            let idx = receiver_s.find(arg_s);
+            let mut value = Value::none();
+            if let Some(needle_byte_offset) = receiver_s.find(arg_s) {
+                for (i, (byte_offset, _)) in receiver_s.char_indices().enumerate() {
+                    if byte_offset == needle_byte_offset {
+                        value = Value::some(Value::Integer(i as i64), env);
+                        break;
+                    }
+                }
+            }
+
             if expr_value_is_used {
-                let value = match idx {
-                    Some(idx) => Value::some(Value::Integer(idx as i64), env),
-                    None => Value::none(),
-                };
                 env.push_value(value);
             }
         }

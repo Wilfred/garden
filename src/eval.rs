@@ -243,6 +243,7 @@ pub(crate) enum EvalError {
     /// `assert()` failed.
     AssertionFailed(Position),
     /// Ran out of ticks (i.e. program did not terminate in time).
+    // TODO: add position here.
     ReachedTickLimit,
     /// Tried to execute a function that isn't permitted in the
     /// sandbox.

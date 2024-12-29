@@ -1,5 +1,9 @@
 target
 
+# Performance/profiling data.
+perf.data*
+flamegraph.svg
+
 .history
 log.gdn
 

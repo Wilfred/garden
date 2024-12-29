@@ -470,20 +470,20 @@ fn run_sandboxed_tests_in_file(
     env.tick_limit = Some(10_000);
     env.enforce_sandbox = true;
 
-    let mut contained_items = vec![];
+    let mut test_at_cursor = None;
     for item in items.iter() {
         let ToplevelItem::Def(def) = &item else {
             continue;
         };
         if def.1.contains_offset(offset) && matches!(def.2, Definition_::Test(_)) {
-            contained_items.push(item.clone());
+            test_at_cursor = Some(item.clone());
+            break;
         }
     }
 
-    let relevant_items = if contained_items.is_empty() {
-        items
-    } else {
-        contained_items
+    let relevant_items = match &test_at_cursor {
+        Some(test_item) => vec![test_item.clone()],
+        None => items,
     };
 
     let summary = eval_tests(&relevant_items, &mut env, &session);
@@ -500,6 +500,21 @@ fn run_sandboxed_tests_in_file(
             EvalError::ReachedTickLimit => num_timed_out += 1,
             EvalError::ForbiddenInSandbox(_) => num_sandboxed += 1,
         }
+    }
+
+    if test_at_cursor.is_some() {
+        if summary.tests_passed == 1 {
+            println!("passing");
+        } else if num_failed == 1 {
+            println!("failing");
+        } else if num_errored == 1 {
+            println!("erroring");
+        } else if num_timed_out == 1 {
+            println!("timing out");
+        } else if num_sandboxed == 1 {
+            println!("sandboxed");
+        }
+        return;
     }
 
     let mut parts = vec![];

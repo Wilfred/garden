@@ -185,9 +185,12 @@ repeated parentheses/brackets on the same line."
     (remove-hook 'post-command-hook #'garden-speculative--run t)))
 
 (defun garden-speculative--run ()
-  (let ((sym (thing-at-point 'symbol t)))
-    (when (and sym
-               (or (string= sym "fun") (string= sym "test")))
+  (let ((line (buffer-substring
+               (line-beginning-position)
+               (line-end-position))))
+    ;; Start speculative execution unless we're on a blank line or
+    ;; comment between toplevel items.
+    (unless (or (string= line "") (s-starts-with-p "//" line))
       (garden-test-sandboxed))))
 
 (defun garden--propertize-read-only (s)

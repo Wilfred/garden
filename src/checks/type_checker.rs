@@ -922,10 +922,10 @@ impl TypeCheckVisitor<'_> {
 
                 match recv_ty {
                     Type::Fun {
+                        type_params,
                         params,
                         return_,
                         name,
-                        ..
                     } => {
                         let formatted_name = match name {
                             Some(name) => format!("`{}`", name.name),
@@ -967,6 +967,9 @@ impl TypeCheckVisitor<'_> {
                         }
 
                         let mut ty_var_env = TypeVarEnv::default();
+                        for type_param in type_params {
+                            ty_var_env.insert(type_param.clone(), None);
+                        }
 
                         for (param_ty, (arg_ty, _arg_pos)) in params.iter().zip(arg_tys.iter()) {
                             unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);

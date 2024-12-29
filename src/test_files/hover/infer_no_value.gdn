@@ -1,0 +1,8 @@
+fun do_stuff() {
+    let foo = Ok(123)
+    //  ^
+}
+
+// args: show-type
+// expected stdout: Result<Int, NoValue>
+

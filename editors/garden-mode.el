@@ -825,8 +825,6 @@ the result."
                      (substring-no-properties (symbol-name sym)))))
     (read-from-minibuffer prompt sym-name)))
 
-(garden--read-symbol "foo ")
-
 (defun garden-rename (new-name)
   "Rename the variable at point."
   (interactive (list (garden--read-symbol "New name: ")))

@@ -1,3 +1,35 @@
+enum MarkdownPart {
+  Heading(String),
+  Paragraph(String),
+}
+
+fun parse_markdown(src: String): List<MarkdownPart> {
+  let parts: List<MarkdownPart> = []
+  let current_section: List<String> = []
+
+  for line in src.lines() {
+    if line.starts_with("#") {
+      if current_section.is_non_empty() {
+        parts = parts.append(Paragraph("\n".join(current_section)))
+        current_section = []
+      }
+
+      parts = parts.append(Heading(line))
+    } else if line == "" {
+      parts = parts.append(Paragraph("\n".join(current_section)))
+      current_section = []
+    } else {
+      current_section = current_section.append(line)
+    }
+  }
+
+  if current_section.is_non_empty() {
+    parts = parts.append(Paragraph("\n".join(current_section)))
+  }
+
+  parts
+}
+
 fun render_markdown_header(src: String): String {
   let h_count = 0
 
@@ -103,18 +135,24 @@ fun render_markdown_paragraph(src: String): String {
 }
 
 fun render_markdown(src: String): String {
-  let lines = src.lines()
-  let parts: List<String> = lines.map(fun(line: String) {
-    if line.starts_with("#") {
-      render_markdown_header(line)
-    } else if line != "" {
-      render_markdown_paragraph(line)
-    } else {
-      line
-    }
-  })
+  let html_parts: List<String> = []
 
-  "\n".join(parts)
+  for part in parse_markdown(src) {
+    match part {
+      Heading(heading) => {
+        html_parts = html_parts.append(render_markdown_header(heading))
+      }
+      Paragraph(paragraph) => {
+        html_parts = html_parts.append(render_markdown_paragraph(paragraph))
+      }
+    }
+  }
+
+  "\n".join(html_parts)
+}
+
+test render_markdown_paragraph_newlines {
+  assert(render_markdown("foo\nbar") == "<p>foo\nbar</p>")
 }
 
 test render_h1 {
@@ -191,4 +229,3 @@ export fun main(_: List<String>) {
 fun source_dir_path(): Path {
   source_directory().or_exception()
 }
-

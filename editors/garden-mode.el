@@ -179,7 +179,7 @@ repeated parentheses/brackets on the same line."
 
 (define-minor-mode garden-speculative-mode
   "Speculatively run tests when point is at the beginning of a definition."
-  :lighter " GSpec"
+  :lighter " GdnSpec"
   (if garden-speculative-mode
       (add-hook 'post-command-hook #'garden-speculative--run nil t)
     (remove-hook 'post-command-hook #'garden-speculative--run t)))

@@ -1,7 +1,0 @@
-export fun main(_) {
-  dbg(Path{ p: "/dev/null" }.read())
-}
-
-// args: run
-// expected stdout: Ok("")
-

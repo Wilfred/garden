@@ -238,6 +238,6 @@ export fun (this: Path) read(): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
-// test path_read {
-//   assert(Path{ p: "/dev/null" }.read() == Ok(""))
-// }
+test path_read {
+  assert(Path{ p: "/dev/null" }.read() == Ok(""))
+}

@@ -1,6 +1,7 @@
 enum MarkdownPart {
   Heading(String),
   Paragraph(String),
+  Code(String),
 }
 
 fun parse_markdown(src: String): List<MarkdownPart> {
@@ -8,7 +9,19 @@ fun parse_markdown(src: String): List<MarkdownPart> {
   let current_section: List<String> = []
 
   for line in src.lines() {
-    if line.starts_with("#") {
+    if line.starts_with("```") {
+      let in_code_block = match current_section.first() {
+        Some(first_line) => first_line.starts_with("```")
+        None => False
+      }
+
+      current_section = current_section.append(line)
+      if in_code_block {
+        // Just finished the code block.
+        parts = parts.append(Code("\n".join(current_section)))
+        current_section = []
+      }
+    } else if line.starts_with("#") {
       if current_section.is_non_empty() {
         parts = parts.append(Paragraph("\n".join(current_section)))
         current_section = []
@@ -42,6 +55,11 @@ fun render_markdown_header(src: String): String {
   let close_tag = "".join(["</h", string_repr(h_count), ">"])
 
   "".join([open_tag, render_inline(src.strip_prefix(" ")), close_tag])
+}
+
+fun render_markdown_code(src: String): String {
+  let inner_lines = src.lines().slice(1, -1)
+  "".join(["<pre><code>", "\n".join(inner_lines), "</code></pre>"])
 }
 
 fun render_inline(src: String): String {
@@ -145,6 +163,9 @@ fun render_markdown(src: String): String {
       Paragraph(paragraph) => {
         html_parts = html_parts.append(render_markdown_paragraph(paragraph))
       }
+      Code(code) => {
+        html_parts = html_parts.append(render_markdown_code(code))
+      }
     }
   }
 
@@ -177,6 +198,10 @@ test render_backtick_in_heading {
 
 test render_link {
   assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
+}
+
+test render_triple_backtick {
+  assert(render_markdown("```\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
 }
 
 // A list of all the files in `website_dir` that are templates.

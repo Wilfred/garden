@@ -32,6 +32,7 @@ mod cli_session;
 mod colors;
 mod commands;
 mod completions;
+mod destructure;
 mod diagnostics;
 mod env;
 mod eval;
@@ -120,6 +121,14 @@ enum CliCommands {
         override_path: Option<PathBuf>,
         #[clap(long)]
         name: String,
+    },
+    /// Wrap the expression at the offset specified in a `match`.
+    Destructure {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
     },
     /// Run the program specified, calling its main() function, then
     /// run eval-up-to at the position specified and print the result.
@@ -305,6 +314,25 @@ fn main() {
 
             let src_path = override_path.unwrap_or(path);
             extract_function::extract_function(&src, &src_path, offset, end_offset, &name);
+        }
+        CliCommands::Destructure {
+            path,
+            offset,
+            end_offset,
+            override_path,
+        } => {
+            let mut src = read_utf8_or_die(&path);
+            let (offset, end_offset) = match (offset, end_offset) {
+                (Some(offset), Some(end_offset)) => (offset, end_offset),
+                _ => {
+                    src = remove_testing_footer(&src);
+                    caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.")
+                }
+            };
+
+            let src_path = override_path.unwrap_or(path);
+            destructure::destructure(&src, &src_path, offset, end_offset);
         }
     }
 }

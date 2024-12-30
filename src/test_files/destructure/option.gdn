@@ -1,0 +1,26 @@
+fun foo(): Option<Int> {
+  None
+}
+
+fun bar() {
+  let x = 1
+  foo()
+//^^^^^
+  let y = 2
+}
+
+// args: destructure
+// expected stdout:
+// fun foo(): Option<Int> {
+//   None
+// }
+// 
+// fun bar() {
+//   let x = 1
+//   match 
+// //^^^^^
+//   let y = 2
+// } {}
+// 
+// fun after() {}
+

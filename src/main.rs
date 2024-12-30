@@ -72,13 +72,13 @@ use garden_lang_parser::{parse_toplevel_items, ParseError};
 #[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: CliCommands,
 }
 
 // TODO: if a user accidentally writes `garden foo.gdn`, suggest
 // `garden run foo.gdn`.
 #[derive(Debug, Subcommand)]
-enum Commands {
+enum CliCommands {
     /// Start a session directly in the CLI.
     Repl,
     /// Start a session over JSON RPC.
@@ -173,16 +173,16 @@ fn main() {
 
     let args = Cli::parse();
     match args.command {
-        Commands::Repl => cli_session::repl(interrupted),
-        Commands::Json => json_session::json_session(interrupted),
-        Commands::Run { path, arguments } => {
+        CliCommands::Repl => cli_session::repl(interrupted),
+        CliCommands::Json => json_session::json_session(interrupted),
+        CliCommands::Run { path, arguments } => {
             let src = read_utf8_or_die(&path);
             run_file(&src, &path, &arguments, interrupted)
         }
-        Commands::JsonExample => {
+        CliCommands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
         }
-        Commands::Check {
+        CliCommands::Check {
             path,
             json,
             override_path,
@@ -191,11 +191,11 @@ fn main() {
             let src_path = override_path.unwrap_or(path);
             syntax_check::check(&src_path, &src, json)
         }
-        Commands::Test { path } => {
+        CliCommands::Test { path } => {
             let src = read_utf8_or_die(&path);
             run_tests_in_file(&src, &path, interrupted)
         }
-        Commands::SandboxedTest { path, offset } => {
+        CliCommands::SandboxedTest { path, offset } => {
             let src = read_utf8_or_die(&path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
@@ -203,17 +203,17 @@ fn main() {
             });
             run_sandboxed_tests_in_file(&src, &path, offset, interrupted)
         }
-        Commands::TestEvalUpTo { path } => {
+        CliCommands::TestEvalUpTo { path } => {
             let src = read_utf8_or_die(&path);
             let offset = caret_finder::find_caret_offset(&src)
                 .expect("Could not find comment containing `^` in source.");
             test_eval_up_to(&src, &path, offset, interrupted);
         }
-        Commands::DumpAst { path } => {
+        CliCommands::DumpAst { path } => {
             let src = read_utf8_or_die(&path);
             dump_ast(&src, &path)
         }
-        Commands::ShowType { path, offset } => {
+        CliCommands::ShowType { path, offset } => {
             let src = read_utf8_or_die(&path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
@@ -221,7 +221,7 @@ fn main() {
             });
             show_type(&src, &path, offset)
         }
-        Commands::DefinitionPosition {
+        CliCommands::DefinitionPosition {
             path,
             offset,
             override_path,
@@ -235,7 +235,7 @@ fn main() {
             let src_path = override_path.unwrap_or(path);
             print_pos(&src, &src_path, offset)
         }
-        Commands::Complete { offset, path } => {
+        CliCommands::Complete { offset, path } => {
             let src = read_utf8_or_die(&path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
@@ -243,7 +243,7 @@ fn main() {
             });
             completions::complete(&src, &path, offset);
         }
-        Commands::TestJson { path } => {
+        CliCommands::TestJson { path } => {
             let src = read_utf8_or_die(&path);
 
             let session = Session {
@@ -269,7 +269,7 @@ fn main() {
             drop(sender);
             handle.join().unwrap();
         }
-        Commands::Rename {
+        CliCommands::Rename {
             path,
             new_name,
             offset,
@@ -286,7 +286,7 @@ fn main() {
             let src_path = override_path.unwrap_or(path);
             rename::rename(&src, &src_path, offset, &new_name)
         }
-        Commands::ExtractFunction {
+        CliCommands::ExtractFunction {
             path,
             offset,
             end_offset,

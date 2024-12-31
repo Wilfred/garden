@@ -45,7 +45,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     };
 
     let Some(variants) = enum_variants(&env, ty) else {
-        eprintln!("No expression found for the ID at the selected position.");
+        eprintln!("The expression at the selected position is not an enum.");
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
 

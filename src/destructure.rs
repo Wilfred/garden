@@ -70,7 +70,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
             );
 
             println!(
-                "match {} {{}}",
+                "match {} {{",
                 &src[expr.position.start_offset..expr.position.end_offset]
             );
 

@@ -17,10 +17,11 @@ fun bar() {
 // 
 // fun bar() {
 //   let x = 1
-//   match 
+//   match foo() {}
+// Some(_) => {}
+// None => {}
+// }
 // //^^^^^
 //   let y = 2
-// } {}
-// 
-// fun after() {}
+// }
 

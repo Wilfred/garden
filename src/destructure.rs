@@ -1,12 +1,14 @@
 use std::path::Path;
 
-use garden_lang_parser::ast::AstId;
+use garden_lang_parser::ast::{AstId, VariantInfo};
 use garden_lang_parser::{ast::IdGenerator, parse_toplevel_items};
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
+use crate::garden_type::{Type, TypeDefKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
+use crate::types::TypeDef;
 
 pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usize) {
     let mut id_gen = IdGenerator::default();
@@ -14,7 +16,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
 
     let mut env = Env::new(&mut id_gen);
     load_toplevel_items(&items, &mut env);
-    let _summary = check_types(&items, &env);
+    let summary = check_types(&items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 
@@ -31,6 +33,16 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
         return;
     };
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
+        eprintln!("No expression found for the ID at this position.");
+        return;
+    };
+
+    let Some(ty) = summary.id_to_ty.get(expr_id) else {
+        eprintln!("Could not find the type of the expression at this position.");
+        return;
+    };
+
+    let Some(variants) = enum_variants(&env, ty) else {
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
@@ -47,10 +59,24 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
                 &src[item_pos.start_offset..expr.position.start_offset]
             );
 
-            print!(
+            println!(
                 "match {} {{}}",
-                dbg!(&src[expr.position.start_offset..expr.position.end_offset])
+                &src[expr.position.start_offset..expr.position.end_offset]
             );
+
+            for variant in variants {
+                println!(
+                    "{}{} => {{}}",
+                    &variant.name_sym.name,
+                    if variant.payload_hint.is_some() {
+                        "(_)"
+                    } else {
+                        ""
+                    }
+                );
+            }
+
+            print!("}}");
 
             // Items after.
             print!("{}", &src[expr.position.end_offset..]);
@@ -58,4 +84,22 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
             break;
         }
     }
+}
+
+/// If `ty` is an enum type, return its variants.
+fn enum_variants(env: &Env, ty: &Type) -> Option<Vec<VariantInfo>> {
+    let Type::UserDefined { kind, name, .. } = ty else {
+        return None;
+    };
+    match kind {
+        TypeDefKind::Enum => {}
+        TypeDefKind::Struct => return None,
+    }
+
+    let type_def = env.types.get(name)?;
+    let TypeDef::Enum(enum_info) = type_def else {
+        return None;
+    };
+
+    Some(enum_info.variants.clone())
 }

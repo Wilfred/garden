@@ -35,3 +35,21 @@ pub(crate) fn find_caret_region(src: &str) -> Option<(usize, usize)> {
 
     Some((first_char_offset, last_char_offset))
 }
+
+/// Remove the comment containing `//^` to make test output more readable.
+pub(crate) fn remove_caret(src: &str) -> String {
+    let mut lines = vec![];
+    for src_line in src.lines() {
+        lines.push(src_line);
+
+        if !src_line.trim_start().starts_with("//") {
+            continue;
+        }
+        if !src_line.trim_end().ends_with("^") {
+            continue;
+        }
+        lines.pop();
+    }
+
+    lines.join("\n")
+}

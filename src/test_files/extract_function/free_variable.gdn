@@ -27,7 +27,6 @@ fun contains_expr(i: Int) {
 // 
 //   // We want to extract x as a parameter, but not increment.
 //   let y = extracted_fun(x, i)
-//   //      ^^^^^^^^^^^^^^^^
 // 
 //   let _ = y + 3
 // }

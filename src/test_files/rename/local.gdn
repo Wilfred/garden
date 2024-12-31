@@ -9,7 +9,6 @@ fun file_name() {
 // expected stdout:
 // fun file_name() {
 //     let new_foo = 1
-//     //    ^
 //     new_foo += 1
 //     new_foo = new_foo + 1
 // }

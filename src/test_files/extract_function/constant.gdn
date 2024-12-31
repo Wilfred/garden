@@ -18,7 +18,6 @@ fun after() {}
 // 
 // fun contains_expr() {
 //   let x = bar()
-//   //      ^^^^^
 //   let _ = x + 3
 // }
 // 

@@ -6,7 +6,6 @@ fun file_name(foo: Int) {
 // args: rename --new-name new_foo
 // expected stdout:
 // fun file_name(new_foo: Int) {
-//     //         ^
 //     let _ = new_foo
 // }
 

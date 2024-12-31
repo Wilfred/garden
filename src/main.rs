@@ -288,8 +288,11 @@ fn main() {
 
             let offset = offset.unwrap_or_else(|| {
                 src = remove_testing_footer(&src);
-                caret_finder::find_caret_offset(&src)
-                    .expect("Could not find comment containing `^` in source.")
+                let offset = caret_finder::find_caret_offset(&src)
+                    .expect("Could not find comment region containing `^^` in source.");
+                src = caret_finder::remove_caret(&src);
+
+                offset
             });
 
             let src_path = override_path.unwrap_or(path);
@@ -307,8 +310,11 @@ fn main() {
                 (Some(offset), Some(end_offset)) => (offset, end_offset),
                 _ => {
                     src = remove_testing_footer(&src);
-                    caret_finder::find_caret_region(&src)
-                        .expect("Could not find comment region containing `^^` in source.")
+                    let region = caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.");
+                    src = caret_finder::remove_caret(&src);
+
+                    region
                 }
             };
 
@@ -326,8 +332,11 @@ fn main() {
                 (Some(offset), Some(end_offset)) => (offset, end_offset),
                 _ => {
                     src = remove_testing_footer(&src);
-                    caret_finder::find_caret_region(&src)
-                        .expect("Could not find comment region containing `^^` in source.")
+                    let region = caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.");
+                    src = caret_finder::remove_caret(&src);
+
+                    region
                 }
             };
 

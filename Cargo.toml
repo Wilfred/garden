@@ -32,7 +32,7 @@ ctrlc = "3.2.5"
 humantime = "2.1.0"
 itertools = "0.11.0"
 lazy_static = "1.4.0"
-line-numbers = "0.2.2"
+line-numbers = "0.3.0"
 ordered-float = "3.7.0"
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
 regex = "1.7.1"

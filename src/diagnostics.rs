@@ -135,7 +135,7 @@ fn format_pos_in_fun(
         let line_positions = LinePositions::from(src.as_str());
 
         for (i, span) in line_positions
-            .from_offsets(offset, end_offset)
+            .from_region(offset, end_offset)
             .iter()
             .enumerate()
         {

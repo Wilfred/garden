@@ -10,6 +10,7 @@ use crate::eval::load_toplevel_items;
 use crate::garden_type::{Type, TypeDefKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
+use crate::BAD_CLI_REQUEST_EXIT_CODE;
 
 pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usize) {
     let mut id_gen = IdGenerator::default();
@@ -31,21 +32,21 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
 
     let Some(expr_id) = expr_id else {
         eprintln!("No expression found at this selected position.");
-        std::process::exit(1);
+        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
         eprintln!("No expression found for the ID at this position.");
-        std::process::exit(1);
+        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
 
     let Some(ty) = summary.id_to_ty.get(expr_id) else {
         eprintln!("Could not find the type of the expression at this position.");
-        std::process::exit(1);
+        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
 
     let Some(variants) = enum_variants(&env, ty) else {
         eprintln!("No expression found for the ID at the selected position.");
-        std::process::exit(1);
+        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
 
     let line_positions = LinePositions::from(src);

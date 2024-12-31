@@ -780,18 +780,28 @@ the result."
      :buffer output-buffer
      :command command
      :sentinel (lambda (process event)
-                 (when (s-starts-with-p "exited abnormally with code " event)
+                 (cond
+                  ;; TODO: are there other events where we shoudn't
+                  ;; kill the buffer? There's a lot of duplication
+                  ;; here.
+                  ((string= event "exited abnormally with code 10\n")
+                   (with-current-buffer (process-buffer process)
+                     (let ((result (buffer-string)))
+                       (kill-buffer (current-buffer))
+                       (delete-file tmp-file-of-src)
+                       (user-error "%s" result))))
+                  ((s-starts-with-p "exited abnormally with code " event)
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
                        (delete-file tmp-file-of-src)
                        (error "Garden `%s` crashed: %s" command-name result))))
-                 (when (string= event "finished\n")
+                  ((string= event "finished\n")
                    (with-current-buffer (process-buffer process)
                      (let ((result (buffer-string)))
                        (kill-buffer (current-buffer))
                        (delete-file tmp-file-of-src)
-                       (funcall callback result))))))))
+                       (funcall callback result)))))))))
 
 (defun garden-mode-eldoc (callback &rest _)
   "Show information for the symbol at point."

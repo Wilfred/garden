@@ -69,6 +69,8 @@ use garden_lang_parser::ast::{Definition_, IdGenerator, SourceString, ToplevelIt
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
+pub(crate) const BAD_CLI_REQUEST_EXIT_CODE: i32 = 10;
+
 #[derive(Debug, Parser)]
 #[command(author, version=version::VERSION.as_str(), name="Garden", about = "A programming language for growing programs", long_about = None)]
 struct Cli {

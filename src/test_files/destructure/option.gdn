@@ -18,9 +18,9 @@ fun bar() {
 // fun bar() {
 //   let x = 1
 //   match foo() {}
-// Some(_) => {}
-// None => {}
-// }
+//     Some(_) => {}
+//     None => {}
+//   }
 // //^^^^^
 //   let y = 2
 // }

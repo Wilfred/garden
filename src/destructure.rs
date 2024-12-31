@@ -2,6 +2,7 @@ use std::path::Path;
 
 use garden_lang_parser::ast::{AstId, VariantInfo};
 use garden_lang_parser::{ast::IdGenerator, parse_toplevel_items};
+use line_numbers::LinePositions;
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
@@ -47,6 +48,15 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
         return;
     };
 
+    let line_positions = LinePositions::from(src);
+
+    let line = src
+        .lines()
+        .nth(line_positions.from_offset(offset).as_usize())
+        .unwrap();
+    let indent = line.len() - line.trim_start().len();
+    let indent_str = " ".repeat(indent);
+
     for item in items {
         let item_pos = item.position();
         if item_pos.contains_offset(offset) {
@@ -66,7 +76,8 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
 
             for variant in variants {
                 println!(
-                    "{}{} => {{}}",
+                    "{}  {}{} => {{}}",
+                    indent_str,
                     &variant.name_sym.name,
                     if variant.payload_hint.is_some() {
                         "(_)"
@@ -76,7 +87,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
                 );
             }
 
-            print!("}}");
+            print!("{}}}", indent_str);
 
             // Items after.
             print!("{}", &src[expr.position.end_offset..]);

@@ -31,21 +31,21 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
 
     let Some(expr_id) = expr_id else {
         eprintln!("No expression found at this selected position.");
-        return;
+        std::process::exit(1);
     };
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
         eprintln!("No expression found for the ID at this position.");
-        return;
+        std::process::exit(1);
     };
 
     let Some(ty) = summary.id_to_ty.get(expr_id) else {
         eprintln!("Could not find the type of the expression at this position.");
-        return;
+        std::process::exit(1);
     };
 
     let Some(variants) = enum_variants(&env, ty) else {
         eprintln!("No expression found for the ID at the selected position.");
-        return;
+        std::process::exit(1);
     };
 
     let line_positions = LinePositions::from(src);

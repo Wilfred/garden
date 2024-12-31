@@ -861,6 +861,25 @@ the result."
       (format "%s" (1- end))
       "--name" name "--override-path" (buffer-file-name)))))
 
+(defun garden-destructure ()
+  "Destructure the expression at point with a match expression."
+  (interactive)
+  (let ((buf (current-buffer))
+        (start (point))
+        (end (point)))
+    (when (region-active-p)
+      (setq start (region-beginning))
+      (setq end (region-end))
+      (deactivate-mark))
+    (garden--async-command
+     "destructure"
+     (lambda (src)
+       (with-current-buffer buf
+         (delete-region (point-min) (point-max))
+         (insert src)
+         (goto-char start)))
+     (list (format "%s" (1- end)) "--override-path" (buffer-file-name)))))
+
 (defvar garden-session-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-z") #'garden-toggle-session)

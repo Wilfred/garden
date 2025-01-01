@@ -1,0 +1,10 @@
+fun bar() {
+  let x = 1
+  x
+//^
+}
+
+// args: destructure
+// expected exit status: 10
+// expected stderr: The expression at the selected position is not an enum.
+

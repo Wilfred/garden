@@ -7,15 +7,20 @@
 Added a `Path` type, with methods `Path::exists`, `Path::extension`,
 `Path::file_name`, `Path::join`, `Path::parent` and `Path::read`.
 
-`list_directory`, `working_directory` and `source_directory` now
-return absolute `Path` values.
+Added `List::slice`, `Option::is_some()`, `Option::is_none()` and
+`Option::or_value()`.
+
+`list_directory` and `working_directory` now return absolute `Path`
+values. `list_directory` now takes a `Path` argument.
 
 Removed `path_exists` (use `Path::exists` instead) and `read_file`
 (use `Path::read` instead).
 
-`list_directory` now takes a `Path` argument.
-
 `String` methods are now substantially faster, 10x in common cases.
+
+Added `source_directory()`, `assert()` and removed `should_equal()`.
+
+Removed `List::for_each` (use `for x in y` loops instead).
 
 ## Syntax
 
@@ -34,15 +39,6 @@ Tests now require a name, so `test {}` is no longer legal. Use `test
 some_name {}` instead.
 
 Added `%`, `+=` and `-=` operators.
-
-## Standard Library
-
-Added `source_directory()`, `assert()` and removed `should_equal()`.
-
-Added `List::slice`, `Option::is_some()`, `Option::is_none()` and
-`Option::or_value()`.
-
-Removed `List::for_each` (use `for x in y` loops instead).
 
 ## Checks
 

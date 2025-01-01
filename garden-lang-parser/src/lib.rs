@@ -906,6 +906,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
         "-" => Some(BinaryOperatorKind::Subtract),
         "*" => Some(BinaryOperatorKind::Multiply),
         "/" => Some(BinaryOperatorKind::Divide),
+        "%" => Some(BinaryOperatorKind::Modulo),
         "==" => Some(BinaryOperatorKind::Equal),
         "!=" => Some(BinaryOperatorKind::NotEqual),
         "&&" => Some(BinaryOperatorKind::And),

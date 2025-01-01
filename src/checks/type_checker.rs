@@ -782,7 +782,8 @@ impl TypeCheckVisitor<'_> {
                     BinaryOperatorKind::Add
                     | BinaryOperatorKind::Subtract
                     | BinaryOperatorKind::Multiply
-                    | BinaryOperatorKind::Divide => {
+                    | BinaryOperatorKind::Divide
+                    | BinaryOperatorKind::Modulo => {
                         if !is_subtype(&lhs_ty, &Type::int()) {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,

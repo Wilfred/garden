@@ -33,7 +33,7 @@ fun foo<T>(items: List<T>) {}
 Tests now require a name, so `test {}` is no longer legal. Use `test
 some_name {}` instead.
 
-Added `+=` and `-=` operators.
+Added `%`, `+=` and `-=` operators.
 
 ## Standard Library
 

@@ -1695,6 +1695,7 @@ fn eval_integer_binop(
 
                 Value::Integer(lhs_num / rhs_num)
             }
+            BinaryOperatorKind::Modulo => Value::Integer(lhs_num % rhs_num),
             BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
             BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
             BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
@@ -3634,6 +3635,7 @@ fn eval_expr(
             | BinaryOperatorKind::Subtract
             | BinaryOperatorKind::Multiply
             | BinaryOperatorKind::Divide
+            | BinaryOperatorKind::Modulo
             | BinaryOperatorKind::LessThan
             | BinaryOperatorKind::LessThanOrEqual
             | BinaryOperatorKind::GreaterThan

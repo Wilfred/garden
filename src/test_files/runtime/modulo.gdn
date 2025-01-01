@@ -1,0 +1,7 @@
+export fun main(_) {
+  dbg(10 % 8)
+}
+
+// args: run
+// expected stdout: 2
+

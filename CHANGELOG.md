@@ -1,4 +1,6 @@
-# 0.18 (unreleased)
+# 0.19 (unreleased)
+
+# 0.18 (released 31st December 2024)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 

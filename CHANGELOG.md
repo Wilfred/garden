@@ -18,7 +18,8 @@ Removed `path_exists` (use `Path::exists` instead) and `read_file`
 
 `String` methods are now substantially faster, 10x in common cases.
 
-Added `source_directory()`, `assert()` and removed `should_equal()`.
+Added `source_directory()`, `assert()`, `range()` and removed
+`should_equal()`.
 
 Removed `List::for_each` (use `for x in y` loops instead).
 

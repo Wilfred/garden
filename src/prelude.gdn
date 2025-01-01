@@ -576,3 +576,23 @@ export fun (this: Path) extension(): Option<String> {
 export fun (this: Path) file_name(): Option<String> {
   this.p.split("/").last()
 }
+
+// Return a list from `i` (inclusive) to `j` (exclusive).
+//
+// ```
+// range(1, 5) // [1, 2, 3, 4]
+// ```
+export fun range(i: Int, j: Int): List<Int> {
+  let items: List<Int> = []
+  while i < j {
+    items = items.append(i)
+    i += 1
+  }
+  items
+}
+
+test range {
+  assert(range(1, 5) == [1, 2, 3, 4])
+  assert(range(10, 10) == [])
+  assert(range(11, 10) == [])
+}

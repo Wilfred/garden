@@ -1018,8 +1018,8 @@ fn parse_definition(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<Definition> {
-    if let Some(token) = tokens.peek() {
-        if token.text == "fun" || token.text == "export" {
+    if let Some((token, next_token)) = tokens.peek_two() {
+        if token.text == "fun" || token.text == "export" && next_token.text == "fun" {
             return parse_function_or_method(src, tokens, id_gen, diagnostics);
         }
         if token.text == "test" {

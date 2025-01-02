@@ -1,0 +1,37 @@
+// Hello
+// World
+struct Foo {}
+
+// Hello
+// World
+export struct Bar {}
+
+// args: dump-ast
+// expected stdout:
+// Struct(
+//     StructInfo {
+//         visibility: CurrentFile,
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "Hello\nWorld",
+//         ),
+//         name_sym: TypeSymbol"Foo",
+//         type_params: [],
+//         fields: [],
+//     },
+// )
+// Struct(
+//     StructInfo {
+//         visibility: Exported(
+//             Position { ... },
+//         ),
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "Hello\nWorld",
+//         ),
+//         name_sym: TypeSymbol"Bar",
+//         type_params: [],
+//         fields: [],
+//     },
+// )
+

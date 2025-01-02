@@ -1,0 +1,37 @@
+// Hello
+// World
+enum Foo {}
+
+// Hello
+// World
+export enum Bar {}
+
+// args: dump-ast
+// expected stdout:
+// Enum(
+//     EnumInfo {
+//         visibility: CurrentFile,
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "Hello\nWorld",
+//         ),
+//         name_sym: TypeSymbol"Foo",
+//         type_params: [],
+//         variants: [],
+//     },
+// )
+// Enum(
+//     EnumInfo {
+//         visibility: Exported(
+//             Position { ... },
+//         ),
+//         src_string: SourceString,
+//         doc_comment: Some(
+//             "Hello\nWorld",
+//         ),
+//         name_sym: TypeSymbol"Bar",
+//         type_params: [],
+//         variants: [],
+//     },
+// )
+

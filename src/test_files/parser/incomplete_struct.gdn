@@ -6,6 +6,7 @@ fun bar() {}
 // expected stdout:
 // Struct(
 //     StructInfo {
+//         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: TypeSymbol"Foo",

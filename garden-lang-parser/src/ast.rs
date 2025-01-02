@@ -581,6 +581,7 @@ pub struct EnumInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructInfo {
+    pub visibility: Visibility,
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name_sym: TypeSymbol,

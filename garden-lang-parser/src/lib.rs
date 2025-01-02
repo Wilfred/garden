@@ -1028,7 +1028,7 @@ fn parse_definition(
         if token.text == "enum" || token.text == "export" && next_token.text == "enum" {
             return Some(parse_enum(src, tokens, id_gen, diagnostics));
         }
-        if token.text == "struct" {
+        if token.text == "struct" || token.text == "export" && next_token.text == "struct" {
             return Some(parse_struct(src, tokens, id_gen, diagnostics));
         }
 
@@ -1179,8 +1179,21 @@ fn parse_struct(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Definition {
+    let mut visibility = Visibility::CurrentFile;
+    let mut first_token = None;
+
+    if let Some(token) = tokens.peek() {
+        if token.text == "export" {
+            let token = tokens.pop().unwrap();
+            visibility = Visibility::Exported(token.position.clone());
+            first_token = Some(token);
+        }
+    }
+
     let struct_token = require_token(tokens, diagnostics, "struct");
-    let doc_comment = parse_doc_comment(&struct_token);
+    let first_token = first_token.unwrap_or_else(|| struct_token.clone());
+
+    let doc_comment = parse_doc_comment(&first_token);
     let name_sym = parse_type_symbol(tokens, id_gen, diagnostics);
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
 
@@ -1211,6 +1224,7 @@ fn parse_struct(
         src_string.clone(),
         position,
         Definition_::Struct(StructInfo {
+            visibility,
             src_string,
             doc_comment,
             name_sym,

@@ -1,5 +1,9 @@
 # 0.19 (unreleased)
 
+## Syntax
+
+Added `^` to raise a number to a power.
+
 # 0.18 (released 31st December 2024)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**

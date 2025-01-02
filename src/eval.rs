@@ -1695,6 +1695,52 @@ fn eval_integer_binop(
                 Value::Integer(lhs_num / rhs_num)
             }
             BinaryOperatorKind::Modulo => Value::Integer(lhs_num % rhs_num),
+            BinaryOperatorKind::Exponent => {
+                if rhs_num < 0 {
+                    return Err((
+                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                        EvalError::ResumableError(
+                            position.clone(),
+                            ErrorMessage(format!(
+                                "Cannot raise an integer to a negative power, got {}.^ {}",
+                                lhs_value.display(env),
+                                rhs_value.display(env),
+                            )),
+                        ),
+                    ));
+                }
+
+                if rhs_num > u32::MAX as i64 {
+                    return Err((
+                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                        EvalError::ResumableError(
+                            position.clone(),
+                            ErrorMessage(format!(
+                                "Exponent is too large, got {}.^ {}",
+                                lhs_value.display(env),
+                                rhs_value.display(env),
+                            )),
+                        ),
+                    ));
+                }
+
+                match lhs_num.checked_pow(rhs_num as u32) {
+                    Some(num) => Value::Integer(num),
+                    None => {
+                        return Err((
+                            RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                            EvalError::ResumableError(
+                                position.clone(),
+                                ErrorMessage(format!(
+                                    "Integer overflow on raising to the power, got {}.^ {}",
+                                    lhs_value.display(env),
+                                    rhs_value.display(env),
+                                )),
+                            ),
+                        ));
+                    }
+                }
+            }
             BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
             BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
             BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
@@ -3635,6 +3681,7 @@ fn eval_expr(
             | BinaryOperatorKind::Multiply
             | BinaryOperatorKind::Divide
             | BinaryOperatorKind::Modulo
+            | BinaryOperatorKind::Exponent
             | BinaryOperatorKind::LessThan
             | BinaryOperatorKind::LessThanOrEqual
             | BinaryOperatorKind::GreaterThan

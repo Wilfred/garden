@@ -225,6 +225,7 @@ pub enum BinaryOperatorKind {
     Multiply,
     Divide,
     Modulo,
+    Exponent,
     Equal,
     NotEqual,
     LessThan,

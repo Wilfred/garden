@@ -1681,13 +1681,12 @@ fn eval_integer_binop(
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
                     return Err((
-                        RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                         EvalError::ResumableError(
                             position.clone(),
-                            // TODO: this looks wrong, it should be the LHS value we print.
                             ErrorMessage(format!(
                                 "Tried to divide {} by zero.",
-                                rhs_value.display(env)
+                                lhs_value.display(env)
                             )),
                         ),
                     ));

@@ -1,0 +1,14 @@
+export fun main(_) {
+  dbg(5 / 0)
+}
+
+// args: run
+// expected stderr:
+// Error: Tried to divide 5 by zero.
+// 
+// --> src/test_files/runtime/div_zero.gdn:2[2m[1m	 fun main()[0m[0m
+//   dbg(5 / 0)
+//       ^^^^^
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// // __toplevel__
+

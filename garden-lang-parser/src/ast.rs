@@ -571,6 +571,7 @@ pub struct FieldInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumInfo {
+    pub visibility: Visibility,
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name_sym: TypeSymbol,

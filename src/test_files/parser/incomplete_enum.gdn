@@ -6,6 +6,7 @@ fun bar() {}
 // expected stdout:
 // Enum(
 //     EnumInfo {
+//         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: TypeSymbol"Foo",

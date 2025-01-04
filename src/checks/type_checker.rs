@@ -118,6 +118,40 @@ impl Visitor for TypeCheckVisitor<'_> {
             }
         }
 
+        let type_hint = &method_info.receiver_hint;
+        if type_bindings.contains_key(&type_hint.sym.name) {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message:
+                    "Methods must be defined on specific types, such as `List`, not generic types."
+                        .to_owned(),
+                position: type_hint.position.clone(),
+            });
+        }
+
+        let mut generic_args_seen = HashSet::new();
+        for type_arg in &type_hint.args {
+            if type_bindings.contains_key(&type_arg.sym.name) {
+                if generic_args_seen.contains(&type_arg.sym.name) {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: "Methods cannot repeat generic type parameters.".to_owned(),
+                        position: type_arg.position.clone(),
+                    });
+                } else {
+                    generic_args_seen.insert(type_arg.sym.name.clone());
+                }
+            } else {
+                self.diagnostics.push(Diagnostic {
+                    level: Level::Error,
+                    message:
+                      "Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`."
+                        .to_owned(),
+                    position: type_arg.position.clone(),
+                });
+            }
+        }
+
         let self_ty = Type::from_hint(&method_info.receiver_hint, &self.env.types, &type_bindings)
             .unwrap_or_err_ty();
         self.bindings.set(&method_info.receiver_sym, self_ty);

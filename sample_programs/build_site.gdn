@@ -9,6 +9,10 @@ fun parse_markdown(src: String): List<MarkdownPart> {
   let current_section: List<String> = []
 
   for line in src.lines() {
+    if (line == "") && current_section.is_empty() {
+      continue
+    }
+
     if line.starts_with("```") {
       let in_code_block = match current_section.first() {
         Some(first_line) => first_line.starts_with("```")
@@ -186,6 +190,10 @@ test render_h2 {
 
 test render_markdown_paragraph {
   assert(render_markdown("foo bar") == "<p>foo bar</p>")
+}
+
+test render_markdown_paragraph_after_heading {
+  assert(render_markdown("# foo\n\nbar") == "<h1>foo</h1>\n<p>bar</p>")
 }
 
 test render_backtick {

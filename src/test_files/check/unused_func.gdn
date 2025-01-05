@@ -32,6 +32,12 @@ fun called_via_block() {}
   called_via_block()
 }
 
+fun called_via_test() {}
+
+test my_test {
+  called_via_test()
+}
+
 fun called_via_method() {}
 
 export fun (this: String) foo(): Unit {
@@ -56,9 +62,14 @@ fun (this: String) used_meth(): Unit {}
 // --> src/test_files/check/unused_func.gdn:25
 // fun unreachable_cycle() {
 //     ^^^^^^^^^^^^^^^^^
+// Warning: `called_via_test` is never called.
+// 
+// --> src/test_files/check/unused_func.gdn:35
+// fun called_via_test() {}
+//     ^^^^^^^^^^^^^^^
 // Warning: `unused_meth` is never called.
 // 
-// --> src/test_files/check/unused_func.gdn:42
+// --> src/test_files/check/unused_func.gdn:48
 // fun (this: String) unused_meth(): Unit {}
 //                    ^^^^^^^^^^^
 // Warning: `unreachable_cycle_1` is never called.

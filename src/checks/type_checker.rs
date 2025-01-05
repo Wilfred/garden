@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, DefinitionId, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, ToplevelItem, TypeHint, TypeName,
+    MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
     VariantInfo,
 };
 use garden_lang_parser::position::Position;
@@ -28,8 +28,8 @@ pub(crate) struct TCSummary {
     pub id_to_doc_comment: FxHashMap<SyntaxId, String>,
     /// A mapping of syntax IDs to their definition positions.
     pub id_to_def_pos: FxHashMap<SyntaxId, Position>,
-    /// A mapping from each toplevel function to the other functions
-    /// it calls.
+    /// A mapping from each toplevel definition to the other functions
+    /// it calls. Does not include tests.
     pub callees: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
 }
 
@@ -108,6 +108,14 @@ struct TypeCheckVisitor<'a> {
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
+    fn visit_test_info(&mut self, test_info: &TestInfo) {
+        // Don't include tests call sites when computing callees, so
+        // discard any additional callee found.
+        let old_callees = self.callees.clone();
+        self.visit_block(&test_info.body);
+        self.callees = old_callees;
+    }
+
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 

@@ -231,15 +231,18 @@ fun build_site(): Unit {
 }
 
 fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: String): Unit {
+  let page_src = page_path.read().or_error()
+  write_website_page(base_tmpl_path, page_src, dest_path)
+}
+
+fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: String): Unit {
   let base_tmpl_src = base_tmpl_path.read().or_error()
   let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {
     Some(s) => s,
     None => ("", "")
   }
 
-  let content_src = page_path.read().or_error()
-  let src = "".join([header.trim_right(), content_src, footer.trim_left()])
-
+  let src = "".join([header.trim_right(), page_src, footer.trim_left()])
   write_file(src, dest_path).or_error()
 }
 

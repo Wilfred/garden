@@ -349,7 +349,7 @@ impl Value {
             Value::Struct {
                 type_name, fields, ..
             } => {
-                let mut s = format!("{type_name} {{ ");
+                let mut s = format!("{type_name}{{ ");
 
                 for (i, (field_name, value)) in fields.iter().enumerate() {
                     if i != 0 {

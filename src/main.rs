@@ -506,7 +506,7 @@ fn run_sandboxed_tests_in_file(
     //
     // Currently it's chosen by bumping it if writing a sample file
     // that hits the limit.
-    env.tick_limit = Some(10_000);
+    env.tick_limit = Some(100_000);
     env.enforce_sandbox = true;
 
     let mut test_at_cursor = None;

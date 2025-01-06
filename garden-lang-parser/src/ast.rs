@@ -433,6 +433,10 @@ pub enum AstId {
     Expr(SyntaxId),
     /// Syntax ID of a symbol. This is not necessarily part of an
     /// expression: it could be a function parameter or type name.
+    ///
+    /// ```
+    /// fun f(foo: Int) {}
+    /// ```
     Sym(SyntaxId),
     TypeSym(SyntaxId),
 }

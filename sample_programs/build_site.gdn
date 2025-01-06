@@ -231,11 +231,6 @@ fun markdown_files(website_dir: Path): List<Path> {
   dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
 }
 
-{
-  let p = Path{ p: "/home/wilfred/projects/garden/website" }
-  markdown_files(p)
-}
-
 // Convert "foo.tmpl.html" to "foo.html".
 fun output_path(template_path: String): String {
   template_path.strip_suffix(".tmpl.html").append(".html")

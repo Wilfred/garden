@@ -1,1 +1,80 @@
-hello world
+<h1>🏡 The Garden Programming Language</h1>
+
+<p>
+  Garden exists because I want a language that is interactively editable. This
+  is impossible to add to an existing language.
+</p>
+
+<h2>Taking REPLs Seriously</h2>
+
+<p>
+  Common Lisp and Smalltalk have a superpower: you can modify running programs.
+  You can redefine functions and modify class definitions without restarting
+  your program.
+</p>
+
+<p>
+  Garden aims to provide that superpower in a conventional language design. I'm
+  trying to provide a very familiar syntax and workflow.
+</p>
+
+<h2>Tooling First</h2>
+
+<p>
+  Garden prioritises developer experience over language functionality. The
+  syntax and semantics are deliberately small, so a small team (or just me!) can
+  build a delightful, credible language experience.
+</p>
+
+<h2>Just Enough Typing</h2>
+
+<p>Types are a nice tool to have too.</p>
+
+<p>
+  Most gradual type systems are intended for incremental adoption in a
+  dynamically typed language. Garden is new, but requires a typing model that
+  works with code of the form:
+</p>
+
+<code>
+  <pre>
+function foo(): String { return "" }
+
+function bar(): Unit {
+    eval("function foo(): Int { return 1 }");
+    let x = foo() + 1
+}
+      </pre
+  >
+</code>
+
+<h2>Sandboxed Execution</h2>
+
+<p>
+  Garden supports sandbox execution without third-party libraries. This is
+  important for two workflows:
+</p>
+
+<p>
+  (1) The IDE can speculatively evaluate snippets of code safely. This is
+  convenient and enables 'mutation testing' for code completion.
+</p>
+
+<p>
+  (2) Libraries can declare what capabilities they need, such as network or
+  disk. This makes third-party libraries safer to install. This will be coarse
+  permissions, similar to OpenBSD's Pledge.
+</p>
+
+<h2>Tooling Oriented Dynamism</h2>
+
+<p>
+  Garden splits its semantics into (1) simple evaluation that is amenable to
+  static analysis, and (2) reflective, dynamic evaluation that is friendly to
+  developer experience.
+</p>
+
+<p>
+  This means that errors in userland are plain <code>Result</code> types, but
+  unhandled errors can be resumed in a Lisp/Smalltalk manner.
+</p>

@@ -77,13 +77,12 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<p><code></code>
-function foo(): String { return "" }</p>
-<p>function bar(): Unit {
+<pre><code>function foo(): String { return "" }
+
+function bar(): Unit {
     eval("function foo(): Int { return 1 }");
     let x = foo() + 1
-}
-<code></code>`</p>
+}</code></pre>
 <h2>Sandboxed Execution</h2>
 <p>Garden supports sandbox execution without third-party libraries. This
 is important for two workflows:</p>

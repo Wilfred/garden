@@ -7,6 +7,7 @@ enum MarkdownPart {
 fun parse_markdown(src: String): List<MarkdownPart> {
   let parts: List<MarkdownPart> = []
   let current_section: List<String> = []
+  let in_code_block = False
 
   for line in src.lines() {
     if (line == "") && current_section.is_empty() {
@@ -14,17 +15,17 @@ fun parse_markdown(src: String): List<MarkdownPart> {
     }
 
     if line.starts_with("```") {
-      let in_code_block = match current_section.first() {
-        Some(first_line) => first_line.starts_with("```")
-        None => False
-      }
-
       current_section = current_section.append(line)
       if in_code_block {
         // Just finished the code block.
         parts = parts.append(Code("\n".join(current_section)))
         current_section = []
+        in_code_block = False
+      } else {
+        in_code_block = True
       }
+    } else if in_code_block {
+      current_section = current_section.append(line)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
         parts = parts.append(Paragraph("\n".join(current_section)))
@@ -210,6 +211,10 @@ test render_link {
 
 test render_triple_backtick {
   assert(render_markdown("```\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
+}
+
+test render_triple_backtick_blank_line {
+  assert(render_markdown("```\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
 }
 
 // A list of all the files in `website_dir` that are templates.

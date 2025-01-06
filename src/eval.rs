@@ -1524,8 +1524,6 @@ fn eval_let(
     //     let just_added_this_var = 1;
     // }
     // ```
-    //
-    // It's annoying if the type checker complains here.
     if expr_value_is_used {
         env.push_value(Value::unit());
     }

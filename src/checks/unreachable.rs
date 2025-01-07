@@ -26,9 +26,7 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
     let mut diagnostics = vec![];
     let mut already_covered_ids = HashSet::new();
     for item in items {
-        let ToplevelItem::Def(definition) = item else {
-            continue;
-        };
+        let ToplevelItem::Def(definition) = item;
 
         let (visibility, symbol, definition_id) = match &definition.2 {
             Definition_::Fun(symbol, fun_info, visibility) => (visibility, symbol, fun_info.def_id),
@@ -63,9 +61,7 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
     let reachable_from = invert(transitively_reachable);
 
     for item in items {
-        let ToplevelItem::Def(definition) = item else {
-            continue;
-        };
+        let ToplevelItem::Def(definition) = item;
 
         match &definition.2 {
             Definition_::Fun(symbol, fun_info, visibility) => {

@@ -14,7 +14,6 @@ pub trait Visitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match item {
             ToplevelItem::Def(def) => self.visit_def(def),
-            ToplevelItem::Expr(expr) => self.visit_expr(&expr.0),
         }
     }
 

@@ -692,7 +692,7 @@ impl Definition_ {
             Definition_::Test(test_info) => test_info.name_sym.is_placeholder(),
             Definition_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
             Definition_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
-            Definition_::Expr(_) => false,
+            Definition_::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
         }
     }
 }
@@ -700,14 +700,12 @@ impl Definition_ {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ToplevelItem {
     Def(Definition),
-    Expr(ToplevelExpression),
 }
 
 impl ToplevelItem {
     pub fn position(&self) -> &Position {
         match self {
             ToplevelItem::Def(definition) => &definition.1,
-            ToplevelItem::Expr(toplevel_expression) => &toplevel_expression.0.position,
         }
     }
 }

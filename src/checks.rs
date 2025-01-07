@@ -34,9 +34,8 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
 
     let mut definitions: Vec<Definition> = vec![];
     for item in items {
-        if let ToplevelItem::Def(def) = item {
-            definitions.push(def.clone());
-        }
+        let ToplevelItem::Def(def) = item;
+        definitions.push(def.clone());
     }
 
     diagnostics.extend(check_free_variables(items, env));

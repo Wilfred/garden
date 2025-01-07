@@ -2143,7 +2143,19 @@ fn parse_toplevel_expr(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
-    ToplevelItem::Expr(ToplevelExpression(expr))
+
+    let position = expr.position.clone();
+
+    let src_string = SourceString {
+        offset: position.start_offset,
+        src: src[position.start_offset..position.end_offset].to_owned(),
+    };
+
+    ToplevelItem::Def(Definition(
+        src_string,
+        position,
+        Definition_::Expr(ToplevelExpression(expr)),
+    ))
 }
 
 fn parse_toplevel_items_from_tokens(
@@ -2159,7 +2171,6 @@ fn parse_toplevel_items_from_tokens(
         match parse_toplevel_item_from_tokens(src, tokens, id_gen, diagnostics) {
             Some(item) => {
                 let was_invalid = match &item {
-                    ToplevelItem::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
                     ToplevelItem::Def(definition) => definition.2.is_invalid_or_placeholder(),
                 };
 

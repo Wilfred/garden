@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::{eval, load_toplevel_items, ExpressionState, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use garden_lang_parser::ast::{IdGenerator, ToplevelItem};
+use garden_lang_parser::ast::{Definition, Definition_, IdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -114,8 +114,11 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
 
                 let mut exprs = vec![];
                 for item in items {
-                    if let ToplevelItem::Expr(expr) = item {
-                        exprs.push(expr);
+                    match item {
+                        ToplevelItem::Def(Definition(_, _, Definition_::Expr(e))) => {
+                            exprs.push(e.clone());
+                        }
+                        _ => {}
                     }
                 }
 

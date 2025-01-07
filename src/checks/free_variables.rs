@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::LetDestination;
+use garden_lang_parser::ast::{Expression_, LetDestination};
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
@@ -170,6 +170,19 @@ impl FreeVariableVisitor<'_> {
 
 impl Visitor for FreeVariableVisitor<'_> {
     fn visit_def(&mut self, def: &Definition) {
+        // Don't worry about unused variables in top level
+        // expressions, as they're legitimate in a REPL. If the user
+        // has written `let x = 1` they might be planning on using `x`
+        // in their next REPL expression!
+        if let Definition_::Expr(e) = &def.2 {
+            match &e.0.expr_ {
+                // If it's a block, it's definitely done, so unused
+                // variable warnings are useful.
+                Expression_::Block(_) => {}
+                _ => return,
+            }
+        }
+
         self.push_scope();
         if let Definition_::Method(method_info, _) = &def.2 {
             self.add_binding(&method_info.receiver_sym);

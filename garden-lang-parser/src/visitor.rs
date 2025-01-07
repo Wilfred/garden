@@ -29,6 +29,7 @@ pub trait Visitor {
             Definition_::Test(test_info) => self.visit_test_info(test_info),
             Definition_::Enum(enum_info) => self.visit_enum_info(enum_info),
             Definition_::Struct(struct_info) => self.visit_struct_info(struct_info),
+            Definition_::Expr(toplevel_expression) => self.visit_expr(&toplevel_expression.0),
         }
     }
 

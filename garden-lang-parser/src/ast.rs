@@ -675,6 +675,10 @@ pub enum Definition_ {
     /// struct Foo { x: Int, y: Int }
     /// ```
     Struct(StructInfo),
+    /// ```garden
+    /// { println("hello world") }
+    /// ```
+    Expr(ToplevelExpression),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -688,6 +692,7 @@ impl Definition_ {
             Definition_::Test(test_info) => test_info.name_sym.is_placeholder(),
             Definition_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
             Definition_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
+            Definition_::Expr(_) => false,
         }
     }
 }

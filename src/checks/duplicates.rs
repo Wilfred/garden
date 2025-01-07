@@ -98,6 +98,7 @@ impl Visitor for DuplicatesVisitor {
                     self.types_seen.insert(name_sym.name.clone());
                 }
             }
+            Definition_::Expr(_) => {}
         }
 
         self.visit_def_(&def.2);

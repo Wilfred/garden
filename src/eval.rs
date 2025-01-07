@@ -614,6 +614,23 @@ pub(crate) fn eval_up_to(
                 // nothing to do
                 return Err(EvalUpToErr::NoExpressionFound);
             }
+            Definition_::Expr(_) => {
+                env.stop_at_expr_id = Some(expr_id);
+
+                let res = eval_toplevel_items(&[item.clone()], env, session);
+                env.stop_at_expr_id = None;
+
+                match res {
+                    Ok(mut eval_summary) => {
+                        let Some(value) = eval_summary.values.pop() else {
+                            env.stack.pop_to_toplevel();
+                            return Err(EvalUpToErr::NoExpressionFound);
+                        };
+                        Ok((value, position))
+                    }
+                    Err(e) => Err(e),
+                }
+            }
         },
         ToplevelItem::Expr(_) => {
             env.stop_at_expr_id = Some(expr_id);
@@ -975,6 +992,7 @@ fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
                 };
                 new_syms.push(name_as_sym);
             }
+            Definition_::Expr(_) => {}
         }
     }
 

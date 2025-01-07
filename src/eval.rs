@@ -731,6 +731,7 @@ fn assign_var_pos(
         let symbol = match &expr.expr_ {
             Expression_::Assign(symbol, _) => symbol,
             Expression_::AssignUpdate(symbol, _, _) => symbol,
+            Expression_::ForIn(symbol, _, _) => symbol,
             _ => {
                 continue;
             }
@@ -3903,22 +3904,30 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             // we were requested to stop at, return that value
             // immediately.
             //
-            // For nested expressions, we want to stop when the
-            // evaluation is fully done. For evaluations that don't
-            // recurse (e.g. variable lookup), we set done_children in
-            // the match above.
-            if expr_state.done_children()
-                && env.stop_at_expr_id.is_some()
-                && env.stop_at_expr_id.as_ref() == Some(&outer_expr.id)
+            if env.stop_at_expr_id.is_some() && env.stop_at_expr_id.as_ref() == Some(&outer_expr.id)
             {
-                let v = if let Some(value) = env.current_frame().evalled_values.last().cloned() {
-                    value
-                } else {
-                    // TODO: this should probably be an Err() case.
-                    Value::String("__ERROR: no expressions evaluated. This is a bug.".to_owned())
-                };
+                if expr_state.done_children() {
+                    let v = if let Some(value) = env.current_frame().evalled_values.last().cloned()
+                    {
+                        value
+                    } else {
+                        // TODO: this should probably be an Err() case.
+                        Value::String(
+                            "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
+                        )
+                    };
 
-                return Ok(v);
+                    return Ok(v);
+                }
+
+                // `for x in y { z }` loops are a special case. We
+                // want to evaluate `y`, enter the block, then stop
+                // evaluation, so we know the first value of `x`.
+                if matches!(outer_expr.expr_, Expression_::ForIn(_, _, _))
+                    && matches!(expr_state, ExpressionState::PartiallyEvaluated)
+                {
+                    return Ok(Value::unit());
+                }
             }
         } else {
             // No more expressions in this stack frame.

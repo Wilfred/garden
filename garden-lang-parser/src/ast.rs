@@ -663,8 +663,17 @@ pub enum Definition_ {
     /// export fun (this: MyType) baz() {}
     /// ```
     Method(MethodInfo, Visibility),
+    /// ```garden
+    /// test foo { assert(1 == 2) }
+    /// ```
     Test(TestInfo),
+    /// ```garden
+    /// enum Foo { Red, Green, Custom(String) }
+    /// ```
     Enum(EnumInfo),
+    /// ```garden
+    /// struct Foo { x: Int, y: Int }
+    /// ```
     Struct(StructInfo),
 }
 

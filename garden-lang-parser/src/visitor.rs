@@ -12,9 +12,7 @@ use crate::{
 /// occurrences of string literals anywhere in a function body.
 pub trait Visitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        match item {
-            ToplevelItem::Def(def) => self.visit_def(def),
-        }
+        self.visit_def(&item.0);
     }
 
     fn visit_def(&mut self, def: &Definition) {

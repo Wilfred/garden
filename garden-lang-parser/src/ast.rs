@@ -698,14 +698,10 @@ impl Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ToplevelItem {
-    Def(Definition),
-}
+pub struct ToplevelItem(pub Definition);
 
 impl ToplevelItem {
     pub fn position(&self) -> &Position {
-        match self {
-            ToplevelItem::Def(definition) => &definition.1,
-        }
+        &self.0 .1
     }
 }

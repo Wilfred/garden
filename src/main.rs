@@ -465,10 +465,10 @@ fn dump_ast(src: &str, path: &Path) {
 
     for item in items {
         match item {
-            ToplevelItem::Def(Definition(_, _, Definition_::Expr(e))) => {
+            ToplevelItem(Definition(_, _, Definition_::Expr(e))) => {
                 println!("{:#?}", e.0.expr_);
             }
-            ToplevelItem::Def(d) => {
+            ToplevelItem(d) => {
                 println!("{:#?}", d.2);
             }
         }
@@ -511,7 +511,7 @@ fn run_sandboxed_tests_in_file(
 
     let mut test_at_cursor = None;
     for item in items.iter() {
-        let ToplevelItem::Def(def) = &item;
+        let ToplevelItem(def) = &item;
         if def.1.contains_offset(offset) && matches!(def.2, Definition_::Test(_)) {
             test_at_cursor = Some(item.clone());
             break;

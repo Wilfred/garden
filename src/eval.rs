@@ -269,7 +269,7 @@ pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> Topl
     let mut defs = vec![];
     for item in items {
         match item {
-            ToplevelItem::Def(def) => {
+            ToplevelItem(def) => {
                 defs.push(def.clone());
             }
         }
@@ -289,7 +289,7 @@ pub(crate) fn eval_toplevel_items(
     let mut exprs = vec![];
     for item in items {
         match item {
-            ToplevelItem::Def(def) => match &def.2 {
+            ToplevelItem(def) => match &def.2 {
                 Definition_::Expr(toplevel_expression) => {
                     exprs.push(toplevel_expression.0.clone());
                 }
@@ -325,7 +325,7 @@ pub(crate) fn eval_tests_until_error(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem::Def(Definition(_, _, Definition_::Test(test))) = item {
+        if let ToplevelItem(Definition(_, _, Definition_::Test(test))) = item {
             test_defs.push(test);
         }
     }
@@ -367,7 +367,7 @@ pub(crate) fn eval_tests(
 
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem::Def(Definition(_, _, Definition_::Test(test))) = item {
+        if let ToplevelItem(Definition(_, _, Definition_::Test(test))) = item {
             test_defs.push(test);
         }
     }
@@ -434,7 +434,7 @@ pub(crate) fn eval_up_to_param(
     id: SyntaxId,
 ) -> Option<(Value, Position)> {
     for item in items {
-        let ToplevelItem::Def(def) = item;
+        let ToplevelItem(def) = item;
         match &def.2 {
             Definition_::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
@@ -555,7 +555,7 @@ pub(crate) fn eval_up_to(
     // position.
 
     let mut res: Result<_, EvalError> = match item {
-        ToplevelItem::Def(def) => match &def.2 {
+        ToplevelItem(def) => match &def.2 {
             Definition_::Fun(name_sym, fun_info, _) => {
                 load_toplevel_items(&[item.clone()], env);
                 let args = match env.prev_call_args.get(&name_sym.name) {
@@ -4328,7 +4328,7 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     let mut exprs = vec![];
     for item in items {
         match item {
-            ToplevelItem::Def(Definition(_, _, Definition_::Expr(expr))) => {
+            ToplevelItem(Definition(_, _, Definition_::Expr(expr))) => {
                 exprs.push(expr.0.clone());
             }
             _ => {}
@@ -4387,7 +4387,7 @@ mod tests {
         let mut defs = vec![];
         for item in items {
             match item {
-                ToplevelItem::Def(def) => {
+                ToplevelItem(def) => {
                     defs.push(def.clone());
                 }
             }
@@ -4403,7 +4403,7 @@ mod tests {
         let mut exprs = vec![];
         for item in items {
             match item {
-                ToplevelItem::Def(Definition(_, _, Definition_::Expr(e))) => exprs.push(e.0),
+                ToplevelItem(Definition(_, _, Definition_::Expr(e))) => exprs.push(e.0),
                 _ => unreachable!(),
             }
         }

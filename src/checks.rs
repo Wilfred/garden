@@ -34,7 +34,7 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
 
     let mut definitions: Vec<Definition> = vec![];
     for item in items {
-        let ToplevelItem::Def(def) = item;
+        let ToplevelItem(def) = item;
         definitions.push(def.clone());
     }
 

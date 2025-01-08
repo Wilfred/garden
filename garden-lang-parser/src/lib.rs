@@ -2151,7 +2151,7 @@ fn parse_toplevel_expr(
         src: src[position.start_offset..position.end_offset].to_owned(),
     };
 
-    ToplevelItem::Def(Definition(
+    ToplevelItem(Definition(
         src_string,
         position,
         Definition_::Expr(ToplevelExpression(expr)),
@@ -2171,7 +2171,7 @@ fn parse_toplevel_items_from_tokens(
         match parse_toplevel_item_from_tokens(src, tokens, id_gen, diagnostics) {
             Some(item) => {
                 let was_invalid = match &item {
-                    ToplevelItem::Def(definition) => definition.2.is_invalid_or_placeholder(),
+                    ToplevelItem(definition) => definition.2.is_invalid_or_placeholder(),
                 };
 
                 items.push(item);
@@ -2203,7 +2203,7 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "struct"
             || token.text == "export"
         {
-            return parse_definition(src, tokens, id_gen, diagnostics).map(ToplevelItem::Def);
+            return parse_definition(src, tokens, id_gen, diagnostics).map(ToplevelItem);
         }
     }
 

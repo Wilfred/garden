@@ -267,12 +267,8 @@ pub(crate) struct ToplevelEvalSummary {
 /// are skipped.
 pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
-    for item in items {
-        match item {
-            ToplevelItem(def) => {
-                defs.push(def.clone());
-            }
-        }
+    for def in items {
+        defs.push(def.clone());
     }
 
     eval_defs(&defs, env)
@@ -287,16 +283,14 @@ pub(crate) fn eval_toplevel_items(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut defs = vec![];
     let mut exprs = vec![];
-    for item in items {
-        match item {
-            ToplevelItem(def) => match &def.2 {
-                Definition_::Expr(toplevel_expression) => {
-                    exprs.push(toplevel_expression.0.clone());
-                }
-                _ => {
-                    defs.push(def.clone());
-                }
-            },
+    for def in items {
+        match &def.2 {
+            Definition_::Expr(toplevel_expression) => {
+                exprs.push(toplevel_expression.0.clone());
+            }
+            _ => {
+                defs.push(def.clone());
+            }
         }
     }
 
@@ -325,7 +319,7 @@ pub(crate) fn eval_tests_until_error(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem(Definition(_, _, Definition_::Test(test))) = item {
+        if let Definition(_, _, Definition_::Test(test)) = item {
             test_defs.push(test);
         }
     }
@@ -367,7 +361,7 @@ pub(crate) fn eval_tests(
 
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem(Definition(_, _, Definition_::Test(test))) = item {
+        if let Definition(_, _, Definition_::Test(test)) = item {
             test_defs.push(test);
         }
     }
@@ -433,8 +427,7 @@ pub(crate) fn eval_up_to_param(
     items: &[ToplevelItem],
     id: SyntaxId,
 ) -> Option<(Value, Position)> {
-    for item in items {
-        let ToplevelItem(def) = item;
+    for def in items {
         match &def.2 {
             Definition_::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
@@ -554,83 +547,80 @@ pub(crate) fn eval_up_to(
     // destructuring tuple, we want to return the tuple element and
     // position.
 
-    let mut res: Result<_, EvalError> = match item {
-        ToplevelItem(def) => match &def.2 {
-            Definition_::Fun(name_sym, fun_info, _) => {
-                load_toplevel_items(&[item.clone()], env);
-                let args = match env.prev_call_args.get(&name_sym.name) {
-                    _ if fun_info.params.is_empty() => vec![],
-                    Some(prev_args) => prev_args.clone(),
-                    None => {
-                        // We don't have any known values that we can use, give up.
-                        return Err(EvalUpToErr::NoValueAvailable);
-                    }
-                };
-
-                env.stop_at_expr_id = Some(expr_id);
-                let res = eval_toplevel_call(&name_sym.name, &args, env, session, id_gen);
-                env.stop_at_expr_id = None;
-
-                res.map(|v| (v, position))
-            }
-            Definition_::Method(method_info, _) => {
-                load_toplevel_items(&[item.clone()], env);
-                let type_name = &method_info.receiver_hint.sym.name;
-
-                let Some(prev_calls_for_type) = env.prev_method_call_args.get(type_name).cloned()
-                else {
+    let mut res: Result<_, EvalError> = match &item.2 {
+        Definition_::Fun(name_sym, fun_info, _) => {
+            load_toplevel_items(&[item.clone()], env);
+            let args = match env.prev_call_args.get(&name_sym.name) {
+                _ if fun_info.params.is_empty() => vec![],
+                Some(prev_args) => prev_args.clone(),
+                None => {
+                    // We don't have any known values that we can use, give up.
                     return Err(EvalUpToErr::NoValueAvailable);
-                };
-                let Some((prev_recv, prev_args)) =
-                    prev_calls_for_type.get(&method_info.name_sym.name)
-                else {
-                    return Err(EvalUpToErr::NoValueAvailable);
-                };
-
-                env.stop_at_expr_id = Some(expr_id);
-                let res = eval_toplevel_method_call(
-                    prev_recv,
-                    &method_info.name_sym.name,
-                    prev_args,
-                    env,
-                    session,
-                    id_gen,
-                );
-                env.stop_at_expr_id = None;
-
-                res.map(|v| (v, position))
-            }
-            Definition_::Test(test) => {
-                env.stop_at_expr_id = Some(expr_id);
-
-                push_test_stackframe(test, env);
-                let res = eval(env, session);
-                env.stop_at_expr_id = None;
-
-                res.map(|v| (v, position))
-            }
-            Definition_::Enum(_) | Definition_::Struct(_) => {
-                // nothing to do
-                return Err(EvalUpToErr::NoExpressionFound);
-            }
-            Definition_::Expr(_) => {
-                env.stop_at_expr_id = Some(expr_id);
-
-                let res = eval_toplevel_items(&[item.clone()], env, session);
-                env.stop_at_expr_id = None;
-
-                match res {
-                    Ok(mut eval_summary) => {
-                        let Some(value) = eval_summary.values.pop() else {
-                            env.stack.pop_to_toplevel();
-                            return Err(EvalUpToErr::NoExpressionFound);
-                        };
-                        Ok((value, position))
-                    }
-                    Err(e) => Err(e),
                 }
+            };
+
+            env.stop_at_expr_id = Some(expr_id);
+            let res = eval_toplevel_call(&name_sym.name, &args, env, session, id_gen);
+            env.stop_at_expr_id = None;
+
+            res.map(|v| (v, position))
+        }
+        Definition_::Method(method_info, _) => {
+            load_toplevel_items(&[item.clone()], env);
+            let type_name = &method_info.receiver_hint.sym.name;
+
+            let Some(prev_calls_for_type) = env.prev_method_call_args.get(type_name).cloned()
+            else {
+                return Err(EvalUpToErr::NoValueAvailable);
+            };
+            let Some((prev_recv, prev_args)) = prev_calls_for_type.get(&method_info.name_sym.name)
+            else {
+                return Err(EvalUpToErr::NoValueAvailable);
+            };
+
+            env.stop_at_expr_id = Some(expr_id);
+            let res = eval_toplevel_method_call(
+                prev_recv,
+                &method_info.name_sym.name,
+                prev_args,
+                env,
+                session,
+                id_gen,
+            );
+            env.stop_at_expr_id = None;
+
+            res.map(|v| (v, position))
+        }
+        Definition_::Test(test) => {
+            env.stop_at_expr_id = Some(expr_id);
+
+            push_test_stackframe(test, env);
+            let res = eval(env, session);
+            env.stop_at_expr_id = None;
+
+            res.map(|v| (v, position))
+        }
+        Definition_::Enum(_) | Definition_::Struct(_) => {
+            // nothing to do
+            return Err(EvalUpToErr::NoExpressionFound);
+        }
+        Definition_::Expr(_) => {
+            env.stop_at_expr_id = Some(expr_id);
+
+            let res = eval_toplevel_items(&[item.clone()], env, session);
+            env.stop_at_expr_id = None;
+
+            match res {
+                Ok(mut eval_summary) => {
+                    let Some(value) = eval_summary.values.pop() else {
+                        env.stack.pop_to_toplevel();
+                        return Err(EvalUpToErr::NoExpressionFound);
+                    };
+                    Ok((value, position))
+                }
+                Err(e) => Err(e),
             }
-        },
+        }
     };
 
     if let Ok((value, pos)) = &mut res {
@@ -4328,7 +4318,7 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     let mut exprs = vec![];
     for item in items {
         match item {
-            ToplevelItem(Definition(_, _, Definition_::Expr(expr))) => {
+            Definition(_, _, Definition_::Expr(expr)) => {
                 exprs.push(expr.0.clone());
             }
             _ => {}
@@ -4384,16 +4374,7 @@ mod tests {
         let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, id_gen);
         assert!(errors.is_empty());
 
-        let mut defs = vec![];
-        for item in items {
-            match item {
-                ToplevelItem(def) => {
-                    defs.push(def.clone());
-                }
-            }
-        }
-
-        defs
+        items
     }
 
     fn parse_exprs_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<Expression> {
@@ -4403,7 +4384,7 @@ mod tests {
         let mut exprs = vec![];
         for item in items {
             match item {
-                ToplevelItem(Definition(_, _, Definition_::Expr(e))) => exprs.push(e.0),
+                Definition(_, _, Definition_::Expr(e)) => exprs.push(e.0),
                 _ => unreachable!(),
             }
         }

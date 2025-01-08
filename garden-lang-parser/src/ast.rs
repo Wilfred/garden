@@ -697,11 +697,10 @@ impl Definition_ {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToplevelItem(pub Definition);
+pub type ToplevelItem = Definition;
 
 impl ToplevelItem {
     pub fn position(&self) -> &Position {
-        &self.0 .1
+        &self.1
     }
 }

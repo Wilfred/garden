@@ -33,8 +33,7 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     let mut diagnostics = vec![];
 
     let mut definitions: Vec<Definition> = vec![];
-    for item in items {
-        let ToplevelItem(def) = item;
+    for def in items {
         definitions.push(def.clone());
     }
 

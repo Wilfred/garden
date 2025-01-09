@@ -2,7 +2,7 @@ use garden_lang_parser::ast::{Expression_, LetDestination};
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
-        Block, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem,
+        Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem, ToplevelItem_,
         TypeHint,
     },
     position::Position,
@@ -174,7 +174,7 @@ impl Visitor for FreeVariableVisitor<'_> {
         // expressions, as they're legitimate in a REPL. If the user
         // has written `let x = 1` they might be planning on using `x`
         // in their next REPL expression!
-        if let Definition_::Expr(e) = &def.2 {
+        if let ToplevelItem_::Expr(e) = &def.2 {
             match &e.0.expr_ {
                 // If it's a block, it's definitely done, so unused
                 // variable warnings are useful.
@@ -184,7 +184,7 @@ impl Visitor for FreeVariableVisitor<'_> {
         }
 
         self.push_scope();
-        if let Definition_::Method(method_info, _) = &def.2 {
+        if let ToplevelItem_::Method(method_info, _) = &def.2 {
             self.add_binding(&method_info.receiver_sym);
             // Always treat the method receiver as used, because we
             // can't avoid defining this parameter even when we don't

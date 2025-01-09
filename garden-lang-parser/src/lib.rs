@@ -1163,7 +1163,7 @@ fn parse_enum(
     ToplevelItem(
         src_string.clone(),
         position,
-        Definition_::Enum(EnumInfo {
+        ToplevelItem_::Enum(EnumInfo {
             visibility,
             src_string,
             doc_comment,
@@ -1224,7 +1224,7 @@ fn parse_struct(
     ToplevelItem(
         src_string.clone(),
         position,
-        Definition_::Struct(StructInfo {
+        ToplevelItem_::Struct(StructInfo {
             visibility,
             src_string,
             doc_comment,
@@ -1263,7 +1263,7 @@ fn parse_test(
     ToplevelItem(
         src_string.clone(),
         position,
-        Definition_::Test(TestInfo {
+        ToplevelItem_::Test(TestInfo {
             src_string,
             doc_comment,
             name_sym: name,
@@ -1855,7 +1855,7 @@ fn parse_method(
     ToplevelItem(
         src_string.clone(),
         position,
-        Definition_::Method(meth_info, visibility),
+        ToplevelItem_::Method(meth_info, visibility),
     )
 }
 
@@ -1900,7 +1900,7 @@ fn parse_function(
     Some(ToplevelItem(
         src_string.clone(),
         position,
-        Definition_::Fun(
+        ToplevelItem_::Fun(
             name_sym.clone(),
             FunInfo {
                 src_string,
@@ -2154,7 +2154,7 @@ fn parse_toplevel_expr(
     ToplevelItem(
         src_string,
         position,
-        Definition_::Expr(ToplevelExpression(expr)),
+        ToplevelItem_::Expr(ToplevelExpression(expr)),
     )
 }
 

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{DefinitionId, Definition_, ToplevelItem, Visibility};
+use garden_lang_parser::ast::{DefinitionId, ToplevelItem, ToplevelItem_, Visibility};
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -27,8 +27,10 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
     let mut already_covered_ids = HashSet::new();
     for definition in items {
         let (visibility, symbol, definition_id) = match &definition.2 {
-            Definition_::Fun(symbol, fun_info, visibility) => (visibility, symbol, fun_info.def_id),
-            Definition_::Method(method_info, visibility) => (
+            ToplevelItem_::Fun(symbol, fun_info, visibility) => {
+                (visibility, symbol, fun_info.def_id)
+            }
+            ToplevelItem_::Method(method_info, visibility) => (
                 visibility,
                 &method_info.name_sym,
                 method_info.fun_info().and_then(|fun_info| fun_info.def_id),
@@ -60,7 +62,7 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
 
     for definition in items {
         match &definition.2 {
-            Definition_::Fun(symbol, fun_info, visibility) => {
+            ToplevelItem_::Fun(symbol, fun_info, visibility) => {
                 if matches!(visibility, Visibility::Exported(_)) {
                     continue;
                 }

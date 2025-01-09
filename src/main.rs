@@ -65,7 +65,7 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::eval_tests;
 use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
-use garden_lang_parser::ast::{Definition_, IdGenerator, SourceString, ToplevelItem};
+use garden_lang_parser::ast::{IdGenerator, SourceString, ToplevelItem, ToplevelItem_};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -465,7 +465,7 @@ fn dump_ast(src: &str, path: &Path) {
 
     for item in items {
         match item {
-            ToplevelItem(_, _, Definition_::Expr(e)) => {
+            ToplevelItem(_, _, ToplevelItem_::Expr(e)) => {
                 println!("{:#?}", e.0.expr_);
             }
             d => {
@@ -511,7 +511,7 @@ fn run_sandboxed_tests_in_file(
 
     let mut test_at_cursor = None;
     for def in items.iter() {
-        if def.1.contains_offset(offset) && matches!(def.2, Definition_::Test(_)) {
+        if def.1.contains_offset(offset) && matches!(def.2, ToplevelItem_::Test(_)) {
             test_at_cursor = Some(def.clone());
             break;
         }

@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use crate::{
-    Block, Definition_, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
-    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo, Pattern,
+    StructInfo, Symbol, TestInfo, ToplevelItem, ToplevelItem_, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -15,14 +15,14 @@ pub trait Visitor {
         self.visit_def_(&def.2);
     }
 
-    fn visit_def_(&mut self, def_: &Definition_) {
+    fn visit_def_(&mut self, def_: &ToplevelItem_) {
         match &def_ {
-            Definition_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
-            Definition_::Method(method_info, _) => self.visit_method_info(method_info),
-            Definition_::Test(test_info) => self.visit_test_info(test_info),
-            Definition_::Enum(enum_info) => self.visit_enum_info(enum_info),
-            Definition_::Struct(struct_info) => self.visit_struct_info(struct_info),
-            Definition_::Expr(toplevel_expression) => self.visit_expr(&toplevel_expression.0),
+            ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
+            ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
+            ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
+            ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
+            ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
+            ToplevelItem_::Expr(toplevel_expression) => self.visit_expr(&toplevel_expression.0),
         }
     }
 

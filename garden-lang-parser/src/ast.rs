@@ -652,7 +652,7 @@ impl MethodInfo {
 pub struct DefinitionId(pub usize);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Definition_ {
+pub enum ToplevelItem_ {
     /// ```garden
     /// fun foo() {}
     /// export fun bar() {}
@@ -682,17 +682,17 @@ pub enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToplevelItem(pub SourceString, pub Position, pub Definition_);
+pub struct ToplevelItem(pub SourceString, pub Position, pub ToplevelItem_);
 
-impl Definition_ {
+impl ToplevelItem_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
         match self {
-            Definition_::Fun(symbol, _, _) => symbol.is_placeholder(),
-            Definition_::Method(method_info, _) => method_info.name_sym.is_placeholder(),
-            Definition_::Test(test_info) => test_info.name_sym.is_placeholder(),
-            Definition_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
-            Definition_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
-            Definition_::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
+            ToplevelItem_::Fun(symbol, _, _) => symbol.is_placeholder(),
+            ToplevelItem_::Method(method_info, _) => method_info.name_sym.is_placeholder(),
+            ToplevelItem_::Test(test_info) => test_info.name_sym.is_placeholder(),
+            ToplevelItem_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
+            ToplevelItem_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
+            ToplevelItem_::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
         }
     }
 }

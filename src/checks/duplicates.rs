@@ -6,7 +6,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{Definition_, SymbolName, ToplevelItem, TypeName};
+use garden_lang_parser::ast::{SymbolName, ToplevelItem, ToplevelItem_, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
@@ -24,7 +24,7 @@ struct DuplicatesVisitor {
 impl Visitor for DuplicatesVisitor {
     fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
         match &def.2 {
-            Definition_::Fun(sym, _, _) => {
+            ToplevelItem_::Fun(sym, _, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
                     self.diagnostics.push(Diagnostic {
                         message: format!(
@@ -39,7 +39,7 @@ impl Visitor for DuplicatesVisitor {
                         .insert(sym.name.clone(), sym.position.clone());
                 }
             }
-            Definition_::Method(method_info, _) => {
+            ToplevelItem_::Method(method_info, _) => {
                 let meth_sym = &method_info.name_sym;
 
                 let mut is_repeat = false;
@@ -67,8 +67,8 @@ impl Visitor for DuplicatesVisitor {
                     });
                 }
             }
-            Definition_::Test(_) => {}
-            Definition_::Enum(enum_info) => {
+            ToplevelItem_::Test(_) => {}
+            ToplevelItem_::Enum(enum_info) => {
                 let name_sym = &enum_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
@@ -83,7 +83,7 @@ impl Visitor for DuplicatesVisitor {
                     self.types_seen.insert(name_sym.name.clone());
                 }
             }
-            Definition_::Struct(struct_info) => {
+            ToplevelItem_::Struct(struct_info) => {
                 let name_sym = &struct_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
@@ -98,7 +98,7 @@ impl Visitor for DuplicatesVisitor {
                     self.types_seen.insert(name_sym.name.clone());
                 }
             }
-            Definition_::Expr(_) => {}
+            ToplevelItem_::Expr(_) => {}
         }
 
         self.visit_def_(&def.2);

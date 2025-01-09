@@ -599,6 +599,9 @@ pub struct StructInfo {
     pub fields: Vec<FieldInfo>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportInfo {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuiltinMethodKind {
     ListAppend,
@@ -676,6 +679,10 @@ pub enum ToplevelItem_ {
     /// ```
     Struct(StructInfo),
     /// ```garden
+    /// import "./foo.gdn"
+    /// ```
+    Import(ImportInfo),
+    /// ```garden
     /// { println("hello world") }
     /// ```
     Expr(ToplevelExpression),
@@ -693,6 +700,7 @@ impl ToplevelItem_ {
             ToplevelItem_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
             ToplevelItem_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
             ToplevelItem_::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
+            ToplevelItem_::Import(_) => false,
         }
     }
 }

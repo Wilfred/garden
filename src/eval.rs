@@ -373,6 +373,7 @@ pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> Topl
                 new_syms.push(name_as_sym);
             }
             ToplevelItem_::Expr(_) => {}
+            ToplevelItem_::Import(_) => todo!(),
         }
     }
 
@@ -708,7 +709,7 @@ pub(crate) fn eval_up_to(
 
             res.map(|v| (v, position))
         }
-        ToplevelItem_::Enum(_) | ToplevelItem_::Struct(_) => {
+        ToplevelItem_::Enum(_) | ToplevelItem_::Struct(_) | ToplevelItem_::Import(_) => {
             // nothing to do
             return Err(EvalUpToErr::NoExpressionFound);
         }

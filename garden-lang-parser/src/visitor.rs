@@ -16,13 +16,14 @@ pub trait Visitor {
     }
 
     fn visit_def_(&mut self, def_: &ToplevelItem_) {
-        match &def_ {
+        match def_ {
             ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
             ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
             ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
             ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
             ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
             ToplevelItem_::Expr(toplevel_expression) => self.visit_expr(&toplevel_expression.0),
+            ToplevelItem_::Import(_) => {}
         }
     }
 

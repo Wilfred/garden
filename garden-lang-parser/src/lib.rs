@@ -1018,7 +1018,7 @@ fn parse_definition(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Option<Definition> {
+) -> Option<ToplevelItem> {
     if let Some((token, next_token)) = tokens.peek_two() {
         if token.text == "fun" || token.text == "export" && next_token.text == "fun" {
             return parse_function_or_method(src, tokens, id_gen, diagnostics);
@@ -1119,7 +1119,7 @@ fn parse_enum(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Definition {
+) -> ToplevelItem {
     let mut visibility = Visibility::CurrentFile;
     let mut first_token = None;
 
@@ -1160,7 +1160,7 @@ fn parse_enum(
 
     let position = Position::merge(&enum_token.position, &close_brace_pos);
 
-    Definition(
+    ToplevelItem(
         src_string.clone(),
         position,
         Definition_::Enum(EnumInfo {
@@ -1179,7 +1179,7 @@ fn parse_struct(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Definition {
+) -> ToplevelItem {
     let mut visibility = Visibility::CurrentFile;
     let mut first_token = None;
 
@@ -1221,7 +1221,7 @@ fn parse_struct(
 
     let position = Position::merge(&struct_token.position, &close_brace_pos);
 
-    Definition(
+    ToplevelItem(
         src_string.clone(),
         position,
         Definition_::Struct(StructInfo {
@@ -1240,7 +1240,7 @@ fn parse_test(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Definition {
+) -> ToplevelItem {
     let test_token = require_token(tokens, diagnostics, "test");
     let doc_comment = parse_doc_comment(&test_token);
 
@@ -1260,7 +1260,7 @@ fn parse_test(
 
     let position = Position::merge(&test_token.position, &body.close_brace);
 
-    Definition(
+    ToplevelItem(
         src_string.clone(),
         position,
         Definition_::Test(TestInfo {
@@ -1731,7 +1731,7 @@ fn parse_function_or_method(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Option<Definition> {
+) -> Option<ToplevelItem> {
     let mut visibility = Visibility::CurrentFile;
     let mut first_token = None;
 
@@ -1785,7 +1785,7 @@ fn parse_method(
     diagnostics: &mut Vec<ParseError>,
     first_token: Token,
     visibility: Visibility,
-) -> Definition {
+) -> ToplevelItem {
     let doc_comment = parse_doc_comment(&first_token);
 
     require_token(tokens, diagnostics, "(");
@@ -1852,7 +1852,7 @@ fn parse_method(
 
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
-    Definition(
+    ToplevelItem(
         src_string.clone(),
         position,
         Definition_::Method(meth_info, visibility),
@@ -1866,7 +1866,7 @@ fn parse_function(
     diagnostics: &mut Vec<ParseError>,
     first_token: Token,
     visibility: Visibility,
-) -> Option<Definition> {
+) -> Option<ToplevelItem> {
     let doc_comment = parse_doc_comment(&first_token);
 
     let name_sym = parse_symbol(tokens, id_gen, diagnostics);
@@ -1897,7 +1897,7 @@ fn parse_function(
 
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
-    Some(Definition(
+    Some(ToplevelItem(
         src_string.clone(),
         position,
         Definition_::Fun(
@@ -2141,7 +2141,7 @@ fn parse_toplevel_expr(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Definition {
+) -> ToplevelItem {
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     let position = expr.position.clone();
@@ -2151,7 +2151,7 @@ fn parse_toplevel_expr(
         src: src[position.start_offset..position.end_offset].to_owned(),
     };
 
-    Definition(
+    ToplevelItem(
         src_string,
         position,
         Definition_::Expr(ToplevelExpression(expr)),
@@ -2163,8 +2163,8 @@ fn parse_toplevel_items_from_tokens(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Vec<Definition> {
-    let mut items: Vec<Definition> = vec![];
+) -> Vec<ToplevelItem> {
+    let mut items: Vec<ToplevelItem> = vec![];
 
     while !tokens.is_empty() {
         let start_idx = tokens.idx;
@@ -2193,7 +2193,7 @@ fn parse_toplevel_item_from_tokens(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Option<Definition> {
+) -> Option<ToplevelItem> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun"
             || token.text == "test"
@@ -2228,7 +2228,7 @@ pub fn parse_toplevel_items(
     path: &Path,
     src: &str,
     id_gen: &mut IdGenerator,
-) -> (Vec<Definition>, Vec<ParseError>) {
+) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
     let (mut tokens, lex_errors) = lex(path, src);
@@ -2248,7 +2248,7 @@ pub fn parse_toplevel_items_from_span(
     id_gen: &mut IdGenerator,
     offset: usize,
     end_offset: usize,
-) -> (Vec<Definition>, Vec<ParseError>) {
+) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
     let (mut tokens, lex_errors) = lex_between(path, src, offset, end_offset);

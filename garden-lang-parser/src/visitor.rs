@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use crate::{
-    Block, Definition, Definition_, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, StructInfo, Symbol, TestInfo, TypeHint, TypeSymbol,
+    Block, Definition_, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
+    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -11,7 +11,7 @@ use crate::{
 /// hook in to specific variants. For example, looking for
 /// occurrences of string literals anywhere in a function body.
 pub trait Visitor {
-    fn visit_def(&mut self, def: &Definition) {
+    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
         self.visit_def_(&def.2);
     }
 

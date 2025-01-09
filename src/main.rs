@@ -65,7 +65,7 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::eval_tests;
 use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
-use garden_lang_parser::ast::{Definition, Definition_, IdGenerator, SourceString};
+use garden_lang_parser::ast::{Definition_, IdGenerator, SourceString, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -465,7 +465,7 @@ fn dump_ast(src: &str, path: &Path) {
 
     for item in items {
         match item {
-            Definition(_, _, Definition_::Expr(e)) => {
+            ToplevelItem(_, _, Definition_::Expr(e)) => {
                 println!("{:#?}", e.0.expr_);
             }
             d => {
@@ -631,7 +631,7 @@ fn parse_toplevel_items_or_die(
     path: &Path,
     src: &str,
     id_gen: &mut IdGenerator,
-) -> Vec<Definition> {
+) -> Vec<ToplevelItem> {
     let (items, errors) = parse_toplevel_items(path, src, id_gen);
 
     if !errors.is_empty() {

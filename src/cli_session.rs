@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::{eval, load_toplevel_items, ExpressionState, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use garden_lang_parser::ast::{Definition, Definition_, IdGenerator};
+use garden_lang_parser::ast::{Definition_, IdGenerator, ToplevelItem};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
@@ -33,7 +33,7 @@ fn read_expr(
     rl: &mut Editor<()>,
     is_stopped: bool,
     id_gen: &mut IdGenerator,
-) -> Result<(String, Vec<Definition>), ReadError> {
+) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
             Ok(input) => {
@@ -115,7 +115,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let mut exprs = vec![];
                 for item in items {
                     match item {
-                        Definition(_, _, Definition_::Expr(e)) => {
+                        ToplevelItem(_, _, Definition_::Expr(e)) => {
                             exprs.push(e.clone());
                         }
                         _ => {}
@@ -256,7 +256,7 @@ fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
     id_gen: &mut IdGenerator,
-) -> Result<(String, Vec<Definition>), ParseError> {
+) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_owned();
 
     loop {

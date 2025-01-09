@@ -1,7 +1,7 @@
 //! Check that loops are well-formed.
 
 use garden_lang_parser::{
-    ast::{Block, Definition, Expression, Expression_, FunInfo, Symbol},
+    ast::{Block, Expression, Expression_, FunInfo, Symbol, ToplevelItem},
     visitor::Visitor,
 };
 
@@ -72,14 +72,14 @@ impl Visitor for LoopVisitor {
     }
 }
 
-pub(crate) fn check_loops(items: &[Definition]) -> Vec<Diagnostic> {
+pub(crate) fn check_loops(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut visitor = LoopVisitor {
         in_loop: false,
         diagnostics: vec![],
     };
 
     for item in items {
-        visitor.visit_def(item);
+        visitor.visit_toplevel_item(item);
     }
     visitor.diagnostics
 }

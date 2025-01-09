@@ -682,7 +682,7 @@ pub enum Definition_ {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Definition(pub SourceString, pub Position, pub Definition_);
+pub struct ToplevelItem(pub SourceString, pub Position, pub Definition_);
 
 impl Definition_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {

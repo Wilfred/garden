@@ -29,7 +29,7 @@ use garden_lang_parser::ast::{
     Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName,
     TypeSymbol,
 };
-use garden_lang_parser::ast::{Definition, Definition_, Expression, Expression_, SymbolName};
+use garden_lang_parser::ast::{Definition_, Expression, Expression_, SymbolName, ToplevelItem};
 use garden_lang_parser::position::Position;
 
 /// Bindings in a single block. For example, `x` is only bound inside
@@ -265,7 +265,7 @@ pub(crate) struct ToplevelEvalSummary {
 /// Function definitions and method definitions are inserted into the
 /// environment, but tests are not executed and toplevel expressions
 /// are skipped.
-pub(crate) fn load_toplevel_items(items: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
+pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut defs = vec![];
     for def in items {
         defs.push(def.clone());
@@ -277,7 +277,7 @@ pub(crate) fn load_toplevel_items(items: &[Definition], env: &mut Env) -> Toplev
 /// Evaluate all toplevel items: definitions, then tests, then
 /// expressions.
 pub(crate) fn eval_toplevel_items(
-    items: &[Definition],
+    items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
@@ -313,13 +313,13 @@ pub(crate) fn eval_toplevel_items(
 }
 
 pub(crate) fn eval_tests_until_error(
-    items: &[Definition],
+    items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut test_defs = vec![];
     for item in items {
-        if let Definition(_, _, Definition_::Test(test)) = item {
+        if let ToplevelItem(_, _, Definition_::Test(test)) = item {
             test_defs.push(test);
         }
     }
@@ -352,7 +352,7 @@ pub(crate) fn eval_tests_until_error(
 
 /// Evaluate these tests.
 pub(crate) fn eval_tests(
-    items: &[Definition],
+    items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
 ) -> ToplevelEvalSummary {
@@ -361,7 +361,7 @@ pub(crate) fn eval_tests(
 
     let mut test_defs = vec![];
     for item in items {
-        if let Definition(_, _, Definition_::Test(test)) = item {
+        if let ToplevelItem(_, _, Definition_::Test(test)) = item {
             test_defs.push(test);
         }
     }
@@ -424,7 +424,7 @@ pub(crate) fn eval_call_main(
 
 pub(crate) fn eval_up_to_param(
     env: &Env,
-    items: &[Definition],
+    items: &[ToplevelItem],
     id: SyntaxId,
 ) -> Option<(Value, Position)> {
     for def in items {
@@ -503,7 +503,7 @@ pub(crate) enum EvalUpToErr {
 pub(crate) fn eval_up_to(
     env: &mut Env,
     session: &Session,
-    items: &[Definition],
+    items: &[ToplevelItem],
     offset: usize,
     id_gen: &mut IdGenerator,
 ) -> Result<(Value, Position), EvalUpToErr> {
@@ -655,7 +655,7 @@ pub(crate) fn eval_up_to(
 /// and the value to be `2`, not `(1, 2)`.
 fn let_var_pos(
     value: &Value,
-    items: &[Definition],
+    items: &[ToplevelItem],
     ast_ids: &[AstId],
 ) -> Option<(Value, Position)> {
     let innermost_id = ast_ids.last()?;
@@ -704,7 +704,11 @@ fn let_var_pos(
     None
 }
 
-fn assign_var_pos(env: &Env, items: &[Definition], ast_ids: &[AstId]) -> Option<(Value, Position)> {
+fn assign_var_pos(
+    env: &Env,
+    items: &[ToplevelItem],
+    ast_ids: &[AstId],
+) -> Option<(Value, Position)> {
     for syn_id in ast_ids.iter().rev() {
         let Some(expr) = find_expr_of_id(items, syn_id.id()) else {
             continue;
@@ -850,7 +854,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     env.stack.0.push(stack_frame);
 }
 
-fn eval_defs(definitions: &[Definition], env: &mut Env) -> ToplevelEvalSummary {
+fn eval_defs(definitions: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
@@ -4304,14 +4308,14 @@ fn eval_match_cases(
 /// had previously interrupted execution, we should still be
 /// interrupted at the same place.
 pub(crate) fn eval_toplevel_exprs_then_stop(
-    items: &[Definition],
+    items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
 ) -> Result<Option<Value>, EvalError> {
     let mut exprs = vec![];
     for item in items {
         match item {
-            Definition(_, _, Definition_::Expr(expr)) => {
+            ToplevelItem(_, _, Definition_::Expr(expr)) => {
                 exprs.push(expr.0.clone());
             }
             _ => {}
@@ -4363,7 +4367,7 @@ mod tests {
     use garden_lang_parser::ast::IdGenerator;
     use garden_lang_parser::parse_toplevel_items;
 
-    fn parse_defs_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<Definition> {
+    fn parse_defs_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<ToplevelItem> {
         let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, id_gen);
         assert!(errors.is_empty());
 
@@ -4377,7 +4381,7 @@ mod tests {
         let mut exprs = vec![];
         for item in items {
             match item {
-                Definition(_, _, Definition_::Expr(e)) => exprs.push(e.0),
+                ToplevelItem(_, _, Definition_::Expr(e)) => exprs.push(e.0),
                 _ => unreachable!(),
             }
         }

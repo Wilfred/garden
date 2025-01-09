@@ -6,7 +6,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{Definition, Definition_, SymbolName, TypeName};
+use garden_lang_parser::ast::{Definition_, SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
@@ -22,7 +22,7 @@ struct DuplicatesVisitor {
 }
 
 impl Visitor for DuplicatesVisitor {
-    fn visit_def(&mut self, def: &Definition) {
+    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
         match &def.2 {
             Definition_::Fun(sym, _, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
@@ -105,7 +105,7 @@ impl Visitor for DuplicatesVisitor {
     }
 }
 
-pub(crate) fn check_duplicates(items: &[Definition], _env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagnostic> {
     let mut visitor = DuplicatesVisitor {
         diagnostics: vec![],
         funs_seen: FxHashMap::default(),
@@ -113,7 +113,7 @@ pub(crate) fn check_duplicates(items: &[Definition], _env: &Env) -> Vec<Diagnost
         types_seen: HashSet::default(),
     };
     for item in items {
-        visitor.visit_def(item);
+        visitor.visit_toplevel_item(item);
     }
     visitor.diagnostics
 }

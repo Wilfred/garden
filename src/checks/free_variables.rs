@@ -2,7 +2,8 @@ use garden_lang_parser::ast::{Expression_, LetDestination};
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
-        Block, Definition, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName, TypeHint,
+        Block, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem,
+        TypeHint,
     },
     position::Position,
 };
@@ -11,10 +12,10 @@ use rustc_hash::FxHashMap;
 use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
 
-pub(crate) fn check_free_variables(items: &[Definition], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = FreeVariableVisitor::new(env);
     for item in items {
-        visitor.visit_def(item);
+        visitor.visit_toplevel_item(item);
     }
     visitor.diagnostics()
 }
@@ -168,7 +169,7 @@ impl FreeVariableVisitor<'_> {
 }
 
 impl Visitor for FreeVariableVisitor<'_> {
-    fn visit_def(&mut self, def: &Definition) {
+    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
         // Don't worry about unused variables in top level
         // expressions, as they're legitimate in a REPL. If the user
         // has written `let x = 1` they might be planning on using `x`

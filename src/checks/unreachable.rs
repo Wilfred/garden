@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{Definition, DefinitionId, Definition_, Visibility};
+use garden_lang_parser::ast::{DefinitionId, Definition_, ToplevelItem, Visibility};
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     env::Env,
 };
 
-pub(crate) fn check_unreachable(items: &[Definition], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let summary = check_types(items, env);
 
     // All the definitions that are called from another definition, excluding self calls.

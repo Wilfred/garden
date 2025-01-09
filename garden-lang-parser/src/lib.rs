@@ -1032,6 +1032,9 @@ fn parse_definition(
         if token.text == "struct" || token.text == "export" && next_token.text == "struct" {
             return Some(parse_struct(src, tokens, id_gen, diagnostics));
         }
+        if token.text == "import" {
+            return parse_import(src, tokens, diagnostics);
+        }
 
         // TODO: Include the token in the error message.
         diagnostics.push(ParseError::Invalid {
@@ -1270,6 +1273,53 @@ fn parse_test(
             body,
         }),
     )
+}
+
+fn parse_import(
+    src: &str,
+    tokens: &mut TokenStream,
+    diagnostics: &mut Vec<ParseError>,
+) -> Option<ToplevelItem> {
+    let import_token = require_token(tokens, diagnostics, "import");
+
+    let Some(path_token) = tokens.pop() else {
+        diagnostics.push(ParseError::Incomplete {
+            position: Position::todo(),
+            message: ErrorMessage("Unfinished `import`.".to_owned()),
+        });
+
+        return None;
+    };
+
+    let position = Position::merge(&import_token.position, &path_token.position);
+
+    let src_string = SourceString {
+        offset: position.start_offset,
+        src: src[position.start_offset..position.end_offset].to_owned(),
+    };
+
+    let path_s = if path_token.text.starts_with('\"') {
+        unescape_string(path_token.text)
+    } else {
+        diagnostics.push(ParseError::Incomplete {
+            position: path_token.position,
+            message: ErrorMessage(
+                "`import` requires a path, e.g. `import \"./foo.gdn\"`.".to_owned(),
+            ),
+        });
+
+        return None;
+    };
+
+    let import_info = ImportInfo {
+        path: path_s.into(),
+    };
+
+    Some(ToplevelItem(
+        src_string,
+        position,
+        ToplevelItem_::Import(import_info),
+    ))
 }
 
 fn parse_type_symbol(
@@ -1918,8 +1968,8 @@ fn parse_function(
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "enum", "struct", "export", "if", "else", "while", "return", "test", "match",
-    "break", "continue", "for", "in",
+    "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
+    "match", "break", "continue", "for", "in",
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
@@ -2200,6 +2250,7 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "enum"
             || token.text == "struct"
             || token.text == "export"
+            || token.text == "import"
         {
             return parse_definition(src, tokens, id_gen, diagnostics);
         }

@@ -1,0 +1,10 @@
+import "./foo.gdn"
+
+// args: dump-ast
+// expected stdout:
+// Import(
+//     ImportInfo {
+//         path: "./foo.gdn",
+//     },
+// )
+

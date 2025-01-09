@@ -2,7 +2,7 @@
 
 use rustc_hash::FxHashMap;
 
-use std::{fmt::Display, rc::Rc};
+use std::{fmt::Display, path::PathBuf, rc::Rc};
 
 use crate::position::Position;
 
@@ -600,7 +600,9 @@ pub struct StructInfo {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ImportInfo {}
+pub struct ImportInfo {
+    pub path: PathBuf,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuiltinMethodKind {

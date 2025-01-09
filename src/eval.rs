@@ -536,10 +536,7 @@ pub(crate) fn eval_up_to(
         return Err(EvalUpToErr::NoExpressionFound);
     };
 
-    let Some(item) = items
-        .iter()
-        .find(|&item| item.position().contains_offset(offset))
-    else {
+    let Some(item) = items.iter().find(|&item| item.1.contains_offset(offset)) else {
         return Err(EvalUpToErr::NoExpressionFound);
     };
 

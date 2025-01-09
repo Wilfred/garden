@@ -698,9 +698,3 @@ impl Definition_ {
 }
 
 pub type ToplevelItem = Definition;
-
-impl ToplevelItem {
-    pub fn position(&self) -> &Position {
-        &self.1
-    }
-}

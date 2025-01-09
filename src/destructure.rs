@@ -59,7 +59,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     let indent_str = " ".repeat(indent);
 
     for item in items {
-        let item_pos = item.position();
+        let item_pos = &item.1;
         if item_pos.contains_offset(offset) {
             // All the items before this one.
             print!("{}", &src[..item_pos.start_offset]);

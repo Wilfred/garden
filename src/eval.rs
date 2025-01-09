@@ -266,12 +266,123 @@ pub(crate) struct ToplevelEvalSummary {
 /// environment, but tests are not executed and toplevel expressions
 /// are skipped.
 pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
-    let mut defs = vec![];
-    for def in items {
-        defs.push(def.clone());
+    let mut diagnostics: Vec<Diagnostic> = vec![];
+    let mut new_syms: Vec<SymbolName> = vec![];
+
+    for item in items {
+        match &item.2 {
+            ToplevelItem_::Fun(name_symbol, fun_info, _) => {
+                if is_builtin_stub(fun_info) {
+                    update_builtin_fun_info(fun_info, env, &mut diagnostics);
+                } else {
+                    env.set_with_file_scope(
+                        &name_symbol.name,
+                        Value::Fun {
+                            name_sym: name_symbol.clone(),
+                            fun_info: fun_info.clone(),
+                        },
+                    );
+                }
+
+                new_syms.push(name_symbol.name.clone());
+            }
+            ToplevelItem_::Method(meth_info, _) => {
+                if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
+                    if is_builtin_stub(fun_info) {
+                        update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
+                    } else {
+                        // TODO: check that types in definitions are defined, and emit
+                        // warnings otherwise.
+                        //
+                        // ```
+                        // fun (this: NoSuchType) foo(x: NoSuchType): NoSuchType {}
+                        // ```
+                        env.add_method(meth_info);
+                    }
+                }
+
+                new_syms.push(SymbolName {
+                    name: meth_info.full_name(),
+                });
+            }
+            ToplevelItem_::Test(test) => {
+                env.tests.insert(test.name_sym.name.clone(), test.clone());
+            }
+            ToplevelItem_::Enum(enum_info) => {
+                // Add the enum definition to the type environment.
+                env.add_type(
+                    enum_info.name_sym.name.clone(),
+                    TypeDef::Enum(enum_info.clone()),
+                );
+
+                // Add the values in the enum to the value environment.
+                for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
+                    let enum_value = if variant_sym.payload_hint.is_some() {
+                        let runtime_type = enum_constructor_type(
+                            env,
+                            enum_info,
+                            variant_sym.payload_hint.as_ref().unwrap(),
+                        );
+                        Value::EnumConstructor {
+                            type_name: enum_info.name_sym.name.clone(),
+                            variant_idx,
+                            runtime_type,
+                        }
+                    } else {
+                        let runtime_type = enum_value_runtime_type(
+                            env,
+                            &enum_info.name_sym.name,
+                            variant_idx,
+                            &Type::Top,
+                        )
+                        .unwrap_or(Type::no_value());
+
+                        Value::EnumVariant {
+                            type_name: enum_info.name_sym.name.clone(),
+                            runtime_type,
+                            variant_idx,
+                            payload: None,
+                        }
+                    };
+
+                    // TODO: warn if we're clobbering a name from a
+                    // different enum (i.e. not just redefining the
+                    // current enum).
+                    env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
+                }
+
+                let name_as_sym = SymbolName {
+                    name: enum_info.name_sym.name.name.clone(),
+                };
+                new_syms.push(name_as_sym);
+            }
+            ToplevelItem_::Struct(struct_info) => {
+                if is_builtin_type(struct_info) {
+                    update_builtin_type_info(struct_info, env, &mut diagnostics);
+                } else {
+                    // Add the struct definition to the type environment.
+                    env.add_type(
+                        struct_info.name_sym.name.clone(),
+                        TypeDef::Struct(struct_info.clone()),
+                    );
+                }
+
+                let name_as_sym = SymbolName {
+                    name: struct_info.name_sym.name.name.clone(),
+                };
+                new_syms.push(name_as_sym);
+            }
+            ToplevelItem_::Expr(_) => {}
+        }
     }
 
-    eval_defs(&defs, env)
+    ToplevelEvalSummary {
+        values: vec![],
+        new_syms,
+        diagnostics,
+        tests_passed: 0,
+        tests_failed: vec![],
+    }
 }
 
 /// Evaluate all toplevel items: definitions, then tests, then
@@ -294,7 +405,7 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    let mut summary = eval_defs(&defs, env);
+    let mut summary = load_toplevel_items(&defs, env);
 
     summary
         .diagnostics
@@ -852,126 +963,6 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         caller_uses_value: true,
     };
     env.stack.0.push(stack_frame);
-}
-
-fn eval_defs(definitions: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
-    let mut diagnostics: Vec<Diagnostic> = vec![];
-    let mut new_syms: Vec<SymbolName> = vec![];
-
-    for definition in definitions {
-        match &definition.2 {
-            ToplevelItem_::Fun(name_symbol, fun_info, _) => {
-                if is_builtin_stub(fun_info) {
-                    update_builtin_fun_info(fun_info, env, &mut diagnostics);
-                } else {
-                    env.set_with_file_scope(
-                        &name_symbol.name,
-                        Value::Fun {
-                            name_sym: name_symbol.clone(),
-                            fun_info: fun_info.clone(),
-                        },
-                    );
-                }
-
-                new_syms.push(name_symbol.name.clone());
-            }
-            ToplevelItem_::Method(meth_info, _) => {
-                if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
-                    if is_builtin_stub(fun_info) {
-                        update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
-                    } else {
-                        // TODO: check that types in definitions are defined, and emit
-                        // warnings otherwise.
-                        //
-                        // ```
-                        // fun (this: NoSuchType) foo(x: NoSuchType): NoSuchType {}
-                        // ```
-                        env.add_method(meth_info);
-                    }
-                }
-
-                new_syms.push(SymbolName {
-                    name: meth_info.full_name(),
-                });
-            }
-            ToplevelItem_::Test(test) => {
-                env.tests.insert(test.name_sym.name.clone(), test.clone());
-            }
-            ToplevelItem_::Enum(enum_info) => {
-                // Add the enum definition to the type environment.
-                env.add_type(
-                    enum_info.name_sym.name.clone(),
-                    TypeDef::Enum(enum_info.clone()),
-                );
-
-                // Add the values in the enum to the value environment.
-                for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
-                    let enum_value = if variant_sym.payload_hint.is_some() {
-                        let runtime_type = enum_constructor_type(
-                            env,
-                            enum_info,
-                            variant_sym.payload_hint.as_ref().unwrap(),
-                        );
-                        Value::EnumConstructor {
-                            type_name: enum_info.name_sym.name.clone(),
-                            variant_idx,
-                            runtime_type,
-                        }
-                    } else {
-                        let runtime_type = enum_value_runtime_type(
-                            env,
-                            &enum_info.name_sym.name,
-                            variant_idx,
-                            &Type::Top,
-                        )
-                        .unwrap_or(Type::no_value());
-
-                        Value::EnumVariant {
-                            type_name: enum_info.name_sym.name.clone(),
-                            runtime_type,
-                            variant_idx,
-                            payload: None,
-                        }
-                    };
-
-                    // TODO: warn if we're clobbering a name from a
-                    // different enum (i.e. not just redefining the
-                    // current enum).
-                    env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
-                }
-
-                let name_as_sym = SymbolName {
-                    name: enum_info.name_sym.name.name.clone(),
-                };
-                new_syms.push(name_as_sym);
-            }
-            ToplevelItem_::Struct(struct_info) => {
-                if is_builtin_type(struct_info) {
-                    update_builtin_type_info(struct_info, env, &mut diagnostics);
-                } else {
-                    // Add the struct definition to the type environment.
-                    env.add_type(
-                        struct_info.name_sym.name.clone(),
-                        TypeDef::Struct(struct_info.clone()),
-                    );
-                }
-
-                let name_as_sym = SymbolName {
-                    name: struct_info.name_sym.name.name.clone(),
-                };
-                new_syms.push(name_as_sym);
-            }
-            ToplevelItem_::Expr(_) => {}
-        }
-    }
-
-    ToplevelEvalSummary {
-        values: vec![],
-        new_syms,
-        diagnostics,
-        tests_passed: 0,
-        tests_failed: vec![],
-    }
 }
 
 fn update_builtin_type_info(
@@ -4619,7 +4610,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { True }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4632,7 +4623,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x) { x }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f(123)", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4645,7 +4636,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x, y) { y }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f(1, 2)", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4659,7 +4650,7 @@ mod tests {
 
         let defs =
             parse_defs_from_str("fun f() { let x = 1 let f = fun() { x } f() }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4672,7 +4663,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x) { }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4684,7 +4675,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { let x = 1 fun() { x } }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("let y = f() y()", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4697,7 +4688,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f()", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4710,7 +4701,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f(123)", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4742,7 +4733,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun id(x) { x }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4755,7 +4746,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { return 1 2 }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4768,7 +4759,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(): Int { 1 }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());
@@ -4780,7 +4771,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(x: Int) { }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f(True)", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4792,7 +4783,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(): String { 1 }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4804,7 +4795,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(): String { return 1 }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4816,7 +4807,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f(_) { _ }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f(1)", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4828,7 +4819,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { let _ = 1 xy }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4840,7 +4831,7 @@ mod tests {
         let mut env = Env::new(&mut id_gen);
 
         let defs = parse_defs_from_str("fun f() { let _ = 1 let _ = 2 }", &mut id_gen);
-        eval_defs(&defs, &mut env);
+        load_toplevel_items(&defs, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());

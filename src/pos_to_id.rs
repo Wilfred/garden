@@ -1,19 +1,19 @@
 use garden_lang_parser::ast::{
-    AstId, Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol,
+    AstId, Definition, Expression, LetDestination, Symbol, SyntaxId, TypeHint, TypeSymbol,
 };
 
 use garden_lang_parser::visitor::Visitor;
 
 /// All the items (expressions, symbols) whose position includes
 /// `offset` and `end_offset`, outermost first.
-pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize, end_offset: usize) -> Vec<AstId> {
+pub(crate) fn find_item_at(items: &[Definition], offset: usize, end_offset: usize) -> Vec<AstId> {
     let mut visitor = IdFinder {
         offset,
         end_offset,
         found_ids: vec![],
     };
     for item in items {
-        visitor.visit_toplevel_item(item);
+        visitor.visit_def(item);
     }
 
     visitor.found_ids
@@ -21,10 +21,10 @@ pub(crate) fn find_item_at(items: &[ToplevelItem], offset: usize, end_offset: us
 
 /// Find the expression whose ID is `id`. If the ID points to a symbol
 /// in an assignment, return the RHS of that assignment.
-pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Expression> {
+pub(crate) fn find_expr_of_id(items: &[Definition], id: SyntaxId) -> Option<Expression> {
     let mut visitor = ExprOfIdFinder { id, expr: None };
     for item in items {
-        visitor.visit_toplevel_item(item);
+        visitor.visit_def(item);
     }
 
     visitor.expr

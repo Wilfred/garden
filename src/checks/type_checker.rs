@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, DefinitionId, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
-    VariantInfo,
+    BinaryOperatorKind, Block, Definition, DefinitionId, Expression, Expression_, FunInfo,
+    LetDestination, MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, TestInfo, TypeHint,
+    TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -33,7 +33,7 @@ pub(crate) struct TCSummary {
     pub callees: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
 }
 
-pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
+pub(crate) fn check_types(items: &[Definition], env: &Env) -> TCSummary {
     let mut visitor = TypeCheckVisitor {
         env,
         diagnostics: vec![],
@@ -45,7 +45,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         current_def: None,
     };
     for item in items {
-        visitor.visit_toplevel_item(item);
+        visitor.visit_def(item);
     }
 
     TCSummary {

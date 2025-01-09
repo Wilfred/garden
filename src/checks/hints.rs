@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
+use garden_lang_parser::ast::{Definition, EnumInfo, FunInfo, StructInfo, TypeHint, TypeName};
 use garden_lang_parser::visitor::Visitor;
 
 use crate::{
@@ -9,14 +9,14 @@ use crate::{
     types::{BuiltinType, TypeDef},
 };
 
-pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_hints(items: &[Definition], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = HintVisitor {
         env,
         diagnostics: vec![],
         bound_type_params: HashSet::new(),
     };
     for item in items {
-        visitor.visit_toplevel_item(item);
+        visitor.visit_def(item);
     }
 
     visitor.diagnostics

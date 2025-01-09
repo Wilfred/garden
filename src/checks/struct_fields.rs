@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
+use garden_lang_parser::ast::{Definition, Expression, Symbol, TypeSymbol};
 use garden_lang_parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
 
@@ -82,13 +82,13 @@ impl Visitor for StructFieldVisitor<'_> {
     }
 }
 
-pub(crate) fn check_struct_fields(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_struct_fields(items: &[Definition], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = StructFieldVisitor {
         env,
         diagnostics: vec![],
     };
     for item in items {
-        visitor.visit_toplevel_item(item);
+        visitor.visit_def(item);
     }
     visitor.diagnostics
 }

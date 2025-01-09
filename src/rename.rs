@@ -40,7 +40,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     };
 
     for item in items {
-        visitor.visit_toplevel_item(&item);
+        visitor.visit_def(&item);
     }
 
     let new_src = apply_renames(src, new_name, &visitor.replace_positions);

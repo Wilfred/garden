@@ -2141,7 +2141,7 @@ fn parse_toplevel_expr(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> ToplevelItem {
+) -> Definition {
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
 
     let position = expr.position.clone();
@@ -2163,8 +2163,8 @@ fn parse_toplevel_items_from_tokens(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Vec<ToplevelItem> {
-    let mut items: Vec<ToplevelItem> = vec![];
+) -> Vec<Definition> {
+    let mut items: Vec<Definition> = vec![];
 
     while !tokens.is_empty() {
         let start_idx = tokens.idx;
@@ -2193,7 +2193,7 @@ fn parse_toplevel_item_from_tokens(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Option<ToplevelItem> {
+) -> Option<Definition> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun"
             || token.text == "test"
@@ -2228,7 +2228,7 @@ pub fn parse_toplevel_items(
     path: &Path,
     src: &str,
     id_gen: &mut IdGenerator,
-) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+) -> (Vec<Definition>, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
     let (mut tokens, lex_errors) = lex(path, src);
@@ -2248,7 +2248,7 @@ pub fn parse_toplevel_items_from_span(
     id_gen: &mut IdGenerator,
     offset: usize,
     end_offset: usize,
-) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+) -> (Vec<Definition>, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
     let (mut tokens, lex_errors) = lex_between(path, src, offset, end_offset);

@@ -2,8 +2,7 @@ use garden_lang_parser::ast::{Expression_, LetDestination};
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
-        Block, Definition, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName,
-        ToplevelItem, TypeHint,
+        Block, Definition, Definition_, Expression, FunInfo, Pattern, Symbol, SymbolName, TypeHint,
     },
     position::Position,
 };
@@ -12,10 +11,10 @@ use rustc_hash::FxHashMap;
 use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
 
-pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_free_variables(items: &[Definition], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = FreeVariableVisitor::new(env);
     for item in items {
-        visitor.visit_toplevel_item(item);
+        visitor.visit_def(item);
     }
     visitor.diagnostics()
 }

@@ -696,5 +696,3 @@ impl Definition_ {
         }
     }
 }
-
-pub type ToplevelItem = Definition;

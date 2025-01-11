@@ -1,0 +1,7 @@
+import "./no_such_file.gdn"
+
+fun main(_) {
+  println("hello")
+}
+
+// args: run

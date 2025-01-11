@@ -683,12 +683,17 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         if matches!(diagnostic.level, Level::Error) {
             eprintln!(
                 "{}",
-                &format_error_with_stack(
+                &format_diagnostic(
                     &ErrorMessage(diagnostic.message),
                     &diagnostic.position,
-                    &env.stack.0
+                    diagnostic.level,
+                    &SourceString {
+                        offset: 0,
+                        src: src.to_owned()
+                    }
                 )
             );
+            return;
         }
     }
 

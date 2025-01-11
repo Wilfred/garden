@@ -32,7 +32,6 @@ fn read_expr(
     session: &mut Session,
     rl: &mut Editor<()>,
     is_stopped: bool,
-    id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
@@ -41,18 +40,16 @@ fn read_expr(
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
-                    Ok(cmd) => {
-                        match run_command(&mut std::io::stdout(), &cmd, env, session, id_gen) {
-                            Ok(()) => {
-                                println!();
-                                println!();
-                                continue;
-                            }
-                            Err(e) => {
-                                return Err(ReadError::NeedsEval(e));
-                            }
+                    Ok(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, session) {
+                        Ok(()) => {
+                            println!();
+                            println!();
+                            continue;
                         }
-                    }
+                        Err(e) => {
+                            return Err(ReadError::NeedsEval(e));
+                        }
+                    },
                     Err(CommandParseError::NoSuchCommand(s)) => {
                         print_available_commands(&s, &mut std::io::stdout()).unwrap();
                         println!();
@@ -63,7 +60,7 @@ fn read_expr(
                     }
                 }
 
-                match read_multiline_syntax(&input, rl, id_gen) {
+                match read_multiline_syntax(&input, rl, &mut env.id_gen) {
                     Ok((src, items)) => {
                         log_src(&src).unwrap();
                         return Ok((src, items));
@@ -86,8 +83,9 @@ fn read_expr(
 pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     print_repl_header();
 
-    let mut id_gen = IdGenerator::default();
-    let mut env = Env::new(&mut id_gen);
+    let id_gen = IdGenerator::default();
+    let mut env = Env::new(id_gen);
+
     let mut session = Session {
         interrupted,
         has_attached_stdout: true,
@@ -103,7 +101,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     loop {
         println!();
 
-        match read_expr(&mut env, &mut session, &mut rl, is_stopped, &mut id_gen) {
+        match read_expr(&mut env, &mut session, &mut rl, is_stopped) {
             Ok((src, items)) => {
                 last_src = src;
 

@@ -20,8 +20,8 @@ use self::{free_variables::check_free_variables, struct_fields::check_struct_fie
 
 /// Check toplevel items in a fresh environment, without any definitions from the current session.
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Diagnostic> {
-    let mut id_gen = IdGenerator::default();
-    let mut env = Env::new(&mut id_gen);
+    let id_gen = IdGenerator::default();
+    let mut env = Env::new(id_gen);
 
     load_toplevel_items(items, &mut env);
 

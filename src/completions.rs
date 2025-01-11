@@ -20,7 +20,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let mut id_gen = IdGenerator::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
-    let mut env = Env::new(&mut id_gen);
+    let mut env = Env::new(id_gen);
     load_toplevel_items(&items, &mut env);
 
     let ids_at_pos = find_item_at(&items, offset, offset);

@@ -25,9 +25,8 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
-    IdGenerator, InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
-    Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName,
-    TypeSymbol,
+    InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern,
+    StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem, ToplevelItem_};
 use garden_lang_parser::position::Position;
@@ -517,11 +516,10 @@ pub(crate) fn eval_call_main(
     cli_args: &[String],
     env: &mut Env,
     session: &Session,
-    id_gen: &mut IdGenerator,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let call_src = call_to_main_src(cli_args);
     let (call_expr_items, parse_errors) =
-        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, id_gen);
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut env.id_gen);
     assert!(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."
@@ -612,7 +610,6 @@ pub(crate) fn eval_up_to(
     session: &Session,
     items: &[ToplevelItem],
     offset: usize,
-    id_gen: &mut IdGenerator,
 ) -> Result<(Value, Position), EvalUpToErr> {
     let syn_ids = find_item_at(items, offset, offset);
 
@@ -664,7 +661,7 @@ pub(crate) fn eval_up_to(
             };
 
             env.stop_at_expr_id = Some(expr_id);
-            let res = eval_toplevel_call(&name_sym.name, &args, env, session, id_gen);
+            let res = eval_toplevel_call(&name_sym.name, &args, env, session);
             env.stop_at_expr_id = None;
 
             res.map(|v| (v, position))
@@ -689,7 +686,6 @@ pub(crate) fn eval_up_to(
                 prev_args,
                 env,
                 session,
-                id_gen,
             );
             env.stop_at_expr_id = None;
 
@@ -844,7 +840,6 @@ pub(crate) fn eval_toplevel_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
-    id_gen: &mut IdGenerator,
 ) -> Result<Value, EvalError> {
     // TODO: return an Err() rather than kludging a string and letting
     // eval_env() return a type error.
@@ -859,14 +854,14 @@ pub(crate) fn eval_toplevel_call(
 
     let recv_expr = Expression {
         position: Position::todo(),
-        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.name, id_gen)),
+        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.name, &mut env.id_gen)),
         value_is_used: true,
-        id: id_gen.next(),
+        id: env.id_gen.next(),
     };
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        arguments.push(Rc::new(Expression::invalid(id_gen.next())));
+        arguments.push(Rc::new(Expression::invalid(env.id_gen.next())));
     }
 
     let paren_args = ParenthesizedArguments {
@@ -879,7 +874,7 @@ pub(crate) fn eval_toplevel_call(
         position: Position::todo(),
         expr_: Expression_::Call(Rc::new(recv_expr), paren_args),
         value_is_used: true,
-        id: id_gen.next(),
+        id: env.id_gen.next(),
     };
     env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, call_expr.into());
 
@@ -894,7 +889,6 @@ pub(crate) fn eval_toplevel_method_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
-    id_gen: &mut IdGenerator,
 ) -> Result<Value, EvalError> {
     env.push_value(recv_value.clone());
     for value in args.iter().rev() {
@@ -905,21 +899,21 @@ pub(crate) fn eval_toplevel_method_call(
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
         position: Position::todo(),
-        expr_: Expression_::Variable(placeholder_symbol(Position::todo(), id_gen)),
+        expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
         value_is_used: true,
-        id: id_gen.next(),
+        id: env.id_gen.next(),
     };
 
     let meth_sym = Symbol {
         position: Position::todo(),
         name: meth_name.clone(),
-        id: id_gen.next(),
-        interned_id: id_gen.intern_symbol(meth_name),
+        id: env.id_gen.next(),
+        interned_id: env.id_gen.intern_symbol(meth_name),
     };
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        arguments.push(Rc::new(Expression::invalid(id_gen.next())));
+        arguments.push(Rc::new(Expression::invalid(env.id_gen.next())));
     }
 
     let paren_args = ParenthesizedArguments {
@@ -932,7 +926,7 @@ pub(crate) fn eval_toplevel_method_call(
         position: Position::todo(),
         expr_: Expression_::MethodCall(Rc::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
-        id: id_gen.next(),
+        id: env.id_gen.next(),
     };
     env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, call_expr.into());
 
@@ -4396,21 +4390,21 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("\"a\" == \"b\"", &mut id_gen);
 
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(false));
     }
 
     #[test]
     fn test_eval_persist_env() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let exprs = parse_exprs_from_str("let foo = 123", &mut id_gen);
+        let exprs = parse_exprs_from_str("let foo = 123", &mut env.id_gen);
         eval_exprs(&exprs, &mut env).unwrap();
 
-        let exprs = parse_exprs_from_str("foo", &mut id_gen);
+        let exprs = parse_exprs_from_str("foo", &mut env.id_gen);
         eval_exprs(&exprs, &mut env).unwrap();
     }
 
@@ -4419,7 +4413,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("True False", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(false));
     }
@@ -4429,7 +4423,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("1 + 2", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(3));
     }
@@ -4439,7 +4433,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("1 < 2", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(true));
     }
@@ -4449,7 +4443,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("3 <= 2", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(false));
     }
@@ -4459,7 +4453,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[1 + 2, 3 * 4]", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
@@ -4475,7 +4469,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("{ let x = 1 x + 1 }", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
@@ -4485,7 +4479,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("{ let x = 1 } x", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
@@ -4494,7 +4488,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("let foo = True foo", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(true));
     }
@@ -4504,7 +4498,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("let foo = if True { 1 } else { 2 } foo", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }
@@ -4514,14 +4508,14 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("if True { let x = 1 } x", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_empty() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&[], &mut env).unwrap();
         assert_eq!(value, Value::unit());
     }
@@ -4531,7 +4525,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[1, 2].append(3)", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
@@ -4547,7 +4541,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[10, 11].get(1)", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(11));
     }
@@ -4557,7 +4551,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[10, 11].get(2)", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
@@ -4566,7 +4560,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[].get(0)", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
@@ -4575,7 +4569,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("[0, 1].len()", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
@@ -4585,7 +4579,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("\"abc\".len()", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(3));
     }
@@ -4595,111 +4589,113 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("\"abcdef\".substring(1, 3)", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::String("bc".into()));
     }
 
     #[test]
     fn test_eval_call() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { True }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f() { True }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(true));
     }
 
     #[test]
     fn test_eval_call_with_arg() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x) { x }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(x) { x }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f(123)", &mut id_gen);
+        let exprs = parse_exprs_from_str("f(123)", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(123));
     }
 
     #[test]
     fn test_eval_call_second_arg() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x, y) { y }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(x, y) { y }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f(1, 2)", &mut id_gen);
+        let exprs = parse_exprs_from_str("f(1, 2)", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
 
     #[test]
     fn test_eval_call_closure_immediately() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs =
-            parse_defs_from_str("fun f() { let x = 1 let f = fun() { x } f() }", &mut id_gen);
+        let defs = parse_defs_from_str(
+            "fun f() { let x = 1 let f = fun() { x } f() }",
+            &mut env.id_gen,
+        );
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }
 
     #[test]
     fn test_eval_call_bad_arity() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x) { }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(x) { }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_return_closure_and_call() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { let x = 1 fun() { x } }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f() { let x = 1 fun() { x } }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("let y = f() y()", &mut id_gen);
+        let exprs = parse_exprs_from_str("let y = f() y()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }
 
     #[test]
     fn test_eval_method_call() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut id_gen);
+        let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("\"\".f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("\"\".f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::bool(true));
     }
 
     #[test]
     fn test_eval_method_call_bad_airty() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut id_gen);
+        let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("\"\".f(123)", &mut id_gen);
+        let exprs = parse_exprs_from_str("\"\".f(123)", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
@@ -4708,7 +4704,7 @@ mod tests {
         let mut id_gen = IdGenerator::default();
         let exprs = parse_exprs_from_str("let i = 0 while i < 5 { i = i + 1 }", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::unit());
     }
@@ -4719,117 +4715,117 @@ mod tests {
         let exprs =
             parse_exprs_from_str("let i = 0 while i < 5 { i = i + 1 let x = 1 }", &mut id_gen);
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());
     }
 
     #[test]
     fn test_eval_env_after_call() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun id(x) { x }", &mut id_gen);
+        let defs = parse_defs_from_str("fun id(x) { x }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut id_gen);
+        let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(0));
     }
 
     #[test]
     fn test_eval_return() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { return 1 2 }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f() { return 1 2 }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(1));
     }
 
     #[test]
     fn test_eval_correct_return_type() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(): Int { 1 }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(): Int { 1 }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());
     }
 
     #[test]
     fn test_eval_wrong_argument_type() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x: Int) { }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(x: Int) { }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f(True)", &mut id_gen);
+        let exprs = parse_exprs_from_str("f(True)", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_wrong_return_type() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(): String { 1 }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(): String { 1 }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_wrong_return_type_early_return() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(): String { return 1 }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(): String { return 1 }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_underscore_param_not_bound() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(_) { _ }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f(_) { _ }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f(1)", &mut id_gen);
+        let exprs = parse_exprs_from_str("f(1)", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_local_underscore_not_bound() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { let _ = 1 xy }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f() { let _ = 1 xy }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]
     fn test_eval_local_underscore_repeated() {
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { let _ = 1 let _ = 2 }", &mut id_gen);
+        let defs = parse_defs_from_str("fun f() { let _ = 1 let _ = 2 }", &mut env.id_gen);
         load_toplevel_items(&defs, &mut env);
 
-        let exprs = parse_exprs_from_str("f()", &mut id_gen);
+        let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());
     }
 
@@ -4841,7 +4837,7 @@ mod tests {
             &mut id_gen,
         );
 
-        let mut env = Env::new(&mut id_gen);
+        let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
     }
@@ -4857,10 +4853,10 @@ mod tests {
             pretty_print_json: true,
         };
 
-        let mut id_gen = IdGenerator::default();
-        let mut env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let mut env = Env::new(id_gen);
 
-        let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut id_gen);
+        let (defs, errors) = parse_toplevel_items(&PathBuf::new(), "test f {}", &mut env.id_gen);
         assert!(errors.is_empty());
         let eval_result = eval_toplevel_items(&defs, &mut env, &session);
         assert!(eval_result.is_ok());

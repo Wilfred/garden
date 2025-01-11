@@ -353,7 +353,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     let mut id_gen = IdGenerator::default();
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
 
-    let mut env = Env::new(&mut id_gen);
+    let mut env = Env::new(id_gen);
     let session = Session {
         interrupted,
         has_attached_stdout: true,
@@ -363,7 +363,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     };
 
     load_toplevel_items(&items, &mut env);
-    if let Err(e) = eval_call_main(&[], &mut env, &session, &mut id_gen) {
+    if let Err(e) = eval_call_main(&[], &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
@@ -378,7 +378,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         return;
     }
 
-    match eval_up_to(&mut env, &session, &items, offset, &mut id_gen) {
+    match eval_up_to(&mut env, &session, &items, offset) {
         Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
         Err(EvalUpToErr::EvalError(e)) => match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
@@ -481,10 +481,10 @@ fn run_sandboxed_tests_in_file(
     offset: usize,
     interrupted: Arc<AtomicBool>,
 ) {
-    let mut id_gen = IdGenerator::default();
-    let mut env = Env::new(&mut id_gen);
+    let id_gen = IdGenerator::default();
+    let mut env = Env::new(id_gen);
 
-    let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let (items, errors) = parse_toplevel_items(path, src, &mut env.id_gen);
     if !errors.is_empty() {
         println!("Parse error");
         return;
@@ -578,9 +578,9 @@ fn run_sandboxed_tests_in_file(
 }
 
 fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
-    let mut id_gen = IdGenerator::default();
-    let mut env = Env::new(&mut id_gen);
-    let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
+    let id_gen = IdGenerator::default();
+    let mut env = Env::new(id_gen);
+    let items = parse_toplevel_items_or_die(path, src, &mut env.id_gen);
 
     let session = Session {
         interrupted,
@@ -669,7 +669,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     let mut id_gen = IdGenerator::default();
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
 
-    let mut env = Env::new(&mut id_gen);
+    let mut env = Env::new(id_gen);
     let session = Session {
         interrupted,
         has_attached_stdout: true,
@@ -680,7 +680,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
 
     load_toplevel_items(&items, &mut env);
 
-    match eval_call_main(arguments, &mut env, &session, &mut id_gen) {
+    match eval_call_main(arguments, &mut env, &session) {
         Ok(_) => {}
         Err(EvalError::ResumableError(position, msg)) => {
             eprintln!(

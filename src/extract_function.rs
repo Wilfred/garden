@@ -25,7 +25,7 @@ pub(crate) fn extract_function(
     let mut id_gen = IdGenerator::default();
     let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
 
-    let mut env = Env::new(&mut id_gen);
+    let mut env = Env::new(id_gen);
     load_toplevel_items(&items, &mut env);
     let summary = check_types(&items, &env);
 

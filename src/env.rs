@@ -93,10 +93,12 @@ pub(crate) struct Env {
     /// access or shell commands. This should allow us to run
     /// arbitrary code safely.
     pub(crate) enforce_sandbox: bool,
+
+    pub(crate) id_gen: IdGenerator,
 }
 
 impl Env {
-    pub(crate) fn new(id_gen: &mut IdGenerator) -> Self {
+    pub(crate) fn new(mut id_gen: IdGenerator) -> Self {
         let mut file_scope = FxHashMap::default();
 
         // Insert all the built-in functions.
@@ -129,8 +131,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "exists", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "exists", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
             },
         );
@@ -150,8 +152,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "read", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "read", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
             },
         );
@@ -180,8 +182,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "index_of", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "index_of", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringIndexOf, None),
             },
         );
@@ -201,8 +203,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "len", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "len", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
             },
         );
@@ -222,8 +224,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "substring", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "substring", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
             },
         );
@@ -243,8 +245,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "append", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "append", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringAppend, None),
             },
         );
@@ -273,8 +275,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "append", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "append", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None),
             },
         );
@@ -294,8 +296,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "len", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "len", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None),
             },
         );
@@ -315,8 +317,8 @@ impl Env {
                     },
                     position: Position::todo(),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", id_gen),
-                name_sym: Symbol::new(Position::todo(), "get", id_gen),
+                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(), "get", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None),
             },
         );
@@ -360,7 +362,7 @@ impl Env {
 
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) =
-            parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, id_gen);
+            parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, &mut id_gen);
         assert!(
             errors.is_empty(),
             "Prelude should be syntactically legal: {}",
@@ -369,7 +371,7 @@ impl Env {
 
         let builtins_src = include_str!("builtins.gdn");
         let (builtin_items, errors) =
-            parse_toplevel_items(&PathBuf::from("builtins.gdn"), builtins_src, id_gen);
+            parse_toplevel_items(&PathBuf::from("builtins.gdn"), builtins_src, &mut id_gen);
         assert!(
             errors.is_empty(),
             "Stubs for built-ins should be syntactically legal: {}",
@@ -387,6 +389,7 @@ impl Env {
             tick_limit: None,
             enforce_sandbox: false,
             stop_at_expr_id: None,
+            id_gen,
         };
 
         load_toplevel_items(&prelude_items, &mut env);

@@ -406,8 +406,8 @@ mod tests {
 
     #[test]
     fn test_display_value_for_string_with_doublequote() {
-        let mut id_gen = IdGenerator::default();
-        let env = Env::new(&mut id_gen);
+        let id_gen = IdGenerator::default();
+        let env = Env::new(id_gen);
 
         let value = Value::String("foo \\ \" \n bar".into());
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");

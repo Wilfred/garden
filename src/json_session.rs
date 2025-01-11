@@ -130,9 +130,9 @@ fn handle_load_request(
     offset: usize,
     end_offset: usize,
     env: &mut Env,
-    id_gen: &mut IdGenerator,
 ) -> Response {
-    let (items, errors) = parse_toplevel_items_from_span(path, input, id_gen, offset, end_offset);
+    let (items, errors) =
+        parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
 
     if !errors.is_empty() {
         return as_error_response(errors, input);
@@ -169,11 +169,11 @@ pub(crate) fn start_eval_thread(session: Session, receiver: Receiver<String>) ->
 fn eval_worker(receiver: Receiver<String>, session: Session) {
     let mut session = session;
 
-    let mut id_gen = IdGenerator::default();
-    let mut env = Env::new(&mut id_gen);
+    let id_gen = IdGenerator::default();
+    let mut env = Env::new(id_gen);
 
     while let Ok(input) = receiver.recv() {
-        handle_request_in_worker(&input, &mut env, &mut session, &mut id_gen);
+        handle_request_in_worker(&input, &mut env, &mut session);
     }
 }
 
@@ -228,14 +228,13 @@ fn handle_eval_up_to_request(
     env: &mut Env,
     session: &Session,
     id: Option<RequestId>,
-    id_gen: &mut IdGenerator,
 ) -> Response {
     let (items, mut errors) = parse_toplevel_items(
         &path
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         src,
-        id_gen,
+        &mut env.id_gen,
     );
 
     if let Some(e) = errors.pop() {
@@ -286,7 +285,7 @@ fn handle_eval_up_to_request(
         }
     }
 
-    match eval_up_to(env, session, &items, offset, id_gen) {
+    match eval_up_to(env, session, &items, offset) {
         Ok((v, pos)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
@@ -427,12 +426,7 @@ pub(crate) fn handle_request(
     sender.send(req_src.to_owned()).unwrap();
 }
 
-fn handle_request_in_worker(
-    req_src: &str,
-    env: &mut Env,
-    session: &mut Session,
-    id_gen: &mut IdGenerator,
-) {
+fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session) {
     let Ok(req) = serde_json::from_str::<Request>(req_src) else {
         let info = match serde_json::from_str::<serde_json::Value>(req_src) {
             Ok(_) => "valid JSON, but not a valid request",
@@ -459,7 +453,7 @@ fn handle_request_in_worker(
             offset,
             end_offset,
             id,
-        } => handle_load_request(id, &path, &input, offset, end_offset, env, id_gen),
+        } => handle_load_request(id, &path, &input, offset, end_offset, env),
         Request::Interrupt => {
             // Nothing to do, handled outside this threaad so it
             // doesn't require locking env.
@@ -471,13 +465,13 @@ fn handle_request_in_worker(
             offset,
             end_offset,
             id,
-        } => handle_run_request(input, env, session, id, path, offset, end_offset, id_gen),
+        } => handle_run_request(input, env, session, id, path, offset, end_offset),
         Request::EvalUpToId {
             path,
             src,
             offset,
             id,
-        } => handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, id, id_gen),
+        } => handle_eval_up_to_request(path.as_ref(), &src, offset, env, session, id),
     };
 
     print_as_json(&res, session.pretty_print_json);
@@ -491,12 +485,11 @@ fn handle_run_request(
     path: Option<PathBuf>,
     offset: Option<usize>,
     end_offset: Option<usize>,
-    id_gen: &mut IdGenerator,
 ) -> Response {
     match Command::from_string(&input) {
         Ok(command) => {
             let mut out_buf: Vec<u8> = vec![];
-            match run_command(&mut out_buf, &command, env, session, id_gen) {
+            match run_command(&mut out_buf, &command, env, session) {
                 Ok(()) => Response {
                     kind: ResponseKind::RunCommand {
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),
@@ -565,16 +558,9 @@ fn handle_run_request(
                 id,
             }
         }
-        Err(CommandParseError::NotCommandSyntax) => handle_run_eval_request(
-            path.as_ref(),
-            &input,
-            offset,
-            end_offset,
-            env,
-            session,
-            id_gen,
-            id,
-        ),
+        Err(CommandParseError::NotCommandSyntax) => {
+            handle_run_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
+        }
     }
 }
 
@@ -585,7 +571,6 @@ fn handle_run_eval_request(
     end_offset: Option<usize>,
     env: &mut Env,
     session: &mut Session,
-    id_gen: &mut IdGenerator,
     id: Option<RequestId>,
 ) -> Response {
     let (items, errors) = parse_toplevel_items_from_span(
@@ -593,7 +578,7 @@ fn handle_run_eval_request(
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         input,
-        id_gen,
+        &mut env.id_gen,
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),
     );

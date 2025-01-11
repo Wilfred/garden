@@ -94,6 +94,8 @@ pub(crate) struct Env {
     /// arbitrary code safely.
     pub(crate) enforce_sandbox: bool,
 
+    /// Used to track the IDs generated so far, so any additional
+    /// parsing produces items with globally unique IDs.
     pub(crate) id_gen: IdGenerator,
 }
 

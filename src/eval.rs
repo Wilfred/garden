@@ -375,7 +375,27 @@ pub(crate) fn load_toplevel_items(
                 new_syms.push(name_as_sym);
             }
             ToplevelItem_::Expr(_) => {}
-            ToplevelItem_::Import(_) => todo!(),
+            ToplevelItem_::Import(import_info) => {
+                let path = &import_info.path;
+                let src = match std::fs::read_to_string(path) {
+                    Ok(s) => s,
+                    Err(_) => {
+                        diagnostics.push(Diagnostic {
+                            message: format!(
+                                "Could not read {} or not valid UTF-8.",
+                                path.display()
+                            ),
+                            position: item.1.clone(),
+                            level: Level::Error,
+                        });
+
+                        // diagnostic
+                        "".to_owned()
+                    }
+                };
+
+                let (_items, _errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
+            }
         }
     }
 
@@ -403,6 +423,14 @@ pub(crate) fn eval_toplevel_items(
     }
 
     let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env);
+    for diagnostic in diagnostics.iter() {
+        if matches!(diagnostic.level, Level::Error) {
+            return Err(EvalError::ResumableError(
+                diagnostic.position.clone(),
+                ErrorMessage(diagnostic.message.clone()),
+            ));
+        }
+    }
 
     diagnostics.extend(check_toplevel_items_in_env(items, env));
 

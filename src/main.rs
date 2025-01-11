@@ -678,7 +678,19 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         pretty_print_json: false,
     };
 
-    load_toplevel_items(&items, &mut env);
+    let (diagnostics, _) = load_toplevel_items(&items, &mut env);
+    for diagnostic in diagnostics {
+        if matches!(diagnostic.level, Level::Error) {
+            eprintln!(
+                "{}",
+                &format_error_with_stack(
+                    &ErrorMessage(diagnostic.message),
+                    &diagnostic.position,
+                    &env.stack.0
+                )
+            );
+        }
+    }
 
     match eval_call_main(arguments, &mut env, &session) {
         Ok(_) => {}

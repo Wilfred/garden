@@ -138,54 +138,20 @@ fn handle_load_request(
         return as_error_response(errors, input);
     }
 
-    let eval_summary = load_toplevel_items(&items, env);
+    let (diagnostics, new_syms) = load_toplevel_items(&items, env);
 
-    // TODO: this is duplicated with handle_eval_request.
-    let definition_summary = if eval_summary.new_syms.is_empty() {
+    let summary = if new_syms.is_empty() {
         "".to_owned()
-    } else if eval_summary.new_syms.len() == 1 {
-        format!("Loaded {}", eval_summary.new_syms[0].name)
+    } else if new_syms.len() == 1 {
+        format!("Loaded {}.", new_syms[0].name)
     } else {
-        format!("Loaded {} definitions", eval_summary.new_syms.len())
-    };
-
-    let total_tests = eval_summary.tests_passed + eval_summary.tests_failed.len();
-    let test_summary = if total_tests == 0 {
-        "".to_owned()
-    } else {
-        format!(
-            "{total_tests} {}",
-            if total_tests == 1 { "test" } else { "tests" }
-        )
-    };
-
-    let test_summary = match (test_summary.is_empty(), definition_summary.is_empty()) {
-        (true, _) => "".to_owned(),
-        (false, true) => format!("Ran {test_summary}"),
-        (false, false) => format!(", ran {test_summary}"),
-    };
-
-    let summary = format!("{definition_summary}{test_summary}");
-
-    let value_summary = if let Some(last_value) = eval_summary.values.last() {
-        Some(if summary.is_empty() {
-            last_value.display(env)
-        } else {
-            format!(
-                "{summary}, and the expression evaluated to {}.",
-                last_value.display(env)
-            )
-        })
-    } else if summary.is_empty() {
-        None
-    } else {
-        Some(format!("{summary}."))
+        format!("Loaded {} definitions.", new_syms.len())
     };
 
     Response {
         kind: ResponseKind::Evaluate {
-            warnings: eval_summary.diagnostics,
-            value: Ok(value_summary),
+            warnings: diagnostics,
+            value: Ok(Some(summary)),
             stack_frame_name: Some(env.top_frame_name()),
         },
         position: None,
@@ -636,10 +602,8 @@ fn handle_run_eval_request(
         return as_error_response(errors, input);
     }
 
-    let mut eval_summary = load_toplevel_items(&items, env);
-    eval_summary
-        .diagnostics
-        .extend(check_toplevel_items_in_env(&items, env));
+    let (mut diagnostics, new_syms) = load_toplevel_items(&items, env);
+    diagnostics.extend(check_toplevel_items_in_env(&items, env));
 
     let test_summary = match eval_tests_until_error(&items, env, session) {
         Ok(s) => s,
@@ -648,12 +612,12 @@ fn handle_run_eval_request(
 
     match eval_toplevel_exprs_then_stop(&items, env, session) {
         Ok(value) => {
-            let definition_summary = if eval_summary.new_syms.is_empty() {
+            let definition_summary = if new_syms.is_empty() {
                 "".to_owned()
-            } else if eval_summary.new_syms.len() == 1 {
-                format!("Loaded {}", eval_summary.new_syms[0].name)
+            } else if new_syms.len() == 1 {
+                format!("Loaded {}", new_syms[0].name)
             } else {
-                format!("Loaded {} definitions", eval_summary.new_syms.len())
+                format!("Loaded {} definitions", new_syms.len())
             };
 
             let tests_passed = test_summary.tests_passed;
@@ -693,7 +657,7 @@ fn handle_run_eval_request(
 
             Response {
                 kind: ResponseKind::Evaluate {
-                    warnings: eval_summary.diagnostics,
+                    warnings: diagnostics,
                     value: Ok(value_summary),
                     stack_frame_name: Some(env.top_frame_name()),
                 },

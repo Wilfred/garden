@@ -265,7 +265,10 @@ pub(crate) struct ToplevelEvalSummary {
 /// Function definitions and method definitions are inserted into the
 /// environment, but tests are not executed and toplevel expressions
 /// are skipped.
-pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> ToplevelEvalSummary {
+pub(crate) fn load_toplevel_items(
+    items: &[ToplevelItem],
+    env: &mut Env,
+) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
@@ -377,13 +380,7 @@ pub(crate) fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) -> Topl
         }
     }
 
-    ToplevelEvalSummary {
-        values: vec![],
-        new_syms,
-        diagnostics,
-        tests_passed: 0,
-        tests_failed: vec![],
-    }
+    (diagnostics, new_syms)
 }
 
 /// Evaluate all toplevel items: definitions, then tests, then
@@ -406,15 +403,13 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    let mut summary = load_toplevel_items(&defs, env);
+    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env);
 
-    summary
-        .diagnostics
-        .extend(check_toplevel_items_in_env(items, env));
+    diagnostics.extend(check_toplevel_items_in_env(items, env));
 
-    let test_summary = eval_tests(items, env, session);
-    summary.tests_passed = test_summary.tests_passed;
-    summary.tests_failed = test_summary.tests_failed;
+    let mut summary = eval_tests(items, env, session);
+    summary.diagnostics.extend(diagnostics);
+    summary.new_syms.extend(new_syms);
 
     if !exprs.is_empty() {
         let value = eval_exprs(&exprs, env, session)?;

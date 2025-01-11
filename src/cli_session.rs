@@ -107,8 +107,8 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             Ok((src, items)) => {
                 last_src = src;
 
-                let summary = load_toplevel_items(&items, &mut env);
-                for diagnostic in summary.diagnostics {
+                let (diagnostics, _) = load_toplevel_items(&items, &mut env);
+                for diagnostic in diagnostics {
                     println!("Warning: {}", diagnostic.message);
                 }
 

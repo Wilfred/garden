@@ -1,0 +1,11 @@
+// This should be fine, it's a no-op to import something we've already
+// imported.
+import "./import_cyclic.gdn"
+
+fun main(_) {
+  println("hello world")
+}
+
+// args: run
+// expected stdout: hello world
+

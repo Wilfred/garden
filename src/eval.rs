@@ -13,7 +13,7 @@ use std::time::Instant;
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::diagnostics::{Diagnostic, Level};
@@ -268,6 +268,15 @@ pub(crate) fn load_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
+    let mut paths_seen = FxHashSet::default();
+    load_toplevel_items_(items, env, &mut paths_seen)
+}
+
+fn load_toplevel_items_(
+    items: &[ToplevelItem],
+    env: &mut Env,
+    paths_seen: &mut FxHashSet<PathBuf>,
+) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
@@ -403,6 +412,12 @@ pub(crate) fn load_toplevel_items(
                     continue;
                 };
 
+                if paths_seen.contains(&path) {
+                    // Already imported this file, so we have a cyclic import.
+                    continue;
+                }
+                paths_seen.insert(path.clone());
+
                 let Ok(src) = std::fs::read_to_string(&path) else {
                     diagnostics.push(Diagnostic {
                         message: format!("Could not read {} or not valid UTF-8.", path.display()),
@@ -426,7 +441,8 @@ pub(crate) fn load_toplevel_items(
                     continue;
                 }
 
-                let (import_diagnostics, imported_syms) = load_toplevel_items(&imported_items, env);
+                let (import_diagnostics, imported_syms) =
+                    load_toplevel_items_(&imported_items, env, paths_seen);
                 diagnostics.extend(import_diagnostics);
                 new_syms.extend(imported_syms);
             }

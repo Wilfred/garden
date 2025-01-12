@@ -138,15 +138,6 @@ export fun (this: List<T>) len<T>(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
-// Return a new string with the string argument concatenated.
-//
-// ```
-// "foo".concat("bar") // "foobar"
-// ```
-export fun (this: String) concat(value: String): String {
-  __BUILTIN_IMPLEMENTATION
-}
-
 // Return the number of characters (codepoints) in the string.
 //
 // ```

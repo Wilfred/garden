@@ -396,7 +396,7 @@ pub(crate) fn load_toplevel_items(
                             "Involid path `{}`. Double-check that this file exists.",
                             import_info.path.display()
                         ),
-                        position: item.1.clone(),
+                        position: import_info.path_pos.clone(),
                         level: Level::Error,
                     });
 
@@ -406,7 +406,7 @@ pub(crate) fn load_toplevel_items(
                 let Ok(src) = std::fs::read_to_string(&path) else {
                     diagnostics.push(Diagnostic {
                         message: format!("Could not read {} or not valid UTF-8.", path.display()),
-                        position: item.1.clone(),
+                        position: import_info.path_pos.clone(),
                         level: Level::Error,
                     });
 

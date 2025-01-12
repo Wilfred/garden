@@ -1320,6 +1320,7 @@ fn parse_import(
 
     let import_info = ImportInfo {
         path: path_s.into(),
+        path_pos: path_token.position.clone(),
     };
 
     Some(ToplevelItem(

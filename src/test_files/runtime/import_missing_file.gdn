@@ -10,5 +10,5 @@ fun main(_) {
 // 
 // --> src/test_files/runtime/import_missing_file.gdn:1
 // import "./no_such_file.gdn"
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//        ^^^^^^^^^^^^^^^^^^^^
 

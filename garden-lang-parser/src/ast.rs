@@ -610,6 +610,7 @@ pub struct StructInfo {
 pub struct ImportInfo {
     pub path_pos: Position,
     pub path: PathBuf,
+    pub id: SyntaxId,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1040,7 +1040,7 @@ fn parse_definition(
             return Some(parse_struct(src, tokens, id_gen, diagnostics));
         }
         if token.text == "import" {
-            return parse_import(src, tokens, diagnostics);
+            return parse_import(src, tokens, id_gen, diagnostics);
         }
 
         // TODO: Include the token in the error message.
@@ -1285,6 +1285,7 @@ fn parse_test(
 fn parse_import(
     src: &str,
     tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     let import_token = require_token(tokens, diagnostics, "import");
@@ -1321,6 +1322,7 @@ fn parse_import(
     let import_info = ImportInfo {
         path: path_s.into(),
         path_pos: path_token.position.clone(),
+        id: id_gen.next(),
     };
 
     Some(ToplevelItem(

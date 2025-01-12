@@ -6,6 +6,7 @@ import "./foo.gdn"
 //     ImportInfo {
 //         path_pos: Position { ... },
 //         path: "./foo.gdn",
+//         id: SyntaxId(0),
 //     },
 // )
 

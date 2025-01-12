@@ -27,6 +27,9 @@ pub(crate) struct TCSummary {
     /// definitions.
     pub id_to_doc_comment: FxHashMap<SyntaxId, String>,
     /// A mapping of syntax IDs to their definition positions.
+    ///
+    /// E.g. if we see an occurrence of `None`, we map the ID of this
+    /// occurrence to the definition position of `Option::None`.
     pub id_to_def_pos: FxHashMap<SyntaxId, Position>,
     /// A mapping from each toplevel definition to the other functions
     /// it calls. Does not include tests.

@@ -12,7 +12,7 @@ export fun foo: Option<Int> {
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
-//         def_id: Some(
+//         item_id: Some(
 //             ToplevelItemId(
 //                 7,
 //             ),

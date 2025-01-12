@@ -10,7 +10,7 @@ export fun foo<T>(): Unit {}
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
-//         def_id: Some(
+//         item_id: Some(
 //             ToplevelItemId(
 //                 5,
 //             ),

@@ -19,7 +19,7 @@ fun foo() {}
 //         name_sym: Some(
 //             Symbol"foo",
 //         ),
-//         def_id: Some(
+//         item_id: Some(
 //             ToplevelItemId(
 //                 2,
 //             ),

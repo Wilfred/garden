@@ -25,35 +25,35 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
 
     let mut diagnostics = vec![];
     let mut already_covered_ids = HashSet::new();
-    for definition in items {
-        let (visibility, symbol, definition_id) = match &definition.2 {
+    for item in items {
+        let (visibility, symbol, item_id) = match &item.2 {
             ToplevelItem_::Fun(symbol, fun_info, visibility) => {
-                (visibility, symbol, fun_info.def_id)
+                (visibility, symbol, fun_info.item_id)
             }
             ToplevelItem_::Method(method_info, visibility) => (
                 visibility,
                 &method_info.name_sym,
-                method_info.fun_info().and_then(|fun_info| fun_info.def_id),
+                method_info.fun_info().and_then(|fun_info| fun_info.item_id),
             ),
             _ => continue,
         };
-        let Some(definition_id) = definition_id else {
+        let Some(item_id) = item_id else {
             continue;
         };
 
         if matches!(visibility, Visibility::Exported(_)) {
-            already_covered_ids.insert(definition_id);
+            already_covered_ids.insert(item_id);
             continue;
         }
 
         // Report unreachable functions that have no callers at all.
-        if !all_called_defs.contains(&definition_id) {
+        if !all_called_defs.contains(&item_id) {
             diagnostics.push(Diagnostic {
                 message: format!("`{}` is never called.", &symbol.name),
                 position: symbol.position.clone(),
                 level: Level::Warning,
             });
-            already_covered_ids.insert(definition_id);
+            already_covered_ids.insert(item_id);
         }
     }
 
@@ -67,24 +67,24 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
                     continue;
                 }
 
-                let Some(definition_id) = fun_info.def_id else {
+                let Some(item_id) = fun_info.item_id else {
                     continue;
                 };
-                let Some(reachable_from_def_ids) = reachable_from.get(&definition_id) else {
+                let Some(reachable_from_item_ids) = reachable_from.get(&item_id) else {
                     continue;
                 };
 
                 // Reachable from a toplevel block.
-                if reachable_from_def_ids.contains(&None) {
+                if reachable_from_item_ids.contains(&None) {
                     continue;
                 }
 
                 // Report unreachable functions that contain cycles.
-                let reachable_from_def_ids: HashSet<ToplevelItemId> = reachable_from_def_ids
+                let reachable_from_item_ids: HashSet<ToplevelItemId> = reachable_from_item_ids
                     .iter()
                     .filter_map(|def_id| *def_id)
                     .collect();
-                if reachable_from_def_ids.is_disjoint(&already_covered_ids) {
+                if reachable_from_item_ids.is_disjoint(&already_covered_ids) {
                     diagnostics.push(Diagnostic {
                         message: format!("`{}` is never called.", &symbol.name),
                         position: symbol.position.clone(),

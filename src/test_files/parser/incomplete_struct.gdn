@@ -22,7 +22,7 @@ fun bar() {}
 //         name_sym: Some(
 //             Symbol"bar",
 //         ),
-//         def_id: Some(
+//         item_id: Some(
 //             ToplevelItemId(
 //                 3,
 //             ),

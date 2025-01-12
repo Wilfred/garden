@@ -24,7 +24,7 @@ export fun (self: List<T>) foo<T>() {}
 //                 name_sym: Some(
 //                     Symbol"foo",
 //                 ),
-//                 def_id: Some(
+//                 item_id: Some(
 //                     ToplevelItemId(
 //                         8,
 //                     ),

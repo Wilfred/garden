@@ -42,7 +42,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
         id_to_doc_comment: FxHashMap::default(),
         id_to_def_pos: FxHashMap::default(),
         callees: FxHashMap::default(),
-        current_def: None,
+        current_item: None,
     };
     for item in items {
         visitor.visit_toplevel_item(item);
@@ -103,7 +103,7 @@ struct TypeCheckVisitor<'a> {
     id_to_ty: FxHashMap<SyntaxId, Type>,
     id_to_doc_comment: FxHashMap<SyntaxId, String>,
     id_to_def_pos: FxHashMap<SyntaxId, Position>,
-    current_def: Option<ToplevelItemId>,
+    current_item: Option<ToplevelItemId>,
     callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
@@ -185,9 +185,9 @@ impl Visitor for TypeCheckVisitor<'_> {
             }
         }
 
-        let old_def_id = self.current_def;
-        if let Some(def_id) = fun_info.def_id {
-            self.current_def = Some(def_id);
+        let old_def_id = self.current_item;
+        if let Some(def_id) = fun_info.item_id {
+            self.current_item = Some(def_id);
         }
 
         let mut type_bindings = self.env.stack.type_bindings();
@@ -196,7 +196,7 @@ impl Visitor for TypeCheckVisitor<'_> {
         }
 
         self.check_fun_info(fun_info, &type_bindings);
-        self.current_def = old_def_id;
+        self.current_item = old_def_id;
     }
 
     fn visit_block(&mut self, block: &Block) {
@@ -914,9 +914,9 @@ impl TypeCheckVisitor<'_> {
                             _ => None,
                         };
                         if let Some(fun_info) = fun_info {
-                            if let Some(def_id) = fun_info.def_id {
+                            if let Some(def_id) = fun_info.item_id {
                                 self.callees
-                                    .entry(self.current_def)
+                                    .entry(self.current_item)
                                     .or_default()
                                     .insert(def_id);
                             }
@@ -1101,9 +1101,9 @@ impl TypeCheckVisitor<'_> {
                             return Type::error("This method has no fun_info");
                         };
 
-                        if let Some(def_id) = fun_info.def_id {
+                        if let Some(def_id) = fun_info.item_id {
                             self.callees
-                                .entry(self.current_def)
+                                .entry(self.current_item)
                                 .or_default()
                                 .insert(def_id);
                         }

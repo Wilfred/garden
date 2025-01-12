@@ -5,3 +5,10 @@ fun main(_) {
 }
 
 // args: run
+// expected stderr:
+// Error: Could not canonicalize path ./no_such_file.gdn
+// 
+// --> src/test_files/runtime/import_missing_file.gdn:1
+// import "./no_such_file.gdn"
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+

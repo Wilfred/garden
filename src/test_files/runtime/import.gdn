@@ -1,0 +1,9 @@
+import "./lib.gdn"
+
+fun main(_) {
+  dbg(foo())
+}
+
+// args: run
+// expected stdout: 42
+

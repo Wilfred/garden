@@ -1,0 +1,7 @@
+export fun foo(): Int {
+  42
+}
+
+fun main(_) {}
+
+// args: run

@@ -413,7 +413,22 @@ pub(crate) fn load_toplevel_items(
                     continue;
                 };
 
-                let (_items, _errors) = parse_toplevel_items(&path, &src, &mut env.id_gen);
+                let (imported_items, parse_errors) =
+                    parse_toplevel_items(&path, &src, &mut env.id_gen);
+                if !parse_errors.is_empty() {
+                    for error in parse_errors {
+                        diagnostics.push(Diagnostic {
+                            message: error.message().0.clone(),
+                            position: error.position().clone(),
+                            level: Level::Error,
+                        });
+                    }
+                    continue;
+                }
+
+                let (import_diagnostics, imported_syms) = load_toplevel_items(&imported_items, env);
+                diagnostics.extend(import_diagnostics);
+                new_syms.extend(imported_syms);
             }
         }
     }

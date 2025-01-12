@@ -51,6 +51,13 @@ impl ParseError {
             ParseError::Incomplete { position, .. } => position,
         }
     }
+
+    pub fn message(&self) -> &ErrorMessage {
+        match self {
+            ParseError::Invalid { message, .. } => message,
+            ParseError::Incomplete { message, .. } => message,
+        }
+    }
 }
 
 fn peeked_symbol_is(tokens: &TokenStream, token: &str) -> bool {

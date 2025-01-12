@@ -376,25 +376,44 @@ pub(crate) fn load_toplevel_items(
             }
             ToplevelItem_::Expr(_) => {}
             ToplevelItem_::Import(import_info) => {
-                let path = &import_info.path;
-                let src = match std::fs::read_to_string(path) {
-                    Ok(s) => s,
-                    Err(_) => {
-                        diagnostics.push(Diagnostic {
-                            message: format!(
-                                "Could not read {} or not valid UTF-8.",
-                                path.display()
-                            ),
-                            position: item.1.clone(),
-                            level: Level::Error,
-                        });
+                let Some(enclosing_dir) = item.1.path.parent() else {
+                    diagnostics.push(Diagnostic {
+                        message: format!(
+                            "Could not canonicalize path {}",
+                            import_info.path.display()
+                        ),
+                        position: item.1.clone(),
+                        level: Level::Error,
+                    });
 
-                        // diagnostic
-                        "".to_owned()
-                    }
+                    continue;
                 };
 
-                let (_items, _errors) = parse_toplevel_items(path, &src, &mut env.id_gen);
+                let path = enclosing_dir.join(&import_info.path);
+                let Ok(path) = path.canonicalize() else {
+                    diagnostics.push(Diagnostic {
+                        message: format!(
+                            "Could not canonicalize path {}",
+                            import_info.path.display()
+                        ),
+                        position: item.1.clone(),
+                        level: Level::Error,
+                    });
+
+                    continue;
+                };
+
+                let Ok(src) = std::fs::read_to_string(&path) else {
+                    diagnostics.push(Diagnostic {
+                        message: format!("Could not read {} or not valid UTF-8.", path.display()),
+                        position: item.1.clone(),
+                        level: Level::Error,
+                    });
+
+                    continue;
+                };
+
+                let (_items, _errors) = parse_toplevel_items(&path, &src, &mut env.id_gen);
             }
         }
     }

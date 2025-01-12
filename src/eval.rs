@@ -461,13 +461,13 @@ pub(crate) fn eval_toplevel_items(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut defs = vec![];
     let mut exprs = vec![];
-    for def in items {
-        match &def.2 {
+    for item in items {
+        match &item.2 {
             ToplevelItem_::Expr(toplevel_expression) => {
                 exprs.push(toplevel_expression.0.clone());
             }
             _ => {
-                defs.push(def.clone());
+                defs.push(item.clone());
             }
         }
     }
@@ -610,8 +610,8 @@ pub(crate) fn eval_up_to_param(
     items: &[ToplevelItem],
     id: SyntaxId,
 ) -> Option<(Value, Position)> {
-    for def in items {
-        match &def.2 {
+    for item in items {
+        match &item.2 {
             ToplevelItem_::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.is_empty() => vec![],

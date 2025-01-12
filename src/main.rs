@@ -515,9 +515,9 @@ fn run_sandboxed_tests_in_file(
     env.enforce_sandbox = true;
 
     let mut test_at_cursor = None;
-    for def in items.iter() {
-        if def.1.contains_offset(offset) && matches!(def.2, ToplevelItem_::Test(_)) {
-            test_at_cursor = Some(def.clone());
+    for item in items.iter() {
+        if item.1.contains_offset(offset) && matches!(item.2, ToplevelItem_::Test(_)) {
+            test_at_cursor = Some(item.clone());
             break;
         }
     }

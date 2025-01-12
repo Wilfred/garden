@@ -60,8 +60,8 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
     let transitively_reachable = transitive_closure(summary.callees.clone());
     let reachable_from = invert(transitively_reachable);
 
-    for definition in items {
-        match &definition.2 {
+    for item in items {
+        match &item.2 {
             ToplevelItem_::Fun(symbol, fun_info, visibility) => {
                 if matches!(visibility, Visibility::Exported(_)) {
                     continue;

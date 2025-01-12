@@ -427,6 +427,8 @@ impl std::fmt::Debug for SyntaxId {
     }
 }
 
+/// An ID that represents a piece of syntax that we can perform
+/// operations on, such as go-to-def.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AstId {
     /// Syntax ID of an expression.

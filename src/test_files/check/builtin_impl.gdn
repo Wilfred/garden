@@ -3,3 +3,11 @@ export fun foo(_: String): NoValue {
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Tried to update a built-in stub for a function `foo` that doesn't exist.
+// 
+// --> src/test_files/check/builtin_impl.gdn:1
+// export fun foo(_: String): NoValue {
+//            ^^^
+

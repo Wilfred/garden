@@ -23,9 +23,10 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let id_gen = IdGenerator::default();
     let mut env = Env::new(id_gen);
 
-    load_toplevel_items(items, &mut env);
+    let (mut diagnostics, _) = load_toplevel_items(items, &mut env);
 
-    check_toplevel_items_in_env(items, &env)
+    diagnostics.extend(check_toplevel_items_in_env(items, &env));
+    diagnostics
 }
 
 /// Check toplevel items in this environment.

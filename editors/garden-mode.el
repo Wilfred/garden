@@ -937,7 +937,9 @@ the result."
 (flycheck-define-checker garden
   "A Garden syntax checker."
   ;; TODO: respect `garden-executable'.
-  :command ("/home/wilfred/projects/garden/target/debug/garden" "check" "--json" source)
+  :command
+  ("/home/wilfred/projects/garden/target/debug/garden"
+   "check" "--json" source "--override-path" source-original)
   :error-parser garden-flycheck--parse
   :modes garden-mode)
 

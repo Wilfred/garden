@@ -147,6 +147,11 @@ enum CliCommands {
         path: PathBuf,
         #[clap(long, action)]
         json: bool,
+        /// Treat the file as if it was at this path.
+        ///
+        /// This allows you to write the state of a file to somewhere
+        /// in /tmp, and check it as if it was in the original path,
+        /// without requiring the user to save.
         #[clap(long)]
         override_path: Option<PathBuf>,
     },

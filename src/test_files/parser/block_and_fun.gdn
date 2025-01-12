@@ -20,7 +20,7 @@ fun foo() {}
 //             Symbol"foo",
 //         ),
 //         def_id: Some(
-//             DefinitionId(
+//             ToplevelItemId(
 //                 2,
 //             ),
 //         ),

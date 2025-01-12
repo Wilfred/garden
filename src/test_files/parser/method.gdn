@@ -25,7 +25,7 @@ export fun (self: List<T>) foo<T>() {}
 //                     Symbol"foo",
 //                 ),
 //                 def_id: Some(
-//                     DefinitionId(
+//                     ToplevelItemId(
 //                         8,
 //                     ),
 //                 ),

@@ -13,7 +13,7 @@ fun bar() {}
 //             Symbol"foo",
 //         ),
 //         def_id: Some(
-//             DefinitionId(
+//             ToplevelItemId(
 //                 1,
 //             ),
 //         ),
@@ -37,7 +37,7 @@ fun bar() {}
 //             Symbol"bar",
 //         ),
 //         def_id: Some(
-//             DefinitionId(
+//             ToplevelItemId(
 //                 3,
 //             ),
 //         ),

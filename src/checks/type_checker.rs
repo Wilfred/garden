@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, DefinitionId, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
-    VariantInfo,
+    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
+    Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, ToplevelItemId, TypeHint,
+    TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -30,7 +30,7 @@ pub(crate) struct TCSummary {
     pub id_to_def_pos: FxHashMap<SyntaxId, Position>,
     /// A mapping from each toplevel definition to the other functions
     /// it calls. Does not include tests.
-    pub callees: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
+    pub callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
 pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
@@ -103,8 +103,8 @@ struct TypeCheckVisitor<'a> {
     id_to_ty: FxHashMap<SyntaxId, Type>,
     id_to_doc_comment: FxHashMap<SyntaxId, String>,
     id_to_def_pos: FxHashMap<SyntaxId, Position>,
-    current_def: Option<DefinitionId>,
-    callees: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
+    current_def: Option<ToplevelItemId>,
+    callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
 impl Visitor for TypeCheckVisitor<'_> {

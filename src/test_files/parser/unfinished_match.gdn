@@ -15,7 +15,7 @@ fun foo(src) {
 //             Symbol"foo",
 //         ),
 //         def_id: Some(
-//             DefinitionId(
+//             ToplevelItemId(
 //                 6,
 //             ),
 //         ),

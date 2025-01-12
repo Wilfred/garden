@@ -11,7 +11,7 @@ fun foo(): Unit {} {}
 //             Symbol"foo",
 //         ),
 //         def_id: Some(
-//             DefinitionId(
+//             ToplevelItemId(
 //                 3,
 //             ),
 //         ),

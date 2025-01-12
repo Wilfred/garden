@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{DefinitionId, ToplevelItem, ToplevelItem_, Visibility};
+use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, ToplevelItem_, Visibility};
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -13,7 +13,7 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
     let summary = check_types(items, env);
 
     // All the definitions that are called from another definition, excluding self calls.
-    let mut all_called_defs: HashSet<DefinitionId> = HashSet::new();
+    let mut all_called_defs: HashSet<ToplevelItemId> = HashSet::new();
 
     for (def_id, called_defs) in &summary.callees {
         for called_def_id in called_defs {
@@ -80,7 +80,7 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
                 }
 
                 // Report unreachable functions that contain cycles.
-                let reachable_from_def_ids: HashSet<DefinitionId> = reachable_from_def_ids
+                let reachable_from_def_ids: HashSet<ToplevelItemId> = reachable_from_def_ids
                     .iter()
                     .filter_map(|def_id| *def_id)
                     .collect();
@@ -103,8 +103,8 @@ pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagno
 ///
 /// {A -> {B, C, D}, B -> {C, D}, C -> {D}}
 fn transitive_closure(
-    mut reachable: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
-) -> FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>> {
+    mut reachable: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
+) -> FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>> {
     let mut changed = true;
 
     while changed {
@@ -132,9 +132,10 @@ fn transitive_closure(
 
 /// Useful for 'reachable from'.
 fn invert(
-    reachable: FxHashMap<Option<DefinitionId>, HashSet<DefinitionId>>,
-) -> FxHashMap<DefinitionId, HashSet<Option<DefinitionId>>> {
-    let mut inverted: FxHashMap<DefinitionId, HashSet<Option<DefinitionId>>> = FxHashMap::default();
+    reachable: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
+) -> FxHashMap<ToplevelItemId, HashSet<Option<ToplevelItemId>>> {
+    let mut inverted: FxHashMap<ToplevelItemId, HashSet<Option<ToplevelItemId>>> =
+        FxHashMap::default();
 
     for (def_id, reachable_def_ids) in reachable {
         for reachable_def_id in reachable_def_ids {

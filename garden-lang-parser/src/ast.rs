@@ -438,6 +438,11 @@ pub enum AstId {
     /// fun f(foo: Int) {}
     /// ```
     Sym(SyntaxId),
+    /// Syntax ID of a type symbol.
+    ///
+    /// ```
+    /// fun f(_: Foo) {}
+    /// ```
     TypeSym(SyntaxId),
 }
 

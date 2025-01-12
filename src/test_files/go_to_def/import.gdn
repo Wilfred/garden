@@ -1,0 +1,7 @@
+import "./some_lib.gdn"
+//       ^
+
+// args: definition-position
+// expected stdout:
+// {"start_offset":0,"end_offset":0,"line_number":0,"end_line_number":0,"path":"./some_lib.gdn"}
+

@@ -446,6 +446,12 @@ pub enum AstId {
     /// fun f(_: Foo) {}
     /// ```
     TypeSym(SyntaxId),
+    /// An import item.
+    ///
+    /// ```
+    /// import "./foo.gdn"
+    /// ```
+    Import(SyntaxId),
 }
 
 impl AstId {
@@ -454,6 +460,7 @@ impl AstId {
             AstId::Expr(syntax_id) => *syntax_id,
             AstId::Sym(syntax_id) => *syntax_id,
             AstId::TypeSym(syntax_id) => *syntax_id,
+            AstId::Import(syntax_id) => *syntax_id,
         }
     }
 }

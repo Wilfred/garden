@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
-    Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, ToplevelItemId, TypeHint,
-    TypeName, VariantInfo,
+    Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, ToplevelItemId, ToplevelItem_,
+    TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -111,6 +111,23 @@ struct TypeCheckVisitor<'a> {
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
+    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
+        if let ToplevelItem_::Import(info) = &def.2 {
+            self.id_to_def_pos.insert(
+                info.id,
+                Position {
+                    start_offset: 0,
+                    end_offset: 0,
+                    line_number: 0,
+                    end_line_number: 0,
+                    path: info.path.clone(),
+                },
+            );
+        }
+
+        self.visit_def_(&def.2);
+    }
+
     fn visit_test_info(&mut self, test_info: &TestInfo) {
         // Don't include tests call sites when computing callees, so
         // discard any additional callee found.

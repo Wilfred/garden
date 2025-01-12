@@ -6,7 +6,7 @@ fun main(_) {
 
 // args: run
 // expected stderr:
-// Error: Involid path `./no_such_file.gdn`. Double-check that this file exists.
+// Error: Invalid path `./no_such_file.gdn`. Double-check that this file exists.
 // 
 // --> src/test_files/runtime/import_missing_file.gdn:1
 // import "./no_such_file.gdn"

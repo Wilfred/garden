@@ -402,7 +402,7 @@ fn load_toplevel_items_(
                 let Ok(path) = path.canonicalize() else {
                     diagnostics.push(Diagnostic {
                         message: format!(
-                            "Involid path `{}`. Double-check that this file exists.",
+                            "Invalid path `{}`. Double-check that this file exists.",
                             import_info.path.display()
                         ),
                         position: import_info.path_pos.clone(),

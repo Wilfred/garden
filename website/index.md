@@ -10,7 +10,7 @@ programs. You can redefine functions and modify class definitions
 without restarting your program.
 
 Garden aims to provide that superpower in a conventional language
-design. I'm trying to provide a very familiar syntax and workflow.
+design.
 
 ## Tooling First
 
@@ -20,8 +20,6 @@ small team (or just me!) can build a delightful, credible language
 experience.
 
 ## Just Enough Typing
-
-Types are a nice tool to have too.
 
 Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
@@ -55,4 +53,4 @@ amenable to static analysis, and (2) reflective, dynamic evaluation
 that is friendly to developer experience.
 
 This means that errors in userland are plain `Result` types, but
-unhandled errors can be resumed in a Lisp/Smalltalk manner.
+unhandled errors can be fixed at runtime by a programmer.

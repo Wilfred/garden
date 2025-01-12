@@ -379,7 +379,7 @@ pub(crate) fn load_toplevel_items(
                 let Some(enclosing_dir) = item.1.path.parent() else {
                     diagnostics.push(Diagnostic {
                         message: format!(
-                            "Could not canonicalize path {}",
+                            "Could not find parent directory of `{}`.",
                             import_info.path.display()
                         ),
                         position: item.1.clone(),
@@ -393,7 +393,7 @@ pub(crate) fn load_toplevel_items(
                 let Ok(path) = path.canonicalize() else {
                     diagnostics.push(Diagnostic {
                         message: format!(
-                            "Could not canonicalize path {}",
+                            "Involid path `{}`. Double-check that this file exists.",
                             import_info.path.display()
                         ),
                         position: item.1.clone(),

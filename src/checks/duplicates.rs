@@ -99,7 +99,7 @@ impl Visitor for DuplicatesVisitor {
                 }
             }
             ToplevelItem_::Expr(_) => {}
-            ToplevelItem_::Import(_) => todo!(),
+            ToplevelItem_::Import(_) => {}
         }
 
         self.visit_def_(&def.2);

@@ -1,0 +1,218 @@
+enum MarkdownPart {
+  Heading(String),
+  Paragraph(String),
+  Code(String),
+}
+
+fun parse_markdown(src: String): List<MarkdownPart> {
+  let parts: List<MarkdownPart> = []
+  let current_section: List<String> = []
+  let in_code_block = False
+
+  for line in src.lines() {
+    if (line == "") && current_section.is_empty() {
+      continue
+    }
+
+    if line.starts_with("```") {
+      current_section = current_section.append(line)
+      if in_code_block {
+        // Just finished the code block.
+        parts = parts.append(Code("\n".join(current_section)))
+        current_section = []
+        in_code_block = False
+      } else {
+        in_code_block = True
+      }
+    } else if in_code_block {
+      current_section = current_section.append(line)
+    } else if line.starts_with("#") {
+      if current_section.is_non_empty() {
+        parts = parts.append(Paragraph("\n".join(current_section)))
+        current_section = []
+      }
+
+      parts = parts.append(Heading(line))
+    } else if line == "" {
+      parts = parts.append(Paragraph("\n".join(current_section)))
+      current_section = []
+    } else {
+      current_section = current_section.append(line)
+    }
+  }
+
+  if current_section.is_non_empty() {
+    parts = parts.append(Paragraph("\n".join(current_section)))
+  }
+
+  parts
+}
+
+fun render_markdown_header(src: String): String {
+  let h_count = 0
+
+  while src.starts_with("#") {
+    h_count += 1
+    src = src.strip_prefix("#")
+  }
+
+  let open_tag = "".join(["<h", string_repr(h_count), ">"])
+  let close_tag = "".join(["</h", string_repr(h_count), ">"])
+
+  "".join([open_tag, render_inline(src.strip_prefix(" ")), close_tag])
+}
+
+fun render_markdown_code(src: String): String {
+  let inner_lines = src.lines().slice(1, -1)
+  "".join(["<pre><code>", "\n".join(inner_lines), "</code></pre>"])
+}
+
+fun render_inline(src: String): String {
+  let parts: List<String> = []
+
+  while True {
+    match split_inline_punct(src) {
+      Some(src_parts) => {
+        let (before, after) = src_parts
+        parts = parts.append(before)
+
+        if after.starts_with("`") {
+          let (rendered, new_src) = render_backtick(after)
+          parts = parts.append(rendered)
+          src = new_src
+        } else if after.starts_with("[") {
+          let (rendered, new_src) = render_link(after)
+          parts = parts.append(rendered)
+          src = new_src
+        } else {
+          assert(False)
+        }
+      }
+      None => {
+        parts = parts.append(src)
+        break
+      }
+    }
+  }
+
+  "".join(parts)
+}
+
+// If `src` contains punctuation, return the text before the
+// punctuation and the substring including the punctuation to the end.
+fun split_inline_punct(src: String): Option<(String, String)> {
+  let i = 0
+  while (i + 1) < src.len() {
+    let char = src.substring(i, i + 1)
+    if (char == "`") || (char == "[") {
+      return Some((src.substring(0, i), src.substring(i, src.len())))
+    }
+
+    i += 1
+  }
+
+  None
+}
+
+// Render the next backtick text as code, and return the remainder of
+// the text to process.
+fun render_backtick(src: String): (String, String) {
+  assert(src.starts_with("`"))
+  src = src.substring(1, src.len())
+
+  match src.split_once("`") {
+    Some(parts) => {
+      let (before, after) = parts
+      ("".join(["<code>", before, "</code>"]), after)
+    }
+    None => {
+      ("", src)
+    }
+  }
+}
+
+fun render_link(src: String): (String, String) {
+  assert(src.starts_with("["))
+  src = src.substring(1, src.len())
+
+  src.split_once("](")
+  match src.split_once("](") {
+    Some(parts) => {
+      let (url_text, after_paren) = parts
+      match after_paren.split_once(")") {
+        Some(parts) => {
+          let (url, after) = parts
+          ("".join(["<a href=\"", url, "\">", url_text, "</a>"]), after)
+        }
+        None => (src, "")
+      }
+    }
+    None => {
+      ("", src)
+    }
+  }
+}
+
+fun render_markdown_paragraph(src: String): String {
+  "".join(["<p>", render_inline(src), "</p>"])
+}
+
+export fun render_markdown(src: String): String {
+  let html_parts: List<String> = []
+
+  for part in parse_markdown(src) {
+    match part {
+      Heading(heading) => {
+        html_parts = html_parts.append(render_markdown_header(heading))
+      }
+      Paragraph(paragraph) => {
+        html_parts = html_parts.append(render_markdown_paragraph(paragraph))
+      }
+      Code(code) => {
+        html_parts = html_parts.append(render_markdown_code(code))
+      }
+    }
+  }
+
+  "\n".join(html_parts)
+}
+
+test render_markdown_paragraph_newlines {
+  assert(render_markdown("foo\nbar") == "<p>foo\nbar</p>")
+}
+
+test render_h1 {
+  assert(render_markdown("# foo") == "<h1>foo</h1>")
+}
+
+test render_h2 {
+  assert(render_markdown("## foo") == "<h2>foo</h2>")
+}
+
+test render_markdown_paragraph {
+  assert(render_markdown("foo bar") == "<p>foo bar</p>")
+}
+
+test render_markdown_paragraph_after_heading {
+  assert(render_markdown("# foo\n\nbar") == "<h1>foo</h1>\n<p>bar</p>")
+}
+
+test render_backtick {
+  assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
+}
+
+test render_backtick_in_heading {
+  assert(render_markdown("# `foo`") == "<h1><code>foo</code></h1>")
+}
+
+test render_link {
+  assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
+}
+
+test render_triple_backtick {
+  assert(render_markdown("```\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
+}
+
+test render_triple_backtick_blank_line {
+  assert(render_markdown("```\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
+}

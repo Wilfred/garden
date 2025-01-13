@@ -169,12 +169,12 @@ impl FreeVariableVisitor<'_> {
 }
 
 impl Visitor for FreeVariableVisitor<'_> {
-    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         // Don't worry about unused variables in top level
         // expressions, as they're legitimate in a REPL. If the user
         // has written `let x = 1` they might be planning on using `x`
         // in their next REPL expression!
-        if let ToplevelItem_::Expr(e) = &def.2 {
+        if let ToplevelItem_::Expr(e) = &item.2 {
             match &e.0.expr_ {
                 // If it's a block, it's definitely done, so unused
                 // variable warnings are useful.
@@ -184,7 +184,7 @@ impl Visitor for FreeVariableVisitor<'_> {
         }
 
         self.push_scope();
-        if let ToplevelItem_::Method(method_info, _) = &def.2 {
+        if let ToplevelItem_::Method(method_info, _) = &item.2 {
             self.add_binding(&method_info.receiver_sym);
             // Always treat the method receiver as used, because we
             // can't avoid defining this parameter even when we don't
@@ -192,7 +192,7 @@ impl Visitor for FreeVariableVisitor<'_> {
             self.mark_used(&method_info.receiver_sym.name);
         }
 
-        self.visit_def_(&def.2);
+        self.visit_item_(&item.2);
         self.pop_scope();
     }
 

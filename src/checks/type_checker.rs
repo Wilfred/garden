@@ -111,8 +111,8 @@ struct TypeCheckVisitor<'a> {
 }
 
 impl Visitor for TypeCheckVisitor<'_> {
-    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
-        if let ToplevelItem_::Import(info) = &def.2 {
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
+        if let ToplevelItem_::Import(info) = &item.2 {
             self.id_to_def_pos.insert(
                 info.id,
                 Position {
@@ -125,7 +125,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             );
         }
 
-        self.visit_def_(&def.2);
+        self.visit_item_(&item.2);
     }
 
     fn visit_test_info(&mut self, test_info: &TestInfo) {

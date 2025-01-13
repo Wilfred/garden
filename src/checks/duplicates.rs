@@ -22,8 +22,8 @@ struct DuplicatesVisitor {
 }
 
 impl Visitor for DuplicatesVisitor {
-    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
-        match &def.2 {
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
+        match &item.2 {
             ToplevelItem_::Fun(sym, _, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
                     self.diagnostics.push(Diagnostic {
@@ -102,7 +102,7 @@ impl Visitor for DuplicatesVisitor {
             ToplevelItem_::Import(_) => {}
         }
 
-        self.visit_def_(&def.2);
+        self.visit_item_(&item.2);
     }
 }
 

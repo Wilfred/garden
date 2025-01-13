@@ -11,12 +11,12 @@ use crate::{
 /// hook in to specific variants. For example, looking for
 /// occurrences of string literals anywhere in a function body.
 pub trait Visitor {
-    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
-        self.visit_def_(&def.2);
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
+        self.visit_item_(&item.2);
     }
 
-    fn visit_def_(&mut self, def_: &ToplevelItem_) {
-        match def_ {
+    fn visit_item_(&mut self, item_: &ToplevelItem_) {
+        match item_ {
             ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
             ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
             ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),

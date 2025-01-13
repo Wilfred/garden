@@ -41,15 +41,15 @@ struct IdFinder {
 }
 
 impl Visitor for IdFinder {
-    fn visit_toplevel_item(&mut self, def: &ToplevelItem) {
-        if let ToplevelItem_::Import(info) = &def.2 {
-            let item_pos = &def.1;
+    fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
+        if let ToplevelItem_::Import(info) = &item.2 {
+            let item_pos = &item.1;
             if item_pos.contains_offset(self.offset) && item_pos.contains_offset(self.end_offset) {
                 self.found_ids.push(AstId::Import(info.id));
             }
         }
 
-        self.visit_def_(&def.2);
+        self.visit_item_(&item.2);
     }
 
     fn visit_expr(&mut self, expr: &Expression) {

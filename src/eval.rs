@@ -4426,7 +4426,7 @@ mod tests {
     use garden_lang_parser::ast::IdGenerator;
     use garden_lang_parser::parse_toplevel_items;
 
-    fn parse_defs_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<ToplevelItem> {
+    fn parse_items_from_str(src: &str, id_gen: &mut IdGenerator) -> Vec<ToplevelItem> {
         let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, id_gen);
         assert!(errors.is_empty());
 
@@ -4677,8 +4677,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { True }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f() { True }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4690,8 +4690,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x) { x }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(x) { x }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f(123)", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4703,8 +4703,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x, y) { y }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(x, y) { y }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f(1, 2)", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4716,11 +4716,11 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str(
+        let items = parse_items_from_str(
             "fun f() { let x = 1 let f = fun() { x } f() }",
             &mut env.id_gen,
         );
-        load_toplevel_items(&defs, &mut env);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4732,8 +4732,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x) { }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(x) { }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4744,8 +4744,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { let x = 1 fun() { x } }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f() { let x = 1 fun() { x } }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("let y = f() y()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4757,8 +4757,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun (this: String) f() { True }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4770,8 +4770,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun (this: String) f() { True }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun (this: String) f() { True }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("\"\".f(123)", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4802,8 +4802,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun id(x) { x }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun id(x) { x }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4815,8 +4815,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { return 1 2 }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f() { return 1 2 }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
@@ -4828,8 +4828,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(): Int { 1 }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(): Int { 1 }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());
@@ -4840,8 +4840,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(x: Int) { }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(x: Int) { }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f(True)", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4852,8 +4852,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(): String { 1 }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(): String { 1 }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4864,8 +4864,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(): String { return 1 }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(): String { return 1 }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4876,8 +4876,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f(_) { _ }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f(_) { _ }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f(1)", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4888,8 +4888,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { let _ = 1 xy }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f() { let _ = 1 xy }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_err());
@@ -4900,8 +4900,8 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen);
 
-        let defs = parse_defs_from_str("fun f() { let _ = 1 let _ = 2 }", &mut env.id_gen);
-        load_toplevel_items(&defs, &mut env);
+        let items = parse_items_from_str("fun f() { let _ = 1 let _ = 2 }", &mut env.id_gen);
+        load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         assert!(eval_exprs(&exprs, &mut env).is_ok());

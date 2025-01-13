@@ -372,9 +372,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-            EvalError::AssertionFailed(pos) => {
-                eprintln!("Assertion failed: {}", pos.as_ide_string())
-            }
+            EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.0),
             EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
@@ -388,9 +386,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         Err(EvalUpToErr::EvalError(e)) => match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-            EvalError::AssertionFailed(pos) => {
-                eprintln!("Assertion failed: {}", pos.as_ide_string())
-            }
+            EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.0),
             EvalError::ReachedTickLimit => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
@@ -537,7 +533,7 @@ fn run_sandboxed_tests_in_file(
         match err {
             EvalError::Interrupted => num_errored += 1,
             EvalError::ResumableError(_, _) => num_errored += 1,
-            EvalError::AssertionFailed(_) => num_failed += 1,
+            EvalError::AssertionFailed(_, _) => num_failed += 1,
             EvalError::ReachedTickLimit => num_timed_out += 1,
             EvalError::ForbiddenInSandbox(_) => num_sandboxed += 1,
         }
@@ -613,7 +609,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
             let pos = match err {
                 EvalError::Interrupted => None,
                 EvalError::ResumableError(position, _) => Some(position),
-                EvalError::AssertionFailed(position) => Some(position),
+                EvalError::AssertionFailed(position, _) => Some(position),
                 EvalError::ReachedTickLimit => None,
                 EvalError::ForbiddenInSandbox(position) => Some(position),
             };
@@ -710,8 +706,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
                 &format_error_with_stack(&msg, &position, &env.stack.0)
             );
         }
-        Err(EvalError::AssertionFailed(position)) => {
-            let msg = ErrorMessage("Assertion failed".to_owned());
+        Err(EvalError::AssertionFailed(position, msg)) => {
             eprintln!(
                 "{}",
                 &format_error_with_stack(&msg, &position, &env.stack.0)

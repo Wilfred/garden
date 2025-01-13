@@ -8,7 +8,6 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
-use garden_lang_parser::diagnostics::ErrorMessage;
 use serde::{Deserialize, Serialize};
 
 use crate::checks::check_toplevel_items_in_env;
@@ -339,8 +338,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
                 id,
             }
         }
-        EvalError::AssertionFailed(position) => {
-            let message = ErrorMessage(format!("Assertion failed: {}", position.as_ide_string()));
+        EvalError::AssertionFailed(position, message) => {
             let stack = format_error_with_stack(&message, &position, &env.stack.0);
 
             Response {
@@ -678,11 +676,11 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             position: None,
             id: None,
         },
-        Err(EvalError::AssertionFailed(position)) => Response {
+        Err(EvalError::AssertionFailed(position, message)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    message: format!("Assertion failed: {}", position.as_ide_string()),
+                    message: message.0.clone(),
                     position: Some(position),
                     stack: None,
                 }]),

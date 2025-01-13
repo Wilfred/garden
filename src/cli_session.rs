@@ -14,7 +14,6 @@ use crate::eval::{eval, load_toplevel_items, ExpressionState, Session};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
 use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_};
-use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;
@@ -201,8 +200,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 );
                 is_stopped = true;
             }
-            Err(EvalError::AssertionFailed(position)) => {
-                let msg = ErrorMessage("Assertion failed".to_owned());
+            Err(EvalError::AssertionFailed(position, msg)) => {
                 println!(
                     "{}",
                     &format_error_with_stack(&msg, &position, &env.stack.0)

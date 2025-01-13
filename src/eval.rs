@@ -240,7 +240,7 @@ pub(crate) enum EvalError {
     /// Normal userland error, e.g. `error()` was called.
     ResumableError(Position, ErrorMessage),
     /// `assert()` failed.
-    AssertionFailed(Position),
+    AssertionFailed(Position, ErrorMessage),
     /// Ran out of ticks (i.e. program did not terminate in time).
     // TODO: add position here.
     ReachedTickLimit,
@@ -1928,7 +1928,10 @@ fn eval_builtin_call(
                 if !b {
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::AssertionFailed(position.clone()),
+                        EvalError::AssertionFailed(
+                            position.clone(),
+                            ErrorMessage(format!("Assertion failed: {}", position.as_ide_string())),
+                        ),
                     ));
                 }
             } else {

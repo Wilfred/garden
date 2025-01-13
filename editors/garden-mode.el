@@ -361,7 +361,9 @@ the user entering a value in the *garden* buffer."
 
 (defun garden--visit-path (file-name)
   "Open or switch to the buffer named FILE-NAME."
-  (if (s-starts-with-p "/" file-name)
+  (if (or
+       (s-starts-with-p "/" file-name)
+       (s-starts-with-p "./" file-name))
       (find-file file-name)
     ;; For prelude and builtins, we don't have a fully qualified
     ;; path. Switch to the current prelude.gdn or builtins.gdn,

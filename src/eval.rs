@@ -2366,11 +2366,23 @@ fn eval_call(
     env: &mut Env,
     expr_value_is_used: bool,
     caller_expr: Rc<Expression>,
-    arg_positions: &[Position],
-    arg_values: &[Value],
-    receiver_value: &Value,
+    paren_args: &ParenthesizedArguments,
     session: &Session,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
+    let mut arg_values = vec![];
+    let mut arg_positions = vec![];
+
+    for arg in &paren_args.arguments {
+        arg_values.push(
+            env.pop_value()
+                .expect("Popped an empty value for stack for call arguments"),
+        );
+        arg_positions.push(arg.position.clone());
+    }
+    let receiver_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for call receiver");
+
     let stack_frame = env.current_frame_mut();
     let frame_type_bindings = stack_frame.type_bindings.clone();
 
@@ -2442,11 +2454,11 @@ fn eval_call(
 
             check_arity(
                 &name_sym.name,
-                receiver_value,
+                &receiver_value,
                 &caller_expr.position,
                 params.len(),
-                arg_positions,
-                arg_values,
+                &arg_positions,
+                &arg_values,
             )?;
 
             let mut is_self_call = false;
@@ -2472,10 +2484,10 @@ fn eval_call(
 
             check_param_types(
                 env,
-                receiver_value,
+                &receiver_value,
                 params,
-                arg_positions,
-                arg_values,
+                &arg_positions,
+                &arg_values,
                 &type_bindings,
             )?;
 
@@ -2508,10 +2520,10 @@ fn eval_call(
         Value::BuiltinFunction(kind, _) => eval_builtin_call(
             env,
             *kind,
-            receiver_value,
+            &receiver_value,
             &caller_expr.position,
-            arg_positions,
-            arg_values,
+            &arg_positions,
+            &arg_values,
             expr_value_is_used,
             &caller_expr.position,
             session,
@@ -2525,11 +2537,11 @@ fn eval_call(
                 &SymbolName {
                     name: type_name.name.clone(),
                 },
-                receiver_value,
+                &receiver_value,
                 &caller_expr.position,
                 1,
-                arg_positions,
-                arg_values,
+                &arg_positions,
+                &arg_values,
             )?;
 
             let runtime_type = enum_value_runtime_type(
@@ -3802,27 +3814,11 @@ fn eval_expr(
                 }
             }
             ExpressionState::EvaluatedSubexpressions => {
-                let mut arg_values = vec![];
-                let mut arg_positions = vec![];
-
-                for arg in &paren_args.arguments {
-                    arg_values.push(
-                        env.pop_value()
-                            .expect("Popped an empty value for stack for call arguments"),
-                    );
-                    arg_positions.push(arg.position.clone());
-                }
-                let receiver_value = env
-                    .pop_value()
-                    .expect("Popped an empty value stack for call receiver");
-
                 match eval_call(
                     env,
                     expr_value_is_used,
-                    outer_expr,
-                    &arg_positions,
-                    &arg_values,
-                    &receiver_value,
+                    outer_expr.clone(),
+                    paren_args,
                     session,
                 )? {
                     Some(new_stack_frame) => {

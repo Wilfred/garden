@@ -22,18 +22,6 @@ export fun error(message: String): NoValue {
   __BUILTIN_IMPLEMENTATION
 }
 
-// Stop the program if `condition` is `False`.
-//
-// ```
-// assert((1 + 1) == 2)
-// ```
-//
-// This is intended for writing tests. See `error` for reporting other
-// issues.
-export fun assert(condition: Bool): Unit {
-  __BUILTIN_IMPLEMENTATION
-}
-
 // List the contents of the specified directory.
 //
 // ```

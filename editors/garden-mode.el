@@ -548,7 +548,7 @@ enclosing point and print the result."
   `((,(regexp-opt
        '("let" "fun" "enum" "struct" "export" "import"
          "if" "else" "while" "return" "test" "match"
-         "break" "continue" "for" "in")
+         "break" "continue" "for" "in" "assert")
        'symbols)
      . font-lock-keyword-face)
 

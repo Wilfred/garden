@@ -205,7 +205,6 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltinFunctionKind {
-    Assert,
     Error,
     ListDirectory,
     Shell,
@@ -220,7 +219,6 @@ pub(crate) enum BuiltinFunctionKind {
 impl Display for BuiltinFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
-            BuiltinFunctionKind::Assert => "assert",
             BuiltinFunctionKind::Error => "error",
             BuiltinFunctionKind::ListDirectory => "list_directory",
             BuiltinFunctionKind::Shell => "shell",

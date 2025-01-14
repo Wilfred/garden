@@ -4,6 +4,9 @@
 
 Added `^` to raise a number to a power.
 
+`assert` is now syntax rather than a built-in function. The symbol
+`assert` is now a reserved word.
+
 ## Checks
 
 Fixed several type checking bugs on type parameters in methods.

@@ -1912,52 +1912,6 @@ fn eval_builtin_call(
                 }
             }
         }
-        BuiltinFunctionKind::Assert => {
-            check_arity(
-                &SymbolName {
-                    name: "assert".to_owned(),
-                },
-                receiver_value,
-                receiver_pos,
-                1,
-                arg_positions,
-                arg_values,
-            )?;
-
-            let mut saved_values = vec![];
-            for value in arg_values.iter().rev() {
-                saved_values.push(value.clone());
-            }
-            saved_values.push(receiver_value.clone());
-
-            if let Some(b) = arg_values[0].as_rust_bool() {
-                if !b {
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::AssertionFailed(
-                            position.clone(),
-                            ErrorMessage(format!("Assertion failed: {}", position.as_ide_string())),
-                        ),
-                    ));
-                }
-            } else {
-                let message = format_type_error(
-                    &TypeName {
-                        name: "Bool".into(),
-                    },
-                    &arg_values[0],
-                    env,
-                );
-                return Err((
-                    RestoreValues(saved_values),
-                    EvalError::ResumableError(arg_positions[0].clone(), message),
-                ));
-            }
-
-            if expr_value_is_used {
-                env.push_value(Value::unit());
-            }
-        }
         BuiltinFunctionKind::Print => {
             check_arity(
                 &SymbolName {

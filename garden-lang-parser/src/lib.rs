@@ -311,6 +311,25 @@ fn parse_lambda(
     )
 }
 
+fn parse_assert(
+    src: &str,
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let assert_keyword = require_token(tokens, diagnostics, "assert");
+
+    require_token(tokens, diagnostics, "(");
+    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let close_paren = require_token(tokens, diagnostics, ")");
+
+    Expression::new(
+        Position::merge(&assert_keyword.position, &close_paren.position),
+        Expression_::Assert(Rc::new(expr)),
+        id_gen.next(),
+    )
+}
+
 fn parse_if(
     src: &str,
     tokens: &mut TokenStream,
@@ -529,6 +548,10 @@ fn parse_simple_expression(
 
         if token.text == "fun" {
             return parse_lambda(src, tokens, id_gen, diagnostics);
+        }
+
+        if token.text == "assert" {
+            return parse_assert(src, tokens, id_gen, diagnostics);
         }
 
         if SYMBOL_RE.is_match(token.text) {
@@ -1979,7 +2002,7 @@ fn parse_function(
 
 const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
-    "match", "break", "continue", "for", "in",
+    "match", "break", "continue", "for", "in", "assert",
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {

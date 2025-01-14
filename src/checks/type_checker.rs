@@ -1287,6 +1287,18 @@ impl TypeCheckVisitor<'_> {
                 // bottom type to prevent later type errors.
                 Type::no_value()
             }
+            Expression_::Assert(expr) => {
+                let ty = self.check_expr(expr, type_bindings, expected_return_ty);
+                if !is_subtype(&ty, &Type::bool()) {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!("Expected `Bool` for `assert()`, but got `{}`.", ty),
+                        position: expr.position.clone(),
+                    });
+                }
+
+                Type::unit()
+            }
         }
     }
 

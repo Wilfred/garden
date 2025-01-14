@@ -394,6 +394,10 @@ pub enum Expression_ {
     /// { x y }
     /// ```
     Block(Block),
+    /// ```garden
+    /// assert(x)
+    /// ```
+    Assert(Rc<Expression>),
     /// We had a parse error in this position, so there's no
     /// expression.
     Invalid,

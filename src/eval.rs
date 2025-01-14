@@ -2595,6 +2595,54 @@ fn eval_call(
     Ok(None)
 }
 
+/// Evaluate a function call.
+///
+/// If we're calling a userland function, return the new stackframe to
+/// evaluate next.
+fn eval_assert(
+    env: &mut Env,
+    expr_value_is_used: bool,
+    outer_expr: Rc<Expression>,
+    recv_pos: &Position,
+) -> Result<(), (RestoreValues, EvalError)> {
+    let receiver_value = env
+        .pop_value()
+        .expect("Popped an empty value stack for call receiver");
+
+    if let Some(b) = receiver_value.as_rust_bool() {
+        if !b {
+            return Err((
+                RestoreValues(vec![receiver_value]),
+                EvalError::AssertionFailed(
+                    recv_pos.clone(),
+                    ErrorMessage(format!(
+                        "Assertion failed: {}",
+                        outer_expr.position.as_ide_string()
+                    )),
+                ),
+            ));
+        }
+    } else {
+        let message = format_type_error(
+            &TypeName {
+                name: "Bool".into(),
+            },
+            &receiver_value,
+            env,
+        );
+        return Err((
+            RestoreValues(vec![receiver_value]),
+            EvalError::ResumableError(recv_pos.clone(), message),
+        ));
+    }
+
+    if expr_value_is_used {
+        env.push_value(Value::unit());
+    }
+
+    Ok(())
+}
+
 /// Given an enum constructor, e.g. `Some`, return the function type
 /// it represents (e.g. `T -> Option<T>` in this case).
 fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHint) -> Type {
@@ -3939,6 +3987,17 @@ fn eval_expr(
         }
         Expression_::Invalid => {
             return Err((RestoreValues(vec![]), (EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())))));
+        }
+        Expression_::Assert(expr) => {
+            if expr_state.done_children() {
+                eval_assert(env, expr_value_is_used, outer_expr.clone(), &expr.position)?;
+            } else {
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedAllSubexpressions,
+                    outer_expr.clone(),
+                );
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
+            }
         }
     }
 

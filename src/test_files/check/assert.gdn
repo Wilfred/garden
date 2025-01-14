@@ -1,0 +1,13 @@
+{
+  assert(1)
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Bool` for `assert()`, but got `Int`.
+// 
+// --> src/test_files/check/assert.gdn:2
+//   assert(1)
+//          ^
+

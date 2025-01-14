@@ -3788,8 +3788,20 @@ fn eval_expr(
                 env.push_value(Value::Closure(bindings, fun_info.clone()));
             }
         }
-        Expression_::Call(receiver, paren_args) => {
-            if expr_state.done_children() {
+        Expression_::Call(receiver, paren_args) => match expr_state {
+            ExpressionState::NotEvaluated => {
+                env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
+
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, receiver.clone());
+            }
+            ExpressionState::PartiallyEvaluated => {
+                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
+
+                for arg in &paren_args.arguments {
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.clone());
+                }
+            }
+            ExpressionState::EvaluatedSubexpressions => {
                 let mut arg_values = vec![];
                 let mut arg_positions = vec![];
 
@@ -3818,19 +3830,8 @@ fn eval_expr(
                     }
                     None => {}
                 }
-            } else {
-                env.push_expr_to_eval(ExpressionState::EvaluatedSubexpressions, outer_expr.clone());
-
-                for arg in &paren_args.arguments {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.clone());
-                }
-                // Push the receiver after arguments, so
-                // we evaluate it before arguments. This
-                // makes it easier to use :replace on bad
-                // functions.
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, receiver.clone());
             }
-        }
+        },
         Expression_::MethodCall(receiver_expr, meth_name, paren_args) => {
             if expr_state.done_children() {
                 match eval_method_call(

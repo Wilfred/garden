@@ -1,0 +1,16 @@
+fun main(_) {
+  // We should evaluate the LHS first, so that should be the resulting
+  // error.
+  error("lhs") + error("rhs")
+}
+
+// args: run
+// expected stderr:
+// Error: lhs
+// 
+// --> src/test_files/runtime/binop_eval_order.gdn:4[2m[1m	 fun main()[0m[0m
+//   error("lhs") + error("rhs")
+//   ^^^^^^^^^^^^
+// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// // __toplevel__
+

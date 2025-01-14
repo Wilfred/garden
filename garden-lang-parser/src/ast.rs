@@ -236,6 +236,28 @@ pub enum BinaryOperatorKind {
     Or,
 }
 
+impl Display for BinaryOperatorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            BinaryOperatorKind::Add => "+",
+            BinaryOperatorKind::Subtract => "-",
+            BinaryOperatorKind::Multiply => "*",
+            BinaryOperatorKind::Divide => "/",
+            BinaryOperatorKind::Modulo => "%",
+            BinaryOperatorKind::Exponent => "^",
+            BinaryOperatorKind::Equal => "==",
+            BinaryOperatorKind::NotEqual => "!=",
+            BinaryOperatorKind::LessThan => "<",
+            BinaryOperatorKind::LessThanOrEqual => "<=",
+            BinaryOperatorKind::GreaterThan => ">",
+            BinaryOperatorKind::GreaterThanOrEqual => ">=",
+            BinaryOperatorKind::And => "&&",
+            BinaryOperatorKind::Or => "||",
+        };
+        write!(f, "{}", s)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AssignUpdateKind {
     Add,

@@ -2557,23 +2557,47 @@ fn eval_assert(
     env: &mut Env,
     expr_value_is_used: bool,
     outer_expr: Rc<Expression>,
-    recv_pos: &Position,
+    recv_expr: &Rc<Expression>,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let receiver_value = env
         .pop_value()
         .expect("Popped an empty value stack for call receiver");
 
+    // Unconditionally pop the LHS and RHS values, even if the assert
+    // succeeds, so we maintain stack discipline.
+    let subexpr_values = match binop_for_assert(recv_expr) {
+        Some((_, kind, _)) => {
+            let rhs_value = env
+                .pop_value()
+                .expect("Popped an empty value stack in assert");
+            let lhs_value = env
+                .pop_value()
+                .expect("Popped an empty value stack in assert");
+
+            Some((lhs_value, kind, rhs_value))
+        }
+        None => None,
+    };
+
     if let Some(b) = receiver_value.as_rust_bool() {
         if !b {
+            let message = match subexpr_values {
+                Some((lhs_value, kind, rhs_value)) => format!(
+                    "Assertion failed `{} {} {}` at {}",
+                    lhs_value.display(env),
+                    kind,
+                    rhs_value.display(env),
+                    outer_expr.position.as_ide_string()
+                ),
+                None => format!(
+                    "Assertion failed at {}",
+                    outer_expr.position.as_ide_string()
+                ),
+            };
+
             return Err((
                 RestoreValues(vec![receiver_value]),
-                EvalError::AssertionFailed(
-                    recv_pos.clone(),
-                    ErrorMessage(format!(
-                        "Assertion failed: {}",
-                        outer_expr.position.as_ide_string()
-                    )),
-                ),
+                EvalError::AssertionFailed(recv_expr.position.clone(), ErrorMessage(message)),
             ));
         }
     } else {
@@ -2586,7 +2610,7 @@ fn eval_assert(
         );
         return Err((
             RestoreValues(vec![receiver_value]),
-            EvalError::ResumableError(recv_pos.clone(), message),
+            EvalError::ResumableError(recv_expr.position.clone(), message),
         ));
     }
 
@@ -3943,19 +3967,74 @@ fn eval_expr(
             return Err((RestoreValues(vec![]), (EvalError::ResumableError(expr_position, ErrorMessage("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())))));
         }
         Expression_::Assert(expr) => {
-            if expr_state.done_children() {
-                eval_assert(env, expr_value_is_used, outer_expr.clone(), &expr.position)?;
-            } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
-                env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
+            match expr_state {
+                ExpressionState::NotEvaluated => match binop_for_assert(expr) {
+                    Some((lhs, _, rhs)) => {
+                        // Intercept evaluation of LHS and RHS, so we
+                        // can show their values if we show an
+                        // assertion failure message.
+
+                        env.push_expr_to_eval(
+                            ExpressionState::PartiallyEvaluated,
+                            outer_expr.clone(),
+                        );
+
+                        env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
+                        env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
+                    }
+                    None => {
+                        env.push_expr_to_eval(
+                            ExpressionState::EvaluatedAllSubexpressions,
+                            outer_expr.clone(),
+                        );
+
+                        env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
+                    }
+                },
+                ExpressionState::PartiallyEvaluated => {
+                    // Duplicate the LHS and RHS values.
+
+                    let rhs_value = env
+                        .pop_value()
+                        .expect("Popped an empty value stack for RHS of binary operator");
+                    let lhs_value = env
+                        .pop_value()
+                        .expect("Popped an empty value stack for LHS of binary operator");
+
+                    env.push_value(lhs_value.clone());
+                    env.push_value(rhs_value.clone());
+                    env.push_value(lhs_value);
+                    env.push_value(rhs_value);
+
+                    env.push_expr_to_eval(
+                        ExpressionState::EvaluatedAllSubexpressions,
+                        outer_expr.clone(),
+                    );
+
+                    env.push_expr_to_eval(
+                        ExpressionState::EvaluatedAllSubexpressions,
+                        expr.clone(),
+                    );
+                }
+                ExpressionState::EvaluatedAllSubexpressions => {
+                    eval_assert(env, expr_value_is_used, outer_expr.clone(), expr)?;
+                }
             }
         }
     }
 
     Ok(None)
+}
+
+fn binop_for_assert(
+    expr: &Rc<Expression>,
+) -> Option<(Rc<Expression>, BinaryOperatorKind, Rc<Expression>)> {
+    match &expr.expr_ {
+        Expression_::BinaryOperator(lhs, op_kind, rhs) => {
+            Some((lhs.clone(), *op_kind, rhs.clone()))
+        }
+        _ => None,
+    }
 }
 
 pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError> {

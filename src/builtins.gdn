@@ -165,7 +165,7 @@ export fun (this: String) append(suffix: String): String {
   __BUILTIN_IMPLEMENTATION
 }
 
-test string_substring {
+test string_append {
   assert("foo".append("bar") == "foobar")
 }
 

@@ -2,12 +2,15 @@ enum MarkdownPart {
   Heading(String),
   Paragraph(String),
   Code(String),
+  Bullets(List<String>)
 }
 
 fun parse_markdown(src: String): List<MarkdownPart> {
   let parts: List<MarkdownPart> = []
   let current_section: List<String> = []
+
   let in_code_block = False
+  let in_bullets = False
 
   for line in src.lines() {
     if (line == "") && current_section.is_empty() {
@@ -28,11 +31,29 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       current_section = current_section.append(line)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
-        parts = parts.append(Paragraph("\n".join(current_section)))
+        if in_bullets {
+          parts = parts.append(Bullets(current_section))
+        } else {
+          parts = parts.append(Paragraph("\n".join(current_section)))
+        }
+
         current_section = []
       }
 
       parts = parts.append(Heading(line))
+    } else if line.starts_with("*") {
+      if in_bullets {
+        current_section = current_section.append(line)
+      } else {
+        if current_section.is_non_empty() {
+          parts = parts.append(Paragraph("\n".join(current_section)))
+          current_section = []
+        }
+
+        in_bullets = True
+        current_section = current_section.append(line)
+      }
+
     } else if line == "" {
       parts = parts.append(Paragraph("\n".join(current_section)))
       current_section = []
@@ -42,7 +63,11 @@ fun parse_markdown(src: String): List<MarkdownPart> {
   }
 
   if current_section.is_non_empty() {
-    parts = parts.append(Paragraph("\n".join(current_section)))
+    if in_bullets {
+      parts = parts.append(Bullets(current_section))
+    } else {
+      parts = parts.append(Paragraph("\n".join(current_section)))
+    }
   }
 
   parts
@@ -157,6 +182,15 @@ fun render_markdown_paragraph(src: String): String {
   "".join(["<p>", render_inline(src), "</p>"])
 }
 
+fun render_markdown_bullets(items: List<String>): String {
+  let rendered_items = items.map(fun(item: String) {
+    let rendered_item = render_inline(item.strip_prefix("*").trim_left())
+    "".join(["<li>", rendered_item, "</li>"])
+  })
+
+  "".join(["<ul>\n", "\n".join(rendered_items), "\n</ul>"])
+}
+
 export fun render_markdown(src: String): String {
   let html_parts: List<String> = []
 
@@ -170,6 +204,9 @@ export fun render_markdown(src: String): String {
       }
       Code(code) => {
         html_parts = html_parts.append(render_markdown_code(code))
+      }
+      Bullets(items) => {
+        html_parts = html_parts.append(render_markdown_bullets(items))
       }
     }
   }
@@ -215,4 +252,11 @@ test render_triple_backtick {
 
 test render_triple_backtick_blank_line {
   assert(render_markdown("```\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
+}
+
+test render_asterisk {
+  assert(render_markdown("* foo\n* bar") == "<ul>
+<li>foo</li>
+<li>bar</li>
+</ul>")
 }

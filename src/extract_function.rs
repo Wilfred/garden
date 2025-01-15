@@ -5,7 +5,7 @@ use garden_lang_parser::{
     parse_toplevel_items,
     visitor::Visitor,
 };
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::{
     checks::type_checker::check_types,
@@ -122,6 +122,7 @@ fn locals_outside_expr(
         env,
         id_to_ty: id_to_ty.clone(),
         vars_outside: vec![],
+        vars_seen: FxHashSet::default(),
     };
 
     // TODO: this does not correctly handle lambdas or let
@@ -134,6 +135,7 @@ fn locals_outside_expr(
 struct OutsideVarsVisitor<'a> {
     env: &'a Env,
     vars_outside: Vec<(SymbolName, Option<Type>)>,
+    vars_seen: FxHashSet<SymbolName>,
     id_to_ty: FxHashMap<SyntaxId, Type>,
 }
 
@@ -142,9 +144,12 @@ impl Visitor for OutsideVarsVisitor<'_> {
         self.visit_expr_(&expr.expr_);
 
         if let Expression_::Variable(symbol) = &expr.expr_ {
-            if !self.env.file_scope.contains_key(&symbol.name) {
+            if !self.env.file_scope.contains_key(&symbol.name)
+                && !self.vars_seen.contains(&symbol.name)
+            {
                 self.vars_outside
                     .push((symbol.name.clone(), self.id_to_ty.get(&expr.id).cloned()));
+                self.vars_seen.insert(symbol.name.clone());
             }
         }
     }

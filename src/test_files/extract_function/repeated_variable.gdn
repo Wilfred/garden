@@ -1,0 +1,21 @@
+fun contains_expr(i: Int) {
+  let x = 1
+
+  // We want to extract x as a parameter, but not increment.
+  let y = x + x
+  //      ^^^^^
+}
+
+// args: extract-function --name extracted_fun
+// expected stdout:
+// fun extracted_fun(x: Int): Int {
+//   x + x
+// }
+// 
+// fun contains_expr(i: Int) {
+//   let x = 1
+// 
+//   // We want to extract x as a parameter, but not increment.
+//   let y = extracted_fun(x)
+// }
+

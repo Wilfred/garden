@@ -2,7 +2,8 @@ enum MarkdownPart {
   Heading(String),
   Paragraph(String),
   Code(String),
-  Bullets(List<String>)
+  Bullets(List<String>),
+  ThematicBreak,
 }
 
 fun parse_markdown(src: String): List<MarkdownPart> {
@@ -29,6 +30,16 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       }
     } else if in_code_block {
       current_section = current_section.append(line)
+    } else if line == "---" {
+      if current_section.is_non_empty() {
+        if in_bullets {
+          parts = parts.append(Bullets(current_section))
+        } else {
+          parts = parts.append(Paragraph("\n".join(current_section)))
+        }
+      }
+
+      parts = parts.append(ThematicBreak)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
         if in_bullets {
@@ -208,6 +219,9 @@ export fun render_markdown(src: String): String {
       Bullets(items) => {
         html_parts = html_parts.append(render_markdown_bullets(items))
       }
+      ThematicBreak => {
+        html_parts = html_parts.append("<hr />")
+      }
     }
   }
 
@@ -259,4 +273,8 @@ test render_asterisk {
 <li>foo</li>
 <li>bar</li>
 </ul>")
+}
+
+test render_thematic_break {
+  assert(render_markdown("---") == "<hr />")
 }

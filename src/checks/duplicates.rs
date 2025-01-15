@@ -18,6 +18,7 @@ struct DuplicatesVisitor {
     funs_seen: FxHashMap<SymbolName, Position>,
     methods_seen: FxHashMap<TypeName, FxHashMap<SymbolName, Position>>,
     types_seen: HashSet<TypeName>,
+    tests_seen: HashSet<SymbolName>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -67,7 +68,21 @@ impl Visitor for DuplicatesVisitor {
                     });
                 }
             }
-            ToplevelItem_::Test(_) => {}
+            ToplevelItem_::Test(test_info) => {
+                let sym = &test_info.name_sym;
+                if self.tests_seen.contains(&sym.name) {
+                    self.diagnostics.push(Diagnostic {
+                        message: format!(
+                            "The test `{}` is already defined in this file.",
+                            sym.name
+                        ),
+                        position: sym.position.clone(),
+                        level: Level::Warning,
+                    });
+                } else {
+                    self.tests_seen.insert(sym.name.clone());
+                }
+            }
             ToplevelItem_::Enum(enum_info) => {
                 let name_sym = &enum_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
@@ -112,6 +127,7 @@ pub(crate) fn check_duplicates(items: &[ToplevelItem], _env: &Env) -> Vec<Diagno
         funs_seen: FxHashMap::default(),
         methods_seen: FxHashMap::default(),
         types_seen: HashSet::default(),
+        tests_seen: HashSet::default(),
     };
     for item in items {
         visitor.visit_toplevel_item(item);

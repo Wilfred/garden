@@ -1,0 +1,13 @@
+test foo {}
+
+test foo {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: The test `foo` is already defined in this file.
+// 
+// --> src/test_files/check/duplicate_test.gdn:3
+// test foo {}
+//      ^^^
+

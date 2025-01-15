@@ -6,6 +6,14 @@ enum MarkdownPart {
   ThematicBreak,
 }
 
+fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPart {
+  if in_bullets {
+    Bullets(current_section)
+  } else {
+    Paragraph("\n".join(current_section))
+  }
+}
+
 fun parse_markdown(src: String): List<MarkdownPart> {
   let parts: List<MarkdownPart> = []
   let current_section: List<String> = []
@@ -32,22 +40,13 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       current_section = current_section.append(line)
     } else if line == "---" {
       if current_section.is_non_empty() {
-        if in_bullets {
-          parts = parts.append(Bullets(current_section))
-        } else {
-          parts = parts.append(Paragraph("\n".join(current_section)))
-        }
+        parts = parts.append(finish_section(in_bullets, current_section))
       }
 
       parts = parts.append(ThematicBreak)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
-        if in_bullets {
-          parts = parts.append(Bullets(current_section))
-        } else {
-          parts = parts.append(Paragraph("\n".join(current_section)))
-        }
-
+        parts = parts.append(finish_section(in_bullets, current_section))
         current_section = []
       }
 
@@ -57,7 +56,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
         current_section = current_section.append(line)
       } else {
         if current_section.is_non_empty() {
-          parts = parts.append(Paragraph("\n".join(current_section)))
+          parts = parts.append(finish_section(in_bullets, current_section))
           current_section = []
         }
 
@@ -74,11 +73,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
   }
 
   if current_section.is_non_empty() {
-    if in_bullets {
-      parts = parts.append(Bullets(current_section))
-    } else {
-      parts = parts.append(Paragraph("\n".join(current_section)))
-    }
+    parts = parts.append(finish_section(in_bullets, current_section))
   }
 
   parts

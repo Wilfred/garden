@@ -101,26 +101,41 @@ fun render_markdown_code(src: String): String {
 fun render_inline(src: String): String {
   let parts: List<String> = []
 
-  while True {
-    match split_inline_punct(src) {
-      Some(src_parts) => {
-        let (before, after) = src_parts
-        parts = parts.append(before)
+  for piece in split_links(src) {
+    if piece.starts_with("[") {
+      parts = parts.append(render_link(piece))
+    } else {
+      parts = parts.append(render_inline_no_links(piece))
+    }
+  }
 
-        if after.starts_with("`") {
-          let (rendered, new_src) = render_backtick(after)
-          parts = parts.append(rendered)
-          src = new_src
-        } else if after.starts_with("[") {
-          let (rendered, new_src) = render_link(after)
-          parts = parts.append(rendered)
-          src = new_src
-        } else {
-          assert(False)
+  "".join(parts)
+}
+
+fun render_inline_no_links(src: String): String {
+  let parts: List<String> = []
+
+  let s = src
+  while True {
+    match s.index_of("`") {
+      Some(i) => {
+        parts = parts.append(s.substring(0, i))
+
+        s = s.substring(i, s.len())
+        match s.substring(1, s.len()).index_of("`") {
+          Some(j) => {
+            let between = s.substring(1, j + 1)
+            parts = parts.append("".join(["<code>", between, "</code>"]))
+            s = s.substring(j + 2, s.len())
+          }
+          None => {
+            parts = parts.append(s)
+            break
+          }
         }
       }
       None => {
-        parts = parts.append(src)
+        parts = parts.append(s)
         break
       }
     }
@@ -129,58 +144,48 @@ fun render_inline(src: String): String {
   "".join(parts)
 }
 
-// If `src` contains punctuation, return the text before the
-// punctuation and the substring including the punctuation to the end.
-fun split_inline_punct(src: String): Option<(String, String)> {
-  let i = 0
-  while (i + 1) < src.len() {
-    let char = src.substring(i, i + 1)
-    if (char == "`") || (char == "[") {
-      return Some((src.substring(0, i), src.substring(i, src.len())))
-    }
+// Split `src` into a list of strings, where each string is either a
+// link or a other text.
+fun split_links(src: String): List<String> {
+  let parts: List<String> = []
 
-    i += 1
-  }
+  let s = src
+  while True {
+    match s.index_of("[") {
+      Some(i) => {
 
-  None
-}
-
-// Render the next backtick text as code, and return the remainder of
-// the text to process.
-fun render_backtick(src: String): (String, String) {
-  assert(src.starts_with("`"))
-  src = src.substring(1, src.len())
-
-  match src.split_once("`") {
-    Some(parts) => {
-      let (before, after) = parts
-      ("".join(["<code>", before, "</code>"]), after)
-    }
-    None => {
-      ("", src)
-    }
-  }
-}
-
-fun render_link(src: String): (String, String) {
-  assert(src.starts_with("["))
-  src = src.substring(1, src.len())
-
-  src.split_once("](")
-  match src.split_once("](") {
-    Some(parts) => {
-      let (url_text, after_paren) = parts
-      match after_paren.split_once(")") {
-        Some(parts) => {
-          let (url, after) = parts
-          ("".join(["<a href=\"", url, "\">", url_text, "</a>"]), after)
+        match s.index_of(")") {
+          Some(j) => {
+            parts = parts.append(s.substring(0, i))
+            parts = parts.append(s.substring(i, j + 1))
+            s = s.substring(j + 1, s.len())
+          }
+          None => {
+            parts = parts.append(s)
+            break
+          }
         }
-        None => (src, "")
+      }
+      None => {
+        parts = parts.append(s)
+        break
       }
     }
-    None => {
-      ("", src)
+  }
+
+  parts
+}
+
+fun render_link(src: String): String {
+  assert(src.starts_with("["))
+
+  match src.index_of("]") {
+    Some(i) => {
+      let link_text = src.substring(1, i)
+      let link_url = src.substring(i + 2, src.len() - 1)
+      "".join(["<a href=\"", link_url, "\">", render_inline_no_links(link_text), "</a>"])
     }
+    None => src
   }
 }
 
@@ -253,6 +258,10 @@ test render_backtick_in_heading {
 
 test render_link {
   assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
+}
+
+test render_backtick_in_link {
+  assert(render_markdown("[`foo` bar](#)") == "<p><a href=\"#\"><code>foo</code> bar</a></p>")
 }
 
 test render_triple_backtick {

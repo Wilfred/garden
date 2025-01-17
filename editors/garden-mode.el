@@ -736,7 +736,7 @@ If called with a prefix, stop the previous session."
 
   (setq font-lock-defaults '(garden-mode-font-lock-keywords))
 
-  (add-hook 'completion-at-point-functions #'garden--completion-at-point nil t)
+  ;; (add-hook 'completion-at-point-functions #'garden--completion-at-point nil t)
   (add-hook 'eldoc-documentation-functions #'garden-mode-eldoc nil t))
 
 (defun garden--buf-as-tmp-file ()

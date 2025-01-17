@@ -791,6 +791,8 @@ fn parse_comma_separated_exprs(
 
         let start_idx = tokens.idx;
         let arg = parse_expression(src, tokens, id_gen, diagnostics);
+        let arg_pos = arg.position.clone();
+
         if arg.expr_.is_invalid_or_placeholder() {
             break;
         }
@@ -813,7 +815,17 @@ fn parse_comma_separated_exprs(
                     )),
                     additional: vec![],
                 });
-                continue;
+
+                // Attempt to recover a reasonable AST.
+                if arg_pos.line_number == token.position.line_number {
+                    // Next token is on the same line, treat it as
+                    // `foo(a b)` with a forgotten comma.
+                    continue;
+                } else {
+                    // Next token is on another line, treat it as a
+                    // forgotten parenthesis `foo(a`.
+                    break;
+                }
             }
         } else {
             diagnostics.push(ParseError::Incomplete {

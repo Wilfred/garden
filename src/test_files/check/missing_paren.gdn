@@ -1,0 +1,32 @@
+fun takes_arg(_) {}
+
+fun inc(x: Int) { x + 1}
+
+fun foo() {
+  let x = 1
+
+  // Forgot closing paren here:
+  takes_arg(inc(x)
+
+  x = 2
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Invalid syntax: Expected `,` or `)`, got `x`
+// 
+// --> src/test_files/check/missing_paren.gdn:11
+//   x = 2
+//   ^
+// Error: Expected `)`, got `x`
+// 
+// --> src/test_files/check/missing_paren.gdn:11
+//   x = 2
+//   ^
+// Warning: `foo` is never called.
+// 
+// --> src/test_files/check/missing_paren.gdn:5
+// fun foo() {
+//     ^^^
+

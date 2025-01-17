@@ -9,7 +9,7 @@ use crate::{
     env::Env,
 };
 
-pub(crate) fn check_unreachable(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_unused_defs(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let summary = check_types(items, env);
 
     // All the definitions that are called from another definition, excluding self calls.

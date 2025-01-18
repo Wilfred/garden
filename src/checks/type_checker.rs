@@ -917,6 +917,24 @@ impl TypeCheckVisitor<'_> {
 
                         Type::bool()
                     }
+                    BinaryOperatorKind::StringConcat => {
+                        if !is_subtype(&lhs_ty, &Type::string()) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `String`, but got `{}`.", lhs_ty),
+                                position: lhs.position.clone(),
+                            });
+                        }
+                        if !is_subtype(&rhs_ty, &Type::string()) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected `String`, but got `{}`.", rhs_ty),
+                                position: rhs.position.clone(),
+                            });
+                        }
+
+                        Type::string()
+                    }
                 }
             }
             Expression_::Variable(sym) => {

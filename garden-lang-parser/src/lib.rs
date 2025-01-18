@@ -949,7 +949,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
         "*" => Some(BinaryOperatorKind::Multiply),
         "/" => Some(BinaryOperatorKind::Divide),
         "%" => Some(BinaryOperatorKind::Modulo),
-        "^" | "**" => Some(BinaryOperatorKind::Exponent),
+        "**" => Some(BinaryOperatorKind::Exponent),
         "==" => Some(BinaryOperatorKind::Equal),
         "!=" => Some(BinaryOperatorKind::NotEqual),
         "&&" => Some(BinaryOperatorKind::And),
@@ -958,6 +958,7 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
         "<=" => Some(BinaryOperatorKind::LessThanOrEqual),
         ">" => Some(BinaryOperatorKind::GreaterThan),
         ">=" => Some(BinaryOperatorKind::GreaterThanOrEqual),
+        "^" => Some(BinaryOperatorKind::StringConcat),
         _ => None,
     }
 }

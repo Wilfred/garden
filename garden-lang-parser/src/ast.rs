@@ -234,6 +234,7 @@ pub enum BinaryOperatorKind {
     GreaterThanOrEqual,
     And,
     Or,
+    StringConcat,
 }
 
 impl Display for BinaryOperatorKind {
@@ -253,6 +254,7 @@ impl Display for BinaryOperatorKind {
             BinaryOperatorKind::GreaterThanOrEqual => ">=",
             BinaryOperatorKind::And => "&&",
             BinaryOperatorKind::Or => "||",
+            BinaryOperatorKind::StringConcat => "^",
         };
         write!(f, "{}", s)
     }

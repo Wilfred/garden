@@ -1808,6 +1808,70 @@ fn eval_integer_binop(
     Ok(())
 }
 
+fn eval_string_concat(
+    env: &mut Env,
+    expr_value_is_used: bool,
+    lhs_position: &Position,
+    rhs_position: &Position,
+) -> Result<(), (RestoreValues, EvalError)> {
+    {
+        let rhs_value = env
+            .pop_value()
+            .expect("Popped an empty value stack for RHS of `^`.");
+        let lhs_value = env
+            .pop_value()
+            .expect("Popped an empty value stack for LHS of `^`.");
+
+        let lhs_str = match &lhs_value {
+            Value::String(s) => s,
+            _ => {
+                return Err((
+                    RestoreValues(vec![lhs_value.clone(), rhs_value]),
+                    EvalError::ResumableError(
+                        lhs_position.clone(),
+                        format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            &lhs_value,
+                            env,
+                        ),
+                    ),
+                ));
+            }
+        };
+        let rhs_str = match &rhs_value {
+            Value::String(s) => s,
+            _ => {
+                return Err((
+                    RestoreValues(vec![lhs_value, rhs_value.clone()]),
+                    EvalError::ResumableError(
+                        rhs_position.clone(),
+                        format_type_error(
+                            &TypeName {
+                                name: "String".into(),
+                            },
+                            &rhs_value,
+                            env,
+                        ),
+                    ),
+                ));
+            }
+        };
+
+        let mut out_str = String::with_capacity(lhs_str.len() + rhs_str.len());
+        out_str.push_str(lhs_str);
+        out_str.push_str(rhs_str);
+
+        let value = Value::String(out_str);
+
+        if expr_value_is_used {
+            env.push_value(value);
+        }
+    }
+    Ok(())
+}
+
 fn check_arity(
     fun_name: &SymbolName,
     receiver_value: &Value,
@@ -3848,6 +3912,19 @@ fn eval_expr(
         ) => {
             if expr_state.done_children() {
                 eval_boolean_binop(env, expr_value_is_used, &lhs.position, &rhs.position, *op)?;
+            } else {
+                // TODO: do short-circuit evaluation of && and ||.
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedAllSubexpressions,
+                    outer_expr.clone(),
+                );
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, rhs.clone());
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, lhs.clone());
+            }
+        }
+        Expression_::BinaryOperator(lhs, BinaryOperatorKind::StringConcat, rhs) => {
+            if expr_state.done_children() {
+                eval_string_concat(env, expr_value_is_used, &lhs.position, &rhs.position)?;
             } else {
                 // TODO: do short-circuit evaluation of && and ||.
                 env.push_expr_to_eval(

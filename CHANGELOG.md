@@ -2,7 +2,9 @@
 
 ## Syntax
 
-Added `^` to raise a number to a power.
+Added `^` to concatenate strings.
+
+Added `**` to raise a number to a power.
 
 `assert` is now syntax rather than a built-in function. The symbol
 `assert` is now a reserved word.

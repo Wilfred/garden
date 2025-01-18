@@ -128,7 +128,7 @@ pub(crate) fn lex_between<'a>(
             continue;
         }
 
-        for token_str in ["==", "!=", ">=", "<=", "&&", "||", "=>", "+=", "-="] {
+        for token_str in ["==", "!=", ">=", "<=", "&&", "||", "=>", "+=", "-=", "**"] {
             if s.starts_with(token_str) {
                 tokens.push(Token {
                     position: Position {

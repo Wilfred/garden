@@ -1,5 +1,5 @@
 export fun main(_) {
-  dbg(2 ^ 10)
+  dbg(2 ** 10)
 }
 
 // args: run

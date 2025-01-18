@@ -156,19 +156,6 @@ test string_substring {
   assert("abc".substring(1, 99) == "bc")
 }
 
-// Return a new string with this suffix appended.
-//
-// ```
-// "ab".append("cd") // "abcd"
-// ```
-export fun (this: String) append(suffix: String): String {
-  __BUILTIN_IMPLEMENTATION
-}
-
-test string_append {
-  assert("foo".append("bar") == "foobar")
-}
-
 // Find the first index of `needle` in `this`. Positions are in
 // character offsets, not bytes.
 //

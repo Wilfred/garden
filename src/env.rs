@@ -231,27 +231,6 @@ impl Env {
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
             },
         );
-        string_methods.insert(
-            SymbolName {
-                name: "append".to_owned(),
-            },
-            MethodInfo {
-                receiver_hint: TypeHint {
-                    args: vec![],
-                    sym: TypeSymbol {
-                        position: Position::todo(),
-                        name: TypeName {
-                            name: "String".into(),
-                        },
-                        id: id_gen.next(),
-                    },
-                    position: Position::todo(),
-                },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "append", &mut id_gen),
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringAppend, None),
-            },
-        );
 
         methods.insert(
             TypeName {

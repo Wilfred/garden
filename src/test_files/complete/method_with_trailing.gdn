@@ -8,7 +8,6 @@ fun file_name(s: String) {
 
 // args: complete
 // expected stdout:
-// {"name":"append","suffix":"(String): String"}
 // {"name":"chars()","suffix":": List<String>"}
 // {"name":"contains","suffix":"(String): Bool"}
 // {"name":"ends_with","suffix":"(String): Bool"}

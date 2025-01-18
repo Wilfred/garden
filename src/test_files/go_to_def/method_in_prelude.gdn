@@ -1,9 +1,9 @@
 fun foo(s: String) {
-    s.append("")
-    // ^
+  s.index_of("a")
+  // ^
 }
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":3585,"end_offset":3591,"line_number":163,"end_line_number":163,"path":"builtins.gdn"}
+// {"start_offset":3635,"end_offset":3643,"line_number":164,"end_line_number":164,"path":"builtins.gdn"}
 

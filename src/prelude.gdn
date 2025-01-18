@@ -202,8 +202,7 @@ export fun (this: String) join(items: List<String>): String {
   let res = items.get(0)
   let i = 1
   while i < items.len() {
-    res = res.append(this)
-    res = res.append(items.get(i))
+    res = (res ^ this) ^ items.get(i)
     i += 1
   }
   res

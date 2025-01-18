@@ -16,7 +16,7 @@ fun markdown_files(website_dir: Path): List<Path> {
 
 // Convert "foo.tmpl.html" to "foo.html".
 fun output_path(template_path: String): String {
-  template_path.strip_suffix(".tmpl.html").append(".html")
+  template_path.strip_suffix(".tmpl.html") ^ ".html"
 }
 
 fun build_site(): Unit {
@@ -31,7 +31,7 @@ fun build_site(): Unit {
   }
 
   for md_path in markdown_files(website_dir) {
-    let dest_path = md_path.p.strip_suffix(".md").append(".html")
+    let dest_path = md_path.p.strip_suffix(".md") ^ ".html"
     let page_src_md = md_path.read().or_error()
     let page_src = render_markdown(page_src_md)
     write_website_page(base_tmpl_path, page_src, dest_path)

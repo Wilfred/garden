@@ -1,7 +1,7 @@
 #!/usr/bin/env -S garden run
 
 fun in_git_repo(): Bool {
-  let git_dir_path = working_directory().append("/.git")
+  let git_dir_path = working_directory() ^ "/.git"
   path_exists(git_dir_path)
 }
 
@@ -41,6 +41,6 @@ fun main(args: List<String>): Unit {
         println(msg)
       }
     }
-    None => println("No branches found matching: ".append(needle))
+    None => println("No branches found matching: " ^ needle)
   }
 }

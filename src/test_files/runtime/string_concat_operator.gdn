@@ -1,0 +1,7 @@
+fun main(_) {
+    dbg("ab" ^ "cd")
+}
+
+// args: run
+// expected stdout: "abcd"
+

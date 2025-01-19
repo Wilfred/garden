@@ -2030,7 +2030,7 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbo
     }
 }
 
-fn reserved_word_placeholer(position: Position, id_gen: &mut IdGenerator) -> Symbol {
+fn reserved_word_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
         name: "__reserved_word_placeholder".to_string(),
     };
@@ -2137,7 +2137,7 @@ fn parse_symbol(
                 additional: vec![],
             });
             tokens.unpop();
-            return reserved_word_placeholer(variable_token.position, id_gen);
+            return reserved_word_placeholder(variable_token.position, id_gen);
         }
     }
 

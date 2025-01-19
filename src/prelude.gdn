@@ -542,7 +542,7 @@ test option_or_value {
   assert(n.or_value(5) == 5)
 }
 
-// A filesytsem path.
+// A filesystem path.
 struct Path {
   p: String,
 }

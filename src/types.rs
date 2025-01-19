@@ -45,7 +45,7 @@ impl TypeDef {
                     id: SyntaxId(0),
                 }],
                 BuiltinType::Tuple => {
-                    // TODO: tuple can actually take an arbtitrary
+                    // TODO: tuple can actually take an arbitrary
                     // number of arguments.
                     vec![]
                 }

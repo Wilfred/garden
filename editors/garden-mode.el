@@ -783,7 +783,7 @@ the result."
      :command command
      :sentinel (lambda (process event)
                  (cond
-                  ;; TODO: are there other events where we shoudn't
+                  ;; TODO: are there other events where we shouldn't
                   ;; kill the buffer? There's a lot of duplication
                   ;; here.
                   ((string= event "exited abnormally with code 10\n")

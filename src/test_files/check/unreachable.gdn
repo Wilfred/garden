@@ -65,4 +65,9 @@ export fun good2(): Int {
 // --> src/test_files/check/unreachable.gdn:8
 //   2
 //   ^
+// Warning: Unreachable code after `error`.
+// 
+// --> src/test_files/check/unreachable.gdn:13
+//   2
+//   ^
 

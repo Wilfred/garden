@@ -52,6 +52,13 @@ impl Visitor for UnreachableVisitor {
                 Expression_::Return(_) => {
                     unreachable_reason = Some("Unreachable code after `return`.");
                 }
+                Expression_::Call(recv, _) => {
+                    if let Expression_::Variable(v) = &recv.expr_ {
+                        if v.name.name == "error" {
+                            unreachable_reason = Some("Unreachable code after `error`.");
+                        }
+                    }
+                }
                 _ => {}
             }
         }

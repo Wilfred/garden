@@ -4,6 +4,7 @@ mod hints;
 mod loops;
 mod struct_fields;
 pub mod type_checker;
+mod unreachable;
 mod unused_defs;
 
 use crate::diagnostics::Diagnostic;
@@ -11,6 +12,7 @@ use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use garden_lang_parser::ast::{IdGenerator, ToplevelItem};
 use loops::check_loops;
+use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;
 
 use self::duplicates::check_duplicates;
@@ -42,6 +44,7 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     diagnostics.extend(check_duplicates(items, env));
     diagnostics.extend(check_loops(items));
     diagnostics.extend(check_unused_defs(items, env));
+    diagnostics.extend(check_unreachable(items));
 
     diagnostics
 }

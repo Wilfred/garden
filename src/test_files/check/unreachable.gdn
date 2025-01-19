@@ -1,0 +1,55 @@
+export fun bad1(): Int {
+  while True {}
+  
+  1
+}
+
+export fun bad2(): Int {
+  return 1
+  2
+}
+
+export fun bad3(): Int {
+  error("")
+  2
+}
+
+// More sophisticated analysis is possible, but keeping the implementation simple for now.
+// export fun bad_ignored(b: Bool): Int {
+//   if b {
+//     return 1
+//   } else {
+//     return 2
+//   }
+//
+//   3
+// }
+//
+// export fun bad_ignored2(b: Bool): Int {
+//   let num = 1 + error("")
+//   num
+// }
+
+// We don't want to complain about code after todo(), even though it's
+// unreachable. We're already linting for todo() calls, and it's not
+// useful to show more squiggles on WIP code.
+export fun good(): Int {
+  todo()
+  let x = 1
+  x + 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unfinished code.
+// 
+// --> src/test_files/check/unreachable.gdn:37
+//   todo()
+//   ^^^^^^
+// Warning: Unreachable code after `return`.
+// 
+// --> src/test_files/check/unreachable.gdn:9
+//   2
+//   ^
+

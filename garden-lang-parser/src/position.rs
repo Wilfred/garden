@@ -47,14 +47,13 @@ impl Position {
         }
     }
 
-    /// Return the merged position of `first` and `second`. Assumes
-    /// that `second` occurs after `first`.
+    /// Return the merged position of `first` and `second`.
     pub fn merge(first: &Self, second: &Self) -> Self {
         Self {
             start_offset: first.start_offset,
-            end_offset: second.end_offset,
+            end_offset: std::cmp::max(first.end_offset, second.end_offset),
             line_number: first.line_number,
-            end_line_number: second.end_line_number,
+            end_line_number: std::cmp::max(first.end_line_number, second.end_line_number),
             path: first.path.clone(),
         }
     }

@@ -3,6 +3,12 @@
 Garden is an experimental programming language focused on interactive
 tooling.
 
+```
+fn main(_args: List<String>) {
+  print("hello world")
+}
+```
+
 ## Taking REPLs Seriously
 
 Common Lisp and Smalltalk have a superpower: you can modify running

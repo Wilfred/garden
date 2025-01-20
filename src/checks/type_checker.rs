@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
-    Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, ToplevelItemId,
-    ToplevelItem_, TypeHint, TypeName, VariantInfo,
+    BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
+    MethodInfo, Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem,
+    ToplevelItemId, ToplevelItem_, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -234,6 +234,30 @@ impl Visitor for TypeCheckVisitor<'_> {
         }
 
         self.bindings.exit_block();
+
+        self.visit_struct_info_default(struct_info);
+    }
+
+    fn visit_enum_info(&mut self, enum_info: &EnumInfo) {
+        self.bindings.enter_block();
+
+        let mut type_bindings = self.env.stack.type_bindings();
+        for type_param in &enum_info.type_params {
+            type_bindings.insert(type_param.name.clone(), None);
+        }
+
+        for variant in &enum_info.variants {
+            let Some(payload_hint) = &variant.payload_hint else {
+                continue;
+            };
+            let payload_ty =
+                Type::from_hint(payload_hint, &self.env.types, &type_bindings).unwrap_or_err_ty();
+            self.save_hint_ty_id(payload_hint, &payload_ty);
+        }
+
+        self.bindings.exit_block();
+
+        self.visit_enum_info_default(enum_info);
     }
 
     fn visit_block(&mut self, block: &Block) {

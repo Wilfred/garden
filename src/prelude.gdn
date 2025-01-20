@@ -128,6 +128,32 @@ test ends_with {
   assert("abc".ends_with("aabc") == False)
 }
 
+export fun (this: String) replace(before: String, after: String): String {
+  let parts: List<String> = []
+
+  let s = this
+  while True {
+    match s.index_of(before) {
+      Some(i) => {
+        parts = parts.append(s.substring(0, i))
+        parts = parts.append(after)
+        s = s.substring(i + before.len(), s.len())
+      }
+      None => {
+        parts = parts.append(s)
+        break
+      }
+    }
+  }
+
+  "".join(parts)
+}
+
+test string_replace {
+  assert("ab".replace("cd", "x") == "ab")
+  assert("abcd cd".replace("cd", "x") == "abx x")
+}
+
 // Split this string into a list of lines.
 export fun (this: String) lines(): List<String> {
   let parts: List<String> = []

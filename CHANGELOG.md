@@ -13,6 +13,8 @@ Added `**` to raise a number to a power.
 
 Removed `String::append`.
 
+Added `String::replace`.
+
 ## Checks
 
 Fixed several type checking bugs on type parameters in methods.

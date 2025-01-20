@@ -15,6 +15,7 @@ fun file_name(s: String) {
 // {"name":"join","suffix":"(List<String>): String"}
 // {"name":"len()","suffix":": Int"}
 // {"name":"lines()","suffix":": List<String>"}
+// {"name":"replace","suffix":"(String, String): String"}
 // {"name":"split","suffix":"(String): List<String>"}
 // {"name":"split_once","suffix":"(String): Option<(String, String)>"}
 // {"name":"starts_with","suffix":"(String): Bool"}

@@ -5,5 +5,5 @@ fun file_name(path: String) {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":7046,"end_offset":7051,"line_number":330,"end_line_number":330,"path":"prelude.gdn"}
+// {"start_offset":7594,"end_offset":7599,"line_number":356,"end_line_number":356,"path":"prelude.gdn"}
 

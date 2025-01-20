@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-/// A position is an offset into source code.
+/// A position is a range in source code. It is a span between
+/// `start_offset` and `end_offset` in `path`.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct Position {
     /// The start of this position, relative to the start of the file.

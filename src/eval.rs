@@ -197,7 +197,7 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
     res.sort_by_key(|n| OrderedFloat(strsim::sorensen_dice(&n.name, &name.name)));
 
     if let Some(closest) = res.last() {
-        if strsim::sorensen_dice(&closest.name, &name.name) > 0.2 {
+        if strsim::sorensen_dice(&closest.name, &name.name) > 0.3 {
             return Some((**closest).clone());
         }
     }

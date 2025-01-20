@@ -689,7 +689,8 @@ If called with a prefix, stop the previous session."
   "Add global keybindings for Garden."
   (interactive)
   (global-set-key (kbd "C-c C-z") #'garden-toggle-session)
-  (global-set-key (kbd "C-c C-j") #'garden-show-raw-json))
+  (global-set-key (kbd "C-c C-j") #'garden-show-raw-json)
+  (add-hook 'garden-mode-hook #'garden-speculative-mode))
 
 (defun garden--completion-at-point ()
   "Offer method names for the expression at point."

@@ -90,7 +90,7 @@ fn extracted_fun_src(
     expr: &Expression,
     params: &[(SymbolName, Option<Type>)],
 ) -> String {
-    let return_signatuure = match return_ty {
+    let return_signature = match return_ty {
         Some(Type::Top | Type::Error(_)) | None => "".to_owned(),
         Some(ty) => format!(": {}", ty),
     };
@@ -108,7 +108,7 @@ fn extracted_fun_src(
         "fun {}({}){} {{\n  {}\n}}\n",
         name,
         params_signature,
-        return_signatuure,
+        return_signature,
         &src[expr.position.start_offset..expr.position.end_offset]
     )
 }

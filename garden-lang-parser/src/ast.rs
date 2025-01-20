@@ -553,9 +553,9 @@ impl Expression {
     }
 
     /// Helper for creating Invalid expressions.
-    pub fn invalid(id: SyntaxId) -> Self {
+    pub fn invalid(position: Position, id: SyntaxId) -> Self {
         Self {
-            position: Position::todo(),
+            position,
             expr_: Expression_::Invalid,
             value_is_used: true,
             id,

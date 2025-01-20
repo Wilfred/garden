@@ -116,6 +116,8 @@ impl Env {
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
             FxHashMap::default();
 
+        let builtins_path = PathBuf::from("builtins.gdn");
+
         let mut path_methods = FxHashMap::default();
         path_methods.insert(
             SymbolName {
@@ -125,16 +127,20 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "exists", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "exists", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
             },
         );
@@ -146,16 +152,20 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "read", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "read", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
             },
         );
@@ -176,16 +186,24 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "index_of", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "index_of",
+                    &mut id_gen,
+                ),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringIndexOf, None),
             },
         );
@@ -197,16 +215,20 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "len", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "len", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
             },
         );
@@ -218,16 +240,24 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "substring", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "substring",
+                    &mut id_gen,
+                ),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
             },
         );
@@ -248,16 +278,20 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "append", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "append", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None),
             },
         );
@@ -269,16 +303,20 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "len", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "len", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None),
             },
         );
@@ -290,16 +328,20 @@ impl Env {
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         name: TypeName {
                             name: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                 },
-                receiver_sym: Symbol::new(Position::todo(), "__irrelevant", &mut id_gen),
-                name_sym: Symbol::new(Position::todo(), "get", &mut id_gen),
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "get", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None),
             },
         );
@@ -352,7 +394,7 @@ impl Env {
 
         let builtins_src = include_str!("builtins.gdn");
         let (builtin_items, errors) =
-            parse_toplevel_items(&PathBuf::from("builtins.gdn"), builtins_src, &mut id_gen);
+            parse_toplevel_items(&builtins_path, builtins_src, &mut id_gen);
         assert!(
             errors.is_empty(),
             "Stubs for built-ins should be syntactically legal: {}",

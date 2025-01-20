@@ -37,13 +37,13 @@ impl std::fmt::Debug for Position {
 }
 
 impl Position {
-    pub fn todo() -> Self {
+    pub fn todo(path: PathBuf) -> Self {
         Self {
             start_offset: 0,
             end_offset: 0,
             line_number: 0,
             end_line_number: 0,
-            path: PathBuf::from("/position/todo"),
+            path,
         }
     }
 

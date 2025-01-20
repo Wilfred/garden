@@ -74,7 +74,7 @@ fn require_a_token<'a>(
         None => {
             diagnostics.push(ParseError::Incomplete {
                 message: ErrorMessage(format!("Expected {}, got EOF", token_description)),
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
             });
 
             // TODO: this is arbitrarily choosing the previous token,
@@ -123,7 +123,7 @@ fn check_required_token<'a>(
         None => {
             diagnostics.push(ParseError::Incomplete {
                 message: ErrorMessage(format!("Expected `{}`, got EOF", expected)),
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
             });
 
             (
@@ -595,10 +595,14 @@ fn parse_simple_expression(
 
     diagnostics.push(ParseError::Incomplete {
         message: ErrorMessage("Expected an expression.".to_owned()),
-        position: Position::todo(),
+        position: Position::todo(tokens.path.clone()),
     });
 
-    Expression::new(Position::todo(), Expression_::Invalid, id_gen.next())
+    Expression::new(
+        Position::todo(tokens.path.clone()),
+        Expression_::Invalid,
+        id_gen.next(),
+    )
 }
 
 fn parse_struct_literal_fields(
@@ -636,7 +640,7 @@ fn parse_struct_literal_fields(
 
         let Some(token) = tokens.peek() else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
                 ),
@@ -693,7 +697,7 @@ fn parse_match(
     loop {
         let Some(token) = tokens.peek() else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
             });
             break;
@@ -829,7 +833,7 @@ fn parse_comma_separated_exprs(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(format!(
                     "Invalid syntax: Expected `,` or `{}` here, but got EOF",
                     terminator
@@ -1089,7 +1093,7 @@ fn parse_definition(
     }
 
     diagnostics.push(ParseError::Incomplete {
-        position: Position::todo(),
+        position: Position::todo(tokens.path.clone()),
         message: ErrorMessage("Unfinished definition".to_owned()),
     });
     None
@@ -1127,7 +1131,7 @@ fn parse_enum_body(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
                 ),
@@ -1328,7 +1332,7 @@ fn parse_import(
 
     let Some(path_token) = tokens.pop() else {
         diagnostics.push(ParseError::Incomplete {
-            position: Position::todo(),
+            position: Position::todo(tokens.path.clone()),
             message: ErrorMessage("Unfinished `import`.".to_owned()),
         });
 
@@ -1423,12 +1427,12 @@ fn parse_type_arguments(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
                 ),
             });
-            break Position::todo();
+            break Position::todo(tokens.path.clone());
         }
     };
 
@@ -1476,7 +1480,7 @@ fn parse_type_params(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
                 ),
@@ -1513,7 +1517,7 @@ fn parse_tuple_type_hint(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `)` here, but got EOF".to_owned(),
                 ),
@@ -1642,7 +1646,7 @@ fn parse_parameters(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
                 ),
@@ -1699,7 +1703,7 @@ fn parse_struct_fields(
             });
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected a struct field name here like `foo: String`, but got EOF".to_string(),
                 ),
@@ -1725,7 +1729,7 @@ fn parse_struct_fields(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(
                     "Invalid syntax: Expected `,` or `}}` here, but got EOF".to_string(),
                 ),
@@ -1765,7 +1769,7 @@ fn parse_block(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage("Invalid syntax: Expected `}` here, but got EOF".to_string()),
             });
             break;
@@ -1866,7 +1870,7 @@ fn parse_function_or_method(
         }
         None => {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(),
+                position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage("Unfinished function or method definition.".to_owned()),
             });
             None
@@ -2185,7 +2189,8 @@ fn parse_assign(
         // Don't proceed if we don't have an equals sign at all. This
         // prevents infinite recursions between assign and expr when
         // no tokens are being consumed.
-        return Expression::invalid(id_gen.next());
+        let position = Position::todo(tokens.path.clone());
+        return Expression::invalid(position, id_gen.next());
     }
     require_token(tokens, diagnostics, "=");
     let expr = parse_expression(src, tokens, id_gen, diagnostics);

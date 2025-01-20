@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use garden_lang_parser::{
     ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol},
     position::Position,
@@ -23,6 +25,8 @@ pub(crate) enum TypeDef {
 
 impl TypeDef {
     pub(crate) fn params(&self) -> Vec<TypeSymbol> {
+        let builtins_path = PathBuf::from("builtins.gdn");
+
         match self {
             TypeDef::Builtin(built_in_type, _) => match built_in_type {
                 BuiltinType::Int => vec![],
@@ -30,18 +34,18 @@ impl TypeDef {
                 BuiltinType::Fun => vec![
                     TypeSymbol {
                         name: "Args".into(),
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         id: SyntaxId(0),
                     },
                     TypeSymbol {
                         name: "Ret".into(),
-                        position: Position::todo(),
+                        position: Position::todo(builtins_path.clone()),
                         id: SyntaxId(0),
                     },
                 ],
                 BuiltinType::List => vec![TypeSymbol {
                     name: "T".into(),
-                    position: Position::todo(),
+                    position: Position::todo(builtins_path.clone()),
                     id: SyntaxId(0),
                 }],
                 BuiltinType::Tuple => {

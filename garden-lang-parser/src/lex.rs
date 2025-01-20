@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
 use line_numbers::LinePositions;
@@ -23,6 +23,7 @@ pub(crate) struct Token<'a> {
 
 #[derive(Debug, Clone)]
 pub(crate) struct TokenStream<'a> {
+    pub(crate) path: PathBuf,
     tokens: Vec<Token<'a>>,
     /// The index of our current position in the underlying vec.
     pub(crate) idx: usize,
@@ -237,7 +238,14 @@ pub(crate) fn lex_between<'a>(
         }
     }
 
-    (TokenStream { tokens, idx: 0 }, errors)
+    (
+        TokenStream {
+            path: path.to_path_buf(),
+            tokens,
+            idx: 0,
+        },
+        errors,
+    )
 }
 
 pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> (TokenStream<'a>, Vec<ParseError>) {

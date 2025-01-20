@@ -4,7 +4,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::fmt::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -691,6 +691,8 @@ pub(crate) fn eval_up_to(
 ) -> Result<(Value, Position), EvalUpToErr> {
     let syn_ids = find_item_at(items, offset, offset);
 
+    let path = PathBuf::from("__eval_up_to__");
+
     let mut expr_id: Option<SyntaxId> = None;
     let mut position = None;
     for syn_id in syn_ids.iter().rev() {
@@ -739,7 +741,7 @@ pub(crate) fn eval_up_to(
             };
 
             env.stop_at_expr_id = Some(expr_id);
-            let res = eval_toplevel_call(&name_sym.name, &args, env, session);
+            let res = eval_toplevel_call(&name_sym.name, &args, env, session, &path);
             env.stop_at_expr_id = None;
 
             res.map(|v| (v, position))
@@ -764,6 +766,7 @@ pub(crate) fn eval_up_to(
                 prev_args,
                 env,
                 session,
+                &path,
             );
             env.stop_at_expr_id = None;
 
@@ -918,6 +921,7 @@ pub(crate) fn eval_toplevel_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
+    path: &Path,
 ) -> Result<Value, EvalError> {
     // TODO: return an Err() rather than kludging a string and letting
     // eval_env() return a type error.
@@ -931,25 +935,30 @@ pub(crate) fn eval_toplevel_call(
     }
 
     let recv_expr = Expression {
-        position: Position::todo(),
-        expr_: Expression_::Variable(Symbol::new(Position::todo(), &name.name, &mut env.id_gen)),
+        position: Position::todo(path.to_owned()),
+        expr_: Expression_::Variable(Symbol::new(
+            Position::todo(path.to_owned()),
+            &name.name,
+            &mut env.id_gen,
+        )),
         value_is_used: true,
         id: env.id_gen.next(),
     };
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        arguments.push(Rc::new(Expression::invalid(env.id_gen.next())));
+        let pos = Position::todo(path.to_owned());
+        arguments.push(Rc::new(Expression::invalid(pos, env.id_gen.next())));
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo(),
+        open_paren: Position::todo(path.to_owned()),
         arguments,
-        close_paren: Position::todo(),
+        close_paren: Position::todo(path.to_owned()),
     };
 
     let call_expr = Expression {
-        position: Position::todo(),
+        position: Position::todo(path.to_owned()),
         expr_: Expression_::Call(Rc::new(recv_expr), paren_args),
         value_is_used: true,
         id: env.id_gen.next(),
@@ -970,6 +979,7 @@ pub(crate) fn eval_toplevel_method_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
+    path: &Path,
 ) -> Result<Value, EvalError> {
     env.push_value(recv_value.clone());
     for value in args.iter().rev() {
@@ -979,14 +989,17 @@ pub(crate) fn eval_toplevel_method_call(
     // Just create a placeholder symbol for the receiver. Since we
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
-        position: Position::todo(),
-        expr_: Expression_::Variable(placeholder_symbol(Position::todo(), &mut env.id_gen)),
+        position: Position::todo(path.to_owned()),
+        expr_: Expression_::Variable(placeholder_symbol(
+            Position::todo(path.to_owned()),
+            &mut env.id_gen,
+        )),
         value_is_used: true,
         id: env.id_gen.next(),
     };
 
     let meth_sym = Symbol {
-        position: Position::todo(),
+        position: Position::todo(path.to_owned()),
         name: meth_name.clone(),
         id: env.id_gen.next(),
         interned_id: env.id_gen.intern_symbol(meth_name),
@@ -994,17 +1007,18 @@ pub(crate) fn eval_toplevel_method_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        arguments.push(Rc::new(Expression::invalid(env.id_gen.next())));
+        let pos = Position::todo(path.to_owned());
+        arguments.push(Rc::new(Expression::invalid(pos, env.id_gen.next())));
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo(),
+        open_paren: Position::todo(path.to_owned()),
         arguments,
-        close_paren: Position::todo(),
+        close_paren: Position::todo(path.to_owned()),
     };
 
     let call_expr = Expression {
-        position: Position::todo(),
+        position: Position::todo(path.to_owned()),
         expr_: Expression_::MethodCall(Rc::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
         id: env.id_gen.next(),

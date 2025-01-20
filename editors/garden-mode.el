@@ -686,7 +686,7 @@ If called with a prefix, stop the previous session."
   (pop-to-buffer (get-buffer-create "*garden-json*")))
 
 (defun garden-enable-globally ()
-  "Add a keybinding for toggling the garden session from any buffer."
+  "Add global keybindings for Garden."
   (interactive)
   (global-set-key (kbd "C-c C-z") #'garden-toggle-session)
   (global-set-key (kbd "C-c C-j") #'garden-show-raw-json))

@@ -113,8 +113,8 @@ enum CliCommands {
         #[clap(long)]
         new_name: String,
     },
-    /// Rename the local variable at this offset to the new name
-    /// specified.
+    /// Replace the expression at this offset with a function called
+    /// `name`, and use the expression as the function's body.
     ExtractFunction {
         path: PathBuf,
         offset: Option<usize>,

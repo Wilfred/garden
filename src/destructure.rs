@@ -53,7 +53,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
 
     let line = src
         .lines()
-        .nth(line_positions.from_offset(offset).as_usize())
+        .nth(line_positions.from_offset(offset).0.as_usize())
         .unwrap();
     let indent = line.len() - line.trim_start().len();
     let indent_str = " ".repeat(indent);

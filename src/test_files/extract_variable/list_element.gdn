@@ -1,0 +1,20 @@
+fun demo() {
+  let x = 1
+
+  let y = [x + 1, 42]
+  //       ^^^^^
+
+  let _ = y
+}
+
+// args: extract-variable --name extracted_var
+// expected stdout:
+// fun demo() {
+//   let x = 1
+// 
+//   let extracted_var = foo;
+//     let y = [extracted_var, 42]
+// 
+//   let _ = y
+// }
+

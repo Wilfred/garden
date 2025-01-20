@@ -37,6 +37,7 @@ mod diagnostics;
 mod env;
 mod eval;
 mod extract_function;
+mod extract_variable;
 mod garden_type;
 mod go_to_def;
 mod hover;
@@ -112,6 +113,17 @@ enum CliCommands {
         override_path: Option<PathBuf>,
         #[clap(long)]
         new_name: String,
+    },
+    /// Replace the expression at this offset with a variable called
+    /// `name`, and use the expression as the variables's definition.
+    ExtractVariable {
+        path: PathBuf,
+        offset: Option<usize>,
+        end_offset: Option<usize>,
+        #[clap(long)]
+        override_path: Option<PathBuf>,
+        #[clap(long)]
+        name: String,
     },
     /// Replace the expression at this offset with a function called
     /// `name`, and use the expression as the function's body.
@@ -304,6 +316,29 @@ fn main() {
 
             let src_path = override_path.unwrap_or(path);
             rename::rename(&src, &src_path, offset, &new_name)
+        }
+        CliCommands::ExtractVariable {
+            path,
+            offset,
+            end_offset,
+            override_path,
+            name,
+        } => {
+            let mut src = read_utf8_or_die(&path);
+            let (offset, end_offset) = match (offset, end_offset) {
+                (Some(offset), Some(end_offset)) => (offset, end_offset),
+                _ => {
+                    src = remove_testing_footer(&src);
+                    let region = caret_finder::find_caret_region(&src)
+                        .expect("Could not find comment region containing `^^` in source.");
+                    src = caret_finder::remove_caret(&src);
+
+                    region
+                }
+            };
+
+            let src_path = override_path.unwrap_or(path);
+            extract_variable::extract_variable(&src, &src_path, offset, end_offset, &name);
         }
         CliCommands::ExtractFunction {
             path,

@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, Expression, Expression_, FunInfo, LetDestination, MethodInfo,
-    Pattern, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, ToplevelItemId, ToplevelItem_,
-    TypeHint, TypeName, VariantInfo,
+    Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem, ToplevelItemId,
+    ToplevelItem_, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -217,6 +217,23 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         self.check_fun_info(fun_info, &type_bindings);
         self.current_item = old_def_id;
+    }
+
+    fn visit_struct_info(&mut self, struct_info: &StructInfo) {
+        self.bindings.enter_block();
+
+        let mut type_bindings = self.env.stack.type_bindings();
+        for type_param in &struct_info.type_params {
+            type_bindings.insert(type_param.name.clone(), None);
+        }
+
+        for field in &struct_info.fields {
+            let field_ty =
+                Type::from_hint(&field.hint, &self.env.types, &type_bindings).unwrap_or_err_ty();
+            self.save_hint_ty_id(&field.hint, &field_ty);
+        }
+
+        self.bindings.exit_block();
     }
 
     fn visit_block(&mut self, block: &Block) {

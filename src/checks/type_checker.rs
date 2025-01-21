@@ -530,8 +530,8 @@ impl TypeCheckVisitor<'_> {
                 }
 
                 match unify_all(&case_tys) {
-                    Some(ty) => ty,
-                    None => {
+                    Ok(ty) => ty,
+                    Err(_) => {
                         let last_case = cases
                             .last()
                             .expect("Type errors should require at least one match case.");
@@ -810,8 +810,8 @@ impl TypeCheckVisitor<'_> {
                     .collect::<Vec<_>>();
 
                 let elem_ty = match unify_all(&item_tys) {
-                    Some(ty) => ty,
-                    None => {
+                    Ok(ty) => ty,
+                    Err(_) => {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: "List elements have different types.".to_owned(),
@@ -1675,15 +1675,18 @@ fn unify_and_solve_hint(
 
 /// Unify all the types given, to a single type, if we can find a
 /// compatible type.
-fn unify_all(tys: &[Type]) -> Option<Type> {
+fn unify_all(tys: &[Type]) -> Result<Type, ()> {
     let mut unified_ty = Type::no_value();
 
     // Unify the types pairwise.
     for ty in tys {
-        unified_ty = unify(&unified_ty, ty)?;
+        let Some(new_unified_ty) = unify(&unified_ty, ty) else {
+            return Err(());
+        };
+        unified_ty = new_unified_ty;
     }
 
-    Some(unified_ty)
+    Ok(unified_ty)
 }
 
 /// If these two types are compatible, return the most general

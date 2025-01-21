@@ -106,7 +106,7 @@ fun render_markdown_code(src: String): String {
     let words = line.split(" ")
     let rendered_words = words.map(fun(word: String) {
       if KEYWORDS.contains(word) {
-        ("<span class=\"keyword\">" ^ word) ^ "</span>"
+        ((("<a href=\"./keyword:" ^ word) ^ ".html\"><span class=\"keyword\">") ^ word) ^ "</span></a>"
       } else {
         word.replace("<", "&lt;").replace(">", "&gt;")
       }
@@ -298,7 +298,7 @@ test render_triple_backtick_blank_line {
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```\nfun foo\n```") == "<pre><code><span class=\"keyword\">fun</span> foo</code></pre>")
+  assert(render_markdown("```\nfun foo\n```") == "<pre><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
 }
 
 test render_asterisk {

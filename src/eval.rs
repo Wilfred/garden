@@ -903,7 +903,7 @@ fn assign_var_pos(
             Expression_::AssignUpdate(symbol, _, _) => symbol,
             Expression_::ForIn(symbol, _, _) => symbol,
             _ => {
-                continue;
+                break;
             }
         };
 

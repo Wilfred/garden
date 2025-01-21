@@ -1,0 +1,16 @@
+fun split_words(src: String): String {
+  for line in src.lines() {
+    line.split(" ")
+    //     ^
+  }
+
+  ""
+}
+
+fun main(_) {
+  split_words("foo bar\nbaz")
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/for_body_expr.gdn:3: ["foo", "bar"]
+

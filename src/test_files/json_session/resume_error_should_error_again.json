@@ -15,6 +15,7 @@
 //             "end_offset": 5,
 //             "line_number": 0,
 //             "end_line_number": 0,
+//             "column": 4,
 //             "path": "__json_session_unnamed__"
 //           },
 //           "level": "Warning"
@@ -40,6 +41,7 @@
 //               "end_offset": 20,
 //               "line_number": 0,
 //               "end_line_number": 0,
+//               "column": 10,
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: x",
@@ -64,6 +66,7 @@
 //               "end_offset": 20,
 //               "line_number": 0,
 //               "end_line_number": 0,
+//               "column": 10,
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: x",

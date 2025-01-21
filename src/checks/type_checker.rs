@@ -120,6 +120,7 @@ impl Visitor for TypeCheckVisitor<'_> {
                     end_offset: 0,
                     line_number: 0,
                     end_line_number: 0,
+                    column: 0,
                     path: info.path.clone(),
                 },
             );

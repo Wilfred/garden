@@ -5,5 +5,5 @@ fun file_name() {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"path":"src/test_files/go_to_def/let_definition_site.gdn"}
+// {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"column":8,"path":"src/test_files/go_to_def/let_definition_site.gdn"}
 

@@ -95,12 +95,15 @@ pub(crate) fn lex_between<'a>(
         // Skip over comments.
         if s.starts_with("//") {
             if let Some(i) = s.find('\n') {
+                let (line_number, column) = lp.from_offset(offset);
+
                 preceding_comments.push((
                     Position {
                         start_offset: offset,
                         end_offset: offset + i,
-                        line_number: lp.from_offset(offset).0.as_usize(),
-                        end_line_number: lp.from_offset(offset).0.as_usize(),
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
                         path: path.to_path_buf(),
                     },
                     &s["//".len()..i + 1],
@@ -131,12 +134,15 @@ pub(crate) fn lex_between<'a>(
 
         for token_str in ["==", "!=", ">=", "<=", "&&", "||", "=>", "+=", "-=", "**"] {
             if s.starts_with(token_str) {
+                let (line_number, column) = lp.from_offset(offset);
+
                 tokens.push(Token {
                     position: Position {
                         start_offset: offset,
                         end_offset: offset + token_str.len(),
-                        line_number: lp.from_offset(offset).0.as_usize(),
-                        end_line_number: lp.from_offset(offset).0.as_usize(),
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
                         path: path.to_path_buf(),
                     },
                     text: &s[0..token_str.len()],
@@ -152,12 +158,15 @@ pub(crate) fn lex_between<'a>(
         // Match integers before binary operators, so -1 is treated as
         // a single integer literal, not the token - followed by 1.
         if let Some(integer_match) = INTEGER_RE.find(s) {
+            let (line_number, column) = lp.from_offset(offset);
+
             tokens.push(Token {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + integer_match.end(),
-                    line_number: lp.from_offset(offset).0.as_usize(),
-                    end_line_number: lp.from_offset(offset).0.as_usize(),
+                    line_number: line_number.as_usize(),
+                    end_line_number: line_number.as_usize(),
+                    column,
                     path: path.to_path_buf(),
                 },
                 text: integer_match.as_str(),
@@ -174,12 +183,15 @@ pub(crate) fn lex_between<'a>(
             ':',
         ] {
             if s.starts_with(token_char) {
+                let (line_number, column) = lp.from_offset(offset);
+
                 tokens.push(Token {
                     position: Position {
                         start_offset: offset,
                         end_offset: offset + 1,
-                        line_number: lp.from_offset(offset).0.as_usize(),
-                        end_line_number: lp.from_offset(offset).0.as_usize(),
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
                         path: path.to_path_buf(),
                     },
                     text: &s[0..1],
@@ -192,12 +204,15 @@ pub(crate) fn lex_between<'a>(
             }
         }
         if let Some(string_match) = STRING_RE.find(s) {
+            let (line_number, column) = lp.from_offset(offset);
+
             tokens.push(Token {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + string_match.end(),
-                    line_number: lp.from_offset(offset).0.as_usize(),
-                    end_line_number: lp.from_offset(offset).0.as_usize(),
+                    line_number: line_number.as_usize(),
+                    end_line_number: line_number.as_usize(),
+                    column,
                     path: path.to_path_buf(),
                 },
                 text: string_match.as_str(),
@@ -207,12 +222,15 @@ pub(crate) fn lex_between<'a>(
 
             offset += string_match.end();
         } else if let Some(variable_match) = SYMBOL_RE.find(s) {
+            let (line_number, column) = lp.from_offset(offset);
+
             tokens.push(Token {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + variable_match.end(),
-                    line_number: lp.from_offset(offset).0.as_usize(),
-                    end_line_number: lp.from_offset(offset).0.as_usize(),
+                    line_number: line_number.as_usize(),
+                    end_line_number: line_number.as_usize(),
+                    column,
                     path: path.to_path_buf(),
                 },
                 text: variable_match.as_str(),
@@ -222,12 +240,15 @@ pub(crate) fn lex_between<'a>(
 
             offset += variable_match.end();
         } else {
+            let (line_number, column) = lp.from_offset(offset);
+
             errors.push(ParseError::Invalid {
                 position: Position {
                     start_offset: offset,
                     end_offset: offset + 1,
-                    line_number: lp.from_offset(offset).0.as_usize(),
-                    end_line_number: lp.from_offset(offset).0.as_usize(),
+                    line_number: line_number.as_usize(),
+                    end_line_number: line_number.as_usize(),
+                    column,
                     path: path.to_path_buf(),
                 },
                 message: ErrorMessage(format!("Unrecognized syntax: `{}`", &s[0..1])),
@@ -269,6 +290,7 @@ mod tests {
                     end_offset: 1,
                     line_number: 0,
                     end_line_number: 0,
+                    column: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
@@ -288,6 +310,7 @@ mod tests {
                     end_offset: 2,
                     line_number: 0,
                     end_line_number: 0,
+                    column: 1,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "a",
@@ -333,6 +356,7 @@ mod tests {
                     end_offset: 6,
                     line_number: 1,
                     end_line_number: 1,
+                    column: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",
@@ -342,6 +366,7 @@ mod tests {
                         end_offset: 4,
                         line_number: 0,
                         end_line_number: 0,
+                        column: 0,
                         path: PathBuf::from("__test.gdn")
                     },
                     " 2\n"
@@ -361,6 +386,7 @@ mod tests {
                     end_offset: 7,
                     line_number: 2,
                     end_line_number: 2,
+                    column: 0,
                     path: PathBuf::from("__test.gdn")
                 },
                 text: "1",

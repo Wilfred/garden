@@ -13,6 +13,8 @@ pub struct Position {
     // TODO: Use LineNumber instead, finding a way to serialize it.
     pub line_number: usize,
     pub end_line_number: usize,
+    /// The column of the start of this position. Zero indexed.
+    pub column: usize,
     // TODO: consider storing a &Path to reduce memory usage.
     pub path: PathBuf,
 }
@@ -43,6 +45,7 @@ impl Position {
             start_offset: 0,
             end_offset: 0,
             line_number: 0,
+            column: 0,
             end_line_number: 0,
             path,
         }
@@ -55,6 +58,7 @@ impl Position {
             end_offset: std::cmp::max(first.end_offset, second.end_offset),
             line_number: first.line_number,
             end_line_number: std::cmp::max(first.end_line_number, second.end_line_number),
+            column: first.column,
             path: first.path.clone(),
         }
     }

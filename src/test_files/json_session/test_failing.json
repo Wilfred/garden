@@ -14,6 +14,7 @@
 //               "end_offset": 23,
 //               "line_number": 0,
 //               "end_line_number": 0,
+//               "column": 11,
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: foo",

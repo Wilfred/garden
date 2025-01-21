@@ -2,4 +2,4 @@
 
 ## Syntax
 
-* [`if`](./if.html)
+* [`if`](./keyword:if.html)

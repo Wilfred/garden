@@ -95,7 +95,8 @@ fun render_markdown_header(src: String): String {
 
 fun render_markdown_code(src: String): String {
   let inner_lines = src.lines().slice(1, -1)
-  "".join(["<pre><code>", "\n".join(inner_lines), "</code></pre>"])
+  let inner_src = "\n".join(inner_lines)
+  "".join(["<pre><code>", inner_src.replace("<", "&lt;").replace(">", "&gt;"), "</code></pre>"])
 }
 
 fun render_inline(src: String): String {
@@ -266,6 +267,10 @@ test render_backtick_in_link {
 
 test render_triple_backtick {
   assert(render_markdown("```\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
+}
+
+test render_triple_backtick_escape_html {
+  assert(render_markdown("```\nfoo <bar>\n```") == "<pre><code>foo &lt;bar&gt;\n</code></pre>")
 }
 
 test render_triple_backtick_blank_line {

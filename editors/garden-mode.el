@@ -877,6 +877,24 @@ the result."
       (format "%s" (1- end))
       "--name" name "--override-path" (buffer-file-name)))))
 
+(defun garden-extract-variable (name)
+  "Extract the current region as a new variable."
+  (interactive "sName: ")
+  (let ((buf (current-buffer))
+        (start (region-beginning))
+        (end (region-end)))
+    (deactivate-mark)
+    (garden--async-command
+     "extract-variable"
+     (lambda (src)
+       (with-current-buffer buf
+         (delete-region (point-min) (point-max))
+         (insert src)
+         (goto-char start)))
+     (list
+      (format "%s" (1- end))
+      "--name" name "--override-path" (buffer-file-name)))))
+
 (defun garden-destructure ()
   "Destructure the expression at point with a match expression."
   (interactive)

@@ -12,5 +12,5 @@ export fun takes_bools(_: List<Bool>) {}
 // 
 // --> src/test_files/check/list_mixed.gdn:4
 //     let x = [1, True]
-//             ^^^^^^^^^
+//                 ^^^^
 

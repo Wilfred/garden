@@ -477,7 +477,10 @@ impl TypeCheckVisitor<'_> {
                         }
                     }
 
-                    case_tys.push(self.check_block(case_expr, type_bindings, expected_return_ty));
+                    case_tys.push((
+                        self.check_block(case_expr, type_bindings, expected_return_ty),
+                        Position::merge(&case_expr.open_brace, &case_expr.close_brace),
+                    ));
 
                     self.bindings.exit_block();
 
@@ -531,14 +534,11 @@ impl TypeCheckVisitor<'_> {
 
                 match unify_all(&case_tys) {
                     Ok(ty) => ty,
-                    Err(_) => {
-                        let last_case = cases
-                            .last()
-                            .expect("Type errors should require at least one match case.");
+                    Err(position) => {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: "`match` cases have different types.".to_owned(),
-                            position: last_case.1.open_brace.clone(),
+                            position,
                         });
 
                         Type::error("Cases had incompatible types.")
@@ -806,16 +806,21 @@ impl TypeCheckVisitor<'_> {
             Expression_::ListLiteral(items) => {
                 let item_tys = items
                     .iter()
-                    .map(|item| self.check_expr(item, type_bindings, expected_return_ty))
+                    .map(|item| {
+                        (
+                            self.check_expr(item, type_bindings, expected_return_ty),
+                            item.position.clone(),
+                        )
+                    })
                     .collect::<Vec<_>>();
 
                 let elem_ty = match unify_all(&item_tys) {
                     Ok(ty) => ty,
-                    Err(_) => {
+                    Err(position) => {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: "List elements have different types.".to_owned(),
-                            position: pos.clone(),
+                            position,
                         });
                         Type::error("List elements have different types")
                     }
@@ -1675,13 +1680,16 @@ fn unify_and_solve_hint(
 
 /// Unify all the types given, to a single type, if we can find a
 /// compatible type.
-fn unify_all(tys: &[Type]) -> Result<Type, ()> {
+///
+/// If we can't find a compatible type, return the position of the
+/// first type that didn't unify.
+fn unify_all(tys: &[(Type, Position)]) -> Result<Type, Position> {
     let mut unified_ty = Type::no_value();
 
     // Unify the types pairwise.
-    for ty in tys {
+    for (ty, position) in tys {
         let Some(new_unified_ty) = unify(&unified_ty, ty) else {
-            return Err(());
+            return Err(position.clone());
         };
         unified_ty = new_unified_ty;
     }

@@ -818,12 +818,15 @@ the result."
   "Parse POS-JSON as a buffer and position, and go to that location."
   (let* ((info (json-parse-string (s-trim pos-json) :object-type 'plist :null-object nil))
          (path (plist-get info :path))
-         (start-offset (plist-get info :start_offset))
-         (_end-offset (plist-get info :end_offset)))
+         (line (plist-get info :line_number))
+         (column (plist-get info :column)))
     (unless info
       (user-error "No position available."))
     (garden--visit-path path)
-    (goto-char (1+ start-offset))))
+    (widen)
+    (goto-char (point-min))
+    (forward-line line)
+    (forward-char column)))
 
 (defun garden-definition ()
   "Go to the definition of the thing at point."

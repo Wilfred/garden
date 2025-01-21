@@ -4,7 +4,7 @@ Garden is an experimental programming language focused on interactive
 tooling.
 
 ```
-fn main(_args: List<String>) {
+fun main(_args: List<String>) {
   print("hello world")
 }
 ```
@@ -32,9 +32,9 @@ dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:
 
 ```
-function foo(): String { return "" }
+fun foo(): String { return "" }
 
-function bar(): Unit {
+fun bar(): Unit {
     eval("function foo(): Int { return 1 }");
     let x = foo() + 1
 }

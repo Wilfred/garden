@@ -48,6 +48,11 @@
       header a {
         text-decoration: none;
       }
+
+      .keyword {
+        color: #d73a49;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -63,7 +68,7 @@
     <div class="container"><h1>🏡 The Garden Programming Language</h1>
 <p>Garden is an experimental programming language focused on interactive
 tooling.</p>
-<pre><code>fn main(_args: List&lt;String&gt;) {
+<pre><code><span class="keyword">fun</span> main(_args: List&lt;String&gt;) {
   print("hello world")
 }</code></pre>
 <h2>Taking REPLs Seriously</h2>
@@ -81,11 +86,11 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<pre><code>function foo(): String { return "" }
+<pre><code><span class="keyword">fun</span> foo(): String { <span class="keyword">return</span> "" }
 
-function bar(): Unit {
-    eval("function foo(): Int { return 1 }");
-    let x = foo() + 1
+<span class="keyword">fun</span> bar(): Unit {
+    eval("function foo(): Int { <span class="keyword">return</span> 1 }");
+    <span class="keyword">let</span> x = foo() + 1
 }</code></pre>
 <h2>Sandboxed Execution</h2>
 <p>Garden supports sandbox execution without third-party libraries. This

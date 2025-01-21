@@ -94,9 +94,29 @@ fun render_markdown_header(src: String): String {
 }
 
 fun render_markdown_code(src: String): String {
+  let KEYWORDS = [
+    "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
+    "match", "break", "continue", "for", "in", "assert",
+  ]
+
   let inner_lines = src.lines().slice(1, -1)
-  let inner_src = "\n".join(inner_lines)
-  "".join(["<pre><code>", inner_src.replace("<", "&lt;").replace(">", "&gt;"), "</code></pre>"])
+  let rendered_lines: List<String> = []
+
+  for line in inner_lines {
+    let words = line.split(" ")
+    let rendered_words = words.map(fun(word: String) {
+      if KEYWORDS.contains(word) {
+        ("<span class=\"keyword\">" ^ word) ^ "</span>"
+      } else {
+        word.replace("<", "&lt;").replace(">", "&gt;")
+      }
+    })
+
+    rendered_lines = rendered_lines.append(" ".join(rendered_words))
+  }
+
+  let inner_src = "\n".join(rendered_lines)
+  ("<pre><code>" ^ inner_src) ^ "</code></pre>"
 }
 
 fun render_inline(src: String): String {
@@ -270,11 +290,15 @@ test render_triple_backtick {
 }
 
 test render_triple_backtick_escape_html {
-  assert(render_markdown("```\nfoo <bar>\n```") == "<pre><code>foo &lt;bar&gt;\n</code></pre>")
+  assert(render_markdown("```\nfoo <bar>\n```") == "<pre><code>foo &lt;bar&gt;</code></pre>")
 }
 
 test render_triple_backtick_blank_line {
   assert(render_markdown("```\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
+}
+
+test render_triple_backtick_keyword {
+  assert(render_markdown("```\nfun foo\n```") == "<pre><code><span class=\"keyword\">fun</span> foo</code></pre>")
 }
 
 test render_asterisk {

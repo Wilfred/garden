@@ -1,12 +1,11 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{AstId, Expression, Expression_, IdGenerator, SyntaxId},
+    ast::{AstId, Expression, Expression_, IdGenerator},
     parse_toplevel_items,
 };
 
 use crate::{
-    checks::type_checker::check_types,
     env::Env,
     eval::load_toplevel_items,
     pos_to_id::{find_expr_of_id, find_item_at},
@@ -24,7 +23,6 @@ pub(crate) fn extract_variable(
 
     let mut env = Env::new(id_gen);
     load_toplevel_items(&items, &mut env);
-    let summary = check_types(&items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 
@@ -77,7 +75,11 @@ pub(crate) fn extract_variable(
                 "{}",
                 &src[item_pos.start_offset..enclosing_block_level_expr.position.start_offset]
             );
-            print!("let {} = foo;\n{}", name, "    ");
+            print!(
+                "let {} = foo;\n{}",
+                name,
+                " ".repeat(enclosing_block_level_expr.position.column)
+            );
 
             print!(
                 "{}",

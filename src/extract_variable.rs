@@ -76,8 +76,9 @@ pub(crate) fn extract_variable(
                 &src[item_pos.start_offset..enclosing_block_level_expr.position.start_offset]
             );
             print!(
-                "let {} = foo;\n{}",
+                "let {} = {};\n{}",
                 name,
+                &src[expr.position.start_offset..expr.position.end_offset],
                 " ".repeat(enclosing_block_level_expr.position.column)
             );
 

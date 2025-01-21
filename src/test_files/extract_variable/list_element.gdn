@@ -12,7 +12,7 @@ fun demo() {
 // fun demo() {
 //   let x = 1
 // 
-//   let extracted_var = foo;
+//   let extracted_var = x + 1;
 //   let y = [extracted_var, 42]
 // 
 //   let _ = y

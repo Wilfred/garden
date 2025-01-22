@@ -1,0 +1,16 @@
+fun demo() {
+  for x in [1, 2, 3] {
+    let y = x + 1
+    //      ^^^^^
+  }
+}
+
+// args: extract-variable --name extracted_var
+// expected stdout:
+// fun demo() {
+//   for x in [1, 2, 3] {
+//     let extracted_var = x + 1
+//     let y = extracted_var
+//   }
+// }
+

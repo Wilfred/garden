@@ -477,7 +477,7 @@ enclosing point and print the result."
   (let* ((buf (garden--active-buffer))
          ;; Zero-based offset.
          (offset (1- (point)))
-         (args `((method . "eval_up_to_id")
+         (args `((method . "eval_up_to")
                  (id . ,(garden--id))
                  (path . ,(buffer-file-name))
                  (src . ,(buffer-string))

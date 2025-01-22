@@ -22,6 +22,10 @@ Fixed several type checking bugs on type parameters in methods.
 The unused function check now reports functions that are only used in
 tests.
 
+## Tooling
+
+Renamed `eval_up_to_id` JSON command to `eval_up_to`.
+
 # 0.18 (released 31st December 2024)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**

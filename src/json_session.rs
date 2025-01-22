@@ -53,7 +53,7 @@ enum Request {
     },
     /// Stop the current evaluation, as if we'd pressed Ctrl-c.
     Interrupt,
-    EvalUpToId {
+    EvalUpTo {
         path: Option<PathBuf>,
         src: String,
         offset: usize,
@@ -464,7 +464,7 @@ fn handle_request_in_worker(req_src: &str, env: &mut Env, session: &mut Session)
             end_offset,
             id,
         } => handle_run_request(input, env, session, id, path, offset, end_offset),
-        Request::EvalUpToId {
+        Request::EvalUpTo {
             path,
             src,
             offset,

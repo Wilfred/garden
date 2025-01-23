@@ -3957,23 +3957,6 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, receiver_expr.clone());
             }
         }
-        Expression_::Block(block) => {
-            if expr_state.done_children() {
-                let stack_frame = env.current_frame_mut();
-                stack_frame.bindings.pop_block();
-
-                if block.exprs.is_empty() && expr_value_is_used {
-                    env.push_value(Value::unit());
-                }
-            } else {
-                env.push_expr_to_eval(
-                    ExpressionState::EvaluatedAllSubexpressions,
-                    outer_expr.clone(),
-                );
-
-                eval_block(env, expr_value_is_used, block);
-            }
-        }
         Expression_::DotAccess(recv, sym) => {
             if expr_state.done_children() {
                 eval_dot_access(env, expr_value_is_used, sym, &recv.position)?;

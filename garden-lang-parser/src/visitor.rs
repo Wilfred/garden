@@ -181,9 +181,6 @@ pub trait Visitor {
             Expression_::FunLiteral(fun_info) => {
                 self.visit_expr_fun_literal(fun_info);
             }
-            Expression_::Block(b) => {
-                self.visit_block(b);
-            }
             Expression_::IntLiteral(_) => {
                 // TODO: custom method for this variant
             }

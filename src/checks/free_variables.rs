@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::{Expression_, LetDestination};
+use garden_lang_parser::ast::LetDestination;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
@@ -174,13 +174,8 @@ impl Visitor for FreeVariableVisitor<'_> {
         // expressions, as they're legitimate in a REPL. If the user
         // has written `let x = 1` they might be planning on using `x`
         // in their next REPL expression!
-        if let ToplevelItem_::Expr(e) = &item.2 {
-            match &e.0.expr_ {
-                // If it's a block, it's definitely done, so unused
-                // variable warnings are useful.
-                Expression_::Block(_) => {}
-                _ => return,
-            }
+        if let ToplevelItem_::Expr(_) = &item.2 {
+            return;
         }
 
         self.push_scope();

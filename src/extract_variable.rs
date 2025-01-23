@@ -46,7 +46,6 @@ pub(crate) fn extract_variable(
 
         match &expr.expr_ {
             Expression_::FunLiteral(_)
-            | Expression_::Block(_)
             | Expression_::ForIn(_, _, _)
             | Expression_::While(_, _)
             | Expression_::If(_, _, _) => break,

@@ -317,10 +317,6 @@ pub enum Expression_ {
     ///     _ => error("yikes"),
     /// }
     /// ```
-    ///
-    /// Note that we always treat the expression after `=>`as a block,
-    /// because it has additional bindings and it simplifies
-    /// evaluation.
     Match(Rc<Expression>, Vec<(Pattern, Block)>),
     /// ```garden
     /// if x { y }
@@ -414,10 +410,6 @@ pub enum Expression_ {
     /// fun(x, y) { x + y }
     /// ```
     FunLiteral(FunInfo),
-    /// ```garden
-    /// { x y }
-    /// ```
-    Block(Block),
     /// ```garden
     /// assert(x)
     /// ```

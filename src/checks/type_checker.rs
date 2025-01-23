@@ -1346,7 +1346,6 @@ impl TypeCheckVisitor<'_> {
                 }
             }
             Expression_::FunLiteral(fun_info) => self.check_fun_info(fun_info, type_bindings),
-            Expression_::Block(block) => self.check_block(block, type_bindings, expected_return_ty),
             Expression_::Invalid => {
                 // We've already emitted a parse error, so use the
                 // bottom type to prevent later type errors.

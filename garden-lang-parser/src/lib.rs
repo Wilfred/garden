@@ -528,16 +528,6 @@ fn parse_simple_expression(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     if let Some(token) = tokens.peek() {
-        if token.text == "{" {
-            let block = parse_block(src, tokens, id_gen, diagnostics, false);
-
-            return Expression::new(
-                Position::merge(&block.open_brace, &block.close_brace),
-                Expression_::Block(block),
-                id_gen.next(),
-            );
-        }
-
         if token.text == "(" {
             return parse_tuple_literal_or_parentheses(src, tokens, id_gen, diagnostics);
         }

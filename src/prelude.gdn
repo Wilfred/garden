@@ -358,7 +358,7 @@ export fun (this: String) split(needle: String): List<String> {
   let s = this
 
   let parts: List<String> = []
-  while s != "" {
+  while True {
     match s.index_of(needle) {
       Some(i) => {
         parts = parts.append(s.substring(0, i))
@@ -372,7 +372,6 @@ export fun (this: String) split(needle: String): List<String> {
 
   }
 
-
   parts
 }
 
@@ -380,6 +379,7 @@ test split {
   assert("ab".split(",") == ["ab"])
   assert("a,b".split(",") == ["a", "b"])
   assert("a,,b".split(",") == ["a", "", "b"])
+  assert("a,b,".split(",") == ["a", "b", ""])
 }
 
 export fun (this: String) chars(): List<String> {

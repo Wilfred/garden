@@ -103,6 +103,17 @@ fun render_markdown_code(src: String): String {
   let rendered_lines: List<String> = []
 
   for line in inner_lines {
+    let rendered_comment: Option<String> = None
+
+    match line.split_once("//") {
+      Some(parts) => {
+        let (before, after) = parts
+        line = before
+        rendered_comment = Some(("<span class=\"comment\">//" ^ after) ^ "</span>")
+      }
+      None => {}
+    }
+
     let words = line.split(" ")
     let rendered_words = words.map(fun(word: String) {
       if KEYWORDS.contains(word) {
@@ -112,7 +123,15 @@ fun render_markdown_code(src: String): String {
       }
     })
 
-    rendered_lines = rendered_lines.append(" ".join(rendered_words))
+    let rendered_line = " ".join(rendered_words)
+    match rendered_comment {
+      Some(rendered_comment) => {
+        rendered_line = rendered_line ^ rendered_comment
+      }
+      None => {}
+    }
+
+    rendered_lines = rendered_lines.append(rendered_line)
   }
 
   let inner_src = "\n".join(rendered_lines)
@@ -299,6 +318,10 @@ test render_triple_backtick_blank_line {
 
 test render_triple_backtick_keyword {
   assert(render_markdown("```\nfun foo\n```") == "<pre><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
+}
+
+test render_triple_backtick_comment {
+  assert(render_markdown("```\nfoo // bar\n```") == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
 }
 
 test render_asterisk {

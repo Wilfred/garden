@@ -728,9 +728,15 @@ pub enum ToplevelItem_ {
     /// ```
     Import(ImportInfo),
     /// ```garden
+    /// println("hello world")
+    /// ```
+    ///
+    /// Should only be used in the REPL.
+    Expr(ToplevelExpression),
+    /// ```garden
     /// { println("hello world") }
     /// ```
-    Expr(ToplevelExpression),
+    Block(Block),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -745,6 +751,7 @@ impl ToplevelItem_ {
             ToplevelItem_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
             ToplevelItem_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
             ToplevelItem_::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
+            ToplevelItem_::Block(_) => false,
             ToplevelItem_::Import(_) => false,
         }
     }

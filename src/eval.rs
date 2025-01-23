@@ -384,6 +384,7 @@ fn load_toplevel_items_(
                 new_syms.push(name_as_sym);
             }
             ToplevelItem_::Expr(_) => {}
+            ToplevelItem_::Block(_) => {}
             ToplevelItem_::Import(import_info) => {
                 let Some(enclosing_dir) = item.1.path.parent() else {
                     diagnostics.push(Diagnostic {
@@ -460,11 +461,16 @@ pub(crate) fn eval_toplevel_items(
     session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut defs = vec![];
-    let mut exprs = vec![];
+    let mut exprs: Vec<Expression> = vec![];
     for item in items {
         match &item.2 {
             ToplevelItem_::Expr(toplevel_expression) => {
                 exprs.push(toplevel_expression.0.clone());
+            }
+            ToplevelItem_::Block(block) => {
+                for expr in &block.exprs {
+                    exprs.push(expr.as_ref().clone());
+                }
             }
             _ => {
                 defs.push(item.clone());
@@ -785,7 +791,7 @@ pub(crate) fn eval_up_to(
             // nothing to do
             return Err(EvalUpToErr::NoExpressionFound);
         }
-        ToplevelItem_::Expr(_) => {
+        ToplevelItem_::Expr(_) | ToplevelItem_::Block(_) => {
             env.stop_at_expr_id = Some(expr_id);
 
             let res = eval_toplevel_items(&[item.clone()], env, session);
@@ -4543,9 +4549,14 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
 ) -> Result<Option<Value>, EvalError> {
     let mut exprs = vec![];
     for item in items {
-        match item {
-            ToplevelItem(_, _, ToplevelItem_::Expr(expr)) => {
+        match &item.2 {
+            ToplevelItem_::Expr(expr) => {
                 exprs.push(expr.0.clone());
+            }
+            ToplevelItem_::Block(block) => {
+                for expr in &block.exprs {
+                    exprs.push(expr.as_ref().clone());
+                }
             }
             _ => {}
         }

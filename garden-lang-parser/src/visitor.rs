@@ -23,6 +23,7 @@ pub trait Visitor {
             ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
             ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
             ToplevelItem_::Expr(toplevel_expression) => self.visit_expr(&toplevel_expression.0),
+            ToplevelItem_::Block(block) => self.visit_block(block),
             ToplevelItem_::Import(_) => {}
         }
     }

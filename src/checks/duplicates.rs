@@ -114,6 +114,7 @@ impl Visitor for DuplicatesVisitor {
                 }
             }
             ToplevelItem_::Expr(_) => {}
+            ToplevelItem_::Block(_) => {}
             ToplevelItem_::Import(_) => {}
         }
 

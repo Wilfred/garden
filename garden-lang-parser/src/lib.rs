@@ -2259,6 +2259,23 @@ fn parse_toplevel_expr(
     )
 }
 
+fn parse_toplevel_block(
+    src: &str,
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> ToplevelItem {
+    let block = parse_block(src, tokens, id_gen, diagnostics, false);
+
+    let position = Position::merge(&block.open_brace, &block.close_brace);
+    let src_string = SourceString {
+        offset: position.start_offset,
+        src: src[position.start_offset..position.end_offset].to_owned(),
+    };
+
+    ToplevelItem(src_string, position, ToplevelItem_::Block(block))
+}
+
 fn parse_toplevel_items_from_tokens(
     src: &str,
     tokens: &mut TokenStream,
@@ -2304,6 +2321,10 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "import"
         {
             return parse_definition(src, tokens, id_gen, diagnostics);
+        }
+
+        if token.text == "{" {
+            return Some(parse_toplevel_block(src, tokens, id_gen, diagnostics));
         }
     }
 

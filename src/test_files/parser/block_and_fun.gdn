@@ -21,7 +21,7 @@ fun foo() {}
 //         ),
 //         item_id: Some(
 //             ToplevelItemId(
-//                 2,
+//                 1,
 //             ),
 //         ),
 //         type_params: [],

@@ -1,0 +1,15 @@
+// We want to complain about the missing expression, but not about the
+// `break`.
+while {
+  break
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an expression, got: `{`.
+// 
+// --> src/test_files/check/incomplete_while.gdn:3
+// while {
+//       ^
+

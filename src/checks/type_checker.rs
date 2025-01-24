@@ -531,16 +531,139 @@ impl TypeCheckVisitor<'_> {
                 self.verify_block(&Type::Top, block, type_bindings, expected_return_ty);
                 Type::unit()
             }
-            Expression_::ForIn(symbol, rc, block) => todo!(),
+            Expression_::ForIn(sym, expr, body) => {
+                let expr_ty = self.infer_expr(expr, type_bindings, expected_return_ty);
+
+                self.bindings.enter_block();
+
+                let elem_ty = match expr_ty {
+                    Type::UserDefined { name, args, .. } if name.name == "List" => {
+                        if let Some(arg) = args.first() {
+                            arg.clone()
+                        } else {
+                            Type::error("Bad list arity")
+                        }
+                    }
+                    _ => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "Expected `List` for a `for` loop, but got `{}`.",
+                                expr_ty
+                            ),
+                            position: expr.position.clone(),
+                        });
+                        Type::error("For loop expression that isn't a list")
+                    }
+                };
+
+                self.set_binding(sym, elem_ty);
+
+                self.infer_block(body, type_bindings, expected_return_ty);
+                self.bindings.exit_block();
+
+                Type::unit()
+            }
             Expression_::Break | Expression_::Continue => {
                 // As with `return`, these never produce a value, they
                 // jump elsewhere. `let x = break` will never assign
                 // a value to x.
                 Type::no_value()
             }
-            Expression_::Assign(symbol, rc) => todo!(),
-            Expression_::AssignUpdate(symbol, assign_update_kind, rc) => todo!(),
-            Expression_::Let(let_destination, type_hint, rc) => todo!(),
+            Expression_::Assign(sym, expr) => {
+                // TODO: also enforce the type of an assignment at runtime.
+                let expected_ty = match self.bindings.get(&sym.name) {
+                    Some((sym_ty, position)) => {
+                        self.id_to_def_pos.insert(sym.id, position.clone());
+                        sym_ty.clone()
+                    }
+                    None => Type::Top,
+                };
+
+                self.verify_expr(&expected_ty, expr, type_bindings, expected_return_ty);
+                Type::unit()
+            }
+            Expression_::AssignUpdate(sym, op, expr) => {
+                // TODO: also enforce the type of an assignment at runtime.
+
+                let sym_ty = match self.bindings.get(&sym.name) {
+                    Some((sym_ty, position)) => {
+                        self.id_to_def_pos.insert(sym.id, position.clone());
+                        sym_ty.clone()
+                    }
+                    None => Type::Top,
+                };
+
+                if !is_subtype(&sym_ty, &Type::int()) {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "`{}` can only be used with `Int` variables, but got `{}`.",
+                            op.as_src(),
+                            sym_ty
+                        ),
+                        position: sym.position.clone(),
+                    });
+                }
+
+                self.verify_expr(&Type::int(), expr, type_bindings, expected_return_ty);
+                Type::unit()
+            }
+            Expression_::Let(dest, hint, expr) => {
+                let ty = match hint {
+                    Some(hint) => {
+                        let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
+                            .unwrap_or_err_ty();
+                        self.save_hint_ty_id(hint, &hint_ty);
+
+                        self.verify_expr(&hint_ty, expr, type_bindings, expected_return_ty);
+
+                        hint_ty
+                    }
+                    None => self.infer_expr(expr, type_bindings, expected_return_ty),
+                };
+
+                match dest {
+                    LetDestination::Symbol(symbol) => self.set_binding(symbol, ty),
+                    LetDestination::Destructure(symbols) => match ty {
+                        Type::Tuple(item_tys) => {
+                            if item_tys.len() != symbols.len() {
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!(
+                                        "Expected a tuple of size {}, but got {}.",
+                                        symbols.len(),
+                                        item_tys.len()
+                                    ),
+                                    position: expr.position.clone(),
+                                });
+                            }
+
+                            for (i, symbol) in symbols.iter().enumerate() {
+                                let ty = match item_tys.get(i) {
+                                    Some(ty) => ty.clone(),
+                                    None => Type::error("Tuple has too many items for the value"),
+                                };
+                                self.set_binding(symbol, ty);
+                            }
+                        }
+                        Type::Error(_) => {
+                            for symbol in symbols {
+                                self.set_binding(symbol, ty.clone());
+                            }
+                        }
+                        _ => {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("Expected a tuple, but got `{}`.", ty),
+                                position: expr.position.clone(),
+                            });
+                        }
+                    },
+                }
+
+                Type::unit()
+            }
             Expression_::Return(inner_expr) => {
                 let expr_ty = expected_return_ty.unwrap_or(&Type::Top);
                 match inner_expr {
@@ -566,7 +689,31 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::IntLiteral(_) => Type::int(),
             Expression_::StringLiteral(_) => Type::string(),
-            Expression_::ListLiteral(vec) => todo!(),
+            Expression_::ListLiteral(items) => {
+                let item_tys = items
+                    .iter()
+                    .map(|item| {
+                        (
+                            self.infer_expr(item, type_bindings, expected_return_ty),
+                            item.position.clone(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                let elem_ty = match unify_all(&item_tys) {
+                    Ok(ty) => ty,
+                    Err(position) => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: "List elements have different types.".to_owned(),
+                            position,
+                        });
+                        Type::error("List elements have different types")
+                    }
+                };
+
+                Type::list(elem_ty)
+            }
             Expression_::TupleLiteral(items) => {
                 let item_tys: Vec<_> = items
                     .iter()

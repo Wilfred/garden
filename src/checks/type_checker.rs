@@ -427,6 +427,187 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
+    fn infer_block(
+        &mut self,
+        block: &Block,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) -> Type {
+        self.bindings.enter_block();
+
+        let mut ty = Type::unit();
+        for expr in &block.exprs {
+            ty = self.infer_expr(expr, type_bindings, expected_return_ty);
+        }
+
+        self.bindings.exit_block();
+        ty
+    }
+
+    fn verify_block(
+        &mut self,
+        expected_ty: &Type,
+        block: &Block,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) {
+    }
+
+    fn infer_expr(
+        &mut self,
+        expr: &Expression,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) -> Type {
+        self.infer_expr_(
+            &expr.expr_,
+            &expr.position,
+            type_bindings,
+            expected_return_ty,
+        )
+    }
+
+    fn infer_expr_(
+        &mut self,
+        expr_: &Expression_,
+        pos: &Position,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) -> Type {
+        match expr_ {
+            Expression_::Match(rc, vec) => todo!(),
+            Expression_::If(cond_expr, then_block, else_block) => {
+                self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+
+                let then_ty = self.infer_block(then_block, type_bindings, expected_return_ty);
+
+                let else_ty = match else_block {
+                    Some(else_block) => {
+                        self.infer_block(then_block, type_bindings, expected_return_ty)
+                    }
+                    None => {
+                        self.verify_block(
+                            &Type::unit(),
+                            then_block,
+                            type_bindings,
+                            expected_return_ty,
+                        );
+                        Type::unit()
+                    }
+                };
+
+                match unify(&then_ty, &else_ty) {
+                    Some(ty) => ty,
+                    None => {
+                        let message = if else_block.is_some() {
+                            format!(
+                                "`if` and `else` have incompatible types: `{}` and `{}`.",
+                                then_ty, else_ty
+                            )
+                        } else {
+                            format!(
+                            "`if` expressions without `else` should have type `Unit`, but got `{}`.",
+                            then_ty
+                        )
+                        };
+
+                        let position = match then_block.exprs.last() {
+                            Some(last_expr) => last_expr.position.clone(),
+                            None => cond_expr.position.clone(),
+                        };
+
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message,
+                            position,
+                        });
+
+                        Type::error("Incompatible if blocks")
+                    }
+                }
+            }
+            Expression_::While(cond_expr, block) => {
+                self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+                self.verify_block(&Type::Top, block, type_bindings, expected_return_ty);
+                Type::unit()
+            }
+            Expression_::ForIn(symbol, rc, block) => todo!(),
+            Expression_::Break | Expression_::Continue => {
+                // As with `return`, these never produce a value, they
+                // jump elsewhere. `let x = break` will never assign
+                // a value to x.
+                Type::no_value()
+            }
+            Expression_::Assign(symbol, rc) => todo!(),
+            Expression_::AssignUpdate(symbol, assign_update_kind, rc) => todo!(),
+            Expression_::Let(let_destination, type_hint, rc) => todo!(),
+            Expression_::Return(inner_expr) => {
+                let expr_ty = expected_return_ty.unwrap_or(&Type::Top);
+                match inner_expr {
+                    Some(expr) => {
+                        self.verify_expr(expr_ty, expr, type_bindings, expected_return_ty)
+                    }
+                    None => {
+                        if !is_subtype(&Type::unit(), expr_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected this function to return `{}`, but got `Unit`.",
+                                    expr_ty,
+                                ),
+                                position: pos.clone(),
+                            });
+                        }
+                    }
+                }
+                // `return` terminates the current function, so we can't
+                // use this expression. Infer as bottom.
+                Type::no_value()
+            }
+            Expression_::IntLiteral(_) => Type::int(),
+            Expression_::StringLiteral(_) => Type::string(),
+            Expression_::ListLiteral(vec) => todo!(),
+            Expression_::TupleLiteral(items) => {
+                let item_tys: Vec<_> = items
+                    .iter()
+                    .map(|item| self.infer_expr(item, type_bindings, expected_return_ty))
+                    .collect();
+                Type::Tuple(item_tys)
+            }
+            Expression_::StructLiteral(type_symbol, vec) => todo!(),
+            Expression_::BinaryOperator(rc, binary_operator_kind, rc1) => todo!(),
+            Expression_::Variable(symbol) => todo!(),
+            Expression_::Call(rc, parenthesized_arguments) => todo!(),
+            Expression_::MethodCall(rc, symbol, parenthesized_arguments) => todo!(),
+            Expression_::DotAccess(rc, symbol) => todo!(),
+            Expression_::FunLiteral(fun_info) => todo!(),
+            Expression_::Assert(expr) => {
+                self.verify_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
+                Type::unit()
+            }
+            Expression_::Invalid => Type::Top,
+        }
+    }
+
+    fn verify_expr(
+        &mut self,
+        expected_ty: &Type,
+        expr: &Expression,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) {
+        self.verify_expr_(expected_ty, &expr.expr_, type_bindings, expected_return_ty);
+    }
+
+    fn verify_expr_(
+        &mut self,
+        expected_ty: &Type,
+        expr_: &Expression_,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: Option<&Type>,
+    ) {
+    }
+
     fn check_expr(
         &mut self,
         expr: &Expression,

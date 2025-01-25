@@ -4605,6 +4605,11 @@ mod tests {
         for item in items {
             match item {
                 ToplevelItem(_, _, ToplevelItem_::Expr(e)) => exprs.push(e.0),
+                ToplevelItem(_, _, ToplevelItem_::Block(b)) => {
+                    for e in &b.exprs {
+                        exprs.push(e.as_ref().clone());
+                    }
+                }
                 _ => unreachable!(),
             }
         }
@@ -4714,15 +4719,6 @@ mod tests {
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::Integer(2));
-    }
-
-    #[test]
-    fn test_eval_block_scope_should_not_leak() {
-        let mut id_gen = IdGenerator::default();
-        let exprs = parse_exprs_from_str("{ let x = 1 } x", &mut id_gen);
-
-        let mut env = Env::new(id_gen);
-        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

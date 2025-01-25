@@ -1392,7 +1392,7 @@ impl TypeCheckVisitor<'_> {
         if !is_subtype(&ty, expected_ty) {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: format!("Expected `{}` , but got `{}`.", expected_ty, ty),
+                message: format!("Expected `{}`, but got `{}`.", expected_ty, ty),
                 position: pos.clone(),
             });
         }

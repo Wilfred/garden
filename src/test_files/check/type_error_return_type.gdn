@@ -7,12 +7,12 @@ export fun bad(): Bool {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected to return `Int` but got `Bool`.
+// Error: Expected `Int`, but got `Bool`.
 // 
 // --> src/test_files/check/type_error_return_type.gdn:2
 //     let _f = fun(): Int { True }
 //                           ^^^^
-// Error: Expected to return `Bool` but got `String`.
+// Error: Expected `Bool`, but got `String`.
 // 
 // --> src/test_files/check/type_error_return_type.gdn:4
 //     "abc"

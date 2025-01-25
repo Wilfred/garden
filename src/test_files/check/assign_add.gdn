@@ -11,12 +11,12 @@ export fun foo() {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an `Int` expression for this `+=`, but got `String`.
+// Error: Expected `Int`, but got `String`.
 // 
 // --> src/test_files/check/assign_add.gdn:5
 //     x += "" // bad
 //          ^^
-// Error: `-=` can only be used with `Int` variables, but got `Int`.
+// Error: `-=` can only be used with `Int` variables, but got `String`.
 // 
 // --> src/test_files/check/assign_add.gdn:8
 //     y -= 2 // bad

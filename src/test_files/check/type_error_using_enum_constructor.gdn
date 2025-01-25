@@ -5,7 +5,7 @@ export fun foo(): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected to return `Int` but got `Fun<(T), Option<T>>`.
+// Error: Expected `Int`, but got `Fun<(T), Option<T>>`.
 // 
 // --> src/test_files/check/type_error_using_enum_constructor.gdn:2
 //     Some

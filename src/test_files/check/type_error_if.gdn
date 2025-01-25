@@ -9,7 +9,7 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Bool` inside an `if` condition, but got `Int`.
+// Error: Expected `Bool`, but got `Int`.
 // 
 // --> src/test_files/check/type_error_if.gdn:2
 //     if 1 {

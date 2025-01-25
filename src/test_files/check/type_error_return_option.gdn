@@ -5,7 +5,7 @@ export fun foo(parts: List<String>): String {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected to return `String` but got `Option<String>`.
+// Error: Expected `String`, but got `Option<String>`.
 // 
 // --> src/test_files/check/type_error_return_option.gdn:2
 //     parts.first()

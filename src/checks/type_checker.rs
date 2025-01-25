@@ -243,7 +243,12 @@ impl Visitor for TypeCheckVisitor<'_> {
             None => None,
         };
 
-        self.infer_block(&fun_info.body, &type_bindings, return_ty.as_ref());
+        self.verify_block(
+            &return_ty.clone().unwrap_or(Type::Top),
+            &fun_info.body,
+            &type_bindings,
+            return_ty.as_ref(),
+        );
 
         self.bindings.exit_block();
 

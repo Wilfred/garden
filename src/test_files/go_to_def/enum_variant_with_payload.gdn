@@ -1,0 +1,14 @@
+enum MyOption {
+  MySome(Int),
+  MyNone,
+}
+
+fun foo() {
+  MySome(1)
+  //^
+}
+
+// args: definition-position
+// expected stdout:
+// {"start_offset":18,"end_offset":24,"line_number":1,"end_line_number":1,"column":2,"path":"src/test_files/go_to_def/enum_variant_with_payload.gdn"}
+

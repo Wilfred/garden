@@ -288,9 +288,13 @@ impl TypeCheckVisitor<'_> {
     /// Update `id_to_pos` for this occurrence of an enum variant,
     /// e.g. an instance of the literal `True`.
     fn save_enum_variant_id(&mut self, occurrence_sym: &Symbol, value: &Value) {
-        let Value::EnumVariant { type_name, .. } = value else {
-            return;
+        let type_name = match value {
+            Value::EnumVariant { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
+                type_name
+            }
+            _ => return,
         };
+
         let Some(TypeDef::Enum(enum_info)) = self.env.get_type_def(type_name) else {
             return;
         };
@@ -1015,7 +1019,10 @@ impl TypeCheckVisitor<'_> {
                             }
                         }
 
-                        if matches!(value, Value::EnumVariant { .. }) {
+                        if matches!(
+                            value,
+                            Value::EnumVariant { .. } | Value::EnumConstructor { .. }
+                        ) {
                             self.save_enum_variant_id(sym, value);
                         }
 

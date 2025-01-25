@@ -400,7 +400,7 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
                 return false;
             }
 
-            // Functions are contravariant in their arguments.
+            // Functions are contravariant in their arguments, so flip the arguments.
             // Fun<(Top,), Unit> <: Fun<(Int,), Unit>
             for (lhs_param, rhs_param) in lhs_params.iter().zip(rhs_params) {
                 if !is_subtype(rhs_param, lhs_param) {
@@ -408,7 +408,7 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
                 }
             }
 
-            // Functions are covariant in their return types, so flip the arguments.
+            // Functions are covariant in their return types.
             // Fun<(), NoValue> <: Fun<(), Int>
             is_subtype(lhs_return, rhs_return)
         }

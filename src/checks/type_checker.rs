@@ -452,7 +452,20 @@ impl TypeCheckVisitor<'_> {
         block: &Block,
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
-    ) {
+    ) -> Type {
+        self.bindings.enter_block();
+
+        let mut ty = Type::unit();
+        for (i, expr) in block.exprs.iter().enumerate() {
+            if i == block.exprs.len() - 1 {
+                ty = self.verify_expr(expected_ty, expr, type_bindings, expected_return_ty);
+            } else {
+                self.infer_expr(expr, type_bindings, expected_return_ty);
+            }
+        }
+
+        self.bindings.exit_block();
+        ty
     }
 
     fn infer_expr(
@@ -626,7 +639,7 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::While(cond_expr, block) => {
                 self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
-                self.verify_block(&Type::Top, block, type_bindings, expected_return_ty);
+                self.infer_block(block, type_bindings, expected_return_ty);
                 Type::unit()
             }
             Expression_::ForIn(sym, expr, body) => {
@@ -766,7 +779,7 @@ impl TypeCheckVisitor<'_> {
                 let expr_ty = expected_return_ty.unwrap_or(&Type::Top);
                 match inner_expr {
                     Some(expr) => {
-                        self.verify_expr(expr_ty, expr, type_bindings, expected_return_ty)
+                        self.verify_expr(expr_ty, expr, type_bindings, expected_return_ty);
                     }
                     None => {
                         if !is_subtype(&Type::unit(), expr_ty) {
@@ -961,9 +974,185 @@ impl TypeCheckVisitor<'_> {
                     None => Type::Error("Unbound variable".to_owned()),
                 }
             }
-            Expression_::Call(rc, parenthesized_arguments) => todo!(),
+            Expression_::Call(recv, paren_args) => {
+                if let Expression_::Variable(s) = &recv.expr_ {
+                    if s.name.name == "todo"
+                        && self.bindings.get(&SymbolName::from("todo")).is_none()
+                    {
+                        self.diagnostics.push(Diagnostic {
+                            message: "Unfinished code.".to_owned(),
+                            position: pos.clone(),
+                            level: Level::Warning,
+                        });
+                    }
+                }
+
+                let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
+
+                match recv_ty {
+                    Type::Fun {
+                        type_params,
+                        params,
+                        return_,
+                        name,
+                    } => {
+                        let formatted_name = match name {
+                            Some(name) => format!("`{}`", name.name),
+                            None => "This function".to_owned(),
+                        };
+
+                        if params.len() < paren_args.arguments.len() {
+                            // Got too many arguments.
+                            let first_excess_arg = &paren_args.arguments[params.len()];
+                            let last_arg = paren_args.arguments.last().unwrap();
+
+                            let position =
+                                Position::merge(&first_excess_arg.position, &last_arg.position);
+
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "{} expects {} argument{}, but got {}.",
+                                    formatted_name,
+                                    params.len(),
+                                    if params.len() == 1 { "" } else { "s" },
+                                    paren_args.arguments.len()
+                                ),
+                                position,
+                            });
+                        } else if params.len() > paren_args.arguments.len() {
+                            // Got too few arguments.
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "{} expects {} argument{}, but got {}.",
+                                    formatted_name,
+                                    params.len(),
+                                    if params.len() == 1 { "" } else { "s" },
+                                    paren_args.arguments.len()
+                                ),
+                                position: recv.position.clone(),
+                            });
+                        }
+
+                        let mut ty_var_env = TypeVarEnv::default();
+                        for type_param in type_params {
+                            ty_var_env.insert(type_param.clone(), None);
+                        }
+
+                        let mut arg_tys = vec![];
+                        for arg in &paren_args.arguments {
+                            let arg_ty = self.infer_expr(arg, type_bindings, expected_return_ty);
+                            arg_tys.push((arg_ty, arg.position.clone()));
+                        }
+
+                        for (param_ty, (arg_ty, _)) in params.iter().zip(arg_tys.iter()) {
+                            unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                        }
+
+                        let params = params
+                            .iter()
+                            .map(|p| subst_ty_vars(p, &ty_var_env))
+                            .collect::<Vec<_>>();
+
+                        for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
+                            if !is_subtype(&arg_ty, param_ty) {
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!(
+                                        "Expected `{}` argument but got `{}`.",
+                                        param_ty, arg_ty
+                                    ),
+                                    position: arg_pos,
+                                });
+                            }
+                        }
+
+                        subst_ty_vars(&return_, &ty_var_env)
+                    }
+                    Type::Error(_) => {
+                        for arg in &paren_args.arguments {
+                            // We still want to check arguments as far as possible.
+                            self.infer_expr(arg, type_bindings, expected_return_ty);
+                        }
+
+                        // If the receiver is an error, use that error
+                        // type for the return type of this call.
+                        recv_ty.clone()
+                    }
+                    _ => {
+                        for arg in &paren_args.arguments {
+                            // We still want to check arguments as far as possible.
+                            self.infer_expr(arg, type_bindings, expected_return_ty);
+                        }
+
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!("Expected a function, but got a `{}`.", recv_ty),
+                            position: recv.position.clone(),
+                        });
+
+                        Type::Error("Calling something that isn't a function".to_owned())
+                    }
+                }
+            }
             Expression_::MethodCall(rc, symbol, parenthesized_arguments) => todo!(),
-            Expression_::DotAccess(rc, symbol) => todo!(),
+            Expression_::DotAccess(recv, field_sym) => {
+                let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
+                let Some(recv_ty_name) = recv_ty.type_name() else {
+                    return Type::error("No type name found for this receiver");
+                };
+
+                match recv_ty {
+                    Type::UserDefined {
+                        kind: TypeDefKind::Struct,
+                        name,
+                        ..
+                    } => {
+                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name) {
+                            for field in &struct_info.fields {
+                                if field.sym.name == field_sym.name {
+                                    let field_ty = Type::from_hint(
+                                        &field.hint,
+                                        &self.env.types,
+                                        type_bindings,
+                                    )
+                                    .unwrap_or_err_ty();
+                                    return field_ty;
+                                }
+                            }
+
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Struct `{}` has no field `{}`.",
+                                    recv_ty_name, field_sym.name
+                                ),
+                                position: field_sym.position.clone(),
+                            });
+
+                            Type::error("No struct field with this name")
+                        } else {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!("`{}` is not a struct.", recv_ty_name),
+                                position: field_sym.position.clone(),
+                            });
+
+                            Type::error("No struct with this name")
+                        }
+                    }
+                    _ => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!("`{}` is not a struct.", recv_ty_name),
+                            position: field_sym.position.clone(),
+                        });
+
+                        Type::error("This type is not a struct")
+                    }
+                }
+            }
             Expression_::FunLiteral(fun_info) => todo!(),
             Expression_::Assert(expr) => {
                 self.verify_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
@@ -978,6 +1167,13 @@ impl TypeCheckVisitor<'_> {
     ///
     /// These two types may differ: for example, `[]` has an inferred
     /// type of `List<NoValue>`, which is a subtype of `List<Int>`.
+    ///
+    /// For function literals, this allows more expressions to be
+    /// checked. Inference cannot handle `fun(x) { x.foo }` but
+    /// verifying/checking can because we know the expected lambda
+    /// type.
+    ///
+    /// When in doubt, prefer adding more cases to `infer_expr`.
     fn verify_expr(
         &mut self,
         expected_ty: &Type,
@@ -985,17 +1181,91 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
-        self.verify_expr_(expected_ty, &expr.expr_, type_bindings, expected_return_ty)
+        self.verify_expr_(
+            expected_ty,
+            &expr.expr_,
+            &expr.position,
+            type_bindings,
+            expected_return_ty,
+        )
     }
 
     fn verify_expr_(
         &mut self,
         expected_ty: &Type,
         expr_: &Expression_,
+        pos: &Position,
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
-        todo!()
+        let ty = match (expr_, expected_ty) {
+            (
+                Expression_::FunLiteral(fun_info),
+                Type::Fun {
+                    name: _,
+                    type_params: _,
+                    params: expected_params,
+                    return_: expected_return_ty,
+                },
+            ) => {
+                self.bindings.enter_block();
+
+                let mut param_tys = vec![];
+                for (i, param) in fun_info.params.iter().enumerate() {
+                    let param_ty = match &param.hint {
+                        Some(hint) => Type::from_hint(&hint, &self.env.types, type_bindings)
+                            .unwrap_or_err_ty(),
+                        None => expected_params.get(i).cloned().unwrap_or(Type::Top),
+                    };
+
+                    self.set_binding(&param.symbol, param_ty.clone());
+                    param_tys.push(param_ty);
+                }
+
+                let return_ty = match &fun_info.return_hint {
+                    Some(hint) => {
+                        let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
+                            .unwrap_or_err_ty();
+                        self.save_hint_ty_id(hint, &hint_ty);
+
+                        if !is_subtype(&hint_ty, expected_return_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected a function with return type `{}` but got `{}`.",
+                                    expected_return_ty, hint_ty
+                                ),
+                                position: pos.clone(),
+                            });
+                        }
+
+                        self.verify_block(&hint_ty, &fun_info.body, type_bindings, Some(&hint_ty));
+                        hint_ty
+                    }
+                    None => self.infer_block(&fun_info.body, type_bindings, None),
+                };
+
+                self.bindings.exit_block();
+
+                Type::Fun {
+                    type_params: vec![],
+                    params: param_tys,
+                    return_: Box::new(return_ty),
+                    name: None,
+                }
+            }
+            _ => self.infer_expr_(expr_, pos, type_bindings, expected_return_ty),
+        };
+
+        if !is_subtype(&ty, expected_ty) {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: format!("Expected `{}` , but got `{}`.", expected_ty, ty),
+                position: pos.clone(),
+            });
+        }
+
+        ty
     }
 
     fn check_expr(

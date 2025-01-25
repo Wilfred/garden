@@ -973,14 +973,19 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
+    /// Verify that `expr` has a type that is a subtype of
+    /// `expected_ty`. Return the inferred type.
+    ///
+    /// These two types may differ: for example, `[]` has an inferred
+    /// type of `List<NoValue>`, which is a subtype of `List<Int>`.
     fn verify_expr(
         &mut self,
         expected_ty: &Type,
         expr: &Expression,
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
-    ) {
-        self.verify_expr_(expected_ty, &expr.expr_, type_bindings, expected_return_ty);
+    ) -> Type {
+        self.verify_expr_(expected_ty, &expr.expr_, type_bindings, expected_return_ty)
     }
 
     fn verify_expr_(
@@ -989,7 +994,8 @@ impl TypeCheckVisitor<'_> {
         expr_: &Expression_,
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
-    ) {
+    ) -> Type {
+        todo!()
     }
 
     fn check_expr(
@@ -1184,7 +1190,12 @@ impl TypeCheckVisitor<'_> {
                 Type::unit()
             }
             Expression_::ForIn(sym, expr, body) => {
-                let expr_ty = self.check_expr(expr, type_bindings, expected_return_ty);
+                let expr_ty = self.verify_expr(
+                    &Type::list(Type::Top),
+                    expr,
+                    type_bindings,
+                    expected_return_ty,
+                );
 
                 self.bindings.enter_block();
 
@@ -1196,17 +1207,7 @@ impl TypeCheckVisitor<'_> {
                             Type::error("Bad list arity")
                         }
                     }
-                    _ => {
-                        self.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Expected `List` for a `for` loop, but got `{}`.",
-                                expr_ty
-                            ),
-                            position: expr.position.clone(),
-                        });
-                        Type::error("For loop expression that isn't a list")
-                    }
+                    _ => Type::error("For loop expression that isn't a list"),
                 };
 
                 self.set_binding(sym, elem_ty);

@@ -1096,7 +1096,164 @@ impl TypeCheckVisitor<'_> {
                     }
                 }
             }
-            Expression_::MethodCall(rc, symbol, parenthesized_arguments) => todo!(),
+            Expression_::MethodCall(recv, sym, paren_args) => {
+                let receiver_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
+                if matches!(receiver_ty, Type::Error(_)) {
+                    for arg in &paren_args.arguments {
+                        self.infer_expr(arg, type_bindings, expected_return_ty);
+                    }
+
+                    // Allow calling methods on error types, to avoid cascading errors.
+                    return Type::error("Called method on an error type");
+                }
+
+                let Some(receiver_ty_name) = receiver_ty.type_name() else {
+                    for arg in &paren_args.arguments {
+                        self.infer_expr(arg, type_bindings, expected_return_ty);
+                    }
+
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: format!(
+                            "Expected a type with a `{}` method, but got a `{}`.",
+                            &sym.name, receiver_ty
+                        ),
+                        position: recv.position.clone(),
+                    });
+                    return Type::error("No type name for this method receiver");
+                };
+
+                let methods = self
+                    .env
+                    .methods
+                    .get(&receiver_ty_name)
+                    .cloned()
+                    .unwrap_or_default();
+
+                match methods.get(&sym.name) {
+                    Some(method_info) => {
+                        self.id_to_def_pos
+                            .insert(sym.id, method_info.name_sym.position.clone());
+
+                        let Some(fun_info) = method_info.fun_info() else {
+                            return Type::error("This method has no fun_info");
+                        };
+
+                        if let Some(def_id) = fun_info.item_id {
+                            self.callees
+                                .entry(self.current_item)
+                                .or_default()
+                                .insert(def_id);
+                        }
+
+                        if fun_info.params.len() != paren_args.arguments.len() {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "`{}::{}` requires {} argument{}, but got {}.",
+                                    receiver_ty_name,
+                                    sym.name,
+                                    fun_info.params.len(),
+                                    if fun_info.params.len() == 1 { "" } else { "s" },
+                                    paren_args.arguments.len()
+                                ),
+                                position: sym.position.clone(),
+                            });
+                        }
+
+                        let mut ty_var_env = TypeVarEnv::default();
+                        for type_param in &fun_info.type_params {
+                            ty_var_env.insert(type_param.name.clone(), None);
+                        }
+
+                        let param_decl_tys: Vec<Type> = fun_info
+                            .params
+                            .iter()
+                            .map(|sym_with_hint| match &sym_with_hint.hint {
+                                Some(hint) => Type::from_hint(hint, &self.env.types, &ty_var_env)
+                                    .unwrap_or_err_ty(),
+                                None => Type::Top,
+                            })
+                            .collect();
+
+                        let recv_decl_ty = Type::from_hint(
+                            &method_info.receiver_hint,
+                            &self.env.types,
+                            &ty_var_env,
+                        )
+                        .unwrap_or_err_ty();
+                        unify_and_solve_ty(&recv_decl_ty, &receiver_ty, &mut ty_var_env);
+
+                        let mut arg_tys = vec![];
+                        for arg in &paren_args.arguments {
+                            let arg_ty = self.infer_expr(arg, type_bindings, expected_return_ty);
+                            arg_tys.push((arg_ty, arg.position.clone()));
+                        }
+
+                        for (param_ty, (arg_ty, _)) in param_decl_tys.iter().zip(arg_tys.iter()) {
+                            unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                        }
+
+                        let params = param_decl_tys
+                            .iter()
+                            .map(|p| subst_ty_vars(p, &ty_var_env))
+                            .collect::<Vec<_>>();
+
+                        for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(&arg_tys) {
+                            if !is_subtype(arg_ty, param_ty) {
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message: format!(
+                                        "Expected `{}` argument but got `{}`.",
+                                        param_ty, arg_ty
+                                    ),
+                                    position: arg_pos.clone(),
+                                });
+                            }
+                        }
+
+                        let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
+                            self.env,
+                            method_info,
+                            &recv.position,
+                            &receiver_ty,
+                            &arg_tys,
+                            &mut ty_var_env,
+                        );
+                        self.diagnostics.extend(more_diagnostics);
+
+                        subst_ty_vars(&ret_ty, &ty_var_env)
+                    }
+                    None => {
+                        // No method exists with that name on this type.
+
+                        for arg in &paren_args.arguments {
+                            self.infer_expr(arg, type_bindings, expected_return_ty);
+                        }
+
+                        let available_methods = methods.keys().collect::<Vec<_>>();
+                        let suggest =
+                            if let Some(similar) = most_similar(&available_methods, &sym.name) {
+                                // TODO: consider arity and types when
+                                // trying to suggest the best
+                                // alternative.
+                                format!(" Did you mean `{}`?", similar)
+                            } else {
+                                "".to_owned()
+                            };
+
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "`{}` has no method `{}`.{}",
+                                receiver_ty_name, sym.name, suggest
+                            ),
+                            position: sym.position.clone(),
+                        });
+                        Type::error("No such method on this type")
+                    }
+                }
+            }
             Expression_::DotAccess(recv, field_sym) => {
                 let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
                 let Some(recv_ty_name) = recv_ty.type_name() else {

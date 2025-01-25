@@ -1153,7 +1153,33 @@ impl TypeCheckVisitor<'_> {
                     }
                 }
             }
-            Expression_::FunLiteral(fun_info) => todo!(),
+            Expression_::FunLiteral(fun_info) => {
+                let param_tys = fun_info
+                    .params
+                    .iter()
+                    .map(|param| match &param.hint {
+                        Some(hint) => {
+                            Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty()
+                        }
+                        None => Type::Top,
+                    })
+                    .collect::<Vec<_>>();
+
+                let return_ty = match &fun_info.return_hint {
+                    Some(hint) => {
+                        Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty()
+                    }
+                    None => Type::Top,
+                };
+
+                let expected_ty = Type::Fun {
+                    type_params: vec![],
+                    params: param_tys,
+                    return_: Box::new(return_ty),
+                    name: None,
+                };
+                self.verify_expr_(&expected_ty, expr_, pos, type_bindings, expected_return_ty)
+            }
             Expression_::Assert(expr) => {
                 self.verify_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
                 Type::unit()
@@ -1213,8 +1239,12 @@ impl TypeCheckVisitor<'_> {
                 let mut param_tys = vec![];
                 for (i, param) in fun_info.params.iter().enumerate() {
                     let param_ty = match &param.hint {
-                        Some(hint) => Type::from_hint(&hint, &self.env.types, type_bindings)
-                            .unwrap_or_err_ty(),
+                        Some(hint) => {
+                            let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
+                                .unwrap_or_err_ty();
+                            self.save_hint_ty_id(hint, &hint_ty);
+                            hint_ty
+                        }
                         None => expected_params.get(i).cloned().unwrap_or(Type::Top),
                     };
 

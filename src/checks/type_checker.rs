@@ -427,6 +427,8 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
+    /// Run type inference on this block, and return the type of the
+    /// last expression.
     fn infer_block(
         &mut self,
         block: &Block,
@@ -475,7 +477,103 @@ impl TypeCheckVisitor<'_> {
         expected_return_ty: Option<&Type>,
     ) -> Type {
         match expr_ {
-            Expression_::Match(rc, vec) => todo!(),
+            Expression_::Match(scrutinee, cases) => {
+                let scrutinee_ty = self.infer_expr(scrutinee, type_bindings, expected_return_ty);
+                let scrutinee_ty_name = scrutinee_ty.type_name();
+
+                let mut case_tys = vec![];
+
+                if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
+                    let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
+                    check_match_exhaustive(
+                        self.env,
+                        &scrutinee.position,
+                        scrutinee_ty_name,
+                        &patterns,
+                        &mut self.diagnostics,
+                    );
+                }
+
+                for (pattern, case_expr) in cases {
+                    self.bindings.enter_block();
+
+                    if let Some(payload_sym) = &pattern.argument {
+                        if !payload_sym.name.is_underscore() {
+                            self.set_binding(
+                                payload_sym,
+                                enum_payload_type(self.env, &scrutinee_ty, &pattern.symbol),
+                            );
+                        }
+                    }
+
+                    case_tys.push((
+                        self.infer_block(case_expr, type_bindings, expected_return_ty),
+                        Position::merge(&case_expr.open_brace, &case_expr.close_brace),
+                    ));
+
+                    self.bindings.exit_block();
+
+                    // Matching `_` works for any type.
+                    if pattern.symbol.name.is_underscore() {
+                        continue;
+                    }
+
+                    let Some(value) = self.env.file_scope.get(&pattern.symbol.name) else {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!("No such type `{}`.", pattern.symbol.name),
+                            position: pattern.symbol.position.clone(),
+                        });
+                        continue;
+                    };
+
+                    let pattern_type_name = match value {
+                        Value::EnumVariant { type_name, .. } => type_name,
+                        Value::EnumConstructor { type_name, .. } => type_name,
+                        _ => {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected an enum variant here, but got `{}`.",
+                                    value.display(self.env)
+                                ),
+                                position: pattern.symbol.position.clone(),
+                            });
+                            continue;
+                        }
+                    };
+
+                    let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
+                        continue;
+                    };
+                    if scrutinee_ty_name.is_no_value() {
+                        continue;
+                    }
+                    if pattern_type_name != scrutinee_ty_name {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: format!(
+                                "This match case is for `{}`, but you're matching on a `{}`.",
+                                pattern_type_name, &scrutinee_ty_name,
+                            ),
+                            position: pattern.symbol.position.clone(),
+                        });
+                    }
+                }
+
+                match unify_all(&case_tys) {
+                    Ok(ty) => ty,
+                    Err(position) => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: "`match` cases have different types.".to_owned(),
+                            position,
+                        });
+
+                        Type::error("Cases had incompatible types.")
+                    }
+                }
+            }
             Expression_::If(cond_expr, then_block, else_block) => {
                 self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
 
@@ -483,7 +581,7 @@ impl TypeCheckVisitor<'_> {
 
                 let else_ty = match else_block {
                     Some(else_block) => {
-                        self.infer_block(then_block, type_bindings, expected_return_ty)
+                        self.infer_block(else_block, type_bindings, expected_return_ty)
                     }
                     None => {
                         self.verify_block(
@@ -721,8 +819,105 @@ impl TypeCheckVisitor<'_> {
                     .collect();
                 Type::Tuple(item_tys)
             }
-            Expression_::StructLiteral(type_symbol, vec) => todo!(),
-            Expression_::BinaryOperator(rc, binary_operator_kind, rc1) => todo!(),
+            Expression_::StructLiteral(name_sym, fields) => {
+                let field_tys: Vec<_> = fields
+                    .iter()
+                    .map(|(sym, expr)| {
+                        let ty = self.infer_expr(expr, type_bindings, expected_return_ty);
+                        (sym, expr.position.clone(), ty)
+                    })
+                    .collect();
+
+                if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym.name) {
+                    let mut ty_var_env = TypeVarEnv::default();
+                    for type_param in &struct_info.type_params {
+                        ty_var_env.insert(type_param.name.clone(), None);
+                    }
+
+                    let mut sym_to_expected_ty = FxHashMap::default();
+                    for field in &struct_info.fields {
+                        let ty = Type::from_hint(&field.hint, &self.env.types, &ty_var_env)
+                            .unwrap_or_err_ty();
+                        sym_to_expected_ty.insert(field.sym.name.clone(), ty);
+                    }
+
+                    for (sym, expr_pos, ty) in field_tys {
+                        let Some(field_ty) = sym_to_expected_ty.get(&sym.name) else {
+                            continue;
+                        };
+
+                        if !is_subtype(&ty, field_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: format!(
+                                    "Expected `{}` for this field but got `{}`.",
+                                    field_ty, ty
+                                ),
+                                position: expr_pos,
+                            });
+                        }
+                    }
+
+                    Type::UserDefined {
+                        kind: TypeDefKind::Struct,
+                        name: name_sym.name.clone(),
+                        args: vec![],
+                    }
+                } else {
+                    Type::Error("Unbound struct name".to_owned())
+                }
+            }
+            Expression_::BinaryOperator(lhs, op, rhs) => match op {
+                BinaryOperatorKind::Add
+                | BinaryOperatorKind::Subtract
+                | BinaryOperatorKind::Multiply
+                | BinaryOperatorKind::Divide
+                | BinaryOperatorKind::Modulo
+                | BinaryOperatorKind::Exponent => {
+                    self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+                    self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+
+                    Type::int()
+                }
+                BinaryOperatorKind::LessThan
+                | BinaryOperatorKind::LessThanOrEqual
+                | BinaryOperatorKind::GreaterThan
+                | BinaryOperatorKind::GreaterThanOrEqual => {
+                    self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+                    self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+
+                    Type::bool()
+                }
+                BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
+                    let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
+                    let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
+
+                    if !is_subtype(&lhs_ty, &rhs_ty) && !is_subtype(&rhs_ty, &lhs_ty) {
+                        self.diagnostics.push(Diagnostic {
+                                level: Level::Warning,
+                                message: format!(
+                                    "You should compare values of the same type, but got `{}` and `{}`.",
+                                    lhs_ty, rhs_ty
+                                ),
+                                position: pos.clone(),
+                            });
+                    }
+
+                    Type::bool()
+                }
+                BinaryOperatorKind::And | BinaryOperatorKind::Or => {
+                    self.verify_expr(&Type::bool(), lhs, type_bindings, expected_return_ty);
+                    self.verify_expr(&Type::bool(), rhs, type_bindings, expected_return_ty);
+
+                    Type::bool()
+                }
+                BinaryOperatorKind::StringConcat => {
+                    self.verify_expr(&Type::string(), lhs, type_bindings, expected_return_ty);
+                    self.verify_expr(&Type::string(), rhs, type_bindings, expected_return_ty);
+
+                    Type::string()
+                }
+            },
             Expression_::Variable(symbol) => todo!(),
             Expression_::Call(rc, parenthesized_arguments) => todo!(),
             Expression_::MethodCall(rc, symbol, parenthesized_arguments) => todo!(),

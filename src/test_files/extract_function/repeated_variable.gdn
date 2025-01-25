@@ -1,7 +1,7 @@
 fun contains_expr(i: Int) {
   let x = 1
 
-  // We want to extract x as a parameter, but not increment.
+  // We want to extract x as a parameter, but only once.
   let y = x + x
   //      ^^^^^
 }
@@ -15,7 +15,7 @@ fun contains_expr(i: Int) {
 // fun contains_expr(i: Int) {
 //   let x = 1
 // 
-//   // We want to extract x as a parameter, but not increment.
+//   // We want to extract x as a parameter, but only once.
 //   let y = extracted_fun(x)
 // }
 

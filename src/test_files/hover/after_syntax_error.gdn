@@ -1,9 +1,9 @@
 fun file_name(path: String) {
-    // invalid semicolon here
-    let _ = 1;
+  // invalid semicolon here
+  let _ = 1;
     
-    path
-    //^
+  path
+  //^
 }
 
 // args: show-type

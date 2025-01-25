@@ -10,24 +10,6 @@ export fun foo(): Unit {
   {}
 }
 
-// Error: Expected an expression, got: `{`.
-// --> src/test_files/check/ambiguity_struct_literal_or_block.gdn:10
-//   {}
-//   ^
-// 
-// Error: Expected `}`, got `{`
-// --> src/test_files/check/ambiguity_struct_literal_or_block.gdn:10
-//   {}
-//   ^
-// 
-// Error: Expected an expression, got: `}`.
-// --> src/test_files/check/ambiguity_struct_literal_or_block.gdn:11
-// }
-// ^
-// 
-// Error: Unbound symbol: SomeValue
-
-
 // args: check
 // expected exit status: 1
 // expected stdout:

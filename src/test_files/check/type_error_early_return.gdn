@@ -9,7 +9,7 @@ export fun takes_int(b: Bool): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected this function to return `Int`, but got `String`.
+// Error: Expected `Int`, but got `String`.
 // 
 // --> src/test_files/check/type_error_early_return.gdn:3
 //         return "foo"

@@ -535,11 +535,35 @@ impl TypeCheckVisitor<'_> {
             Expression_::If(cond_expr, then_block, else_block) => {
                 self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
 
-                let then_ty = self.infer_block(then_block, type_bindings, expected_return_ty);
-
-                let else_ty = match else_block {
+                match else_block {
                     Some(else_block) => {
-                        self.infer_block(else_block, type_bindings, expected_return_ty)
+                        let then_ty =
+                            self.infer_block(then_block, type_bindings, expected_return_ty);
+                        let else_ty =
+                            self.infer_block(else_block, type_bindings, expected_return_ty);
+
+                        match unify(&then_ty, &else_ty) {
+                            Some(ty) => ty,
+                            None => {
+                                let message = format!(
+                                    "`if` and `else` have incompatible types: `{}` and `{}`.",
+                                    then_ty, else_ty
+                                );
+
+                                let position = match then_block.exprs.last() {
+                                    Some(last_expr) => last_expr.position.clone(),
+                                    None => cond_expr.position.clone(),
+                                };
+
+                                self.diagnostics.push(Diagnostic {
+                                    level: Level::Error,
+                                    message,
+                                    position,
+                                });
+
+                                Type::error("Incompatible if blocks")
+                            }
+                        }
                     }
                     None => {
                         self.verify_block(
@@ -549,36 +573,6 @@ impl TypeCheckVisitor<'_> {
                             expected_return_ty,
                         );
                         Type::unit()
-                    }
-                };
-
-                match unify(&then_ty, &else_ty) {
-                    Some(ty) => ty,
-                    None => {
-                        let message = if else_block.is_some() {
-                            format!(
-                                "`if` and `else` have incompatible types: `{}` and `{}`.",
-                                then_ty, else_ty
-                            )
-                        } else {
-                            format!(
-                            "`if` expressions without `else` should have type `Unit`, but got `{}`.",
-                            then_ty
-                        )
-                        };
-
-                        let position = match then_block.exprs.last() {
-                            Some(last_expr) => last_expr.position.clone(),
-                            None => cond_expr.position.clone(),
-                        };
-
-                        self.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message,
-                            position,
-                        });
-
-                        Type::error("Incompatible if blocks")
                     }
                 }
             }

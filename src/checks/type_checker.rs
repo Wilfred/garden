@@ -918,7 +918,46 @@ impl TypeCheckVisitor<'_> {
                     Type::string()
                 }
             },
-            Expression_::Variable(symbol) => todo!(),
+            Expression_::Variable(sym) => {
+                if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
+                    self.id_to_def_pos.insert(sym.id, position.clone());
+                    return value_ty.clone();
+                }
+
+                match self.env.file_scope.get(&sym.name) {
+                    Some(value) => {
+                        let fun_info = match value {
+                            Value::Fun { fun_info, .. } => Some(fun_info),
+                            Value::Closure(_, fun_info) => Some(fun_info),
+                            Value::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
+                            _ => None,
+                        };
+                        if let Some(fun_info) = fun_info {
+                            if let Some(def_id) = fun_info.item_id {
+                                self.callees
+                                    .entry(self.current_item)
+                                    .or_default()
+                                    .insert(def_id);
+                            }
+
+                            if let Some(fun_sym) = &fun_info.name_sym {
+                                self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
+                            }
+
+                            if let Some(doc_comment) = &fun_info.doc_comment {
+                                self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
+                            }
+                        }
+
+                        if matches!(value, Value::EnumVariant { .. }) {
+                            self.save_enum_variant_id(sym, value);
+                        }
+
+                        Type::from_value(value, &self.env.types, type_bindings)
+                    }
+                    None => Type::Error("Unbound variable".to_owned()),
+                }
+            }
             Expression_::Call(rc, parenthesized_arguments) => todo!(),
             Expression_::MethodCall(rc, symbol, parenthesized_arguments) => todo!(),
             Expression_::DotAccess(rc, symbol) => todo!(),

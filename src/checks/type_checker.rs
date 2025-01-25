@@ -949,7 +949,10 @@ impl TypeCheckVisitor<'_> {
                             }
                         }
 
-                        if matches!(value, Value::EnumVariant { .. }) {
+                        if matches!(
+                            value,
+                            Value::EnumVariant { .. } | Value::EnumConstructor { .. }
+                        ) {
                             self.save_enum_variant_id(sym, value);
                         }
 

@@ -406,6 +406,14 @@ impl TypeCheckVisitor<'_> {
             }
         }
 
+        if block.exprs.is_empty() && !is_subtype(&ty, expected_ty) {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: format!("Expected `{}`, but got `{}`.", expected_ty, ty),
+                position: block.close_brace.clone(),
+            });
+        }
+
         self.bindings.exit_block();
         ty
     }

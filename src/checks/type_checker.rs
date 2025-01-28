@@ -427,6 +427,7 @@ impl TypeCheckVisitor<'_> {
         let ty = self.infer_expr_(
             &expr.expr_,
             &expr.position,
+            expr.id,
             type_bindings,
             expected_return_ty,
         );
@@ -439,6 +440,7 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         expr_: &Expression_,
         pos: &Position,
+        expr_id: SyntaxId,
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
@@ -1283,7 +1285,14 @@ impl TypeCheckVisitor<'_> {
                     return_: Box::new(return_ty),
                     name: None,
                 };
-                self.verify_expr_(&expected_ty, expr_, pos, type_bindings, expected_return_ty)
+                self.verify_expr_(
+                    &expected_ty,
+                    expr_,
+                    pos,
+                    expr_id,
+                    type_bindings,
+                    expected_return_ty,
+                )
             }
             Expression_::Assert(expr) => {
                 self.verify_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
@@ -1320,6 +1329,7 @@ impl TypeCheckVisitor<'_> {
             expected_ty,
             &expr.expr_,
             &expr.position,
+            expr.id,
             type_bindings,
             expected_return_ty,
         )
@@ -1330,6 +1340,7 @@ impl TypeCheckVisitor<'_> {
         expected_ty: &Type,
         expr_: &Expression_,
         pos: &Position,
+        expr_id: SyntaxId,
         type_bindings: &TypeVarEnv,
         expected_return_ty: Option<&Type>,
     ) -> Type {
@@ -1393,7 +1404,7 @@ impl TypeCheckVisitor<'_> {
                     name: None,
                 }
             }
-            _ => self.infer_expr_(expr_, pos, type_bindings, expected_return_ty),
+            _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty),
         };
 
         if !is_subtype(&ty, expected_ty) {

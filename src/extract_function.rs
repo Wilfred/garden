@@ -148,7 +148,7 @@ impl Visitor for OutsideVarsVisitor<'_> {
                 && !self.vars_seen.contains(&symbol.name)
             {
                 self.vars_outside
-                    .push((symbol.name.clone(), self.id_to_ty.get(&expr.id).cloned()));
+                    .push((symbol.name.clone(), self.id_to_ty.get(&symbol.id).cloned()));
                 self.vars_seen.insert(symbol.name.clone());
             }
         }

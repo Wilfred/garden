@@ -881,6 +881,7 @@ impl TypeCheckVisitor<'_> {
             Expression_::Variable(sym) => {
                 if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
                     self.id_to_def_pos.insert(sym.id, position.clone());
+                    self.id_to_ty.insert(sym.id, value_ty.clone());
                     return value_ty.clone();
                 }
 

@@ -207,3 +207,26 @@ export fun (this: Path) read(): Result<String, String> {
 test path_read {
   assert(Path{ p: "/dev/null" }.read() == Ok(""))
 }
+
+// Check the syntax of `src`.
+export fun check_snippet(src: String): Result<Unit, List<String>> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test check_snippet_good {
+  match check_snippet("fun foo() {}") {
+    Ok(_) => {}
+    Err(_) => {
+      assert(False)
+    }
+  }
+}
+
+test check_snippet_bad {
+  match check_snippet("fun foo(") {
+    Ok(_) => {
+      assert(False)
+    }
+    Err(_) => {}
+  }
+}

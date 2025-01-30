@@ -25,8 +25,9 @@ use crate::types::TypeDef;
 use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
-    InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, Pattern,
-    StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
+    IdGenerator, InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
+    Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName,
+    TypeSymbol,
 };
 use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem, ToplevelItem_};
 use garden_lang_parser::position::Position;
@@ -2396,9 +2397,75 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::CheckSnippet => {
+            check_arity(
+                &SymbolName {
+                    name: "error".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let snippet = match &arg_values[0] {
+                Value::String(s) => s,
+                v => {
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        v,
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let v = check_snippet(snippet, env);
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
     }
 
     Ok(())
+}
+
+fn check_snippet(src: &str, env: &Env) -> Value {
+    let path = PathBuf::from("snippet.gdn");
+
+    let mut id_gen = IdGenerator::default();
+    let (_, errors) = parse_toplevel_items(&path, src, &mut id_gen);
+
+    if errors.is_empty() {
+        Value::ok(Value::unit(), env)
+    } else {
+        let error_messages = errors
+            .iter()
+            .map(|e| {
+                let m = e.message();
+                Value::String(m.0.clone())
+            })
+            .collect::<Vec<_>>();
+
+        Value::err(
+            Value::List {
+                items: error_messages,
+                elem_type: Type::string(),
+            },
+            env,
+        )
+    }
 }
 
 /// Evaluate a function call.

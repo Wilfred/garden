@@ -238,17 +238,12 @@ impl Visitor for TypeCheckVisitor<'_> {
                     Type::from_hint(hint, &self.env.types, &type_bindings).unwrap_or_err_ty();
                 self.save_hint_ty_id(hint, &hint_ty);
 
-                Some(hint_ty)
+                hint_ty
             }
-            None => None,
+            None => Type::Top,
         };
 
-        self.verify_block(
-            &return_ty.clone().unwrap_or(Type::Top),
-            &fun_info.body,
-            &type_bindings,
-            return_ty.as_ref(),
-        );
+        self.verify_block(&return_ty, &fun_info.body, &type_bindings, &return_ty);
 
         self.bindings.exit_block();
 
@@ -298,7 +293,7 @@ impl Visitor for TypeCheckVisitor<'_> {
 
     fn visit_block(&mut self, block: &Block) {
         // infer_block recurses, so don't recurse in the visitor.
-        self.infer_block(block, &self.env.stack.type_bindings(), None);
+        self.infer_block(block, &self.env.stack.type_bindings(), &Type::Top);
     }
 }
 
@@ -375,7 +370,7 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         block: &Block,
         type_bindings: &TypeVarEnv,
-        expected_return_ty: Option<&Type>,
+        expected_return_ty: &Type,
     ) -> Type {
         self.bindings.enter_block();
 
@@ -393,7 +388,7 @@ impl TypeCheckVisitor<'_> {
         expected_ty: &Type,
         block: &Block,
         type_bindings: &TypeVarEnv,
-        expected_return_ty: Option<&Type>,
+        expected_return_ty: &Type,
     ) -> Type {
         self.bindings.enter_block();
 
@@ -422,7 +417,7 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         expr: &Expression,
         type_bindings: &TypeVarEnv,
-        expected_return_ty: Option<&Type>,
+        expected_return_ty: &Type,
     ) -> Type {
         let ty = self.infer_expr_(
             &expr.expr_,
@@ -442,7 +437,7 @@ impl TypeCheckVisitor<'_> {
         pos: &Position,
         expr_id: SyntaxId,
         type_bindings: &TypeVarEnv,
-        expected_return_ty: Option<&Type>,
+        expected_return_ty: &Type,
     ) -> Type {
         match expr_ {
             Expression_::Match(scrutinee, cases) => {
@@ -725,7 +720,7 @@ impl TypeCheckVisitor<'_> {
                 Type::unit()
             }
             Expression_::Return(inner_expr) => {
-                let expr_ty = expected_return_ty.unwrap_or(&Type::Top);
+                let expr_ty = expected_return_ty;
                 match inner_expr {
                     Some(expr) => {
                         self.verify_expr(expr_ty, expr, type_bindings, expected_return_ty);
@@ -1324,7 +1319,7 @@ impl TypeCheckVisitor<'_> {
         expected_ty: &Type,
         expr: &Expression,
         type_bindings: &TypeVarEnv,
-        expected_return_ty: Option<&Type>,
+        expected_return_ty: &Type,
     ) -> Type {
         self.verify_expr_(
             expected_ty,
@@ -1343,7 +1338,7 @@ impl TypeCheckVisitor<'_> {
         pos: &Position,
         expr_id: SyntaxId,
         type_bindings: &TypeVarEnv,
-        expected_return_ty: Option<&Type>,
+        expected_return_ty: &Type,
     ) -> Type {
         let ty = match (expr_, expected_ty) {
             (
@@ -1390,10 +1385,10 @@ impl TypeCheckVisitor<'_> {
                             });
                         }
 
-                        self.verify_block(&hint_ty, &fun_info.body, type_bindings, Some(&hint_ty));
+                        self.verify_block(&hint_ty, &fun_info.body, type_bindings, &hint_ty);
                         hint_ty
                     }
-                    None => self.infer_block(&fun_info.body, type_bindings, None),
+                    None => self.infer_block(&fun_info.body, type_bindings, &Type::Top),
                 };
 
                 self.bindings.exit_block();

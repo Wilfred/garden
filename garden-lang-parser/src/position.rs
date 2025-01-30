@@ -30,11 +30,7 @@ impl std::fmt::Debug for Position {
                 .field("path", &self.path)
                 .finish()
         } else {
-            if self.path == PathBuf::from("/position/todo") {
-                f.write_str("Position { TODO }")
-            } else {
-                f.write_str("Position { ... }")
-            }
+            f.write_str("Position { ... }")
         }
     }
 }

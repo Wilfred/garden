@@ -362,17 +362,17 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             position: None,
             id: None,
         },
-        EvalError::ReachedTickLimit => Response {
+        EvalError::ReachedTickLimit(position) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    position: None,
+                    position: Some(position.clone()),
                     message: "Reached the tick limit.".to_owned(),
                     stack: None,
                 }]),
                 stack_frame_name: Some(env.top_frame_name()),
             },
-            position: None,
+            position: Some(position),
             id,
         },
         EvalError::ForbiddenInSandbox(position) => Response {
@@ -702,17 +702,17 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             position: None,
             id: None,
         },
-        Err(EvalError::ReachedTickLimit) => Response {
+        Err(EvalError::ReachedTickLimit(position)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    position: None,
+                    position: Some(position.clone()),
                     message: "Reached the tick limit.".to_owned(),
                     stack: None,
                 }]),
                 stack_frame_name: Some(env.top_frame_name()),
             },
-            position: None,
+            position: Some(position),
             id: None,
         },
         Err(EvalError::ForbiddenInSandbox(position)) => Response {

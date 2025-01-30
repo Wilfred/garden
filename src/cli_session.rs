@@ -211,7 +211,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 println!("Interrupted. You can take a look around, or use :resume to continue.");
                 is_stopped = true;
             }
-            Err(EvalError::ReachedTickLimit) => {
+            Err(EvalError::ReachedTickLimit(_)) => {
                 println!("Reached tick limit.");
                 is_stopped = false;
             }

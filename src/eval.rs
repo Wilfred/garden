@@ -242,8 +242,7 @@ pub(crate) enum EvalError {
     /// `assert()` failed.
     AssertionFailed(Position, ErrorMessage),
     /// Ran out of ticks (i.e. program did not terminate in time).
-    // TODO: add position here.
-    ReachedTickLimit,
+    ReachedTickLimit(Position),
     /// Tried to execute a function that isn't permitted in the
     /// sandbox.
     ForbiddenInSandbox(Position),
@@ -4070,8 +4069,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
 
             if let Some(tick_limit) = env.tick_limit {
                 if env.ticks >= tick_limit {
+                    let position = outer_expr.position.clone();
                     restore_stack_frame(env, (expr_state, outer_expr), &[]);
-                    return Err(EvalError::ReachedTickLimit);
+                    return Err(EvalError::ReachedTickLimit(position));
                 }
             }
 

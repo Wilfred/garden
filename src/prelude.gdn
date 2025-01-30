@@ -237,7 +237,6 @@ export fun (this: String) join(items: List<String>): String {
 test join {
   assert(" ".join(["x"]) == "x")
 
-  // TODO: should .join() exist on String or on List?
   assert(" ".join(["x", "y"]) == "x y")
 }
 

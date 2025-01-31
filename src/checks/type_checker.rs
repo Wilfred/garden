@@ -587,7 +587,12 @@ impl TypeCheckVisitor<'_> {
                 Type::unit()
             }
             Expression_::ForIn(sym, expr, body) => {
-                let expr_ty = self.infer_expr(expr, type_bindings, expected_return_ty);
+                let expr_ty = self.verify_expr(
+                    &Type::list(Type::Top),
+                    expr,
+                    type_bindings,
+                    expected_return_ty,
+                );
 
                 self.bindings.enter_block();
 
@@ -599,17 +604,7 @@ impl TypeCheckVisitor<'_> {
                             Type::error("Bad list arity")
                         }
                     }
-                    _ => {
-                        self.diagnostics.push(Diagnostic {
-                            level: Level::Error,
-                            message: format!(
-                                "Expected `List` for a `for` loop, but got `{}`.",
-                                expr_ty
-                            ),
-                            position: expr.position.clone(),
-                        });
-                        Type::error("For loop expression that isn't a list")
-                    }
+                    _ => Type::error("For loop expression that isn't a list"),
                 };
 
                 self.set_binding(sym, elem_ty);

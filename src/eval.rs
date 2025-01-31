@@ -228,6 +228,8 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
 #[derive(Debug)]
 pub(crate) struct Session {
     pub(crate) interrupted: Arc<AtomicBool>,
+    /// Whether `print()` should write to stdout directly, or if we
+    /// should write a JSON message to stdout summarising the print.
     pub(crate) has_attached_stdout: bool,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,

@@ -781,6 +781,9 @@ impl TypeCheckVisitor<'_> {
                     .collect();
 
                 if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym.name) {
+                    self.id_to_def_pos
+                        .insert(name_sym.id, struct_info.name_sym.position.clone());
+
                     let mut ty_var_env = TypeVarEnv::default();
                     for type_param in &struct_info.type_params {
                         ty_var_env.insert(type_param.name.clone(), None);

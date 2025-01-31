@@ -40,10 +40,11 @@ pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> 
     diagnostics.extend(check_hints(items, env));
 
     let summary = check_types(items, env);
+    diagnostics.extend(check_unused_defs(items, &summary));
+
     diagnostics.extend(summary.diagnostics);
     diagnostics.extend(check_duplicates(items, env));
     diagnostics.extend(check_loops(items));
-    diagnostics.extend(check_unused_defs(items, env));
     diagnostics.extend(check_unreachable(items));
 
     diagnostics

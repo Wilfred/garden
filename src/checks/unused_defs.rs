@@ -3,15 +3,11 @@ use std::collections::HashSet;
 use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, ToplevelItem_, Visibility};
 use rustc_hash::FxHashMap;
 
-use crate::{
-    checks::type_checker::check_types,
-    diagnostics::{Diagnostic, Level},
-    env::Env,
-};
+use crate::diagnostics::{Diagnostic, Level};
 
-pub(crate) fn check_unused_defs(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
-    let summary = check_types(items, env);
+use super::type_checker::TCSummary;
 
+pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> Vec<Diagnostic> {
     // All the definitions that are called from another definition, excluding self calls.
     let mut all_called_defs: HashSet<ToplevelItemId> = HashSet::new();
 

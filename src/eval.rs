@@ -280,6 +280,8 @@ fn load_toplevel_items_(
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
 
+    let mut enum_infos: Vec<&EnumInfo> = vec![];
+
     for item in items {
         match &item.2 {
             ToplevelItem_::Fun(name_symbol, fun_info, _) => {
@@ -326,41 +328,7 @@ fn load_toplevel_items_(
                     TypeDef::Enum(enum_info.clone()),
                 );
 
-                // Add the values in the enum to the value environment.
-                for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
-                    let enum_value = if variant_sym.payload_hint.is_some() {
-                        let runtime_type = enum_constructor_type(
-                            env,
-                            enum_info,
-                            variant_sym.payload_hint.as_ref().unwrap(),
-                        );
-                        Value::EnumConstructor {
-                            type_name: enum_info.name_sym.name.clone(),
-                            variant_idx,
-                            runtime_type,
-                        }
-                    } else {
-                        let runtime_type = enum_value_runtime_type(
-                            env,
-                            &enum_info.name_sym.name,
-                            variant_idx,
-                            &Type::Top,
-                        )
-                        .unwrap_or(Type::no_value());
-
-                        Value::EnumVariant {
-                            type_name: enum_info.name_sym.name.clone(),
-                            runtime_type,
-                            variant_idx,
-                            payload: None,
-                        }
-                    };
-
-                    // TODO: warn if we're clobbering a name from a
-                    // different enum (i.e. not just redefining the
-                    // current enum).
-                    env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
-                }
+                enum_infos.push(enum_info);
 
                 let name_as_sym = SymbolName {
                     name: enum_info.name_sym.name.name.clone(),
@@ -447,6 +415,42 @@ fn load_toplevel_items_(
                 diagnostics.extend(import_diagnostics);
                 new_syms.extend(imported_syms);
             }
+        }
+    }
+
+    // We've loaded all the toplevel items, so we can now create enum
+    // constructor values knowing that all types have been loaded.
+    for enum_info in enum_infos {
+        // Add the values in the enum to the value environment.
+        for (variant_idx, variant_sym) in enum_info.variants.iter().enumerate() {
+            let enum_value = if variant_sym.payload_hint.is_some() {
+                let runtime_type = enum_constructor_type(
+                    env,
+                    enum_info,
+                    variant_sym.payload_hint.as_ref().unwrap(),
+                );
+                Value::EnumConstructor {
+                    type_name: enum_info.name_sym.name.clone(),
+                    variant_idx,
+                    runtime_type,
+                }
+            } else {
+                let runtime_type =
+                    enum_value_runtime_type(env, &enum_info.name_sym.name, variant_idx, &Type::Top)
+                        .unwrap_or(Type::no_value());
+
+                Value::EnumVariant {
+                    type_name: enum_info.name_sym.name.clone(),
+                    runtime_type,
+                    variant_idx,
+                    payload: None,
+                }
+            };
+
+            // TODO: warn if we're clobbering a name from a
+            // different enum (i.e. not just redefining the
+            // current enum).
+            env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
         }
     }
 

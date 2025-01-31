@@ -1,0 +1,32 @@
+enum LispList {
+  Cons(LispList),
+  Nil,
+}
+
+enum MarkdownPart {
+  // Note forward reference here.
+  Code(Snippet),
+}
+
+struct Snippet {}
+
+export fun demo() {
+  // Good, deliberately testing recursive types.
+  Cons(Cons(Nil))
+
+  // Bad, we should still check types from forward references.
+  Code("")
+
+  // TODO: what if we have a cyclice reference to a type in another
+  // file?
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Snippet` argument but got `String`.
+// 
+// --> src/test_files/check/enum_payload_value.gdn:18
+//   Code("")
+//        ^^
+

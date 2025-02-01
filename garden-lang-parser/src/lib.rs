@@ -1285,6 +1285,25 @@ fn parse_test(
     let doc_comment = parse_doc_comment(&test_token);
 
     let name = parse_symbol(tokens, id_gen, diagnostics);
+
+    if let Some(token) = tokens.peek() {
+        if token.text == "(" {
+            // The user has accidentally added parameters. Parse them
+            // and throw them away, including any additional parse
+            // errors.
+            let mut param_diagnostics = vec![];
+            let params = parse_parameters(tokens, id_gen, &mut param_diagnostics);
+
+            diagnostics.push(ParseError::Invalid {
+                position: Position::merge(&params.open_paren, &params.close_paren),
+                message: ErrorMessage(
+                    "Tests should not have arguments, e.g. `test foo {}`.".to_owned(),
+                ),
+                additional: vec![],
+            });
+        }
+    }
+
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
     let mut start_offset = test_token.position.start_offset;

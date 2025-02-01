@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>The Garden Programming Language</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/blocks.css/dist/blocks.min.css"
+    />
+    <style>
+      /* Heavily inspired by https://github.com/thesephist/codeframe,
+      which is under a MIT license. */
+      body {
+        max-width: 900px;
+        margin: 24px auto 52px auto;
+      }
+      .container {
+        margin-top: 86px;
+      }
+      header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        padding: 4px;
+        background: #46917a;
+        border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+      }
+
+      a {
+        color: #46917a;
+        text-decoration: none;
+        border-bottom: 2px dotted #46917a;
+      }
+
+      nav {
+        display: flex;
+        flex-direction: row;
+        flex-shrink: 1;
+        overflow-x: auto;
+      }
+
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      header a {
+        text-decoration: none;
+      }
+
+      .keyword {
+        font-weight: bold;
+      }
+
+      .comment {
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="/parser.html">Parser</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>while</code> keyword</h1>
+<p><code>for</code> runs a block code repeatedly, while an expression evaluates to
+<code>True</code>.</p>
+<pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> nums = [1, 2, 3]
+
+<a href="./keyword:let.html"><span class="keyword">let</span></a> i = 0
+<a href="./keyword:while.html"><span class="keyword">while</span></a> i &lt; nums.len() {
+  <a href="./keyword:let.html"><span class="keyword">let</span></a> num = nums.get(i).or_exception()
+  dbg(num)
+  
+  i += 1
+}</code></pre>
+<p>For looping when you have a list, see
+<a href="keyword:for.html">while</a>.</p></div>
+  </body>
+</html>

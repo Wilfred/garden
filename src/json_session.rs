@@ -15,7 +15,7 @@ use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic,
 use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
-    push_test_stackframe, EvalUpToErr, ExpressionState,
+    push_test_stackframe, EvalUpToErr, ExpressionState, StdoutMode,
 };
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
@@ -746,7 +746,7 @@ pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
     let pretty_print_json = false;
     let session = Session {
         interrupted: Arc::clone(&interrupted),
-        has_attached_stdout: false,
+        stdout_mode: StdoutMode::WriteJson,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json,

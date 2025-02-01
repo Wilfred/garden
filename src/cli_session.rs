@@ -10,7 +10,7 @@ use crate::commands::{
 };
 use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
-use crate::eval::{eval, load_toplevel_items, ExpressionState, Session};
+use crate::eval::{eval, load_toplevel_items, ExpressionState, Session, StdoutMode};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
 use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_};
@@ -87,7 +87,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
 
     let mut session = Session {
         interrupted,
-        has_attached_stdout: true,
+        stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,

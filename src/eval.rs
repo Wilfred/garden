@@ -226,11 +226,17 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
 }
 
 #[derive(Debug)]
+pub(crate) enum StdoutMode {
+    WriteDirectly,
+    WriteJson,
+}
+
+#[derive(Debug)]
 pub(crate) struct Session {
     pub(crate) interrupted: Arc<AtomicBool>,
     /// Whether `print()` should write to stdout directly, or if we
     /// should write a JSON message to stdout summarising the print.
-    pub(crate) has_attached_stdout: bool,
+    pub(crate) stdout_mode: StdoutMode,
     pub(crate) start_time: Instant,
     pub(crate) trace_exprs: bool,
     pub(crate) pretty_print_json: bool,
@@ -2015,10 +2021,11 @@ fn eval_builtin_call(
             )?;
 
             match &arg_values[0] {
-                Value::String(s) => {
-                    if session.has_attached_stdout {
+                Value::String(s) => match session.stdout_mode {
+                    StdoutMode::WriteDirectly => {
                         print!("{}", s);
-                    } else {
+                    }
+                    StdoutMode::WriteJson => {
                         let response = Response {
                             kind: ResponseKind::Printed { s: s.clone() },
                             position: None,
@@ -2026,7 +2033,7 @@ fn eval_builtin_call(
                         };
                         print_as_json(&response, session.pretty_print_json);
                     }
-                }
+                },
                 v => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
@@ -2065,10 +2072,11 @@ fn eval_builtin_call(
             )?;
 
             match &arg_values[0] {
-                Value::String(s) => {
-                    if session.has_attached_stdout {
+                Value::String(s) => match session.stdout_mode {
+                    StdoutMode::WriteDirectly => {
                         println!("{}", s);
-                    } else {
+                    }
+                    StdoutMode::WriteJson => {
                         let response = Response {
                             kind: ResponseKind::Printed {
                                 s: format!("{}\n", s),
@@ -2078,7 +2086,7 @@ fn eval_builtin_call(
                         };
                         print_as_json(&response, session.pretty_print_json);
                     }
-                }
+                },
                 v => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
@@ -4696,7 +4704,7 @@ mod tests {
         let interrupted = Arc::new(AtomicBool::new(false));
         let session = Session {
             interrupted,
-            has_attached_stdout: false,
+            stdout_mode: StdoutMode::WriteDirectly,
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: true,
@@ -5158,7 +5166,7 @@ mod tests {
         let interrupted = Arc::new(AtomicBool::new(false));
         let session = Session {
             interrupted,
-            has_attached_stdout: false,
+            stdout_mode: StdoutMode::WriteDirectly,
             start_time: Instant::now(),
             trace_exprs: false,
             pretty_print_json: true,

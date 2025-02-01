@@ -57,7 +57,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use eval::{eval_up_to, EvalUpToErr};
+use eval::{eval_up_to, EvalUpToErr, StdoutMode};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
@@ -276,7 +276,7 @@ fn main() {
 
             let session = Session {
                 interrupted: Arc::clone(&interrupted),
-                has_attached_stdout: false,
+                stdout_mode: StdoutMode::WriteJson,
                 start_time: Instant::now(),
                 trace_exprs: false,
                 pretty_print_json: true,
@@ -396,7 +396,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     let mut env = Env::new(id_gen);
     let session = Session {
         interrupted,
-        has_attached_stdout: true,
+        stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: true,
@@ -528,7 +528,7 @@ fn run_sandboxed_tests_in_file(
 
     let session = Session {
         interrupted,
-        has_attached_stdout: true,
+        stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,
@@ -620,7 +620,7 @@ fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
 
     let session = Session {
         interrupted,
-        has_attached_stdout: true,
+        stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,
@@ -708,7 +708,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     let mut env = Env::new(id_gen);
     let session = Session {
         interrupted,
-        has_attached_stdout: true,
+        stdout_mode: StdoutMode::WriteDirectly,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,

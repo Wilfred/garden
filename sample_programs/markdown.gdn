@@ -1,9 +1,14 @@
 enum MarkdownPart {
   Heading(String),
   Paragraph(String),
-  Code(String),
+  Code(Snippet),
   Bullets(List<String>),
   ThematicBreak,
+}
+
+struct Snippet {
+  language: String,
+  content: String,
 }
 
 fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPart {
@@ -28,9 +33,18 @@ fun parse_markdown(src: String): List<MarkdownPart> {
 
     if line.starts_with("```") {
       current_section = current_section.append(line)
+
       if in_code_block {
         // Just finished the code block.
-        parts = parts.append(Code("\n".join(current_section)))
+        let language = current_section.first().or_exception().strip_prefix("```")
+        let content = "\n".join(current_section.slice(1, -1))
+
+        let snippet = Snippet{
+          language: language,
+          content: content,
+        }
+
+        parts = parts.append(Code(snippet))
         current_section = []
         in_code_block = False
       } else {
@@ -93,16 +107,14 @@ fun render_markdown_header(src: String): String {
   "".join([open_tag, render_inline(src.strip_prefix(" ")), close_tag])
 }
 
-fun render_markdown_code(src: String): String {
+fun render_markdown_code(snippet: Snippet): String {
   let KEYWORDS = [
     "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
     "match", "break", "continue", "for", "in", "assert",
   ]
 
-  let inner_lines = src.lines().slice(1, -1)
   let rendered_lines: List<String> = []
-
-  for line in inner_lines {
+  for line in snippet.content.lines() {
     let rendered_comment: Option<String> = None
 
     match line.split_once("//") {

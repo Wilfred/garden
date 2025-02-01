@@ -35,7 +35,7 @@ works with code of the form:
 fun foo(): String { return "" }
 
 fun bar(): Unit {
-    eval("function foo(): Int { return 1 }");
+    eval("function foo(): Int { return 1 }")
     let x = foo() + 1
 }
 ```

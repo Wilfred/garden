@@ -108,6 +108,16 @@ fun render_markdown_header(src: String): String {
 }
 
 fun render_markdown_code(snippet: Snippet): String {
+  match check_snippet(snippet.content) {
+    Ok(_) => {}
+    Err(messages) => {
+      println(snippet.content)
+      for message in messages {
+        println(message)
+      }
+    }
+  }
+
   let KEYWORDS = [
     "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
     "match", "break", "continue", "for", "in", "assert",

@@ -26,8 +26,8 @@ use crate::values::{escape_string_literal, type_representation, BuiltinFunctionK
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
     IdGenerator, InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
-    Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName,
-    TypeSymbol,
+    ParenthesizedParameters, Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo,
+    TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem, ToplevelItem_};
 use garden_lang_parser::position::Position;
@@ -633,14 +633,14 @@ pub(crate) fn eval_up_to_param(
         match &item.2 {
             ToplevelItem_::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
-                    _ if fun_info.params.is_empty() => vec![],
+                    _ if fun_info.params.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
                     None => {
                         continue;
                     }
                 };
 
-                for (i, param) in fun_info.params.iter().enumerate() {
+                for (i, param) in fun_info.params.params.iter().enumerate() {
                     if param.symbol.id != id {
                         continue;
                     }
@@ -676,7 +676,7 @@ pub(crate) fn eval_up_to_param(
                     ));
                 }
 
-                for (i, param) in fun_info.params.iter().enumerate() {
+                for (i, param) in fun_info.params.params.iter().enumerate() {
                     if param.symbol.id != id {
                         continue;
                     }
@@ -751,7 +751,7 @@ pub(crate) fn eval_up_to(
         ToplevelItem_::Fun(name_sym, fun_info, _) => {
             load_toplevel_items(&[item.clone()], env);
             let args = match env.prev_call_args.get(&name_sym.name) {
-                _ if fun_info.params.is_empty() => vec![],
+                _ if fun_info.params.params.is_empty() => vec![],
                 Some(prev_args) => prev_args.clone(),
                 None => {
                     // We don't have any known values that we can use, give up.
@@ -2517,7 +2517,7 @@ fn eval_call(
         Value::Closure(bindings, fun_info) => {
             let mut bindings = bindings.clone();
 
-            if fun_info.params.len() != arg_values.len() {
+            if fun_info.params.params.len() != arg_values.len() {
                 let mut saved_values = vec![receiver_value.clone()];
                 for value in arg_values.iter().rev() {
                     saved_values.push(value.clone());
@@ -2525,8 +2525,12 @@ fn eval_call(
 
                 let message = ErrorMessage(format!(
                     "Closure expects {} argument{}, but got {}",
-                    fun_info.params.len(),
-                    if fun_info.params.len() == 1 { "" } else { "s" },
+                    fun_info.params.params.len(),
+                    if fun_info.params.params.len() == 1 {
+                        ""
+                    } else {
+                        "s"
+                    },
                     arg_values.len()
                 ));
                 return Err((
@@ -2541,7 +2545,7 @@ fn eval_call(
             }
 
             let mut fun_bindings = FxHashMap::default();
-            for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
+            for (param, value) in fun_info.params.params.iter().zip(arg_values.iter()) {
                 if !param.symbol.name.is_underscore() {
                     fun_bindings.insert(param.symbol.interned_id, value.clone());
                 }
@@ -2575,7 +2579,12 @@ fn eval_call(
         }
         Value::Fun {
             name_sym,
-            fun_info: fi @ FunInfo { params, body, .. },
+            fun_info:
+                fi @ FunInfo {
+                    params: ParenthesizedParameters { params, .. },
+                    body,
+                    ..
+                },
         } => {
             // Calling a user-defined function.
 
@@ -3011,7 +3020,7 @@ fn eval_method_call(
         &meth_name.name,
         &receiver_value,
         &caller_expr.position,
-        fun_info.params.len(),
+        fun_info.params.params.len(),
         &arg_positions,
         &arg_values,
     )?;
@@ -3019,7 +3028,7 @@ fn eval_method_call(
     // TODO: check for duplicate parameter names.
     // TODO: parameter names must not clash with the receiver name.
     let mut fun_bindings: FxHashMap<InternedSymbolId, Value> = FxHashMap::default();
-    for (param, value) in fun_info.params.iter().zip(arg_values.iter()) {
+    for (param, value) in fun_info.params.params.iter().zip(arg_values.iter()) {
         fun_bindings.insert(param.symbol.interned_id, value.clone());
     }
     fun_bindings.insert(receiver_method.receiver_sym.interned_id, receiver_value);

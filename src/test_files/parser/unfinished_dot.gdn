@@ -18,18 +18,22 @@ fun foo(s: String) {
 //             ),
 //         ),
 //         type_params: [],
-//         params: [
-//             SymbolWithHint {
-//                 symbol: Symbol"s",
-//                 hint: Some(
-//                     TypeHint {
-//                         sym: TypeSymbol"String",
-//                         args: [],
-//                         position: Position { ... },
-//                     },
-//                 ),
-//             },
-//         ],
+//         params: ParenthesizedParameters {
+//             open_paren: Position { ... },
+//             params: [
+//                 SymbolWithHint {
+//                     symbol: Symbol"s",
+//                     hint: Some(
+//                         TypeHint {
+//                             sym: TypeSymbol"String",
+//                             args: [],
+//                             position: Position { ... },
+//                         },
+//                     ),
+//                 },
+//             ],
+//             close_paren: Position { ... },
+//         },
 //         return_hint: None,
 //         body: Block {
 //             open_brace: Position { ... },

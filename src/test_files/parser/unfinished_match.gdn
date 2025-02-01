@@ -20,12 +20,16 @@ fun foo(src) {
 //             ),
 //         ),
 //         type_params: [],
-//         params: [
-//             SymbolWithHint {
-//                 symbol: Symbol"src",
-//                 hint: None,
-//             },
-//         ],
+//         params: ParenthesizedParameters {
+//             open_paren: Position { ... },
+//             params: [
+//                 SymbolWithHint {
+//                     symbol: Symbol"src",
+//                     hint: None,
+//                 },
+//             ],
+//             close_paren: Position { ... },
+//         },
 //         return_hint: None,
 //         body: Block {
 //             open_brace: Position { ... },

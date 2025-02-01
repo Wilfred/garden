@@ -79,6 +79,7 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
 
         let params = &fun_info
             .params
+            .params
             .iter()
             .map(|param| match &param.hint {
                 Some(hint) => hint.as_src(),

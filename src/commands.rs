@@ -337,7 +337,7 @@ fn format_signature(
 
     res.push_str(&format!(" {}", name_symbol.name));
     res.push('(');
-    for (i, param) in fun_info.params.iter().enumerate() {
+    for (i, param) in fun_info.params.params.iter().enumerate() {
         if i != 0 {
             res.push_str(", ");
         }
@@ -404,6 +404,7 @@ pub(crate) fn run_command<T: Write>(
                     let signature = match meth_info.fun_info() {
                         Some(fun_info) => {
                             let params = fun_info
+                                .params
                                 .params
                                 .iter()
                                 .map(|p| match &p.hint {

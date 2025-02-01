@@ -1604,9 +1604,15 @@ fn parse_parameters(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Vec<SymbolWithHint> {
-    if !required_token_ok(tokens, diagnostics, "(") {
-        return vec![];
+) -> ParenthesizedParameters {
+    let (ok, open_paren) = check_required_token(tokens, diagnostics, "(");
+
+    if !ok {
+        return ParenthesizedParameters {
+            open_paren: open_paren.position.clone(),
+            params: vec![],
+            close_paren: open_paren.position.clone(),
+        };
     }
 
     let mut params = vec![];
@@ -1645,7 +1651,7 @@ fn parse_parameters(
         }
     }
 
-    require_token(tokens, diagnostics, ")");
+    let close_paren = require_token(tokens, diagnostics, ")");
 
     // Emit error if there are duplicate parameters.
     let mut seen = HashSet::new();
@@ -1667,7 +1673,11 @@ fn parse_parameters(
         }
     }
 
-    params
+    ParenthesizedParameters {
+        open_paren: open_paren.position.clone(),
+        params,
+        close_paren: close_paren.position.clone(),
+    }
 }
 
 fn parse_struct_fields(

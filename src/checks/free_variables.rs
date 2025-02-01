@@ -193,7 +193,7 @@ impl Visitor for FreeVariableVisitor<'_> {
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
         self.push_scope();
-        for param in &fun_info.params {
+        for param in &fun_info.params.params {
             self.add_binding(&param.symbol);
         }
 

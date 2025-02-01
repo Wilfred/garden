@@ -25,7 +25,11 @@ fun foo() {}
 //             ),
 //         ),
 //         type_params: [],
-//         params: [],
+//         params: ParenthesizedParameters {
+//             open_paren: Position { ... },
+//             params: [],
+//             close_paren: Position { ... },
+//         },
 //         return_hint: None,
 //         body: Block {
 //             open_brace: Position { ... },

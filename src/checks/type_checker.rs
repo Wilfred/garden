@@ -218,7 +218,7 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         self.bindings.enter_block();
 
-        for param in &fun_info.params {
+        for param in &fun_info.params.params {
             let param_ty = match &param.hint {
                 Some(hint) => {
                     let hint_ty =
@@ -1090,15 +1090,19 @@ impl TypeCheckVisitor<'_> {
                                 .insert(def_id);
                         }
 
-                        if fun_info.params.len() != paren_args.arguments.len() {
+                        if fun_info.params.params.len() != paren_args.arguments.len() {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: format!(
                                     "`{}::{}` requires {} argument{}, but got {}.",
                                     receiver_ty_name,
                                     sym.name,
-                                    fun_info.params.len(),
-                                    if fun_info.params.len() == 1 { "" } else { "s" },
+                                    fun_info.params.params.len(),
+                                    if fun_info.params.params.len() == 1 {
+                                        ""
+                                    } else {
+                                        "s"
+                                    },
                                     paren_args.arguments.len()
                                 ),
                                 position: sym.position.clone(),
@@ -1111,6 +1115,7 @@ impl TypeCheckVisitor<'_> {
                         }
 
                         let param_decl_tys: Vec<Type> = fun_info
+                            .params
                             .params
                             .iter()
                             .map(|sym_with_hint| match &sym_with_hint.hint {
@@ -1257,6 +1262,7 @@ impl TypeCheckVisitor<'_> {
             Expression_::FunLiteral(fun_info) => {
                 let param_tys = fun_info
                     .params
+                    .params
                     .iter()
                     .map(|param| match &param.hint {
                         Some(hint) => {
@@ -1351,7 +1357,7 @@ impl TypeCheckVisitor<'_> {
                 self.bindings.enter_block();
 
                 let mut param_tys = vec![];
-                for (i, param) in fun_info.params.iter().enumerate() {
+                for (i, param) in fun_info.params.params.iter().enumerate() {
                     let param_ty = match &param.hint {
                         Some(hint) => {
                             let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
@@ -1510,7 +1516,7 @@ fn subst_type_vars_in_fun_info_return_ty(
 ) -> (Vec<Diagnostic>, Type) {
     let mut diagnostics = vec![];
 
-    for ((arg_ty, arg_pos), param) in arg_tys.iter().zip(&fun_info.params) {
+    for ((arg_ty, arg_pos), param) in arg_tys.iter().zip(&fun_info.params.params) {
         if let Some(param_hint) = &param.hint {
             if let Err(diagnostic) =
                 unify_and_solve_hint(env, param_hint, arg_pos, arg_ty, ty_var_env)

@@ -263,7 +263,7 @@ impl Type {
         }
 
         let mut param_types = vec![];
-        for param in &fun_info.params {
+        for param in &fun_info.params.params {
             let type_ = match &param.hint {
                 Some(hint) => Self::from_hint(hint, global_tys, &type_bindings)?,
                 None => Type::Top,

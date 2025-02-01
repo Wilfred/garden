@@ -79,7 +79,7 @@ pub trait Visitor {
             self.visit_type_symbol(type_param);
         }
 
-        for param in &fun_info.params {
+        for param in &fun_info.params.params {
             self.visit_symbol(&param.symbol);
 
             if let Some(param_hint) = &param.hint {

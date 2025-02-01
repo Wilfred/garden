@@ -580,9 +580,16 @@ pub struct FunInfo {
     /// If this is a toplevel function, the ID of the definition.
     pub item_id: Option<ToplevelItemId>,
     pub type_params: Vec<TypeSymbol>,
-    pub params: Vec<SymbolWithHint>,
+    pub params: ParenthesizedParameters,
     pub return_hint: Option<TypeHint>,
     pub body: Block,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParenthesizedParameters {
+    pub open_paren: Position,
+    pub params: Vec<SymbolWithHint>,
+    pub close_paren: Position,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

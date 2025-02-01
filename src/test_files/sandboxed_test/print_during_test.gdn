@@ -1,0 +1,13 @@
+fun foo() {
+  1 + 2
+  // ^
+
+}
+
+test one {
+  print("in test")  
+}
+
+// args: sandboxed-test
+// expected stdout: 1 passed
+

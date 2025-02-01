@@ -229,6 +229,7 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
 pub(crate) enum StdoutMode {
     WriteDirectly,
     WriteJson,
+    DoNotWrite,
 }
 
 #[derive(Debug)]
@@ -2033,6 +2034,7 @@ fn eval_builtin_call(
                         };
                         print_as_json(&response, session.pretty_print_json);
                     }
+                    StdoutMode::DoNotWrite => {}
                 },
                 v => {
                     let mut saved_values = vec![];
@@ -2086,6 +2088,7 @@ fn eval_builtin_call(
                         };
                         print_as_json(&response, session.pretty_print_json);
                     }
+                    StdoutMode::DoNotWrite => {}
                 },
                 v => {
                     let mut saved_values = vec![];

@@ -528,7 +528,7 @@ fn run_sandboxed_tests_in_file(
 
     let session = Session {
         interrupted,
-        stdout_mode: StdoutMode::WriteDirectly,
+        stdout_mode: StdoutMode::DoNotWrite,
         start_time: Instant::now(),
         trace_exprs: false,
         pretty_print_json: false,

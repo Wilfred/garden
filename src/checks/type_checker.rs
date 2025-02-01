@@ -1856,16 +1856,21 @@ fn check_match_exhaustive(
         }
     }
 
-    let missing: Vec<_> = variants_remaining.keys().collect();
-
-    if let Some(missing_case) = missing.first() {
-        diagnostics.push(Diagnostic {
-            level: Level::Error,
-            message: format!(
+    // If we're missing any variants, complain about the first one in
+    // source code order.
+    //
+    // TODO: mention the other variants missing and/or the total.
+    for variant in &enum_info.variants {
+        if variants_remaining.contains_key(&variant.name_sym.name) {
+            diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: format!(
                 "This match expression does not cover all the cases of `{}`. It's missing `{}`.",
-                type_name, missing_case
+                    type_name, &variant.name_sym.name.name
             ),
-            position: scrutinee_pos.clone(),
-        });
+                position: scrutinee_pos.clone(),
+            });
+            break;
+        }
     }
 }

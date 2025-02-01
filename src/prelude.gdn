@@ -505,7 +505,7 @@ test list_map {
 // the end.
 //
 // [10, 11, 12].slice(0, 2) // [10, 11]
-// [10, 11, 12].slice(1, -1) // [11, 12]
+// [10, 11, 12].slice(1, -1) // [11]
 export fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
   if (j < 0) {
     j = this.len() + j

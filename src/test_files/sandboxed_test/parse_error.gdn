@@ -9,5 +9,5 @@ fun foo() {
 }
 
 // args: sandboxed-test
-// expected stdout: Parse error
+// expected stdout: {"description":"Parse error","tests":{}}
 

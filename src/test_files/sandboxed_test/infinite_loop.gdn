@@ -8,5 +8,5 @@ test foo_call {
 }
 
 // args: sandboxed-test
-// expected stdout: timing out
+// expected stdout: {"description":"timing out","tests":{}}
 

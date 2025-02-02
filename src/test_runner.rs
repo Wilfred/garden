@@ -20,19 +20,21 @@ struct SandboxedTestsSummary {
     tests: FxHashMap<String, String>,
 }
 
-pub(crate) fn run_sandboxed_tests_in_file(
+fn sandboxed_tests_summary(
     src: &str,
     path: &Path,
     offset: usize,
     interrupted: Arc<AtomicBool>,
-) {
+) -> SandboxedTestsSummary {
     let id_gen = IdGenerator::default();
     let mut env = Env::new(id_gen);
 
     let (items, errors) = parse_toplevel_items(path, src, &mut env.id_gen);
     if !errors.is_empty() {
-        println!("Parse error");
-        return;
+        return SandboxedTestsSummary {
+            description: "Parse error".to_owned(),
+            tests: FxHashMap::default(),
+        };
     }
 
     let session = Session {
@@ -84,18 +86,25 @@ pub(crate) fn run_sandboxed_tests_in_file(
     }
 
     if test_at_cursor.is_some() {
-        if summary.tests_passed == 1 {
-            println!("passing");
+        let description = if summary.tests_passed == 1 {
+            "passing"
         } else if num_failed == 1 {
-            println!("failing");
+            "failing"
         } else if num_errored == 1 {
-            println!("erroring");
+            "erroring"
         } else if num_timed_out == 1 {
-            println!("timing out");
+            "timing out"
         } else if num_sandboxed == 1 {
-            println!("sandboxed");
+            "sandboxed"
+        } else {
+            "unknown state"
         }
-        return;
+        .to_owned();
+
+        return SandboxedTestsSummary {
+            description,
+            tests: FxHashMap::default(),
+        };
     }
 
     let mut parts = vec![];
@@ -119,11 +128,19 @@ pub(crate) fn run_sandboxed_tests_in_file(
         parts.push("No tests".to_owned());
     }
 
-    let summary = SandboxedTestsSummary {
+    SandboxedTestsSummary {
         description: parts.join(", "),
         tests: FxHashMap::default(),
-    };
+    }
+}
 
+pub(crate) fn run_sandboxed_tests_in_file(
+    src: &str,
+    path: &Path,
+    offset: usize,
+    interrupted: Arc<AtomicBool>,
+) {
+    let summary = sandboxed_tests_summary(src, path, offset, interrupted);
     println!("{}", serde_json::to_string(&summary).unwrap());
 }
 

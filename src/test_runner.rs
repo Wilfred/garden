@@ -70,23 +70,42 @@ fn sandboxed_tests_summary(
     };
 
     let summary = eval_tests(&relevant_items, &mut env, &session);
+
+    let mut num_passed = 0;
     let mut num_failed = 0;
     let mut num_errored = 0;
     let mut num_sandboxed = 0;
     let mut num_timed_out = 0;
 
-    for (_test_sym, err) in &summary.tests_failed {
-        match err {
-            EvalError::Interrupted => num_errored += 1,
-            EvalError::ResumableError(_, _) => num_errored += 1,
-            EvalError::AssertionFailed(_, _) => num_failed += 1,
-            EvalError::ReachedTickLimit(_) => num_timed_out += 1,
-            EvalError::ForbiddenInSandbox(_) => num_sandboxed += 1,
-        }
+    let mut tests = FxHashMap::default();
+    for (test_sym, err) in &summary.tests {
+        let msg = match err {
+            Some(EvalError::Interrupted | EvalError::ResumableError(_, _)) => {
+                num_errored += 1;
+                "errored"
+            }
+            Some(EvalError::AssertionFailed(_, _)) => {
+                num_failed += 1;
+                "failed"
+            }
+            Some(EvalError::ReachedTickLimit(_)) => {
+                num_timed_out += 1;
+                "timed_out"
+            }
+            Some(EvalError::ForbiddenInSandbox(_)) => {
+                num_sandboxed += 1;
+                "sandboxed"
+            }
+            None => {
+                num_passed += 1;
+                "passed"
+            }
+        };
+        tests.insert(test_sym.name.name.clone(), msg.to_owned());
     }
 
     if test_at_cursor.is_some() {
-        let description = if summary.tests_passed == 1 {
+        let description = if num_passed == 1 {
             "passing"
         } else if num_failed == 1 {
             "failing"
@@ -101,15 +120,12 @@ fn sandboxed_tests_summary(
         }
         .to_owned();
 
-        return SandboxedTestsSummary {
-            description,
-            tests: FxHashMap::default(),
-        };
+        return SandboxedTestsSummary { description, tests };
     }
 
     let mut parts = vec![];
-    if summary.tests_passed > 0 {
-        parts.push(format!("{} passed", summary.tests_passed));
+    if num_passed > 0 {
+        parts.push(format!("{} passed", num_passed));
     }
     if num_failed > 0 {
         parts.push(format!("{} failed", num_failed));
@@ -130,7 +146,7 @@ fn sandboxed_tests_summary(
 
     SandboxedTestsSummary {
         description: parts.join(", "),
-        tests: FxHashMap::default(),
+        tests,
     }
 }
 
@@ -160,16 +176,25 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
     load_toplevel_items(&items, &mut env);
 
     let summary = eval_tests(&items, &mut env, &session);
-    if summary.tests_passed == 0 && summary.tests_failed.is_empty() {
+
+    let total_tests = summary.tests.len();
+    let tests_failed = summary
+        .tests
+        .iter()
+        .filter(|(_, err)| err.is_some())
+        .count();
+    let tests_passed = total_tests - tests_failed;
+
+    if tests_passed == 0 && tests_failed == 0 {
         println!("No tests found.");
     } else {
-        println!(
-            "{} passed, {} failed.",
-            summary.tests_passed,
-            summary.tests_failed.len()
-        );
+        println!("{} passed, {} failed.", tests_passed, tests_failed,);
 
-        for (test_sym, err) in &summary.tests_failed {
+        for (test_sym, err) in &summary.tests {
+            let Some(err) = err else {
+                continue;
+            };
+
             print!("Failed: {}", test_sym.name);
 
             let pos = match err {
@@ -189,7 +214,7 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
     // TODO: support printing back traces from every test failure.
     // TODO: print incremental progress as tests run.
 
-    if !summary.tests_failed.is_empty() {
+    if tests_failed > 0 {
         std::process::exit(1);
     }
 }

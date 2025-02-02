@@ -263,9 +263,8 @@ pub(crate) struct ToplevelEvalSummary {
     pub(crate) values: Vec<Value>,
     pub(crate) new_syms: Vec<SymbolName>,
     pub(crate) diagnostics: Vec<Diagnostic>,
-    // TODO: Report the names of tests that passed/failed.
-    pub(crate) tests_passed: usize,
-    pub(crate) tests_failed: Vec<(Symbol, EvalError)>,
+    /// Which tests were run, and the error if they failed.
+    pub(crate) tests: Vec<(Symbol, Option<EvalError>)>,
 }
 
 /// Load, but do not evaluate, `items`.
@@ -534,12 +533,12 @@ pub(crate) fn eval_tests_until_error(
             .insert(test.name_sym.name.clone(), (*test).clone());
     }
 
-    let mut tests_passed = 0;
+    let mut tests = vec![];
     for test in test_defs {
         push_test_stackframe(test, env);
 
         eval(env, session)?;
-        tests_passed += 1;
+        tests.push((test.name_sym.clone(), None));
 
         env.stack.pop_to_toplevel();
     }
@@ -548,8 +547,7 @@ pub(crate) fn eval_tests_until_error(
         values: vec![],
         new_syms: vec![],
         diagnostics: vec![],
-        tests_passed,
-        tests_failed: vec![],
+        tests,
     })
 }
 
@@ -559,8 +557,7 @@ pub(crate) fn eval_tests(
     env: &mut Env,
     session: &Session,
 ) -> ToplevelEvalSummary {
-    let mut tests_passed = 0;
-    let mut tests_failed = vec![];
+    let mut tests: Vec<(Symbol, Option<EvalError>)> = vec![];
 
     let mut test_defs = vec![];
     for item in items {
@@ -581,10 +578,10 @@ pub(crate) fn eval_tests(
 
         match eval(env, session) {
             Ok(_) => {
-                tests_passed += 1;
+                tests.push((test.name_sym.clone(), None));
             }
             Err(e) => {
-                tests_failed.push((test.name_sym.clone(), e.clone()));
+                tests.push((test.name_sym.clone(), Some(e.clone())));
                 if matches!(e, EvalError::Interrupted) {
                     break;
                 }
@@ -598,8 +595,7 @@ pub(crate) fn eval_tests(
         values: vec![],
         new_syms: vec![],
         diagnostics: vec![],
-        tests_passed,
-        tests_failed,
+        tests,
     }
 }
 

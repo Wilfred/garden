@@ -8,5 +8,5 @@ test safe_test {
 }
 
 // args: sandboxed-test
-// expected stdout: {"description":"passing","tests":{}}
+// expected stdout: {"description":"passing","tests":{"safe_test":"passed"}}
 

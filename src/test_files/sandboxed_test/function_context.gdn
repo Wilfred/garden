@@ -14,5 +14,5 @@ test two {
 }
 
 // args: sandboxed-test
-// expected stdout: {"description":"2 passed","tests":{}}
+// expected stdout: {"description":"2 passed","tests":{"two":"passed","one":"passed"}}
 

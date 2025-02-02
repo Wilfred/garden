@@ -603,9 +603,14 @@ fn handle_run_eval_request(
                 format!("Loaded {} definitions", new_syms.len())
             };
 
-            let tests_passed = test_summary.tests_passed;
-            let tests_failed = test_summary.tests_failed.len();
-            let total_tests = tests_passed + tests_failed;
+            let total_tests = test_summary.tests.len();
+            let tests_failed = test_summary
+                .tests
+                .iter()
+                .filter(|(_, err)| err.is_some())
+                .count();
+            let tests_passed = total_tests - tests_failed;
+
             let test_summary = if total_tests == 0 {
                 "".to_owned()
             } else {

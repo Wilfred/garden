@@ -171,11 +171,13 @@ repeated parentheses/brackets on the same line."
     (garden--async-command
      "sandboxed-test"
      (lambda (result)
-       (setq result (s-trim result))
+       (setq result
+             (json-parse-string
+              (s-trim result)
+              :object-type 'plist :null-object nil))
        (setq
         garden--last-test-result
-        (plist-put garden--last-test-result
-                   buf result))))))
+        (plist-put garden--last-test-result buf result))))))
 
 (define-minor-mode garden-speculative-mode
   "Speculatively run tests when point is at the beginning of a definition."
@@ -727,7 +729,7 @@ If called with a prefix, stop the previous session."
         '(:eval
           (let ((test-result (plist-get garden--last-test-result (current-buffer))))
             (cond
-             (test-result (format "Garden[%s]" test-result) )
+             (test-result (format "Garden[%s]" (plist-get test-result :description)))
              ((garden--session-active-p) "Garden[active]")
              (t "Garden")))))
   (set (make-local-variable 'indent-line-function) #'garden-indent-line)

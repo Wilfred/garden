@@ -61,6 +61,8 @@ use eval::{eval_up_to, EvalUpToErr, StdoutMode};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
+use rustc_hash::FxHashMap;
+use serde::Serialize;
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
@@ -511,6 +513,12 @@ fn dump_ast(src: &str, path: &Path) {
     }
 }
 
+#[derive(Serialize, Debug)]
+struct SandboxedTestsSummary {
+    description: String,
+    tests: FxHashMap<String, String>,
+}
+
 fn run_sandboxed_tests_in_file(
     src: &str,
     path: &Path,
@@ -610,7 +618,12 @@ fn run_sandboxed_tests_in_file(
         parts.push("No tests".to_owned());
     }
 
-    println!("{}", parts.join(", "));
+    let summary = SandboxedTestsSummary {
+        description: parts.join(", "),
+        tests: FxHashMap::default(),
+    };
+
+    println!("{}", serde_json::to_string(&summary).unwrap());
 }
 
 fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {

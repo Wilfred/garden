@@ -9,5 +9,5 @@ test one {
 }
 
 // args: sandboxed-test
-// expected stdout: 1 passed
+// expected stdout: {"description":"1 passed","tests":{}}
 

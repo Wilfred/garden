@@ -4,5 +4,5 @@ fun foo() {
 }
 
 // args: sandboxed-test
-// expected stdout: No tests
+// expected stdout: {"description":"No tests","tests":{}}
 

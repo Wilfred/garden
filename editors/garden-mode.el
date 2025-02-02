@@ -163,7 +163,11 @@ repeated parentheses/brackets on the same line."
     (indent-line-to (* garden-indent-offset paren-depth))))
 
 (defvar garden--last-test-result nil
-  "A plist recording the last test result for each file.")
+  "A plist recording the last test result for each file, as a string description.")
+
+(defvar garden--test-states (make-hash-table :test #'equal)
+  "The passing/failing state of each individual test."
+  )
 
 (defun garden-test-sandboxed ()
   (interactive)
@@ -171,13 +175,43 @@ repeated parentheses/brackets on the same line."
     (garden--async-command
      "sandboxed-test"
      (lambda (result)
-       (setq result
-             (json-parse-string
-              (s-trim result)
-              :object-type 'plist :null-object nil))
-       (setq
-        garden--last-test-result
-        (plist-put garden--last-test-result buf result))))))
+       (let* ((summary (json-parse-string result :object-type 'hash-table :null-object nil))
+              (test-details (gethash "tests" summary (make-hash-table))))
+         (dolist (test-name (hash-table-keys test-details))
+           (let ((test-result (gethash test-name test-details)))
+             (puthash test-name test-result garden--test-states)))
+
+         (garden--apply-test-faces buf)
+         (setq
+          garden--last-test-result
+          (plist-put garden--last-test-result buf (gethash :description summary))))))))
+
+(defface garden-test-pass-face
+  '((t :inherit font-lock-function-name-face))
+  "Face for highlighting passing tests")
+
+(defface garden-test-failed-face
+  '((t :inherit warning))
+  "Face for highlighting passing tests")
+
+(defun garden--apply-test-faces (buf)
+  "Given a plist of test names to test results, apply faces accordingly."
+  (with-current-buffer buf
+    (save-mark-and-excursion
+      (widen)
+      (goto-char (point-min))
+
+      (while (re-search-forward
+              (rx
+               line-start "test" (1+ whitespace)
+               (group (1+ (or (syntax word) (syntax symbol))))
+               symbol-end)
+              nil t)
+        (let* ((test-name (match-string 1))
+               (status (gethash test-name garden--test-states))
+               (color (if (string= status "passed") 'garden-test-pass-face 'garden-test-failed-face)))
+          (when status
+            (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face color)))))))
 
 (define-minor-mode garden-speculative-mode
   "Speculatively run tests when point is at the beginning of a definition."

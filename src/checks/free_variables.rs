@@ -1,4 +1,4 @@
-use garden_lang_parser::ast::LetDestination;
+use garden_lang_parser::ast::{Expression_, LetDestination};
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
@@ -170,14 +170,6 @@ impl FreeVariableVisitor<'_> {
 
 impl Visitor for FreeVariableVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        // Don't worry about unused variables in top level
-        // expressions, as they're legitimate in a REPL. If the user
-        // has written `let x = 1` they might be planning on using `x`
-        // in their next REPL expression!
-        if let ToplevelItem_::Expr(_) = &item.2 {
-            return;
-        }
-
         self.push_scope();
         if let ToplevelItem_::Method(method_info, _) = &item.2 {
             self.add_binding(&method_info.receiver_sym);
@@ -188,6 +180,26 @@ impl Visitor for FreeVariableVisitor<'_> {
         }
 
         self.visit_item_(&item.2);
+
+        // Don't worry about unused variables in top level
+        // expressions, as they're legitimate in a REPL. If the user
+        // has written `let x = 1` they might be planning on using `x`
+        // in their next REPL expression!
+        if let ToplevelItem_::Expr(toplevel_expr) = &item.2 {
+            if let Expression_::Let(dest, _, _) = &toplevel_expr.0.expr_ {
+                match dest {
+                    LetDestination::Symbol(symbol) => {
+                        self.mark_used(&symbol.name);
+                    }
+                    LetDestination::Destructure(symbols) => {
+                        for symbol in symbols {
+                            self.mark_used(&symbol.name);
+                        }
+                    }
+                }
+            }
+        }
+
         self.pop_scope();
     }
 

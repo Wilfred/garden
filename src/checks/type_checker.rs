@@ -6,7 +6,6 @@ use garden_lang_parser::ast::{
     ToplevelItem, ToplevelItemId, ToplevelItem_, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
-use garden_lang_parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
@@ -110,23 +109,30 @@ struct TypeCheckVisitor<'a> {
     callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
-impl Visitor for TypeCheckVisitor<'_> {
+impl TypeCheckVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        if let ToplevelItem_::Import(info) = &item.2 {
-            self.id_to_def_pos.insert(
-                info.id,
-                Position {
-                    start_offset: 0,
-                    end_offset: 0,
-                    line_number: 0,
-                    end_line_number: 0,
-                    column: 0,
-                    path: info.path.clone(),
-                },
-            );
+        match &item.2 {
+            ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
+            ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
+            ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
+            ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
+            ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
+            ToplevelItem_::Import(info) => {
+                self.id_to_def_pos.insert(
+                    info.id,
+                    Position {
+                        start_offset: 0,
+                        end_offset: 0,
+                        line_number: 0,
+                        end_line_number: 0,
+                        column: 0,
+                        path: info.path.clone(),
+                    },
+                );
+            }
+            ToplevelItem_::Expr(toplevel_expr) => self.visit_toplevel_expr(toplevel_expr),
+            ToplevelItem_::Block(block) => self.visit_block(block),
         }
-
-        self.visit_item_(&item.2);
     }
 
     fn visit_test_info(&mut self, test_info: &TestInfo) {
@@ -187,7 +193,9 @@ impl Visitor for TypeCheckVisitor<'_> {
 
         // TODO: generic variables are bound here.
 
-        self.visit_method_info_default(method_info);
+        if let Some(fun_info) = method_info.fun_info() {
+            self.visit_fun_info(fun_info);
+        }
 
         self.bindings.exit_block();
     }
@@ -265,8 +273,6 @@ impl Visitor for TypeCheckVisitor<'_> {
         }
 
         self.bindings.exit_block();
-
-        self.visit_struct_info_default(struct_info);
     }
 
     fn visit_enum_info(&mut self, enum_info: &EnumInfo) {
@@ -287,8 +293,6 @@ impl Visitor for TypeCheckVisitor<'_> {
         }
 
         self.bindings.exit_block();
-
-        self.visit_enum_info_default(enum_info);
     }
 
     fn visit_block(&mut self, block: &Block) {
@@ -303,9 +307,7 @@ impl Visitor for TypeCheckVisitor<'_> {
             &Type::Top,
         );
     }
-}
 
-impl TypeCheckVisitor<'_> {
     /// Update `id_to_pos` for this occurrence of an enum variant,
     /// e.g. an instance of the literal `True`.
     fn save_enum_variant_id(&mut self, occurrence_sym: &Symbol, value: &Value) {

@@ -319,7 +319,23 @@ fn parse_assert(
 ) -> Expression {
     let assert_keyword = require_token(tokens, diagnostics, "assert");
 
-    require_token(tokens, diagnostics, "(");
+    let open_paren = require_token(tokens, diagnostics, "(");
+
+    if peeked_symbol_is(tokens, ")") {
+        let close_paren = tokens.pop().unwrap();
+
+        let position = Position::merge(&open_paren.position, &close_paren.position);
+        diagnostics.push(ParseError::Invalid {
+            position: position.clone(),
+            message: ErrorMessage(
+                "Assert requires an expression, e.g. `assert(x == 42)`.".to_owned(),
+            ),
+            additional: vec![],
+        });
+
+        return Expression::new(position, Expression_::Invalid, id_gen.next());
+    }
+
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
     let close_paren = require_token(tokens, diagnostics, ")");
 

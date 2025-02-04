@@ -1,0 +1,11 @@
+let x = 1 + True
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `Int`, but got `Bool`.
+// 
+// --> src/test_files/check/type_error_toplevel.gdn:1
+// let x = 1 + True
+//             ^^^^
+

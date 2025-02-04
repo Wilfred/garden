@@ -1,8 +1,9 @@
 use std::rc::Rc;
 
 use crate::{
-    Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo, Pattern,
-    StructInfo, Symbol, TestInfo, ToplevelItem, ToplevelItem_, TypeHint, TypeSymbol,
+    ast::ToplevelExpression, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
+    MethodInfo, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, ToplevelItem_, TypeHint,
+    TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -22,10 +23,16 @@ pub trait Visitor {
             ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
             ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
             ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
-            ToplevelItem_::Expr(toplevel_expression) => self.visit_expr(&toplevel_expression.0),
+            ToplevelItem_::Expr(toplevel_expression) => {
+                self.visit_toplevel_expr(toplevel_expression)
+            }
             ToplevelItem_::Block(block) => self.visit_block(block),
             ToplevelItem_::Import(_) => {}
         }
+    }
+
+    fn visit_toplevel_expr(&mut self, toplevel_expr: &ToplevelExpression) {
+        self.visit_expr(&toplevel_expr.0);
     }
 
     fn visit_method_info(&mut self, method_info: &MethodInfo) {

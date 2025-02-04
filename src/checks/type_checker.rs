@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelItem,
-    ToplevelItemId, ToplevelItem_, TypeHint, TypeName, VariantInfo,
+    MethodInfo, Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelExpression,
+    ToplevelItem, ToplevelItemId, ToplevelItem_, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
@@ -294,6 +294,14 @@ impl Visitor for TypeCheckVisitor<'_> {
     fn visit_block(&mut self, block: &Block) {
         // infer_block recurses, so don't recurse in the visitor.
         self.infer_block(block, &self.env.stack.type_bindings(), &Type::Top);
+    }
+
+    fn visit_toplevel_expr(&mut self, toplevel_expr: &ToplevelExpression) {
+        self.infer_expr(
+            &toplevel_expr.0,
+            &self.env.stack.type_bindings(),
+            &Type::Top,
+        );
     }
 }
 

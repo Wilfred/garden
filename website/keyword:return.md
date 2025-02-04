@@ -4,7 +4,7 @@
 the caller.
 
 ```
-fun add_one(b: bool): Int {
+fun add_one(b: Bool): Int {
   if b {
     return 42
   }

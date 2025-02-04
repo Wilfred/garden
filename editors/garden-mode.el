@@ -190,8 +190,12 @@ repeated parentheses/brackets on the same line."
   '((t :inherit font-lock-function-name-face))
   "Face for highlighting passing tests")
 
-(defface garden-test-failed-face
+(defface garden-test-sandboxed-face
   '((t :inherit warning))
+  "Face for highlighting passing tests")
+
+(defface garden-test-failed-face
+  '((t :inherit error))
   "Face for highlighting passing tests")
 
 (defun garden--apply-test-faces (buf)
@@ -209,7 +213,11 @@ repeated parentheses/brackets on the same line."
               nil t)
         (let* ((test-name (match-string 1))
                (status (gethash test-name garden--test-states))
-               (color (if (string= status "passed") 'garden-test-pass-face 'garden-test-failed-face)))
+               (color
+                (cond
+                 ((string= status "passed") 'garden-test-pass-face)
+                 ((string= status "sandboxed") 'garden-test-sandboxed-face)
+                 (t 'garden-test-failed-face))))
           (when status
             (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face color)))))))
 

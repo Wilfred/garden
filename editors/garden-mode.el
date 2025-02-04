@@ -1,6 +1,6 @@
 ;;; garden-mode.el --- Major mode for editing Garden programs  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023  Wilfred Hughes
+;; Copyright (C) 2023-2025  Wilfred Hughes
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: languages

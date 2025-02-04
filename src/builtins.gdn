@@ -222,8 +222,17 @@ test check_snippet_good {
   }
 }
 
-test check_snippet_bad {
+test check_snippet_bad_syntax {
   match check_snippet("fun foo(") {
+    Ok(_) => {
+      assert(False)
+    }
+    Err(_) => {}
+  }
+}
+
+test check_snippet_bad_name {
+  match check_snippet("fun foo() { bar() }") {
     Ok(_) => {
       assert(False)
     }

@@ -15,7 +15,7 @@ use garden_lang_parser::{parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::checks::check_toplevel_items_in_env;
+use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::{Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
@@ -2458,19 +2458,25 @@ fn check_snippet(src: &str, env: &Env) -> Value {
     let path = PathBuf::from("snippet.gdn");
 
     let mut id_gen = IdGenerator::default();
-    let (_, errors) = parse_toplevel_items(&path, src, &mut id_gen);
+    let (items, syntax_errors) = parse_toplevel_items(&path, src, &mut id_gen);
 
-    if errors.is_empty() {
+    let mut error_messages = vec![];
+    for err in syntax_errors {
+        error_messages.push(Value::String(err.message().0.clone()));
+    }
+
+    for Diagnostic { message, level, .. } in check_toplevel_items(&items) {
+        match level {
+            Level::Warning => {}
+            Level::Error => {
+                error_messages.push(Value::String(message));
+            }
+        }
+    }
+
+    if error_messages.is_empty() {
         Value::ok(Value::unit(), env)
     } else {
-        let error_messages = errors
-            .iter()
-            .map(|e| {
-                let m = e.message();
-                Value::String(m.0.clone())
-            })
-            .collect::<Vec<_>>();
-
         Value::err(
             Value::List {
                 items: error_messages,

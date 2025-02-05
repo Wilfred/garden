@@ -8,7 +8,7 @@ let nums = [1, 2, 3]
 
 let i = 0
 while i < nums.len() {
-  let num = nums.get(i).or_exception()
+  let num = nums.get(i)
   dbg(num)
   
   i += 1

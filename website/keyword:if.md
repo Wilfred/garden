@@ -17,7 +17,7 @@ if b {
 ```
 let food = "chocolate"
 
-let description = if food = "chocolate" {
+let description = if food == "chocolate" {
   "tasty"
 } else {
   "hmm"

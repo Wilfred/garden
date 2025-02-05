@@ -1,0 +1,6 @@
+// Whilst users should probably use toplevel blocks when editing a
+// file, this pattern is useful when type checking docs snippets.
+let x = 1
+let y = x + 1
+
+// args: check

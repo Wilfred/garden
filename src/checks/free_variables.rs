@@ -170,7 +170,13 @@ impl FreeVariableVisitor<'_> {
 
 impl Visitor for FreeVariableVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        self.push_scope();
+        match &item.2 {
+            ToplevelItem_::Expr(_) => {}
+            _ => {
+                self.push_scope();
+            }
+        }
+
         if let ToplevelItem_::Method(method_info, _) = &item.2 {
             self.add_binding(&method_info.receiver_sym);
             // Always treat the method receiver as used, because we
@@ -200,7 +206,12 @@ impl Visitor for FreeVariableVisitor<'_> {
             }
         }
 
-        self.pop_scope();
+        match &item.2 {
+            ToplevelItem_::Expr(_) => {}
+            _ => {
+                self.pop_scope();
+            }
+        }
     }
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {

@@ -1,5 +1,9 @@
 export fun foo(_: String): NoValue {
-    __BUILTIN_IMPLEMENTATION
+  __BUILTIN_IMPLEMENTATION
+}
+
+export fun bar() {
+  foo("")
 }
 
 // args: check

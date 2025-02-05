@@ -1183,6 +1183,18 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
             ),
             position: symbol.position.clone(),
         });
+
+        // The built-in function doesn't exist, presumably the Garden
+        // maintainer is still writing it. Add the function as-is to
+        // the environment, so we can still type check call sites.
+        env.set_with_file_scope(
+            &symbol.name,
+            Value::Fun {
+                name_sym: symbol.clone(),
+                fun_info: fun_info.clone(),
+            },
+        );
+
         return;
     };
 

@@ -1980,7 +1980,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Error => {
             check_arity(
                 &SymbolName {
-                    name: "error".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2020,7 +2020,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Print => {
             check_arity(
                 &SymbolName {
-                    name: "print".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2072,7 +2072,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Println => {
             check_arity(
                 &SymbolName {
-                    name: "println".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2139,7 +2139,7 @@ fn eval_builtin_call(
 
             check_arity(
                 &SymbolName {
-                    name: "shell".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2228,7 +2228,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::StringRepr => {
             check_arity(
                 &SymbolName {
-                    name: "string_repr".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2257,7 +2257,7 @@ fn eval_builtin_call(
 
             check_arity(
                 &SymbolName {
-                    name: "list_directory".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2314,7 +2314,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::SourceDirectory => {
             check_arity(
                 &SymbolName {
-                    name: "source_directory".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2336,7 +2336,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(
                 &SymbolName {
-                    name: "working_directory".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2368,7 +2368,7 @@ fn eval_builtin_call(
 
             check_arity(
                 &SymbolName {
-                    name: "write_file".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2425,7 +2425,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::CheckSnippet => {
             check_arity(
                 &SymbolName {
-                    name: "error".to_owned(),
+                    name: format!("{}", kind),
                 },
                 receiver_value,
                 receiver_pos,

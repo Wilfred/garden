@@ -107,6 +107,21 @@ export fun (this: List<T>) append<T>(value: T): List<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Does this list contain `item`?
+//
+// ```
+// [10, 11, 12].contains(12) // True
+// ```
+export fun (this: List<T>) contains<T>(item: T): Bool {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test list_contains {
+  assert([].contains(10) == False)
+  assert([10, 11].contains(10) == True)
+  assert([12, 11, 10, 10].contains(10) == True)
+}
+
 // Get the item in the list at the index specified.
 // Errors if the index is less than 0 or greater than `length - 1`.
 //

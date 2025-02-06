@@ -3179,6 +3179,56 @@ fn eval_builtin_method_call(
                 }
             }
         }
+        BuiltinMethodKind::ListContains => {
+            check_arity(
+                &SymbolName {
+                    name: "List::contains".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let needle = &arg_values[0];
+            match &receiver_value {
+                Value::List { items, .. } => {
+                    let mut present = false;
+                    for item in items {
+                        if item == needle {
+                            present = true;
+                            break;
+                        }
+                    }
+
+                    if expr_value_is_used {
+                        env.push_value(Value::bool(present));
+                    }
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "List".into(),
+                                },
+                                v,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
         BuiltinMethodKind::ListGet => {
             check_arity(
                 &SymbolName {

@@ -5,5 +5,5 @@ fun foo(s: String) {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":3635,"end_offset":3643,"line_number":164,"end_line_number":164,"column":26,"path":"builtins.gdn"}
+// {"start_offset":3956,"end_offset":3964,"line_number":179,"end_line_number":179,"column":26,"path":"builtins.gdn"}
 

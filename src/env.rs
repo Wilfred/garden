@@ -297,6 +297,35 @@ impl Env {
         );
         list_methods.insert(
             SymbolName {
+                name: "contains".to_owned(),
+            },
+            MethodInfo {
+                receiver_hint: TypeHint {
+                    args: vec![],
+                    sym: TypeSymbol {
+                        position: Position::todo(builtins_path.clone()),
+                        name: TypeName {
+                            name: "List".into(),
+                        },
+                        id: id_gen.next(),
+                    },
+                    position: Position::todo(builtins_path.clone()),
+                },
+                receiver_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "__irrelevant",
+                    &mut id_gen,
+                ),
+                name_sym: Symbol::new(
+                    Position::todo(builtins_path.clone()),
+                    "contains",
+                    &mut id_gen,
+                ),
+                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListContains, None),
+            },
+        );
+        list_methods.insert(
+            SymbolName {
                 name: "len".to_owned(),
             },
             MethodInfo {

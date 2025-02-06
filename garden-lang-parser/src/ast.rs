@@ -650,6 +650,7 @@ pub struct ImportInfo {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuiltinMethodKind {
     ListAppend,
+    ListContains,
     ListGet,
     ListLen,
     PathExists,

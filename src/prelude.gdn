@@ -465,21 +465,6 @@ test is_non_empty {
   assert([1].is_non_empty())
 }
 
-// Does this list contain `item`?
-export fun (this: List<T>) contains<T>(item: T): Bool {
-  for this_item in this {
-    if this_item == item {
-      return True
-    }
-  }
-
-  False
-}
-
-test contains {
-  assert([10, 11].contains(10) == True)
-}
-
 // Call `f` on every item in this list, and return a list of the
 // results.
 //

@@ -3563,6 +3563,61 @@ fn eval_builtin_method_call(
                 }
             }
         }
+        BuiltinMethodKind::StringLines => {
+            check_arity(
+                &SymbolName {
+                    name: "String::lines".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match &receiver_value {
+                Value::String(s) => {
+                    let lines = s
+                        .lines()
+                        .map(|line| Value::String(line.to_owned()))
+                        .collect::<Vec<_>>();
+
+                    let elem_type = if lines.is_empty() {
+                        Type::no_value()
+                    } else {
+                        Type::string()
+                    };
+
+                    if expr_value_is_used {
+                        env.push_value(Value::List {
+                            items: lines,
+                            elem_type,
+                        });
+                    }
+                }
+                v => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    name: "String".into(),
+                                },
+                                v,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
         BuiltinMethodKind::StringSubstring => {
             check_arity(
                 &SymbolName {

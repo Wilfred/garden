@@ -154,38 +154,6 @@ test string_replace {
   assert("abcd cd".replace("cd", "x") == "abx x")
 }
 
-// Split this string into a list of lines.
-export fun (this: String) lines(): List<String> {
-  let parts: List<String> = []
-
-  let line_start = 0
-  let i = 0
-  while i < this.len() {
-    let char = this.substring(i, i + 1)
-
-    if char == "\n" {
-      parts = parts.append(this.substring(line_start, i))
-      line_start = i + 1
-    }
-
-    i += 1
-  }
-
-  // Append last line if it wasn't terminated with a newline.
-  if line_start != this.len() {
-    parts = parts.append(this.substring(line_start, this.len()))
-  }
-
-  parts
-}
-
-test lines {
-  assert("".lines() == [])
-  assert("a".lines() == ["a"])
-  assert("a\nb".lines() == ["a", "b"])
-  assert("a\nb\n".lines() == ["a", "b"])
-}
-
 // Split this string on the first occurrence of `needle`, and return
 // the text before and after `needle`.
 //

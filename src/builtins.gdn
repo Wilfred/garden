@@ -155,6 +155,22 @@ test string_len {
   assert("☃".len() == 1)
 }
 
+// Split this string into a list of lines.
+//
+// ```
+// "a\nb".lines() // ["a", "b"]
+// ```
+export fun (this: String) lines(): List<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test string_lines {
+  assert("".lines() == [])
+  assert("a".lines() == ["a"])
+  assert("a\nb".lines() == ["a", "b"])
+  assert("a\nb\n".lines() == ["a", "b"])
+}
+
 // Return the substring of the string between the indexes
 // specified. Indexes are specified in character offsets, not bytes.
 //

@@ -485,7 +485,7 @@ impl AstId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IdGenerator {
     pub next_id: SyntaxId,
     pub interned: FxHashMap<SymbolName, InternedSymbolId>,

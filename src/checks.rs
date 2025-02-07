@@ -10,7 +10,7 @@ mod unused_defs;
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
-use garden_lang_parser::ast::{IdGenerator, ToplevelItem};
+use garden_lang_parser::ast::ToplevelItem;
 use loops::check_loops;
 use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;
@@ -21,10 +21,8 @@ use self::type_checker::check_types;
 use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
 
 /// Check toplevel items in a fresh environment, without any definitions from the current session.
-pub(crate) fn check_toplevel_items(items: &[ToplevelItem]) -> Vec<Diagnostic> {
-    let id_gen = IdGenerator::default();
-    let mut env = Env::new(id_gen);
-
+pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+    let mut env: Env = env.clone();
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env);
 
     diagnostics.extend(check_toplevel_items_in_env(items, &env));

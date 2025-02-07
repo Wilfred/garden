@@ -2486,7 +2486,8 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         error_messages.push(Value::new(Value_::String(err.message().0.clone())));
     }
 
-    for Diagnostic { message, level, .. } in check_toplevel_items(&items) {
+    let check_env = Env::new(id_gen);
+    for Diagnostic { message, level, .. } in check_toplevel_items(&items, &check_env) {
         match level {
             Level::Warning => {}
             Level::Error => {

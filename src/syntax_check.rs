@@ -12,6 +12,7 @@ use garden_lang_parser::{
 use crate::{
     checks::check_toplevel_items,
     diagnostics::{format_diagnostic, Diagnostic, Level},
+    Env,
 };
 
 #[derive(Debug, Serialize)]
@@ -69,11 +70,12 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         };
     }
 
+    let env = Env::new(id_gen);
     for Diagnostic {
         message,
         position,
         level,
-    } in check_toplevel_items(&items)
+    } in check_toplevel_items(&items, &env)
     {
         // TODO: merge Level and Severity types.
         let severity = match level {

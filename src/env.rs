@@ -62,7 +62,7 @@ impl Stack {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Env {
     pub(crate) file_scope: FxHashMap<SymbolName, Value>,
     pub(crate) methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>>,

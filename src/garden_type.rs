@@ -7,7 +7,7 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     types::{BuiltinType, TypeDef},
-    values::Value,
+    values::{Value, Value_},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -224,23 +224,23 @@ impl Type {
         global_tys: &FxHashMap<TypeName, TypeDef>,
         type_bindings: &TypeVarEnv,
     ) -> Self {
-        match value {
-            Value::Integer(_) => Type::int(),
-            Value::Fun { fun_info, .. } | Value::Closure(_, fun_info) => {
+        match value.as_ref() {
+            Value_::Integer(_) => Type::int(),
+            Value_::Fun { fun_info, .. } | Value_::Closure(_, fun_info) => {
                 Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()
             }
-            Value::BuiltinFunction(_, fun_info) => match fun_info {
+            Value_::BuiltinFunction(_, fun_info) => match fun_info {
                 Some(fun_info) => {
                     Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()
                 }
                 None => Self::error("No fun_info for built-in function"),
             },
-            Value::String(_) => Type::string(),
-            Value::List { elem_type, .. } => Type::list(elem_type.clone()),
-            Value::Tuple { item_types, .. } => Type::Tuple(item_types.clone()),
-            Value::EnumVariant { runtime_type, .. } => runtime_type.clone(),
-            Value::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
-            Value::Struct { runtime_type, .. } => runtime_type.clone(),
+            Value_::String(_) => Type::string(),
+            Value_::List { elem_type, .. } => Type::list(elem_type.clone()),
+            Value_::Tuple { item_types, .. } => Type::Tuple(item_types.clone()),
+            Value_::EnumVariant { runtime_type, .. } => runtime_type.clone(),
+            Value_::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
+            Value_::Struct { runtime_type, .. } => runtime_type.clone(),
         }
     }
 

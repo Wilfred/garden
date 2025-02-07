@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
-use crate::values::Value;
+use crate::values::{Value, Value_};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {
@@ -310,9 +310,9 @@ impl TypeCheckVisitor<'_> {
 
     /// Update `id_to_pos` for this occurrence of an enum variant,
     /// e.g. an instance of the literal `True`.
-    fn save_enum_variant_id(&mut self, occurrence_sym: &Symbol, value: &Value) {
-        let type_name = match value {
-            Value::EnumVariant { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
+    fn save_enum_variant_id(&mut self, occurrence_sym: &Symbol, value: Value) {
+        let type_name = match value.as_ref() {
+            Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
                 type_name
             }
             _ => return,
@@ -500,9 +500,9 @@ impl TypeCheckVisitor<'_> {
                         continue;
                     };
 
-                    let pattern_type_name = match value {
-                        Value::EnumVariant { type_name, .. } => type_name,
-                        Value::EnumConstructor { type_name, .. } => type_name,
+                    let pattern_type_name = match value.as_ref() {
+                        Value_::EnumVariant { type_name, .. } => type_name,
+                        Value_::EnumConstructor { type_name, .. } => type_name,
                         _ => {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
@@ -893,10 +893,10 @@ impl TypeCheckVisitor<'_> {
 
                 match self.env.file_scope.get(&sym.name) {
                     Some(value) => {
-                        let fun_info = match value {
-                            Value::Fun { fun_info, .. } => Some(fun_info),
-                            Value::Closure(_, fun_info) => Some(fun_info),
-                            Value::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
+                        let fun_info = match value.as_ref() {
+                            Value_::Fun { fun_info, .. } => Some(fun_info),
+                            Value_::Closure(_, fun_info) => Some(fun_info),
+                            Value_::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
                             _ => None,
                         };
                         if let Some(fun_info) = fun_info {
@@ -917,10 +917,10 @@ impl TypeCheckVisitor<'_> {
                         }
 
                         if matches!(
-                            value,
-                            Value::EnumVariant { .. } | Value::EnumConstructor { .. }
+                            value.as_ref(),
+                            Value_::EnumVariant { .. } | Value_::EnumConstructor { .. }
                         ) {
-                            self.save_enum_variant_id(sym, value);
+                            self.save_enum_variant_id(sym, value.clone());
                         }
 
                         Type::from_value(value, &self.env.types, type_bindings)

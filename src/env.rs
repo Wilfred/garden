@@ -6,7 +6,7 @@ use strum::IntoEnumIterator;
 
 use crate::eval::{EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
-use crate::values::{BuiltinFunctionKind, Value};
+use crate::values::{BuiltinFunctionKind, Value, Value_};
 use crate::{
     eval::{load_toplevel_items, Bindings},
     types::{BuiltinType, TypeDef},
@@ -109,7 +109,7 @@ impl Env {
                 SymbolName {
                     name: format!("{}", fun_kind),
                 },
-                Value::BuiltinFunction(fun_kind, None),
+                Value::new(Value_::BuiltinFunction(fun_kind, None)),
             );
         }
 

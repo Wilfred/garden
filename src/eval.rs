@@ -22,7 +22,9 @@ use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrT
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
-use crate::values::{escape_string_literal, type_representation, BuiltinFunctionKind, Value};
+use crate::values::{
+    escape_string_literal, type_representation, BuiltinFunctionKind, Value, Value_,
+};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
     IdGenerator, InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
@@ -298,10 +300,10 @@ fn load_toplevel_items_(
                 } else {
                     env.set_with_file_scope(
                         &name_symbol.name,
-                        Value::Fun {
+                        Value::new(Value_::Fun {
                             name_sym: name_symbol.clone(),
                             fun_info: fun_info.clone(),
-                        },
+                        }),
                     );
                 }
 
@@ -437,22 +439,22 @@ fn load_toplevel_items_(
                     enum_info,
                     variant_sym.payload_hint.as_ref().unwrap(),
                 );
-                Value::EnumConstructor {
+                Value::new(Value_::EnumConstructor {
                     type_name: enum_info.name_sym.name.clone(),
                     variant_idx,
                     runtime_type,
-                }
+                })
             } else {
                 let runtime_type =
                     enum_value_runtime_type(env, &enum_info.name_sym.name, variant_idx, &Type::Top)
                         .unwrap_or(Type::no_value());
 
-                Value::EnumVariant {
+                Value::new(Value_::EnumVariant {
                     type_name: enum_info.name_sym.name.clone(),
                     runtime_type,
                     variant_idx,
                     payload: None,
-                }
+                })
             };
 
             // TODO: warn if we're clobbering a name from a
@@ -886,8 +888,8 @@ fn let_var_pos(
                 }
                 let matching_sym_i = matching_sym_i?;
 
-                match value {
-                    Value::Tuple { items, .. } => {
+                match value.as_ref() {
+                    Value_::Tuple { items, .. } => {
                         let tuple_item = items.get(matching_sym_i)?;
                         return Some((
                             tuple_item.clone(),
@@ -941,7 +943,9 @@ pub(crate) fn eval_toplevel_call(
     // TODO: return an Err() rather than kludging a string and letting
     // eval_env() return a type error.
     let recv_value = env.file_scope.get(name).cloned().unwrap_or_else(|| {
-        Value::String("ERROR: Tried to call a function that isn't defined".to_owned())
+        Value::new(Value_::String(
+            "ERROR: Tried to call a function that isn't defined".to_owned(),
+        ))
     });
     env.push_value(recv_value);
 
@@ -1189,16 +1193,16 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
         // the environment, so we can still type check call sites.
         env.set_with_file_scope(
             &symbol.name,
-            Value::Fun {
+            Value::new(Value_::Fun {
                 name_sym: symbol.clone(),
                 fun_info: fun_info.clone(),
-            },
+            }),
         );
 
         return;
     };
 
-    let Value::BuiltinFunction(kind, _) = value else {
+    let Value_::BuiltinFunction(kind, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: format!(
@@ -1213,7 +1217,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
 
     env.set_with_file_scope(
         &symbol.name,
-        Value::BuiltinFunction(*kind, Some(fun_info.clone())),
+        Value::new(Value_::BuiltinFunction(*kind, Some(fun_info.clone()))),
     );
 }
 
@@ -1233,13 +1237,13 @@ fn is_builtin_stub(fun_info: &FunInfo) -> bool {
 // If value is a list of strings, return the strings as a vec. Return
 // an error otherwise.
 fn as_string_list(value: &Value) -> Result<Vec<String>, Value> {
-    match value {
-        Value::List { items, .. } => {
+    match value.as_ref() {
+        Value_::List { items, .. } => {
             // TODO: check runtime_type instead.
             let mut res: Vec<String> = vec![];
             for item in items {
-                match item {
-                    Value::String(s) => {
+                match item.as_ref() {
+                    Value_::String(s) => {
                         res.push(s.clone());
                     }
                     _ => {
@@ -1385,21 +1389,22 @@ fn eval_for_in(
         .pop_value()
         .expect("Popped an empty value stack for `for` loop iterated value");
 
-    let iteree_idx = match env
+    let iteree_idx = env
         .pop_value()
-        .expect("Popped an empty value stack for `for` loop index")
-    {
-        Value::Integer(i) => i,
-        v => {
+        .expect("Popped an empty value stack for `for` loop index");
+
+    let iteree_idx = match iteree_idx.as_ref() {
+        Value_::Integer(i) => *i,
+        _ => {
             unreachable!(
                 "`for` loop index should always be an `Int`, got `{}`: {}",
-                v.display(env),
+                iteree_idx.display(env),
                 outer_expr.position.as_ide_string()
             )
         }
     };
 
-    let Value::List { items, .. } = &iteree_value else {
+    let Value_::List { items, .. } = iteree_value.as_ref() else {
         return Err((
             RestoreValues(vec![iteree_value.clone()]),
             EvalError::ResumableError(
@@ -1423,7 +1428,7 @@ fn eval_for_in(
     // re-evaluate the iteree expression though.
     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
-    env.push_value(Value::Integer(iteree_idx + 1));
+    env.push_value(Value::new(Value_::Integer(iteree_idx + 1)));
     env.push_value(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
@@ -1459,7 +1464,7 @@ fn eval_assign_update(
             ),
         ));
     };
-    let Value::Integer(var_value_num) = var_value else {
+    let Value_::Integer(var_value_num) = var_value.as_ref() else {
         return Err((
             RestoreValues(vec![]),
             EvalError::ResumableError(
@@ -1473,7 +1478,7 @@ fn eval_assign_update(
         "Popped an empty value stack for `{}`",
         op.as_src()
     ));
-    let Value::Integer(rhs_num) = rhs_value else {
+    let Value_::Integer(rhs_num) = rhs_value.as_ref() else {
         return Err((
             RestoreValues(vec![rhs_value.clone()]),
             EvalError::ResumableError(
@@ -1484,12 +1489,12 @@ fn eval_assign_update(
     };
 
     let new_value_num = match op {
-        AssignUpdateKind::Add => var_value_num + rhs_num,
-        AssignUpdateKind::Subtract => var_value_num - rhs_num,
+        AssignUpdateKind::Add => *var_value_num + *rhs_num,
+        AssignUpdateKind::Subtract => *var_value_num - *rhs_num,
     };
     env.current_frame_mut()
         .bindings
-        .set_existing(variable, Value::Integer(new_value_num));
+        .set_existing(variable, Value::new(Value_::Integer(new_value_num)));
 
     if expr_value_is_used {
         env.push_value(Value::unit());
@@ -1577,8 +1582,8 @@ fn eval_let(
     let stack_frame = env.current_frame_mut();
     match destination {
         LetDestination::Symbol(symbol) => stack_frame.bindings.add_new(symbol, expr_value),
-        LetDestination::Destructure(symbols) => match &expr_value {
-            Value::Tuple { items, .. } => {
+        LetDestination::Destructure(symbols) => match expr_value.as_ref() {
+            Value_::Tuple { items, .. } => {
                 if items.len() != symbols.len() {
                     return Err((
                         RestoreValues(vec![expr_value.clone()]),
@@ -1741,8 +1746,8 @@ fn eval_integer_binop(
             .pop_value()
             .expect("Popped an empty value stack for LHS of binary operator");
 
-        let lhs_num = match lhs_value {
-            Value::Integer(i) => i,
+        let lhs_num = match lhs_value.as_ref() {
+            Value_::Integer(i) => *i,
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value.clone(), rhs_value]),
@@ -1753,8 +1758,8 @@ fn eval_integer_binop(
                 ));
             }
         };
-        let rhs_num = match rhs_value {
-            Value::Integer(i) => i,
+        let rhs_num = match rhs_value.as_ref() {
+            Value_::Integer(i) => *i,
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value, rhs_value.clone()]),
@@ -1767,9 +1772,13 @@ fn eval_integer_binop(
         };
 
         let value = match op {
-            BinaryOperatorKind::Add => Value::Integer(lhs_num.wrapping_add(rhs_num)),
-            BinaryOperatorKind::Subtract => Value::Integer(lhs_num.wrapping_sub(rhs_num)),
-            BinaryOperatorKind::Multiply => Value::Integer(lhs_num.wrapping_mul(rhs_num)),
+            BinaryOperatorKind::Add => Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num))),
+            BinaryOperatorKind::Subtract => {
+                Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num)))
+            }
+            BinaryOperatorKind::Multiply => {
+                Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num)))
+            }
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
                     return Err((
@@ -1784,9 +1793,9 @@ fn eval_integer_binop(
                     ));
                 }
 
-                Value::Integer(lhs_num / rhs_num)
+                Value::new(Value_::Integer(lhs_num / rhs_num))
             }
-            BinaryOperatorKind::Modulo => Value::Integer(lhs_num % rhs_num),
+            BinaryOperatorKind::Modulo => Value::new(Value_::Integer(lhs_num % rhs_num)),
             BinaryOperatorKind::Exponent => {
                 if rhs_num < 0 {
                     return Err((
@@ -1817,7 +1826,7 @@ fn eval_integer_binop(
                 }
 
                 match lhs_num.checked_pow(rhs_num as u32) {
-                    Some(num) => Value::Integer(num),
+                    Some(num) => Value::new(Value_::Integer(num)),
                     None => {
                         return Err((
                             RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
@@ -1863,8 +1872,8 @@ fn eval_string_concat(
             .pop_value()
             .expect("Popped an empty value stack for LHS of `^`.");
 
-        let lhs_str = match &lhs_value {
-            Value::String(s) => s,
+        let lhs_str = match lhs_value.as_ref() {
+            Value_::String(s) => s,
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value.clone(), rhs_value]),
@@ -1881,8 +1890,8 @@ fn eval_string_concat(
                 ));
             }
         };
-        let rhs_str = match &rhs_value {
-            Value::String(s) => s,
+        let rhs_str = match rhs_value.as_ref() {
+            Value_::String(s) => s,
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value, rhs_value.clone()]),
@@ -1904,7 +1913,7 @@ fn eval_string_concat(
         out_str.push_str(lhs_str);
         out_str.push_str(rhs_str);
 
-        let value = Value::String(out_str);
+        let value = Value::new(Value_::String(out_str));
 
         if expr_value_is_used {
             env.push_value(value);
@@ -1994,20 +2003,20 @@ fn eval_builtin_call(
                 saved_values.push(value.clone());
             }
 
-            match &arg_values[0] {
-                Value::String(msg) => {
+            match arg_values[0].as_ref() {
+                Value_::String(msg) => {
                     let message = ErrorMessage(msg.clone());
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::ResumableError(position.clone(), message),
                     ));
                 }
-                v => {
+                _ => {
                     let message = format_type_error(
                         &TypeName {
                             name: "String".into(),
                         },
-                        v,
+                        &arg_values[0],
                         env,
                     );
                     return Err((
@@ -2029,8 +2038,8 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            match &arg_values[0] {
-                Value::String(s) => match session.stdout_mode {
+            match arg_values[0].as_ref() {
+                Value_::String(s) => match session.stdout_mode {
                     StdoutMode::WriteDirectly => {
                         print!("{}", s);
                     }
@@ -2044,7 +2053,7 @@ fn eval_builtin_call(
                     }
                     StdoutMode::DoNotWrite => {}
                 },
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -2055,7 +2064,7 @@ fn eval_builtin_call(
                         &TypeName {
                             name: "String".into(),
                         },
-                        v,
+                        &arg_values[0],
                         env,
                     );
                     return Err((
@@ -2081,8 +2090,8 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            match &arg_values[0] {
-                Value::String(s) => match session.stdout_mode {
+            match arg_values[0].as_ref() {
+                Value_::String(s) => match session.stdout_mode {
                     StdoutMode::WriteDirectly => {
                         println!("{}", s);
                     }
@@ -2098,7 +2107,7 @@ fn eval_builtin_call(
                     }
                     StdoutMode::DoNotWrite => {}
                 },
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -2109,7 +2118,7 @@ fn eval_builtin_call(
                         &TypeName {
                             name: "String".into(),
                         },
-                        v,
+                        &arg_values[0],
                         env,
                     );
                     return Err((
@@ -2148,8 +2157,8 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            match &arg_values[0] {
-                Value::String(s) => {
+            match arg_values[0].as_ref() {
+                Value_::String(s) => {
                     match as_string_list(&arg_values[1]) {
                         Ok(items) => {
                             let mut command = std::process::Command::new(s);
@@ -2168,13 +2177,13 @@ fn eval_builtin_call(
                                         .unwrap();
 
                                     if output.status.success() {
-                                        Value::ok(Value::String(s), env)
+                                        Value::ok(Value::new(Value_::String(s)), env)
                                     } else {
-                                        Value::err(Value::String(s), env)
+                                        Value::err(Value::new(Value_::String(s)), env)
                                     }
                                 }
                                 Err(e) => {
-                                    let s = Value::String(format!("{}", e));
+                                    let s = Value::new(Value_::String(format!("{}", e)));
                                     Value::err(s, env)
                                 }
                             };
@@ -2204,7 +2213,7 @@ fn eval_builtin_call(
                         }
                     }
                 }
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -2215,7 +2224,7 @@ fn eval_builtin_call(
                         &TypeName {
                             name: "String".into(),
                         },
-                        v,
+                        &arg_values[0],
                         env,
                     );
                     return Err((
@@ -2238,7 +2247,7 @@ fn eval_builtin_call(
             )?;
 
             if expr_value_is_used {
-                env.push_value(Value::String(arg_values[0].display(env)));
+                env.push_value(Value::new(Value_::String(arg_values[0].display(env))));
             }
         }
         BuiltinFunctionKind::ListDirectory => {
@@ -2294,15 +2303,15 @@ fn eval_builtin_call(
                     }
 
                     Value::ok(
-                        Value::List {
+                        Value::new(Value_::List {
                             items,
                             elem_type: Type::list(Type::path()),
-                        },
+                        }),
                         env,
                     )
                 }
                 Err(e) => {
-                    let s = Value::String(format!("{e} {path_s}"));
+                    let s = Value::new(Value_::String(format!("{e} {path_s}")));
                     Value::err(s, env)
                 }
             };
@@ -2377,16 +2386,16 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let content_s = match &arg_values[0] {
-                Value::String(s) => s,
-                v => {
+            let content_s = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
                     }
                     saved_values.push(receiver_value.clone());
 
-                    let message = format_type_error("String", v, env);
+                    let message = format_type_error("String", &arg_values[0], env);
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
@@ -2394,16 +2403,16 @@ fn eval_builtin_call(
                 }
             };
 
-            let path_s = match &arg_values[1] {
-                Value::String(s) => s,
-                v => {
+            let path_s = match arg_values[1].as_ref() {
+                Value_::String(s) => s,
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
                     }
                     saved_values.push(receiver_value.clone());
 
-                    let message = format_type_error("String", v, env);
+                    let message = format_type_error("String", &arg_values[1], env);
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::ResumableError(arg_positions[0].clone(), message),
@@ -2415,7 +2424,7 @@ fn eval_builtin_call(
 
             let v = match std::fs::write(path, content_s) {
                 Ok(()) => Value::ok(Value::unit(), env),
-                Err(e) => Value::err(Value::String(format!("{}", e)), env),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e))), env),
             };
 
             if expr_value_is_used {
@@ -2439,14 +2448,14 @@ fn eval_builtin_call(
                 saved_values.push(value.clone());
             }
 
-            let snippet = match &arg_values[0] {
-                Value::String(s) => s,
-                v => {
+            let snippet = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
                     let message = format_type_error(
                         &TypeName {
                             name: "String".into(),
                         },
-                        v,
+                        &arg_values[0],
                         env,
                     );
                     return Err((
@@ -2474,14 +2483,14 @@ fn check_snippet(src: &str, env: &Env) -> Value {
 
     let mut error_messages = vec![];
     for err in syntax_errors {
-        error_messages.push(Value::String(err.message().0.clone()));
+        error_messages.push(Value::new(Value_::String(err.message().0.clone())));
     }
 
     for Diagnostic { message, level, .. } in check_toplevel_items(&items) {
         match level {
             Level::Warning => {}
             Level::Error => {
-                error_messages.push(Value::String(message));
+                error_messages.push(Value::new(Value_::String(message)));
             }
         }
     }
@@ -2490,10 +2499,10 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         Value::ok(Value::unit(), env)
     } else {
         Value::err(
-            Value::List {
+            Value::new(Value_::List {
                 items: error_messages,
                 elem_type: Type::string(),
-            },
+            }),
             env,
         )
     }
@@ -2527,8 +2536,8 @@ fn eval_call(
     let stack_frame = env.current_frame_mut();
     let frame_type_bindings = stack_frame.type_bindings.clone();
 
-    match &receiver_value {
-        Value::Closure(bindings, fun_info) => {
+    match receiver_value.as_ref() {
+        Value_::Closure(bindings, fun_info) => {
             let mut bindings = bindings.clone();
 
             if fun_info.params.params.len() != arg_values.len() {
@@ -2591,7 +2600,7 @@ fn eval_call(
                 caller_uses_value: expr_value_is_used,
             }));
         }
-        Value::Fun {
+        Value_::Fun {
             name_sym,
             fun_info:
                 fi @ FunInfo {
@@ -2667,7 +2676,7 @@ fn eval_call(
                 caller_uses_value: expr_value_is_used,
             }));
         }
-        Value::BuiltinFunction(kind, _) => eval_builtin_call(
+        Value_::BuiltinFunction(kind, _) => eval_builtin_call(
             env,
             *kind,
             &receiver_value,
@@ -2678,7 +2687,7 @@ fn eval_call(
             &caller_expr.position,
             session,
         )?,
-        Value::EnumConstructor {
+        Value_::EnumConstructor {
             type_name,
             variant_idx,
             ..
@@ -2702,20 +2711,20 @@ fn eval_call(
             )
             .unwrap_or(Type::no_value());
 
-            let value = Value::EnumVariant {
+            let value = Value::new(Value_::EnumVariant {
                 type_name: type_name.clone(),
                 variant_idx: *variant_idx,
                 // TODO: check type of arg_values[0] is compatible
                 // with the declared type of the variant.
                 payload: Some(Box::new(arg_values[0].clone())),
                 runtime_type,
-            };
+            });
 
             if expr_value_is_used {
                 env.push_value(value);
             }
         }
-        v => {
+        _ => {
             let mut saved_values = vec![];
             for value in arg_values.iter().rev() {
                 saved_values.push(value.clone());
@@ -2726,7 +2735,7 @@ fn eval_call(
                 &TypeName {
                     name: "Function".into(),
                 },
-                v,
+                &receiver_value,
                 env,
             );
             return Err((
@@ -3069,9 +3078,9 @@ fn eval_method_call(
 }
 
 fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
-    let Value::Struct {
+    let Value_::Struct {
         type_name, fields, ..
-    } = value
+    } = value.as_ref()
     else {
         return Err(format_type_error(
             &TypeName {
@@ -3104,8 +3113,8 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
         )));
     }
 
-    match field_value {
-        Value::String(s) => Ok(s.clone()),
+    match field_value.as_ref() {
+        Value_::String(s) => Ok(s.clone()),
         _ => Err(ErrorMessage(format!(
             "Malformed `Path` struct (expected `p` to contain a string, got `{}`).",
             field_value.display(env),
@@ -3135,8 +3144,8 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match &receiver_value {
-                Value::List { items, .. } => {
+            match receiver_value.as_ref() {
+                Value_::List { items, .. } => {
                     let mut new_items = items.clone();
                     new_items.push(arg_values[0].clone());
 
@@ -3150,13 +3159,13 @@ fn eval_builtin_method_call(
 
                         // TODO: check that the new value has the same
                         // type as the existing list items.
-                        env.push_value(Value::List {
+                        env.push_value(Value::new(Value_::List {
                             items: new_items,
                             elem_type,
-                        });
+                        }));
                     }
                 }
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3171,7 +3180,7 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "List".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
@@ -3192,8 +3201,8 @@ fn eval_builtin_method_call(
             )?;
 
             let needle = &arg_values[0];
-            match &receiver_value {
-                Value::List { items, .. } => {
+            match receiver_value.as_ref() {
+                Value_::List { items, .. } => {
                     let mut present = false;
                     for item in items {
                         if item == needle {
@@ -3206,7 +3215,7 @@ fn eval_builtin_method_call(
                         env.push_value(Value::bool(present));
                     }
                 }
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3221,7 +3230,7 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "List".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
@@ -3241,8 +3250,8 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match (&receiver_value, &arg_values[0]) {
-                (Value::List { items, .. }, Value::Integer(i)) => {
+            match (receiver_value.as_ref(), arg_values[0].as_ref()) {
+                (Value_::List { items, .. }, Value_::Integer(i)) => {
                     let index: usize = if *i >= items.len() as i64 || *i < 0 {
                         let mut saved_values = vec![];
                         for value in arg_values.iter().rev() {
@@ -3272,7 +3281,7 @@ fn eval_builtin_method_call(
                         env.push_value(items[index].clone());
                     }
                 }
-                (v, Value::Integer(_)) => {
+                (_, Value_::Integer(_)) => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3287,13 +3296,13 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "List".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
                     ));
                 }
-                (_, v) => {
+                (_, _) => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3304,7 +3313,11 @@ fn eval_builtin_method_call(
                         RestoreValues(saved_values),
                         EvalError::ResumableError(
                             arg_positions[1].clone(),
-                            format_type_error(&TypeName { name: "Int".into() }, v, env),
+                            format_type_error(
+                                &TypeName { name: "Int".into() },
+                                &arg_values[0],
+                                env,
+                            ),
                         ),
                     ));
                 }
@@ -3322,13 +3335,13 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match &receiver_value {
-                Value::List { items, .. } => {
+            match receiver_value.as_ref() {
+                Value_::List { items, .. } => {
                     if expr_value_is_used {
-                        env.push_value(Value::Integer(items.len() as i64));
+                        env.push_value(Value::new(Value_::Integer(items.len() as i64)));
                     }
                 }
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3343,7 +3356,7 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "List".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
@@ -3439,8 +3452,8 @@ fn eval_builtin_method_call(
             let path = PathBuf::from(path_s.clone());
 
             let v = match std::fs::read_to_string(path) {
-                Ok(s) => Value::ok(Value::String(s), env),
-                Err(e) => Value::err(Value::String(format!("{e} {path_s}")), env),
+                Ok(s) => Value::ok(Value::new(Value_::String(s)), env),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{e} {path_s}"))), env),
             };
 
             if expr_value_is_used {
@@ -3459,9 +3472,9 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            let receiver_s = match &receiver_value {
-                Value::String(s) => s.clone(),
-                v => {
+            let receiver_s = match receiver_value.as_ref() {
+                Value_::String(s) => s.clone(),
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3476,16 +3489,16 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "String".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
                     ));
                 }
             };
-            let arg_s = match &arg_values[0] {
-                Value::String(s) => s,
-                v => {
+            let arg_s = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3500,7 +3513,7 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "String".into(),
                                 },
-                                v,
+                                &arg_values[0],
                                 env,
                             ),
                         ),
@@ -3512,7 +3525,7 @@ fn eval_builtin_method_call(
             if let Some(needle_byte_offset) = receiver_s.find(arg_s) {
                 for (i, (byte_offset, _)) in receiver_s.char_indices().enumerate() {
                     if byte_offset == needle_byte_offset {
-                        value = Value::some(Value::Integer(i as i64), env);
+                        value = Value::some(Value::new(Value_::Integer(i as i64)), env);
                         break;
                     }
                 }
@@ -3534,13 +3547,13 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match &receiver_value {
-                Value::String(s) => {
+            match receiver_value.as_ref() {
+                Value_::String(s) => {
                     if expr_value_is_used {
-                        env.push_value(Value::Integer(s.chars().count() as i64));
+                        env.push_value(Value::new(Value_::Integer(s.chars().count() as i64)));
                     }
                 }
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3555,7 +3568,7 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "String".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
@@ -3575,11 +3588,11 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match &receiver_value {
-                Value::String(s) => {
+            match receiver_value.as_ref() {
+                Value_::String(s) => {
                     let lines = s
                         .lines()
-                        .map(|line| Value::String(line.to_owned()))
+                        .map(|line| Value::new(Value_::String(line.to_owned())))
                         .collect::<Vec<_>>();
 
                     let elem_type = if lines.is_empty() {
@@ -3589,13 +3602,13 @@ fn eval_builtin_method_call(
                     };
 
                     if expr_value_is_used {
-                        env.push_value(Value::List {
+                        env.push_value(Value::new(Value_::List {
                             items: lines,
                             elem_type,
-                        });
+                        }));
                     }
                 }
-                v => {
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3610,7 +3623,7 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "String".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
@@ -3630,9 +3643,9 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            let s_arg = match &receiver_value {
-                Value::String(s) => s,
-                v => {
+            let s_arg = match receiver_value.as_ref() {
+                Value_::String(s) => s,
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3647,16 +3660,16 @@ fn eval_builtin_method_call(
                                 &TypeName {
                                     name: "String".into(),
                                 },
-                                v,
+                                receiver_value,
                                 env,
                             ),
                         ),
                     ));
                 }
             };
-            let from_arg = match &arg_values[0] {
-                Value::Integer(i) => i,
-                v => {
+            let from_arg = match arg_values[0].as_ref() {
+                Value_::Integer(i) => i,
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3667,14 +3680,18 @@ fn eval_builtin_method_call(
                         RestoreValues(saved_values),
                         EvalError::ResumableError(
                             arg_positions[1].clone(),
-                            format_type_error(&TypeName { name: "Int".into() }, v, env),
+                            format_type_error(
+                                &TypeName { name: "Int".into() },
+                                &arg_values[0],
+                                env,
+                            ),
                         ),
                     ));
                 }
             };
-            let to_arg = match &arg_values[1] {
-                Value::Integer(i) => i,
-                v => {
+            let to_arg = match arg_values[1].as_ref() {
+                Value_::Integer(i) => i,
+                _ => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
@@ -3685,7 +3702,11 @@ fn eval_builtin_method_call(
                         RestoreValues(saved_values),
                         EvalError::ResumableError(
                             arg_positions[2].clone(),
-                            format_type_error(&TypeName { name: "Int".into() }, v, env),
+                            format_type_error(
+                                &TypeName { name: "Int".into() },
+                                &arg_values[1],
+                                env,
+                            ),
                         ),
                     ));
                 }
@@ -3724,13 +3745,13 @@ fn eval_builtin_method_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::String(
+                env.push_value(Value::new(Value_::String(
                     s_arg
                         .chars()
                         .skip(*from_arg as usize)
                         .take((to_arg - from_arg) as usize)
                         .collect(),
-                ));
+                )));
             }
         }
     }
@@ -3823,7 +3844,7 @@ fn eval_expr(
             match expr_state {
                 ExpressionState::NotEvaluated => {
                     // The initial value of the loop index.
-                    env.push_value(Value::Integer(0));
+                    env.push_value(Value::new(Value_::Integer(0)));
 
                     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
@@ -3900,13 +3921,13 @@ fn eval_expr(
         Expression_::IntLiteral(i) => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::Integer(*i));
+                env.push_value(Value::new(Value_::Integer(*i)));
             }
         }
         Expression_::StringLiteral(s) => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::String(s.clone()));
+                env.push_value(Value::new(Value_::String(s.clone())));
             }
         }
         Expression_::ListLiteral(items) => {
@@ -3926,10 +3947,10 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_value(Value::List {
+                    env.push_value(Value::new(Value_::List {
                         items: list_values,
                         elem_type: element_type,
-                    });
+                    }));
                 }
             } else {
                 env.push_expr_to_eval(
@@ -3958,10 +3979,10 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_value(Value::Tuple {
+                    env.push_value(Value::new(Value_::Tuple {
                         items: items_values,
                         item_types,
-                    });
+                    }));
                 }
             } else {
                 env.push_expr_to_eval(
@@ -4106,7 +4127,7 @@ fn eval_expr(
                 let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
 
-                env.push_value(Value::Closure(bindings, fun_info.clone()));
+                env.push_value(Value::new(Value_::Closure(bindings, fun_info.clone())));
             }
         }
         Expression_::Call(receiver, paren_args) => match expr_state {
@@ -4329,9 +4350,9 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         value
                     } else {
                         // TODO: this should probably be an Err() case.
-                        Value::String(
+                        Value::new(Value_::String(
                             "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
-                        )
+                        ))
                     };
 
                     return Ok(v);
@@ -4469,8 +4490,8 @@ fn eval_dot_access(
         .pop_value()
         .expect("Popped an empty value when evaluating dot access");
 
-    match recv_value {
-        Value::Struct { ref fields, .. } => {
+    match recv_value.as_ref() {
+        Value_::Struct { ref fields, .. } => {
             let mut found = false;
 
             for (field_name, field_value) in fields {
@@ -4623,11 +4644,11 @@ fn eval_struct_value(
     };
 
     if expr_value_is_used {
-        env.push_value(Value::Struct {
+        env.push_value(Value::new(Value_::Struct {
             type_name: type_symbol.name,
             fields,
             runtime_type,
-        });
+        }));
     }
 
     Ok(())
@@ -4643,12 +4664,12 @@ fn eval_match_cases(
         .pop_value()
         .expect("Popped an empty value stack for match");
 
-    let Value::EnumVariant {
+    let Value_::EnumVariant {
         type_name: value_type_name,
         variant_idx: value_variant_idx,
         payload: value_payload,
         ..
-    } = scrutinee_value
+    } = scrutinee_value.as_ref()
     else {
         let stack_frame = env.current_frame();
         let msg = ErrorMessage(format!(
@@ -4659,7 +4680,7 @@ fn eval_match_cases(
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
-    let Some(_type) = env.get_type_def(&value_type_name) else {
+    let Some(_type) = env.get_type_def(value_type_name) else {
         let msg = ErrorMessage(format!(
             "Could not find an enum type named {value_type_name}"
         ));
@@ -4683,17 +4704,17 @@ fn eval_match_cases(
             ));
         };
 
-        let (pattern_type_name, pattern_variant_idx) = match value {
-            Value::EnumVariant {
+        let (pattern_type_name, pattern_variant_idx) = match value.as_ref() {
+            Value_::EnumVariant {
                 type_name,
                 variant_idx,
                 ..
-            } => (type_name, variant_idx),
-            Value::EnumConstructor {
+            } => (type_name, *variant_idx),
+            Value_::EnumConstructor {
                 type_name,
                 variant_idx,
                 ..
-            } => (type_name, variant_idx),
+            } => (type_name, *variant_idx),
             _ => {
                 // TODO: error messages should include examples of valid code.
                 let msg = ErrorMessage(format!(
@@ -4707,7 +4728,7 @@ fn eval_match_cases(
             }
         };
 
-        if value_type_name == pattern_type_name && value_variant_idx == pattern_variant_idx {
+        if value_type_name == pattern_type_name && *value_variant_idx == pattern_variant_idx {
             let mut bindings: Vec<(Symbol, Value)> = vec![];
             match (&value_payload, &pattern.argument) {
                 (Some(payload), Some(payload_sym)) => {
@@ -4884,7 +4905,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(3));
+        assert_eq!(value, Value::new(Value_::Integer(3)));
     }
 
     #[test]
@@ -4916,10 +4937,13 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::List {
-                items: vec![Value::Integer(3), Value::Integer(12)],
+            Value::new(Value_::List {
+                items: vec![
+                    Value::new(Value_::Integer(3)),
+                    Value::new(Value_::Integer(12))
+                ],
                 elem_type: Type::int()
-            }
+            })
         );
     }
 
@@ -4930,7 +4954,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(2));
+        assert_eq!(value, Value::new(Value_::Integer(2)));
     }
 
     #[test]
@@ -4950,7 +4974,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(1));
+        assert_eq!(value, Value::new(Value_::Integer(1)));
     }
 
     #[test]
@@ -4979,10 +5003,14 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::List {
-                items: vec![Value::Integer(1), Value::Integer(2), Value::Integer(3)],
+            Value::new(Value_::List {
+                items: vec![
+                    Value::new(Value_::Integer(1)),
+                    Value::new(Value_::Integer(2)),
+                    Value::new(Value_::Integer(3))
+                ],
                 elem_type: Type::int()
-            }
+            })
         );
     }
 
@@ -4993,7 +5021,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(11));
+        assert_eq!(value, Value::new(Value_::Integer(11)));
     }
 
     #[test]
@@ -5021,7 +5049,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(2));
+        assert_eq!(value, Value::new(Value_::Integer(2)));
     }
 
     #[test]
@@ -5031,7 +5059,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(3));
+        assert_eq!(value, Value::new(Value_::Integer(3)));
     }
 
     #[test]
@@ -5041,7 +5069,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::String("bc".into()));
+        assert_eq!(value, Value::new(Value_::String("bc".into())));
     }
 
     #[test]
@@ -5067,7 +5095,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(123)", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(123));
+        assert_eq!(value, Value::new(Value_::Integer(123)));
     }
 
     #[test]
@@ -5080,7 +5108,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(1, 2)", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(2));
+        assert_eq!(value, Value::new(Value_::Integer(2)));
     }
 
     #[test]
@@ -5096,7 +5124,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(1));
+        assert_eq!(value, Value::new(Value_::Integer(1)));
     }
 
     #[test]
@@ -5121,7 +5149,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("let y = f() y()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(1));
+        assert_eq!(value, Value::new(Value_::Integer(1)));
     }
 
     #[test]
@@ -5179,7 +5207,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(0));
+        assert_eq!(value, Value::new(Value_::Integer(0)));
     }
 
     #[test]
@@ -5192,7 +5220,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(1));
+        assert_eq!(value, Value::new(Value_::Integer(1)));
     }
 
     #[test]
@@ -5289,7 +5317,7 @@ mod tests {
 
         let mut env = Env::new(id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::Integer(2));
+        assert_eq!(value, Value::new(Value_::Integer(2)));
     }
 
     #[test]

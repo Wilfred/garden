@@ -11,7 +11,7 @@ use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::garden_type::Type;
 use crate::types::{BuiltinType, TypeDef};
-use crate::values::Value;
+use crate::values::{Value, Value_};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{
@@ -271,11 +271,11 @@ fn describe_type(type_: &TypeDef) -> String {
 }
 
 fn describe_fun(value: &Value) -> Option<String> {
-    match value {
-        Value::Fun {
+    match value.as_ref() {
+        Value_::Fun {
             name_sym, fun_info, ..
         } => Some(format_fun_info(fun_info, name_sym, None)),
-        Value::BuiltinFunction(_kind, fun_info) => {
+        Value_::BuiltinFunction(_kind, fun_info) => {
             if let Some(fun_info) = fun_info {
                 if let Some(fun_name) = &fun_info.name_sym {
                     return Some(format_fun_info(fun_info, fun_name, None));
@@ -498,15 +498,17 @@ pub(crate) fn run_command<T: Write>(
         Command::Functions => {
             let mut names = vec![];
             for (name, value) in env.file_scope.iter() {
-                let is_fun = match value {
-                    Value::Fun { .. } | Value::Closure(_, _) | Value::BuiltinFunction(_, _) => true,
-                    Value::Integer(_) => false,
-                    Value::String(_) => false,
-                    Value::List { .. } => false,
-                    Value::Tuple { .. } => false,
-                    Value::EnumVariant { .. } => false,
-                    Value::EnumConstructor { .. } => false,
-                    Value::Struct { .. } => false,
+                let is_fun = match value.as_ref() {
+                    Value_::Fun { .. } | Value_::Closure(_, _) | Value_::BuiltinFunction(_, _) => {
+                        true
+                    }
+                    Value_::Integer(_) => false,
+                    Value_::String(_) => false,
+                    Value_::List { .. } => false,
+                    Value_::Tuple { .. } => false,
+                    Value_::EnumVariant { .. } => false,
+                    Value_::EnumConstructor { .. } => false,
+                    Value_::Struct { .. } => false,
                 };
 
                 if is_fun {
@@ -720,8 +722,8 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
     } else if let Some(value) = env.file_scope.get(&SymbolName {
         name: name.to_owned(),
     }) {
-        match value {
-            Value::Fun { fun_info, .. } => Ok(Some(fun_info.src_string.clone())),
+        match value.as_ref() {
+            Value_::Fun { fun_info, .. } => Ok(Some(fun_info.src_string.clone())),
             // TODO: Offer source of stub for built-in functions.
             _ => Ok(None),
         }

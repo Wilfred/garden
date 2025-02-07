@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::rc::Rc;
 
 use strum_macros::EnumIter;
 
@@ -10,7 +11,20 @@ use crate::types::TypeDef;
 use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum Value {
+pub(crate) struct Value(pub(crate) Rc<Value_>);
+
+impl Value {
+    pub(crate) fn as_ref(&self) -> &Value_ {
+        self.0.as_ref()
+    }
+
+    pub(crate) fn new(v: Value_) -> Self {
+        Self(Rc::new(v))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Value_ {
     /// An integer value.
     Integer(i64),
     /// A reference to a user-defined function, along with its return
@@ -57,32 +71,32 @@ impl Value {
     pub(crate) fn unit() -> Self {
         // We can assume that Unit is always defined because it's in the
         // prelude.
-        Value::EnumVariant {
+        Self::new(Value_::EnumVariant {
             type_name: TypeName {
                 name: "Unit".to_owned(),
             },
             runtime_type: Type::unit(),
             variant_idx: 0,
             payload: None,
-        }
+        })
     }
 
     pub(crate) fn bool(b: bool) -> Self {
         // We can assume that Bool is always defined because it's in the
         // prelude.
-        Value::EnumVariant {
+        Self::new(Value_::EnumVariant {
             type_name: TypeName {
                 name: "Bool".to_owned(),
             },
             runtime_type: Type::bool(),
             variant_idx: if b { 0 } else { 1 },
             payload: None,
-        }
+        })
     }
 
     pub(crate) fn as_rust_bool(&self) -> Option<bool> {
-        match self {
-            Value::EnumVariant {
+        match self.as_ref() {
+            Value_::EnumVariant {
                 runtime_type,
                 variant_idx,
                 ..
@@ -96,7 +110,7 @@ impl Value {
 
         // We can assume that Option is always defined because it's in the
         // prelude.
-        Value::EnumVariant {
+        Self::new(Value_::EnumVariant {
             type_name: TypeName {
                 name: "Option".to_owned(),
             },
@@ -109,13 +123,13 @@ impl Value {
                 },
                 args: vec![value_type],
             },
-        }
+        })
     }
 
     pub(crate) fn none() -> Self {
         // We can assume that Option is always defined because it's in the
         // prelude.
-        Value::EnumVariant {
+        Self::new(Value_::EnumVariant {
             type_name: TypeName {
                 name: "Option".to_owned(),
             },
@@ -128,7 +142,7 @@ impl Value {
                 },
                 args: vec![Type::no_value()],
             },
-        }
+        })
     }
 
     pub(crate) fn ok(v: Value, env: &Env) -> Self {
@@ -136,7 +150,7 @@ impl Value {
 
         // We can assume that Result is always defined because it's in the
         // prelude.
-        Value::EnumVariant {
+        Self::new(Value_::EnumVariant {
             type_name: TypeName {
                 name: "Result".to_owned(),
             },
@@ -149,7 +163,7 @@ impl Value {
                 },
                 args: vec![value_type, Type::no_value()],
             },
-        }
+        })
     }
 
     pub(crate) fn err(v: Value, env: &Env) -> Self {
@@ -157,7 +171,7 @@ impl Value {
 
         // We can assume that Result is always defined because it's in the
         // prelude.
-        Value::EnumVariant {
+        Self::new(Value_::EnumVariant {
             type_name: TypeName {
                 name: "Result".to_owned(),
             },
@@ -170,34 +184,34 @@ impl Value {
             },
             variant_idx: 1,
             payload: Some(Box::new(v)),
-        }
+        })
     }
 
     pub(crate) fn path(inner: String) -> Self {
-        Value::Struct {
+        Self::new(Value_::Struct {
             type_name: TypeName {
                 name: "Path".to_owned(),
             },
-            fields: vec![(SymbolName::from("p"), Value::String(inner))],
+            fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner)))],
             runtime_type: Type::path(),
-        }
+        })
     }
 }
 
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
-        name: match value {
-            Value::Integer(_) => "Int",
-            Value::Fun { .. } => "Fun",
-            Value::Closure(_, _) => "Fun",
-            Value::BuiltinFunction(_, _) => "Fun",
-            Value::String(_) => "String",
-            Value::List { .. } => "List",
-            Value::Tuple { .. } => "Tuple",
-            Value::EnumVariant { type_name, .. } | Value::EnumConstructor { type_name, .. } => {
+        name: match value.as_ref() {
+            Value_::Integer(_) => "Int",
+            Value_::Fun { .. } => "Fun",
+            Value_::Closure(_, _) => "Fun",
+            Value_::BuiltinFunction(_, _) => "Fun",
+            Value_::String(_) => "String",
+            Value_::List { .. } => "List",
+            Value_::Tuple { .. } => "Tuple",
+            Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
                 &type_name.name
             }
-            Value::Struct { type_name, .. } => &type_name.name,
+            Value_::Struct { type_name, .. } => &type_name.name,
         }
         .to_owned(),
     }
@@ -238,13 +252,13 @@ impl Display for BuiltinFunctionKind {
 impl Value {
     /// Pretty-print `self` in a human friendly way.
     pub(crate) fn display(&self, env: &Env) -> String {
-        match self {
-            Value::Integer(i) => format!("{}", i),
-            Value::Fun { name_sym, .. } => format!("(function: {})", name_sym.name),
-            Value::Closure(..) => "(closure)".to_owned(),
-            Value::BuiltinFunction(kind, _) => format!("(function: {})", kind),
-            Value::String(s) => escape_string_literal(s),
-            Value::List { items, .. } => {
+        match self.as_ref() {
+            Value_::Integer(i) => format!("{}", i),
+            Value_::Fun { name_sym, .. } => format!("(function: {})", name_sym.name),
+            Value_::Closure(..) => "(closure)".to_owned(),
+            Value_::BuiltinFunction(kind, _) => format!("(function: {})", kind),
+            Value_::String(s) => escape_string_literal(s),
+            Value_::List { items, .. } => {
                 let mut s = String::new();
 
                 s.push('[');
@@ -261,7 +275,7 @@ impl Value {
 
                 s
             }
-            Value::Tuple { items, .. } => {
+            Value_::Tuple { items, .. } => {
                 let mut s = String::new();
 
                 s.push('(');
@@ -281,7 +295,7 @@ impl Value {
 
                 s
             }
-            Value::EnumVariant {
+            Value_::EnumVariant {
                 type_name,
                 variant_idx,
                 payload,
@@ -314,7 +328,7 @@ impl Value {
                     None => variant_name,
                 }
             }
-            Value::EnumConstructor {
+            Value_::EnumConstructor {
                 type_name,
                 variant_idx,
                 ..
@@ -346,7 +360,7 @@ impl Value {
                     }
                 }
             }
-            Value::Struct {
+            Value_::Struct {
                 type_name, fields, ..
             } => {
                 let mut s = format!("{type_name}{{ ");
@@ -367,8 +381,8 @@ impl Value {
     }
 
     pub(crate) fn display_unless_unit(&self, env: &Env) -> Option<String> {
-        match self {
-            Value::EnumVariant {
+        match self.as_ref() {
+            Value_::EnumVariant {
                 type_name,
                 variant_idx,
                 ..
@@ -409,7 +423,7 @@ mod tests {
         let id_gen = IdGenerator::default();
         let env = Env::new(id_gen);
 
-        let value = Value::String("foo \\ \" \n bar".into());
+        let value = Value::new(Value_::String("foo \\ \" \n bar".into()));
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

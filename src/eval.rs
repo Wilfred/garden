@@ -3030,7 +3030,7 @@ fn eval_method_call(
             )?;
             return Ok(None);
         }
-        MethodKind::UserDefinedMethod(fun_info) => fun_info.clone(),
+        MethodKind::UserDefinedMethod(fun_info) => fun_info,
     };
 
     let mut method_subexprs = vec![];

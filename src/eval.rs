@@ -2478,15 +2478,18 @@ fn eval_builtin_call(
 fn check_snippet(src: &str, env: &Env) -> Value {
     let path = PathBuf::from("snippet.gdn");
 
-    let mut id_gen = IdGenerator::default();
-    let (items, syntax_errors) = parse_toplevel_items(&path, src, &mut id_gen);
+    let mut check_env = env
+        .initial_state
+        .as_ref()
+        .map(|e| e.as_ref().clone())
+        .unwrap_or_else(|| Env::new(IdGenerator::default()));
+    let (items, syntax_errors) = parse_toplevel_items(&path, src, &mut check_env.id_gen);
 
     let mut error_messages = vec![];
     for err in syntax_errors {
         error_messages.push(Value::new(Value_::String(err.message().0.clone())));
     }
 
-    let check_env = Env::new(id_gen);
     for Diagnostic { message, level, .. } in check_toplevel_items(&items, &check_env) {
         match level {
             Level::Warning => {}

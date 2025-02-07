@@ -97,6 +97,12 @@ pub(crate) struct Env {
     /// Used to track the IDs generated so far, so any additional
     /// parsing produces items with globally unique IDs.
     pub(crate) id_gen: IdGenerator,
+
+    /// A copy of the environment before we started adding things to
+    /// it. This is useful when running checks at runtime, where we
+    /// don't want to do the work of initialising a fresh environment
+    /// repeatedly.
+    pub(crate) initial_state: Option<Box<Self>>,
 }
 
 impl Env {
@@ -467,10 +473,13 @@ impl Env {
             enforce_sandbox: false,
             stop_at_expr_id: None,
             id_gen,
+            initial_state: None,
         };
 
         load_toplevel_items(&prelude_items, &mut env);
         load_toplevel_items(&builtin_items, &mut env);
+
+        env.initial_state = Some(Box::new(env.clone()));
 
         env
     }

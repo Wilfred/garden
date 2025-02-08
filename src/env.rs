@@ -122,7 +122,7 @@ impl Env {
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
             FxHashMap::default();
 
-        let builtins_path = PathBuf::from("builtins.gdn");
+        let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
 
         let mut path_methods = FxHashMap::default();
         path_methods.insert(

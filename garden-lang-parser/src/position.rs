@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
@@ -15,8 +15,7 @@ pub struct Position {
     pub end_line_number: usize,
     /// The column of the start of this position. Zero indexed.
     pub column: usize,
-    // TODO: consider storing a &Path to reduce memory usage.
-    pub path: PathBuf,
+    pub path: Rc<PathBuf>,
 }
 
 impl std::fmt::Debug for Position {
@@ -36,7 +35,7 @@ impl std::fmt::Debug for Position {
 }
 
 impl Position {
-    pub fn todo(path: PathBuf) -> Self {
+    pub fn todo(path: Rc<PathBuf>) -> Self {
         Self {
             start_offset: 0,
             end_offset: 0,

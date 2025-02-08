@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use lazy_static::lazy_static;
 use line_numbers::LinePositions;
@@ -23,7 +24,7 @@ pub(crate) struct Token<'a> {
 
 #[derive(Debug, Clone)]
 pub(crate) struct TokenStream<'a> {
-    pub(crate) path: PathBuf,
+    pub(crate) path: Rc<PathBuf>,
     tokens: Vec<Token<'a>>,
     /// The index of our current position in the underlying vec.
     pub(crate) idx: usize,
@@ -77,6 +78,7 @@ pub(crate) fn lex_between<'a>(
 ) -> (TokenStream<'a>, Vec<ParseError>) {
     assert!(end_offset <= s.len());
 
+    let path = Rc::new(path.to_owned());
     let lp = LinePositions::from(s);
     let mut tokens: Vec<Token<'a>> = vec![];
     let mut errors: Vec<ParseError> = vec![];
@@ -104,7 +106,7 @@ pub(crate) fn lex_between<'a>(
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        path: path.to_path_buf(),
+                        path: path.clone(),
                     },
                     &s["//".len()..i + 1],
                 ));
@@ -143,7 +145,7 @@ pub(crate) fn lex_between<'a>(
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        path: path.to_path_buf(),
+                        path: path.clone(),
                     },
                     text: &s[0..token_str.len()],
                     preceding_comments,
@@ -167,7 +169,7 @@ pub(crate) fn lex_between<'a>(
                     line_number: line_number.as_usize(),
                     end_line_number: line_number.as_usize(),
                     column,
-                    path: path.to_path_buf(),
+                    path: path.clone(),
                 },
                 text: integer_match.as_str(),
                 preceding_comments,
@@ -192,7 +194,7 @@ pub(crate) fn lex_between<'a>(
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        path: path.to_path_buf(),
+                        path: path.clone(),
                     },
                     text: &s[0..1],
                     preceding_comments,
@@ -213,7 +215,7 @@ pub(crate) fn lex_between<'a>(
                     line_number: line_number.as_usize(),
                     end_line_number: line_number.as_usize(),
                     column,
-                    path: path.to_path_buf(),
+                    path: path.clone(),
                 },
                 text: string_match.as_str(),
                 preceding_comments,
@@ -231,7 +233,7 @@ pub(crate) fn lex_between<'a>(
                     line_number: line_number.as_usize(),
                     end_line_number: line_number.as_usize(),
                     column,
-                    path: path.to_path_buf(),
+                    path: path.clone(),
                 },
                 text: variable_match.as_str(),
                 preceding_comments,
@@ -249,7 +251,7 @@ pub(crate) fn lex_between<'a>(
                     line_number: line_number.as_usize(),
                     end_line_number: line_number.as_usize(),
                     column,
-                    path: path.to_path_buf(),
+                    path: path.clone(),
                 },
                 message: ErrorMessage(format!("Unrecognized syntax: `{}`", &s[0..1])),
                 additional: vec![],
@@ -261,7 +263,7 @@ pub(crate) fn lex_between<'a>(
 
     (
         TokenStream {
-            path: path.to_path_buf(),
+            path: path.clone(),
             tokens,
             idx: 0,
         },
@@ -291,7 +293,7 @@ mod tests {
                     line_number: 0,
                     end_line_number: 0,
                     column: 0,
-                    path: PathBuf::from("__test.gdn")
+                    path: PathBuf::from("__test.gdn").into()
                 },
                 text: "1",
                 preceding_comments: vec![],
@@ -311,7 +313,7 @@ mod tests {
                     line_number: 0,
                     end_line_number: 0,
                     column: 1,
-                    path: PathBuf::from("__test.gdn")
+                    path: PathBuf::from("__test.gdn").into()
                 },
                 text: "a",
                 preceding_comments: vec![],
@@ -357,7 +359,7 @@ mod tests {
                     line_number: 1,
                     end_line_number: 1,
                     column: 0,
-                    path: PathBuf::from("__test.gdn")
+                    path: PathBuf::from("__test.gdn").into()
                 },
                 text: "1",
                 preceding_comments: vec![(
@@ -367,7 +369,7 @@ mod tests {
                         line_number: 0,
                         end_line_number: 0,
                         column: 0,
-                        path: PathBuf::from("__test.gdn")
+                        path: PathBuf::from("__test.gdn").into()
                     },
                     " 2\n"
                 )],
@@ -387,7 +389,7 @@ mod tests {
                     line_number: 2,
                     end_line_number: 2,
                     column: 0,
-                    path: PathBuf::from("__test.gdn")
+                    path: PathBuf::from("__test.gdn").into()
                 },
                 text: "1",
                 preceding_comments: vec![],

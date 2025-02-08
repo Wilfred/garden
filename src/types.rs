@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, rc::Rc};
 
 use garden_lang_parser::{
     ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol},
@@ -25,7 +25,7 @@ pub(crate) enum TypeDef {
 
 impl TypeDef {
     pub(crate) fn params(&self) -> Vec<TypeSymbol> {
-        let builtins_path = PathBuf::from("builtins.gdn");
+        let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
 
         match self {
             TypeDef::Builtin(built_in_type, _) => match built_in_type {

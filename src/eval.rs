@@ -953,10 +953,12 @@ pub(crate) fn eval_toplevel_call(
         env.push_value(value.clone());
     }
 
+    let path = Rc::new(path.to_owned());
+
     let recv_expr = Expression {
-        position: Position::todo(path.to_owned()),
+        position: Position::todo(path.clone()),
         expr_: Expression_::Variable(Symbol::new(
-            Position::todo(path.to_owned()),
+            Position::todo(path.clone()),
             &name.name,
             &mut env.id_gen,
         )),
@@ -966,18 +968,18 @@ pub(crate) fn eval_toplevel_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        let pos = Position::todo(path.to_owned());
+        let pos = Position::todo(path.clone());
         arguments.push(Rc::new(Expression::invalid(pos, env.id_gen.next())));
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo(path.to_owned()),
+        open_paren: Position::todo(path.clone()),
         arguments,
-        close_paren: Position::todo(path.to_owned()),
+        close_paren: Position::todo(path.clone()),
     };
 
     let call_expr = Expression {
-        position: Position::todo(path.to_owned()),
+        position: Position::todo(path.clone()),
         expr_: Expression_::Call(Rc::new(recv_expr), paren_args),
         value_is_used: true,
         id: env.id_gen.next(),
@@ -1005,12 +1007,14 @@ pub(crate) fn eval_toplevel_method_call(
         env.push_value(value.clone());
     }
 
+    let path = Rc::new(path.to_owned());
+
     // Just create a placeholder symbol for the receiver. Since we
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
-        position: Position::todo(path.to_owned()),
+        position: Position::todo(path.clone()),
         expr_: Expression_::Variable(placeholder_symbol(
-            Position::todo(path.to_owned()),
+            Position::todo(path.clone()),
             &mut env.id_gen,
         )),
         value_is_used: true,
@@ -1018,7 +1022,7 @@ pub(crate) fn eval_toplevel_method_call(
     };
 
     let meth_sym = Symbol {
-        position: Position::todo(path.to_owned()),
+        position: Position::todo(path.clone()),
         name: meth_name.clone(),
         id: env.id_gen.next(),
         interned_id: env.id_gen.intern_symbol(meth_name),
@@ -1026,18 +1030,18 @@ pub(crate) fn eval_toplevel_method_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        let pos = Position::todo(path.to_owned());
+        let pos = Position::todo(path.clone());
         arguments.push(Rc::new(Expression::invalid(pos, env.id_gen.next())));
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo(path.to_owned()),
+        open_paren: Position::todo(path.clone()),
         arguments,
-        close_paren: Position::todo(path.to_owned()),
+        close_paren: Position::todo(path.clone()),
     };
 
     let call_expr = Expression {
-        position: Position::todo(path.to_owned()),
+        position: Position::todo(path.clone()),
         expr_: Expression_::MethodCall(Rc::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
         id: env.id_gen.next(),
@@ -2332,8 +2336,7 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let path = position.path.clone();
-            let v = match std::fs::canonicalize(path) {
+            let v = match std::fs::canonicalize(position.path.as_ref()) {
                 Ok(abspath) => Value::some(Value::path(abspath.display().to_string()), env),
                 Err(_) => Value::none(),
             };

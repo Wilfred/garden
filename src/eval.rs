@@ -151,7 +151,7 @@ impl Default for Bindings {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum EnclosingSymbol {
     Fun(Symbol),
     Method(TypeName, Symbol),
@@ -2627,12 +2627,8 @@ fn eval_call(
                 &arg_values,
             )?;
 
-            let mut is_self_call = false;
-            if let Some(enclosing_fi) = &stack_frame.enclosing_fun {
-                if enclosing_fi == fi {
-                    is_self_call = true;
-                }
-            }
+            let enclosing_name = EnclosingSymbol::Fun(name_sym.clone());
+            let is_self_call = enclosing_name == stack_frame.enclosing_name;
 
             // Always update prev_call_args, unless we're in a
             // self-recursive call, as the initial arguments are
@@ -2674,7 +2670,7 @@ fn eval_call(
                 src: fi.src_string.clone(),
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
-                enclosing_name: EnclosingSymbol::Fun(name_sym.clone()),
+                enclosing_name,
                 bindings: Bindings::new_with(fun_bindings),
                 type_bindings,
                 bindings_next_block: vec![],

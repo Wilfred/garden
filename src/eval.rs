@@ -1063,7 +1063,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let stack_frame = StackFrame {
         src: test.src_string.clone(),
         enclosing_name: EnclosingSymbol::Test(test.name_sym.clone()),
-        enclosing_fun: None,
+        return_hint: None,
         caller_pos: None,
         caller_expr_id: None,
         bindings: Bindings::default(),
@@ -2601,7 +2601,7 @@ fn eval_call(
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
                 evalled_values: vec![Value::unit()],
-                enclosing_fun: Some(fun_info.clone()),
+                return_hint: fun_info.return_hint.clone(),
                 enclosing_name: EnclosingSymbol::Closure,
                 src: fun_info.src_string.clone(),
                 caller_uses_value: expr_value_is_used,
@@ -2666,7 +2666,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
-                enclosing_fun: Some(fi.clone()),
+                return_hint: fi.return_hint.clone(),
                 src: fi.src_string.clone(),
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
@@ -3066,7 +3066,7 @@ fn eval_method_call(
     }
 
     Ok(Some(StackFrame {
-        enclosing_fun: Some(fun_info.clone()),
+        return_hint: fun_info.return_hint.clone(),
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         src: fun_info.src_string.clone(),
         caller_pos: Some(caller_expr.position.clone()),
@@ -4381,21 +4381,19 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
             let return_value = env.pop_value().expect("Should have a value");
 
             let type_bindings = env.current_frame().type_bindings.clone();
-            if let Some(ref fun) = env.current_frame().enclosing_fun {
-                if let Some(return_hint) = &fun.return_hint {
-                    let err_pos = return_hint.position.clone();
+            if let Some(return_hint) = &env.current_frame().return_hint {
+                let err_pos = return_hint.position.clone();
 
-                    let return_ty = match Type::from_hint(return_hint, &env.types, &type_bindings) {
-                        Ok(ty) => ty,
-                        Err(e) => {
-                            return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
-                        }
-                    };
-
-                    if let Err(msg) = check_type(&return_value, &return_ty, env) {
-                        env.push_value(return_value.clone());
-                        return Err(EvalError::ResumableError(err_pos, msg));
+                let return_ty = match Type::from_hint(return_hint, &env.types, &type_bindings) {
+                    Ok(ty) => ty,
+                    Err(e) => {
+                        return Err(EvalError::ResumableError(err_pos, ErrorMessage(e)));
                     }
+                };
+
+                if let Err(msg) = check_type(&return_value, &return_ty, env) {
+                    env.push_value(return_value.clone());
+                    return Err(EvalError::ResumableError(err_pos, msg));
                 }
             }
 

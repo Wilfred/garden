@@ -2960,8 +2960,8 @@ fn eval_method_call(
     meth_name: &Symbol,
     paren_args: &ParenthesizedArguments,
 ) -> Result<Option<StackFrame>, (RestoreValues, EvalError)> {
-    let mut arg_values: Vec<Value> = vec![];
-    let mut arg_positions: Vec<Position> = vec![];
+    let mut arg_values: Vec<Value> = Vec::with_capacity(paren_args.arguments.len());
+    let mut arg_positions: Vec<Position> = Vec::with_capacity(paren_args.arguments.len());
     for arg in &paren_args.arguments {
         arg_values.push(
             env.pop_value()

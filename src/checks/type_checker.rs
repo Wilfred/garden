@@ -359,18 +359,26 @@ impl TypeCheckVisitor<'_> {
         };
 
         if let Some(type_def) = self.env.get_type_def(&ty_name) {
-            let def_name_sym = match type_def {
-                TypeDef::Builtin(_, Some(struct_info)) => &struct_info.name_sym,
+            let (def_name_sym, doc_comment) = match type_def {
+                TypeDef::Builtin(_, Some(struct_info)) => {
+                    (&struct_info.name_sym, struct_info.doc_comment.clone())
+                }
                 TypeDef::Builtin(_, None) => {
                     return;
                 }
-                TypeDef::Enum(enum_info) => &enum_info.name_sym,
-                TypeDef::Struct(struct_info) => &struct_info.name_sym,
+                TypeDef::Enum(enum_info) => (&enum_info.name_sym, enum_info.doc_comment.clone()),
+                TypeDef::Struct(struct_info) => {
+                    (&struct_info.name_sym, struct_info.doc_comment.clone())
+                }
             };
 
             let hint_id = hint.sym.id;
             self.id_to_def_pos
                 .insert(hint_id, def_name_sym.position.clone());
+
+            if let Some(doc_comment) = doc_comment {
+                self.id_to_doc_comment.insert(hint_id, doc_comment);
+            }
         }
     }
 

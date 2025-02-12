@@ -1,0 +1,7 @@
+fun foo(_: String) {
+  //        ^
+}
+
+// args: show-type
+// expected stdout: A Unicode string, such as "hello world".
+

@@ -275,6 +275,17 @@ pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> (TokenStream<'a>, Vec<ParseErr
     lex_between(path, s, 0, s.len())
 }
 
+pub fn lexemes(s: &str) -> Vec<&str> {
+    let (mut stream, _) = lex(&PathBuf::new(), s);
+
+    let mut tokens = vec![];
+    while let Some(token) = stream.pop() {
+        tokens.push(token.text);
+    }
+
+    tokens
+}
+
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;

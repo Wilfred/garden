@@ -13,7 +13,7 @@ Added `**` to raise a number to a power.
 
 Removed `String::append`.
 
-Added `String::replace` and `check_snippet`.
+Added `String::replace`, `lex` and `check_snippet`.
 
 ## Checks
 

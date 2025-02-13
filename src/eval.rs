@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::{parse_toplevel_items, placeholder_symbol};
+use garden_lang_parser::{lex, parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -2471,6 +2471,53 @@ fn eval_builtin_call(
             let v = check_snippet(snippet, env);
             if expr_value_is_used {
                 env.push_value(v);
+            }
+        }
+        BuiltinFunctionKind::Lex => {
+            check_arity(
+                &SymbolName {
+                    name: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let src = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let items = lex::lexemes(src)
+                .iter()
+                .map(|t| Value::new(Value_::String((*t).to_owned())))
+                .collect::<Vec<_>>();
+
+            let v = Value_::List {
+                items,
+                elem_type: Type::string(),
+            };
+            if expr_value_is_used {
+                env.push_value(Value::new(v));
             }
         }
     }

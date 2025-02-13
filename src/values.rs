@@ -229,6 +229,7 @@ pub(crate) enum BuiltinFunctionKind {
     WorkingDirectory,
     WriteFile,
     CheckSnippet,
+    Lex,
 }
 
 impl Display for BuiltinFunctionKind {
@@ -244,6 +245,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
             BuiltinFunctionKind::WriteFile => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
+            BuiltinFunctionKind::Lex => "lex",
         };
         write!(f, "{}", name)
     }

@@ -131,14 +131,6 @@ pub(crate) fn lex_between<'a>(
             continue;
         }
 
-        // If we see a blank line, discard any comments. We're only
-        // interested in comments immediately before definitions.
-        if s.starts_with('\n') {
-            offset += 1;
-            preceding_comments = vec![];
-            continue;
-        }
-
         // Skip over other whitespace.
         let Some(first_char) = s.chars().next() else {
             break;

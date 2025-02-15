@@ -19,6 +19,7 @@ lazy_static! {
 pub struct Token<'a> {
     pub position: Position,
     pub text: &'a str,
+    /// Comments before this token.
     pub preceding_comments: Vec<(Position, &'a str)>,
 }
 
@@ -28,6 +29,8 @@ pub struct TokenStream<'a> {
     tokens: Vec<Token<'a>>,
     /// The index of our current position in the underlying vec.
     pub(crate) idx: usize,
+    /// Comments after the last token in the file.
+    pub trailing_comments: Vec<(Position, &'a str)>,
 }
 
 impl<'a> TokenStream<'a> {
@@ -96,9 +99,8 @@ pub(crate) fn lex_between<'a>(
 
         // Skip over comments.
         if s.starts_with("//") {
+            let (line_number, column) = lp.from_offset(offset);
             if let Some(i) = s.find('\n') {
-                let (line_number, column) = lp.from_offset(offset);
-
                 preceding_comments.push((
                     Position {
                         start_offset: offset,
@@ -111,10 +113,22 @@ pub(crate) fn lex_between<'a>(
                     &s[0..i + 1],
                 ));
                 offset += i + 1;
-                continue;
             } else {
-                break;
+                // Comment at EOF without a trailing newline.
+                preceding_comments.push((
+                    Position {
+                        start_offset: offset,
+                        end_offset: offset + s.len(),
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
+                        path: path.clone(),
+                    },
+                    s,
+                ));
+                offset += s.len();
             }
+            continue;
         }
 
         // If we see a blank line, discard any comments. We're only
@@ -266,6 +280,7 @@ pub(crate) fn lex_between<'a>(
             path: path.clone(),
             tokens,
             idx: 0,
+            trailing_comments: preceding_comments,
         },
         errors,
     )

@@ -2518,6 +2518,10 @@ fn eval_builtin_call(
                 items.push(Value::new(Value_::String(token.text.to_owned())));
             }
 
+            for (_pos, comment_str) in &token_stream.trailing_comments {
+                items.push(Value::new(Value_::String((*comment_str).to_owned())));
+            }
+
             let v = Value_::List {
                 items,
                 elem_type: Type::string(),

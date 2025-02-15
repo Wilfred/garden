@@ -108,7 +108,7 @@ pub(crate) fn lex_between<'a>(
                         column,
                         path: path.clone(),
                     },
-                    &s["//".len()..i + 1],
+                    &s[0..i + 1],
                 ));
                 offset += i + 1;
                 continue;

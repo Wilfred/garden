@@ -3,5 +3,5 @@ fun unused() {}
 // args: check --json
 // expected exit status: 1
 // expected stdout:
-// {"line_number":1,"message":"`unused` is never called.","start_offset":4,"end_offset":10,"severity":"warning"}
+// {"line_number":1,"end_line_number":1,"column":4,"end_column":10,"message":"`unused` is never called.","start_offset":4,"end_offset":10,"severity":"warning"}
 

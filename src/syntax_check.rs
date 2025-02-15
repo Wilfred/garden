@@ -26,7 +26,15 @@ enum Severity {
 struct CheckDiagnostic {
     #[serde(skip)]
     position: Position,
+    // TODO: Could we just use Position here? The only downside of
+    // using Position directly is that a file with a large number of
+    // errors will repeat the same file name many times in the JSON
+    // output.
+    /// 1-indexed.
     line_number: usize,
+    end_line_number: usize,
+    column: usize,
+    end_column: usize,
     message: ErrorMessage,
     start_offset: usize,
     end_offset: usize,
@@ -48,6 +56,9 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 diagnostics.push(CheckDiagnostic {
                     position: position.clone(),
                     line_number: position.line_number + 1,
+                    end_line_number: position.end_line_number + 1,
+                    column: position.column,
+                    end_column: position.end_column,
                     message,
                     start_offset: position.start_offset,
                     end_offset: position.end_offset,
@@ -61,6 +72,9 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 diagnostics.push(CheckDiagnostic {
                     position: position.clone(),
                     line_number: 1,
+                    end_line_number: position.end_line_number + 1,
+                    column: position.column,
+                    end_column: position.end_column,
                     message,
                     start_offset: position.start_offset,
                     end_offset: position.end_offset,
@@ -86,6 +100,9 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         diagnostics.push(CheckDiagnostic {
             position: position.clone(),
             line_number: position.line_number + 1,
+            end_line_number: position.end_line_number + 1,
+            column: position.column,
+            end_column: position.end_column,
             message: ErrorMessage(message),
             start_offset: position.start_offset,
             end_offset: position.end_offset,

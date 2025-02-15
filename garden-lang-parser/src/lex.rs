@@ -16,14 +16,14 @@ lazy_static! {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Token<'a> {
-    pub(crate) position: Position,
-    pub(crate) text: &'a str,
-    pub(crate) preceding_comments: Vec<(Position, &'a str)>,
+pub struct Token<'a> {
+    pub position: Position,
+    pub text: &'a str,
+    pub preceding_comments: Vec<(Position, &'a str)>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct TokenStream<'a> {
+pub struct TokenStream<'a> {
     pub(crate) path: Rc<PathBuf>,
     tokens: Vec<Token<'a>>,
     /// The index of our current position in the underlying vec.
@@ -35,7 +35,7 @@ impl<'a> TokenStream<'a> {
         self.tokens.get(self.idx).is_none()
     }
 
-    pub(crate) fn pop(&mut self) -> Option<Token<'a>> {
+    pub fn pop(&mut self) -> Option<Token<'a>> {
         match self.tokens.get(self.idx) {
             Some(token) => {
                 self.idx += 1;
@@ -271,19 +271,8 @@ pub(crate) fn lex_between<'a>(
     )
 }
 
-pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> (TokenStream<'a>, Vec<ParseError>) {
+pub fn lex<'a>(path: &Path, s: &'a str) -> (TokenStream<'a>, Vec<ParseError>) {
     lex_between(path, s, 0, s.len())
-}
-
-pub fn lexemes(s: &str) -> Vec<&str> {
-    let (mut stream, _) = lex(&PathBuf::new(), s);
-
-    let mut tokens = vec![];
-    while let Some(token) = stream.pop() {
-        tokens.push(token.text);
-    }
-
-    tokens
 }
 
 #[cfg(test)]

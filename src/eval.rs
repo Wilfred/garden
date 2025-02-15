@@ -2507,10 +2507,16 @@ fn eval_builtin_call(
                 }
             };
 
-            let items = lex::lexemes(src)
-                .iter()
-                .map(|t| Value::new(Value_::String((*t).to_owned())))
-                .collect::<Vec<_>>();
+            let (mut token_stream, _lex_errors) = lex::lex(&PathBuf::new(), src);
+
+            let mut items = vec![];
+            while let Some(token) = token_stream.pop() {
+                for (_pos, comment_str) in &token.preceding_comments {
+                    items.push(Value::new(Value_::String((*comment_str).to_owned())));
+                }
+
+                items.push(Value::new(Value_::String(token.text.to_owned())));
+            }
 
             let v = Value_::List {
                 items,

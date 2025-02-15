@@ -17,6 +17,7 @@
 //             "line_number": 0,
 //             "end_line_number": 0,
 //             "column": 16,
+//             "end_column": 17,
 //             "path": "__json_session_unnamed__"
 //           },
 //           "level": "Warning"
@@ -29,6 +30,7 @@
 //             "line_number": 0,
 //             "end_line_number": 0,
 //             "column": 26,
+//             "end_column": 27,
 //             "path": "__json_session_unnamed__"
 //           },
 //           "level": "Warning"
@@ -41,6 +43,7 @@
 //             "line_number": 0,
 //             "end_line_number": 0,
 //             "column": 4,
+//             "end_column": 7,
 //             "path": "__json_session_unnamed__"
 //           },
 //           "level": "Warning"
@@ -67,6 +70,7 @@
 //               "line_number": 0,
 //               "end_line_number": 0,
 //               "column": 32,
+//               "end_column": 46,
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: oh no",

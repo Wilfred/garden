@@ -15,6 +15,7 @@ pub struct Position {
     pub end_line_number: usize,
     /// The column of the start of this position. Zero indexed.
     pub column: usize,
+    pub end_column: usize,
     pub path: Rc<PathBuf>,
 }
 
@@ -41,6 +42,7 @@ impl Position {
             end_offset: 0,
             line_number: 0,
             column: 0,
+            end_column: 0,
             end_line_number: 0,
             path,
         }
@@ -54,6 +56,11 @@ impl Position {
             line_number: first.line_number,
             end_line_number: std::cmp::max(first.end_line_number, second.end_line_number),
             column: first.column,
+            end_column: if first.end_offset > second.end_offset {
+                first.end_column
+            } else {
+                second.end_column
+            },
             path: first.path.clone(),
         }
     }

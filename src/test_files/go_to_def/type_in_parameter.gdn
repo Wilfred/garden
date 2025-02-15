@@ -4,5 +4,5 @@ fun foo(_: Bool) {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":120,"end_offset":124,"line_number":4,"end_line_number":4,"column":5,"path":"prelude.gdn"}
+// {"start_offset":120,"end_offset":124,"line_number":4,"end_line_number":4,"column":5,"end_column":9,"path":"prelude.gdn"}
 

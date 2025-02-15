@@ -10,5 +10,5 @@ fun foo() {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":18,"end_offset":24,"line_number":1,"end_line_number":1,"column":4,"path":"src/test_files/go_to_def/enum_variant.gdn"}
+// {"start_offset":18,"end_offset":24,"line_number":1,"end_line_number":1,"column":4,"end_column":10,"path":"src/test_files/go_to_def/enum_variant.gdn"}
 

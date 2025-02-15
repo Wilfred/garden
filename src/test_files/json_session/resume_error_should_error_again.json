@@ -16,6 +16,7 @@
 //             "line_number": 0,
 //             "end_line_number": 0,
 //             "column": 4,
+//             "end_column": 5,
 //             "path": "__json_session_unnamed__"
 //           },
 //           "level": "Warning"
@@ -42,6 +43,7 @@
 //               "line_number": 0,
 //               "end_line_number": 0,
 //               "column": 10,
+//               "end_column": 20,
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: x",
@@ -67,6 +69,7 @@
 //               "line_number": 0,
 //               "end_line_number": 0,
 //               "column": 10,
+//               "end_column": 20,
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: x",

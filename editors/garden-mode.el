@@ -992,14 +992,18 @@ the result."
   ;; (garden--log-json-to-buf json-output)
   (--map
    (let* ((message (plist-get it :message))
-          (start-offset (plist-get it :start_offset))
-          (end-offset (plist-get it :end_offset))
+          (line-number (plist-get it :line_number))
+          (end-line-number (plist-get it :end_line_number))
+          (column (plist-get it :column))
+          (end-column (plist-get it :end_column))
           (severity (plist-get it :severity)))
-     (flycheck-error-new-at-pos
-      (1+ start-offset)
+     (flycheck-error-new-at
+      line-number
+      (1+ column)
       (if (string= severity "warning") 'warning 'error)
       message
-      :end-pos (1+ end-offset)
+      :end-line end-line-number
+      :end-column (1+ end-column)
       :buffer buffer))
    (garden--jsonl-parse json-output)))
 

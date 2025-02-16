@@ -1978,6 +1978,18 @@ fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMess
     }
 }
 
+fn as_int_str_tuple(i: i64, s: &str) -> Value {
+    let items = vec![
+        Value::new(Value_::Integer(i)),
+        Value::new(Value_::String(s.to_owned())),
+    ];
+
+    Value::new(Value_::Tuple {
+        items,
+        item_types: vec![Type::int(), Type::string()],
+    })
+}
+
 fn eval_builtin_call(
     env: &mut Env,
     kind: BuiltinFunctionKind,
@@ -2511,20 +2523,23 @@ fn eval_builtin_call(
 
             let mut items = vec![];
             while let Some(token) = token_stream.pop() {
-                for (_pos, comment_str) in &token.preceding_comments {
-                    items.push(Value::new(Value_::String((*comment_str).to_owned())));
+                for (pos, comment_str) in &token.preceding_comments {
+                    items.push(as_int_str_tuple(pos.start_offset as i64, comment_str));
                 }
 
-                items.push(Value::new(Value_::String(token.text.to_owned())));
+                items.push(as_int_str_tuple(
+                    token.position.start_offset as i64,
+                    token.text,
+                ));
             }
 
-            for (_pos, comment_str) in &token_stream.trailing_comments {
-                items.push(Value::new(Value_::String((*comment_str).to_owned())));
+            for (pos, comment_str) in &token_stream.trailing_comments {
+                items.push(as_int_str_tuple(pos.start_offset as i64, comment_str));
             }
 
             let v = Value_::List {
                 items,
-                elem_type: Type::string(),
+                elem_type: Type::Tuple(vec![Type::int(), Type::string()]),
             };
             if expr_value_is_used {
                 env.push_value(Value::new(v));

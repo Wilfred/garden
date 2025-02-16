@@ -36,8 +36,6 @@ struct CheckDiagnostic {
     column: usize,
     end_column: usize,
     message: ErrorMessage,
-    start_offset: usize,
-    end_offset: usize,
     severity: Severity,
 }
 
@@ -60,8 +58,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                     column: position.column,
                     end_column: position.end_column,
                     message,
-                    start_offset: position.start_offset,
-                    end_offset: position.end_offset,
                     severity: Severity::Error,
                 });
             }
@@ -76,8 +72,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                     column: position.column,
                     end_column: position.end_column,
                     message,
-                    start_offset: position.start_offset,
-                    end_offset: position.end_offset,
                     severity: Severity::Error,
                 });
             }
@@ -104,8 +98,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             column: position.column,
             end_column: position.end_column,
             message: ErrorMessage(message),
-            start_offset: position.start_offset,
-            end_offset: position.end_offset,
             severity,
         });
     }

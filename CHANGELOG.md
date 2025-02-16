@@ -26,6 +26,9 @@ tests.
 
 Renamed `eval_up_to_id` JSON command to `eval_up_to`.
 
+The `check --json` CLI command now returns line and columns in its
+output, instead of offsets.
+
 # 0.18 (released 31st December 2024)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**

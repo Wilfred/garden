@@ -1,4 +1,6 @@
 # 0.19 (unreleased)
+**Goal: Website has snippets that are checked and linkified.**
+**Goal: Offer actions when runtime errors occur.**
 
 ## Syntax
 
@@ -33,7 +35,6 @@ The `check --json` CLI command now returns line and columns in its
 output, instead of offsets.
 
 # 0.18 (released 31st December 2024)
-**Goal: Offer actions when runtime errors occur.**
 **Goal: Speculative sandboxed execution of tests and completions.**
 
 ## Standard Library

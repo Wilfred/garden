@@ -3327,33 +3327,14 @@ fn eval_builtin_method_call(
 
             match (receiver_value.as_ref(), arg_values[0].as_ref()) {
                 (Value_::List { items, .. }, Value_::Integer(i)) => {
-                    let index: usize = if *i >= items.len() as i64 || *i < 0 {
-                        let mut saved_values = vec![];
-                        for value in arg_values.iter().rev() {
-                            saved_values.push(value.clone());
-                        }
-                        saved_values.push(receiver_value.clone());
-
-                        let message = ErrorMessage(if items.is_empty() {
-                            format!("Tried to index into an empty list with index {}", *i)
-                        } else {
-                            format!(
-                                "The list index must be between 0 and {} (inclusive), but got: {}",
-                                items.len() - 1,
-                                i
-                            )
-                        });
-
-                        return Err((
-                            RestoreValues(saved_values),
-                            EvalError::ResumableError(arg_positions[0].clone(), message),
-                        ));
+                    let v = if *i >= items.len() as i64 || *i < 0 {
+                        Value::none()
                     } else {
-                        *i as usize
+                        Value::some(items[*i as usize].clone(), env)
                     };
 
                     if expr_value_is_used {
-                        env.push_value(items[index].clone());
+                        env.push_value(v);
                     }
                 }
                 (_, Value_::Integer(_)) => {
@@ -5085,34 +5066,6 @@ mod tests {
                 elem_type: Type::int()
             })
         );
-    }
-
-    #[test]
-    fn test_eval_list_get() {
-        let mut id_gen = IdGenerator::default();
-        let exprs = parse_exprs_from_str("[10, 11].get(1)", &mut id_gen);
-
-        let mut env = Env::new(id_gen);
-        let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(11)));
-    }
-
-    #[test]
-    fn test_eval_list_get_out_of_bounds() {
-        let mut id_gen = IdGenerator::default();
-        let exprs = parse_exprs_from_str("[10, 11].get(2)", &mut id_gen);
-
-        let mut env = Env::new(id_gen);
-        assert!(eval_exprs(&exprs, &mut env).is_err());
-    }
-
-    #[test]
-    fn test_eval_list_get_empty() {
-        let mut id_gen = IdGenerator::default();
-        let exprs = parse_exprs_from_str("[].get(0)", &mut id_gen);
-
-        let mut env = Env::new(id_gen);
-        assert!(eval_exprs(&exprs, &mut env).is_err());
     }
 
     #[test]

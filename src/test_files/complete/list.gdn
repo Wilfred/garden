@@ -10,7 +10,7 @@ fun foo() {
 // {"name":"contains","suffix":"(T): Bool"}
 // {"name":"filter","suffix":"(Fun<(T), Bool>): List<T>"}
 // {"name":"first()","suffix":": Option<T>"}
-// {"name":"get","suffix":"(Int): T"}
+// {"name":"get","suffix":"(Int): Option<T>"}
 // {"name":"is_empty()","suffix":": Bool"}
 // {"name":"is_non_empty()","suffix":": Bool"}
 // {"name":"last()","suffix":": Option<T>"}

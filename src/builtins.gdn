@@ -123,13 +123,24 @@ test list_contains {
 }
 
 // Get the item in the list at the index specified.
-// Errors if the index is less than 0 or greater than `length - 1`.
+//
+// Returns `None` if the index is less than 0 or if the index is greater
+// than `length - 1`.
 //
 // ```
-// [4, 5, 6].get(1) // 5
+// [4, 5, 6].get(1) // Some(5)
+// [4, 5, 6].get(3) // None
 // ```
-export fun (this: List<T>) get<T>(index: Int): T {
+export fun (this: List<T>) get<T>(index: Int): Option<T> {
   __BUILTIN_IMPLEMENTATION
+}
+
+test list_get {
+  assert([4, 5, 6].get(1) == Some(5))
+  assert([4, 5, 6].get(3) == None)
+
+  assert([].get(0) == None)
+  assert([].get(-1) == None)
 }
 
 // Return the length of the list.

@@ -186,19 +186,20 @@ test split_once {
 // ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
 export fun (this: String) join(items: List<String>): String {
-  if items.is_empty() {
-    return ""
-  }
-  if items.len() == 1 {
-    return items.get(0)
+  let first = match items.first() {
+    Some(item) => item
+    None => return ""
   }
 
-  let res = items.get(0)
-  let i = 1
-  while i < items.len() {
-    res = (res ^ this) ^ items.get(i)
-    i += 1
+  if items.len() == 1 {
+    return first
   }
+
+  let res = first
+  for item in items.slice(1, items.len()) {
+    res = (res ^ this) ^ item
+  }
+
   res
 }
 
@@ -369,11 +370,7 @@ test string_chars {
 
 // Get the first item in this list, if the list is not empty.
 export fun (this: List<T>) first<T>(): Option<T> {
-  if this.is_empty() {
-    None
-  } else {
-    Some(this.get(0))
-  }
+  this.get(0)
 }
 
 test first {
@@ -383,11 +380,7 @@ test first {
 
 // Get the last item in this list, if the list is not empty.
 export fun (this: List<T>) last<T>(): Option<T> {
-  if this.is_empty() {
-    None
-  } else {
-    Some(this.get(this.len() - 1))
-  }
+  this.get(this.len() - 1)
 }
 
 test last {

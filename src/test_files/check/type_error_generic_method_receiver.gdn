@@ -1,5 +1,5 @@
 export fun (this: List<T>) foo<T>(): String {
-  this.get(1)
+  this.get(1).or_exception()
 }
 
 // args: check
@@ -8,6 +8,6 @@ export fun (this: List<T>) foo<T>(): String {
 // Error: Expected `String`, but got `T`.
 // 
 // --> src/test_files/check/type_error_generic_method_receiver.gdn:2
-//   this.get(1)
-//   ^^^^^^^^^^^
+//   this.get(1).or_exception()
+//   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

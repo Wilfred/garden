@@ -15,6 +15,9 @@ Removed `String::append`.
 
 Added `String::replace`, `lex` and `check_snippet`.
 
+`List::get` now returns an option rather than erroring on
+out-of-bounds access.
+
 ## Checks
 
 Fixed several type checking bugs on type parameters in methods.

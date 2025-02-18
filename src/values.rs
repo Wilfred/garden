@@ -50,8 +50,8 @@ pub(crate) enum Value_ {
         variant_idx: usize,
         payload: Option<Box<Value>>,
     },
-    // A function that takes one argument, the payload of this enum
-    // variant, and returns an enum value.
+    // A function that takes one argument (the payload of this enum
+    // variant), and returns an enum value. For example, `Some`.
     EnumConstructor {
         type_name: TypeName,
         runtime_type: Type,

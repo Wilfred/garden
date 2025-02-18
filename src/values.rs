@@ -23,7 +23,7 @@ impl Value {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub(crate) enum Value_ {
     /// An integer value.
     Integer(i64),
@@ -65,6 +65,106 @@ pub(crate) enum Value_ {
         runtime_type: Type,
     },
 }
+
+impl PartialEq for Value_ {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value_::Integer(i1), Value_::Integer(i2)) => i1 == i2,
+            (
+                Value_::Fun { name_sym, .. },
+                Value_::Fun {
+                    name_sym: other_name_sym,
+                    ..
+                },
+            ) => name_sym == other_name_sym,
+            (Value_::Closure(_, _), Value_::Closure(_, _)) => {
+                // TODO: we should probably use reference equality on
+                // closures in Value, instead of always returning
+                // false.
+                false
+            }
+            (Value_::BuiltinFunction(self_kind, _), Value_::BuiltinFunction(other_kind, _)) => {
+                self_kind == other_kind
+            }
+            (Value_::String(s1), Value_::String(s2)) => s1 == s2,
+            (
+                Value_::List {
+                    items: self_items,
+                    elem_type: _,
+                },
+                Value_::List {
+                    items: other_items,
+                    elem_type: _,
+                },
+            ) => {
+                // We don't consider list type when comparing list
+                // values. This ensures that [] == [] regardless of
+                // how the lists were constructed (a source of runtime
+                // bugs previously).
+                self_items == other_items
+            }
+            (
+                Value_::Tuple {
+                    items: self_items,
+                    item_types: _,
+                },
+                Value_::Tuple {
+                    items: other_items,
+                    item_types: _,
+                },
+            ) => {
+                // We don't consider type when comparing tuple
+                // values.
+                self_items == other_items
+            }
+            (
+                Value_::EnumVariant {
+                    runtime_type: self_runtime_type,
+                    variant_idx: self_variant_idx,
+                    payload: self_payload,
+                    ..
+                },
+                Value_::EnumVariant {
+                    runtime_type: other_runtime_type,
+                    variant_idx: other_variant_idx,
+                    payload: other_payload,
+                    ..
+                },
+            ) => {
+                self_runtime_type == other_runtime_type
+                    && self_variant_idx == other_variant_idx
+                    && self_payload == other_payload
+            }
+            (
+                Value_::EnumConstructor {
+                    runtime_type: self_runtime_type,
+                    variant_idx: self_variant_idx,
+                    ..
+                },
+                Value_::EnumConstructor {
+                    runtime_type: other_runtime_type,
+                    variant_idx: other_variant_idx,
+                    ..
+                },
+            ) => self_runtime_type == other_runtime_type && self_variant_idx == other_variant_idx,
+            (
+                Value_::Struct {
+                    fields: self_fields,
+                    runtime_type: self_runtime_type,
+                    ..
+                },
+                Value_::Struct {
+                    fields: other_fields,
+                    runtime_type: other_runtime_type,
+                    ..
+                },
+            ) => self_runtime_type == other_runtime_type && self_fields == other_fields,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Value_ {}
 
 impl Value {
     /// A helper for creating a unit value.

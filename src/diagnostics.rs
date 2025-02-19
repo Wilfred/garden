@@ -52,6 +52,7 @@ pub(crate) fn format_error_with_stack(
         &top_stack.src,
         Some(&top_stack.enclosing_name),
         true,
+        true,
     ));
 
     // For the rest of the stack, we want the positions of calls.
@@ -63,6 +64,7 @@ pub(crate) fn format_error_with_stack(
                 &caller_stack_frame.src,
                 Some(&caller_stack_frame.enclosing_name),
                 false,
+                true,
             ));
         }
     }
@@ -82,7 +84,13 @@ pub(crate) fn format_diagnostic(
     };
 
     let mut res = format!("{}: {}\n\n", level_s, message.0);
-    res.push_str(&format_pos_in_fun(position, src_string, None, true));
+    res.push_str(&format_pos_in_fun(
+        position,
+        src_string,
+        None,
+        true,
+        matches!(level, Level::Error),
+    ));
     res
 }
 
@@ -91,6 +99,7 @@ fn format_pos_in_fun(
     src_string: &SourceString,
     enclosing_symbol: Option<&EnclosingSymbol>,
     underline: bool,
+    is_error: bool,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -157,7 +166,11 @@ fn format_pos_in_fun(
 
                 let carets = "^".repeat((span.end_col - span.start_col) as usize);
                 if use_color {
-                    res.push_str(&carets.red().to_string());
+                    res.push_str(&if is_error {
+                        carets.red().to_string()
+                    } else {
+                        carets.yellow().to_string()
+                    });
                 } else {
                     res.push_str(&carets);
                 }

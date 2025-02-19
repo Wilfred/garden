@@ -106,7 +106,8 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         src: src.to_owned(),
         offset: 0,
     };
-    for diagnostic in &diagnostics {
+
+    for (i, diagnostic) in diagnostics.iter().enumerate() {
         let s = if json {
             serde_json::to_string(diagnostic).expect("TODO: can this ever fail?")
         } else {
@@ -123,7 +124,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             )
         };
 
-        println!("{}", s);
+        println!("{}{}", if i == 0 { "" } else { "\n" }, s);
     }
 
     if !diagnostics.is_empty() {

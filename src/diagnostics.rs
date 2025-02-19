@@ -35,7 +35,7 @@ pub(crate) fn format_error_with_stack(
     let mut res = String::new();
 
     res.push_str(&format!(
-        "{}: {}\n\n",
+        "{}: {}\n",
         if use_color {
             "Error".bold().red().to_string()
         } else {
@@ -78,12 +78,22 @@ pub(crate) fn format_diagnostic(
     level: Level,
     src_string: &SourceString,
 ) -> String {
+    let use_color = std::io::stdout().is_terminal();
+
     let level_s = match level {
         Level::Warning => "Warning",
         Level::Error => "Error",
     };
 
-    let mut res = format!("{}: {}\n\n", level_s, message.0);
+    let mut res = format!(
+        "{}: {}\n",
+        if use_color {
+            level_s.bold().to_string()
+        } else {
+            level_s.to_owned()
+        },
+        message.0
+    );
     res.push_str(&format_pos_in_fun(
         position,
         src_string,

@@ -10,3 +10,4 @@ log.gdn
 # Emacs related
 .cask
 *.elc
+.aider*

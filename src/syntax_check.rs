@@ -35,7 +35,7 @@ struct CheckDiagnostic {
     end_line_number: usize,
     column: usize,
     end_column: usize,
-    message: ErrorMessage,
+    message: String,
     severity: Severity,
 }
 
@@ -57,7 +57,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                     end_line_number: position.end_line_number + 1,
                     column: position.column,
                     end_column: position.end_column,
-                    message,
+                    message: message.as_string(),
                     severity: Severity::Error,
                 });
             }
@@ -71,7 +71,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                     end_line_number: position.end_line_number + 1,
                     column: position.column,
                     end_column: position.end_column,
-                    message,
+                    message: message.as_string(),
                     severity: Severity::Error,
                 });
             }
@@ -97,7 +97,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             end_line_number: position.end_line_number + 1,
             column: position.column,
             end_column: position.end_column,
-            message: ErrorMessage(vec![message]),
+            message,
             severity,
         });
     }
@@ -117,7 +117,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             };
 
             format_diagnostic(
-                &diagnostic.message,
+                &ErrorMessage(vec![diagnostic.message.clone()]),
                 &diagnostic.position,
                 level,
                 &src_string,

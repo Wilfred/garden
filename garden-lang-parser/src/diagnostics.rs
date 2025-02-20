@@ -1,6 +1,4 @@
-use serde::Serialize;
-
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct ErrorMessage(pub Vec<String>);
 
 impl ErrorMessage {

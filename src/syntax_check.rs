@@ -97,7 +97,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             end_line_number: position.end_line_number + 1,
             column: position.column,
             end_column: position.end_column,
-            message: ErrorMessage(message),
+            message: ErrorMessage(vec![message]),
             severity,
         });
     }

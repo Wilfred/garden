@@ -197,13 +197,13 @@ fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
 
                 ResponseError {
                     position: Some(position),
-                    message: message.0,
+                    message: message.as_string(),
                     stack,
                 }
             }
             ParseError::Incomplete { message, .. } => ResponseError {
                 position: None,
-                message: message.0,
+                message: message.as_string(),
                 stack: None,
             },
         })
@@ -257,7 +257,7 @@ fn handle_eval_up_to_request(
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: Some(position),
-                            message: message.0,
+                            message: message.as_string(),
                             stack,
                         }]),
                         stack_frame_name: None,
@@ -272,7 +272,7 @@ fn handle_eval_up_to_request(
                         warnings: vec![],
                         value: Err(vec![ResponseError {
                             position: None,
-                            message: message.0,
+                            message: message.as_string(),
                             stack: None,
                         }]),
                         stack_frame_name: None,
@@ -329,7 +329,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
                     warnings: vec![],
                     value: Err(vec![ResponseError {
                         position: Some(position),
-                        message: format!("Error: {}", e.0),
+                        message: format!("Error: {}", e.as_string()),
                         stack: Some(stack),
                     }]),
                     stack_frame_name: Some(env.top_frame_name()),
@@ -673,7 +673,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
                     position: Some(position),
-                    message: format!("Error: {}", e.0),
+                    message: format!("Error: {}", e.as_string()),
                     stack: None,
                 }]),
                 stack_frame_name: Some(env.top_frame_name()),
@@ -685,7 +685,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
-                    message: message.0.clone(),
+                    message: message.as_string(),
                     position: Some(position),
                     stack: None,
                 }]),

@@ -640,7 +640,13 @@ pub(crate) fn run_command<T: Write>(
                         ParseError::Invalid { message, .. } => message,
                         ParseError::Incomplete { message, .. } => message,
                     };
-                    writeln!(buf, "{}: {}", "Error".bright_red(), msg.0).unwrap();
+
+                    write!(buf, "{}: ", "Error".bright_red()).unwrap();
+                    for message_part in &msg.0 {
+                        write!(buf, "{}", message_part).unwrap();
+                    }
+
+                    writeln!(buf).unwrap();
                 }
 
                 for (i, item) in items.iter().enumerate() {

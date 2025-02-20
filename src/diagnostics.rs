@@ -41,7 +41,7 @@ pub(crate) fn format_error_with_stack(
         } else {
             "Error".to_owned()
         },
-        message.0
+        message.as_string()
     ));
 
     // For the topmost (most recently called) stack frame, the
@@ -92,7 +92,7 @@ pub(crate) fn format_diagnostic(
         } else {
             level_s.to_owned()
         },
-        message.0
+        message.as_string()
     );
     res.push_str(&format_pos_in_fun(
         position,

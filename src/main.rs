@@ -407,8 +407,8 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     if let Err(e) = eval_call_main(&[], &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
-            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-            EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.0),
+            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
+            EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
@@ -421,8 +421,8 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
         Err(EvalUpToErr::EvalError(e)) => match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
-            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.0),
-            EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.0),
+            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
+            EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
@@ -484,7 +484,7 @@ fn dump_ast(src: &str, path: &Path) {
                 eprintln!(
                     "{}",
                     &format_diagnostic(
-                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &ErrorMessage(vec![format!("Parse error: {}", e.as_string())]),
                         &position,
                         Level::Error,
                         &SourceString {
@@ -495,7 +495,7 @@ fn dump_ast(src: &str, path: &Path) {
                 );
             }
             ParseError::Incomplete { message: e, .. } => {
-                eprintln!("Parse error (incomplete input): {}", e.0);
+                eprintln!("Parse error (incomplete input): {}", e.as_string());
             }
         }
     }
@@ -529,7 +529,7 @@ fn parse_toplevel_items_or_die(
                 } => eprintln!(
                     "{}",
                     &format_diagnostic(
-                        &ErrorMessage(format!("Parse error: {}", e.0)),
+                        &ErrorMessage(vec![format!("Parse error: {}", e.as_string())]),
                         &position,
                         Level::Error,
                         &SourceString {
@@ -539,7 +539,7 @@ fn parse_toplevel_items_or_die(
                     )
                 ),
                 ParseError::Incomplete { message: e, .. } => {
-                    eprintln!("Parse error (incomplete input): {}", e.0)
+                    eprintln!("Parse error (incomplete input): {}", e.as_string())
                 }
             }
         }
@@ -569,7 +569,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
             eprintln!(
                 "{}",
                 &format_diagnostic(
-                    &ErrorMessage(diagnostic.message),
+                    &ErrorMessage(vec![diagnostic.message]),
                     &diagnostic.position,
                     diagnostic.level,
                     &SourceString {

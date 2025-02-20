@@ -13,10 +13,10 @@ pub fn check_parse(src: &str) -> Option<String> {
     match errors.first() {
         Some(e) => match e {
             garden_lang_parser::ParseError::Invalid { message, .. } => {
-                Some(format!("Invalid: {}", message.0))
+                Some(format!("Invalid: {}", message.as_string()))
             }
             garden_lang_parser::ParseError::Incomplete { message, .. } => {
-                Some(format!("Incomplete: {}", message.0))
+                Some(format!("Incomplete: {}", message.as_string()))
             }
         },
         None => None,

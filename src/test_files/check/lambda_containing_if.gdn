@@ -13,7 +13,6 @@ export fun map_over_strings(lines: List<String>) {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a type with a `starts_with` method, but got a `_`.
-// 
 // --> src/test_files/check/lambda_containing_if.gdn:3
 //         if line.starts_with("a") {
 //            ^^^^

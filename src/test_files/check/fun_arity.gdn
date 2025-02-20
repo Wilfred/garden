@@ -6,7 +6,6 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `string_repr` expects 1 argument, but got 3.
-// 
 // --> src/test_files/check/fun_arity.gdn:2
 //     string_repr(1, 2, 3)
 //                    ^^^^

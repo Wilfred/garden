@@ -15,7 +15,6 @@ export fun main(_args: List<String>): Unit {
 // expected exit status: 1
 // expected stdout:
 // Warning: `x` is unused.
-// 
 // --> src/test_files/check/let_shadow_lambda.gdn:3
 //     let x = "a"
 //         ^

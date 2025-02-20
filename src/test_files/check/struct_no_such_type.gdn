@@ -6,7 +6,6 @@ export fun main(_): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: No such type `NoSuchType`.
-// 
 // --> src/test_files/check/struct_no_such_type.gdn:2
 //     NoSuchType{ x: 1 + 2 }
 //     ^^^^^^^^^^

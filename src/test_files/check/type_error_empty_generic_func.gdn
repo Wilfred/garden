@@ -4,7 +4,6 @@ export fun empty_block<T>(): List<T> {}
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `List<T>`, but got `Unit`.
-// 
 // --> src/test_files/check/type_error_empty_generic_func.gdn:1
 // export fun empty_block<T>(): List<T> {}
 //                                       ^

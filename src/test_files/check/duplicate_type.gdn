@@ -6,7 +6,6 @@ enum Foo {}
 // expected exit status: 1
 // expected stdout:
 // Warning: The type `Foo` is already defined in this file.
-// 
 // --> src/test_files/check/duplicate_type.gdn:3
 // enum Foo {}
 //      ^^^

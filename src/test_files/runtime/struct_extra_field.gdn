@@ -7,7 +7,6 @@ fun main(args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: `Foo` does not have a field named `x`.
-// 
 // --> src/test_files/runtime/struct_extra_field.gdn:4[2m[1m	 fun main()[0m[0m
 //     Foo{ x: 1 }
 //          ^

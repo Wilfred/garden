@@ -9,7 +9,6 @@ fun main(args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: No such type: NoSuchType
-// 
 // --> src/test_files/runtime/nonexistent_type_return_type_arg.gdn:1[2m[1m	 fun foo()[0m[0m
 // fun foo(): Option<NoSuchType> {
 //            ^^^^^^^^^^^^^^^^^^

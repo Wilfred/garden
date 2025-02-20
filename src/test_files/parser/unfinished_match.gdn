@@ -67,7 +67,6 @@ fun foo(src) {
 
 // expected stderr:
 // Error: Parse error: Expected `{`, got `(`
-// 
 // --> src/test_files/parser/unfinished_match.gdn:4
 //     ("")
 //     ^

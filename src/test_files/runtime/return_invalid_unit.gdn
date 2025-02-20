@@ -8,7 +8,6 @@ fun main(args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: Expected `Int`, but got `Unit`
-// 
 // --> src/test_files/runtime/return_invalid_unit.gdn:1[2m[1m	 fun foo()[0m[0m
 // fun foo(): Int {}
 //            ^^^

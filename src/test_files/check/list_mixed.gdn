@@ -9,7 +9,6 @@ export fun takes_bools(_: List<Bool>) {}
 // expected exit status: 1
 // expected stdout:
 // Error: List elements have different types.
-// 
 // --> src/test_files/check/list_mixed.gdn:4
 //     let x = [1, True]
 //                 ^^^^

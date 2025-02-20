@@ -5,7 +5,6 @@ fun main(_args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: Incorrect type for variable: Expected `String`, but got `Int`: 123
-// 
 // --> src/test_files/runtime/let_hint_invalid.gdn:2[2m[1m	 fun main()[0m[0m
 //     let x: String = 123
 //            ^^^^^^

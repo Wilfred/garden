@@ -4,12 +4,11 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an expression, got: `/`.
-// 
 // --> src/test_files/check/incomplete_binop.gdn:1
 // /
 // ^
-// Error: Expected an expression.
 // 
+// Error: Expected an expression.
 // --> src/test_files/check/incomplete_binop.gdn:1
 // /
 

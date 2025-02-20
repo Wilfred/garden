@@ -12,7 +12,6 @@ export fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: `Color` is not a struct.
-// 
 // --> src/test_files/check/struct_literal_from_enum.gdn:8
 //     Color{}
 //     ^^^^^

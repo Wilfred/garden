@@ -10,7 +10,6 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `_`.
-// 
 // --> src/test_files/check/type_inference_lambda.gdn:6
 //   [1, 2, 3].map(fun(x) { x + 1 })
 //                          ^

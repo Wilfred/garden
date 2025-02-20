@@ -51,22 +51,21 @@ export fun good2(): Int {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unfinished code.
-// 
 // --> src/test_files/check/unreachable.gdn:36
 //   todo()
 //   ^^^^^^
-// Warning: Unreachable code after `while` loop which never terminates.
 // 
+// Warning: Unreachable code after `while` loop which never terminates.
 // --> src/test_files/check/unreachable.gdn:3
 //   1
 //   ^
-// Warning: Unreachable code after `return`.
 // 
+// Warning: Unreachable code after `return`.
 // --> src/test_files/check/unreachable.gdn:8
 //   2
 //   ^
-// Warning: Unreachable code after `error`.
 // 
+// Warning: Unreachable code after `error`.
 // --> src/test_files/check/unreachable.gdn:13
 //   2
 //   ^

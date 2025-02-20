@@ -7,7 +7,6 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `String` has no method `no_such_meth`.
-// 
 // --> src/test_files/check/type_error_list_generic.gdn:3
 //   items.get(0).or_exception().no_such_meth()
 //                               ^^^^^^^^^^^^

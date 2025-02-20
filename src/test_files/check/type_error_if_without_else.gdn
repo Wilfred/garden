@@ -8,12 +8,11 @@ export fun foo(b: Bool): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Unit`, but got `Int`.
-// 
 // --> src/test_files/check/type_error_if_without_else.gdn:3
 //         123
 //         ^^^
-// Error: Expected `Int`, but got `Unit`.
 // 
+// Error: Expected `Int`, but got `Unit`.
 // --> src/test_files/check/type_error_if_without_else.gdn:2
 //     if b {
 //     ^^^^^^

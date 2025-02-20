@@ -7,7 +7,6 @@ fun main(_) {
 // args: run
 // expected stderr:
 // Error: lhs
-// 
 // --> src/test_files/runtime/binop_eval_order.gdn:4[2m[1m	 fun main()[0m[0m
 //   error("lhs") + error("rhs")
 //   ^^^^^^^^^^^^

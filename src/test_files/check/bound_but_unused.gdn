@@ -4,7 +4,6 @@ export fun foo(x: Int) {}
 // expected exit status: 1
 // expected stdout:
 // Warning: `x` is unused.
-// 
 // --> src/test_files/check/bound_but_unused.gdn:1
 // export fun foo(x: Int) {}
 //                ^

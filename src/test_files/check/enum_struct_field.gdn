@@ -6,7 +6,6 @@ export fun foo(b: Bool) {
 // expected exit status: 1
 // expected stdout:
 // Error: `Bool` is not a struct.
-// 
 // --> src/test_files/check/enum_struct_field.gdn:2
 //     b.some_field
 //       ^^^^^^^^^^

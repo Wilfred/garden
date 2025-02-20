@@ -11,7 +11,6 @@ export fun weird_but_ok() {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unfinished code.
-// 
 // --> src/test_files/check/todo.gdn:2
 //   todo()
 //   ^^^^^^

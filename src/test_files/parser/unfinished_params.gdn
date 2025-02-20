@@ -58,7 +58,6 @@ export fun foo: Option<Int> {
 
 // expected stderr:
 // Error: Parse error: Expected `(`, got `:`
-// 
 // --> src/test_files/parser/unfinished_params.gdn:1
 // export fun foo: Option<Int> {
 //               ^

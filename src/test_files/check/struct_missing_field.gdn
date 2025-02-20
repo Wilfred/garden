@@ -10,7 +10,6 @@ export fun main(_args: List<String>): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: Missing field `x` in struct literal.
-// 
 // --> src/test_files/check/struct_missing_field.gdn:6
 //     let _f = Foo{}
 //              ^^^

@@ -6,7 +6,6 @@ export fun foo(): (Int, List) {
 // expected exit status: 1
 // expected stdout:
 // Error: List takes 1 type argument, but got 0 arguments.
-// 
 // --> src/test_files/check/missing_type_arg_tuple.gdn:1
 // export fun foo(): (Int, List) {
 //                         ^^^^

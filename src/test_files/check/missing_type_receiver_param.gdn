@@ -6,12 +6,11 @@ export fun (this: List<NoSuchType>) foo<T>() {
 // expected exit status: 1
 // expected stdout:
 // Error: No such type: NoSuchType
-// 
 // --> src/test_files/check/missing_type_receiver_param.gdn:1
 // export fun (this: List<NoSuchType>) foo<T>() {
 //                        ^^^^^^^^^^
-// Error: Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`.
 // 
+// Error: Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`.
 // --> src/test_files/check/missing_type_receiver_param.gdn:1
 // export fun (this: List<NoSuchType>) foo<T>() {
 //                        ^^^^^^^^^^

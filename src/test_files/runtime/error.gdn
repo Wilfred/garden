@@ -14,7 +14,6 @@ fun main(_) {
 // expected stderr:
 // Error: oh no
 // oh dear
-// 
 // --> src/test_files/runtime/error.gdn:2[2m[1m	 fun callee()[0m[0m
 //     error("oh no\noh dear")
 //     ^^^^^^^^^^^^^^^^^^^^^^^

@@ -19,22 +19,21 @@ export fun destructure() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// 
 // --> src/test_files/check/let_destructure.gdn:8
 //     let _ = x + y
 //                 ^
-// Error: Expected a tuple of size 3, but got 2.
 // 
+// Error: Expected a tuple of size 3, but got 2.
 // --> src/test_files/check/let_destructure.gdn:11
 //     let (_x, _y, _z) = get_tuple()
 //                        ^^^^^^^^^^^
-// Error: Expected a tuple of size 1, but got 2.
 // 
+// Error: Expected a tuple of size 1, but got 2.
 // --> src/test_files/check/let_destructure.gdn:12
 //     let (_x) = get_tuple()
 //                ^^^^^^^^^^^
-// Error: Expected a tuple, but got `String`.
 // 
+// Error: Expected a tuple, but got `String`.
 // --> src/test_files/check/let_destructure.gdn:15
 //     let () = "foo"
 //              ^^^^^

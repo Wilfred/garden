@@ -14,7 +14,6 @@ export fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Option<Int>` argument but got `Option<String>`.
-// 
 // --> src/test_files/check/type_error_solve_generics.gdn:10
 //     takes_options(Some("foo"), Some(123))
 //                   ^^^^^^^^^^^

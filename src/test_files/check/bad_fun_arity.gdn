@@ -4,7 +4,6 @@ export fun foo(_f: Fun<(Int, Int)>) {}
 // expected exit status: 1
 // expected stdout:
 // Error: Fun takes 2 type arguments, but got 1 argument.
-// 
 // --> src/test_files/check/bad_fun_arity.gdn:1
 // export fun foo(_f: Fun<(Int, Int)>) {}
 //                        ^^^^^^^^^^

@@ -37,7 +37,6 @@ foo(a b)
 
 // expected stderr:
 // Error: Parse error: Invalid syntax: Expected `,` or `)`, got `b`
-// 
 // --> src/test_files/parser/missing_punct.gdn:1
 // foo(a b)
 //       ^

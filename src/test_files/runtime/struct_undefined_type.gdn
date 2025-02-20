@@ -5,7 +5,6 @@ fun main(args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: No type exists named `Foo`.
-// 
 // --> src/test_files/runtime/struct_undefined_type.gdn:2[2m[1m	 fun main()[0m[0m
 //     Foo{ x: 1 }
 //     ^^^

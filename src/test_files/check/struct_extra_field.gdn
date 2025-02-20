@@ -10,7 +10,6 @@ export fun main(_args: List<String>): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: Struct `Foo` has no field named `y`
-// 
 // --> src/test_files/check/struct_extra_field.gdn:6
 //     let _f = Foo{ x: 1 + 2, y: 2 }
 //                             ^

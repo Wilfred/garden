@@ -5,7 +5,6 @@ export fun main(_) {
 // args: run
 // expected stderr:
 // Error: Tried to divide 5 by zero.
-// 
 // --> src/test_files/runtime/div_zero.gdn:2[2m[1m	 fun main()[0m[0m
 //   dbg(5 / 0)
 //       ^^^^^

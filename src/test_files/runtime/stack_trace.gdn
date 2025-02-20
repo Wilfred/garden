@@ -17,7 +17,6 @@ fun main(_) {
 // args: run
 // expected stderr:
 // Error: Undefined variable: no_such.
-// 
 // --> src/test_files/runtime/stack_trace.gdn:6[2m[1m	 fun call_it()[0m[0m
 //     no_such()
 //     ^^^^^^^

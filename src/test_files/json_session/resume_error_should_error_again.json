@@ -47,7 +47,7 @@
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: x",
-//             "stack": "Error: x\n\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t fun f()\u001b[0m\u001b[0m\nfun f() { error(\"x\") }\n          ^^^^^^^^^^\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t __toplevel__\u001b[0m\u001b[0m\n// __toplevel__"
+//             "stack": "Error: x\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t fun f()\u001b[0m\u001b[0m\nfun f() { error(\"x\") }\n          ^^^^^^^^^^\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t __toplevel__\u001b[0m\u001b[0m\n// __toplevel__"
 //           }
 //         ]
 //       },

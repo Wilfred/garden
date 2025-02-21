@@ -28,7 +28,7 @@ export fun foo(): Unit {
 // }
 // ^
 // 
-// Error: Unbound symbol: SomeValue
+// Error: Unbound symbol: `SomeValue`
 // --> src/test_files/check/ambiguity_struct_literal_or_block.gdn:6
 //   while SomeValue {}
 //         ^^^^^^^^^

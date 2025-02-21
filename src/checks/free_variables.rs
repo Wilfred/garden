@@ -53,7 +53,10 @@ impl FreeVariableVisitor<'_> {
         for (free_sym, position) in &self.free {
             diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!("Unbound symbol: {free_sym}"))]),
+                message: ErrorMessage(vec![
+                    Text("Unbound symbol: ".to_owned()),
+                    Code(format!("{free_sym}")),
+                ]),
                 position: position.clone(),
             });
         }
@@ -64,7 +67,10 @@ impl FreeVariableVisitor<'_> {
         for (name, position) in unused {
             diagnostics.push(Diagnostic {
                 level: Level::Warning,
-                message: ErrorMessage(vec![Text(format!("`{name}` is unused."))]),
+                message: ErrorMessage(vec![
+                    Code(format!("{name}")),
+                    Text(" is unused.".to_owned()),
+                ]),
                 position: position.clone(),
             });
         }

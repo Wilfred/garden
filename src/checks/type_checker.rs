@@ -1202,7 +1202,7 @@ impl TypeCheckVisitor<'_> {
                         );
                         self.diagnostics.extend(more_diagnostics);
 
-                        subst_ty_vars(&ret_ty, &ty_var_env)
+                        ret_ty
                     }
                     None => {
                         // No method exists with that name on this type.

@@ -13,6 +13,7 @@ use std::time::Instant;
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::{lex, parse_toplevel_items, placeholder_symbol};
+
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -367,10 +368,10 @@ fn load_toplevel_items_(
             ToplevelItem_::Import(import_info) => {
                 let Some(enclosing_dir) = item.1.path.parent() else {
                     diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "Could not find parent directory of `{}`.",
                             import_info.path.display()
-                        ),
+                        ))]),
                         position: item.1.clone(),
                         level: Level::Error,
                     });
@@ -381,10 +382,10 @@ fn load_toplevel_items_(
                 let path = enclosing_dir.join(&import_info.path);
                 let Ok(path) = path.canonicalize() else {
                     diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "Invalid path `{}`. Double-check that this file exists.",
                             import_info.path.display()
-                        ),
+                        ))]),
                         position: import_info.path_pos.clone(),
                         level: Level::Error,
                     });
@@ -400,7 +401,10 @@ fn load_toplevel_items_(
 
                 let Ok(src) = std::fs::read_to_string(&path) else {
                     diagnostics.push(Diagnostic {
-                        message: format!("Could not read {} or not valid UTF-8.", path.display()),
+                        message: ErrorMessage(vec![Text(format!(
+                            "Could not read {} or not valid UTF-8.",
+                            path.display()
+                        ))]),
                         position: import_info.path_pos.clone(),
                         level: Level::Error,
                     });
@@ -413,7 +417,7 @@ fn load_toplevel_items_(
                 if !parse_errors.is_empty() {
                     for error in parse_errors {
                         diagnostics.push(Diagnostic {
-                            message: error.message().as_string(),
+                            message: ErrorMessage(vec![Text(error.message().as_string())]),
                             position: error.position().clone(),
                             level: Level::Error,
                         });
@@ -498,7 +502,7 @@ pub(crate) fn eval_toplevel_items(
         if matches!(diagnostic.level, Level::Error) {
             return Err(EvalError::ResumableError(
                 diagnostic.position.clone(),
-                ErrorMessage(vec![Text(diagnostic.message.clone())]),
+                diagnostic.message.clone(),
             ));
         }
     }
@@ -1087,10 +1091,10 @@ fn update_builtin_type_info(
     let Some(current_def) = env.types.get(&symbol.name) else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type `{}` that doesn't exist.",
                 symbol.name
-            ),
+            ))]),
             position: symbol.position.clone(),
         });
         return;
@@ -1099,10 +1103,10 @@ fn update_builtin_type_info(
     let TypeDef::Builtin(kind, _) = current_def else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but {} isn't a built-in type.",
                 symbol.name,
-            ),
+            ))]),
             position: symbol.position.clone(),
         });
         return;
@@ -1132,10 +1136,10 @@ fn update_builtin_meth_info(
     let Some(type_methods) = env.methods.get_mut(type_name) else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
-            ),
+            ))]),
             position: meth_info.receiver_hint.sym.position.clone(),
         });
         return;
@@ -1144,10 +1148,10 @@ fn update_builtin_meth_info(
     let Some(curr_meth_info) = type_methods.get_mut(&meth_info.name_sym.name) else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
                 meth_info.name_sym.name, type_name
-            ),
+            ))]),
             position: meth_info.name_sym.position.clone(),
         });
         return;
@@ -1156,14 +1160,14 @@ fn update_builtin_meth_info(
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 // TODO: we need a better design principle around
                 // warning phrasing. It should probably always include
                 // an explanation of what will happen (in this case
                 // nothing).
                 "{}::{} is not a built-in method.",
                 type_name, meth_info.name_sym.name
-            ),
+            ))]),
             position: meth_info.name_sym.position.clone(),
         });
         return;
@@ -1186,10 +1190,10 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
     let Some(value) = env.file_scope.get(&symbol.name) else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a function `{}` that doesn't exist.",
                 symbol.name
-            ),
+            ))]),
             position: symbol.position.clone(),
         });
 
@@ -1210,11 +1214,11 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
     let Value_::BuiltinFunction(kind, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
-            message: format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
                 Type::from_value(value, &env.types, &env.stack.type_bindings()),
-            ),
+            ))]),
             position: symbol.position.clone(),
         });
         return;
@@ -2573,7 +2577,7 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         match level {
             Level::Warning => {}
             Level::Error => {
-                error_messages.push(Value::new(Value_::String(message)));
+                error_messages.push(Value::new(Value_::String(message.as_string())));
             }
         }
     }

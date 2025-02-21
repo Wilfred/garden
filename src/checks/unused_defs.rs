@@ -1,6 +1,9 @@
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, ToplevelItem_, Visibility};
+use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::diagnostics::MessagePart::*;
+
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
@@ -45,7 +48,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
         // Report unreachable functions that have no callers at all.
         if !all_called_defs.contains(&item_id) {
             diagnostics.push(Diagnostic {
-                message: format!("`{}` is never called.", &symbol.name),
+                message: ErrorMessage(vec![Text(format!("`{}` is never called.", &symbol.name))]),
                 position: symbol.position.clone(),
                 level: Level::Warning,
             });
@@ -82,7 +85,10 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                     .collect();
                 if reachable_from_item_ids.is_disjoint(&already_covered_ids) {
                     diagnostics.push(Diagnostic {
-                        message: format!("`{}` is never called.", &symbol.name),
+                        message: ErrorMessage(vec![Text(format!(
+                            "`{}` is never called.",
+                            &symbol.name
+                        ))]),
                         position: symbol.position.clone(),
                         level: Level::Warning,
                     });

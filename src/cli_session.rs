@@ -106,7 +106,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
 
                 let (diagnostics, _) = load_toplevel_items(&items, &mut env);
                 for diagnostic in diagnostics {
-                    println!("Warning: {}", diagnostic.message);
+                    println!("Warning: {}", diagnostic.message.as_string());
                 }
 
                 let mut exprs = vec![];

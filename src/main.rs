@@ -571,7 +571,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
             eprintln!(
                 "{}",
                 &format_diagnostic(
-                    &ErrorMessage(vec![Text(diagnostic.message)]),
+                    &diagnostic.message,
                     &diagnostic.position,
                     diagnostic.level,
                     &SourceString {

@@ -7,6 +7,8 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{SymbolName, ToplevelItem, ToplevelItem_, TypeName};
+use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::position::Position;
 use garden_lang_parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
@@ -28,10 +30,10 @@ impl Visitor for DuplicatesVisitor {
             ToplevelItem_::Fun(sym, _, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "The function `{}` is already defined in this file.",
                             sym.name
-                        ),
+                        ))]),
                         position: sym.position.clone(),
                         level: Level::Warning,
                     });
@@ -59,10 +61,10 @@ impl Visitor for DuplicatesVisitor {
 
                 if is_repeat {
                     self.diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "The method `{}::{}` is already defined in this file.",
                             type_name, meth_sym.name
-                        ),
+                        ))]),
                         position: meth_sym.position.clone(),
                         level: Level::Warning,
                     });
@@ -72,10 +74,10 @@ impl Visitor for DuplicatesVisitor {
                 let sym = &test_info.name_sym;
                 if self.tests_seen.contains(&sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "The test `{}` is already defined in this file.",
                             sym.name
-                        ),
+                        ))]),
                         position: sym.position.clone(),
                         level: Level::Warning,
                     });
@@ -87,10 +89,10 @@ impl Visitor for DuplicatesVisitor {
                 let name_sym = &enum_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "The type `{}` is already defined in this file.",
                             &name_sym.name
-                        ),
+                        ))]),
                         position: name_sym.position.clone(),
                         level: Level::Warning,
                     });
@@ -102,10 +104,10 @@ impl Visitor for DuplicatesVisitor {
                 let name_sym = &struct_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
-                        message: format!(
+                        message: ErrorMessage(vec![Text(format!(
                             "The type `{}` is already defined in this file.",
                             &name_sym.name
-                        ),
+                        ))]),
                         position: name_sym.position.clone(),
                         level: Level::Warning,
                     });

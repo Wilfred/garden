@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
 use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
+use garden_lang_parser::diagnostics::MessagePart::*;
+use garden_lang_parser::diagnostics::{ErrorMessage, MessagePart};
 use garden_lang_parser::visitor::Visitor;
 
 use crate::{
@@ -85,7 +87,9 @@ impl Visitor for HintVisitor<'_> {
                 if let Some(first_arg) = type_hint.args.first() {
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,
-                        message: "Generic type arguments cannot take parameters.".to_owned(),
+                        message: ErrorMessage(vec![Text(
+                            "Generic type arguments cannot take parameters.".to_owned(),
+                        )]),
                         position: first_arg.position.clone(),
                     });
                 }
@@ -110,7 +114,10 @@ impl Visitor for HintVisitor<'_> {
                             if num_expected != type_hint.args.len() {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
-                                    message: format_type_arity_error(type_hint, num_expected),
+                                    message: ErrorMessage(vec![format_type_arity_error(
+                                        type_hint,
+                                        num_expected,
+                                    )]),
                                     position: type_args_pos,
                                 });
                             }
@@ -121,7 +128,7 @@ impl Visitor for HintVisitor<'_> {
                             if first_arg.sym.name.name != "Tuple" {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
-                                    message: format!("Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `{}`.", first_arg.sym.name),
+                                    message: ErrorMessage(vec![Text(format!("Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `{}`.", first_arg.sym.name))]),
                                     position: first_arg.position.clone(),
                                 });
                             }
@@ -131,10 +138,10 @@ impl Visitor for HintVisitor<'_> {
                         if enum_info.type_params.len() != type_hint.args.len() {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
-                                message: format_type_arity_error(
+                                message: ErrorMessage(vec![format_type_arity_error(
                                     type_hint,
                                     enum_info.type_params.len(),
-                                ),
+                                )]),
                                 position: type_args_pos,
                             });
                         }
@@ -143,10 +150,10 @@ impl Visitor for HintVisitor<'_> {
                         if struct_info.type_params.len() != type_hint.args.len() {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
-                                message: format_type_arity_error(
+                                message: ErrorMessage(vec![format_type_arity_error(
                                     type_hint,
                                     struct_info.type_params.len(),
-                                ),
+                                )]),
                                 position: type_args_pos,
                             });
                         }
@@ -156,7 +163,7 @@ impl Visitor for HintVisitor<'_> {
             None => {
                 self.diagnostics.push(Diagnostic {
                     level: Level::Error,
-                    message: format!("No such type: {}", &type_hint.sym),
+                    message: ErrorMessage(vec![Text(format!("No such type: {}", &type_hint.sym))]),
                     position: type_hint.position.clone(),
                 });
             }
@@ -168,15 +175,15 @@ impl Visitor for HintVisitor<'_> {
     }
 }
 
-fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> String {
+fn format_type_arity_error(type_hint: &TypeHint, num_expected: usize) -> MessagePart {
     let num_actual = type_hint.args.len();
 
-    format!(
+    Text(format!(
         "{} takes {} type argument{}, but got {} argument{}.",
         &type_hint.sym.name,
         num_expected,
         if num_expected == 1 { "" } else { "s" },
         num_actual,
         if num_actual == 1 { "" } else { "s" },
-    )
+    ))
 }

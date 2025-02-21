@@ -20,7 +20,7 @@ pub(crate) enum Level {
 
 #[derive(Debug)]
 pub(crate) struct Diagnostic {
-    pub(crate) message: String,
+    pub(crate) message: ErrorMessage,
     pub(crate) position: Position,
     pub(crate) level: Level,
 }

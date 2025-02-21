@@ -1,4 +1,6 @@
 use garden_lang_parser::ast::{Expression_, LetDestination};
+use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
     ast::{
@@ -51,7 +53,7 @@ impl FreeVariableVisitor<'_> {
         for (free_sym, position) in &self.free {
             diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: format!("Unbound symbol: {free_sym}"),
+                message: ErrorMessage(vec![Text(format!("Unbound symbol: {free_sym}"))]),
                 position: position.clone(),
             });
         }
@@ -62,7 +64,7 @@ impl FreeVariableVisitor<'_> {
         for (name, position) in unused {
             diagnostics.push(Diagnostic {
                 level: Level::Warning,
-                message: format!("`{name}` is unused."),
+                message: ErrorMessage(vec![Text(format!("`{name}` is unused."))]),
                 position: position.clone(),
             });
         }

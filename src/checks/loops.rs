@@ -1,7 +1,9 @@
 //! Check that loops are well-formed.
 
+use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::{
     ast::{Block, Expression, Expression_, FunInfo, Symbol, ToplevelItem},
+    diagnostics::ErrorMessage,
     visitor::Visitor,
 };
 
@@ -49,7 +51,9 @@ impl Visitor for LoopVisitor {
             Expression_::Break => {
                 if !self.in_loop {
                     self.diagnostics.push(Diagnostic {
-                        message: "`break` can only be used inside loops.".to_owned(),
+                        message: ErrorMessage(vec![Text(
+                            "`break` can only be used inside loops.".to_owned(),
+                        )]),
                         position: expr.position.clone(),
                         level: Level::Error,
                     });
@@ -59,7 +63,9 @@ impl Visitor for LoopVisitor {
                 if !self.in_loop {
                     self.diagnostics.push(Diagnostic {
                         // TODO: Add an example of valid usage.
-                        message: "`continue` can only be used inside loops.".to_owned(),
+                        message: ErrorMessage(vec![Text(
+                            "`continue` can only be used inside loops.".to_owned(),
+                        )]),
                         position: expr.position.clone(),
                         level: Level::Error,
                     });

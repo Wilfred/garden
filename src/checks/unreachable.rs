@@ -1,7 +1,10 @@
+use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::{
     ast::{Block, Expression, Expression_, SyntaxId, ToplevelItem},
     visitor::Visitor,
 };
+
 use rustc_hash::FxHashSet;
 
 use crate::diagnostics::{Diagnostic, Level};
@@ -35,7 +38,7 @@ impl Visitor for UnreachableVisitor {
 
             if let Some(reason) = unreachable_reason {
                 self.diagnostics.push(Diagnostic {
-                    message: reason.to_owned(),
+                    message: ErrorMessage(vec![Text(reason.to_owned())]),
                     position: expr.position.clone(),
                     level: Level::Warning,
                 });

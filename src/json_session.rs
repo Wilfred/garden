@@ -73,7 +73,7 @@ pub(crate) struct DiagnosticForJson {
 impl From<Diagnostic> for DiagnosticForJson {
     fn from(value: Diagnostic) -> Self {
         Self {
-            message: value.message,
+            message: value.message.as_string(),
             position: value.position,
             level: value.level,
         }

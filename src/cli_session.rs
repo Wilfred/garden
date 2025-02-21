@@ -64,19 +64,11 @@ fn read_expr(
                         log_src(&src).unwrap();
                         return Ok((src, items));
                     }
-                    Err(ParseError::Incomplete { message: e, .. }) => {
-                        print!("Parsing failed (incomplete): ");
-                        for message_part in e.0 {
-                            print!("{}", message_part);
-                        }
-                        println!();
+                    Err(ParseError::Incomplete { message, .. }) => {
+                        println!("Parsing failed (incomplete): {}", message.as_string());
                     }
-                    Err(ParseError::Invalid { message: e, .. }) => {
-                        print!("Parsing failed: ");
-                        for message_part in e.0 {
-                            print!("{}", message_part);
-                        }
-                        println!();
+                    Err(ParseError::Invalid { message, .. }) => {
+                        println!("Parsing failed: {}", message.as_string());
                     }
                 }
             }

@@ -23,6 +23,7 @@ use position::Position;
 
 use crate::ast::*;
 use crate::diagnostics::ErrorMessage;
+use crate::diagnostics::MessagePart::*;
 use crate::lex::lex;
 use crate::lex::lex_between;
 use crate::lex::Token;
@@ -73,7 +74,10 @@ fn require_a_token<'a>(
         Some(token) => token,
         None => {
             diagnostics.push(ParseError::Incomplete {
-                message: ErrorMessage(vec![format!("Expected {}, got EOF", token_description)]),
+                message: ErrorMessage(vec![Text(format!(
+                    "Expected {}, got EOF",
+                    token_description
+                ))]),
                 position: Position::todo(tokens.path.clone()),
             });
 
@@ -107,10 +111,10 @@ fn check_required_token<'a>(
 
                 diagnostics.push(ParseError::Invalid {
                     position,
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Expected `{}`, got `{}`",
                         expected, token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
                 ok = false;
@@ -125,7 +129,7 @@ fn check_required_token<'a>(
         }
         None => {
             diagnostics.push(ParseError::Incomplete {
-                message: ErrorMessage(vec![format!("Expected `{}`, got EOF", expected)]),
+                message: ErrorMessage(vec![Text(format!("Expected `{}`, got EOF", expected))]),
                 position: Position::todo(tokens.path.clone()),
             });
 
@@ -159,7 +163,10 @@ fn parse_integer(
     } else {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
-            message: ErrorMessage(vec![format!("Not a valid integer literal: {}", token.text)]),
+            message: ErrorMessage(vec![Text(format!(
+                "Not a valid integer literal: {}",
+                token.text
+            ))]),
             additional: vec![],
         });
 
@@ -225,7 +232,7 @@ fn parse_tuple_literal_or_parentheses(
 
                 diagnostics.push(ParseError::Invalid {
                     position,
-                    message: ErrorMessage(vec!["Expected `,` or `)`. ".to_owned()]),
+                    message: ErrorMessage(vec![Text("Expected `,` or `)`. ".to_owned())]),
                     additional: vec![],
                 });
 
@@ -330,9 +337,9 @@ fn parse_assert(
         let position = Position::merge(&open_paren.position, &close_paren.position);
         diagnostics.push(ParseError::Invalid {
             position: position.clone(),
-            message: ErrorMessage(vec![
+            message: ErrorMessage(vec![Text(
                 "Assert requires an expression, e.g. `assert(x == 42)`.".to_owned(),
-            ]),
+            )]),
             additional: vec![],
         });
 
@@ -595,10 +602,10 @@ fn parse_simple_expression(
 
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
-            message: ErrorMessage(vec![format!(
+            message: ErrorMessage(vec![Text(format!(
                 "Expected an expression, got: `{}`.",
                 token.text
-            )]),
+            ))]),
             additional: vec![],
         });
 
@@ -606,7 +613,7 @@ fn parse_simple_expression(
     }
 
     diagnostics.push(ParseError::Incomplete {
-        message: ErrorMessage(vec!["Expected an expression.".to_owned()]),
+        message: ErrorMessage(vec![Text("Expected an expression.".to_owned())]),
         position: Position::todo(tokens.path.clone()),
     });
 
@@ -653,9 +660,9 @@ fn parse_struct_literal_fields(
         let Some(token) = tokens.peek() else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
-                ]),
+                )]),
             });
             break;
         };
@@ -710,9 +717,9 @@ fn parse_match(
         let Some(token) = tokens.peek() else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
-                    "Invalid syntax: Expected `}` here, but got EOF".to_string()
-                ]),
+                message: ErrorMessage(vec![Text(
+                    "Invalid syntax: Expected `}` here, but got EOF".to_string(),
+                )]),
             });
             break;
         };
@@ -827,10 +834,10 @@ fn parse_comma_separated_exprs(
             } else if token.text != terminator {
                 diagnostics.push(ParseError::Invalid {
                     position: token.position.clone(),
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Invalid syntax: Expected `,` or `{}`, got `{}`",
                         terminator, token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
 
@@ -848,10 +855,10 @@ fn parse_comma_separated_exprs(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![format!(
+                message: ErrorMessage(vec![Text(format!(
                     "Invalid syntax: Expected `,` or `{}` here, but got EOF",
                     terminator
-                )]),
+                ))]),
             });
             break;
         }
@@ -1100,7 +1107,7 @@ fn parse_definition(
         // TODO: Include the token in the error message.
         diagnostics.push(ParseError::Invalid {
             position: token.position,
-            message: ErrorMessage(vec!["Expected a definition".to_string()]),
+            message: ErrorMessage(vec![Text("Expected a definition".to_string())]),
             additional: vec![],
         });
         return None;
@@ -1108,7 +1115,7 @@ fn parse_definition(
 
     diagnostics.push(ParseError::Incomplete {
         position: Position::todo(tokens.path.clone()),
-        message: ErrorMessage(vec!["Unfinished definition".to_owned()]),
+        message: ErrorMessage(vec![Text("Unfinished definition".to_owned())]),
     });
     None
 }
@@ -1135,10 +1142,10 @@ fn parse_enum_body(
             } else {
                 diagnostics.push(ParseError::Invalid {
                     position: token.position,
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
                         token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
                 break;
@@ -1146,9 +1153,9 @@ fn parse_enum_body(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `}` here, but got EOF".to_string(),
-                ]),
+                )]),
             });
             break;
         }
@@ -1320,9 +1327,9 @@ fn parse_test(
 
             diagnostics.push(ParseError::Invalid {
                 position: Position::merge(&params.open_paren, &params.close_paren),
-                message: ErrorMessage(vec![
-                    "Tests should not have arguments, e.g. `test foo {}`.".to_owned()
-                ]),
+                message: ErrorMessage(vec![Text(
+                    "Tests should not have arguments, e.g. `test foo {}`.".to_owned(),
+                )]),
                 additional: vec![],
             });
         }
@@ -1366,7 +1373,7 @@ fn parse_import(
     let Some(path_token) = tokens.pop() else {
         diagnostics.push(ParseError::Incomplete {
             position: Position::todo(tokens.path.clone()),
-            message: ErrorMessage(vec!["Unfinished `import`.".to_owned()]),
+            message: ErrorMessage(vec![Text("Unfinished `import`.".to_owned())]),
         });
 
         return None;
@@ -1384,9 +1391,9 @@ fn parse_import(
     } else {
         diagnostics.push(ParseError::Incomplete {
             position: path_token.position,
-            message: ErrorMessage(vec![
+            message: ErrorMessage(vec![Text(
                 "`import` requires a path, e.g. `import \"./foo.gdn\"`.".to_owned(),
-            ]),
+            )]),
         });
 
         return None;
@@ -1450,10 +1457,10 @@ fn parse_type_arguments(
             } else {
                 diagnostics.push(ParseError::Invalid {
                     position: token.position.clone(),
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Invalid syntax: Expected `,` or `>` here, but got `{}`",
                         token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
                 break token.position;
@@ -1461,9 +1468,9 @@ fn parse_type_arguments(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
-                ]),
+                )]),
             });
             break Position::todo(tokens.path.clone());
         }
@@ -1503,10 +1510,10 @@ fn parse_type_params(
             } else {
                 diagnostics.push(ParseError::Invalid {
                     position: token.position,
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Invalid syntax: Expected `,` or `>` here, but got `{}`",
                         token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
                 break;
@@ -1514,9 +1521,9 @@ fn parse_type_params(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `>` here, but got EOF".to_owned(),
-                ]),
+                )]),
             });
             break;
         }
@@ -1551,9 +1558,9 @@ fn parse_tuple_type_hint(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `)` here, but got EOF".to_owned(),
-                ]),
+                )]),
             });
             break;
         }
@@ -1675,10 +1682,10 @@ fn parse_parameters(
             } else {
                 diagnostics.push(ParseError::Invalid {
                     position: token.position,
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Invalid syntax: Expected `,` or `)` here, but got `{}`",
                         token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
                 break;
@@ -1686,9 +1693,9 @@ fn parse_parameters(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `)` here, but got EOF".to_string(),
-                ]),
+                )]),
             });
             break;
         }
@@ -1707,7 +1714,7 @@ fn parse_parameters(
         if seen.contains(param_name) {
             diagnostics.push(ParseError::Invalid {
                 position: param.symbol.position.clone(),
-                message: ErrorMessage(vec![format!("Duplicate parameter: `{}`", param_name)]),
+                message: ErrorMessage(vec![Text(format!("Duplicate parameter: `{}`", param_name))]),
                 // TODO: report the position of the previous parameter too.
                 additional: vec![],
             });
@@ -1747,9 +1754,9 @@ fn parse_struct_fields(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected a struct field name here like `foo: String`, but got EOF".to_string(),
-                ]),
+                )]),
             });
             break;
         }
@@ -1762,10 +1769,10 @@ fn parse_struct_fields(
             } else {
                 diagnostics.push(ParseError::Invalid {
                     position: token.position,
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Invalid syntax: Expected `,` or `}}` here, but got `{}`",
                         token.text
-                    )]),
+                    ))]),
                     additional: vec![],
                 });
                 break;
@@ -1773,9 +1780,9 @@ fn parse_struct_fields(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
+                message: ErrorMessage(vec![Text(
                     "Invalid syntax: Expected `,` or `}}` here, but got EOF".to_string(),
-                ]),
+                )]),
             });
             break;
         }
@@ -1813,9 +1820,9 @@ fn parse_block(
         } else {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec![
-                    "Invalid syntax: Expected `}` here, but got EOF".to_string()
-                ]),
+                message: ErrorMessage(vec![Text(
+                    "Invalid syntax: Expected `}` here, but got EOF".to_string(),
+                )]),
             });
             break;
         }
@@ -1919,7 +1926,9 @@ fn parse_function_or_method(
         None => {
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
-                message: ErrorMessage(vec!["Unfinished function or method definition.".to_owned()]),
+                message: ErrorMessage(vec![Text(
+                    "Unfinished function or method definition.".to_owned(),
+                )]),
             });
             None
         }
@@ -1944,7 +1953,9 @@ fn parse_method(
         None => {
             diagnostics.push(ParseError::Incomplete {
                 position: receiver_param.symbol.position.clone(),
-                message: ErrorMessage(vec!["This `self` argument requires a type.".to_owned()]),
+                message: ErrorMessage(vec![Text(
+                    "This `self` argument requires a type.".to_owned(),
+                )]),
             });
             TypeHint {
                 sym: TypeSymbol {
@@ -2147,10 +2158,10 @@ fn parse_let_destination(
             if seen.contains(name) {
                 diagnostics.push(ParseError::Invalid {
                     position: symbol.position.clone(),
-                    message: ErrorMessage(vec![format!(
+                    message: ErrorMessage(vec![Text(format!(
                         "Duplicate destructure variable: `{}`.",
                         name
-                    )]),
+                    ))]),
                     // TODO: report the position of the previous occurrence too.
                     additional: vec![],
                 });
@@ -2174,7 +2185,10 @@ fn parse_symbol(
     if !SYMBOL_RE.is_match(variable_token.text) {
         diagnostics.push(ParseError::Invalid {
             position: variable_token.position.clone(),
-            message: ErrorMessage(vec![format!("Invalid name: '{}'", variable_token.text)]),
+            message: ErrorMessage(vec![Text(format!(
+                "Invalid name: '{}'",
+                variable_token.text
+            ))]),
             additional: vec![],
         });
         tokens.unpop();
@@ -2185,10 +2199,10 @@ fn parse_symbol(
         if variable_token.text == *reserved {
             diagnostics.push(ParseError::Invalid {
                 position: variable_token.position.clone(),
-                message: ErrorMessage(vec![format!(
+                message: ErrorMessage(vec![Text(format!(
                     "'{}' is a reserved word that cannot be used as a name",
                     variable_token.text
-                )]),
+                ))]),
                 additional: vec![],
             });
             tokens.unpop();
@@ -2269,10 +2283,10 @@ fn parse_assign_update(
         _ => {
             diagnostics.push(ParseError::Invalid {
                 position: op_token.position.clone(),
-                message: ErrorMessage(vec![format!(
+                message: ErrorMessage(vec![Text(format!(
                     "Invalid syntax: Expected `+=` or `-=`, but got `{}`",
                     op_token.text
-                )]),
+                ))]),
                 additional: vec![],
             });
             AssignUpdateKind::Add

@@ -69,6 +69,8 @@ use crate::env::Env;
 use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
 use garden_lang_parser::ast::{IdGenerator, SourceString, ToplevelItem, ToplevelItem_};
 use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::diagnostics::MessagePart::*;
+
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 pub(crate) const BAD_CLI_REQUEST_EXIT_CODE: i32 = 10;
@@ -484,7 +486,7 @@ fn dump_ast(src: &str, path: &Path) {
                 eprintln!(
                     "{}",
                     &format_diagnostic(
-                        &ErrorMessage(vec![format!("Parse error: {}", e.as_string())]),
+                        &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         Level::Error,
                         &SourceString {
@@ -529,7 +531,7 @@ fn parse_toplevel_items_or_die(
                 } => eprintln!(
                     "{}",
                     &format_diagnostic(
-                        &ErrorMessage(vec![format!("Parse error: {}", e.as_string())]),
+                        &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         Level::Error,
                         &SourceString {
@@ -569,7 +571,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
             eprintln!(
                 "{}",
                 &format_diagnostic(
-                    &ErrorMessage(vec![diagnostic.message]),
+                    &ErrorMessage(vec![Text(diagnostic.message)]),
                     &diagnostic.position,
                     diagnostic.level,
                     &SourceString {

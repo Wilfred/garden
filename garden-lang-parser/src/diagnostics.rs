@@ -1,11 +1,18 @@
 #[derive(Debug, Clone)]
-pub struct ErrorMessage(pub Vec<String>);
+pub enum MessagePart {
+    Text(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct ErrorMessage(pub Vec<MessagePart>);
 
 impl ErrorMessage {
     pub fn as_string(&self) -> String {
         let mut s = String::new();
         for message_part in &self.0 {
-            s.push_str(message_part);
+            match message_part {
+                MessagePart::Text(t) => s.push_str(t),
+            }
         }
 
         s

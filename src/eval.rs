@@ -11,6 +11,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use garden_lang_parser::diagnostics::ErrorMessage;
+use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::{lex, parse_toplevel_items, placeholder_symbol};
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -497,7 +498,7 @@ pub(crate) fn eval_toplevel_items(
         if matches!(diagnostic.level, Level::Error) {
             return Err(EvalError::ResumableError(
                 diagnostic.position.clone(),
-                ErrorMessage(vec![diagnostic.message.clone()]),
+                ErrorMessage(vec![Text(diagnostic.message.clone())]),
             ));
         }
     }
@@ -1461,10 +1462,10 @@ fn eval_assign_update(
             RestoreValues(vec![]),
             EvalError::ResumableError(
                 variable.position.clone(),
-                ErrorMessage(vec![format!(
+                ErrorMessage(vec![Text(format!(
                     "{} is not currently bound. Try `let {} = something`.",
                     var_name, var_name
-                )]),
+                ))]),
             ),
         ));
     };
@@ -1518,10 +1519,10 @@ fn eval_assign(
             RestoreValues(vec![]),
             EvalError::ResumableError(
                 variable.position.clone(),
-                ErrorMessage(vec![format!(
+                ErrorMessage(vec![Text(format!(
                     "{} is not currently bound. Try `let {} = something`.",
                     var_name, var_name
-                )]),
+                ))]),
             ),
         ));
     }
@@ -1566,7 +1567,7 @@ fn eval_let(
                     RestoreValues(vec![]),
                     EvalError::ResumableError(
                         hint.position.clone(),
-                        ErrorMessage(vec![format!("Unbound type in hint: {}", e)]),
+                        ErrorMessage(vec![Text(format!("Unbound type in hint: {}", e))]),
                     ),
                 ));
             }
@@ -1577,10 +1578,10 @@ fn eval_let(
                 RestoreValues(vec![expr_value]),
                 EvalError::ResumableError(
                     hint.position.clone(),
-                    ErrorMessage(vec![format!(
+                    ErrorMessage(vec![Text(format!(
                         "Incorrect type for variable: {}",
                         msg.as_string()
-                    )]),
+                    ))]),
                 ),
             ));
         };
@@ -1596,11 +1597,11 @@ fn eval_let(
                         RestoreValues(vec![expr_value.clone()]),
                         EvalError::ResumableError(
                             position.clone(),
-                            ErrorMessage(vec![format!(
+                            ErrorMessage(vec![Text(format!(
                                 "Expected a tuple with {} items, got a tuple with {} items.",
                                 symbols.len(),
                                 items.len(),
-                            )]),
+                            ))]),
                         ),
                     ));
                 }
@@ -1614,7 +1615,7 @@ fn eval_let(
                     RestoreValues(vec![expr_value]),
                     EvalError::ResumableError(
                         position.clone(),
-                        ErrorMessage(vec![format!("Incorrect type for variable: {}", "x")]),
+                        ErrorMessage(vec![Text(format!("Incorrect type for variable: {}", "x"))]),
                     ),
                 ));
             }
@@ -1651,7 +1652,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
         )
     };
 
-    ErrorMessage(vec![msg])
+    ErrorMessage(vec![Text(msg)])
 }
 
 fn eval_boolean_binop(
@@ -1792,10 +1793,10 @@ fn eval_integer_binop(
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                         EvalError::ResumableError(
                             position.clone(),
-                            ErrorMessage(vec![format!(
+                            ErrorMessage(vec![Text(format!(
                                 "Tried to divide {} by zero.",
                                 lhs_value.display(env)
-                            )]),
+                            ))]),
                         ),
                     ));
                 }
@@ -1809,11 +1810,11 @@ fn eval_integer_binop(
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                         EvalError::ResumableError(
                             position.clone(),
-                            ErrorMessage(vec![format!(
+                            ErrorMessage(vec![Text(format!(
                                 "Cannot raise an integer to a negative power, got {}.^ {}",
                                 lhs_value.display(env),
                                 rhs_value.display(env),
-                            )]),
+                            ))]),
                         ),
                     ));
                 }
@@ -1823,11 +1824,11 @@ fn eval_integer_binop(
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                         EvalError::ResumableError(
                             position.clone(),
-                            ErrorMessage(vec![format!(
+                            ErrorMessage(vec![Text(format!(
                                 "Exponent is too large, got {}.^ {}",
                                 lhs_value.display(env),
                                 rhs_value.display(env),
-                            )]),
+                            ))]),
                         ),
                     ));
                 }
@@ -1839,11 +1840,11 @@ fn eval_integer_binop(
                             RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
                             EvalError::ResumableError(
                                 position.clone(),
-                                ErrorMessage(vec![format!(
+                                ErrorMessage(vec![Text(format!(
                                     "Integer overflow on raising to the power, got {}.^ {}",
                                     lhs_value.display(env),
                                     rhs_value.display(env),
-                                )]),
+                                ))]),
                             ),
                         ));
                     }
@@ -1956,13 +1957,13 @@ fn check_arity(
             RestoreValues(saved_values),
             EvalError::ResumableError(
                 error_position,
-                ErrorMessage(vec![format!(
+                ErrorMessage(vec![Text(format!(
                     "Function {} requires {} argument{}, but got {}",
                     fun_name,
                     expected,
                     if expected == 1 { "" } else { "s" },
                     arg_values.len()
-                )]),
+                ))]),
             ),
         ));
     }
@@ -2024,7 +2025,7 @@ fn eval_builtin_call(
 
             match arg_values[0].as_ref() {
                 Value_::String(msg) => {
-                    let message = ErrorMessage(vec![msg.clone()]);
+                    let message = ErrorMessage(vec![Text(msg.clone())]);
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::ResumableError(position.clone(), message),
@@ -2628,7 +2629,7 @@ fn eval_call(
                     saved_values.push(value.clone());
                 }
 
-                let message = ErrorMessage(vec![format!(
+                let message = ErrorMessage(vec![Text(format!(
                     "Closure expects {} argument{}, but got {}",
                     fun_info.params.params.len(),
                     if fun_info.params.params.len() == 1 {
@@ -2637,7 +2638,7 @@ fn eval_call(
                         "s"
                     },
                     arg_values.len()
-                )]);
+                ))]);
                 return Err((
                     RestoreValues(saved_values),
                     EvalError::ResumableError(caller_expr.position.clone(), message),
@@ -2874,7 +2875,10 @@ fn eval_assert(
 
             return Err((
                 RestoreValues(vec![receiver_value]),
-                EvalError::AssertionFailed(recv_expr.position.clone(), ErrorMessage(vec![message])),
+                EvalError::AssertionFailed(
+                    recv_expr.position.clone(),
+                    ErrorMessage(vec![Text(message)]),
+                ),
             ));
         }
     } else {
@@ -2997,7 +3001,7 @@ fn check_param_types(
                         RestoreValues(vec![]),
                         EvalError::ResumableError(
                             arg_positions[i].clone(),
-                            ErrorMessage(vec![format!("Unbound type in hint: {}", e)]),
+                            ErrorMessage(vec![Text(format!("Unbound type in hint: {}", e))]),
                         ),
                     ));
                 }
@@ -3014,10 +3018,10 @@ fn check_param_types(
                     RestoreValues(saved_values),
                     EvalError::ResumableError(
                         arg_positions[i].clone(),
-                        ErrorMessage(vec![format!(
+                        ErrorMessage(vec![Text(format!(
                             "Incorrect type for argument: {}",
                             msg.as_string()
-                        )]),
+                        ))]),
                     ),
                 ));
             }
@@ -3075,10 +3079,10 @@ fn eval_method_call(
             RestoreValues(saved_values),
             EvalError::ResumableError(
                 meth_name.position.clone(),
-                ErrorMessage(vec![format!(
+                ErrorMessage(vec![Text(format!(
                     "No methods defined on `{}`.",
                     receiver_type_name
-                )]),
+                ))]),
             ),
         ));
     };
@@ -3093,10 +3097,10 @@ fn eval_method_call(
             RestoreValues(saved_values),
             EvalError::ResumableError(
                 meth_name.position.clone(),
-                ErrorMessage(vec![format!(
+                ErrorMessage(vec![Text(format!(
                     "No method named `{}` on `{}`.",
                     meth_name.name, receiver_type_name
-                )]),
+                ))]),
             ),
         ));
     };
@@ -3186,23 +3190,23 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
     }
 
     let Some((field_name, field_value)) = fields.first() else {
-        return Err(ErrorMessage(vec![
+        return Err(ErrorMessage(vec![Text(
             "Malformed `Path` struct (expected some fields).".to_owned(),
-        ]));
+        )]));
     };
     if field_name.name != "p" {
-        return Err(ErrorMessage(vec![format!(
+        return Err(ErrorMessage(vec![Text(format!(
             "Malformed `Path` struct (expected a field named `p`, got `{}`).",
             field_name,
-        )]));
+        ))]));
     }
 
     match field_value.as_ref() {
         Value_::String(s) => Ok(s.clone()),
-        _ => Err(ErrorMessage(vec![format!(
+        _ => Err(ErrorMessage(vec![Text(format!(
             "Malformed `Path` struct (expected `p` to contain a string, got `{}`).",
             field_value.display(env),
-        )])),
+        ))])),
     }
 }
 
@@ -3788,7 +3792,7 @@ fn eval_builtin_method_call(
                     RestoreValues(saved_values),
                     EvalError::ResumableError(
                         arg_positions[1].clone(),
-                        ErrorMessage(vec![format!("The first argument to String::substring must be greater than 0, but got: {}", from_arg)]),
+                        ErrorMessage(vec![Text(format!("The first argument to String::substring must be greater than 0, but got: {}", from_arg))]),
                     ),
                 ));
             }
@@ -3804,7 +3808,7 @@ fn eval_builtin_method_call(
                     RestoreValues(saved_values),
                     EvalError::ResumableError(
                         arg_positions[1].clone(),
-                        ErrorMessage(vec![format!("The first argument to String::substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg)]),
+                        ErrorMessage(vec![Text(format!("The first argument to String::substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg))]),
                     ),
                 ));
             }
@@ -4099,10 +4103,10 @@ fn eval_expr(
                     RestoreValues(vec![]),
                     EvalError::ResumableError(
                         name_sym.position.clone(),
-                        ErrorMessage(vec![format!(
+                        ErrorMessage(vec![Text(format!(
                             "Undefined variable: {}.{}",
                             name_sym.name, suggestion
-                        )]),
+                        ))]),
                     ),
                 ));
             }
@@ -4274,7 +4278,9 @@ fn eval_expr(
             eval_continue(env);
         }
         Expression_::Invalid => {
-            return Err((RestoreValues(vec![]), (EvalError::ResumableError(expr_position, ErrorMessage(vec!["Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned()])))));
+            return Err((RestoreValues(vec![]),
+                        (EvalError::ResumableError(expr_position,
+                                                   ErrorMessage(vec![Text("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())])))));
         }
         Expression_::Assert(expr) => {
             match expr_state {
@@ -4449,7 +4455,10 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 let return_ty = match Type::from_hint(return_hint, &env.types, &type_bindings) {
                     Ok(ty) => ty,
                     Err(e) => {
-                        return Err(EvalError::ResumableError(err_pos, ErrorMessage(vec![e])));
+                        return Err(EvalError::ResumableError(
+                            err_pos,
+                            ErrorMessage(vec![Text(e)]),
+                        ));
                     }
                 };
 
@@ -4573,10 +4582,10 @@ fn eval_dot_access(
                     RestoreValues(vec![recv_value]),
                     EvalError::ResumableError(
                         symbol.position.clone(),
-                        ErrorMessage(vec![format!(
+                        ErrorMessage(vec![Text(format!(
                             "This struct has no field named `{}`.",
                             symbol.name
-                        )]),
+                        ))]),
                     ),
                 ));
             }
@@ -4607,18 +4616,18 @@ fn eval_struct_value(
             RestoreValues(vec![]),
             EvalError::ResumableError(
                 type_symbol.position.clone(),
-                ErrorMessage(vec![format!(
+                ErrorMessage(vec![Text(format!(
                     "No type exists named `{}`.",
                     type_symbol.name
-                )]),
+                ))]),
             ),
         ));
     };
     let TypeDef::Struct(struct_info) = type_info.clone() else {
-        let message = ErrorMessage(vec![format!(
+        let message = ErrorMessage(vec![Text(format!(
             "`{}` is not a struct, so it cannot be initialized with struct syntax.",
             type_symbol.name,
-        )]);
+        ))]);
 
         return Err((
             RestoreValues(vec![]),
@@ -4646,10 +4655,10 @@ fn eval_struct_value(
             // TODO: this would be a good candidate for additional
             // positions, in this case the definition site of the
             // struct.
-            let message = ErrorMessage(vec![format!(
+            let message = ErrorMessage(vec![Text(format!(
                 "`{}` does not have a field named `{}`.",
                 type_symbol.name, field_sym.name
-            )]);
+            ))]);
 
             return Err((
                 RestoreValues(vec![]), // TODO
@@ -4671,10 +4680,10 @@ fn eval_struct_value(
                 RestoreValues(vec![]), // TODO
                 EvalError::ResumableError(
                     field_expr.position.clone(),
-                    ErrorMessage(vec![format!(
+                    ErrorMessage(vec![Text(format!(
                         "Incorrect type for field: {}",
                         msg.as_string()
-                    )]),
+                    ))]),
                 ),
             ));
         }
@@ -4688,11 +4697,11 @@ fn eval_struct_value(
             .into_keys()
             .map(|sn| format!("`{}`", sn.name))
             .collect();
-        let message = ErrorMessage(vec![format!(
+        let message = ErrorMessage(vec![Text(format!(
             "Missing fields from `{}`: {}.",
             type_symbol.name,
             missing.join(", ")
-        )]);
+        ))]);
 
         return Err((
             RestoreValues(vec![]), // TODO
@@ -4744,18 +4753,18 @@ fn eval_match_cases(
     } = scrutinee_value.as_ref()
     else {
         let stack_frame = env.current_frame();
-        let msg = ErrorMessage(vec![format!(
+        let msg = ErrorMessage(vec![Text(format!(
             "Expected an enum value, but got {}: {}",
             Type::from_value(&scrutinee_value, &env.types, &stack_frame.type_bindings),
             scrutinee_value.display(env)
-        )]);
+        ))]);
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
     let Some(_type) = env.get_type_def(value_type_name) else {
-        let msg = ErrorMessage(vec![format!(
+        let msg = ErrorMessage(vec![Text(format!(
             "Could not find an enum type named {value_type_name}"
-        )]);
+        ))]);
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
     };
 
@@ -4766,10 +4775,10 @@ fn eval_match_cases(
         }
 
         let Some(value) = get_var(&pattern.symbol, env) else {
-            let msg = ErrorMessage(vec![format!(
+            let msg = ErrorMessage(vec![Text(format!(
                 "No such value defined for pattern `{}`",
                 pattern.symbol.name
-            )]);
+            ))]);
             return Err(EvalError::ResumableError(
                 pattern.symbol.position.clone(),
                 msg,
@@ -4789,10 +4798,10 @@ fn eval_match_cases(
             } => (type_name, *variant_idx),
             _ => {
                 // TODO: error messages should include examples of valid code.
-                let msg = ErrorMessage(vec![format!(
+                let msg = ErrorMessage(vec![Text(format!(
                     "Patterns must be enum variants, got `{}`",
                     value.display(env)
-                )]);
+                ))]);
                 return Err(EvalError::ResumableError(
                     pattern.symbol.position.clone(),
                     msg,
@@ -4823,9 +4832,9 @@ fn eval_match_cases(
         }
     }
 
-    let msg = ErrorMessage(vec![
-        "No cases in this `match` statement were reached.".to_owned()
-    ]);
+    let msg = ErrorMessage(vec![Text(
+        "No cases in this `match` statement were reached.".to_owned(),
+    )]);
     Err(EvalError::ResumableError(scrutinee_pos.clone(), msg))
 }
 

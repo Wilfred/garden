@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::path::Path;
 
+use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::{
     ast::{IdGenerator, SourceString},
     diagnostics::ErrorMessage,
@@ -117,7 +118,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             };
 
             format_diagnostic(
-                &ErrorMessage(vec![diagnostic.message.clone()]),
+                &ErrorMessage(vec![Text(diagnostic.message.clone())]),
                 &diagnostic.position,
                 level,
                 &src_string,

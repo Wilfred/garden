@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>The Garden Programming Language</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/blocks.css/dist/blocks.min.css"
+    />
+    <style>
+      /* Heavily inspired by https://github.com/thesephist/codeframe,
+      which is under a MIT license. */
+      body {
+        max-width: 900px;
+        margin: 24px auto 52px auto;
+        font-size: 16px;
+      }
+      .container {
+        margin-top: 86px;
+        margin-left: 10px;
+      }
+      header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        padding: 4px;
+        background: #46917a;
+        border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+      }
+
+      a {
+        color: #46917a;
+        text-decoration: none;
+        border-bottom: 2px dotted #46917a;
+      }
+
+      nav {
+        display: flex;
+        flex-direction: row;
+        flex-shrink: 1;
+        overflow-x: auto;
+      }
+
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+      }
+
+      header a {
+        text-decoration: none;
+      }
+
+      .keyword {
+        font-weight: bold;
+      }
+
+      .comment {
+        color: gray;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="/parser.html">Parser</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1>🌻 The Garden Programming Language</h1>
+<p>Garden is an experimental programming language focused on interactive
+tooling.</p>
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> main(_args: List&lt;String&gt;) {
+  print("hello world")
+}</code></pre>
+<h2>Taking REPLs Seriously</h2>
+<p>Common Lisp and Smalltalk have a superpower: you can modify running
+programs. You can redefine functions and modify class definitions
+without restarting your program.</p>
+<p>Garden aims to provide that superpower in a conventional language
+design.</p>
+<h2>Tooling First</h2>
+<p>Garden prioritises developer experience over language
+functionality. The syntax and semantics are deliberately small, so a
+small team (or just me!) can build a delightful, credible language
+experience.</p>
+<h2>Just Enough Typing</h2>
+<p>Most gradual type systems are intended for incremental adoption in a
+dynamically typed language. Garden is new, but requires a typing model that
+works with code of the form:</p>
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): String { <a href="./keyword:return.html"><span class="keyword">return</span></a> "" }
+
+<a href="./keyword:fun.html"><span class="keyword">fun</span></a> bar(): Unit {
+    eval("fun foo(): Int { <a href="./keyword:return.html"><span class="keyword">return</span></a> 1 }")
+    <a href="./keyword:let.html"><span class="keyword">let</span></a> x = foo() + 1
+}</code></pre>
+<h2>Sandboxed Execution</h2>
+<p>Garden supports sandbox execution without third-party libraries. This
+is important for two workflows:</p>
+<p>(1) The IDE can speculatively evaluate snippets of code safely. This
+is convenient and enables 'mutation testing' for code completion.</p>
+<p>(2) Libraries can declare what capabilities they need, such as network
+or disk. This makes third-party libraries safer to install. This will
+be coarse permissions, similar to OpenBSD's Pledge.</p>
+<h2>Tooling Oriented Dynamism</h2>
+<p>Garden splits its semantics into (1) simple evaluation that is
+amenable to static analysis, and (2) reflective, dynamic evaluation
+that is friendly to developer experience.</p>
+<p>This means that errors in userland are plain <code>Result</code> types, but
+unhandled errors can be fixed at runtime by a programmer.</p></div>
+  </body>
+</html>

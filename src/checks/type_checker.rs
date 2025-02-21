@@ -428,10 +428,7 @@ impl TypeCheckVisitor<'_> {
         if block.exprs.is_empty() && !is_subtype(&ty, expected_ty) {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!(
-                    "Expected `{}`, but got `{}`.",
-                    expected_ty, ty
-                ))]),
+                message: format_type_mismatch(expected_ty, &ty),
                 position: block.close_brace.clone(),
             });
         }
@@ -1040,10 +1037,7 @@ impl TypeCheckVisitor<'_> {
                             if !is_subtype(&arg_ty, param_ty) {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
-                                    message: ErrorMessage(vec![Text(format!(
-                                        "Expected `{}` argument but got `{}`.",
-                                        param_ty, arg_ty
-                                    ))]),
+                                    message: format_type_mismatch(param_ty, &arg_ty),
                                     position: arg_pos,
                                 });
                             }
@@ -1192,10 +1186,7 @@ impl TypeCheckVisitor<'_> {
                             if !is_subtype(arg_ty, param_ty) {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
-                                    message: ErrorMessage(vec![Text(format!(
-                                        "Expected `{}` argument but got `{}`.",
-                                        param_ty, arg_ty
-                                    ))]),
+                                    message: format_type_mismatch(param_ty, arg_ty),
                                     position: arg_pos.clone(),
                                 });
                             }
@@ -1456,10 +1447,7 @@ impl TypeCheckVisitor<'_> {
         if !is_subtype(&ty, expected_ty) {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!(
-                    "Expected `{}`, but got `{}`.",
-                    expected_ty, ty
-                ))]),
+                message: format_type_mismatch(expected_ty, &ty),
                 position: pos.clone(),
             });
         }
@@ -1924,4 +1912,14 @@ fn check_match_exhaustive(
             break;
         }
     }
+}
+
+fn format_type_mismatch(expected_ty: &Type, actual_ty: &Type) -> ErrorMessage {
+    ErrorMessage(vec![
+        Text("Expected ".to_owned()),
+        Code(expected_ty.to_string()),
+        Text(", but got ".to_owned()),
+        Code(actual_ty.to_string()),
+        Text(".".to_owned()),
+    ])
 }

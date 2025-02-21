@@ -88,10 +88,10 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                     .collect();
                 if reachable_from_item_ids.is_disjoint(&already_covered_ids) {
                     diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "`{}` is never called.",
-                            &symbol.name
-                        ))]),
+                        message: ErrorMessage(vec![
+                            Code(format!("{}", &symbol.name)),
+                            Text(" is never called.".to_owned()),
+                        ]),
                         position: symbol.position.clone(),
                         level: Level::Warning,
                     });

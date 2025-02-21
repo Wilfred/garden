@@ -81,17 +81,25 @@ pub(crate) fn format_diagnostic(
     let use_color = std::io::stdout().is_terminal();
 
     let level_s = match level {
-        Level::Warning => "Warning",
-        Level::Error => "Error",
+        Level::Warning => {
+            if use_color {
+                "Warning".bold().yellow().to_string()
+            } else {
+                "Warning".to_owned()
+            }
+        }
+        Level::Error => {
+            if use_color {
+                "Error".bold().red().to_string()
+            } else {
+                "Error".to_owned()
+            }
+        }
     };
 
     let mut res = format!(
         "{}: {}\n",
-        if use_color {
-            level_s.bold().to_string()
-        } else {
-            level_s.to_owned()
-        },
+        level_s,
         if use_color {
             message.as_styled_string()
         } else {

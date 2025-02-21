@@ -63,10 +63,28 @@ enum Request {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct DiagnosticForJson {
+    // Not an ErrorMessage.
+    message: String,
+    position: Position,
+    level: Level,
+}
+
+impl From<Diagnostic> for DiagnosticForJson {
+    fn from(value: Diagnostic) -> Self {
+        Self {
+            message: value.message,
+            position: value.position,
+            level: value.level,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum ResponseKind {
     Evaluate {
-        warnings: Vec<Diagnostic>,
+        warnings: Vec<DiagnosticForJson>,
         value: Result<Option<String>, Vec<ResponseError>>,
         stack_frame_name: Option<String>,
     },
@@ -149,7 +167,7 @@ fn handle_load_request(
 
     Response {
         kind: ResponseKind::Evaluate {
-            warnings: diagnostics,
+            warnings: diagnostics.into_iter().map(Into::into).collect::<Vec<_>>(),
             value: Ok(Some(summary)),
             stack_frame_name: Some(env.top_frame_name()),
         },
@@ -645,7 +663,7 @@ fn handle_run_eval_request(
 
             Response {
                 kind: ResponseKind::Evaluate {
-                    warnings: diagnostics,
+                    warnings: diagnostics.into_iter().map(Into::into).collect::<Vec<_>>(),
                     value: Ok(value_summary),
                     stack_frame_name: Some(env.top_frame_name()),
                 },

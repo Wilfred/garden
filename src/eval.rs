@@ -1645,18 +1645,28 @@ fn eval_let(
 fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &Env) -> ErrorMessage {
     let actual_ty = Type::from_value(value, &env.types, &env.stack.type_bindings());
 
-    let msg = if actual_ty.is_unit() {
-        format!("Expected `{}`, but got `Unit`", expected.to_string(),)
+    let parts = if actual_ty.is_unit() {
+        vec![
+            Text("Expected ".to_owned()),
+            Code(expected.to_string()),
+            Text(", but got ".to_owned()),
+            Code("Unit".to_owned()),
+        ]
     } else {
-        format!(
-            "Expected `{}`, but got `{}`: {}",
-            expected.to_string(),
-            Type::from_value(value, &env.types, &env.stack.type_bindings()),
-            value.display(env)
-        )
+        vec![
+            Text("Expected ".to_owned()),
+            Code(expected.to_string()),
+            Text(", but got ".to_owned()),
+            Code(format!(
+                "{}",
+                Type::from_value(value, &env.types, &env.stack.type_bindings())
+            )),
+            Text(": ".to_owned()),
+            Code(value.display(env)),
+        ]
     };
 
-    ErrorMessage(vec![Text(msg)])
+    ErrorMessage(parts)
 }
 
 fn eval_boolean_binop(

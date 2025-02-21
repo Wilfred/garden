@@ -13,7 +13,7 @@ fun main(args: List<String>): Unit {
 
 // args: run
 // expected stderr:
-// Error: Expected `Box<Int>`, but got `Box<String>`: Box{ value: "not an int" }
+// Error: Expected `Box<Int>`, but got `Box<String>`: `Box{ value: "not an int" }`
 // --> src/test_files/runtime/struct_invalid_type_param.gdn:5[2m[1m	 fun foo()[0m[0m
 // fun foo(): Box<Int> {
 //            ^^^^^^^^

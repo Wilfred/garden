@@ -5,7 +5,7 @@ fun main(args: List<String>): Unit {
 
 // args: run
 // expected stderr:
-// Error: Expected `struct`, but got `Int`: 1
+// Error: Expected `struct`, but got `Int`: `1`
 // --> src/test_files/runtime/dot_access_bad_type.gdn:3[2m[1m	 fun main()[0m[0m
 //     x.y
 //     ^

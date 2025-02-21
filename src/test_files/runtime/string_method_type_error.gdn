@@ -4,7 +4,7 @@ fun main(_) {
 
 // args: run
 // expected stderr:
-// Error: Expected `String`, but got `Int`: 123
+// Error: Expected `String`, but got `Int`: `123`
 // --> src/test_files/runtime/string_method_type_error.gdn:2[2m[1m	 fun main()[0m[0m
 //   "foo".index_of(123)
 //                  ^^^

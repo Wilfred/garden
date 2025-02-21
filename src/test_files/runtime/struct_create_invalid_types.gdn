@@ -9,7 +9,7 @@ fun main(args: List<String>): Unit {
 
 // args: run
 // expected stderr:
-// Error: Incorrect type for field: Expected `Int`, but got `String`: "abc"
+// Error: Incorrect type for field: Expected `Int`, but got `String`: `"abc"`
 // --> src/test_files/runtime/struct_create_invalid_types.gdn:6[2m[1m	 fun main()[0m[0m
 //     dbg(Foo{ x: "abc" })
 //                 ^^^^^

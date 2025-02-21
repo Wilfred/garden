@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::io::IsTerminal;
 use std::path::Path;
 
 use garden_lang_parser::diagnostics::MessagePart::*;
@@ -41,6 +42,8 @@ struct CheckDiagnostic {
 }
 
 pub(crate) fn check(path: &Path, src: &str, json: bool) {
+    let use_color = std::io::stdout().is_terminal() && !json;
+
     let mut diagnostics = vec![];
 
     let mut id_gen = IdGenerator::default();
@@ -58,7 +61,11 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                     end_line_number: position.end_line_number + 1,
                     column: position.column,
                     end_column: position.end_column,
-                    message: message.as_string(),
+                    message: if use_color {
+                        message.as_styled_string()
+                    } else {
+                        message.as_string()
+                    },
                     severity: Severity::Error,
                 });
             }
@@ -72,7 +79,11 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                     end_line_number: position.end_line_number + 1,
                     column: position.column,
                     end_column: position.end_column,
-                    message: message.as_string(),
+                    message: if use_color {
+                        message.as_styled_string()
+                    } else {
+                        message.as_string()
+                    },
                     severity: Severity::Error,
                 });
             }
@@ -98,7 +109,11 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             end_line_number: position.end_line_number + 1,
             column: position.column,
             end_column: position.end_column,
-            message: message.as_string(),
+            message: if use_color {
+                message.as_styled_string()
+            } else {
+                message.as_string()
+            },
             severity,
         });
     }

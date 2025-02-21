@@ -18,7 +18,7 @@ pub(crate) enum Level {
     Error,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug)]
 pub(crate) struct Diagnostic {
     pub(crate) message: String,
     pub(crate) position: Position,

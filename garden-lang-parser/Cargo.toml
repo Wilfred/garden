@@ -20,3 +20,4 @@ serde = { version = "1.0.104", features = ["derive", "rc"] }
 strum = "0.24.1"
 strum_macros = "0.24.1"
 rustc-hash = "2.1.0"
+owo-colors = { version = "4.0.0", features = ["supports-colors"] }

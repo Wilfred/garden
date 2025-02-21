@@ -331,6 +331,7 @@ version = "0.19.0"
 dependencies = [
  "lazy_static",
  "line-numbers",
+ "owo-colors",
  "regex",
  "rustc-hash",
  "serde",

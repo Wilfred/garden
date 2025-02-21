@@ -92,7 +92,11 @@ pub(crate) fn format_diagnostic(
         } else {
             level_s.to_owned()
         },
-        message.as_string()
+        if use_color {
+            message.as_styled_string()
+        } else {
+            message.as_string()
+        }
     );
     res.push_str(&format_pos_in_fun(
         position,

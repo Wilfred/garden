@@ -2844,7 +2844,6 @@ fn eval_call(
 fn eval_assert(
     env: &mut Env,
     expr_value_is_used: bool,
-    outer_expr: Rc<Expression>,
     recv_expr: &Rc<Expression>,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let receiver_value = env
@@ -2870,25 +2869,22 @@ fn eval_assert(
     if let Some(b) = receiver_value.as_rust_bool() {
         if !b {
             let message = match subexpr_values {
-                Some((lhs_value, kind, rhs_value)) => format!(
-                    "Assertion failed `{} {} {}` at {}",
-                    lhs_value.display(env),
-                    kind,
-                    rhs_value.display(env),
-                    outer_expr.position.as_ide_string()
-                ),
-                None => format!(
-                    "Assertion failed at {}",
-                    outer_expr.position.as_ide_string()
-                ),
+                Some((lhs_value, kind, rhs_value)) => vec![
+                    Text("Assertion failed: ".to_owned()),
+                    Code(format!(
+                        "{} {} {}",
+                        lhs_value.display(env),
+                        kind,
+                        rhs_value.display(env),
+                    )),
+                    Text(".".to_owned()),
+                ],
+                None => vec![Text("Assertion failed.".to_owned())],
             };
 
             return Err((
                 RestoreValues(vec![receiver_value]),
-                EvalError::AssertionFailed(
-                    recv_expr.position.clone(),
-                    ErrorMessage(vec![Text(message)]),
-                ),
+                EvalError::AssertionFailed(recv_expr.position.clone(), ErrorMessage(message)),
             ));
         }
     } else {
@@ -4343,7 +4339,7 @@ fn eval_expr(
                     );
                 }
                 ExpressionState::EvaluatedAllSubexpressions => {
-                    eval_assert(env, expr_value_is_used, outer_expr.clone(), expr)?;
+                    eval_assert(env, expr_value_is_used, expr)?;
                 }
             }
         }

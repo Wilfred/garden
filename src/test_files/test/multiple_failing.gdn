@@ -10,6 +10,6 @@ test bar {
 // expected exit status: 1
 // expected stdout:
 // 0 passed, 2 failed.
-// Failed: foo src/test_files/test/multiple_failing.gdn:2
-// Failed: bar src/test_files/test/multiple_failing.gdn:6
+// Failed: foo src/test_files/test/multiple_failing.gdn:2: Assertion failed: `1 == 2`.
+// Failed: bar src/test_files/test/multiple_failing.gdn:6: Assertion failed: `1 == 2`.
 

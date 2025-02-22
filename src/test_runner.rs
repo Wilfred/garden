@@ -1,4 +1,5 @@
 use std::{
+    io::IsTerminal as _,
     path::Path,
     sync::{atomic::AtomicBool, Arc},
     time::Instant,
@@ -185,6 +186,7 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
         .count();
     let tests_passed = total_tests - tests_failed;
 
+    let use_color = std::io::stdout().is_terminal();
     if tests_passed == 0 && tests_failed == 0 {
         println!("No tests found.");
     } else {
@@ -197,16 +199,28 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
 
             print!("Failed: {}", test_sym.name);
 
-            let pos = match err {
-                EvalError::Interrupted => None,
-                EvalError::ResumableError(position, _) => Some(position),
-                EvalError::AssertionFailed(position, _) => Some(position),
-                EvalError::ReachedTickLimit(position) => Some(position),
-                EvalError::ForbiddenInSandbox(position) => Some(position),
+            let (pos, msg) = match err {
+                EvalError::Interrupted => (None, None),
+                EvalError::ResumableError(position, msg) => (Some(position), Some(msg)),
+                EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
+                EvalError::ReachedTickLimit(position) => (Some(position), None),
+                EvalError::ForbiddenInSandbox(position) => (Some(position), None),
             };
-            match pos {
-                Some(pos) => println!(" {}", pos.as_ide_string()),
-                None => println!(),
+
+            match (pos, msg) {
+                (Some(pos), Some(msg)) => {
+                    println!(
+                        " {}: {}",
+                        pos.as_ide_string(),
+                        if use_color {
+                            msg.as_styled_string()
+                        } else {
+                            msg.as_string()
+                        }
+                    )
+                }
+                (Some(pos), None) => println!(" {}", pos.as_ide_string()),
+                _ => println!(),
             }
         }
     }

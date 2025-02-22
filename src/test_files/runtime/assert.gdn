@@ -5,7 +5,7 @@ fun main(_) {
 
 // args: run
 // expected stderr:
-// Error: Assertion failed `2 == 3` at src/test_files/runtime/assert.gdn:3
+// Error: Assertion failed: `2 == 3`.
 // --> src/test_files/runtime/assert.gdn:3[2m[1m	 fun main()[0m[0m
 //     assert((1 + 1) == 3)
 //             ^^^^^^^^^^^

@@ -8,6 +8,7 @@ fun foo() {
 // expected stdout:
 // {"name":"append","suffix":"(T): List<T>"}
 // {"name":"contains","suffix":"(T): Bool"}
+// {"name":"enumerate()","suffix":": List<(Int, T)>"}
 // {"name":"filter","suffix":"(Fun<(T), Bool>): List<T>"}
 // {"name":"first()","suffix":": Option<T>"}
 // {"name":"get","suffix":"(Int): Option<T>"}

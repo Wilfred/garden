@@ -450,8 +450,10 @@ test list_map {
 // to index j (exclusive). If `j` is negative, count backwards from
 // the end.
 //
+// ```
 // [10, 11, 12].slice(0, 2) // [10, 11]
 // [10, 11, 12].slice(1, -1) // [11]
+// ```
 export fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
   if (j < 0) {
     j = this.len() + j
@@ -477,6 +479,29 @@ test list_slice {
   assert([10, 11, 12].slice(0, 2) == [10, 11])
 
   assert([10, 11, 12].slice(0, -1) == [10, 11])
+}
+
+// Return a new list consisting of the items themselves, plus the
+// index of the position of each value.
+//
+// ```
+// ["a", "b"].enumerate() // [(0, "a"), (1, "b")]
+// ```
+export fun (this: List<T>) enumerate<T>(): List<(Int, T)> {
+  let items: List<(Int, T)> = []
+
+  let i = 0
+  for item in this {
+    let t = (i, item)
+    items = items.append(t)
+    i += 1
+  }
+
+  items
+}
+
+test list_enumerate {
+  assert(["a", "b"].enumerate() == [(0, "a"), (1, "b")])
 }
 
 // Option methods.

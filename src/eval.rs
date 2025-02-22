@@ -2841,10 +2841,6 @@ fn eval_call(
     Ok(None)
 }
 
-/// Evaluate a function call.
-///
-/// If we're calling a userland function, return the new stackframe to
-/// evaluate next.
 fn eval_assert(
     env: &mut Env,
     expr_value_is_used: bool,

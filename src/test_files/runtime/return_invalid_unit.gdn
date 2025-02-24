@@ -8,11 +8,11 @@ fun main(args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: Expected `Int`, but got `Unit`
-// --> src/test_files/runtime/return_invalid_unit.gdn:1[2m[1m	 fun foo()[0m[0m
+// --> src/test_files/runtime/return_invalid_unit.gdn:1	 fun foo()
 // fun foo(): Int {}
 //            ^^^
-// --> src/test_files/runtime/return_invalid_unit.gdn:4[2m[1m	 fun main()[0m[0m
+// --> src/test_files/runtime/return_invalid_unit.gdn:4	 fun main()
 //     foo()
-// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// --> __main_fun__:1	 __toplevel__
 // // __toplevel__
 

@@ -5,9 +5,9 @@ fun main(_args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: Expected `String`, but got `Int`: `123`
-// --> src/test_files/runtime/let_hint_invalid.gdn:2[2m[1m	 fun main()[0m[0m
+// --> src/test_files/runtime/let_hint_invalid.gdn:2	 fun main()
 //     let x: String = 123
 //                     ^^^
-// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// --> __main_fun__:1	 __toplevel__
 // // __toplevel__
 

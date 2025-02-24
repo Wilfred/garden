@@ -13,11 +13,11 @@ fun main(_args: List<String>): Unit {
 // args: run
 // expected stderr:
 // Error: Expected `Int`, but got `Unit`
-// --> src/test_files/runtime/if_without_else.gdn:1[2m[1m	 fun foo()[0m[0m
+// --> src/test_files/runtime/if_without_else.gdn:1	 fun foo()
 // fun foo(b: Bool): Int {
 //                   ^^^
-// --> src/test_files/runtime/if_without_else.gdn:9[2m[1m	 fun main()[0m[0m
+// --> src/test_files/runtime/if_without_else.gdn:9	 fun main()
 //     foo(True)
-// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// --> __main_fun__:1	 __toplevel__
 // // __toplevel__
 

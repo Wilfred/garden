@@ -19,7 +19,7 @@
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: foo",
-//             "stack": "Error: foo\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t test foo\u001b[0m\u001b[0m\ntest foo { error(\"foo\") }\n           ^^^^^^^^^^^^"
+//             "stack": "Error: foo\n--> __json_session_unnamed__:1\t test foo\ntest foo { error(\"foo\") }\n           ^^^^^^^^^^^^"
 //           }
 //         ]
 //       },

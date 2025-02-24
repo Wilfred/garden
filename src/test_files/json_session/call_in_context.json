@@ -60,7 +60,7 @@
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: oh no",
-//             "stack": "Error: oh no\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t fun foo()\u001b[0m\u001b[0m\nfun foo() { let x = 1 error(\"oh no\") }\n                      ^^^^^^^^^^^^^^\n--> __json_session_unnamed__:1\u001b[2m\u001b[1m\t __toplevel__\u001b[0m\u001b[0m\n// __toplevel__"
+//             "stack": "Error: oh no\n--> __json_session_unnamed__:1\t fun foo()\nfun foo() { let x = 1 error(\"oh no\") }\n                      ^^^^^^^^^^^^^^\n--> __json_session_unnamed__:1\t __toplevel__\n// __toplevel__"
 //           }
 //         ]
 //       },

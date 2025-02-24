@@ -7,9 +7,9 @@ fun main(_) {
 // args: run
 // expected stderr:
 // Error: lhs
-// --> src/test_files/runtime/binop_eval_order.gdn:4[2m[1m	 fun main()[0m[0m
+// --> src/test_files/runtime/binop_eval_order.gdn:4	 fun main()
 //   error("lhs") + error("rhs")
 //   ^^^^^^^^^^^^
-// --> __main_fun__:1[2m[1m	 __toplevel__[0m[0m
+// --> __main_fun__:1	 __toplevel__
 // // __toplevel__
 

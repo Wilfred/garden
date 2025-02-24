@@ -1554,7 +1554,7 @@ fn eval_let(
     env: &mut Env,
     expr_value_is_used: bool,
     destination: &LetDestination,
-    position: &Position,
+    init_value_pos: &Position,
     hint: &Option<TypeHint>,
 ) -> Result<(), (RestoreValues, EvalError)> {
     let expr_value = env
@@ -1571,7 +1571,7 @@ fn eval_let(
                     RestoreValues(vec![]),
                     EvalError::ResumableError(
                         hint.position.clone(),
-                        ErrorMessage(vec![Text(format!("Unbound type in hint: {}", e))]),
+                        ErrorMessage(vec![msgtext!("Unbound type in hint: "), Code(e)]),
                     ),
                 ));
             }
@@ -1580,13 +1580,7 @@ fn eval_let(
         if let Err(msg) = check_type(&expr_value, &expected_ty, env) {
             return Err((
                 RestoreValues(vec![expr_value]),
-                EvalError::ResumableError(
-                    hint.position.clone(),
-                    ErrorMessage(vec![Text(format!(
-                        "Incorrect type for variable: {}",
-                        msg.as_string()
-                    ))]),
-                ),
+                EvalError::ResumableError(init_value_pos.clone(), msg),
             ));
         };
     }
@@ -1600,7 +1594,7 @@ fn eval_let(
                     return Err((
                         RestoreValues(vec![expr_value.clone()]),
                         EvalError::ResumableError(
-                            position.clone(),
+                            init_value_pos.clone(),
                             ErrorMessage(vec![Text(format!(
                                 "Expected a tuple with {} items, got a tuple with {} items.",
                                 symbols.len(),
@@ -1618,7 +1612,7 @@ fn eval_let(
                 return Err((
                     RestoreValues(vec![expr_value]),
                     EvalError::ResumableError(
-                        position.clone(),
+                        init_value_pos.clone(),
                         ErrorMessage(vec![Text(format!("Incorrect type for variable: {}", "x"))]),
                     ),
                 ));
@@ -3984,7 +3978,7 @@ fn eval_expr(
         }
         Expression_::Let(destination, hint, expr) => {
             if expr_state.done_children() {
-                eval_let(env, expr_value_is_used, destination, &expr_position, hint)?;
+                eval_let(env, expr_value_is_used, destination, &expr.position, hint)?;
             } else {
                 env.push_expr_to_eval(
                     ExpressionState::EvaluatedAllSubexpressions,

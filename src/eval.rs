@@ -3001,7 +3001,7 @@ fn check_param_types(
                         RestoreValues(vec![]),
                         EvalError::ResumableError(
                             arg_positions[i].clone(),
-                            ErrorMessage(vec![Text(format!("Unbound type in hint: {}", e))]),
+                            ErrorMessage(vec![msgtext!("Unbound type in hint: "), Code(e)]),
                         ),
                     ));
                 }
@@ -3016,13 +3016,7 @@ fn check_param_types(
 
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(
-                        arg_positions[i].clone(),
-                        ErrorMessage(vec![Text(format!(
-                            "Incorrect type for argument: {}",
-                            msg.as_string()
-                        ))]),
-                    ),
+                    EvalError::ResumableError(arg_positions[i].clone(), msg),
                 ));
             }
         }

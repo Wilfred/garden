@@ -6,6 +6,24 @@ pub enum MessagePart {
     Code(String),
 }
 
+/// A macro that wraps Text(format!("foo")) to make it easier to write
+/// error messages.
+#[macro_export]
+macro_rules! msgtext {
+    ($($arg:tt)*) => {
+        $crate::diagnostics::MessagePart::Text(format!($($arg)*))
+    };
+}
+
+/// A macro that wraps Code(format!("foo")) to make it easier to write
+/// error messages.
+#[macro_export]
+macro_rules! msgcode {
+    ($($arg:tt)*) => {
+        $crate::diagnostics::MessagePart::Code(format!($($arg)*))
+    };
+}
+
 #[derive(Debug, Clone)]
 pub struct ErrorMessage(pub Vec<MessagePart>);
 

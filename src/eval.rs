@@ -12,7 +12,7 @@ use std::time::Instant;
 
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::{lex, parse_toplevel_items, placeholder_symbol};
+use garden_lang_parser::{lex, msgcode, msgtext, parse_toplevel_items, placeholder_symbol};
 
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -1647,21 +1647,21 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
 
     let parts = if actual_ty.is_unit() {
         vec![
-            Text("Expected ".to_owned()),
+            msgtext!("Expected "),
             Code(expected.to_string()),
-            Text(", but got ".to_owned()),
+            msgtext!(", but got "),
             Code("Unit".to_owned()),
         ]
     } else {
         vec![
-            Text("Expected ".to_owned()),
+            msgtext!("Expected "),
             Code(expected.to_string()),
-            Text(", but got ".to_owned()),
+            msgtext!(", but got "),
             Code(format!(
                 "{}",
                 Type::from_value(value, &env.types, &env.stack.type_bindings())
             )),
-            Text(": ".to_owned()),
+            msgtext!(": "),
             Code(value.display(env)),
         ]
     };
@@ -2870,16 +2870,16 @@ fn eval_assert(
         if !b {
             let message = match subexpr_values {
                 Some((lhs_value, kind, rhs_value)) => vec![
-                    Text("Assertion failed: ".to_owned()),
-                    Code(format!(
+                    msgtext!("Assertion failed: "),
+                    msgcode!(
                         "{} {} {}",
                         lhs_value.display(env),
                         kind,
                         rhs_value.display(env),
-                    )),
-                    Text(".".to_owned()),
+                    ),
+                    msgtext!("."),
                 ],
-                None => vec![Text("Assertion failed.".to_owned())],
+                None => vec![msgtext!("Assertion failed.")],
             };
 
             return Err((
@@ -4286,7 +4286,7 @@ fn eval_expr(
         Expression_::Invalid => {
             return Err((RestoreValues(vec![]),
                         (EvalError::ResumableError(expr_position,
-                                                   ErrorMessage(vec![Text("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.".to_owned())])))));
+                                                   ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")])))));
         }
         Expression_::Assert(expr) => {
             match expr_state {

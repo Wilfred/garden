@@ -4,6 +4,7 @@ use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeH
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::diagnostics::{ErrorMessage, MessagePart};
 use garden_lang_parser::visitor::Visitor;
+use garden_lang_parser::{msgcode, msgtext};
 
 use crate::{
     diagnostics::{Diagnostic, Level},
@@ -128,7 +129,13 @@ impl Visitor for HintVisitor<'_> {
                             if first_arg.sym.name.name != "Tuple" {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
-                                    message: ErrorMessage(vec![Text(format!("Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `{}`.", first_arg.sym.name))]),
+                                    message: ErrorMessage(vec![
+                                        msgtext!("Expected a tuple here, e.g. "),
+                                        msgcode!("Fun<(Int, Int), String>"),
+                                        msgtext!(" but got "),
+                                        msgcode!("{}", first_arg.sym.name),
+                                        msgtext!("."),
+                                    ]),
                                     position: first_arg.position.clone(),
                                 });
                             }
@@ -163,7 +170,11 @@ impl Visitor for HintVisitor<'_> {
             None => {
                 self.diagnostics.push(Diagnostic {
                     level: Level::Error,
-                    message: ErrorMessage(vec![Text(format!("No such type: {}", &type_hint.sym))]),
+                    message: ErrorMessage(vec![
+                        msgtext!("No such type "),
+                        msgcode!("{}", type_hint.sym),
+                        msgtext!("."),
+                    ]),
                     position: type_hint.position.clone(),
                 });
             }

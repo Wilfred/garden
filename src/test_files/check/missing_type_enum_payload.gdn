@@ -6,7 +6,7 @@ enum Foo {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: No such type: NoSuchType
+// Error: No such type `NoSuchType`.
 // --> src/test_files/check/missing_type_enum_payload.gdn:3
 //     Two(NoSuchType),
 //         ^^^^^^^^^^

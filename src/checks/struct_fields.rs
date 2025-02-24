@@ -5,6 +5,7 @@ use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::visitor::Visitor;
+use garden_lang_parser::{msgcode, msgtext};
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Level;
@@ -28,7 +29,11 @@ impl Visitor for StructFieldVisitor<'_> {
         let Some(type_def) = self.env.get_type_def(&name_sym.name) else {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!("No such type `{}`.", name_sym))]),
+                message: ErrorMessage(vec![
+                    msgtext!("No such type "),
+                    msgcode!("{}", name_sym),
+                    msgtext!("."),
+                ]),
                 position: name_sym.position.clone(),
             });
             return;
@@ -36,7 +41,10 @@ impl Visitor for StructFieldVisitor<'_> {
         let TypeDef::Struct(struct_info) = type_def else {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!("`{}` is not a struct.", name_sym))]),
+                message: ErrorMessage(vec![
+                    msgcode!("{}", name_sym),
+                    msgtext!(" is not a struct."),
+                ]),
                 position: name_sym.position.clone(),
             });
             return;
@@ -53,10 +61,11 @@ impl Visitor for StructFieldVisitor<'_> {
             if seen_fields.contains(&field_sym.name) {
                 self.diagnostics.push(Diagnostic {
                     level: Level::Warning,
-                    message: ErrorMessage(vec![Text(format!(
-                        "Duplicate field `{}` in struct literal.",
-                        field_sym.name
-                    ))]),
+                    message: ErrorMessage(vec![
+                        msgtext!("Duplicate field "),
+                        msgcode!("{}", field_sym.name),
+                        msgtext!(" in struct literal."),
+                    ]),
                     position: field_sym.position.clone(),
                 });
             }

@@ -4,6 +4,7 @@ use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, ToplevelItem_, Visib
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 
+use garden_lang_parser::msgtext;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
@@ -50,7 +51,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
             diagnostics.push(Diagnostic {
                 message: ErrorMessage(vec![
                     Code(format!("{}", symbol.name)),
-                    Text(" is never called.".to_owned()),
+                    msgtext!(" is never called."),
                 ]),
                 position: symbol.position.clone(),
                 level: Level::Warning,
@@ -90,7 +91,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                     diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![
                             Code(format!("{}", &symbol.name)),
-                            Text(" is never called.".to_owned()),
+                            msgtext!(" is never called."),
                         ]),
                         position: symbol.position.clone(),
                         level: Level::Warning,

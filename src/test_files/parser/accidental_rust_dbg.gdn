@@ -51,11 +51,11 @@ fun foo() {
 // )
 
 // expected stderr:
-// Error: Parse error: Unrecognized syntax: `!`
+// Error: Parse error: Unrecognized syntax `!`
 // --> src/test_files/parser/accidental_rust_dbg.gdn:2
 //     dbg!(1);
 //        ^
-// Error: Parse error: Unrecognized syntax: `;`
+// Error: Parse error: Unrecognized syntax `;`
 // --> src/test_files/parser/accidental_rust_dbg.gdn:2
 //     dbg!(1);
 //            ^

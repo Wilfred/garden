@@ -8,7 +8,7 @@ use regex::Regex;
 use crate::diagnostics::ErrorMessage;
 use crate::diagnostics::MessagePart::*;
 use crate::position::Position;
-use crate::ParseError;
+use crate::{msgcode, msgtext, ParseError};
 
 lazy_static! {
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
@@ -268,7 +268,10 @@ pub(crate) fn lex_between<'a>(
                     end_column: column + 1,
                     path: path.clone(),
                 },
-                message: ErrorMessage(vec![Text(format!("Unrecognized syntax: `{}`", &s[0..1]))]),
+                message: ErrorMessage(vec![
+                    msgtext!("Unrecognized syntax "),
+                    msgcode!("{}", &s[0..1]),
+                ]),
                 additional: vec![],
             });
 

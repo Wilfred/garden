@@ -44,11 +44,13 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): String { <a href="./keyword:return.html"><span class="keyword">return</span></a> <span class="string">"" </span>}
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): String {
+  <a href="./keyword:return.html"><span class="keyword">return</span></a> <span class="string">""</span>
+}
 
 <a href="./keyword:fun.html"><span class="keyword">fun</span></a> bar(): Unit {
-    eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
-    <a href="./keyword:let.html"><span class="keyword">let</span></a> x = foo() + 1
+  eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
+  <a href="./keyword:let.html"><span class="keyword">let</span></a> x = foo() + 1
 }</code></pre>
 <h2>Sandboxed Execution</h2>
 <p>Garden supports sandbox execution without third-party libraries. This

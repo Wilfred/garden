@@ -32,11 +32,13 @@ dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:
 
 ```garden nocheck
-fun foo(): String { return "" }
+fun foo(): String {
+  return ""
+}
 
 fun bar(): Unit {
-    eval("fun foo(): Int { return 1 }")
-    let x = foo() + 1
+  eval("fun foo(): Int { return 1 }")
+  let x = foo() + 1
 }
 ```
 

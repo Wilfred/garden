@@ -165,6 +165,8 @@ fun render_markdown_code(snippet: Snippet): String {
 
       let rendered_part = if tok.starts_with("//") {
         ("<span class=\"comment\">" ^ escape_angle_brackets(part)) ^ "</span>"
+      } else if tok.starts_with("\"") {
+        ("<span class=\"string\">" ^ escape_angle_brackets(part)) ^ "</span>"
       } else if KEYWORDS.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok

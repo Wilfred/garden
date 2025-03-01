@@ -8,7 +8,7 @@ use garden_lang_parser::{
 use crate::{
     env::Env,
     eval::load_toplevel_items,
-    pos_to_id::{find_expr_of_id, find_item_at},
+    pos_to_id::{block_contains_id, find_expr_of_id, find_item_at},
 };
 
 pub(crate) fn extract_variable(
@@ -34,7 +34,14 @@ pub(crate) fn extract_variable(
         }
     }
 
-    // The innermost block-level expression containing the target expression.
+    let Some(expr_id) = expr_id else {
+        eprintln!("No expression found at this selected position.");
+        return;
+    };
+
+    // The innermost block-level expression containing the target
+    // expression. We will insert our new variable directly before
+    // this expression.
     let mut enclosing_block_level_expr: Option<Expression> = None;
     for id in ids_at_pos.iter().rev() {
         let AstId::Expr(expr_syntax_id) = id else {
@@ -45,20 +52,38 @@ pub(crate) fn extract_variable(
         };
 
         match &expr.expr_ {
-            Expression_::FunLiteral(_)
-            | Expression_::ForIn(_, _, _)
-            | Expression_::While(_, _)
-            | Expression_::If(_, _, _) => break,
+            Expression_::FunLiteral(_) => break,
+            Expression_::ForIn(_, _, body) if block_contains_id(body, *expr_id) => {
+                // If we're trying to extract a variable from an
+                // expression inside the body, we want the variable to
+                // also be inside the body. If the expression is
+                // inside the loop header, we want it before the loop.
+                //
+                // ```
+                // // Extracting `foo()` must be before the loop.
+                // for x in foo() {
+                //   // Extracting `bar()` can be inside the loop body.
+                //   bar()
+                // }
+                // ```
+                break;
+            }
+            Expression_::While(_, body) if block_contains_id(body, *expr_id) => break,
+            Expression_::If(_, then_block, None) if block_contains_id(then_block, *expr_id) => {
+                break
+            }
+            Expression_::If(_, then_block, Some(else_block))
+                if block_contains_id(then_block, *expr_id)
+                    || block_contains_id(else_block, *expr_id) =>
+            {
+                break
+            }
             _ => {
                 enclosing_block_level_expr = Some(expr.clone());
             }
         }
     }
 
-    let Some(expr_id) = expr_id else {
-        eprintln!("No expression found at this selected position.");
-        return;
-    };
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
         eprintln!("No expression found for the ID at the selected position.");
         return;

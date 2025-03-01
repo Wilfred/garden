@@ -1,6 +1,6 @@
 use garden_lang_parser::ast::{
-    AstId, Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, ToplevelItem_, TypeHint,
-    TypeSymbol,
+    AstId, Block, Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, ToplevelItem_,
+    TypeHint, TypeSymbol,
 };
 
 use garden_lang_parser::visitor::Visitor;
@@ -29,6 +29,13 @@ pub(crate) fn find_expr_of_id(items: &[ToplevelItem], id: SyntaxId) -> Option<Ex
     }
 
     visitor.expr
+}
+
+pub(crate) fn block_contains_id(block: &Block, id: SyntaxId) -> bool {
+    let mut visitor = ExprOfIdFinder { id, expr: None };
+    visitor.visit_block(block);
+
+    visitor.expr.is_some()
 }
 
 /// Stores a vec of all the expressions whose expression includes

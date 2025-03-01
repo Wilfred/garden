@@ -1,0 +1,16 @@
+fun demo() {
+  for item in [1, 2] {
+    //        ^^^^^
+    dbg(item)
+  }
+}
+
+// args: extract-variable --name extracted_var
+// expected stdout:
+// fun demo() {
+//   let extracted_var = [1, 2]
+//   for item in extracted_var {
+//     dbg(item)
+//   }
+// }
+

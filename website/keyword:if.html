@@ -27,14 +27,18 @@
         align-items: center;
         flex-shrink: 0;
         padding: 4px;
-        background: #46917a;
+        background: #307D30;
         border-bottom: 4px solid rgba(0, 0, 0, 0.1);
       }
 
+      .block.accent, .block.accent::before {
+        background: #66AE24;
+      }
+
       a {
-        color: #46917a;
+        color: #307D30;
         text-decoration: none;
-        border-bottom: 2px dotted #46917a;
+        border-bottom: 2px dotted #307D30;
       }
 
       nav {
@@ -64,6 +68,9 @@
       .comment {
         color: gray;
       }
+      .string {
+        color: #91170A;
+      }
     </style>
   </head>
   <body>
@@ -81,23 +88,23 @@
 <pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> b = True
 
 <a href="./keyword:if.html"><span class="keyword">if</span></a> b {
-  print("b was true!")
+  print(<span class="string">"b was true!"</span>)
 } <a href="./keyword:else.html"><span class="keyword">else</span></a> {
-  print("b was false!")
+  print(<span class="string">"b was false!"</span>)
 }</code></pre>
 <p><code>if</code> is an expression in Garden, so it can be used like a ternary.</p>
-<pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> food = "chocolate"
+<pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> food = <span class="string">"chocolate"</span>
 
-<a href="./keyword:let.html"><span class="keyword">let</span></a> description = <a href="./keyword:if.html"><span class="keyword">if</span></a> food == "chocolate" {
-  "tasty"
+<a href="./keyword:let.html"><span class="keyword">let</span></a> description = <a href="./keyword:if.html"><span class="keyword">if</span></a> food == <span class="string">"chocolate" </span>{
+  <span class="string">"tasty"</span>
 } <a href="./keyword:else.html"><span class="keyword">else</span></a> {
-  "hmm"
+  <span class="string">"hmm"</span>
 }</code></pre>
 <p><code>else</code> is optional.</p>
 <pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> b = True
 
 <a href="./keyword:if.html"><span class="keyword">if</span></a> b {
-  print("b was true!")
+  print(<span class="string">"b was true!"</span>)
 }</code></pre></div>
   </body>
 </html>

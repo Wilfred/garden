@@ -27,14 +27,18 @@
         align-items: center;
         flex-shrink: 0;
         padding: 4px;
-        background: #46917a;
+        background: #307D30;
         border-bottom: 4px solid rgba(0, 0, 0, 0.1);
       }
 
+      .block.accent, .block.accent::before {
+        background: #66AE24;
+      }
+
       a {
-        color: #46917a;
+        color: #307D30;
         text-decoration: none;
-        border-bottom: 2px dotted #46917a;
+        border-bottom: 2px dotted #307D30;
       }
 
       nav {
@@ -64,6 +68,9 @@
       .comment {
         color: gray;
       }
+      .string {
+        color: #91170A;
+      }
     </style>
   </head>
   <body>
@@ -80,7 +87,7 @@
 <p>Garden is an experimental programming language focused on interactive
 tooling.</p>
 <pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> main(_args: List&lt;String&gt;) {
-  print("hello world")
+  print(<span class="string">"hello world"</span>)
 }</code></pre>
 <h2>Taking REPLs Seriously</h2>
 <p>Common Lisp and Smalltalk have a superpower: you can modify running
@@ -97,10 +104,10 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): String { <a href="./keyword:return.html"><span class="keyword">return</span></a> "" }
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): String { <a href="./keyword:return.html"><span class="keyword">return</span></a> <span class="string">"" </span>}
 
 <a href="./keyword:fun.html"><span class="keyword">fun</span></a> bar(): Unit {
-    eval("fun foo(): Int { return 1 }")
+    eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
     <a href="./keyword:let.html"><span class="keyword">let</span></a> x = foo() + 1
 }</code></pre>
 <h2>Sandboxed Execution</h2>

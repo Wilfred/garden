@@ -6,7 +6,6 @@ use line_numbers::LinePositions;
 use regex::Regex;
 
 use crate::diagnostics::ErrorMessage;
-use crate::diagnostics::MessagePart::*;
 use crate::position::Position;
 use crate::{msgcode, msgtext, ParseError};
 

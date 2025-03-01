@@ -8,73 +8,10 @@
       rel="stylesheet"
       href="https://unpkg.com/blocks.css/dist/blocks.min.css"
     />
-    <style>
-      /* Heavily inspired by https://github.com/thesephist/codeframe,
-      which is under a MIT license. */
-      body {
-        max-width: 900px;
-        margin: 24px auto 52px auto;
-        font-size: 16px;
-      }
-      .container {
-        margin-top: 86px;
-        margin-left: 10px;
-      }
-      header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        flex-shrink: 0;
-        padding: 4px;
-        background: #307D30;
-        border-bottom: 4px solid rgba(0, 0, 0, 0.1);
-      }
-
-      .block.accent, .block.accent::before {
-        background: #66AE24;
-      }
-
-      a {
-        color: #307D30;
-        text-decoration: none;
-        border-bottom: 2px dotted #307D30;
-      }
-      pre a {
-        border-bottom: 0;
-      }
-
-      nav {
-        display: flex;
-        flex-direction: row;
-        flex-shrink: 1;
-        overflow-x: auto;
-      }
-
-      header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
-      }
-
-      header a {
-        text-decoration: none;
-      }
-
-      .keyword {
-        font-weight: bold;
-      }
-
-      .comment {
-        color: gray;
-      }
-      .string {
-        color: #91170A;
-      }
-    </style>
+    <link
+      rel="stylesheet"
+      href="/style.css"
+    />
   </head>
   <body>
     <header>

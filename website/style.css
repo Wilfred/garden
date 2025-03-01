@@ -40,6 +40,14 @@ pre a {
   border-bottom: 0;
 }
 
+h2 {
+  margin-top: 60px;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
 nav {
   display: flex;
   flex-direction: row;

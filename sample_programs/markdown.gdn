@@ -107,6 +107,29 @@ fun render_markdown_header(src: String): String {
   "".join([open_tag, render_inline(src.strip_prefix(" ")), close_tag])
 }
 
+fun lex_with_ranges(s: String): List<(Int, Int, String)> {
+  let items: List<(Int, Int, String)> = []
+
+  let lexemes = lex(s)
+
+  for i_idx_and_tok in lexemes.enumerate() {
+    let (i, idx_and_tok) = i_idx_and_tok
+    let (start_idx, tok) = idx_and_tok
+
+    let end_idx = match lexemes.get(i + 1) {
+      Some(next_idx_and_tok) => {
+        let (next_idx, _) = next_idx_and_tok
+        next_idx
+      }
+      None => s.len()
+    }
+
+    items = items.append((start_idx, end_idx, tok))
+  }
+
+  items
+}
+
 fun render_markdown_code(snippet: Snippet): String {
   if (snippet.language == "") {
     match check_snippet(snippet.content) {
@@ -126,36 +149,31 @@ fun render_markdown_code(snippet: Snippet): String {
   ]
 
   let rendered_lines: List<String> = []
+
   for line in snippet.content.lines() {
-    let rendered_comment: Option<String> = None
+    let rendered_line_parts: List<String> = []
 
-    match line.split_once("//") {
-      Some(parts) => {
-        let (before, after) = parts
-        line = before
-        rendered_comment = Some(("<span class=\"comment\">//" ^ after) ^ "</span>")
+    for i_and_tup in lex_with_ranges(line).enumerate() {
+      let (i, tup) = i_and_tup
+      let (start_idx, end_idx, tok) = tup
+
+      if i == 0 {
+        rendered_line_parts = rendered_line_parts.append(line.substring(0, start_idx))
       }
-      None => {}
-    }
 
-    let words = line.split(" ")
-    let rendered_words = words.map(fun(word: String) {
-      if KEYWORDS.contains(word) {
-        ((("<a href=\"./keyword:" ^ word) ^ ".html\"><span class=\"keyword\">") ^ word) ^ "</span></a>"
+      let part = line.substring(start_idx, end_idx)
+
+      let rendered_part = if tok.starts_with("//") {
+        ("<span class=\"comment\">" ^ part) ^ "</span>"
+      } else if KEYWORDS.contains(tok) {
+        let after_tok = part.substring(tok.len(), part.len())
+        (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok
       } else {
-        word.replace("<", "&lt;").replace(">", "&gt;")
+        part.replace("<", "&lt;").replace(">", "&gt;")
       }
-    })
-
-    let rendered_line = " ".join(rendered_words)
-    match rendered_comment {
-      Some(rendered_comment) => {
-        rendered_line = rendered_line ^ rendered_comment
-      }
-      None => {}
+      rendered_line_parts = rendered_line_parts.append(rendered_part)
     }
-
-    rendered_lines = rendered_lines.append(rendered_line)
+    rendered_lines = rendered_lines.append("".join(rendered_line_parts))
   }
 
   let inner_src = "\n".join(rendered_lines)

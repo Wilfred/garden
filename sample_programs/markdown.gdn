@@ -164,12 +164,12 @@ fun render_markdown_code(snippet: Snippet): String {
       let part = line.substring(start_idx, end_idx)
 
       let rendered_part = if tok.starts_with("//") {
-        ("<span class=\"comment\">" ^ part) ^ "</span>"
+        ("<span class=\"comment\">" ^ escape_angle_brackets(part)) ^ "</span>"
       } else if KEYWORDS.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok
       } else {
-        part.replace("<", "&lt;").replace(">", "&gt;")
+        escape_angle_brackets(part)
       }
       rendered_line_parts = rendered_line_parts.append(rendered_part)
     }
@@ -178,6 +178,10 @@ fun render_markdown_code(snippet: Snippet): String {
 
   let inner_src = "\n".join(rendered_lines)
   ("<pre><code>" ^ inner_src) ^ "</code></pre>"
+}
+
+fun escape_angle_brackets(s: String): String {
+  s.replace("<", "&lt;").replace(">", "&gt;")
 }
 
 fun render_inline(src: String): String {

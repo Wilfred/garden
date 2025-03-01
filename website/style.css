@@ -21,6 +21,11 @@ header {
   border-bottom: 4px solid rgba(0, 0, 0, 0.1);
 }
 
+.block,
+.block::before {
+  background-color: #ebeee3;
+}
+
 .block.accent,
 .block.accent::before {
   background: #66ae24;

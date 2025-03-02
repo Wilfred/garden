@@ -45,6 +45,11 @@ h2 {
 }
 
 pre {
+  /* Fix excessively small fonts on mobile.
+
+  https://stackoverflow.com/a/75839939/
+  https://horstmann.com/unblog/2023-03-25/index.html
+  */
   white-space: pre-wrap;
 }
 

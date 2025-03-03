@@ -871,11 +871,13 @@ fn let_var_pos(
             continue;
         };
 
-        let Expression_::Let(let_dest, _, _) = &expr.expr_ else {
-            continue;
+        let dest = match &expr.expr_ {
+            Expression_::ForIn(dest, _, _) => dest,
+            Expression_::Let(dest, _, _) => dest,
+            _ => continue,
         };
 
-        match let_dest {
+        match dest {
             LetDestination::Symbol(symbol) => {
                 if &AstId::Sym(symbol.id) != innermost_id {
                     return None;
@@ -930,17 +932,26 @@ fn assign_var_pos(
             continue;
         };
 
-        let symbol = match &expr.expr_ {
-            Expression_::Assign(symbol, _) => symbol,
-            Expression_::AssignUpdate(symbol, _, _) => symbol,
-            Expression_::ForIn(symbol, _, _) => symbol,
+        match &expr.expr_ {
+            Expression_::Assign(symbol, _) | Expression_::AssignUpdate(symbol, _, _) => {
+                let value = get_var(symbol, env)?;
+                return Some((value, symbol.position.clone()));
+            }
+            Expression_::ForIn(dest, _, _) => match dest {
+                LetDestination::Symbol(symbol) => {
+                    let value = get_var(symbol, env)?;
+                    return Some((value, symbol.position.clone()));
+                }
+                LetDestination::Destructure(_) => {
+                    // TODO: handle eval-up-to on destructuring for
+                    // loop variables.
+                    break;
+                }
+            },
             _ => {
                 break;
             }
         };
-
-        let value = get_var(symbol, env)?;
-        return Some((value, symbol.position.clone()));
     }
 
     None
@@ -1399,7 +1410,7 @@ fn eval_while_body(
 
 fn eval_for_in(
     env: &mut Env,
-    iter_symbol: &Symbol,
+    iter_dest: &LetDestination,
     iteree_pos: &Position,
     outer_expr: Rc<Expression>,
     body: &Block,
@@ -1451,8 +1462,48 @@ fn eval_for_in(
     env.push_value(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
-    if !iter_symbol.name.is_underscore() {
-        bindings.push((iter_symbol.clone(), items[iteree_idx as usize].clone()));
+    let iteree_current_elem = items[iteree_idx as usize].clone();
+
+    match iter_dest {
+        LetDestination::Symbol(symbol) => {
+            if !symbol.name.is_underscore() {
+                bindings.push((symbol.clone(), iteree_current_elem));
+            }
+        }
+        LetDestination::Destructure(symbols) => match iteree_current_elem.as_ref() {
+            Value_::Tuple { items, .. } => {
+                if items.len() != symbols.len() {
+                    return Err((
+                        RestoreValues(vec![iteree_current_elem.clone()]),
+                        EvalError::ResumableError(
+                            iteree_pos.clone(),
+                            ErrorMessage(vec![Text(format!(
+                                "Expected a tuple with {} items, got a tuple with {} items.",
+                                symbols.len(),
+                                items.len(),
+                            ))]),
+                        ),
+                    ));
+                }
+
+                for (symbol, item) in symbols.iter().zip(items) {
+                    if symbol.name.is_underscore() {
+                        continue;
+                    }
+
+                    bindings.push((symbol.clone(), item.clone()));
+                }
+            }
+            _ => {
+                return Err((
+                    RestoreValues(vec![iteree_current_elem.clone()]),
+                    EvalError::ResumableError(
+                        iteree_pos.clone(),
+                        ErrorMessage(vec![Text(format!("Incorrect type for variable: {}", "x"))]),
+                    ),
+                ));
+            }
+        },
     }
 
     let stack_frame = env.current_frame_mut();

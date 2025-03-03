@@ -329,8 +329,9 @@ pub enum Expression_ {
     While(Rc<Expression>, Block),
     /// ```garden
     /// for x in y { z }
+    /// for (foo, bar) in y { z }
     /// ```
-    ForIn(Symbol, Rc<Expression>, Block),
+    ForIn(LetDestination, Rc<Expression>, Block),
     /// ```garden
     /// break
     /// ```

@@ -11,6 +11,15 @@ Added `**` to raise a number to a power.
 `assert` is now syntax rather than a built-in function. The symbol
 `assert` is now a reserved word.
 
+Destructuring is now supported in loop headers, so the following is
+now legal:
+
+```
+for (x, y) in [(1, 2), (3, 4)] {
+  dbg(x * y)
+}
+```
+
 ## Standard Library
 
 Removed `String::append`.

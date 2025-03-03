@@ -615,7 +615,7 @@ impl TypeCheckVisitor<'_> {
                 self.infer_block(block, type_bindings, expected_return_ty);
                 Type::unit()
             }
-            Expression_::ForIn(sym, expr, body) => {
+            Expression_::ForIn(dest, expr, body) => {
                 let expr_ty = self.verify_expr(
                     &Type::list(Type::Top),
                     expr,
@@ -636,7 +636,7 @@ impl TypeCheckVisitor<'_> {
                     _ => Type::error("For loop expression that isn't a list"),
                 };
 
-                self.set_binding(sym, elem_ty);
+                self.set_dest_binding(dest, &expr.position, elem_ty);
 
                 self.infer_block(body, type_bindings, expected_return_ty);
                 self.bindings.exit_block();
@@ -702,48 +702,7 @@ impl TypeCheckVisitor<'_> {
                     None => self.infer_expr(expr, type_bindings, expected_return_ty),
                 };
 
-                match dest {
-                    LetDestination::Symbol(symbol) => self.set_binding(symbol, ty),
-                    LetDestination::Destructure(symbols) => match ty {
-                        Type::Tuple(item_tys) => {
-                            if item_tys.len() != symbols.len() {
-                                self.diagnostics.push(Diagnostic {
-                                    level: Level::Error,
-                                    message: ErrorMessage(vec![Text(format!(
-                                        "Expected a tuple of size {}, but got {}.",
-                                        symbols.len(),
-                                        item_tys.len()
-                                    ))]),
-                                    position: expr.position.clone(),
-                                });
-                            }
-
-                            for (i, symbol) in symbols.iter().enumerate() {
-                                let ty = match item_tys.get(i) {
-                                    Some(ty) => ty.clone(),
-                                    None => Type::error("Tuple has too many items for the value"),
-                                };
-                                self.set_binding(symbol, ty);
-                            }
-                        }
-                        Type::Error(_) => {
-                            for symbol in symbols {
-                                self.set_binding(symbol, ty.clone());
-                            }
-                        }
-                        _ => {
-                            self.diagnostics.push(Diagnostic {
-                                level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Expected a tuple, but got `{}`.",
-                                    ty
-                                ))]),
-                                position: expr.position.clone(),
-                            });
-                        }
-                    },
-                }
-
+                self.set_dest_binding(dest, &expr.position, ty);
                 Type::unit()
             }
             Expression_::Return(inner_expr) => {
@@ -1340,6 +1299,50 @@ impl TypeCheckVisitor<'_> {
                 // bottom type to prevent later type errors.
                 Type::no_value()
             }
+        }
+    }
+
+    fn set_dest_binding(&mut self, dest: &LetDestination, expr_pos: &Position, ty: Type) {
+        match dest {
+            LetDestination::Symbol(symbol) => self.set_binding(symbol, ty),
+            LetDestination::Destructure(symbols) => match ty {
+                Type::Tuple(item_tys) => {
+                    if item_tys.len() != symbols.len() {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Error,
+                            message: ErrorMessage(vec![Text(format!(
+                                "Expected a tuple of size {}, but got {}.",
+                                symbols.len(),
+                                item_tys.len()
+                            ))]),
+                            position: expr_pos.clone(),
+                        });
+                    }
+
+                    for (i, symbol) in symbols.iter().enumerate() {
+                        let ty = match item_tys.get(i) {
+                            Some(ty) => ty.clone(),
+                            None => Type::error("Tuple has too many items for the value"),
+                        };
+                        self.set_binding(symbol, ty);
+                    }
+                }
+                Type::Error(_) => {
+                    for symbol in symbols {
+                        self.set_binding(symbol, ty.clone());
+                    }
+                }
+                _ => {
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message: ErrorMessage(vec![Text(format!(
+                            "Expected a tuple, but got `{}`.",
+                            ty
+                        ))]),
+                        position: expr_pos.clone(),
+                    });
+                }
+            },
         }
     }
 

@@ -439,7 +439,8 @@ fn parse_for_in(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let for_token = require_token(tokens, diagnostics, "for");
-    let symbol = parse_symbol(tokens, id_gen, diagnostics);
+    let destination = parse_let_destination(tokens, id_gen, diagnostics);
+
     require_token(tokens, diagnostics, "in");
 
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
@@ -448,7 +449,7 @@ fn parse_for_in(
 
     Expression::new(
         Position::merge(&for_token.position, &body.close_brace),
-        Expression_::ForIn(symbol, Rc::new(expr), body),
+        Expression_::ForIn(destination, Rc::new(expr), body),
         id_gen.next(),
     )
 }

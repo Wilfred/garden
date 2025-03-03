@@ -1,24 +1,29 @@
 fun foo(): String { "abc" }
 
 fun main(_) {
-    let items = [1, 2, 3, 4, 5]
+  let items = [1, 2, 3, 4, 5]
 
-    // Check that an empty loop works.
-    for _ in items {}
+  // Check that an empty loop works.
+  for _ in items {}
 
-    // Check that we can call a function for side-effects.
-    for _item in [1, 2] {
-        foo()
+  // Check that we can call a function for side-effects.
+  for _item in [1, 2] {
+    foo()
+  }
+
+  // Check that a non-trivial loop with `break` works.
+  for item in items {
+    dbg(item)
+
+    if item >= 3 {
+      break
     }
+  }
 
-    // Check that a non-trivial loop with `break` works.
-    for item in items {
-        dbg(item)
-
-        if item >= 3 {
-            break
-        }
-    }
+  // Check destructuring.
+  for (x, y) in [(1, 2), (3, 4)] {
+    dbg(x * y)
+  }
 }
 
 // args: run
@@ -26,4 +31,6 @@ fun main(_) {
 // 1
 // 2
 // 3
+// 2
+// 12
 

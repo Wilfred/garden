@@ -243,8 +243,8 @@ pub trait Visitor {
         self.visit_block(body);
     }
 
-    fn visit_expr_for_in(&mut self, symbol: &Symbol, expr: &Expression, body: &Block) {
-        self.visit_symbol(symbol);
+    fn visit_expr_for_in(&mut self, dest: &LetDestination, expr: &Expression, body: &Block) {
+        self.visit_dest(dest);
         self.visit_expr(expr);
         self.visit_block(body);
     }
@@ -253,12 +253,7 @@ pub trait Visitor {
         self.visit_symbol(symbol);
     }
 
-    fn visit_expr_let(
-        &mut self,
-        dest: &LetDestination,
-        hint: Option<&TypeHint>,
-        expr: &Expression,
-    ) {
+    fn visit_dest(&mut self, dest: &LetDestination) {
         match dest {
             LetDestination::Symbol(symbol) => {
                 self.visit_symbol(symbol);
@@ -269,6 +264,15 @@ pub trait Visitor {
                 }
             }
         }
+    }
+
+    fn visit_expr_let(
+        &mut self,
+        dest: &LetDestination,
+        hint: Option<&TypeHint>,
+        expr: &Expression,
+    ) {
+        self.visit_dest(dest);
 
         if let Some(hint) = hint {
             self.visit_type_hint(hint);

@@ -3,10 +3,7 @@ use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
-    ast::{
-        Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem, ToplevelItem_,
-        TypeHint,
-    },
+    ast::{Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem, ToplevelItem_},
     position::Position,
 };
 use rustc_hash::FxHashMap;
@@ -237,14 +234,7 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.check_symbol(var);
     }
 
-    fn visit_expr_let(
-        &mut self,
-        dest: &LetDestination,
-        _hint: Option<&TypeHint>,
-        expr: &Expression,
-    ) {
-        self.visit_expr(expr);
-
+    fn visit_dest(&mut self, dest: &LetDestination) {
         match dest {
             LetDestination::Symbol(symbol) => {
                 self.add_binding(symbol);
@@ -267,11 +257,11 @@ impl Visitor for FreeVariableVisitor<'_> {
         self.visit_expr(expr);
     }
 
-    fn visit_expr_for_in(&mut self, symbol: &Symbol, expr: &Expression, body: &Block) {
+    fn visit_expr_for_in(&mut self, dest: &LetDestination, expr: &Expression, body: &Block) {
         self.visit_expr(expr);
 
         self.push_scope();
-        self.add_binding(symbol);
+        self.visit_dest(dest);
         self.visit_block(body);
         self.pop_scope();
     }

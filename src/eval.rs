@@ -910,6 +910,16 @@ fn let_var_pos(
     None
 }
 
+/// If the AstId corresponded to a variable assignment, return the
+/// inner value and position.
+///
+/// ```garden
+/// foo_bar += baz
+/// //  ^
+/// ```
+///
+/// In this example, we want the value returned to be the value of
+/// `foo_bar` after the assignment.
 fn assign_var_pos(
     env: &Env,
     items: &[ToplevelItem],

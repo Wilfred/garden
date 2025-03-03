@@ -112,8 +112,7 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 
   let lexemes = lex(s)
 
-  for i_idx_and_tok in lexemes.enumerate() {
-    let (i, idx_and_tok) = i_idx_and_tok
+  for (i, idx_and_tok) in lexemes.enumerate() {
     let (start_idx, tok) = idx_and_tok
 
     let end_idx = match lexemes.get(i + 1) {
@@ -153,8 +152,7 @@ fun render_markdown_code(snippet: Snippet): String {
   for line in snippet.content.lines() {
     let rendered_line_parts: List<String> = []
 
-    for i_and_tup in lex_with_ranges(line).enumerate() {
-      let (i, tup) = i_and_tup
+    for (i, tup) in lex_with_ranges(line).enumerate() {
       let (start_idx, end_idx, tok) = tup
 
       if i == 0 {

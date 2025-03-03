@@ -16,4 +16,4 @@ while i < nums.len() {
 ```
 
 For looping when you have a list, see
-[while](keyword:for.html).
+[`for`](keyword:for.html).

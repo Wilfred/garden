@@ -1,5 +1,7 @@
 # Manual
 
-## Syntax
+## Keywords
 
-* [`if`](./keyword:if.html)
+[`for`](./keyword:for.html), [`if`](./keyword:if.html),
+[`let`](./keyword:let.html), [`return`](./keyword:return.html) and
+[`while`](./keyword:while.html).

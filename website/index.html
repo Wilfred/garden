@@ -30,7 +30,7 @@
     <div class="container"><h1>🌻 The Garden Programming Language</h1>
 <p>Garden is an experimental programming language focused on interactive
 tooling.</p>
-<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> main(_args: List&lt;String&gt;) {
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> main(_args: <span class="type">List</span>&lt;<span class="type">String</span>&gt;) {
   print(<span class="string">"hello world"</span>)
 }</code></pre>
 <h2>Taking REPLs Seriously</h2>
@@ -48,11 +48,11 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): String {
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): <span class="type">String</span> {
   <a href="./keyword:return.html"><span class="keyword">return</span></a> <span class="string">""</span>
 }
 
-<a href="./keyword:fun.html"><span class="keyword">fun</span></a> bar(): Unit {
+<a href="./keyword:fun.html"><span class="keyword">fun</span></a> bar(): <span class="type">Unit</span> {
   eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
   <a href="./keyword:let.html"><span class="keyword">let</span></a> x = foo() + 1
 }</code></pre>

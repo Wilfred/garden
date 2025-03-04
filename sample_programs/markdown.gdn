@@ -168,6 +168,9 @@ fun render_markdown_code(snippet: Snippet): String {
       } else if KEYWORDS.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok
+      } else if looks_like_type(tok) {
+        let after_tok = part.substring(tok.len(), part.len())
+        (("<span class=\"type\">" ^ tok) ^ "</span>") ^ after_tok
       } else {
         escape_angle_brackets(part)
       }
@@ -379,4 +382,15 @@ test render_asterisk {
 
 test render_thematic_break {
   assert(render_markdown("---") == "<hr />")
+}
+
+fun looks_like_type(name: String): Bool {
+  let upper_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars()
+  upper_letters.contains(name.substring(0, 1))
+}
+
+test looks_like_type {
+  assert(looks_like_type("Abc"))
+
+  assert(looks_like_type("abc").not())
 }

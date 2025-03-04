@@ -57,6 +57,12 @@ impl From<&str> for TypeName {
     }
 }
 
+impl From<&String> for TypeName {
+    fn from(s: &String) -> Self {
+        TypeName { name: s.to_owned() }
+    }
+}
+
 #[derive(Clone, Eq)]
 pub struct TypeSymbol {
     pub name: TypeName,

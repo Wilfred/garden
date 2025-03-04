@@ -2618,6 +2618,62 @@ fn eval_builtin_call(
                 env.push_value(Value::new(v));
             }
         }
+        BuiltinFunctionKind::TypeDocComment => {
+            check_arity(
+                &SymbolName {
+                    name: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let name = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let v = match env.types.get(&TypeName::from(name)) {
+                Some(ty) => {
+                    let doc_comment: Option<String> = match ty {
+                        TypeDef::Builtin(_, struct_info) => {
+                            struct_info.as_ref().and_then(|si| si.doc_comment.clone())
+                        }
+                        TypeDef::Enum(enum_info) => enum_info.doc_comment.clone(),
+                        TypeDef::Struct(struct_info) => struct_info.doc_comment.clone(),
+                    };
+
+                    match doc_comment {
+                        Some(s) => Value::some(Value::new(Value_::String(s)), env),
+                        None => Value::none(),
+                    }
+                }
+                None => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
     }
 
     Ok(())

@@ -301,3 +301,20 @@ test lex {
   // Comments should not require a newline at EOF.
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
 }
+
+export fun type_doc_comment(type_name: String): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test type_doc_comment {
+  match type_doc_comment("Unit") {
+    Some(_) => {}
+    None => { assert(False) }
+  }
+
+  match type_doc_comment("NoSuchTypeExists") {
+    Some(_) => { assert(False) }
+    None => {}
+  }
+}
+

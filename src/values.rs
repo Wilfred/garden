@@ -330,6 +330,7 @@ pub(crate) enum BuiltinFunctionKind {
     WriteFile,
     CheckSnippet,
     Lex,
+    TypeDocComment,
 }
 
 impl Display for BuiltinFunctionKind {
@@ -346,6 +347,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::WriteFile => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
             BuiltinFunctionKind::Lex => "lex",
+            BuiltinFunctionKind::TypeDocComment => "type_doc_comment",
         };
         write!(f, "{}", name)
     }

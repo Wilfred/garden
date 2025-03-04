@@ -3,9 +3,27 @@
 body {
   max-width: 900px;
   margin: 24px auto 52px auto;
-  font-size: 16px;
+  font-size: 18px;
   background-color: #ebeee3;
 }
+
+p {
+  font-family: "Lora";
+}
+
+pre,
+code {
+  font-family: "Inconsolata";
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Rubik";
+}
+
 .container {
   margin-top: 86px;
   margin-left: 10px;
@@ -41,7 +59,8 @@ pre a {
 }
 
 h2 {
-  margin-top: 60px;
+  margin-top: 48px;
+  margin-bottom: 12px;
 }
 
 pre {

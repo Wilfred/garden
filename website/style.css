@@ -14,6 +14,7 @@ p {
 pre,
 code {
   font-family: "Inconsolata";
+  line-height: 20px;
 }
 
 h1,

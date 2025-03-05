@@ -12,7 +12,7 @@ use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
 
 pub(crate) fn check_unused_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
-    let mut visitor = FreeVariableVisitor::new(env);
+    let mut visitor = UnusedVariableVisitor::new(env);
     for item in items {
         visitor.visit_toplevel_item(item);
     }
@@ -26,7 +26,7 @@ enum UseState {
     NotUsed(Position),
 }
 
-struct FreeVariableVisitor<'a> {
+struct UnusedVariableVisitor<'a> {
     env: &'a Env,
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
@@ -35,9 +35,9 @@ struct FreeVariableVisitor<'a> {
     unused: Vec<(SymbolName, Position)>,
 }
 
-impl FreeVariableVisitor<'_> {
-    fn new(env: &Env) -> FreeVariableVisitor<'_> {
-        FreeVariableVisitor {
+impl UnusedVariableVisitor<'_> {
+    fn new(env: &Env) -> UnusedVariableVisitor<'_> {
+        UnusedVariableVisitor {
             env,
             bound_scopes: vec![FxHashMap::default()],
             free: FxHashMap::default(),
@@ -173,7 +173,7 @@ impl FreeVariableVisitor<'_> {
     }
 }
 
-impl Visitor for FreeVariableVisitor<'_> {
+impl Visitor for UnusedVariableVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match &item.2 {
             ToplevelItem_::Expr(_) => {}

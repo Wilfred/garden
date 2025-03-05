@@ -2674,6 +2674,42 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::BuiltInTypes => {
+            check_arity(
+                &SymbolName {
+                    name: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut names = match &env.initial_state {
+                Some(env) => env
+                    .types
+                    .keys()
+                    .map(|k| (k.name.clone()))
+                    .collect::<Vec<_>>(),
+                None => vec![],
+            };
+            names.sort();
+
+            let items = names
+                .into_iter()
+                .map(|n| Value::new(Value_::String(n)))
+                .collect::<Vec<_>>();
+
+            let v = Value::new(Value_::List {
+                items,
+                elem_type: Type::string(),
+            });
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
     }
 
     Ok(())

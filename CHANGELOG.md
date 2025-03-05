@@ -24,8 +24,8 @@ for (x, y) in [(1, 2), (3, 4)] {
 
 Removed `String::append`.
 
-Added `String::replace`, `List::enumerate`, `lex`, `check_snippet` and
-`type_doc_comment`.
+Added `String::replace`, `List::enumerate`, `lex`, `check_snippet`,
+`type_doc_comment` and `built_in_types`.
 
 `List::get` now returns an option rather than erroring on
 out-of-bounds access.

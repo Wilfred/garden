@@ -318,3 +318,14 @@ test type_doc_comment {
   }
 }
 
+// A list of all the built-in type names, `String`, `Option` and
+// so on. The list is sorted alphabetically.
+export fun built_in_types(): List<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test built_in_types {
+  assert(built_in_types().contains("Unit"))
+
+  assert(built_in_types().first() == Some("Bool"))
+}

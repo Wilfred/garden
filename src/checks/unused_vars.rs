@@ -11,7 +11,7 @@ use rustc_hash::FxHashMap;
 use crate::diagnostics::Level;
 use crate::{diagnostics::Diagnostic, env::Env};
 
-pub(crate) fn check_free_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_unused_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = FreeVariableVisitor::new(env);
     for item in items {
         visitor.visit_toplevel_item(item);

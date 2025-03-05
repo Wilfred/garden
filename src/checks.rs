@@ -1,11 +1,11 @@
 mod duplicates;
-mod free_variables;
 mod hints;
 mod loops;
 mod struct_fields;
 pub mod type_checker;
 mod unreachable;
 mod unused_defs;
+mod unused_vars;
 
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;
@@ -18,7 +18,7 @@ use unused_defs::check_unused_defs;
 use self::duplicates::check_duplicates;
 use self::hints::check_hints;
 use self::type_checker::check_types;
-use self::{free_variables::check_free_variables, struct_fields::check_struct_fields};
+use self::{struct_fields::check_struct_fields, unused_vars::check_unused_variables};
 
 /// Check toplevel items in a fresh environment, without any definitions from the current session.
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
@@ -33,7 +33,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Dia
 pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut diagnostics = vec![];
 
-    diagnostics.extend(check_free_variables(items, env));
+    diagnostics.extend(check_unused_variables(items, env));
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
 

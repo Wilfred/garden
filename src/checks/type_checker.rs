@@ -1341,6 +1341,11 @@ impl TypeCheckVisitor<'_> {
                         ))]),
                         position: expr_pos.clone(),
                     });
+
+                    let ty = Type::error("Tuple destructuing with non-tuple");
+                    for symbol in symbols {
+                        self.set_binding(symbol, ty.clone());
+                    }
                 }
             },
         }

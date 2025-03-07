@@ -1,6 +1,10 @@
+# 0.20 (unreleased)
+**Goal: Namespaces.**
+**Goal: Offer actions when runtime errors occur.**
+**Goal: Separate line/column in go-to-def input positions.**
+
 # 0.19 (unreleased)
 **Goal: Website has snippets that are checked and linkified.**
-**Goal: Offer actions when runtime errors occur.**
 
 ## Syntax
 

@@ -31,7 +31,6 @@ struct UnusedVariableVisitor<'a> {
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
     bound_scopes: Vec<FxHashMap<SymbolName, UseState>>,
-    free: FxHashMap<SymbolName, Position>,
     unused: Vec<(SymbolName, Position)>,
 }
 
@@ -40,27 +39,15 @@ impl UnusedVariableVisitor<'_> {
         UnusedVariableVisitor {
             env,
             bound_scopes: vec![FxHashMap::default()],
-            free: FxHashMap::default(),
             unused: vec![],
         }
     }
 
     fn diagnostics(&self) -> Vec<Diagnostic> {
-        let mut diagnostics = vec![];
-        for (free_sym, position) in &self.free {
-            diagnostics.push(Diagnostic {
-                level: Level::Error,
-                message: ErrorMessage(vec![
-                    Text("Unbound symbol: ".to_owned()),
-                    Code(format!("{free_sym}")),
-                ]),
-                position: position.clone(),
-            });
-        }
-
         let mut unused = self.unused.clone();
         unused.sort_by_key(|(_, position)| position.clone());
 
+        let mut diagnostics = vec![];
         for (name, position) in unused {
             diagnostics.push(Diagnostic {
                 level: Level::Warning,
@@ -162,12 +149,6 @@ impl UnusedVariableVisitor<'_> {
                 if stack_frame.bindings.has(var.interned_id) {
                     return;
                 }
-            }
-
-            // Variable is free.
-            if !self.free.contains_key(&var.name) {
-                // Only record the first occurrence as free.
-                self.free.insert(var.name.clone(), var.position.clone());
             }
         }
     }

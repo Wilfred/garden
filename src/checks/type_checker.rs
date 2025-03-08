@@ -10,6 +10,7 @@ use garden_lang_parser::ast::{
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::position::Position;
+use garden_lang_parser::{msgcode, msgtext};
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
@@ -926,7 +927,26 @@ impl TypeCheckVisitor<'_> {
 
                         Type::from_value(value, &self.env.types, type_bindings)
                     }
-                    None => Type::Error("Unbound variable".to_owned()),
+                    None => {
+                        let ty = Type::Error("Unbound variable".to_owned());
+                        // Treat this variable as locally bound in the
+                        // rest of the scope, to prevent cascading
+                        // errors.
+                        self.set_binding(sym, ty.clone());
+
+                        if sym.name.name != "__BUILTIN_IMPLEMENTATION" {
+                            self.diagnostics.push(Diagnostic {
+                                level: Level::Error,
+                                message: ErrorMessage(vec![
+                                    msgtext!("Unbound symbol: "),
+                                    msgcode!("{}", sym.name),
+                                ]),
+                                position: sym.position.clone(),
+                            });
+                        }
+
+                        ty
+                    }
                 }
             }
             Expression_::Call(recv, paren_args) => {

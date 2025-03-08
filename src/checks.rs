@@ -33,7 +33,7 @@ pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Dia
 pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut diagnostics = vec![];
 
-    diagnostics.extend(check_unused_variables(items, env));
+    diagnostics.extend(check_unused_variables(items));
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
 

@@ -8,11 +8,11 @@ use garden_lang_parser::{
 };
 use rustc_hash::FxHashMap;
 
+use crate::diagnostics::Diagnostic;
 use crate::diagnostics::Level;
-use crate::{diagnostics::Diagnostic, env::Env};
 
-pub(crate) fn check_unused_variables(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
-    let mut visitor = UnusedVariableVisitor::new(env);
+pub(crate) fn check_unused_variables(items: &[ToplevelItem]) -> Vec<Diagnostic> {
+    let mut visitor = UnusedVariableVisitor::new();
     for item in items {
         visitor.visit_toplevel_item(item);
     }
@@ -26,18 +26,16 @@ enum UseState {
     NotUsed(Position),
 }
 
-struct UnusedVariableVisitor<'a> {
-    env: &'a Env,
+struct UnusedVariableVisitor {
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
     bound_scopes: Vec<FxHashMap<SymbolName, UseState>>,
     unused: Vec<(SymbolName, Position)>,
 }
 
-impl UnusedVariableVisitor<'_> {
-    fn new(env: &Env) -> UnusedVariableVisitor<'_> {
+impl UnusedVariableVisitor {
+    fn new() -> UnusedVariableVisitor {
         UnusedVariableVisitor {
-            env,
             bound_scopes: vec![FxHashMap::default()],
             unused: vec![],
         }
@@ -143,7 +141,7 @@ impl UnusedVariableVisitor<'_> {
     }
 }
 
-impl Visitor for UnusedVariableVisitor<'_> {
+impl Visitor for UnusedVariableVisitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match &item.2 {
             ToplevelItem_::Expr(_) => {}

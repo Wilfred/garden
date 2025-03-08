@@ -24,6 +24,9 @@ for (x, y) in [(1, 2), (3, 4)] {
 }
 ```
 
+Functions and types visible in other files now use the `external`
+keyword, rather than `export`. `internal` is now a reserved word too.
+
 ## Standard Library
 
 Removed `String::append`.

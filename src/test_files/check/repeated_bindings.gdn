@@ -1,11 +1,11 @@
-export fun foo(x: Int, x: Int) {
+external fun foo(x: Int, x: Int) {
     let (y, y) = (1, 2)
 
     let _f = fun(z, z) {}
 }
 
 // We allow repetition with _.
-export fun bar(_: Int, _: Int, _: String) {
+external fun bar(_: Int, _: Int, _: String) {
     let (_, _) = (1, 2)
 
     let _f = fun(_, _) {}
@@ -16,8 +16,8 @@ export fun bar(_: Int, _: Int, _: String) {
 // expected stdout:
 // Error: Duplicate parameter: `x`
 // --> src/test_files/check/repeated_bindings.gdn:1
-// export fun foo(x: Int, x: Int) {
-//                        ^
+// external fun foo(x: Int, x: Int) {
+//                          ^
 // 
 // Error: Duplicate destructure variable: `y`.
 // --> src/test_files/check/repeated_bindings.gdn:2
@@ -31,8 +31,8 @@ export fun bar(_: Int, _: Int, _: String) {
 // 
 // Warning: `x` is unused.
 // --> src/test_files/check/repeated_bindings.gdn:1
-// export fun foo(x: Int, x: Int) {
-//                        ^
+// external fun foo(x: Int, x: Int) {
+//                          ^
 // 
 // Warning: `y` is unused.
 // --> src/test_files/check/repeated_bindings.gdn:2

@@ -1,4 +1,4 @@
-export fun foo(): List<Int, Int, Int> {
+external fun foo(): List<Int, Int, Int> {
     error("")
 }
 
@@ -7,6 +7,6 @@ export fun foo(): List<Int, Int, Int> {
 // expected stdout:
 // Error: List takes 1 type argument, but got 3 arguments.
 // --> src/test_files/check/type_arg_arity.gdn:1
-// export fun foo(): List<Int, Int, Int> {
-//                                  ^^^
+// external fun foo(): List<Int, Int, Int> {
+//                                    ^^^
 

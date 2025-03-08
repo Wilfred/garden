@@ -143,7 +143,7 @@ fun render_markdown_code(snippet: Snippet): String {
   }
 
   let KEYWORDS = [
-    "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
+    "let", "fun", "enum", "struct", "external", "internal", "import", "if", "else", "while", "return", "test",
     "match", "break", "continue", "for", "in", "assert",
   ]
 
@@ -291,7 +291,7 @@ fun render_markdown_bullets(items: List<String>): String {
   "".join(["<ul>\n", "\n".join(rendered_items), "\n</ul>"])
 }
 
-export fun render_markdown(src: String): String {
+external fun render_markdown(src: String): String {
   let html_parts: List<String> = []
 
   for part in parse_markdown(src) {

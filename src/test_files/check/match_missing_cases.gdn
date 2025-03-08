@@ -1,4 +1,4 @@
-export fun foo(v: Result<Int, Unit>) {
+external fun foo(v: Result<Int, Unit>) {
   // We should complain about Ok here.
   match v {
   }

@@ -58,7 +58,7 @@ fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: String
   build_site()
 }
 
-export fun main(_: List<String>) {
+external fun main(_: List<String>) {
   build_site()
 }
 

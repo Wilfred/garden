@@ -1,6 +1,6 @@
 enum Foo {}
 
-export fun opt_foo(): Option<Foo> {
+external fun opt_foo(): Option<Foo> {
     error("")
 }
 

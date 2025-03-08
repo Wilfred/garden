@@ -1,4 +1,4 @@
-export fun foo: Option<Int> {
+external fun foo: Option<Int> {
   None
 }
 
@@ -51,7 +51,7 @@ export fun foo: Option<Int> {
 //             close_brace: Position { ... },
 //         },
 //     },
-//     Exported(
+//     External(
 //         Position { ... },
 //     ),
 // )
@@ -59,6 +59,6 @@ export fun foo: Option<Int> {
 // expected stderr:
 // Error: Parse error: Expected `(`, got `:`
 // --> src/test_files/parser/unfinished_params.gdn:1
-// export fun foo: Option<Int> {
-//               ^
+// external fun foo: Option<Int> {
+//                 ^
 

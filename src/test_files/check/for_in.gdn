@@ -1,4 +1,4 @@
-export fun foo(items: List<Int>) {
+external fun foo(items: List<Int>) {
   // Good
   for x in items {
     x + 1

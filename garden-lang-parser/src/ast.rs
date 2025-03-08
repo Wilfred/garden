@@ -571,7 +571,7 @@ pub struct Block {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Visibility {
-    Exported(Position),
+    External(Position),
     CurrentFile,
 }
 
@@ -711,12 +711,12 @@ pub struct ToplevelItemId(pub usize);
 pub enum ToplevelItem_ {
     /// ```garden
     /// fun foo() {}
-    /// export fun bar() {}
+    /// external fun bar() {}
     /// ```
     Fun(Symbol, FunInfo, Visibility),
     /// ```garden
     /// fun (this: MyType) foo() {}
-    /// export fun (this: MyType) baz() {}
+    /// external fun (this: MyType) baz() {}
     /// ```
     Method(MethodInfo, Visibility),
     /// ```garden

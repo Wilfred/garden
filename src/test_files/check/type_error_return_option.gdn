@@ -1,4 +1,4 @@
-export fun foo(parts: List<String>): String {
+external fun foo(parts: List<String>): String {
     parts.first()
 }
 

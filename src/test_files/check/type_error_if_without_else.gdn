@@ -1,4 +1,4 @@
-export fun foo(b: Bool): Int {
+external fun foo(b: Bool): Int {
     if b {
         123
     }

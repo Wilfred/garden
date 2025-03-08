@@ -1,4 +1,4 @@
-export fun (self: String) foo() {
+external fun (self: String) foo() {
     self = 123
     self.index_of("a")
 }

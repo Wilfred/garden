@@ -1,4 +1,4 @@
-export fun (self: List<T>) foo<T>() {}
+external fun (self: List<T>) foo<T>() {}
 
 // args: dump-ast
 // expected stdout:
@@ -46,7 +46,7 @@ export fun (self: List<T>) foo<T>() {}
 //             },
 //         ),
 //     },
-//     Exported(
+//     External(
 //         Position { ... },
 //     ),
 // )

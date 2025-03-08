@@ -4,7 +4,7 @@ struct Foo {}
 
 // Hello
 // World
-export struct Bar {}
+external struct Bar {}
 
 // args: dump-ast
 // expected stdout:
@@ -22,7 +22,7 @@ export struct Bar {}
 // )
 // Struct(
 //     StructInfo {
-//         visibility: Exported(
+//         visibility: External(
 //             Position { ... },
 //         ),
 //         src_string: SourceString,

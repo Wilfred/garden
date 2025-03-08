@@ -8,12 +8,12 @@ fun not_called() {
 
 fun called() {}
 
-export fun foo() {
+external fun foo() {
   called()
 }
 
 // We do want to warn here, we have non-zero callers but they're not
-// reachable from an exported function.
+// reachable from an externaled function.
 fun unreachable_cycle_1() {
   unreachable_cycle_2()
 }
@@ -40,7 +40,7 @@ test my_test {
 
 fun called_via_method() {}
 
-export fun (this: String) foo(): Unit {
+external fun (this: String) foo(): Unit {
   called_via_method()
   this.used_meth()
 }

@@ -1,10 +1,10 @@
-export fun (self String) doStuff() {}
+external fun (self String) doStuff() {}
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `:`, got `String`
 // --> src/test_files/check/missing_colon_method_receiver.gdn:1
-// export fun (self String) doStuff() {}
-//                  ^^^^^^
+// external fun (self String) doStuff() {}
+//                    ^^^^^^
 

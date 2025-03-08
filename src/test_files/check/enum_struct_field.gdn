@@ -1,4 +1,4 @@
-export fun foo(b: Bool) {
+external fun foo(b: Bool) {
     b.some_field
 }
 

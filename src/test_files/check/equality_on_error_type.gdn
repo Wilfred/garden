@@ -1,4 +1,4 @@
-export fun foo() {
+external fun foo() {
     let v = no_such_func()
     // should not emit an equality warning
     if v == "" {

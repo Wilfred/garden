@@ -1089,16 +1089,16 @@ fn parse_definition(
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     if let Some((token, next_token)) = tokens.peek_two() {
-        if token.text == "fun" || token.text == "export" && next_token.text == "fun" {
+        if token.text == "fun" || token.text == "external" && next_token.text == "fun" {
             return parse_function_or_method(src, tokens, id_gen, diagnostics);
         }
         if token.text == "test" {
             return Some(parse_test(src, tokens, id_gen, diagnostics));
         }
-        if token.text == "enum" || token.text == "export" && next_token.text == "enum" {
+        if token.text == "enum" || token.text == "external" && next_token.text == "enum" {
             return Some(parse_enum(src, tokens, id_gen, diagnostics));
         }
-        if token.text == "struct" || token.text == "export" && next_token.text == "struct" {
+        if token.text == "struct" || token.text == "external" && next_token.text == "struct" {
             return Some(parse_struct(src, tokens, id_gen, diagnostics));
         }
         if token.text == "import" {
@@ -1196,9 +1196,9 @@ fn parse_enum(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "export" {
+        if token.text == "external" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::Exported(token.position.clone());
+            visibility = Visibility::External(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -1256,9 +1256,9 @@ fn parse_struct(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "export" {
+        if token.text == "external" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::Exported(token.position.clone());
+            visibility = Visibility::External(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -1892,9 +1892,9 @@ fn parse_function_or_method(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "export" {
+        if token.text == "external" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::Exported(token.position.clone());
+            visibility = Visibility::External(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -2078,8 +2078,8 @@ fn parse_function(
 }
 
 const RESERVED_WORDS: &[&str] = &[
-    "let", "fun", "enum", "struct", "export", "import", "if", "else", "while", "return", "test",
-    "match", "break", "continue", "for", "in", "assert",
+    "let", "fun", "enum", "struct", "internal", "external", "import", "if", "else", "while",
+    "return", "test", "match", "break", "continue", "for", "in", "assert",
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
@@ -2383,7 +2383,7 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "test"
             || token.text == "enum"
             || token.text == "struct"
-            || token.text == "export"
+            || token.text == "external"
             || token.text == "import"
         {
             return parse_definition(src, tokens, id_gen, diagnostics);

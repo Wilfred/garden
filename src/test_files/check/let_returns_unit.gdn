@@ -1,8 +1,8 @@
-export fun foo(): Unit {
+external fun foo(): Unit {
     let _ = 1
 }
 
-export fun main(_args: List<String>): Unit {
+external fun main(_args: List<String>): Unit {
     foo()
 }
 

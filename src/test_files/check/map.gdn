@@ -1,8 +1,8 @@
-export fun get_ints_explicit(items: List<String>): List<Int> {
+external fun get_ints_explicit(items: List<String>): List<Int> {
     items.map(fun(_item: String): Int { 1 })
 }
 
-export fun get_ints_inferred(items: List<String>): List<Int> {
+external fun get_ints_inferred(items: List<String>): List<Int> {
     items.map(fun(item) { item.len() })
 }
 

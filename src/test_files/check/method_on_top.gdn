@@ -1,4 +1,4 @@
-export fun map_over_strings(value) {
+external fun map_over_strings(value) {
     value.foo()
 }
 

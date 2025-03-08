@@ -1,4 +1,4 @@
-export fun foo() {
+external fun foo() {
     let x = 1
     let _y = x
     (10, 11)

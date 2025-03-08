@@ -4,7 +4,7 @@ enum Foo {}
 
 // Hello
 // World
-export enum Bar {}
+external enum Bar {}
 
 // args: dump-ast
 // expected stdout:
@@ -22,7 +22,7 @@ export enum Bar {}
 // )
 // Enum(
 //     EnumInfo {
-//         visibility: Exported(
+//         visibility: External(
 //             Position { ... },
 //         ),
 //         src_string: SourceString,

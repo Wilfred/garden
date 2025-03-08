@@ -1,4 +1,4 @@
-export fun (self: String) doStuff(): String {
+external fun (self: String) doStuff(): String {
     self
 }
 

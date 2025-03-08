@@ -1,4 +1,4 @@
-export fun bad(): Bool {
+external fun bad(): Bool {
     let _f = fun(): Int { True }
     
     "abc"

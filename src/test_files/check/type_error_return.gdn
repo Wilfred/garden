@@ -1,4 +1,4 @@
-export fun foo() {
+external fun foo() {
     let s = ""
     return s.no_such_meth()
 }

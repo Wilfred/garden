@@ -1,28 +1,28 @@
-export fun (this: List<T>) good<T>() {}
+external fun (this: List<T>) good<T>() {}
 
 // We shouldn't allow this, because it's unclear whether `[].bad()`
 // dispatches to this method or not.
-export fun (this: List<Int>) bad() {}
+external fun (this: List<Int>) bad() {}
 
-export fun (this: Result<T, T>) also_bad<T>() {}
+external fun (this: Result<T, T>) also_bad<T>() {}
 
-export fun (this: T) very_bad<T>() {}
+external fun (this: T) very_bad<T>() {}
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Error: Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`.
 // --> src/test_files/check/type_error_method_specialised_type.gdn:5
-// export fun (this: List<Int>) bad() {}
-//                        ^^^
+// external fun (this: List<Int>) bad() {}
+//                          ^^^
 // 
 // Error: Methods cannot repeat generic type parameters.
 // --> src/test_files/check/type_error_method_specialised_type.gdn:7
-// export fun (this: Result<T, T>) also_bad<T>() {}
-//                             ^
+// external fun (this: Result<T, T>) also_bad<T>() {}
+//                               ^
 // 
 // Error: Methods must be defined on specific types, such as `List`, not generic types.
 // --> src/test_files/check/type_error_method_specialised_type.gdn:9
-// export fun (this: T) very_bad<T>() {}
-//                   ^
+// external fun (this: T) very_bad<T>() {}
+//                     ^
 

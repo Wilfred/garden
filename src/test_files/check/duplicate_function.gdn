@@ -1,12 +1,12 @@
-export fun foo() {}
+external fun foo() {}
 
-export fun foo() {}
+external fun foo() {}
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Warning: The function `foo` is already defined in this file.
 // --> src/test_files/check/duplicate_function.gdn:3
-// export fun foo() {}
-//            ^^^
+// external fun foo() {}
+//              ^^^
 

@@ -18,7 +18,7 @@ struct List<T> {
 // ```
 // error("Computer is melting!")
 // ```
-export fun error(message: String): NoValue {
+external fun error(message: String): NoValue {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -27,7 +27,7 @@ export fun error(message: String): NoValue {
 // ```
 // list_directory(Path{ p: "/" })
 // ```
-export fun list_directory(path: Path): Result<List<Path>, String> {
+external fun list_directory(path: Path): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -36,7 +36,7 @@ export fun list_directory(path: Path): Result<List<Path>, String> {
 // ```
 // print("hello world\n")
 // ```
-export fun print(_: String): Unit {
+external fun print(_: String): Unit {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -45,7 +45,7 @@ export fun print(_: String): Unit {
 // ```
 // println("hello world")
 // ```
-export fun println(_: String): Unit {
+external fun println(_: String): Unit {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -55,7 +55,7 @@ export fun println(_: String): Unit {
 // ```
 // shell("ls", ["-l", "/"])
 // ```
-export fun shell(command: String, args: List<String>): Result<String, String> {
+external fun shell(command: String, args: List<String>): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -64,7 +64,7 @@ export fun shell(command: String, args: List<String>): Result<String, String> {
 // ```
 // string_repr(123) // "123"
 // ```
-export fun string_repr<T>(value: T): String {
+external fun string_repr<T>(value: T): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -75,7 +75,7 @@ export fun string_repr<T>(value: T): String {
 // ```
 // write_file("hello world", "/tmp/foo.txt")
 // ```
-export fun write_file(content: String, path: String): Result<Unit, String> {
+external fun write_file(content: String, path: String): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -84,7 +84,7 @@ export fun write_file(content: String, path: String): Result<Unit, String> {
 // ```
 // working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
 // ```
-export fun working_directory(): Path {
+external fun working_directory(): Path {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -94,7 +94,7 @@ export fun working_directory(): Path {
 // ```
 // source_directory() // Some(Path{ p: "/home/yourname/awesome_garden_project" })
 // ```
-export fun source_directory(): Option<Path> {
+external fun source_directory(): Option<Path> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -103,7 +103,7 @@ export fun source_directory(): Option<Path> {
 // ```
 // [10].append(11) // [10, 11]
 // ```
-export fun (this: List<T>) append<T>(value: T): List<T> {
+external fun (this: List<T>) append<T>(value: T): List<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -112,7 +112,7 @@ export fun (this: List<T>) append<T>(value: T): List<T> {
 // ```
 // [10, 11, 12].contains(12) // True
 // ```
-export fun (this: List<T>) contains<T>(item: T): Bool {
+external fun (this: List<T>) contains<T>(item: T): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -131,7 +131,7 @@ test list_contains {
 // [4, 5, 6].get(1) // Some(5)
 // [4, 5, 6].get(3) // None
 // ```
-export fun (this: List<T>) get<T>(index: Int): Option<T> {
+external fun (this: List<T>) get<T>(index: Int): Option<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -148,7 +148,7 @@ test list_get {
 // ```
 // [10, 11, 12].len() // 3
 // ```
-export fun (this: List<T>) len<T>(): Int {
+external fun (this: List<T>) len<T>(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -157,7 +157,7 @@ export fun (this: List<T>) len<T>(): Int {
 // ```
 // "abc".len() // 3
 // ```
-export fun (this: String) len(): Int {
+external fun (this: String) len(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -171,7 +171,7 @@ test string_len {
 // ```
 // "a\nb".lines() // ["a", "b"]
 // ```
-export fun (this: String) lines(): List<String> {
+external fun (this: String) lines(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -189,7 +189,7 @@ test string_lines {
 // "abcdef".substring(1, 3) // "bc"
 // "abc".substring(1, 99) // "bc"
 // ```
-export fun (this: String) substring(from_index: Int, to_index: Int): String {
+external fun (this: String) substring(from_index: Int, to_index: Int): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -204,7 +204,7 @@ test string_substring {
 // ```
 // "abc".index_of("c") // Some(2)
 // ```
-export fun (this: String) index_of(needle: String): Option<Int> {
+external fun (this: String) index_of(needle: String): Option<Int> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -228,7 +228,7 @@ test string_index_of {
 //
 // Note that a path may exist without the current user having
 // permission to read it.
-export fun (this: Path) exists(): Bool {
+external fun (this: Path) exists(): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -242,7 +242,7 @@ test path_exists {
 // ```
 // Path{ p: "/tmp/foo.txt" }.read()
 // ```
-export fun (this: Path) read(): Result<String, String> {
+external fun (this: Path) read(): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -251,7 +251,7 @@ test path_read {
 }
 
 // Check the syntax of `src`.
-export fun check_snippet(src: String): Result<Unit, List<String>> {
+external fun check_snippet(src: String): Result<Unit, List<String>> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -284,7 +284,7 @@ test check_snippet_bad_name {
 
 // Split `src` into individual lexed tokens, along with their offsets
 // in the original string.
-export fun lex(src: String): List<(Int, String)> {
+external fun lex(src: String): List<(Int, String)> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -302,7 +302,7 @@ test lex {
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
 }
 
-export fun type_doc_comment(type_name: String): Option<String> {
+external fun type_doc_comment(type_name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -320,7 +320,7 @@ test type_doc_comment {
 
 // A list of all the built-in type names, `String`, `Option` and
 // so on. The list is sorted alphabetically.
-export fun built_in_types(): List<String> {
+external fun built_in_types(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 

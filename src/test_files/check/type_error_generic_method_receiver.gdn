@@ -1,4 +1,4 @@
-export fun (this: List<T>) foo<T>(): String {
+external fun (this: List<T>) foo<T>(): String {
   this.get(1).or_exception()
 }
 

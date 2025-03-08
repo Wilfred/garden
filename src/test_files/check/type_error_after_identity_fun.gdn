@@ -1,4 +1,4 @@
-export fun id<T>(v: T): T {
+external fun id<T>(v: T): T {
     v
 }
 

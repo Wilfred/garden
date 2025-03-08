@@ -1,8 +1,8 @@
-export fun bad() {
+external fun bad() {
   todo()
 }
 
-export fun weird_but_ok() {
+external fun weird_but_ok() {
   let todo = fun() {}
   todo()
 }

@@ -1,4 +1,4 @@
-export fun fib(i: Int): Int {
+external fun fib(i: Int): Int {
     if i == 0 {
         return 1
     }

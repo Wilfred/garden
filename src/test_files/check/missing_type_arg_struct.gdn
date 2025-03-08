@@ -1,6 +1,6 @@
 struct MyStruct<T> {}
 
-export fun foo(): MyStruct {
+external fun foo(): MyStruct {
     error("")
 }
 
@@ -9,6 +9,6 @@ export fun foo(): MyStruct {
 // expected stdout:
 // Error: MyStruct takes 1 type argument, but got 0 arguments.
 // --> src/test_files/check/missing_type_arg_struct.gdn:3
-// export fun foo(): MyStruct {
-//                   ^^^^^^^^
+// external fun foo(): MyStruct {
+//                     ^^^^^^^^
 

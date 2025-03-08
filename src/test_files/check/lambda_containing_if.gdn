@@ -1,4 +1,4 @@
-export fun map_over_strings(lines: List<String>) {
+external fun map_over_strings(lines: List<String>) {
     lines.map(fun(line) {
         if line.starts_with("a") {
             "b"

@@ -1,4 +1,4 @@
-export fun main(_args: List<String>): Unit {
+external fun main(_args: List<String>): Unit {
     // This is unused.
     let x = "a"
 

@@ -1,4 +1,4 @@
-export fun foo(): Fun<(Int), Int> {
+external fun foo(): Fun<(Int), Int> {
   fun(x) { x + 1 }
 }
 

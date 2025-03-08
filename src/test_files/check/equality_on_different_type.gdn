@@ -1,11 +1,11 @@
-export fun foo(s: String, i: Int) {
+external fun foo(s: String, i: Int) {
     // Always False.
     if s == i {
         print("hello world")
     }
 }
 
-export fun bar(s: Option<String>, i: Option<Int>) {
+external fun bar(s: Option<String>, i: Option<Int>) {
     // Only True when both values are None.
     if s == i {
         print("hello world")

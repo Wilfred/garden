@@ -1,4 +1,4 @@
-export fun main(_): Unit {
+external fun main(_): Unit {
     NoSuchType{ x: 1 + 2 }
 }
 

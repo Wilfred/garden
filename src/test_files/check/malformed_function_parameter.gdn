@@ -1,4 +1,4 @@
-export fun foo(f: Fun<Int, Int>): Int {
+external fun foo(f: Fun<Int, Int>): Int {
     f(1)
 }
 
@@ -7,6 +7,6 @@ export fun foo(f: Fun<Int, Int>): Int {
 // expected stdout:
 // Error: Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `Int`.
 // --> src/test_files/check/malformed_function_parameter.gdn:1
-// export fun foo(f: Fun<Int, Int>): Int {
-//                       ^^^
+// external fun foo(f: Fun<Int, Int>): Int {
+//                         ^^^
 

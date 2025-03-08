@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use std::path::PathBuf;
+use std::rc::Rc;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
@@ -41,7 +43,7 @@ pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
     let mut visitor = TypeCheckVisitor {
         env,
         diagnostics: vec![],
-        bindings: LocalBindings::default(),
+        bindings: LocalBindings::new(env),
         id_to_ty: FxHashMap::default(),
         id_to_doc_comment: FxHashMap::default(),
         id_to_def_pos: FxHashMap::default(),
@@ -66,10 +68,26 @@ struct LocalBindings {
     blocks: Vec<FxHashMap<SymbolName, (Type, Position)>>,
 }
 
-impl Default for LocalBindings {
-    fn default() -> Self {
+impl LocalBindings {
+    fn new(env: &Env) -> Self {
+        let placeholder_path = Rc::new(PathBuf::from("__local_scope_placeholder__"));
+        let mut block_bindings = FxHashMap::default();
+        if let Some(stack_top) = env.stack.0.last() {
+            for (sym_id, value) in stack_top.bindings.all() {
+                let Some(sym_name) = env.id_gen.intern_id_to_name.get(&sym_id) else {
+                    continue;
+                };
+                let ty = Type::from_value(&value, &env.types, &stack_top.type_bindings);
+
+                block_bindings.insert(
+                    sym_name.clone(),
+                    (ty, Position::todo(placeholder_path.clone())),
+                );
+            }
+        }
+
         Self {
-            blocks: vec![FxHashMap::default()],
+            blocks: vec![block_bindings],
         }
     }
 }

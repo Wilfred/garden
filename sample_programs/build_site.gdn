@@ -41,7 +41,7 @@ fun build_site(): Unit {
     match type_doc_comment(type_name) {
       Some(doc_comment) => {
         let dest_path = website_dir.p ^ (("/type:" ^ type_name) ^ ".html")
-        let page_src = render_markdown(doc_comment)
+        let page_src = render_markdown("# `" ^ (type_name ^ ("` type\n\n" ^ doc_comment)))
         write_website_page(base_tmpl_path, page_src, dest_path)
       }
       None => {}

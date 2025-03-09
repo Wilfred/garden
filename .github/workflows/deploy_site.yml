@@ -11,15 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: extractions/setup-just@v1
-      - uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: 'v0.12.1'
-
-      - run: just wasm
-
-      - run: rm website/pkg/.gitignore
-
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:

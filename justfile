@@ -15,10 +15,6 @@ tag_then_bump:
 
     cargo set-version --bump minor
 
-wasm:
-    cd garden-lang-web && wasm-pack build --target web
-    cp -r garden-lang-web/pkg website
-
 web:
     cd website && python -m http.server
 

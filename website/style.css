@@ -15,6 +15,9 @@ p {
 pre,
 code {
   font-family: monospace;
+}
+
+pre {
   font-size: 16px;
   line-height: 20px;
 }

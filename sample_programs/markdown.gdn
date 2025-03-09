@@ -170,7 +170,11 @@ fun render_markdown_code(snippet: Snippet): String {
         (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok
       } else if looks_like_type(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        (("<span class=\"type\">" ^ tok) ^ "</span>") ^ after_tok
+        if built_in_types().contains(tok) {
+          (((("<a href=\"./type:" ^ tok) ^ ".html\"><span class=\"type\">") ^ tok) ^ "</span></a>") ^ after_tok
+        } else {
+          (("<span class=\"type\">" ^ tok) ^ "</span>") ^ after_tok
+        }
       } else {
         escape_angle_brackets(part)
       }

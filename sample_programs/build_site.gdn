@@ -36,6 +36,17 @@ fun build_site(): Unit {
     let page_src = render_markdown(page_src_md)
     write_website_page(base_tmpl_path, page_src, dest_path)
   }
+
+  for type_name in built_in_types() {
+    match type_doc_comment(type_name) {
+      Some(doc_comment) => {
+        let dest_path = website_dir.p ^ (("/type:" ^ type_name) ^ ".html")
+        let page_src = render_markdown(doc_comment)
+        write_website_page(base_tmpl_path, page_src, dest_path)
+      }
+      None => {}
+    }
+  }
 }
 
 fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: String): Unit {

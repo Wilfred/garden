@@ -31,6 +31,9 @@ use crate::lex::TokenStream;
 use crate::lex::INTEGER_RE;
 use crate::lex::SYMBOL_RE;
 
+// TODO: implement precedence using Pratt parsing, as discussed in
+// <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
+
 #[derive(Debug)]
 #[allow(dead_code)] // additional isn't used yet.
 pub enum ParseError {

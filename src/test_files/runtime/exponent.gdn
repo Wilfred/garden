@@ -1,4 +1,4 @@
-external fun main(_) {
+fun main(_) {
   dbg(2 ** 10)
 }
 

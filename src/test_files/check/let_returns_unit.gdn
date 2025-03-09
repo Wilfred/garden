@@ -2,7 +2,7 @@ external fun foo(): Unit {
     let _ = 1
 }
 
-external fun main(_args: List<String>): Unit {
+fun main(_args: List<String>): Unit {
     foo()
 }
 

@@ -11,4 +11,9 @@ Status: Pre-alpha, almost nothing works yet.
 
 MIT.
 
+`blocks.min.css` is a vendored copy of
+[blocks.css](https://thesephist.github.io/blocks.css/) version 0.4.1,
+which is also under a MIT License.
+
 Logo is [by Freepik on Flaticon](https://www.flaticon.com/free-icon/gardening_1518965).
+

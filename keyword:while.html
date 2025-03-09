@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/blocks.css/dist/blocks.min.css"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>while</code> keyword</h1>
+<p><code>for</code> runs a block code repeatedly, while an expression evaluates to
+<code>True</code>.</p>
+<pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> nums = [1, 2, 3]
+
+<a href="./keyword:let.html"><span class="keyword">let</span></a> i = 0
+<a href="./keyword:while.html"><span class="keyword">while</span></a> i &lt; nums.len() {
+  <a href="./keyword:let.html"><span class="keyword">let</span></a> num = nums.get(i)
+  dbg(num)
+
+  i += 1
+}</code></pre>
+<p>For looping when you have a list, see
+<a href="keyword:for.html"><code>for</code></a>.</p></div>
+  </body>
+</html>

@@ -552,7 +552,21 @@ external fun (this: Path) parent(): Path {
 
 // Append `component` to this path.
 external fun (this: Path) join(component: String): Path {
-  Path{ p: "/".join([this.p, component]) }
+  let p = if this.p.ends_with("/") {
+    this.p ^ component
+  } else {
+    (this.p ^ "/") ^ component
+  }
+
+  Path{ p: p }
+}
+
+test path_join {
+  let directory = Path{ p: "/foo/bar" }
+  assert(directory.join("baz").p == "/foo/bar/baz")
+
+  let root = Path{ p: "/" }
+  assert(root.join("baz").p == "/baz")
 }
 
 // The extension of this path, if this path is a file whose name

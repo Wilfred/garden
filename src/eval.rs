@@ -2491,7 +2491,7 @@ fn eval_builtin_call(
                 }
             };
 
-            let path_s = match unwrap_path(receiver_value, env) {
+            let path_s = match unwrap_path(&arg_values[1], env) {
                 Ok(s) => s,
                 Err(msg) => {
                     let mut saved_values = vec![];

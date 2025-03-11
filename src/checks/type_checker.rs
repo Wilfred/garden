@@ -1408,14 +1408,17 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        self.verify_expr_(
+        let inferred_ty = self.verify_expr_(
             expected_ty,
             &expr.expr_,
             &expr.position,
             expr.id,
             type_bindings,
             expected_return_ty,
-        )
+        );
+
+        self.id_to_ty.insert(expr.id, inferred_ty.clone());
+        inferred_ty
     }
 
     fn verify_expr_(

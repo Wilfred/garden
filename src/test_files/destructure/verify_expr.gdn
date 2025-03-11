@@ -1,0 +1,22 @@
+// Ensure that we can still use destructuring on expresisons used in
+// verify positions, not infer positions (according to the type
+// checker).
+
+fun (this: Path) my_set_extension(): Path {
+  this.file_name()
+//^^^^^^^^^^^^^^^^
+}
+
+// args: destructure
+// expected stdout:
+// // Ensure that we can still use destructuring on expresisons used in
+// // verify positions, not infer positions (according to the type
+// // checker).
+// 
+// fun (this: Path) my_set_extension(): Path {
+//   match this.file_name() {
+//     Some(_) => {}
+//     None => {}
+//   }
+// }
+

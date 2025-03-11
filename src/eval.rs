@@ -2491,19 +2491,17 @@ fn eval_builtin_call(
                 }
             };
 
-            let path_s = match arg_values[1].as_ref() {
-                Value_::String(s) => s,
-                _ => {
+            let path_s = match unwrap_path(receiver_value, env) {
+                Ok(s) => s,
+                Err(msg) => {
                     let mut saved_values = vec![];
                     for value in arg_values.iter().rev() {
                         saved_values.push(value.clone());
+                        saved_values.push(receiver_value.clone());
                     }
-                    saved_values.push(receiver_value.clone());
-
-                    let message = format_type_error("String", &arg_values[1], env);
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::ResumableError(receiver_pos.clone(), msg),
                     ));
                 }
             };

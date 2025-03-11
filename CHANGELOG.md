@@ -37,6 +37,8 @@ Added `String::replace`, `List::enumerate`, `lex`, `check_snippet`,
 `List::get` now returns an option rather than erroring on
 out-of-bounds access.
 
+`write_file` now takes a `Path` instead of a string.
+
 ## Checks
 
 Fixed several type checking bugs on type parameters in methods.

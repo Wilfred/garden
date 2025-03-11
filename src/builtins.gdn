@@ -73,10 +73,15 @@ external fun string_repr<T>(value: T): String {
 // If `path` already exists, its content is replaced with `content`.
 //
 // ```
-// write_file("hello world", "/tmp/foo.txt")
+// write_file("hello world", Path{ p: "/tmp/foo.txt" })
 // ```
-external fun write_file(content: String, path: String): Result<Unit, String> {
+external fun write_file(content: String, path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
+}
+
+test write_file {
+  // TODO: delete the file afterwards
+  write_file("hello world", Path{ p: "/tmp/file_from_garden_testing.txt" })
 }
 
 // Return the path of the current working directory.

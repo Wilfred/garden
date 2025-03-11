@@ -15,8 +15,8 @@ fun markdown_files(website_dir: Path): List<Path> {
 }
 
 // Convert "foo.tmpl.html" to "foo.html".
-fun output_path(template_path: String): String {
-  template_path.strip_suffix(".tmpl.html") ^ ".html"
+fun output_path(template_path: String): Path {
+  Path{ p: template_path.strip_suffix(".tmpl.html") ^ ".html"}
 }
 
 fun build_site(): Unit {
@@ -31,7 +31,7 @@ fun build_site(): Unit {
   }
 
   for md_path in markdown_files(website_dir) {
-    let dest_path = md_path.p.strip_suffix(".md") ^ ".html"
+    let dest_path = Path{ p: md_path.p.strip_suffix(".md") ^ ".html" }
     let page_src_md = md_path.read().or_error()
     let page_src = render_markdown(substitute_shorthand(page_src_md))
     write_website_page(base_tmpl_path, page_src, dest_path)
@@ -40,7 +40,7 @@ fun build_site(): Unit {
   for type_name in built_in_types() {
     match type_doc_comment(type_name) {
       Some(doc_comment) => {
-        let dest_path = website_dir.p ^ (("/type:" ^ type_name) ^ ".html")
+        let dest_path = Path{ p: website_dir.p ^ (("/type:" ^ type_name) ^ ".html") }
         let page_src = render_markdown("# `" ^ (type_name ^ ("` type\n\n" ^ doc_comment)))
         write_website_page(base_tmpl_path, page_src, dest_path)
       }
@@ -87,12 +87,12 @@ fun substitute_shorthand(src: String): String {
   src.replace("__KEYWORDS", keyword_links).replace("__BUILTIN_TYPES", type_links)
 }
 
-fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: String): Unit {
+fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: Path): Unit {
   let page_src = page_path.read().or_error()
   write_website_page(base_tmpl_path, page_src, dest_path)
 }
 
-fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: String): Unit {
+fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: Path): Unit {
   let base_tmpl_src = base_tmpl_path.read().or_error()
   let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {
     Some(s) => s,
@@ -100,7 +100,7 @@ fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: String
   }
 
   let src = "".join([header.trim_right(), page_src, footer.trim_left()])
-  write_file(src, dest_path).or_error()
+  write_file(src, dest_path.p).or_error()
 }
 
 {

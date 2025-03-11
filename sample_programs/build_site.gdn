@@ -33,7 +33,7 @@ fun build_site(): Unit {
   for md_path in markdown_files(website_dir) {
     let dest_path = md_path.p.strip_suffix(".md") ^ ".html"
     let page_src_md = md_path.read().or_error()
-    let page_src = render_markdown(page_src_md)
+    let page_src = render_markdown(substitute_shorthand(page_src_md))
     write_website_page(base_tmpl_path, page_src, dest_path)
   }
 
@@ -47,6 +47,44 @@ fun build_site(): Unit {
       None => {}
     }
   }
+}
+
+fun join_with_commas_and(items: List<String>): String {
+  let last_item = match items.last() {
+    Some(item) => item,
+    None => return "",
+  }
+
+  let but_last = items.slice(0, -1)
+  if but_last.is_empty() {
+    return last_item
+  }
+
+  " and ".join([", ".join(but_last), last_item ^ "."])
+}
+
+// Replace all __FOO strings in markdown `src` with runtime values.
+fun substitute_shorthand(src: String): String {
+  // TODO: this is duplicated with markdown.gdn. This should probably
+  // be a built-in constant.
+  let KEYWORDS = [
+    "let", "fun", "enum", "struct", "external", "internal", "import", "if", "else", "while", "return", "test",
+    "match", "break", "continue", "for", "in", "assert",
+  ]
+
+  let keyword_links = KEYWORDS.map(fun(keyword: String) {
+    "".join(["[`", keyword, "`](./keyword:", keyword, ".html)"])
+  })
+
+  let keyword_links = join_with_commas_and(keyword_links)
+
+  let type_links = built_in_types().map(fun(name: String) {
+    "".join(["[`", name, "`](./type:", name, ".html)"])
+  })
+
+  let type_links = join_with_commas_and(type_links)
+
+  src.replace("__KEYWORDS", keyword_links).replace("__BUILTIN_TYPES", type_links)
 }
 
 fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: String): Unit {

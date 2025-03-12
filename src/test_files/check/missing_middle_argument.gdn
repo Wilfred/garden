@@ -1,0 +1,14 @@
+fun foo(_: Int, _: Path, _: String) {}
+
+external fun bar() {
+  foo(1, "stuff")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `foo` requires an additional `Path` argument here.
+// --> src/test_files/check/missing_middle_argument.gdn:4
+//   foo(1, "stuff")
+//          ^^^^^^^
+

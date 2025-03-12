@@ -411,7 +411,8 @@ impl TypeCheckVisitor<'_> {
     fn check_arity(
         &mut self,
         name: Option<&Symbol>,
-        params: &[Type],
+        expected_args: &[Type],
+        actual_args: &[(Type, Position)],
         paren_args: &ParenthesizedArguments,
     ) {
         let formatted_name = match name {
@@ -419,12 +420,36 @@ impl TypeCheckVisitor<'_> {
             None => msgtext!("This function call"),
         };
 
-        if let Some(last_param_ty) = params.last() {
-            if paren_args.arguments.len() + 1 == params.len() {
+        for (i, (arg_ty, arg_pos)) in actual_args.iter().enumerate() {
+            let Some(expected_ty) = expected_args.get(i) else {
+                break;
+            };
+            let Some(next_expected_ty) = expected_args.get(i + 1) else {
+                break;
+            };
+
+            if !is_subtype(arg_ty, expected_ty) && is_subtype(arg_ty, next_expected_ty) {
                 let message = ErrorMessage(vec![
                     formatted_name,
                     msgtext!(" requires an additional ",),
-                    msgcode!("{}", last_param_ty.to_string()),
+                    msgcode!("{}", expected_ty),
+                    msgtext!(" argument here."),
+                ]);
+                self.diagnostics.push(Diagnostic {
+                    level: Level::Error,
+                    message,
+                    position: arg_pos.clone(),
+                });
+                return;
+            }
+        }
+
+        if let Some(last_param_ty) = expected_args.last() {
+            if paren_args.arguments.len() + 1 == expected_args.len() {
+                let message = ErrorMessage(vec![
+                    formatted_name,
+                    msgtext!(" requires an additional ",),
+                    msgcode!("{}", last_param_ty),
                     msgtext!(" argument."),
                 ]);
                 self.diagnostics.push(Diagnostic {
@@ -440,15 +465,15 @@ impl TypeCheckVisitor<'_> {
             formatted_name,
             msgtext!(
                 " expects {} argument{}, but got {}.",
-                params.len(),
-                if params.len() == 1 { "" } else { "s" },
+                expected_args.len(),
+                if expected_args.len() == 1 { "" } else { "s" },
                 paren_args.arguments.len()
             ),
         ]);
 
-        if params.len() < paren_args.arguments.len() {
+        if expected_args.len() < paren_args.arguments.len() {
             // Got too many arguments.
-            let first_excess_arg = &paren_args.arguments[params.len()];
+            let first_excess_arg = &paren_args.arguments[expected_args.len()];
             let last_arg = paren_args.arguments.last().unwrap();
 
             let position = Position::merge(&first_excess_arg.position, &last_arg.position);
@@ -458,7 +483,7 @@ impl TypeCheckVisitor<'_> {
                 message,
                 position,
             });
-        } else if params.len() > paren_args.arguments.len() {
+        } else if expected_args.len() > paren_args.arguments.len() {
             // Got too few arguments.
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
@@ -1032,8 +1057,6 @@ impl TypeCheckVisitor<'_> {
                         return_,
                         name,
                     } => {
-                        self.check_arity(name.as_ref(), &params, paren_args);
-
                         let mut ty_var_env = TypeVarEnv::default();
                         for type_param in type_params {
                             ty_var_env.insert(type_param.clone(), None);
@@ -1054,15 +1077,22 @@ impl TypeCheckVisitor<'_> {
                             .map(|p| subst_ty_vars(p, &ty_var_env))
                             .collect::<Vec<_>>();
 
-                        for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(arg_tys) {
-                            if !is_subtype(&arg_ty, param_ty) {
-                                self.diagnostics.push(Diagnostic {
-                                    level: Level::Error,
-                                    message: format_type_mismatch(param_ty, &arg_ty),
-                                    position: arg_pos,
-                                });
+                        if params.len() == arg_tys.len() {
+                            // Only check argument types if we have the right number of
+                            // arguments. Otherwise, it's likely that the types are valid,
+                            // but there were missing previous arguments.
+                            for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(&arg_tys) {
+                                if !is_subtype(arg_ty, param_ty) {
+                                    self.diagnostics.push(Diagnostic {
+                                        level: Level::Error,
+                                        message: format_type_mismatch(param_ty, arg_ty),
+                                        position: arg_pos.clone(),
+                                    });
+                                }
                             }
                         }
+
+                        self.check_arity(name.as_ref(), &params, &arg_tys, paren_args);
 
                         subst_ty_vars(&return_, &ty_var_env)
                     }

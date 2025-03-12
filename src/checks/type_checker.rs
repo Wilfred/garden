@@ -408,13 +408,15 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
-    fn check_arity(
+    fn arity_diagnostics(
         &mut self,
         name: Option<&Symbol>,
         expected_args: &[Type],
         actual_args: &[(Type, Position)],
         paren_args: &ParenthesizedArguments,
     ) {
+        debug_assert!(expected_args.len() != actual_args.len());
+
         let formatted_name = match name {
             Some(name) => msgcode!("{}", name.name),
             None => msgtext!("This function call"),
@@ -424,16 +426,43 @@ impl TypeCheckVisitor<'_> {
             let Some(expected_ty) = expected_args.get(i) else {
                 break;
             };
-            let Some(next_expected_ty) = expected_args.get(i + 1) else {
+            if is_subtype(arg_ty, expected_ty) {
+                // This argument is fine.
+                continue;
+            }
+
+            if let Some(next_expected_ty) = expected_args.get(i + 1) {
+                // This argument looks like it matches the next parameter, presumably we
+                // forgot an argument.
+                if is_subtype(arg_ty, next_expected_ty) {
+                    let message = ErrorMessage(vec![
+                        formatted_name,
+                        msgtext!(" requires an additional ",),
+                        msgcode!("{}", expected_ty),
+                        msgtext!(" argument here."),
+                    ]);
+                    self.diagnostics.push(Diagnostic {
+                        level: Level::Error,
+                        message,
+                        position: arg_pos.clone(),
+                    });
+                    return;
+                }
+            };
+
+            let Some((next_arg_ty, _)) = actual_args.get(i + 1) else {
                 break;
             };
 
-            if !is_subtype(arg_ty, expected_ty) && is_subtype(arg_ty, next_expected_ty) {
+            if is_subtype(next_arg_ty, expected_ty) && actual_args.len() > expected_args.len() {
                 let message = ErrorMessage(vec![
+                    msgtext!("Unexpected extra argument. ",),
                     formatted_name,
-                    msgtext!(" requires an additional ",),
-                    msgcode!("{}", expected_ty),
-                    msgtext!(" argument here."),
+                    msgtext!(
+                        " requires {} argument{}.",
+                        expected_args.len(),
+                        if expected_args.len() == 1 { "" } else { "s" }
+                    ),
                 ]);
                 self.diagnostics.push(Diagnostic {
                     level: Level::Error,
@@ -1091,9 +1120,9 @@ impl TypeCheckVisitor<'_> {
                                     });
                                 }
                             }
+                        } else {
+                            self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
                         }
-
-                        self.check_arity(name.as_ref(), &params, &arg_tys, paren_args);
 
                         subst_ty_vars(&return_, &ty_var_env)
                     }

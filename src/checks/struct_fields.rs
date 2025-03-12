@@ -3,7 +3,6 @@ use std::rc::Rc;
 
 use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
 use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{msgcode, msgtext};
 use rustc_hash::FxHashMap;
@@ -75,10 +74,13 @@ impl Visitor for StructFieldVisitor<'_> {
             if !fields_by_name.contains_key(&field_sym.name) {
                 self.diagnostics.push(Diagnostic {
                     level: Level::Error,
-                    message: ErrorMessage(vec![Text(format!(
-                        "Struct `{}` has no field named `{}`",
-                        name_sym.name, field_sym.name,
-                    ))]),
+                    message: ErrorMessage(vec![
+                        msgtext!("Struct "),
+                        msgcode!("{}", name_sym.name),
+                        msgtext!(" does not have a field named "),
+                        msgcode!("{}", field_sym.name),
+                        msgtext!("."),
+                    ]),
                     position: field_sym.position.clone(),
                 });
             }
@@ -88,10 +90,11 @@ impl Visitor for StructFieldVisitor<'_> {
             if !seen_fields.contains(&field_info.sym.name) {
                 self.diagnostics.push(Diagnostic {
                     level: Level::Error,
-                    message: ErrorMessage(vec![Text(format!(
-                        "Missing field `{}` in struct literal.",
-                        field_info.sym.name,
-                    ))]),
+                    message: ErrorMessage(vec![
+                        msgtext!("This struct literal is missing the field "),
+                        msgcode!("{}", field_info.sym.name),
+                        msgtext!("."),
+                    ]),
                     position: name_sym.position.clone(),
                 });
             }

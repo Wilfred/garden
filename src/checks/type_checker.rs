@@ -613,10 +613,11 @@ impl TypeCheckVisitor<'_> {
                     let Some(value) = self.env.file_scope.get(&pattern.symbol.name) else {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
-                            message: ErrorMessage(vec![Text(format!(
-                                "No such type `{}`.",
-                                pattern.symbol.name
-                            ))]),
+                            message: ErrorMessage(vec![
+                                msgtext!("No such type "),
+                                msgcode!("{}", pattern.symbol.name),
+                                msgtext!("."),
+                            ]),
                             position: pattern.symbol.position.clone(),
                         });
                         continue;
@@ -2006,10 +2007,13 @@ fn check_match_exhaustive(
         if variants_remaining.contains_key(&variant.name_sym.name) {
             diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!(
-                "This match expression does not cover all the cases of `{}`. It's missing `{}`.",
-                    type_name, &variant.name_sym.name.name
-            ))]),
+                message: ErrorMessage(vec![
+                    msgtext!("This match expression does not cover all the cases of ",),
+                    msgcode!("{}", type_name),
+                    msgtext!(". It's missing ",),
+                    msgcode!("{}", variant.name_sym.name.name),
+                    msgtext!("."),
+                ]),
                 position: scrutinee_pos.clone(),
             });
             break;

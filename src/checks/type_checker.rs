@@ -4,8 +4,9 @@ use std::rc::Rc;
 
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, StructInfo, Symbol, SymbolName, SyntaxId, TestInfo, ToplevelExpression,
-    ToplevelItem, ToplevelItemId, ToplevelItem_, TypeHint, TypeName, VariantInfo,
+    MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
+    TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, ToplevelItem_, TypeHint, TypeName,
+    VariantInfo,
 };
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
@@ -404,6 +405,55 @@ impl TypeCheckVisitor<'_> {
             if let Some(doc_comment) = doc_comment {
                 self.id_to_doc_comment.insert(hint_id, doc_comment);
             }
+        }
+    }
+
+    fn check_arity(
+        &mut self,
+        name: Option<&Symbol>,
+        params: &[Type],
+        paren_args: &ParenthesizedArguments,
+        position: &Position,
+    ) {
+        let formatted_name = match name {
+            Some(name) => format!("`{}`", name.name),
+            None => "This function".to_owned(),
+        };
+
+        if params.len() < paren_args.arguments.len() {
+            // Got too many arguments.
+            let first_excess_arg = &paren_args.arguments[params.len()];
+            let last_arg = paren_args.arguments.last().unwrap();
+
+            let position = Position::merge(&first_excess_arg.position, &last_arg.position);
+
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: ErrorMessage(vec![Text(format!(
+                    "{} expects {} argument{}, but got {}.",
+                    formatted_name,
+                    params.len(),
+                    if params.len() == 1 { "" } else { "s" },
+                    paren_args.arguments.len()
+                ))]),
+                position,
+            });
+        } else if params.len() > paren_args.arguments.len() {
+            // Got too few arguments.
+            //
+            // TODO: This is the same message as the previous case,
+            // just a different position. Fix the duplication.
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: ErrorMessage(vec![Text(format!(
+                    "{} expects {} argument{}, but got {}.",
+                    formatted_name,
+                    params.len(),
+                    if params.len() == 1 { "" } else { "s" },
+                    paren_args.arguments.len()
+                ))]),
+                position: position.clone(),
+            });
         }
     }
 
@@ -971,44 +1021,7 @@ impl TypeCheckVisitor<'_> {
                         return_,
                         name,
                     } => {
-                        let formatted_name = match name {
-                            Some(name) => format!("`{}`", name.name),
-                            None => "This function".to_owned(),
-                        };
-
-                        if params.len() < paren_args.arguments.len() {
-                            // Got too many arguments.
-                            let first_excess_arg = &paren_args.arguments[params.len()];
-                            let last_arg = paren_args.arguments.last().unwrap();
-
-                            let position =
-                                Position::merge(&first_excess_arg.position, &last_arg.position);
-
-                            self.diagnostics.push(Diagnostic {
-                                level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "{} expects {} argument{}, but got {}.",
-                                    formatted_name,
-                                    params.len(),
-                                    if params.len() == 1 { "" } else { "s" },
-                                    paren_args.arguments.len()
-                                ))]),
-                                position,
-                            });
-                        } else if params.len() > paren_args.arguments.len() {
-                            // Got too few arguments.
-                            self.diagnostics.push(Diagnostic {
-                                level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "{} expects {} argument{}, but got {}.",
-                                    formatted_name,
-                                    params.len(),
-                                    if params.len() == 1 { "" } else { "s" },
-                                    paren_args.arguments.len()
-                                ))]),
-                                position: recv.position.clone(),
-                            });
-                        }
+                        self.check_arity(name.as_ref(), &params, paren_args, &recv.position);
 
                         let mut ty_var_env = TypeVarEnv::default();
                         for type_param in type_params {

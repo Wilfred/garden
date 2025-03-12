@@ -413,12 +413,28 @@ impl TypeCheckVisitor<'_> {
         name: Option<&Symbol>,
         params: &[Type],
         paren_args: &ParenthesizedArguments,
-        position: &Position,
     ) {
         let formatted_name = match name {
             Some(name) => msgcode!("{}", name.name),
-            None => msgtext!("This function"),
+            None => msgtext!("This function call"),
         };
+
+        if let Some(last_param_ty) = params.last() {
+            if paren_args.arguments.len() + 1 == params.len() {
+                let message = ErrorMessage(vec![
+                    formatted_name,
+                    msgtext!(" requires an additional ",),
+                    msgcode!("{}", last_param_ty.to_string()),
+                    msgtext!(" argument."),
+                ]);
+                self.diagnostics.push(Diagnostic {
+                    level: Level::Error,
+                    message,
+                    position: paren_args.close_paren.clone(),
+                });
+                return;
+            }
+        }
 
         let message = ErrorMessage(vec![
             formatted_name,
@@ -447,7 +463,7 @@ impl TypeCheckVisitor<'_> {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
                 message,
-                position: position.clone(),
+                position: paren_args.close_paren.clone(),
             });
         }
     }
@@ -1016,7 +1032,7 @@ impl TypeCheckVisitor<'_> {
                         return_,
                         name,
                     } => {
-                        self.check_arity(name.as_ref(), &params, paren_args, &recv.position);
+                        self.check_arity(name.as_ref(), &params, paren_args);
 
                         let mut ty_var_env = TypeVarEnv::default();
                         for type_param in type_params {

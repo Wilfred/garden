@@ -11,8 +11,8 @@
 //     let f = fun(x: Int): Int { x.no_such_meth() }
 //                                  ^^^^^^^^^^^^
 // 
-// Error: This function expects 1 argument, but got 0.
+// Error: This function call requires an additional `Int` argument.
 // --> src/test_files/check/type_error_lambda.gdn:3
 //     f()
-//     ^
+//       ^
 

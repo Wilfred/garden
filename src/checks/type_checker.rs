@@ -416,9 +416,19 @@ impl TypeCheckVisitor<'_> {
         position: &Position,
     ) {
         let formatted_name = match name {
-            Some(name) => format!("`{}`", name.name),
-            None => "This function".to_owned(),
+            Some(name) => msgcode!("{}", name.name),
+            None => msgtext!("This function"),
         };
+
+        let message = ErrorMessage(vec![
+            formatted_name,
+            msgtext!(
+                " expects {} argument{}, but got {}.",
+                params.len(),
+                if params.len() == 1 { "" } else { "s" },
+                paren_args.arguments.len()
+            ),
+        ]);
 
         if params.len() < paren_args.arguments.len() {
             // Got too many arguments.
@@ -429,29 +439,14 @@ impl TypeCheckVisitor<'_> {
 
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!(
-                    "{} expects {} argument{}, but got {}.",
-                    formatted_name,
-                    params.len(),
-                    if params.len() == 1 { "" } else { "s" },
-                    paren_args.arguments.len()
-                ))]),
+                message,
                 position,
             });
         } else if params.len() > paren_args.arguments.len() {
             // Got too few arguments.
-            //
-            // TODO: This is the same message as the previous case,
-            // just a different position. Fix the duplication.
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
-                message: ErrorMessage(vec![Text(format!(
-                    "{} expects {} argument{}, but got {}.",
-                    formatted_name,
-                    params.len(),
-                    if params.len() == 1 { "" } else { "s" },
-                    paren_args.arguments.len()
-                ))]),
+                message,
                 position: position.clone(),
             });
         }

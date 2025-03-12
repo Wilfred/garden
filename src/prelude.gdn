@@ -586,6 +586,34 @@ external fun (this: Path) file_name(): Option<String> {
   this.p.split("/").last()
 }
 
+// Get the containing directory for this path. For files, this is the
+// directory containing it. For directories, this is the parent
+// directory.
+//
+// This always returns a `Path`, so the root directory (i.e. `/`) is
+// returned as-is.
+//
+// ```
+// Path{ p: "/foo/bar.txt" }.containing_dir() // Path{ p: "/foo" }
+// Path{ p: "/foo/bar/" }.containing_dir() // Path{ p: "/foo" }
+// Path{ p: "/" }.containing_dir() // Path{ p: "/" }
+// ```
+external fun (this: Path) containing_dir(): Path {
+  let p = this.p.strip_suffix("/")
+  if p == "" {
+    return Path{ p: "/" }
+  }
+
+  let parts = p.split("/").slice(0, -1)
+  Path{ p: "/".join(parts) }
+}
+
+test path_containing_dir {
+  assert(Path{ p: "/foo/bar.txt" }.containing_dir() == Path{ p: "/foo" })
+  assert(Path{ p: "/foo/bar/" }.containing_dir() == Path{ p: "/foo" })
+  assert(Path{ p: "/" }.containing_dir() == Path{ p: "/" })
+}
+
 // Return a list from `i` (inclusive) to `j` (exclusive).
 //
 // ```

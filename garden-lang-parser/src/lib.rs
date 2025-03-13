@@ -282,7 +282,7 @@ fn parse_list_literal(
 
     Expression::new(
         Position::merge(&open_bracket.position, &close_bracket.position),
-        Expression_::ListLiteral(items.into_iter().map(Rc::new).collect()),
+        Expression_::ListLiteral(items),
         id_gen.next(),
     )
 }
@@ -811,8 +811,8 @@ fn parse_comma_separated_exprs(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
     terminator: &str,
-) -> Vec<Expression> {
-    let mut items = vec![];
+) -> Vec<ExpressionWithComma> {
+    let mut items: Vec<ExpressionWithComma> = vec![];
     loop {
         if peeked_symbol_is(tokens, terminator) {
             break;
@@ -826,7 +826,6 @@ fn parse_comma_separated_exprs(
             break;
         }
 
-        items.push(arg);
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
@@ -834,8 +833,18 @@ fn parse_comma_separated_exprs(
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
+                items.push(ExpressionWithComma {
+                    expr: Rc::new(arg),
+                    comma: Some(token.position),
+                });
+
                 tokens.pop();
             } else if token.text != terminator {
+                items.push(ExpressionWithComma {
+                    expr: Rc::new(arg),
+                    comma: None,
+                });
+
                 diagnostics.push(ParseError::Invalid {
                     position: token.position.clone(),
                     message: ErrorMessage(vec![Text(format!(
@@ -855,8 +864,18 @@ fn parse_comma_separated_exprs(
                     // forgotten parenthesis `foo(a`.
                     break;
                 }
+            } else {
+                items.push(ExpressionWithComma {
+                    expr: Rc::new(arg),
+                    comma: None,
+                });
             }
         } else {
+            items.push(ExpressionWithComma {
+                expr: Rc::new(arg),
+                comma: None,
+            });
+
             diagnostics.push(ParseError::Incomplete {
                 position: Position::todo(tokens.path.clone()),
                 message: ErrorMessage(vec![Text(format!(
@@ -882,7 +901,7 @@ fn parse_call_arguments(
     let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {
-        arguments: arguments.into_iter().map(Rc::new).collect(),
+        arguments,
         open_paren: open_paren_token.position,
         close_paren: close_paren_token.position,
     }

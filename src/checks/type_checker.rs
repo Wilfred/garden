@@ -505,7 +505,8 @@ impl TypeCheckVisitor<'_> {
             let first_excess_arg = &paren_args.arguments[expected_args.len()];
             let last_arg = paren_args.arguments.last().unwrap();
 
-            let position = Position::merge(&first_excess_arg.position, &last_arg.position);
+            let position =
+                Position::merge(&first_excess_arg.expr.position, &last_arg.expr.position);
 
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
@@ -870,8 +871,8 @@ impl TypeCheckVisitor<'_> {
                     .iter()
                     .map(|item| {
                         (
-                            self.infer_expr(item, type_bindings, expected_return_ty),
-                            item.position.clone(),
+                            self.infer_expr(&item.expr, type_bindings, expected_return_ty),
+                            item.expr.position.clone(),
                         )
                     })
                     .collect::<Vec<_>>();
@@ -1094,8 +1095,9 @@ impl TypeCheckVisitor<'_> {
 
                         let mut arg_tys = vec![];
                         for arg in &paren_args.arguments {
-                            let arg_ty = self.infer_expr(arg, type_bindings, expected_return_ty);
-                            arg_tys.push((arg_ty, arg.position.clone()));
+                            let arg_ty =
+                                self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                            arg_tys.push((arg_ty, arg.expr.position.clone()));
                         }
 
                         for (param_ty, (arg_ty, _)) in params.iter().zip(arg_tys.iter()) {
@@ -1129,7 +1131,7 @@ impl TypeCheckVisitor<'_> {
                     Type::Error(_) => {
                         for arg in &paren_args.arguments {
                             // We still want to check arguments as far as possible.
-                            self.infer_expr(arg, type_bindings, expected_return_ty);
+                            self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                         }
 
                         // If the receiver is an error, use that error
@@ -1139,7 +1141,7 @@ impl TypeCheckVisitor<'_> {
                     _ => {
                         for arg in &paren_args.arguments {
                             // We still want to check arguments as far as possible.
-                            self.infer_expr(arg, type_bindings, expected_return_ty);
+                            self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                         }
 
                         self.diagnostics.push(Diagnostic {
@@ -1159,7 +1161,7 @@ impl TypeCheckVisitor<'_> {
                 let receiver_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
                 if matches!(receiver_ty, Type::Error(_)) {
                     for arg in &paren_args.arguments {
-                        self.infer_expr(arg, type_bindings, expected_return_ty);
+                        self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                     }
 
                     // Allow calling methods on error types, to avoid cascading errors.
@@ -1168,7 +1170,7 @@ impl TypeCheckVisitor<'_> {
 
                 let Some(receiver_ty_name) = receiver_ty.type_name() else {
                     for arg in &paren_args.arguments {
-                        self.infer_expr(arg, type_bindings, expected_return_ty);
+                        self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                     }
 
                     self.diagnostics.push(Diagnostic {
@@ -1250,8 +1252,9 @@ impl TypeCheckVisitor<'_> {
 
                         let mut arg_tys = vec![];
                         for arg in &paren_args.arguments {
-                            let arg_ty = self.infer_expr(arg, type_bindings, expected_return_ty);
-                            arg_tys.push((arg_ty, arg.position.clone()));
+                            let arg_ty =
+                                self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                            arg_tys.push((arg_ty, arg.expr.position.clone()));
                         }
 
                         for (param_ty, (arg_ty, _)) in param_decl_tys.iter().zip(arg_tys.iter()) {
@@ -1289,7 +1292,7 @@ impl TypeCheckVisitor<'_> {
                         // No method exists with that name on this type.
 
                         for arg in &paren_args.arguments {
-                            self.infer_expr(arg, type_bindings, expected_return_ty);
+                            self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                         }
 
                         let available_methods = methods.keys().collect::<Vec<_>>();

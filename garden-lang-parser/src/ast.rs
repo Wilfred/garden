@@ -289,6 +289,12 @@ pub struct Pattern {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExpressionWithComma {
+    pub expr: Rc<Expression>,
+    pub comma: Option<Position>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParenthesizedExpression {
     pub open_paren: Position,
     pub expr: Rc<Expression>,
@@ -298,7 +304,7 @@ pub struct ParenthesizedExpression {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParenthesizedArguments {
     pub open_paren: Position,
-    pub arguments: Vec<Rc<Expression>>,
+    pub arguments: Vec<ExpressionWithComma>,
     pub close_paren: Position,
 }
 
@@ -377,7 +383,7 @@ pub enum Expression_ {
     /// ```garden
     /// [x, y]
     /// ```
-    ListLiteral(Vec<Rc<Expression>>),
+    ListLiteral(Vec<ExpressionWithComma>),
     /// ```garden
     /// ()
     /// (x,)

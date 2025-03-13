@@ -152,7 +152,7 @@ pub trait Visitor {
             Expression_::ListLiteral(exprs) => {
                 // TODO: custom method for this variant
                 for expr in exprs {
-                    self.visit_expr(expr);
+                    self.visit_expr(&expr.expr);
                 }
             }
             Expression_::TupleLiteral(exprs) => {
@@ -175,14 +175,14 @@ pub trait Visitor {
                 // TODO: custom method for this variant
                 self.visit_expr(recv);
                 for arg in &paren_args.arguments {
-                    self.visit_expr(arg);
+                    self.visit_expr(&arg.expr);
                 }
             }
             Expression_::MethodCall(recv, meth_name, paren_args) => {
                 self.visit_symbol(meth_name);
                 self.visit_expr(recv);
                 for arg in &paren_args.arguments {
-                    self.visit_expr(arg);
+                    self.visit_expr(&arg.expr);
                 }
             }
             Expression_::FunLiteral(fun_info) => {

@@ -19,13 +19,16 @@ ffun foo(_: Bool) {
 //     ParenthesizedArguments {
 //         open_paren: Position { ... },
 //         arguments: [
-//             Expression {
-//                 position: Position { ... },
-//                 expr_: Variable(
-//                     Symbol"_",
-//                 ),
-//                 value_is_used: true,
-//                 id: SyntaxId(5),
+//             ExpressionWithComma {
+//                 expr: Expression {
+//                     position: Position { ... },
+//                     expr_: Variable(
+//                         Symbol"_",
+//                     ),
+//                     value_is_used: true,
+//                     id: SyntaxId(5),
+//                 },
+//                 comma: None,
 //             },
 //         ],
 //         close_paren: Position { ... },

@@ -28,10 +28,10 @@ use crate::values::{
     escape_string_literal, type_representation, BuiltinFunctionKind, Value, Value_,
 };
 use garden_lang_parser::ast::{
-    AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, FunInfo,
-    IdGenerator, InternedSymbolId, LetDestination, MethodInfo, MethodKind, ParenthesizedArguments,
-    ParenthesizedParameters, Pattern, StructInfo, Symbol, SymbolWithHint, SyntaxId, TestInfo,
-    TypeHint, TypeName, TypeSymbol,
+    AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
+    ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
+    MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
+    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem, ToplevelItem_};
 use garden_lang_parser::position::Position;
@@ -995,7 +995,8 @@ pub(crate) fn eval_toplevel_call(
     let mut arguments = vec![];
     for _ in 0..args.len() {
         let pos = Position::todo(path.clone());
-        arguments.push(Rc::new(Expression::invalid(pos, env.id_gen.next())));
+        let expr = Rc::new(Expression::invalid(pos, env.id_gen.next()));
+        arguments.push(ExpressionWithComma { expr, comma: None });
     }
 
     let paren_args = ParenthesizedArguments {
@@ -1057,7 +1058,8 @@ pub(crate) fn eval_toplevel_method_call(
     let mut arguments = vec![];
     for _ in 0..args.len() {
         let pos = Position::todo(path.clone());
-        arguments.push(Rc::new(Expression::invalid(pos, env.id_gen.next())));
+        let expr = Rc::new(Expression::invalid(pos, env.id_gen.next()));
+        arguments.push(ExpressionWithComma { expr, comma: None });
     }
 
     let paren_args = ParenthesizedArguments {
@@ -2769,7 +2771,7 @@ fn eval_call(
             env.pop_value()
                 .expect("Popped an empty value for stack for call arguments"),
         );
-        arg_positions.push(arg.position.clone());
+        arg_positions.push(arg.expr.position.clone());
     }
     let receiver_value = env
         .pop_value()
@@ -3194,7 +3196,7 @@ fn eval_method_call(
             env.pop_value()
                 .expect("Popped an empty value for stack for method call arguments."),
         );
-        arg_positions.push(arg.position.clone());
+        arg_positions.push(arg.expr.position.clone());
     }
     let receiver_value = env
         .pop_value()
@@ -4173,7 +4175,7 @@ fn eval_expr(
                 );
 
                 for item in items.iter() {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, item.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, item.expr.clone());
                 }
             }
         }
@@ -4357,7 +4359,7 @@ fn eval_expr(
                 );
 
                 for arg in &paren_args.arguments {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.expr.clone());
                 }
             }
             ExpressionState::EvaluatedAllSubexpressions => {
@@ -4396,7 +4398,7 @@ fn eval_expr(
                 );
 
                 for arg in &paren_args.arguments {
-                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, arg.expr.clone());
                 }
                 // Push the receiver after arguments, so
                 // we evaluate it before arguments.
@@ -5294,6 +5296,7 @@ mod tests {
         load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f(123)", &mut env.id_gen);
+        dbg!(&exprs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::new(Value_::Integer(123)));
     }

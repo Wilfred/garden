@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>NoValue</code> type</h1>
+<p>The absense of a value. This is an enum with no variants, so it is
+impossible to create a value of type <code>NoValue</code>.</p>
+<p>This is useful when you have a function that never returns, such as
+<code>error()</code>.</p>
+<p>You can also encounter <code>NoValue</code> on empty containers. For example,
+<code>[]</code> has type <code>List<NoValue></code> and <code>None</code> has type <code>Option<NoValue></code>.</p>
+<p>This is sometimes called 'the bottom type'.</p></div>
+  </body>
+</html>

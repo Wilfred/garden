@@ -5296,7 +5296,6 @@ mod tests {
         load_toplevel_items(&items, &mut env);
 
         let exprs = parse_exprs_from_str("f(123)", &mut env.id_gen);
-        dbg!(&exprs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(value, Value::new(Value_::Integer(123)));
     }

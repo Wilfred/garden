@@ -10,5 +10,5 @@ external fun bar() {
 // Error: `foo` requires an additional `Path` argument here.
 // --> src/test_files/check/missing_middle_argument.gdn:4
 //   foo(1, "stuff")
-//          ^^^^^^^
+//        ^
 

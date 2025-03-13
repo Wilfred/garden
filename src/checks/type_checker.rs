@@ -412,7 +412,7 @@ impl TypeCheckVisitor<'_> {
         &mut self,
         name: Option<&Symbol>,
         expected_args: &[Type],
-        actual_args: &[(Type, Position)],
+        actual_args: &[(Type, Position, Option<Position>)],
         paren_args: &ParenthesizedArguments,
     ) {
         debug_assert!(expected_args.len() != actual_args.len());
@@ -422,7 +422,7 @@ impl TypeCheckVisitor<'_> {
             None => msgtext!("This function call"),
         };
 
-        for (i, (arg_ty, arg_pos)) in actual_args.iter().enumerate() {
+        for (i, (arg_ty, arg_pos, comma_pos)) in actual_args.iter().enumerate() {
             let Some(expected_ty) = expected_args.get(i) else {
                 break;
             };
@@ -441,16 +441,24 @@ impl TypeCheckVisitor<'_> {
                         msgcode!("{}", expected_ty),
                         msgtext!(" argument here."),
                     ]);
+
+                    let mut position = paren_args.open_paren.clone();
+                    if i > 0 {
+                        let (_, _, prev_comma) = &actual_args[i - 1];
+                        if let Some(prev_comma) = prev_comma {
+                            position = prev_comma.clone();
+                        }
+                    }
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,
                         message,
-                        position: arg_pos.clone(),
+                        position,
                     });
                     return;
                 }
             };
 
-            let Some((next_arg_ty, _)) = actual_args.get(i + 1) else {
+            let Some((next_arg_ty, _, _)) = actual_args.get(i + 1) else {
                 break;
             };
 
@@ -464,10 +472,16 @@ impl TypeCheckVisitor<'_> {
                         if expected_args.len() == 1 { "" } else { "s" }
                     ),
                 ]);
+
+                let mut position = arg_pos.clone();
+                if let Some(comma_pos) = comma_pos {
+                    position = Position::merge(&position, comma_pos);
+                }
+
                 self.diagnostics.push(Diagnostic {
                     level: Level::Error,
                     message,
-                    position: arg_pos.clone(),
+                    position,
                 });
                 return;
             }
@@ -1097,10 +1111,11 @@ impl TypeCheckVisitor<'_> {
                         for arg in &paren_args.arguments {
                             let arg_ty =
                                 self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                            arg_tys.push((arg_ty, arg.expr.position.clone()));
+
+                            arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
                         }
 
-                        for (param_ty, (arg_ty, _)) in params.iter().zip(arg_tys.iter()) {
+                        for (param_ty, (arg_ty, _, _)) in params.iter().zip(arg_tys.iter()) {
                             unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
                         }
 
@@ -1113,7 +1128,7 @@ impl TypeCheckVisitor<'_> {
                             // Only check argument types if we have the right number of
                             // arguments. Otherwise, it's likely that the types are valid,
                             // but there were missing previous arguments.
-                            for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(&arg_tys) {
+                            for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
                                 if !is_subtype(arg_ty, param_ty) {
                                     self.diagnostics.push(Diagnostic {
                                         level: Level::Error,

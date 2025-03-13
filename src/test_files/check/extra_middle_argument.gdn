@@ -10,5 +10,5 @@ external fun bar() {
 // Error: Unexpected extra argument. `foo` requires 3 arguments.
 // --> src/test_files/check/extra_middle_argument.gdn:4
 //   foo(1, Path{ p: "" }, [], "stuff")
-//                         ^^
+//                         ^^^
 

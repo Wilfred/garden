@@ -8,7 +8,7 @@ fun main(_) {
 // Error: Assertion failed: `2 == 3`.
 // --> src/test_files/runtime/assert.gdn:3	 fun main()
 //     assert((1 + 1) == 3)
-//             ^^^^^^^^^^^
+//            ^^^^^^^^^^^^
 // --> __main_fun__:1	 __toplevel__
 // // __toplevel__
 

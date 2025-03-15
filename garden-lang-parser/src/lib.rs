@@ -265,9 +265,12 @@ fn parse_tuple_literal_or_parentheses(
     }
 
     // No comma, must be a parenthesised expression.
-    require_token(tokens, diagnostics, ")");
+    let close_paren = require_token(tokens, diagnostics, ")");
 
-    expr
+    // TODO: ideally we'd have a separate ParenthesizedExpr node,
+    // rather than just updating the positions on this expression.
+    let position = Position::merge(&open_paren.position, &close_paren.position);
+    Expression::new(position, expr.expr_, expr.id)
 }
 
 fn parse_list_literal(

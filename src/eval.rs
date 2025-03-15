@@ -2674,6 +2674,63 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::TypeSource => {
+            check_arity(
+                &SymbolName {
+                    name: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let name = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            name: "String".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let v = match env.types.get(&TypeName::from(name)) {
+                Some(ty) => {
+                    let src: Option<String> = match ty {
+                        TypeDef::Builtin(_, Some(struct_info)) => {
+                            Some(struct_info.src_string.src.clone())
+                        }
+                        TypeDef::Builtin(_, None) => None,
+                        TypeDef::Enum(enum_info) => Some(enum_info.src_string.src.clone()),
+                        TypeDef::Struct(struct_info) => Some(struct_info.src_string.src.clone()),
+                    };
+
+                    match src {
+                        Some(s) => Value::some(Value::new(Value_::String(s)), env),
+                        None => Value::none(),
+                    }
+                }
+                None => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltinFunctionKind::BuiltInTypes => {
             check_arity(
                 &SymbolName {

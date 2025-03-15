@@ -331,6 +331,7 @@ pub(crate) enum BuiltinFunctionKind {
     CheckSnippet,
     Lex,
     TypeDocComment,
+    TypeSource,
     BuiltInTypes,
 }
 
@@ -349,6 +350,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
             BuiltinFunctionKind::Lex => "lex",
             BuiltinFunctionKind::TypeDocComment => "type_doc_comment",
+            BuiltinFunctionKind::TypeSource => "type_source",
             BuiltinFunctionKind::BuiltInTypes => "built_in_types",
         };
         write!(f, "{}", name)

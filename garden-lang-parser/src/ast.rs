@@ -12,7 +12,8 @@ pub struct SourceString {
     /// The offset of this string into the defining file, at the time
     /// of evaluation.
     pub offset: usize,
-    /// The string containing this definition.
+    /// The string containing this definition. This is a substring of
+    /// the defining file.
     pub src: String,
 }
 

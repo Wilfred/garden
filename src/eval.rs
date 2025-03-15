@@ -4979,10 +4979,11 @@ fn eval_match_cases(
         }
 
         let Some(value) = get_var(&pattern.variant_sym, env) else {
-            let msg = ErrorMessage(vec![Text(format!(
-                "No such value defined for pattern `{}`",
-                pattern.variant_sym.name
-            ))]);
+            let msg = ErrorMessage(vec![
+                msgtext!("Expected an enum variant named "),
+                msgcode!("{}", pattern.variant_sym.name),
+                msgtext!(" but nothing is defined with that name."),
+            ]);
             return Err(EvalError::ResumableError(
                 pattern.variant_sym.position.clone(),
                 msg,

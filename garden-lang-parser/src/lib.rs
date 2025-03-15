@@ -791,9 +791,9 @@ fn parse_pattern(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Pattern {
-    let symbol = parse_symbol(tokens, id_gen, diagnostics);
+    let variant_sym = parse_symbol(tokens, id_gen, diagnostics);
 
-    let argument = if peeked_symbol_is(tokens, "(") {
+    let payload = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
         let arg = parse_symbol(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, ")");
@@ -802,7 +802,10 @@ fn parse_pattern(
         None
     };
 
-    Pattern { symbol, argument }
+    Pattern {
+        variant_sym,
+        payload,
+    }
 }
 
 fn parse_comma_separated_exprs(

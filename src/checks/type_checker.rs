@@ -633,11 +633,11 @@ impl TypeCheckVisitor<'_> {
                 for (pattern, case_expr) in cases {
                     self.bindings.enter_block();
 
-                    if let Some(payload_sym) = &pattern.argument {
+                    if let Some(payload_sym) = &pattern.payload {
                         if !payload_sym.name.is_underscore() {
                             self.set_binding(
                                 payload_sym,
-                                enum_payload_type(self.env, &scrutinee_ty, &pattern.symbol),
+                                enum_payload_type(self.env, &scrutinee_ty, &pattern.variant_sym),
                             );
                         }
                     }
@@ -650,19 +650,19 @@ impl TypeCheckVisitor<'_> {
                     self.bindings.exit_block();
 
                     // Matching `_` works for any type.
-                    if pattern.symbol.name.is_underscore() {
+                    if pattern.variant_sym.name.is_underscore() {
                         continue;
                     }
 
-                    let Some(value) = self.env.file_scope.get(&pattern.symbol.name) else {
+                    let Some(value) = self.env.file_scope.get(&pattern.variant_sym.name) else {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: ErrorMessage(vec![
                                 msgtext!("No such type "),
-                                msgcode!("{}", pattern.symbol.name),
+                                msgcode!("{}", pattern.variant_sym.name),
                                 msgtext!("."),
                             ]),
-                            position: pattern.symbol.position.clone(),
+                            position: pattern.variant_sym.position.clone(),
                         });
                         continue;
                     };
@@ -677,7 +677,7 @@ impl TypeCheckVisitor<'_> {
                                     "Expected an enum variant here, but got `{}`.",
                                     value.display(self.env)
                                 ))]),
-                                position: pattern.symbol.position.clone(),
+                                position: pattern.variant_sym.position.clone(),
                             });
                             continue;
                         }
@@ -696,7 +696,7 @@ impl TypeCheckVisitor<'_> {
                                 "This match case is for `{}`, but you're matching on a `{}`.",
                                 pattern_type_name, &scrutinee_ty_name,
                             ))]),
-                            position: pattern.symbol.position.clone(),
+                            position: pattern.variant_sym.position.clone(),
                         });
                     }
                 }
@@ -1614,7 +1614,7 @@ impl TypeCheckVisitor<'_> {
     }
 }
 
-fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Type {
+fn enum_payload_type(env: &Env, scrutinee_ty: &Type, variant_sym: &Symbol) -> Type {
     let Some(scrutinee_ty_name) = scrutinee_ty.type_name() else {
         return Type::error(
             "No type name for match scrutinee, we should have errored elsewhere already.",
@@ -1631,7 +1631,7 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Ty
 
     let mut relevant_variant = None;
     for variant in &enum_info.variants {
-        if variant.name_sym.name == pattern_sym.name {
+        if variant.name_sym.name == variant_sym.name {
             relevant_variant = Some(variant.clone());
         }
     }
@@ -1639,7 +1639,7 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, pattern_sym: &Symbol) -> Ty
     let Some(variant) = relevant_variant else {
         return Type::error(format!(
             "No variant found in `{}` named `{}`.",
-            scrutinee_ty_name, pattern_sym.name
+            scrutinee_ty_name, variant_sym.name
         ));
     };
 
@@ -2019,12 +2019,12 @@ fn check_match_exhaustive(
     if !enum_info.variants.is_empty() {
         let mut seen_underscore = false;
         for pattern in patterns {
-            if pattern.symbol.name.is_underscore() {
+            if pattern.variant_sym.name.is_underscore() {
                 seen_underscore = true;
                 continue;
             }
 
-            match variants_remaining.remove(&pattern.symbol.name) {
+            match variants_remaining.remove(&pattern.variant_sym.name) {
                 Some(_) => {
                     // First time we've seen this variant.
                 }
@@ -2034,7 +2034,7 @@ fn check_match_exhaustive(
                         message: ErrorMessage(vec![Text(
                             "Duplicate case in pattern match.".to_owned(),
                         )]),
-                        position: pattern.symbol.position.clone(),
+                        position: pattern.variant_sym.position.clone(),
                     });
                 }
             }

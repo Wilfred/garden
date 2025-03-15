@@ -241,8 +241,8 @@ impl Visitor for UnusedVariableVisitor {
             // variant, and that we've covered all the variants.
 
             self.push_scope();
-            if let Some(pattern_arg) = &pattern.argument {
-                self.add_binding(pattern_arg);
+            if let Some(payload_sym) = &pattern.payload {
+                self.add_binding(payload_sym);
             }
 
             self.visit_block(case_expr);

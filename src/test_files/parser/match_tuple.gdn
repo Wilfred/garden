@@ -17,8 +17,8 @@ match foo {
 //     [
 //         (
 //             Pattern {
-//                 symbol: Symbol"Some",
-//                 argument: Some(
+//                 variant_sym: Symbol"Some",
+//                 payload: Some(
 //                     Symbol"_",
 //                 ),
 //             },
@@ -56,8 +56,8 @@ match foo {
 //         ),
 //         (
 //             Pattern {
-//                 symbol: Symbol"None",
-//                 argument: None,
+//                 variant_sym: Symbol"None",
+//                 payload: None,
 //             },
 //             Block {
 //                 open_brace: Position { ... },

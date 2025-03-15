@@ -285,8 +285,10 @@ impl AssignUpdateKind {
 /// The left hand side of a case in a `match` expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pattern {
-    pub symbol: Symbol,
-    pub argument: Option<Symbol>,
+    /// E.g. `Some` or `None`.
+    pub variant_sym: Symbol,
+    /// E.g. `foo` in `Some(foo) => `.
+    pub payload: Option<Symbol>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

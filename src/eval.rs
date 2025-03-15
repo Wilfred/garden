@@ -4973,18 +4973,18 @@ fn eval_match_cases(
     };
 
     for (pattern, case_expr) in cases {
-        if pattern.symbol.name.is_underscore() {
+        if pattern.variant_sym.name.is_underscore() {
             eval_block(env, expr_value_is_used, case_expr);
             return Ok(());
         }
 
-        let Some(value) = get_var(&pattern.symbol, env) else {
+        let Some(value) = get_var(&pattern.variant_sym, env) else {
             let msg = ErrorMessage(vec![Text(format!(
                 "No such value defined for pattern `{}`",
-                pattern.symbol.name
+                pattern.variant_sym.name
             ))]);
             return Err(EvalError::ResumableError(
-                pattern.symbol.position.clone(),
+                pattern.variant_sym.position.clone(),
                 msg,
             ));
         };
@@ -5007,7 +5007,7 @@ fn eval_match_cases(
                     value.display(env)
                 ))]);
                 return Err(EvalError::ResumableError(
-                    pattern.symbol.position.clone(),
+                    pattern.variant_sym.position.clone(),
                     msg,
                 ));
             }
@@ -5015,7 +5015,7 @@ fn eval_match_cases(
 
         if value_type_name == pattern_type_name && *value_variant_idx == pattern_variant_idx {
             let mut bindings: Vec<(Symbol, Value)> = vec![];
-            match (&value_payload, &pattern.argument) {
+            match (&value_payload, &pattern.payload) {
                 (Some(payload), Some(payload_sym)) => {
                     if !payload_sym.name.is_underscore() {
                         bindings.push((payload_sym.clone(), (**payload).clone()));

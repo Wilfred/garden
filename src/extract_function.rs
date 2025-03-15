@@ -118,39 +118,44 @@ fn locals_outside_expr(
     id_to_ty: &FxHashMap<SyntaxId, Type>,
     expr: &Expression,
 ) -> Vec<(SymbolName, Option<Type>)> {
-    let mut visitor = OutsideVarsVisitor {
+    let mut visitor = FreeVarsVisitor {
         env,
         id_to_ty: id_to_ty.clone(),
-        vars_outside: vec![],
-        vars_seen: FxHashSet::default(),
+        free_vars: vec![],
+        free_vars_seen: FxHashSet::default(),
     };
 
     // TODO: this does not correctly handle lambdas or let
     // expressions, which can introduce new variables which aren't
     // defined outside of the current scope.
     visitor.visit_expr(expr);
-    visitor.vars_outside
+    visitor.free_vars
 }
 
-struct OutsideVarsVisitor<'a> {
+struct FreeVarsVisitor<'a> {
     env: &'a Env,
-    vars_outside: Vec<(SymbolName, Option<Type>)>,
-    vars_seen: FxHashSet<SymbolName>,
+    /// Variables that are bound outside the current expression.
+    free_vars: Vec<(SymbolName, Option<Type>)>,
+    /// A hash set of variables in `free_vars`, to avoid duplicates.
+    free_vars_seen: FxHashSet<SymbolName>,
     id_to_ty: FxHashMap<SyntaxId, Type>,
 }
 
-impl Visitor for OutsideVarsVisitor<'_> {
+impl Visitor for FreeVarsVisitor<'_> {
     fn visit_expr(&mut self, expr: &Expression) {
         self.visit_expr_(&expr.expr_);
 
         if let Expression_::Variable(symbol) = &expr.expr_ {
-            if !self.env.file_scope.contains_key(&symbol.name)
-                && !self.vars_seen.contains(&symbol.name)
-            {
-                self.vars_outside
-                    .push((symbol.name.clone(), self.id_to_ty.get(&symbol.id).cloned()));
-                self.vars_seen.insert(symbol.name.clone());
+            if self.env.file_scope.contains_key(&symbol.name) {
+                return;
             }
+            if self.free_vars_seen.contains(&symbol.name) {
+                return;
+            }
+
+            self.free_vars
+                .push((symbol.name.clone(), self.id_to_ty.get(&symbol.id).cloned()));
+            self.free_vars_seen.insert(symbol.name.clone());
         }
     }
 }

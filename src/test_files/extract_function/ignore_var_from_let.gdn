@@ -1,0 +1,15 @@
+fun demo() {
+  for x in [] { let y = "stuff" print(y) }
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+
+// args: extract-function --name extracted_fun
+// expected stdout:
+// fun extracted_fun(): Unit {
+//   for x in [] { let y = "stuff" print(y) }
+// }
+// 
+// fun demo() {
+//   extracted_fun()
+// }
+

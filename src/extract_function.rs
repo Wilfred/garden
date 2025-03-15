@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{AstId, Expression, Expression_, IdGenerator, SymbolName, SyntaxId},
+    ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId},
     parse_toplevel_items,
     visitor::Visitor,
 };
@@ -121,19 +121,18 @@ fn locals_outside_expr(
     let mut visitor = FreeVarsVisitor {
         env,
         id_to_ty: id_to_ty.clone(),
+        local_bindings: vec![FxHashSet::default()],
         free_vars: vec![],
         free_vars_seen: FxHashSet::default(),
     };
 
-    // TODO: this does not correctly handle lambdas or let
-    // expressions, which can introduce new variables which aren't
-    // defined outside of the current scope.
     visitor.visit_expr(expr);
     visitor.free_vars
 }
 
 struct FreeVarsVisitor<'a> {
     env: &'a Env,
+    local_bindings: Vec<FxHashSet<SymbolName>>,
     /// Variables that are bound outside the current expression.
     free_vars: Vec<(SymbolName, Option<Type>)>,
     /// A hash set of variables in `free_vars`, to avoid duplicates.
@@ -142,20 +141,97 @@ struct FreeVarsVisitor<'a> {
 }
 
 impl Visitor for FreeVarsVisitor<'_> {
-    fn visit_expr(&mut self, expr: &Expression) {
-        self.visit_expr_(&expr.expr_);
-
-        if let Expression_::Variable(symbol) = &expr.expr_ {
-            if self.env.file_scope.contains_key(&symbol.name) {
-                return;
-            }
-            if self.free_vars_seen.contains(&symbol.name) {
-                return;
-            }
-
-            self.free_vars
-                .push((symbol.name.clone(), self.id_to_ty.get(&symbol.id).cloned()));
-            self.free_vars_seen.insert(symbol.name.clone());
+    fn visit_expr_variable(&mut self, symbol: &ast::Symbol) {
+        if self.env.file_scope.contains_key(&symbol.name) {
+            return;
         }
+        if self.free_vars_seen.contains(&symbol.name) {
+            return;
+        }
+        for scope in self.local_bindings.iter().rev() {
+            if scope.contains(&symbol.name) {
+                return;
+            }
+        }
+
+        self.free_vars
+            .push((symbol.name.clone(), self.id_to_ty.get(&symbol.id).cloned()));
+        self.free_vars_seen.insert(symbol.name.clone());
+    }
+
+    fn visit_expr_match(&mut self, scrutinee: &Expression, cases: &[(ast::Pattern, ast::Block)]) {
+        self.visit_expr(scrutinee);
+
+        for (pattern, block) in cases {
+            let mut block_bindings = FxHashSet::default();
+
+            if let Some(payload_sym) = &pattern.payload {
+                block_bindings.insert(payload_sym.name.clone());
+            }
+
+            self.local_bindings.push(block_bindings);
+            self.visit_block(block);
+            self.local_bindings.pop();
+        }
+    }
+
+    fn visit_expr_for_in(
+        &mut self,
+        dest: &ast::LetDestination,
+        expr: &Expression,
+        body: &ast::Block,
+    ) {
+        self.visit_expr(expr);
+
+        let mut block_bindings = FxHashSet::default();
+        match dest {
+            ast::LetDestination::Symbol(symbol) => {
+                block_bindings.insert(symbol.name.clone());
+            }
+            ast::LetDestination::Destructure(symbols) => {
+                for symbol in symbols {
+                    block_bindings.insert(symbol.name.clone());
+                }
+            }
+        }
+
+        self.local_bindings.push(block_bindings);
+        self.visit_block(body);
+        self.local_bindings.pop();
+    }
+
+    fn visit_expr_let(
+        &mut self,
+        dest: &ast::LetDestination,
+        _: Option<&ast::TypeHint>,
+        expr: &Expression,
+    ) {
+        self.visit_expr(expr);
+
+        let block_bindings = self
+            .local_bindings
+            .last_mut()
+            .expect("Should never be empty");
+        match dest {
+            ast::LetDestination::Symbol(symbol) => {
+                block_bindings.insert(symbol.name.clone());
+            }
+            ast::LetDestination::Destructure(symbols) => {
+                for symbol in symbols {
+                    block_bindings.insert(symbol.name.clone());
+                }
+            }
+        }
+    }
+
+    fn visit_expr_fun_literal(&mut self, fun_info: &ast::FunInfo) {
+        let mut block_bindings = FxHashSet::default();
+        for param in &fun_info.params.params {
+            block_bindings.insert(param.symbol.name.clone());
+        }
+
+        self.local_bindings.push(block_bindings);
+        self.visit_block(&fun_info.body);
+        self.local_bindings.pop();
     }
 }

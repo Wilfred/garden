@@ -1,0 +1,15 @@
+fun demo(opt_s: Option<String>) {
+  match opt_s { Some(s) => { print(s) } None => {} }
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+
+// args: extract-function --name extracted_fun
+// expected stdout:
+// fun extracted_fun(opt_s: Option<String>): Unit {
+//   match opt_s { Some(s) => { print(s) } None => {} }
+// }
+// 
+// fun demo(opt_s: Option<String>) {
+//   extracted_fun(opt_s)
+// }
+

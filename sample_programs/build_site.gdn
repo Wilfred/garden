@@ -19,6 +19,18 @@ fun output_path(template_path: String): Path {
   Path{ p: template_path.strip_suffix(".tmpl.html") ^ ".html"}
 }
 
+fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path): Unit {
+  match type_doc_comment(type_name) {
+    Some(doc_comment) => {
+      let dest_path = Path{ p: "".join([website_dir.p, "/type:", type_name, ".html"]) }
+      let md_src = "".join(["# `", type_name, "` type\n\n" , doc_comment])
+      let page_src = render_markdown(md_src)
+      write_website_page(base_tmpl_path, page_src, dest_path)
+    }
+    None => {}
+  }
+}
+
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().parent().join("website")
   let tmpl_paths = template_files(website_dir)
@@ -38,14 +50,7 @@ fun build_site(): Unit {
   }
 
   for type_name in built_in_types() {
-    match type_doc_comment(type_name) {
-      Some(doc_comment) => {
-        let dest_path = Path{ p: website_dir.p ^ (("/type:" ^ type_name) ^ ".html") }
-        let page_src = render_markdown("# `" ^ (type_name ^ ("` type\n\n" ^ doc_comment)))
-        write_website_page(base_tmpl_path, page_src, dest_path)
-      }
-      None => {}
-    }
+    write_type_page(type_name, website_dir, base_tmpl_path)
   }
 }
 

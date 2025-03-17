@@ -4018,10 +4018,14 @@ fn eval_builtin_method_call(
                     EvalError::ResumableError(
                         arg_positions[1].clone(),
                         ErrorMessage(vec![
-                            msgtext!("The first argument to "),
+                            msgtext!("The first argument ({}) to ", from_arg),
                             msgcode!("String::substring"),
-                            msgtext!(" (which is {}) cannot be greater than than the second (which is {}). ", from_arg, to_arg),
-                            msgtext!("The string itself is {} character{} long.", s_len, if s_len == 1 { "" } else { "s" }),
+                            msgtext!(" cannot be greater than than the second ({}). ", to_arg),
+                            msgtext!(
+                                "The string itself is {} character{} long.",
+                                s_len,
+                                if s_len == 1 { "" } else { "s" }
+                            ),
                         ]),
                     ),
                 ));

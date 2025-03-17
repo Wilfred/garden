@@ -23,7 +23,14 @@ fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path):
   match type_doc_comment(type_name) {
     Some(doc_comment) => {
       let dest_path = Path{ p: "".join([website_dir.p, "/type:", type_name, ".html"]) }
-      let md_src = "".join(["# `", type_name, "` type\n\n" , doc_comment])
+
+      let src = match type_source(type_name) {
+        Some(src) => {
+          "```\n" ^ (src ^ "\n```")
+        }
+        None => ""
+      }
+      let md_src = "".join(["# `", type_name, "` type\n\n" , src, "\n\n", doc_comment])
       let page_src = render_markdown(md_src)
       write_website_page(base_tmpl_path, page_src, dest_path)
     }

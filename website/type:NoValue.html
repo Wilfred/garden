@@ -24,6 +24,17 @@
     </header>
 
     <div class="container"><h1><code>NoValue</code> type</h1>
+<pre><code><span class="comment">// The absense of a value. This is an enum with no variants, so it is</span>
+<span class="comment">// impossible to create a value of type `NoValue`.</span>
+<span class="comment">//</span>
+<span class="comment">// This is useful when you have a function that never returns, such as</span>
+<span class="comment">// `error()`.</span>
+<span class="comment">//</span>
+<span class="comment">// You can also encounter `NoValue` on empty containers. For example,</span>
+<span class="comment">// `[]` has type `List&lt;NoValue&gt;` and `None` has type `Option&lt;NoValue&gt;`.</span>
+<span class="comment">//</span>
+<span class="comment">// This is sometimes called 'the bottom type'.</span>
+<a href="./keyword:enum.html"><span class="keyword">enum</span></a> <a href="./type:NoValue.html"><span class="type">NoValue</span></a> {}</code></pre>
 <p>The absense of a value. This is an enum with no variants, so it is
 impossible to create a value of type <code>NoValue</code>.</p>
 <p>This is useful when you have a function that never returns, such as

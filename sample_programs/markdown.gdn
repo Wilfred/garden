@@ -238,20 +238,22 @@ fun render_inline_no_links(src: String): String {
 }
 
 // Split `src` into a list of strings, where each string is either a
-// link or a other text.
+// link or something else.
 fun split_links(src: String): List<String> {
   let parts: List<String> = []
 
   let s = src
   while True {
-    match s.index_of("[") {
-      Some(i) => {
+    match s.split_once("[") {
+      Some(tup) => {
+        let (before_bracket, after_bracket) = tup
+        match after_bracket.split_once(")") {
+          Some(after_tup) => {
+            parts = parts.append(before_bracket)
 
-        match s.index_of(")") {
-          Some(j) => {
-            parts = parts.append(s.substring(0, i))
-            parts = parts.append(s.substring(i, j + 1))
-            s = s.substring(j + 1, s.len())
+            let (before_paren, after_paren) = after_tup
+            parts = parts.append("[" ^ (before_paren ^ ")"))
+            s = after_paren
           }
           None => {
             parts = parts.append(s)
@@ -351,6 +353,10 @@ test render_backtick_in_heading {
 
 test render_link {
   assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
+}
+
+test render_malformed_link {
+  assert(render_markdown("foo ) [ bar") == "<p>foo ) [ bar</p>")
 }
 
 test render_backtick_in_link {

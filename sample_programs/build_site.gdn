@@ -19,6 +19,25 @@ fun output_path(template_path: String): Path {
   Path{ p: template_path.strip_suffix(".tmpl.html") ^ ".html"}
 }
 
+fun drop_leading_comments(src: String): String {
+  let lines = src.lines()
+
+  let first_code_line = 0
+  for (i, line) in lines.enumerate() {
+    if line.starts_with("// ") {
+      continue
+    }
+    if line == "" {
+      continue
+    }
+
+    first_code_line = i
+    break
+  }
+
+  "\n".join(lines.slice(first_code_line, lines.len()))
+}
+
 fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path): Unit {
   match type_doc_comment(type_name) {
     Some(doc_comment) => {
@@ -26,7 +45,7 @@ fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path):
 
       let src = match type_source(type_name) {
         Some(src) => {
-          "```\n" ^ (src ^ "\n```")
+          "```\n" ^ (drop_leading_comments(src) ^ "\n```")
         }
         None => ""
       }

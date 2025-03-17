@@ -3995,8 +3995,12 @@ fn eval_builtin_method_call(
                 return Err((
                     RestoreValues(saved_values),
                     EvalError::ResumableError(
-                        arg_positions[1].clone(),
-                        ErrorMessage(vec![Text(format!("The first argument to String::substring must be greater than 0, but got: {}", from_arg))]),
+                        arg_positions[0].clone(),
+                        ErrorMessage(vec![
+                            msgtext!("The first argument to "),
+                            msgcode!("String::substring"),
+                            msgtext!(" must be greater than 0, but got {}.", from_arg),
+                        ]),
                     ),
                 ));
             }
@@ -4008,11 +4012,17 @@ fn eval_builtin_method_call(
                 }
                 saved_values.push(receiver_value.clone());
 
+                let s_len = s_arg.chars().count();
                 return Err((
                     RestoreValues(saved_values),
                     EvalError::ResumableError(
                         arg_positions[1].clone(),
-                        ErrorMessage(vec![Text(format!("The first argument to String::substring cannot be greater than the second, but got: {} and {}", from_arg, to_arg))]),
+                        ErrorMessage(vec![
+                            msgtext!("The first argument to "),
+                            msgcode!("String::substring"),
+                            msgtext!(" (which is {}) cannot be greater than than the second (which is {}). ", from_arg, to_arg),
+                            msgtext!("The string itself is {} character{} long.", s_len, if s_len == 1 { "" } else { "s" }),
+                        ]),
                     ),
                 ));
             }

@@ -801,13 +801,7 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::Assign(sym, expr) => {
                 // TODO: also enforce the type of an assignment at runtime.
-                let expected_ty = match self.bindings.get(&sym.name) {
-                    Some((sym_ty, position)) => {
-                        self.id_to_def_pos.insert(sym.id, position.clone());
-                        sym_ty.clone()
-                    }
-                    None => Type::Top,
-                };
+                let expected_ty = self.get_var_for_assignment(sym, type_bindings);
 
                 self.verify_expr(&expected_ty, expr, type_bindings, expected_return_ty);
                 Type::unit()
@@ -815,14 +809,7 @@ impl TypeCheckVisitor<'_> {
             Expression_::AssignUpdate(sym, op, expr) => {
                 // TODO: also enforce the type of an assignment at runtime.
 
-                let sym_ty = match self.bindings.get(&sym.name) {
-                    Some((sym_ty, position)) => {
-                        self.id_to_def_pos.insert(sym.id, position.clone());
-                        sym_ty.clone()
-                    }
-                    None => Type::Top,
-                };
-
+                let sym_ty = self.get_var_for_assignment(sym, type_bindings);
                 if !is_subtype(&sym_ty, &Type::int()) {
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,
@@ -1440,6 +1427,51 @@ impl TypeCheckVisitor<'_> {
                 Type::no_value()
             }
         }
+    }
+
+    /// Get the type of `sym` in the current scope (checking both
+    /// locals and globals).
+    ///
+    /// Emit a diagnostic is `sym` is unbound or cannot be reassigned.
+    ///
+    /// If `sym` is unbound, also insert it in the current scope, to
+    /// prevent cascading errors.
+    fn get_var_for_assignment(&mut self, sym: &Symbol, type_bindings: &TypeVarEnv) -> Type {
+        if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
+            self.id_to_def_pos.insert(sym.id, position.clone());
+            return sym_ty.clone();
+        }
+
+        if let Some(value) = self.env.file_scope.get(&sym.name) {
+            self.diagnostics.push(Diagnostic {
+                level: Level::Error,
+                message: ErrorMessage(vec![
+                    msgcode!("{}", &sym.name),
+                    msgtext!(" is a function definition, which cannot be reassigned."),
+                ]),
+                position: sym.position.clone(),
+            });
+
+            return Type::from_value(value, &self.env.types, type_bindings);
+        }
+
+        // No such variable, user probably forgot `let`.
+        self.diagnostics.push(Diagnostic {
+            level: Level::Error,
+            message: ErrorMessage(vec![
+                msgtext!("No such variable "),
+                msgcode!("{}", &sym.name),
+                msgtext!(". If you want to define a new local variable, write "),
+                msgcode!("let {} =", sym.name),
+                msgtext!("."),
+            ]),
+            position: sym.position.clone(),
+        });
+
+        let ty = Type::error("Unbound variable");
+        self.bindings.set(sym, ty.clone());
+
+        ty
     }
 
     fn set_dest_binding(&mut self, dest: &LetDestination, expr_pos: &Position, ty: Type) {

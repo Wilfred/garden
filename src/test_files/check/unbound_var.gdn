@@ -1,0 +1,23 @@
+external fun foo() {
+  // These should be errors.
+  x = 1
+  y += 2
+
+  // But later uses of these variables shouldn't have cascading
+  // errors.
+  let _ = x + y
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: No such variable `x`. If you want to define a new local variable, write `let x =`.
+// --> src/test_files/check/unbound_var.gdn:3
+//   x = 1
+//   ^
+// 
+// Error: No such variable `y`. If you want to define a new local variable, write `let y =`.
+// --> src/test_files/check/unbound_var.gdn:4
+//   y += 2
+//   ^
+

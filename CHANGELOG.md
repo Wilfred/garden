@@ -42,7 +42,8 @@ out-of-bounds access.
 
 ## Checks
 
-Fixed several type checking bugs on type parameters in methods.
+Fixed several type checking bugs on local variables and on type
+parameters in methods.
 
 The unused function check now reports functions that are only used in
 tests.

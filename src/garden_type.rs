@@ -354,6 +354,8 @@ impl Display for Type {
     }
 }
 
+/// Is `lhs` a subtype of `rhs`, i.e. is `lhs <: rhs` in type system
+/// notation?
 pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
     match (lhs, rhs) {
         (_, Type::Top) => true,

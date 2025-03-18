@@ -1,0 +1,21 @@
+external fun foo() {
+  let x = todo()
+  x += 1
+
+  let y = no_such_func()
+  y += 1
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: Unfinished code.
+// --> src/test_files/check/assign_update_error_type.gdn:2
+//   let x = todo()
+//           ^^^^^^
+// 
+// Error: Unbound symbol: `no_such_func`
+// --> src/test_files/check/assign_update_error_type.gdn:5
+//   let y = no_such_func()
+//           ^^^^^^^^^^^^
+

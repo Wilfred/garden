@@ -3145,7 +3145,7 @@ fn enum_constructor_type(env: &Env, enum_info: &EnumInfo, payload_hint: &TypeHin
     };
 
     Type::Fun {
-        name: None,
+        name_sym: None,
         type_params,
         params: vec![arg_ty],
         return_: Box::new(return_),

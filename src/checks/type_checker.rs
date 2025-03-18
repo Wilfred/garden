@@ -1088,7 +1088,7 @@ impl TypeCheckVisitor<'_> {
                         type_params,
                         params,
                         return_,
-                        name,
+                        name_sym,
                     } => {
                         let mut ty_var_env = TypeVarEnv::default();
                         for type_param in type_params {
@@ -1126,7 +1126,7 @@ impl TypeCheckVisitor<'_> {
                                 }
                             }
                         } else {
-                            let name = name.map(|sym| sym.name.name.clone());
+                            let name = name_sym.map(|sym| sym.name.name.clone());
                             self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
                         }
 
@@ -1395,7 +1395,7 @@ impl TypeCheckVisitor<'_> {
                     type_params: vec![],
                     params: param_tys,
                     return_: Box::new(return_ty),
-                    name: None,
+                    name_sym: None,
                 };
                 self.verify_expr_(
                     &expected_ty,
@@ -1557,7 +1557,7 @@ impl TypeCheckVisitor<'_> {
             (
                 Expression_::FunLiteral(fun_info),
                 Type::Fun {
-                    name: _,
+                    name_sym: _,
                     type_params: _,
                     params: expected_params,
                     return_: expected_return_ty,
@@ -1610,7 +1610,7 @@ impl TypeCheckVisitor<'_> {
                     type_params: vec![],
                     params: param_tys,
                     return_: Box::new(return_ty),
-                    name: None,
+                    name_sym: None,
                 }
             }
             _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty),
@@ -1770,7 +1770,7 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
             type_params,
             params,
             return_,
-            name,
+            name_sym,
         } => {
             let params = params
                 .iter()
@@ -1782,7 +1782,7 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
                 type_params: type_params.clone(),
                 params,
                 return_: Box::new(return_),
-                name: name.clone(),
+                name_sym: name_sym.clone(),
             }
         }
         Type::UserDefined { kind, name, args } => Type::UserDefined {

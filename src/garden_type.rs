@@ -31,7 +31,7 @@ pub(crate) enum Type {
     Fun {
         /// If this function has a defined name (i.e. not a closure),
         /// the name used.
-        name: Option<Symbol>,
+        name_sym: Option<Symbol>,
         /// E.g. if a function's return type depends on argument
         /// types, we need type_parameters.
         type_params: Vec<TypeName>,
@@ -192,7 +192,7 @@ impl Type {
                             };
 
                             Ok(Type::Fun {
-                                name: None,
+                                name_sym: None,
                                 type_params: vec![],
                                 params,
                                 return_: Box::new(return_.clone()),
@@ -289,7 +289,7 @@ impl Type {
             type_params,
             params: param_types,
             return_: Box::new(return_),
-            name: fun_info.name_sym.clone(),
+            name_sym: fun_info.name_sym.clone(),
         })
     }
 

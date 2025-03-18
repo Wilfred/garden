@@ -410,15 +410,16 @@ impl TypeCheckVisitor<'_> {
 
     fn arity_diagnostics(
         &mut self,
-        name: Option<&Symbol>,
+        name: Option<&String>,
         expected_args: &[Type],
+        // The type of the value, the position of the value, the comma position.
         actual_args: &[(Type, Position, Option<Position>)],
         paren_args: &ParenthesizedArguments,
     ) {
         debug_assert!(expected_args.len() != actual_args.len());
 
         let formatted_name = match name {
-            Some(name) => msgcode!("{}", name.name),
+            Some(name) => msgcode!("{}", name),
             None => msgtext!("This function call"),
         };
 
@@ -1125,6 +1126,7 @@ impl TypeCheckVisitor<'_> {
                                 }
                             }
                         } else {
+                            let name = name.map(|sym| sym.name.name.clone());
                             self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
                         }
 
@@ -1209,25 +1211,6 @@ impl TypeCheckVisitor<'_> {
                                 .insert(def_id);
                         }
 
-                        if fun_info.params.params.len() != paren_args.arguments.len() {
-                            self.diagnostics.push(Diagnostic {
-                                level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "`{}::{}` requires {} argument{}, but got {}.",
-                                    receiver_ty_name,
-                                    sym.name,
-                                    fun_info.params.params.len(),
-                                    if fun_info.params.params.len() == 1 {
-                                        ""
-                                    } else {
-                                        "s"
-                                    },
-                                    paren_args.arguments.len()
-                                ))]),
-                                position: sym.position.clone(),
-                            });
-                        }
-
                         let mut ty_var_env = TypeVarEnv::default();
                         for type_param in &fun_info.type_params {
                             ty_var_env.insert(type_param.name.clone(), None);
@@ -1256,10 +1239,11 @@ impl TypeCheckVisitor<'_> {
                         for arg in &paren_args.arguments {
                             let arg_ty =
                                 self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                            arg_tys.push((arg_ty, arg.expr.position.clone()));
+                            arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
                         }
 
-                        for (param_ty, (arg_ty, _)) in param_decl_tys.iter().zip(arg_tys.iter()) {
+                        for (param_ty, (arg_ty, _, _)) in param_decl_tys.iter().zip(arg_tys.iter())
+                        {
                             unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
                         }
 
@@ -1268,7 +1252,7 @@ impl TypeCheckVisitor<'_> {
                             .map(|p| subst_ty_vars(p, &ty_var_env))
                             .collect::<Vec<_>>();
 
-                        for (param_ty, (arg_ty, arg_pos)) in params.iter().zip(&arg_tys) {
+                        for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
                             if !is_subtype(arg_ty, param_ty) {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
@@ -1276,6 +1260,11 @@ impl TypeCheckVisitor<'_> {
                                     position: arg_pos.clone(),
                                 });
                             }
+                        }
+
+                        if fun_info.params.params.len() != paren_args.arguments.len() {
+                            let name = format!("{}::{}", receiver_ty_name, sym.name);
+                            self.arity_diagnostics(Some(&name), &params, &arg_tys, paren_args);
                         }
 
                         let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
@@ -1705,7 +1694,7 @@ fn subst_type_vars_in_meth_return_ty(
     method_info: &MethodInfo,
     receiver_pos: &Position,
     receiver_ty: &Type,
-    arg_tys: &[(Type, Position)],
+    arg_tys: &[(Type, Position, Option<Position>)],
     ty_var_env: &mut TypeVarEnv,
 ) -> (Vec<Diagnostic>, Type) {
     let mut diagnostics = vec![];
@@ -1731,12 +1720,12 @@ fn subst_type_vars_in_meth_return_ty(
 fn subst_type_vars_in_fun_info_return_ty(
     env: &Env,
     fun_info: &FunInfo,
-    arg_tys: &[(Type, Position)],
+    arg_tys: &[(Type, Position, Option<Position>)],
     ty_var_env: &mut TypeVarEnv,
 ) -> (Vec<Diagnostic>, Type) {
     let mut diagnostics = vec![];
 
-    for ((arg_ty, arg_pos), param) in arg_tys.iter().zip(&fun_info.params.params) {
+    for ((arg_ty, arg_pos, _), param) in arg_tys.iter().zip(&fun_info.params.params) {
         if let Some(param_hint) = &param.hint {
             if let Err(diagnostic) =
                 unify_and_solve_hint(env, param_hint, arg_pos, arg_ty, ty_var_env)

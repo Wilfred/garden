@@ -1,12 +1,22 @@
 {
-    "abc".len(1, 2)
+  // Too many arguments
+  "abc".len(1, 2)
+
+  let x = [1, 2]
+  // Too few.
+  x.slice(0)
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: `String::len` requires 0 arguments, but got 2.
-// --> src/test_files/check/method_arity.gdn:2
-//     "abc".len(1, 2)
-//           ^^^
+// Error: `String::len` expects 0 arguments, but got 2.
+// --> src/test_files/check/method_arity.gdn:3
+//   "abc".len(1, 2)
+//             ^^^^
+// 
+// Error: `List::slice` requires an additional `Int` argument.
+// --> src/test_files/check/method_arity.gdn:7
+//   x.slice(0)
+//            ^
 

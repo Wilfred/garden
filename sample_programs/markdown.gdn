@@ -116,8 +116,7 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
     let (start_idx, tok) = idx_and_tok
 
     let end_idx = match lexemes.get(i + 1) {
-      Some(next_idx_and_tok) => {
-        let (next_idx, _) = next_idx_and_tok
+      Some((next_idx, _)) => {
         next_idx
       }
       None => s.len()
@@ -245,13 +244,11 @@ fun split_links(src: String): List<String> {
   let s = src
   while True {
     match s.split_once("[") {
-      Some(tup) => {
-        let (before_bracket, after_bracket) = tup
+      Some((before_bracket, after_bracket)) => {
         match after_bracket.split_once(")") {
-          Some(after_tup) => {
+          Some((before_paren, after_paren)) => {
             parts = parts.append(before_bracket)
 
-            let (before_paren, after_paren) = after_tup
             parts = parts.append("[" ^ (before_paren ^ ")"))
             s = after_paren
           }

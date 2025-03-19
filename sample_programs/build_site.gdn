@@ -42,12 +42,8 @@ fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path):
   match type_doc_comment(type_name) {
     Some(doc_comment) => {
       let (intro, rest) = match doc_comment.split_once("\n\n") {
-        Some(tup) => {
-          tup
-        }
-        None => {
-          (doc_comment, "")
-        }
+        Some(tup) => tup,
+        None => (doc_comment, ""),
       }
 
       let dest_path = Path{ p: "".join([website_dir.p, "/type:", type_name, ".html"]) }

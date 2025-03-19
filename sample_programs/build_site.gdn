@@ -24,7 +24,7 @@ fun drop_leading_comments(src: String): String {
 
   let first_code_line = 0
   for (i, line) in lines.enumerate() {
-    if line.starts_with("// ") {
+    if line.starts_with("//") {
       continue
     }
     if line == "" {

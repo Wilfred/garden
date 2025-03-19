@@ -282,13 +282,20 @@ impl AssignUpdateKind {
     }
 }
 
-/// The left hand side of a case in a `match` expression.
+/// The left hand side of a case in a `match`
+/// expression. E.g. `Foo(bar)` in the following code.
+///
+/// ```garden
+/// match x {
+///   Foo(bar) => {}
+/// }
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pattern {
     /// E.g. `Some` or `None`.
     pub variant_sym: Symbol,
     /// E.g. `foo` in `Some(foo) => `.
-    pub payload: Option<Symbol>,
+    pub payload: Option<LetDestination>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

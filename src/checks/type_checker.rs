@@ -634,13 +634,14 @@ impl TypeCheckVisitor<'_> {
                 for (pattern, case_expr) in cases {
                     self.bindings.enter_block();
 
-                    if let Some(payload_sym) = &pattern.payload {
-                        if !payload_sym.name.is_underscore() {
-                            self.set_binding(
-                                payload_sym,
-                                enum_payload_type(self.env, &scrutinee_ty, &pattern.variant_sym),
-                            );
-                        }
+                    if let Some(payload_dest) = &pattern.payload {
+                        let payload_ty =
+                            enum_payload_type(self.env, &scrutinee_ty, &pattern.variant_sym);
+                        self.set_dest_binding(
+                            payload_dest,
+                            &pattern.variant_sym.position,
+                            payload_ty,
+                        );
                     }
 
                     case_tys.push((

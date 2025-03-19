@@ -5031,11 +5031,52 @@ fn eval_match_cases(
         if value_type_name == pattern_type_name && *value_variant_idx == pattern_variant_idx {
             let mut bindings: Vec<(Symbol, Value)> = vec![];
             match (&value_payload, &pattern.payload) {
-                (Some(payload), Some(payload_sym)) => {
-                    if !payload_sym.name.is_underscore() {
-                        bindings.push((payload_sym.clone(), (**payload).clone()));
+                (Some(payload), Some(payload_dest)) => match payload_dest {
+                    LetDestination::Symbol(symbol) => {
+                        if !symbol.name.is_underscore() {
+                            bindings.push((symbol.clone(), (**payload).clone()));
+                        }
                     }
-                }
+                    LetDestination::Destructure(symbols) => {
+                        let items = match payload.as_ref().as_ref() {
+                            Value_::Tuple { items, .. } => items,
+                            _ => {
+                                let msg = ErrorMessage(vec![
+                                    msgtext!(
+                                        "Expected a tuple of {} items, but got a ",
+                                        symbols.len(),
+                                    ),
+                                    msgcode!("{}", type_representation(payload.as_ref())),
+                                    msgtext!("."),
+                                ]);
+                                return Err(EvalError::ResumableError(
+                                    pattern.variant_sym.position.clone(),
+                                    msg,
+                                ));
+                            }
+                        };
+
+                        if items.len() != symbols.len() {
+                            let msg = ErrorMessage(vec![msgtext!(
+                                "Expected a tuple of {} items, but got a tuple of {} items.",
+                                symbols.len(),
+                                items.len(),
+                            )]);
+                            return Err(EvalError::ResumableError(
+                                pattern.variant_sym.position.clone(),
+                                msg,
+                            ));
+                        }
+
+                        for (symbol, value) in symbols.iter().zip(items) {
+                            if symbol.name.is_underscore() {
+                                continue;
+                            }
+
+                            bindings.push((symbol.clone(), value.clone()));
+                        }
+                    }
+                },
                 (None, None) => {}
                 _ => {
                     // This variant has been redefined and previously

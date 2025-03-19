@@ -798,9 +798,9 @@ fn parse_pattern(
 
     let payload = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
-        let arg = parse_symbol(tokens, id_gen, diagnostics);
+        let dest = parse_let_destination(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, ")");
-        Some(arg)
+        Some(dest)
     } else {
         None
     };

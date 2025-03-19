@@ -163,13 +163,11 @@ impl Visitor for FreeVarsVisitor<'_> {
         self.visit_expr(scrutinee);
 
         for (pattern, block) in cases {
-            let mut block_bindings = FxHashSet::default();
-
-            if let Some(payload_sym) = &pattern.payload {
-                block_bindings.insert(payload_sym.name.clone());
+            self.local_bindings.push(FxHashSet::default());
+            if let Some(payload_dest) = &pattern.payload {
+                self.insert_dest_bindings(payload_dest);
             }
 
-            self.local_bindings.push(block_bindings);
             self.visit_block(block);
             self.local_bindings.pop();
         }
@@ -207,7 +205,23 @@ impl Visitor for FreeVarsVisitor<'_> {
         expr: &Expression,
     ) {
         self.visit_expr(expr);
+        self.insert_dest_bindings(dest);
+    }
 
+    fn visit_expr_fun_literal(&mut self, fun_info: &ast::FunInfo) {
+        let mut block_bindings = FxHashSet::default();
+        for param in &fun_info.params.params {
+            block_bindings.insert(param.symbol.name.clone());
+        }
+
+        self.local_bindings.push(block_bindings);
+        self.visit_block(&fun_info.body);
+        self.local_bindings.pop();
+    }
+}
+
+impl FreeVarsVisitor<'_> {
+    fn insert_dest_bindings(&mut self, dest: &ast::LetDestination) {
         let block_bindings = self
             .local_bindings
             .last_mut()
@@ -222,16 +236,5 @@ impl Visitor for FreeVarsVisitor<'_> {
                 }
             }
         }
-    }
-
-    fn visit_expr_fun_literal(&mut self, fun_info: &ast::FunInfo) {
-        let mut block_bindings = FxHashSet::default();
-        for param in &fun_info.params.params {
-            block_bindings.insert(param.symbol.name.clone());
-        }
-
-        self.local_bindings.push(block_bindings);
-        self.visit_block(&fun_info.body);
-        self.local_bindings.pop();
     }
 }

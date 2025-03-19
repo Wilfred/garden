@@ -19,7 +19,9 @@ match foo {
 //             Pattern {
 //                 variant_sym: Symbol"Some",
 //                 payload: Some(
-//                     Symbol"_",
+//                     Symbol(
+//                         Symbol"_",
+//                     ),
 //                 ),
 //             },
 //             Block {

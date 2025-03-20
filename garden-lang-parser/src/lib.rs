@@ -1628,6 +1628,26 @@ fn parse_type_hint(
         None => sym.position.clone(),
     };
 
+    if sym.name.name == "Tuple" {
+        let formatted_args = args
+            .iter()
+            .map(|h| h.as_src())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let equivalent_tuple_src = format!("({})", formatted_args);
+
+        diagnostics.push(ParseError::Invalid {
+            position: position.clone(),
+            message: ErrorMessage(vec![
+                msgcode!("Tuple"),
+                msgtext!(" cannot be used a type hint. Use "),
+                msgcode!("{}", equivalent_tuple_src),
+                msgtext!(" instead."),
+            ]),
+            additional: vec![],
+        });
+    }
+
     TypeHint {
         sym,
         args,

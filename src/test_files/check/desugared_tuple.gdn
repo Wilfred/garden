@@ -1,0 +1,21 @@
+external fun foo(): Tuple {
+  error("")
+}
+
+external fun bar(): Tuple<Int> {
+  error("")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `Tuple` cannot be used a type hint. Use `()` instead.
+// --> src/test_files/check/desugared_tuple.gdn:1
+// external fun foo(): Tuple {
+//                     ^^^^^
+// 
+// Error: `Tuple` cannot be used a type hint. Use `(Int)` instead.
+// --> src/test_files/check/desugared_tuple.gdn:5
+// external fun bar(): Tuple<Int> {
+//                     ^^^^^^^^^^
+

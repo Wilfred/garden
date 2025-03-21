@@ -141,11 +141,7 @@ fun render_markdown_code(snippet: Snippet): String {
     }
   }
 
-  let KEYWORDS = [
-    "let", "fun", "enum", "struct", "external", "internal", "import", "if", "else", "while", "return", "test",
-    "match", "break", "continue", "for", "in", "assert",
-  ]
-
+  let keywords = keywords()
   let rendered_lines: List<String> = []
 
   for line in snippet.content.lines() {
@@ -164,7 +160,7 @@ fun render_markdown_code(snippet: Snippet): String {
         ("<span class=\"comment\">" ^ escape_angle_brackets(part)) ^ "</span>"
       } else if tok.starts_with("\"") {
         ("<span class=\"string\">" ^ escape_angle_brackets(part)) ^ "</span>"
-      } else if KEYWORDS.contains(tok) {
+      } else if keywords.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok
       } else if looks_like_type(tok) {

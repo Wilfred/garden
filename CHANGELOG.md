@@ -37,7 +37,7 @@ keyword, rather than `export`. `internal` is now a reserved word too.
 Removed `String::append`.
 
 Added `String::replace`, `List::enumerate`, `lex`, `check_snippet`,
-`type_doc_comment`, `type_source` and `built_in_types`.
+`keywords`, `type_doc_comment`, `type_source` and `built_in_types`.
 
 `List::get` now returns an option rather than erroring on
 out-of-bounds access.

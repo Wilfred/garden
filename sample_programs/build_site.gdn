@@ -106,14 +106,7 @@ fun join_with_commas_and(items: List<String>): String {
 
 // Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(src: String): String {
-  // TODO: this is duplicated with markdown.gdn. This should probably
-  // be a built-in constant.
-  let KEYWORDS = [
-    "let", "fun", "enum", "struct", "external", "internal", "import", "if", "else", "while", "return", "test",
-    "match", "break", "continue", "for", "in", "assert",
-  ]
-
-  let keyword_links = KEYWORDS.map(fun(keyword: String) {
+  let keyword_links = keywords().map(fun(keyword: String) {
     "".join(["[`", keyword, "`](./keyword:", keyword, ".html)"])
   })
 

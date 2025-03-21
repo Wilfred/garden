@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>break</code> and <code>continue</code> keywords</h1>
+<p><code>break</code> stops evaluation of a loop.</p>
+<pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> flavors = [<span class="string">"Chocolate"</span>, <span class="string">"Strawberry"</span>, <span class="string">"Mint"</span>, <span class="string">"Vanilla"</span>]
+
+<a href="./keyword:for.html"><span class="keyword">for</span></a> flavor <a href="./keyword:in.html"><span class="keyword">in</span></a> flavors {
+  <a href="./keyword:if.html"><span class="keyword">if</span></a> flavor == <span class="string">"Mint" </span>{
+    <a href="./keyword:break.html"><span class="keyword">break</span></a>
+  }
+  println(flavor ^ <span class="string">" ice cream is yummy."</span>)
+}
+
+<span class="comment">// Chocolate ice cream is yummy.</span>
+<span class="comment">// Strawberry ice cream is yummy.</span></code></pre>
+<p><code>continue</code> stops evaluation of the current loop iteration, and
+immediately starts the next iteration.</p>
+<pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> flavors = [<span class="string">"Chocolate"</span>, <span class="string">"Strawberry"</span>, <span class="string">"Mint"</span>, <span class="string">"Vanilla"</span>]
+
+<a href="./keyword:for.html"><span class="keyword">for</span></a> flavor <a href="./keyword:in.html"><span class="keyword">in</span></a> flavors {
+  <a href="./keyword:if.html"><span class="keyword">if</span></a> flavor == <span class="string">"Mint" </span>{
+    <a href="./keyword:continue.html"><span class="keyword">continue</span></a> <span class="comment">// Yuck.</span>
+  }
+  println(flavor ^ <span class="string">" ice cream is yummy."</span>)
+}
+
+<span class="comment">// Chocolate ice cream is yummy.</span>
+<span class="comment">// Strawberry ice cream is yummy.</span>
+<span class="comment">// Vanilla ice cream is yummy.</span></code></pre></div>
+  </body>
+</html>

@@ -10,7 +10,9 @@ for num in nums {
 }
 ```
 
-The keywords `break` and `continue` are also available in loops.
+To stop loop evaluation, or to skip a loop iteration, see
+[`break`](./keyword:break.html) and
+[`continue`](./keyword:continue.html).
 
 As with [`let`](./keyword:let.html), you can use destructuring in `for`
 loop headers.
@@ -23,5 +25,6 @@ for (score, name) in game_scores {
   dbg(name)
 }
 ```
+
 For looping when you don't have a list, see
 [while](./keyword:while.html).

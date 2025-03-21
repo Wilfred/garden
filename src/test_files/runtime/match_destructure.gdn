@@ -1,0 +1,29 @@
+fun main(_args: List<String>) {
+  match Some((1, 2)) {
+    Some((x, y)) => {
+      // Valid, should print 3.
+      dbg(x + y)
+      Unit
+    }
+    None => {}
+  }
+
+  match Some("foo") {
+    Some((_, _)) => {
+      // Invalid, we should have a runtime error here.
+    }
+    None => {}
+  }
+}
+
+// args: run
+// expected stdout: 3
+
+// expected stderr:
+// Error: Expected a tuple of 2 items, but got a `String`.
+// --> src/test_files/runtime/match_destructure.gdn:12	 fun main()
+//     Some((_, _)) => {
+//     ^^^^
+// --> __main_fun__:1	 __toplevel__
+// // __toplevel__
+

@@ -1,0 +1,25 @@
+external fun foo() {
+  match Some(1) {
+    Some(_) => {}
+    None => {}
+  }
+
+  match Some((1, 2)) {
+    Some((x, y)) => { let _ = x + y }
+    None => {}
+  }
+
+  match Some("") {
+    Some((x, y)) => { let _ = x + y }
+    None => {}
+  }
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a tuple, but got `String`.
+// --> src/test_files/check/match_destructure.gdn:13
+//     Some((x, y)) => { let _ = x + y }
+//     ^^^^
+

@@ -22,6 +22,14 @@ pre {
   line-height: 20px;
 }
 
+pre.block:hover {
+  transform: none;
+}
+pre.block {
+  cursor: initial;
+  padding: 8px;
+}
+
 .container {
   margin-top: 86px;
   margin-left: 10px;

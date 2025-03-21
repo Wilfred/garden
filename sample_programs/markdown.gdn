@@ -179,7 +179,7 @@ fun render_markdown_code(snippet: Snippet): String {
   }
 
   let inner_src = "\n".join(rendered_lines)
-  ("<pre><code>" ^ inner_src) ^ "</code></pre>"
+  ("<pre class=\"block\"><code>" ^ inner_src) ^ "</code></pre>"
 }
 
 fun escape_angle_brackets(s: String): String {

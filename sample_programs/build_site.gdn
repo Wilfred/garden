@@ -78,11 +78,33 @@ fun build_site(): Unit {
     write_website_file(base_tmpl_path, tmpl_path, dest_path)
   }
 
+  let seen_keyword_pages: List<String> = []
+
   for md_path in markdown_files(website_dir) {
+    let file_name = match md_path.file_name() {
+      Some(n) => n,
+      None => continue,
+    }
+
+    match file_name.split_once(":") {
+      Some((before, after)) => {
+        if before == "keyword" {
+          seen_keyword_pages = seen_keyword_pages.append(after.strip_suffix(".md"))
+        }
+      }
+      None => {}
+    }
+
     let dest_path = Path{ p: md_path.p.strip_suffix(".md") ^ ".html" }
     let page_src_md = md_path.read().or_error()
     let page_src = render_markdown(substitute_shorthand(page_src_md))
     write_website_page(base_tmpl_path, page_src, dest_path)
+  }
+
+  for keyword in keywords() {
+    if seen_keyword_pages.contains(keyword).not() {
+      println("Expected a page documenting: " ^ keyword)
+    }
   }
 
   for type_name in built_in_types() {

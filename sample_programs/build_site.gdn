@@ -15,8 +15,8 @@ fun markdown_files(website_dir: Path): List<Path> {
 }
 
 // Convert "foo.tmpl.html" to "foo.html".
-fun output_path(template_path: String): Path {
-  Path{ p: template_path.strip_suffix(".tmpl.html") ^ ".html"}
+fun output_path(template_path: Path): Path {
+  Path{ p: template_path.p.strip_suffix(".tmpl.html") ^ ".html"}
 }
 
 fun drop_leading_comments(src: String): String {
@@ -74,7 +74,7 @@ fun build_site(): Unit {
   let base_tmpl_path = website_dir.join("template.html")
 
   for tmpl_path in tmpl_paths {
-    let dest_path = output_path(tmpl_path.p)
+    let dest_path = output_path(tmpl_path)
     write_website_file(base_tmpl_path, tmpl_path, dest_path)
   }
 

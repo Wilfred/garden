@@ -553,11 +553,31 @@ struct Path {
   p: String,
 }
 
-// The parent directory of this path.
+// Get the parent for this path. For directories, this is the parent
+// directory. For files, this is the containing directory.
+//
+// This always returns a `Path`, so the root directory (i.e. `/`) is
+// returned as-is.
+//
+// ```
+// Path{ p: "/foo/bar.txt" }.parent() // Path{ p: "/foo" }
+// Path{ p: "/foo/bar/" }.parent() // Path{ p: "/foo" }
+// Path{ p: "/" }.parent() // Path{ p: "/" }
+// ```
 external fun (this: Path) parent(): Path {
-  let parts = this.p.split("/")
-  let parent_s = "/".join(parts.slice(0, -1))
-  Path{ p: parent_s }
+  let p = this.p.strip_suffix("/")
+  if p == "" {
+    return Path{ p: "/" }
+  }
+
+  let parts = p.split("/").slice(0, -1)
+  Path{ p: "/".join(parts) }
+}
+
+test path_parent {
+  assert(Path{ p: "/foo/bar.txt" }.containing_dir() == Path{ p: "/foo" })
+  assert(Path{ p: "/foo/bar/" }.containing_dir() == Path{ p: "/foo" })
+  assert(Path{ p: "/" }.containing_dir() == Path{ p: "/" })
 }
 
 // Append `component` to this path.
@@ -594,34 +614,6 @@ external fun (this: Path) extension(): Option<String> {
 // directory).
 external fun (this: Path) file_name(): Option<String> {
   this.p.split("/").last()
-}
-
-// Get the containing directory for this path. For files, this is the
-// directory containing it. For directories, this is the parent
-// directory.
-//
-// This always returns a `Path`, so the root directory (i.e. `/`) is
-// returned as-is.
-//
-// ```
-// Path{ p: "/foo/bar.txt" }.containing_dir() // Path{ p: "/foo" }
-// Path{ p: "/foo/bar/" }.containing_dir() // Path{ p: "/foo" }
-// Path{ p: "/" }.containing_dir() // Path{ p: "/" }
-// ```
-external fun (this: Path) containing_dir(): Path {
-  let p = this.p.strip_suffix("/")
-  if p == "" {
-    return Path{ p: "/" }
-  }
-
-  let parts = p.split("/").slice(0, -1)
-  Path{ p: "/".join(parts) }
-}
-
-test path_containing_dir {
-  assert(Path{ p: "/foo/bar.txt" }.containing_dir() == Path{ p: "/foo" })
-  assert(Path{ p: "/foo/bar/" }.containing_dir() == Path{ p: "/foo" })
-  assert(Path{ p: "/" }.containing_dir() == Path{ p: "/" })
 }
 
 // Return a list from `i` (inclusive) to `j` (exclusive).

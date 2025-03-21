@@ -45,7 +45,10 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     };
 
     let Some(variants) = enum_variants(&env, ty) else {
-        eprintln!("The expression at the selected position is not an enum.");
+        eprintln!(
+            "The expression at the selected position has type `{}`, which isn't an `enum`.",
+            ty
+        );
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
 

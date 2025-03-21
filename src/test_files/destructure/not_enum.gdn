@@ -6,5 +6,5 @@ fun bar() {
 
 // args: destructure
 // expected exit status: 10
-// expected stderr: The expression at the selected position is not an enum.
+// expected stderr: The expression at the selected position has type `Int`, which isn't an `enum`.
 

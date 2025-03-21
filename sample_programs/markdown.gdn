@@ -189,9 +189,11 @@ fun escape_angle_brackets(s: String): String {
 fun render_inline(src: String): String {
   let parts: List<String> = []
 
-  for piece in split_links(src) {
+  for piece in split_inline_parts(src) {
     if piece.starts_with("[") {
       parts = parts.append(render_link(piece))
+    } else if piece.starts_with("<") {
+      parts = parts.append(piece)
     } else {
       parts = parts.append(render_inline_no_links(piece))
     }
@@ -234,25 +236,27 @@ fun render_inline_no_links(src: String): String {
 
 // Split `src` into a list of strings, where each string is either a
 // link or something else.
-fun split_links(src: String): List<String> {
+fun split_inline_parts(src: String): List<String> {
   let parts: List<String> = []
 
   let s = src
   while True {
-    match first_idx(s, ["["]) {
+    match first_idx(s, ["[", "<"]) {
       Some(idx) => {
         let before_bracket = s.substring(0, idx)
         let after_bracket = s.substring(idx, s.len())
 
-        match split_on_terminator(after_bracket, ")") {
-          Some((link, after_link)) => {
+        let terminator = if after_bracket.starts_with("[") { ")" } else { ">" }
+
+        match split_on_terminator(after_bracket, terminator) {
+          Some((part, after_part)) => {
             parts = parts.append(before_bracket)
-            parts = parts.append(link)
-            s = after_link
+            parts = parts.append(part)
+            s = after_part
           }
           None => {
-            // We saw a [ without a closing ), so it was a malformed
-            // link. Treat it as simple text.
+            // We saw malformed syntax, e.g. an unfinished link `[foo](bar`.
+            // Treat it as simple text.
             parts = parts.append(s)
             break
           }

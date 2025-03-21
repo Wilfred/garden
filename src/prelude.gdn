@@ -575,9 +575,9 @@ external fun (this: Path) parent(): Path {
 }
 
 test path_parent {
-  assert(Path{ p: "/foo/bar.txt" }.containing_dir() == Path{ p: "/foo" })
-  assert(Path{ p: "/foo/bar/" }.containing_dir() == Path{ p: "/foo" })
-  assert(Path{ p: "/" }.containing_dir() == Path{ p: "/" })
+  assert(Path{ p: "/foo/bar.txt" }.parent() == Path{ p: "/foo" })
+  assert(Path{ p: "/foo/bar/" }.parent() == Path{ p: "/foo" })
+  assert(Path{ p: "/" }.parent() == Path{ p: "/" })
 }
 
 // Append `component` to this path.

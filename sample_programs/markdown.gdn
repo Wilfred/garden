@@ -239,16 +239,21 @@ fun split_links(src: String): List<String> {
 
   let s = src
   while True {
-    match s.split_once("[") {
-      Some((before_bracket, after_bracket)) => {
+    match first_idx(s, ["["]) {
+      Some(idx) => {
+        let before_bracket = s.substring(0, idx)
+        let after_bracket = s.substring(idx, s.len())
+
         match after_bracket.split_once(")") {
           Some((before_paren, after_paren)) => {
             parts = parts.append(before_bracket)
 
-            parts = parts.append("[" ^ (before_paren ^ ")"))
+            parts = parts.append(before_paren ^ ")")
             s = after_paren
           }
           None => {
+            // We saw a [ without a closing ), so it was a malformed
+            // link. Treat it as simple text.
             parts = parts.append(s)
             break
           }
@@ -262,6 +267,49 @@ fun split_links(src: String): List<String> {
   }
 
   parts
+}
+
+// If `s` contains any of the items in `chars`, return the index of
+// the first match.
+fun first_idx(s: String, chars: List<String>): Option<Int> {
+  let indices: List<Int> = []
+  for char in chars {
+    match s.index_of(char) {
+      Some(idx) => {
+        indices = indices.append(idx)
+      }
+      None => {}
+    }
+  }
+
+  min(indices)
+}
+
+test first_idx {
+  assert(first_idx("abc", []) == None)
+  assert(first_idx("abc", ["x"]) == None)
+  assert(first_idx("abc", ["c", "b"]) == Some(1))
+}
+
+fun min(items: List<Int>): Option<Int> {
+  let smallest = match items.first() {
+    Some(item) => item,
+    None => { return None }
+  }
+
+  for item in items {
+    if item < smallest {
+      smallest = item
+    }
+  }
+
+  Some(smallest)
+}
+
+test min {
+  assert(min([]) == None)
+  assert(min([1]) == Some(1))
+  assert(min([1, 0, 2]) == Some(0))
 }
 
 fun render_link(src: String): String {

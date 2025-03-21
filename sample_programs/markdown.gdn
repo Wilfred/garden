@@ -244,12 +244,11 @@ fun split_links(src: String): List<String> {
         let before_bracket = s.substring(0, idx)
         let after_bracket = s.substring(idx, s.len())
 
-        match after_bracket.split_once(")") {
-          Some((before_paren, after_paren)) => {
+        match split_on_terminator(after_bracket, ")") {
+          Some((link, after_link)) => {
             parts = parts.append(before_bracket)
-
-            parts = parts.append(before_paren ^ ")")
-            s = after_paren
+            parts = parts.append(link)
+            s = after_link
           }
           None => {
             // We saw a [ without a closing ), so it was a malformed
@@ -267,6 +266,21 @@ fun split_links(src: String): List<String> {
   }
 
   parts
+}
+
+// If `s` contains `terminator`, return the string up to the
+// terminator (inclusive), and the string beyond it.
+fun split_on_terminator(s: String, terminator: String): Option<(String, String)> {
+  match s.split_once(terminator) {
+    Some((before, after)) => {
+      Some((before ^ terminator, after))
+    }
+    None => None,
+  }
+}
+
+test split_on_terminator {
+  assert(split_on_terminator("abc", "b") == Some(("ab", "c")))
 }
 
 // If `s` contains any of the items in `chars`, return the index of

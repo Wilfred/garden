@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>struct</code> keyword</h1>
+<p><code>struct</code> defines a type made up of fields. Structs are immutable.</p>
+<pre class="block"><code><a href="./keyword:struct.html"><span class="keyword">struct</span></a> <span class="type">User</span> {
+  email: <a href="./type:String.html"><span class="type">String</span></a>,
+  admin: <a href="./type:Bool.html"><span class="type">Bool</span></a>,
+}
+
+<a href="./keyword:let.html"><span class="keyword">let</span></a> alice = <span class="type">User</span>{ 
+  email: <span class="string">"alice@example.com"</span>,
+  admin: <span class="type">True</span>,
+}</code></pre>
+<p>To avoid ambiguity, struct literals cannot have a space between the
+type name and curly brace. <code>User{</code> cannot be written <code>User {</code>.</p></div>
+  </body>
+</html>

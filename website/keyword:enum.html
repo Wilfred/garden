@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>enum</code> keyword</h1>
+<p><code>enum</code> defines a type where values are one of a possible set of
+variants.</p>
+<pre class="block"><code><a href="./keyword:enum.html"><span class="keyword">enum</span></a> <span class="type">Flavor</span> {
+  <span class="type">Chocolate</span>,
+  <span class="type">Strawberry</span>,
+  <span class="type">Custom</span>(<a href="./type:String.html"><span class="type">String</span></a>),
+}
+
+<a href="./keyword:let.html"><span class="keyword">let</span></a> f = <span class="type">Custom</span>(<span class="string">"Fudge"</span>)</code></pre></div>
+  </body>
+</html>

@@ -9,6 +9,7 @@ fun template_files(website_dir: Path): List<Path> {
   dir_files.filter(fun(p: Path) { p.p.ends_with(".tmpl.html") })
 }
 
+// A list of all the files in `website_dir` that have a .md extension.
 fun markdown_files(website_dir: Path): List<Path> {
   let dir_files = list_directory(website_dir).or_error()
   dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
@@ -19,6 +20,8 @@ fun output_path(template_path: Path): Path {
   Path{ p: template_path.p.strip_suffix(".tmpl.html") ^ ".html"}
 }
 
+// Given a snippet of source code `src`, remove all the leading lines
+// that are just comments.
 fun drop_leading_comments(src: String): String {
   let lines = src.lines()
 
@@ -38,6 +41,8 @@ fun drop_leading_comments(src: String): String {
   "\n".join(lines.slice(first_code_line, lines.len()))
 }
 
+// Look up the doc comment for `type_name`, render it to HTML and
+// write it to `out_dir`.
 fun write_type_page(type_name: String, out_dir: Path, base_tmpl_path: Path): Unit {
   match type_doc_comment(type_name) {
     Some(doc_comment) => {
@@ -66,6 +71,7 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_path: Path): Uni
   }
 }
 
+// Buld the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().parent().join("website")
   let out_dir = website_dir
@@ -113,6 +119,7 @@ fun build_site(): Unit {
   }
 }
 
+// Convert `["a", "b", "c"]` to `"a, b and c"`.
 fun join_with_commas_and(items: List<String>): String {
   let last_item = match items.last() {
     Some(item) => item,
@@ -149,6 +156,7 @@ fun write_website_file(base_tmpl_path: Path, page_path: Path, dest_path: Path): 
   write_website_page(base_tmpl_path, page_src, dest_path)
 }
 
+// Wrap `page_src` in the base template and write to the file `dest_path`.
 fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: Path): Unit {
   let base_tmpl_src = base_tmpl_path.read().or_error()
   let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {

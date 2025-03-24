@@ -57,6 +57,13 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_path: Path): Uni
   }
 }
 
+fun write_markdown_page(base_tmpl_path: Path, md_path: Path): Unit {
+  let dest_path = Path{ p: md_path.p.strip_suffix(".md") ^ ".html" }
+  let page_src_md = md_path.read().or_error()
+  let page_src = render_markdown(substitute_shorthand(page_src_md))
+  write_website_page(base_tmpl_path, page_src, dest_path)
+}
+
 // Buld the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().parent().join("website")
@@ -81,10 +88,7 @@ fun build_site(): Unit {
       None => {}
     }
 
-    let dest_path = Path{ p: md_path.p.strip_suffix(".md") ^ ".html" }
-    let page_src_md = md_path.read().or_error()
-    let page_src = render_markdown(substitute_shorthand(page_src_md))
-    write_website_page(base_tmpl_path, page_src, dest_path)
+    write_markdown_page(base_tmpl_path, md_path)
   }
 
   for keyword in keywords() {

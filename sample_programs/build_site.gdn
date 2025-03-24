@@ -29,7 +29,7 @@ fun drop_leading_comments(src: String): String {
 
 // Look up the doc comment for `type_name`, render it to HTML and
 // write it to `out_dir`.
-fun write_type_page(type_name: String, out_dir: Path, base_tmpl_path: Path): Unit {
+fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Unit {
   match type_doc_comment(type_name) {
     Some(doc_comment) => {
       let (intro, rest) = match doc_comment.split_once("\n\n") {
@@ -51,17 +51,17 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_path: Path): Uni
 
       let page_src = render_markdown(md_src)
       let dest_path = out_dir.join("type:" ^ (type_name ^ ".html"))
-      write_website_page(base_tmpl_path, page_src, dest_path)
+      write_website_page(base_tmpl_src, page_src, dest_path)
     }
     None => {}
   }
 }
 
-fun write_markdown_page(base_tmpl_path: Path, md_path: Path): Unit {
+fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
   let dest_path = Path{ p: md_path.p.strip_suffix(".md") ^ ".html" }
   let page_src_md = md_path.read().or_error()
   let page_src = render_markdown(substitute_shorthand(page_src_md))
-  write_website_page(base_tmpl_path, page_src, dest_path)
+  write_website_page(base_tmpl_string, page_src, dest_path)
 }
 
 // Buld the entire garden website.
@@ -70,6 +70,7 @@ fun build_site(): Unit {
   let out_dir = website_dir
 
   let base_tmpl_path = website_dir.join("template.html")
+  let base_tmpl_src = base_tmpl_path.read().or_error()
 
   let seen_keyword_pages: List<String> = []
 
@@ -88,7 +89,7 @@ fun build_site(): Unit {
       None => {}
     }
 
-    write_markdown_page(base_tmpl_path, md_path)
+    write_markdown_page(base_tmpl_src, md_path)
   }
 
   for keyword in keywords() {
@@ -98,7 +99,7 @@ fun build_site(): Unit {
   }
 
   for type_name in built_in_types() {
-    write_type_page(type_name, out_dir, base_tmpl_path)
+    write_type_page(type_name, out_dir, base_tmpl_src)
   }
 }
 
@@ -135,8 +136,7 @@ fun substitute_shorthand(src: String): String {
 }
 
 // Wrap `page_src` in the base template and write to the file `dest_path`.
-fun write_website_page(base_tmpl_path: Path, page_src: String, dest_path: Path): Unit {
-  let base_tmpl_src = base_tmpl_path.read().or_error()
+fun write_website_page(base_tmpl_src: String, page_src: String, dest_path: Path): Unit {
   let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {
     Some(s) => s,
     None => ("", "")

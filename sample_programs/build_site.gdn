@@ -38,7 +38,7 @@ fun drop_leading_comments(src: String): String {
   "\n".join(lines.slice(first_code_line, lines.len()))
 }
 
-fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path): Unit {
+fun write_type_page(type_name: String, out_dir: Path, base_tmpl_path: Path): Unit {
   match type_doc_comment(type_name) {
     Some(doc_comment) => {
       let (intro, rest) = match doc_comment.split_once("\n\n") {
@@ -59,7 +59,7 @@ fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path):
       }
 
       let page_src = render_markdown(md_src)
-      let dest_path = website_dir.join("type:" ^ (type_name ^ ".html"))
+      let dest_path = out_dir.join("type:" ^ (type_name ^ ".html"))
       write_website_page(base_tmpl_path, page_src, dest_path)
     }
     None => {}
@@ -68,6 +68,8 @@ fun write_type_page(type_name: String, website_dir: Path, base_tmpl_path: Path):
 
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().parent().join("website")
+  let out_dir = website_dir
+
   let tmpl_paths = template_files(website_dir)
 
   let base_tmpl_path = website_dir.join("template.html")
@@ -107,7 +109,7 @@ fun build_site(): Unit {
   }
 
   for type_name in built_in_types() {
-    write_type_page(type_name, website_dir, base_tmpl_path)
+    write_type_page(type_name, out_dir, base_tmpl_path)
   }
 }
 

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, rc::Rc};
 
 use garden_lang_parser::{
     ast::{AstId, Expression, Expression_, IdGenerator},
@@ -24,14 +24,29 @@ pub(crate) fn extract_variable(
     let mut env = Env::new(id_gen);
     load_toplevel_items(&items, &mut env);
 
-    let ids_at_pos = find_item_at(&items, offset, end_offset);
+    let ids_containing_pos = find_item_at(&items, offset, end_offset);
 
+    // Find the smallest expression that includes offset and end_offset.
     let mut expr_id = None;
-    for id in ids_at_pos.iter().rev() {
-        if let AstId::Expr(syntax_id) = id {
-            expr_id = Some(syntax_id);
+    for id in ids_containing_pos.iter().rev() {
+        let AstId::Expr(syntax_id) = id else {
+            continue;
+        };
+
+        if expr_id.is_some() {
+            // Special case: if we're trying to extract an expression
+            // wrapped in Parentheses, we want to remove the
+            // parentheses too when extracting.
+            if let Some(expr) = find_expr_of_id(&items, *syntax_id) {
+                if let Expression_::Parentheses(_, _, _) = expr.expr_ {
+                    expr_id = Some(syntax_id);
+                }
+            }
+
             break;
         }
+
+        expr_id = Some(syntax_id);
     }
 
     let Some(expr_id) = expr_id else {
@@ -45,7 +60,7 @@ pub(crate) fn extract_variable(
     // This is not the block itself, but the expression wihin the
     // block that we want to place our new variable before.
     let mut enclosing_block_level_expr: Option<Expression> = None;
-    for id in ids_at_pos.iter().rev() {
+    for id in ids_containing_pos.iter().rev() {
         let AstId::Expr(expr_syntax_id) = id else {
             continue;
         };
@@ -102,6 +117,11 @@ pub(crate) fn extract_variable(
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
+    let var_init_expr = match expr.expr_ {
+        Expression_::Parentheses(_, inner_expr, _) => inner_expr,
+        _ => Rc::new(expr.clone()),
+    };
+
     let Some(enclosing_block_level_expr) = enclosing_block_level_expr else {
         eprintln!("No enclosing block-level expression found for the selected position.");
         return;
@@ -120,7 +140,7 @@ pub(crate) fn extract_variable(
             print!(
                 "let {} = {}\n{}",
                 name,
-                &src[expr.position.start_offset..expr.position.end_offset],
+                &src[var_init_expr.position.start_offset..var_init_expr.position.end_offset],
                 " ".repeat(enclosing_block_level_expr.position.column)
             );
 

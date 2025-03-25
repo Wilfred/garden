@@ -16,7 +16,7 @@ fun foo(src) {
 //         ),
 //         item_id: Some(
 //             ToplevelItemId(
-//                 6,
+//                 7,
 //             ),
 //         ),
 //         type_params: [],
@@ -52,11 +52,20 @@ fun foo(src) {
 //                 },
 //                 Expression {
 //                     position: Position { ... },
-//                     expr_: StringLiteral(
-//                         "",
+//                     expr_: Parentheses(
+//                         Position { ... },
+//                         Expression {
+//                             position: Position { ... },
+//                             expr_: StringLiteral(
+//                                 "",
+//                             ),
+//                             value_is_used: true,
+//                             id: SyntaxId(5),
+//                         },
+//                         Position { ... },
 //                     ),
 //                     value_is_used: true,
-//                     id: SyntaxId(5),
+//                     id: SyntaxId(6),
 //                 },
 //             ],
 //             close_brace: Position { ... },

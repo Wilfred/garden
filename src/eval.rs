@@ -4495,6 +4495,9 @@ fn eval_expr(
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             eval_continue(env);
         }
+        Expression_::Parentheses(_, expr, _) => {
+            env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
+        }
         Expression_::Invalid => {
             return Err((RestoreValues(vec![]),
                         (EvalError::ResumableError(expr_position,

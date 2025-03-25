@@ -201,6 +201,9 @@ pub trait Visitor {
             Expression_::Assert(expr) => {
                 self.visit_expr(expr);
             }
+            Expression_::Parentheses(_, expr, _) => {
+                self.visit_expr(expr);
+            }
             Expression_::Invalid => {
                 // TODO: custom method for this variant
             }

@@ -437,6 +437,13 @@ pub enum Expression_ {
     /// assert(x)
     /// ```
     Assert(Rc<Expression>),
+    /// Parentheses used for grouping, particularly in nested binary operators.
+    ///
+    /// ```garden
+    /// (x)
+    /// x * (y * z)
+    /// ```
+    Parentheses(Position, Rc<Expression>, Position),
     /// We had a parse error in this position, so there's no
     /// expression.
     Invalid,

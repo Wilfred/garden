@@ -14,7 +14,7 @@ fun foo() {
 //         ),
 //         item_id: Some(
 //             ToplevelItemId(
-//                 4,
+//                 5,
 //             ),
 //         ),
 //         type_params: [],
@@ -37,11 +37,20 @@ fun foo() {
 //                 },
 //                 Expression {
 //                     position: Position { ... },
-//                     expr_: IntLiteral(
-//                         1,
+//                     expr_: Parentheses(
+//                         Position { ... },
+//                         Expression {
+//                             position: Position { ... },
+//                             expr_: IntLiteral(
+//                                 1,
+//                             ),
+//                             value_is_used: true,
+//                             id: SyntaxId(3),
+//                         },
+//                         Position { ... },
 //                     ),
 //                     value_is_used: true,
-//                     id: SyntaxId(3),
+//                     id: SyntaxId(4),
 //                 },
 //             ],
 //             close_brace: Position { ... },

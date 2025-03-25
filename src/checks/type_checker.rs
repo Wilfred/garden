@@ -1411,6 +1411,9 @@ impl TypeCheckVisitor<'_> {
                 self.verify_expr(&Type::bool(), expr, type_bindings, expected_return_ty);
                 Type::unit()
             }
+            Expression_::Parentheses(_, expr, _) => {
+                self.infer_expr(expr, type_bindings, expected_return_ty)
+            }
             Expression_::Invalid => {
                 // We've already emitted a parse error, so use the
                 // bottom type to prevent later type errors.

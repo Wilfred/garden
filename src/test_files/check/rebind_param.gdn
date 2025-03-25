@@ -1,0 +1,6 @@
+external fun foo(x: Int) {
+  let x = x + 1
+  dbg(x)
+}
+
+// args: check

@@ -272,13 +272,15 @@ pub trait Visitor {
         hint: Option<&TypeHint>,
         expr: &Expression,
     ) {
+        // Visit the expression before the destination, so we're not
+        // confused by cases like `let x = x`.
+        self.visit_expr(expr);
+
         self.visit_dest(dest);
 
         if let Some(hint) = hint {
             self.visit_type_hint(hint);
         }
-
-        self.visit_expr(expr);
     }
 
     fn visit_expr_assign(&mut self, symbol: &Symbol, expr: &Expression) {

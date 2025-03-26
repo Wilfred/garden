@@ -350,3 +350,11 @@ test type_source {
     }
   }
 }
+
+// Get the arguments passed when this program was run.
+//
+// For example, if the shell command was `garden run my_program.gdn
+// --foo`, then this function will return `["--foo"]`.
+external fun shell_arguments(): List<String> {
+  __BUILTIN_IMPLEMENTATION
+}

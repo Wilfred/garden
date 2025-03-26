@@ -2432,6 +2432,31 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::ShellArguments => {
+            check_arity(
+                &SymbolName {
+                    name: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            if expr_value_is_used {
+                let items = env
+                    .cli_args
+                    .iter()
+                    .map(|arg| Value::new(Value_::String(arg.clone())))
+                    .collect::<Vec<_>>();
+
+                env.push_value(Value::new(Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                }));
+            }
+        }
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(
                 &SymbolName {

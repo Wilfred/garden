@@ -1,0 +1,10 @@
+fun main(_: List<String>): Unit {
+  // This is only arguments after the .gdn file name, so it's an empty
+  // list.
+  dbg(shell_arguments())
+  return
+}
+
+// args: run
+// expected stdout: []
+

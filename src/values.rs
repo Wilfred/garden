@@ -326,6 +326,10 @@ pub(crate) enum BuiltinFunctionKind {
     Print,
     Println,
     SourceDirectory,
+    // TODO: It's a little confusing that we have both shell() and
+    // shell_arguments(), these should go in separate namespaces once
+    // we have namespaces.
+    ShellArguments,
     WorkingDirectory,
     WriteFile,
     CheckSnippet,
@@ -345,6 +349,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Print => "print",
             BuiltinFunctionKind::Println => "println",
             BuiltinFunctionKind::SourceDirectory => "source_directory",
+            BuiltinFunctionKind::ShellArguments => "shell_arguments",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
             BuiltinFunctionKind::WriteFile => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",

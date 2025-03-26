@@ -557,6 +557,8 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
 
     let mut env = Env::new(id_gen);
+    env.cli_args = Vec::from(arguments);
+
     let session = Session {
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,

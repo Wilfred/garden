@@ -103,6 +103,10 @@ pub(crate) struct Env {
     /// don't want to do the work of initialising a fresh environment
     /// repeatedly.
     pub(crate) initial_state: Option<Box<Self>>,
+
+    /// Command line arguments used to invoke this Garden program,
+    /// e.g. `vec!["--stuff"]`.
+    pub(crate) cli_args: Vec<String>,
 }
 
 impl Env {
@@ -474,6 +478,7 @@ impl Env {
             stop_at_expr_id: None,
             id_gen,
             initial_state: None,
+            cli_args: vec![],
         };
 
         load_toplevel_items(&prelude_items, &mut env);

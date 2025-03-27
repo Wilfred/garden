@@ -1,4 +1,4 @@
-fun main(_) {
+fun main() {
     123
     let cond = True
     while cond {

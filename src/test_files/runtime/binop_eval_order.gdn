@@ -1,4 +1,4 @@
-fun main(_) {
+fun main() {
   // We should evaluate the LHS first, so that should be the resulting
   // error.
   error("lhs") + error("rhs")

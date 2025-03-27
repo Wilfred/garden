@@ -1,6 +1,6 @@
 struct Foo {}
 
-fun main(args: List<String>): Unit {
+fun main(): Unit {
     Foo{ x: 1 }
 }
 

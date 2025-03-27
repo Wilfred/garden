@@ -4,7 +4,7 @@ fun foo(aa: Int) {
 //  ^
 }
 
-fun main(_) {
+fun main() {
     foo(10)
 }
 

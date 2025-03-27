@@ -2,7 +2,7 @@ struct Foo {
     x: Int,
 }
 
-fun main(args: List<String>): Unit {
+fun main(): Unit {
     dbg(Foo{})
     Unit
 }

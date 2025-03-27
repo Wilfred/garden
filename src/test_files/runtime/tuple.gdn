@@ -2,7 +2,7 @@ fun return_tuple(): (Int, String) {
     (123, "foo")
 }
 
-fun main(_) {
+fun main() {
     let v = return_tuple()
     dbg(v)
     let (i, _) = v

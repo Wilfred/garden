@@ -1,4 +1,4 @@
-fun main(_): Unit {
+fun main(): Unit {
     NoSuchType{ x: 1 + 2 }
 }
 

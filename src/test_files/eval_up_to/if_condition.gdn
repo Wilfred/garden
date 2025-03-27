@@ -1,4 +1,4 @@
-fun main(_) {
+fun main() {
     if 1 == 2 {
         //^
         print("yikes")

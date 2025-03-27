@@ -2,6 +2,6 @@ external fun foo(): Int {
   42
 }
 
-fun main(_) {}
+fun main() {}
 
 // args: run

@@ -4,7 +4,7 @@ Garden is an experimental programming language focused on interactive
 tooling.
 
 ```
-fun main(_args: List<String>) {
+fun main() {
   print("hello world")
 }
 ```

@@ -150,7 +150,7 @@ fun write_website_page(base_tmpl_src: String, page_src: String, dest_path: Path)
   build_site()
 }
 
-fun main(_: List<String>) {
+fun main() {
   build_site()
 }
 

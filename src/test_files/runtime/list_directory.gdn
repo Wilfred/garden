@@ -1,4 +1,4 @@
-fun main(_: List<String>) {
+fun main() {
   list_directory(Path{ p: "/" }).or_error()
 }
 

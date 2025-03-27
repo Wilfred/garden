@@ -1,4 +1,4 @@
-fun main(_args: List<String>): Unit {
+fun main(): Unit {
     let x: String = "foo"
     print(x)
 }

@@ -10,7 +10,7 @@ fun call_it2() {
     call_it()
 }
 
-fun main(_) {
+fun main() {
     call_it2()
 }
 

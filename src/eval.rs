@@ -24,9 +24,7 @@ use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrT
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
-use crate::values::{
-    escape_string_literal, type_representation, BuiltinFunctionKind, Value, Value_,
-};
+use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
@@ -606,20 +604,14 @@ pub(crate) fn eval_tests(
     }
 }
 
-fn call_to_main_src(cli_args: &[String]) -> String {
-    let arg_literals: Vec<_> = cli_args.iter().map(|s| escape_string_literal(s)).collect();
-    format!("main([{}])", arg_literals.join(", "))
-}
-
 /// Evaluate a call to the user's main() function.
 pub(crate) fn eval_call_main(
-    cli_args: &[String],
     env: &mut Env,
     session: &Session,
 ) -> Result<ToplevelEvalSummary, EvalError> {
-    let call_src = call_to_main_src(cli_args);
+    let call_src = "main()";
     let (call_expr_items, parse_errors) =
-        parse_toplevel_items(&PathBuf::from("__main_fun__"), &call_src, &mut env.id_gen);
+        parse_toplevel_items(&PathBuf::from("__main_fun__"), call_src, &mut env.id_gen);
     assert!(
         parse_errors.is_empty(),
         "Internally constructed main() invocation should always be valid syntax."

@@ -2,7 +2,7 @@
 // imported.
 import "./import_cyclic.gdn"
 
-fun main(_) {
+fun main() {
   println("hello world")
 }
 

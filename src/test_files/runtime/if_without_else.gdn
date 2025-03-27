@@ -5,7 +5,7 @@ fun foo(b: Bool): Int {
     }
 }
 
-fun main(_args: List<String>): Unit {
+fun main(): Unit {
     foo(True)
     Unit
 }

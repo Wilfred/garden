@@ -1,6 +1,6 @@
 import "./lib.gdn"
 
-fun main(_) {
+fun main() {
   dbg(foo())
 }
 

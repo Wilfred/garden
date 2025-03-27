@@ -1,4 +1,4 @@
-fun main(_) {
+fun main() {
   dbg(source_directory().or_exception().file_name())
 }
 

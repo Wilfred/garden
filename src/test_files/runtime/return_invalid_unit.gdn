@@ -1,6 +1,6 @@
 fun foo(): Int {}
 
-fun main(args: List<String>): Unit {
+fun main(): Unit {
     foo()
     return
 }

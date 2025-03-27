@@ -1,4 +1,4 @@
-fun main(_: List<String>): Unit {
+fun main(): Unit {
     let i = 0
     i = 2
 }

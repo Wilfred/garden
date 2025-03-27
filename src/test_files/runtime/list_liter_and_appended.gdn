@@ -1,4 +1,4 @@
-fun main(_: List<String>) {
+fun main() {
     let literal = [1]
 
     let changed = []

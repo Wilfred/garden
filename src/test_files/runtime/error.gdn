@@ -6,7 +6,7 @@ fun caller() {
     callee()
 }
 
-fun main(_) {
+fun main() {
     caller()
 }
 

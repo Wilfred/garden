@@ -1,4 +1,4 @@
-fun main(_: List<String>) {
+fun main() {
     dbg(shell("no_such_command", []))
 }
 

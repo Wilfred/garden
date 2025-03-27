@@ -1,4 +1,4 @@
-fun main(_: List<String>): Unit {
+fun main(): Unit {
   // This is only arguments after the .gdn file name, so it's an empty
   // list.
   dbg(shell_arguments())

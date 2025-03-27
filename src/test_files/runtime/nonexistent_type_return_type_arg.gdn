@@ -2,7 +2,7 @@ fun foo(): Option<NoSuchType> {
     None
 }
 
-fun main(args: List<String>): Unit {
+fun main(): Unit {
     foo()
 }
 

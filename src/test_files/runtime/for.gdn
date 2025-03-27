@@ -1,6 +1,6 @@
 fun foo(): String { "abc" }
 
-fun main(_) {
+fun main() {
   let items = [1, 2, 3, 4, 5]
 
   // Check that an empty loop works.

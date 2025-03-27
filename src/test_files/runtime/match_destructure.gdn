@@ -1,4 +1,4 @@
-fun main(_args: List<String>) {
+fun main() {
   match Some((1, 2)) {
     Some((x, y)) => {
       // Valid, should print 3.

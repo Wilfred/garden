@@ -3,7 +3,7 @@ fun foo (abc: Int) {
   //       ^
 }
 
-fun main(_) {}
+fun main() {}
 
 // args: test-eval-up-to
 // expected stderr: No previous value saved for this expression

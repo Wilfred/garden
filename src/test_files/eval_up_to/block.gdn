@@ -5,7 +5,7 @@
 //  ^
 }
 
-fun main(_) {}
+fun main() {}
 
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/block.gdn:4: 3

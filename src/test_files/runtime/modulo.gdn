@@ -1,4 +1,4 @@
-fun main(_) {
+fun main() {
   dbg(10 % 8)
 }
 

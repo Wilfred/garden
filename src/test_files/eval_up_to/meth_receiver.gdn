@@ -2,7 +2,7 @@ fun (this: String) foo(x: Int) {
     //  ^
 }
 
-fun main(_) {
+fun main() {
     "abc".foo(123)
 }
 

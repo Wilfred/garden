@@ -129,7 +129,15 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 }
 
 fun render_markdown_code(snippet: Snippet): String {
-  if (snippet.language == "") {
+  if (snippet.language == "") || (snippet.language.starts_with("garden")) {
+    render_markdown_garden_code(snippet)
+  } else {
+    ("<pre class=\"block\"><code>" ^ escape_angle_brackets(snippet.content)) ^ "</code></pre>"
+  }
+}
+
+fun render_markdown_garden_code(snippet: Snippet): String {
+  if snippet.language.ends_with("nocheck").not() {
     match check_snippet(snippet.content) {
       Ok(_) => {}
       Err(messages) => {

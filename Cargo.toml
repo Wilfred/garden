@@ -1,5 +1,5 @@
 [workspace]
-members = ["garden-lang-parser", "garden-lang-web"]
+members = ["garden-lang-parser"]
 
 [workspace.package]
 description = "A live programming language."

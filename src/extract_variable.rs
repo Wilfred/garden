@@ -1,7 +1,7 @@
 use std::{path::Path, rc::Rc};
 
 use garden_lang_parser::{
-    ast::{AstId, Expression, Expression_, IdGenerator},
+    ast::{AstId, Expression, Expression_, IdGenerator, Vfs},
     parse_toplevel_items,
 };
 
@@ -19,9 +19,10 @@ pub(crate) fn extract_variable(
     name: &str,
 ) {
     let mut id_gen = IdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
-    let mut env = Env::new(id_gen);
+    let mut env = Env::new(id_gen, vfs);
     load_toplevel_items(&items, &mut env);
 
     let ids_containing_pos = find_item_at(&items, offset, end_offset);

@@ -6,7 +6,7 @@ use std::{
 };
 
 use garden_lang_parser::{
-    ast::{IdGenerator, ToplevelItem_},
+    ast::{IdGenerator, ToplevelItem_, Vfs},
     parse_toplevel_items,
 };
 use rustc_hash::FxHashMap;
@@ -27,10 +27,10 @@ fn sandboxed_tests_summary(
     offset: usize,
     interrupted: Arc<AtomicBool>,
 ) -> SandboxedTestsSummary {
-    let id_gen = IdGenerator::default();
-    let mut env = Env::new(id_gen);
+    let mut id_gen = IdGenerator::default();
+    let mut vfs = Vfs::default();
 
-    let (items, errors) = parse_toplevel_items(path, src, &mut env.id_gen);
+    let (items, errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
     if !errors.is_empty() {
         return SandboxedTestsSummary {
             description: "Parse error".to_owned(),
@@ -48,6 +48,7 @@ fn sandboxed_tests_summary(
 
     // TODO: for real IDE usage we'll want to use the environment of
     // the current session.
+    let mut env = Env::new(id_gen, vfs);
     load_toplevel_items(&items, &mut env);
 
     // TODO: allow users to choose this value.
@@ -163,8 +164,9 @@ pub(crate) fn run_sandboxed_tests_in_file(
 
 pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
     let id_gen = IdGenerator::default();
-    let mut env = Env::new(id_gen);
-    let items = parse_toplevel_items_or_die(path, src, &mut env.id_gen);
+    let vfs = Vfs::default();
+    let mut env = Env::new(id_gen, vfs);
+    let items = parse_toplevel_items_or_die(path, src, &mut env.vfs, &mut env.id_gen);
 
     let session = Session {
         interrupted,

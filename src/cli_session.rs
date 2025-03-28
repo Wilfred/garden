@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::{eval, load_toplevel_items, ExpressionState, Session, StdoutMode};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_};
+use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_, Vfs};
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;
@@ -59,7 +59,7 @@ fn read_expr(
                     }
                 }
 
-                match read_multiline_syntax(&input, rl, &mut env.id_gen) {
+                match read_multiline_syntax(&input, rl, &mut env.vfs, &mut env.id_gen) {
                     Ok((src, items)) => {
                         log_src(&src).unwrap();
                         return Ok((src, items));
@@ -83,7 +83,8 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     print_repl_header();
 
     let id_gen = IdGenerator::default();
-    let mut env = Env::new(id_gen);
+    let vfs = Vfs::default();
+    let mut env = Env::new(id_gen, vfs);
 
     let mut session = Session {
         interrupted,
@@ -251,13 +252,14 @@ fn print_repl_header() {
 fn read_multiline_syntax(
     first_line: &str,
     rl: &mut Editor<()>,
+    vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {
     let mut src = first_line.to_owned();
 
     loop {
         let (items, errors) =
-            parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src, id_gen);
+            parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src, vfs, id_gen);
 
         // TODO: return all errors.
         match errors.into_iter().next() {

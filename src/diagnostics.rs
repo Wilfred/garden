@@ -123,6 +123,10 @@ fn format_pos_in_fun(
     underline: bool,
     is_error: bool,
 ) -> String {
+    println!(
+        "My backtrace: {}",
+        std::backtrace::Backtrace::force_capture()
+    );
     let use_color = std::io::stdout().is_terminal();
 
     let mut res = String::new();

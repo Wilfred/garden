@@ -15,7 +15,7 @@ use crate::values::{Value, Value_};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{
-    self, IdGenerator, MethodKind, SourceString, SymbolName, TypeHint, TypeName,
+    self, IdGenerator, MethodKind, SourceString, SymbolName, TypeHint, TypeName, Vfs,
 };
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
@@ -631,10 +631,15 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Parse(src) => {
             if let Some(src) = src {
+                let mut vfs = Vfs::default();
                 let mut id_gen = IdGenerator::default();
 
-                let (items, errors) =
-                    parse_toplevel_items(&PathBuf::from("__interactive__"), src, &mut id_gen);
+                let (items, errors) = parse_toplevel_items(
+                    &PathBuf::from("__interactive__"),
+                    src,
+                    &mut vfs,
+                    &mut id_gen,
+                );
                 for error in errors {
                     let msg = match error {
                         ParseError::Invalid { message, .. } => message,

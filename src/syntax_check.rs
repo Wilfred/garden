@@ -1,3 +1,4 @@
+use garden_lang_parser::ast::Vfs;
 use serde::Serialize;
 use std::io::IsTerminal;
 use std::path::Path;
@@ -47,7 +48,8 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
     let mut diagnostics = vec![];
 
     let mut id_gen = IdGenerator::default();
-    let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let (items, errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
     for e in errors.into_iter() {
         match e {
@@ -90,7 +92,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         };
     }
 
-    let env = Env::new(id_gen);
+    let env = Env::new(id_gen, vfs);
     for Diagnostic {
         message,
         position,

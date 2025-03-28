@@ -2470,8 +2470,11 @@ pub fn parse_inline_expr_from_str(
 pub fn parse_toplevel_items(
     path: &Path,
     src: &str,
+    vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+    vfs.insert(path.to_owned(), src.to_owned());
+
     let mut diagnostics = vec![];
 
     let (mut tokens, lex_errors) = lex(path, src);
@@ -2511,9 +2514,11 @@ mod tests {
 
     #[test]
     fn test_incomplete_expression() {
+        let mut vfs = Vfs::default();
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "1 + ",
+            &mut vfs,
             &mut IdGenerator::default(),
         );
         assert!(!errors.is_empty())
@@ -2521,9 +2526,11 @@ mod tests {
 
     #[test]
     fn test_repeated_param() {
+        let mut vfs = Vfs::default();
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "fun f(x, x) {} ",
+            &mut vfs,
             &mut IdGenerator::default(),
         );
         assert!(!errors.is_empty())
@@ -2531,9 +2538,11 @@ mod tests {
 
     #[test]
     fn test_repeated_param_underscore() {
+        let mut vfs = Vfs::default();
         let (_, errors) = parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
             "fun f(_, _) {} ",
+            &mut vfs,
             &mut IdGenerator::default(),
         );
         assert!(errors.is_empty())

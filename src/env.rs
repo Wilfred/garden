@@ -13,7 +13,7 @@ use crate::{
 };
 use garden_lang_parser::ast::{
     BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, SourceString, Symbol,
-    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
+    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
 };
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
@@ -98,6 +98,9 @@ pub(crate) struct Env {
     /// parsing produces items with globally unique IDs.
     pub(crate) id_gen: IdGenerator,
 
+    /// A copy of the source code of all files we've evaluated.
+    pub(crate) vfs: Vfs,
+
     /// A copy of the environment before we started adding things to
     /// it. This is useful when running checks at runtime, where we
     /// don't want to do the work of initialising a fresh environment
@@ -110,7 +113,7 @@ pub(crate) struct Env {
 }
 
 impl Env {
-    pub(crate) fn new(mut id_gen: IdGenerator) -> Self {
+    pub(crate) fn new(mut id_gen: IdGenerator, mut vfs: Vfs) -> Self {
         let mut file_scope = FxHashMap::default();
 
         // Insert all the built-in functions.
@@ -448,8 +451,12 @@ impl Env {
         );
 
         let prelude_src = include_str!("prelude.gdn");
-        let (prelude_items, errors) =
-            parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, &mut id_gen);
+        let (prelude_items, errors) = parse_toplevel_items(
+            &PathBuf::from("prelude.gdn"),
+            prelude_src,
+            &mut vfs,
+            &mut id_gen,
+        );
         assert!(
             errors.is_empty(),
             "Prelude should be syntactically legal: {}",
@@ -458,7 +465,7 @@ impl Env {
 
         let builtins_src = include_str!("builtins.gdn");
         let (builtin_items, errors) =
-            parse_toplevel_items(&builtins_path, builtins_src, &mut id_gen);
+            parse_toplevel_items(&builtins_path, builtins_src, &mut vfs, &mut id_gen);
         assert!(
             errors.is_empty(),
             "Stubs for built-ins should be syntactically legal: {}",
@@ -477,6 +484,7 @@ impl Env {
             enforce_sandbox: false,
             stop_at_expr_id: None,
             id_gen,
+            vfs,
             initial_state: None,
             cli_args: vec![],
         };

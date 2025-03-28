@@ -67,7 +67,7 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
-use garden_lang_parser::ast::{IdGenerator, SourceString, ToplevelItem, ToplevelItem_};
+use garden_lang_parser::ast::{IdGenerator, SourceString, ToplevelItem, ToplevelItem_, Vfs};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 
@@ -394,9 +394,10 @@ fn main() {
 /// Evaluate a garden file, then run eval-up-to and print the result.
 fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<AtomicBool>) {
     let mut id_gen = IdGenerator::default();
-    let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let items = parse_toplevel_items_or_die(path, src, &mut vfs, &mut id_gen);
 
-    let mut env = Env::new(id_gen);
+    let mut env = Env::new(id_gen, vfs);
     let session = Session {
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,
@@ -474,7 +475,8 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
 
 fn dump_ast(src: &str, path: &Path) {
     let mut id_gen = IdGenerator::default();
-    let (items, errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let (items, errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
     for error in errors.into_iter() {
         match error {
@@ -517,9 +519,10 @@ fn dump_ast(src: &str, path: &Path) {
 fn parse_toplevel_items_or_die(
     path: &Path,
     src: &str,
+    vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Vec<ToplevelItem> {
-    let (items, errors) = parse_toplevel_items(path, src, id_gen);
+    let (items, errors) = parse_toplevel_items(path, src, vfs, id_gen);
 
     if !errors.is_empty() {
         for error in errors.into_iter() {
@@ -554,9 +557,10 @@ fn parse_toplevel_items_or_die(
 
 fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
     let mut id_gen = IdGenerator::default();
-    let items = parse_toplevel_items_or_die(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let items = parse_toplevel_items_or_die(path, src, &mut vfs, &mut id_gen);
 
-    let mut env = Env::new(id_gen);
+    let mut env = Env::new(id_gen, vfs);
     env.cli_args = Vec::from(arguments);
 
     let session = Session {

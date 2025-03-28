@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use garden_lang_parser::ast::{AstId, VariantInfo};
+use garden_lang_parser::ast::{AstId, VariantInfo, Vfs};
 use garden_lang_parser::{ast::IdGenerator, parse_toplevel_items};
 use line_numbers::LinePositions;
 
@@ -14,9 +14,10 @@ use crate::BAD_CLI_REQUEST_EXIT_CODE;
 
 pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usize) {
     let mut id_gen = IdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
-    let mut env = Env::new(id_gen);
+    let mut env = Env::new(id_gen, vfs);
     load_toplevel_items(&items, &mut env);
     let summary = check_types(&items, &env);
 

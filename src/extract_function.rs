@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId},
+    ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId, Vfs},
     parse_toplevel_items,
     visitor::Visitor,
 };
@@ -23,9 +23,10 @@ pub(crate) fn extract_function(
     name: &str,
 ) {
     let mut id_gen = IdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
-    let mut env = Env::new(id_gen);
+    let mut env = Env::new(id_gen, vfs);
     load_toplevel_items(&items, &mut env);
     let summary = check_types(&items, &env);
 

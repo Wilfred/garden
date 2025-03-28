@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use garden_lang_parser::{
-    ast::{AstId, IdGenerator, Symbol, SyntaxId},
+    ast::{AstId, IdGenerator, Symbol, SyntaxId, Vfs},
     parse_toplevel_items,
     position::Position,
     visitor::Visitor,
@@ -16,9 +16,10 @@ use crate::{
 /// and use sites, then print the new source code.
 pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     let mut id_gen = IdGenerator::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut id_gen);
+    let mut vfs = Vfs::default();
+    let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
-    let mut env = Env::new(id_gen);
+    let mut env = Env::new(id_gen, vfs);
     load_toplevel_items(&items, &mut env);
     let summary = check_types(&items, &env);
 

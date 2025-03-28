@@ -527,14 +527,15 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use garden_lang_parser::ast::IdGenerator;
+    use garden_lang_parser::ast::{IdGenerator, Vfs};
 
     use super::*;
 
     #[test]
     fn test_display_value_for_string_with_doublequote() {
         let id_gen = IdGenerator::default();
-        let env = Env::new(id_gen);
+        let vfs = Vfs::default();
+        let env = Env::new(id_gen, vfs);
 
         let value = Value::new(Value_::String("foo \\ \" \n bar".into()));
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");

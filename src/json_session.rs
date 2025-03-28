@@ -21,7 +21,7 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{IdGenerator, SourceString};
+use garden_lang_parser::ast::{IdGenerator, SourceString, Vfs};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -187,7 +187,8 @@ fn eval_worker(receiver: Receiver<String>, session: Session) {
     let mut session = session;
 
     let id_gen = IdGenerator::default();
-    let mut env = Env::new(id_gen);
+    let vfs = Vfs::default();
+    let mut env = Env::new(id_gen, vfs);
 
     while let Ok(input) = receiver.recv() {
         handle_request_in_worker(&input, &mut env, &mut session);
@@ -251,6 +252,7 @@ fn handle_eval_up_to_request(
             .cloned()
             .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
         src,
+        &mut env.vfs,
         &mut env.id_gen,
     );
 

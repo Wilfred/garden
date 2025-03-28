@@ -2,7 +2,11 @@
 
 use rustc_hash::FxHashMap;
 
-use std::{fmt::Display, path::PathBuf, rc::Rc};
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
 use crate::position::Position;
 
@@ -550,6 +554,24 @@ impl IdGenerator {
                 id
             }
         }
+    }
+}
+
+/// Stores the source code of all the files we've loaded.
+#[derive(Debug, Clone, Default)]
+pub struct Vfs {
+    // TODO: support a single path having different strings, because
+    // users can re-evaluate individual functions after modification.
+    srcs: FxHashMap<PathBuf, String>,
+}
+
+impl Vfs {
+    pub fn insert(&mut self, path: PathBuf, src: String) {
+        self.srcs.insert(path, src);
+    }
+
+    pub fn src(&self, path: &Path) -> Option<&String> {
+        self.srcs.get(path)
     }
 }
 

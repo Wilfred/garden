@@ -20,5 +20,5 @@ fun main(): Unit {
 // --> src/test_files/runtime/struct_invalid_type_param.gdn:10	 fun main()
 //     foo()
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

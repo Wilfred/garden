@@ -21,7 +21,7 @@ use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
     eval::{EvalError, Session},
 };
-use garden_lang_parser::ast::{IdGenerator, SourceString, Vfs};
+use garden_lang_parser::ast::{IdGenerator, Vfs};
 use garden_lang_parser::position::Position;
 use garden_lang_parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 
@@ -152,7 +152,7 @@ fn handle_load_request(
         parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
 
     if !errors.is_empty() {
-        return as_error_response(errors, input, &env.vfs);
+        return as_error_response(errors, &env.vfs);
     }
 
     let (diagnostics, new_syms) = load_toplevel_items(&items, env);
@@ -195,7 +195,7 @@ fn eval_worker(receiver: Receiver<String>, session: Session) {
     }
 }
 
-fn as_error_response(errors: Vec<ParseError>, input: &str, vfs: &Vfs) -> Response {
+fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs) -> Response {
     let response_errors: Vec<_> = errors
         .into_iter()
         .map(|e| match e {
@@ -204,16 +204,7 @@ fn as_error_response(errors: Vec<ParseError>, input: &str, vfs: &Vfs) -> Respons
                 message,
                 additional: _,
             } => {
-                let stack = Some(format_diagnostic(
-                    &message,
-                    &position,
-                    Level::Error,
-                    vfs,
-                    &SourceString {
-                        src: input.to_owned(),
-                        offset: 0,
-                    },
-                ));
+                let stack = Some(format_diagnostic(&message, &position, Level::Error, vfs));
 
                 ResponseError {
                     position: Some(position),
@@ -269,10 +260,6 @@ fn handle_eval_up_to_request(
                     &position,
                     Level::Error,
                     &env.vfs,
-                    &SourceString {
-                        src: src.to_owned(),
-                        offset: 0,
-                    },
                 ));
                 return Response {
                     kind: ResponseKind::Evaluate {
@@ -604,7 +591,7 @@ fn handle_run_eval_request(
     );
 
     if !errors.is_empty() {
-        return as_error_response(errors, input, &env.vfs);
+        return as_error_response(errors, &env.vfs);
     }
 
     let (mut diagnostics, new_syms) = load_toplevel_items(&items, env);

@@ -67,7 +67,7 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
-use garden_lang_parser::ast::{IdGenerator, SourceString, ToplevelItem, ToplevelItem_, Vfs};
+use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_, Vfs};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 
@@ -492,10 +492,6 @@ fn dump_ast(src: &str, path: &Path) {
                         &position,
                         Level::Error,
                         &vfs,
-                        &SourceString {
-                            src: src.to_owned(),
-                            offset: 0
-                        }
                     )
                 );
             }
@@ -539,10 +535,6 @@ fn parse_toplevel_items_or_die(
                         &position,
                         Level::Error,
                         vfs,
-                        &SourceString {
-                            src: src.to_owned(),
-                            offset: 0
-                        }
                     )
                 ),
                 ParseError::Incomplete { message: e, .. } => {
@@ -583,10 +575,6 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
                     &diagnostic.position,
                     diagnostic.level,
                     &env.vfs,
-                    &SourceString {
-                        offset: 0,
-                        src: src.to_owned()
-                    }
                 )
             );
             return;

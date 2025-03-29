@@ -22,5 +22,5 @@ fun main() {
 // --> src/test_files/runtime/error.gdn:10	 fun main()
 //     caller()
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

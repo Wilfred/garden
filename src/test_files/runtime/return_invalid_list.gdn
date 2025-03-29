@@ -16,5 +16,5 @@ fun main(): Unit {
 // --> src/test_files/runtime/return_invalid_list.gdn:6	 fun main()
 //     foo()
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

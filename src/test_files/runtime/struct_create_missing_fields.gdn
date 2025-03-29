@@ -14,5 +14,5 @@ fun main(): Unit {
 //     dbg(Foo{})
 //         ^^^^^
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

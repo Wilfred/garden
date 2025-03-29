@@ -5,15 +5,13 @@ use std::path::Path;
 
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::{
-    ast::{IdGenerator, SourceString},
-    diagnostics::ErrorMessage,
-    parse_toplevel_items,
-    position::Position,
+    ast::IdGenerator, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
     ParseError,
 };
 
+use crate::checks::check_toplevel_items_in_env;
+use crate::load_toplevel_items;
 use crate::{
-    checks::check_toplevel_items,
     diagnostics::{format_diagnostic, Diagnostic, Level},
     Env,
 };
@@ -92,12 +90,15 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         };
     }
 
-    let env = Env::new(id_gen, vfs);
+    let mut env = Env::new(id_gen, vfs);
+    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env);
+    raw_diagnostics.extend(check_toplevel_items_in_env(&items, &env));
+
     for Diagnostic {
         message,
         position,
         level,
-    } in check_toplevel_items(&items, &env)
+    } in raw_diagnostics
     {
         // TODO: merge Level and Severity types.
         let severity = match level {
@@ -120,11 +121,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         });
     }
 
-    let src_string = SourceString {
-        src: src.to_owned(),
-        offset: 0,
-    };
-
     for (i, diagnostic) in diagnostics.iter().enumerate() {
         let s = if json {
             serde_json::to_string(diagnostic).expect("TODO: can this ever fail?")
@@ -139,7 +135,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 &diagnostic.position,
                 level,
                 &env.vfs,
-                &src_string,
             )
         };
 

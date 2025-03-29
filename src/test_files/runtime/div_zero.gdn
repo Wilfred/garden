@@ -9,5 +9,5 @@ fun main() {
 //   dbg(5 / 0)
 //       ^^^^^
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

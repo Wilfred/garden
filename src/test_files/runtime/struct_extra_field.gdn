@@ -11,5 +11,5 @@ fun main(): Unit {
 //     Foo{ x: 1 }
 //          ^
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

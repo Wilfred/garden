@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::env::StackFrame;
 use crate::eval::EnclosingSymbol;
+use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::position::Position;
-use garden_lang_parser::{ast::SourceString, diagnostics::ErrorMessage};
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub(crate) enum Level {
@@ -52,7 +52,6 @@ pub(crate) fn format_error_with_stack(
     res.push_str(&format_pos_in_fun(
         position,
         vfs,
-        &top_stack.src,
         Some(&top_stack.enclosing_name),
         true,
         true,
@@ -65,7 +64,6 @@ pub(crate) fn format_error_with_stack(
             res.push_str(&format_pos_in_fun(
                 pos,
                 vfs,
-                &caller_stack_frame.src,
                 Some(&caller_stack_frame.enclosing_name),
                 false,
                 true,
@@ -81,7 +79,6 @@ pub(crate) fn format_diagnostic(
     position: &Position,
     level: Level,
     vfs: &Vfs,
-    src_string: &SourceString,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -114,7 +111,6 @@ pub(crate) fn format_diagnostic(
     res.push_str(&format_pos_in_fun(
         position,
         vfs,
-        src_string,
         None,
         true,
         matches!(level, Level::Error),
@@ -125,7 +121,6 @@ pub(crate) fn format_diagnostic(
 fn format_pos_in_fun(
     position: &Position,
     vfs: &Vfs,
-    src_string: &SourceString,
     enclosing_symbol: Option<&EnclosingSymbol>,
     underline: bool,
     is_error: bool,
@@ -156,14 +151,8 @@ fn format_pos_in_fun(
     }
     res.push('\n');
 
-    // TODO: this is the line number relative to the start of
-    // the SourceString, not the start of the file.
-    let offset = std::cmp::max(
-        position.start_offset as isize - src_string.offset as isize,
-        0,
-    ) as usize;
-    let end_offset =
-        std::cmp::max(position.end_offset as isize - src_string.offset as isize, 0) as usize;
+    let offset = position.start_offset;
+    let end_offset = position.end_offset;
 
     let src = match vfs.src(&position.path) {
         Some(src) => src,

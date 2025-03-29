@@ -25,5 +25,5 @@ fun main() {
 // --> src/test_files/runtime/stack_trace.gdn:14	 fun main()
 //     call_it2()
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

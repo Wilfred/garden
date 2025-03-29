@@ -9,5 +9,5 @@ fun main() {
 //   "foo".index_of(123)
 //                  ^^^
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

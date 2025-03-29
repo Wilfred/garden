@@ -19,5 +19,5 @@ fun main(): Unit {
 // --> src/test_files/runtime/if_without_else.gdn:9	 fun main()
 //     foo(True)
 // --> __main_fun__:1	 __toplevel__
-// // __toplevel__
+// main()
 

@@ -20,7 +20,11 @@ use self::hints::check_hints;
 use self::type_checker::check_types;
 use self::{struct_fields::check_struct_fields, unused_vars::check_unused_variables};
 
-/// Check toplevel items in a fresh environment, without any definitions from the current session.
+/// Check toplevel items in a fresh environment, without any
+/// definitions from the current session.
+///
+/// Note that this creates a new Env and Vfs, so diagnostics returned
+/// may refer to files that aren't present in `env.vfs`.
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env);

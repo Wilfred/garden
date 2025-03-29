@@ -2491,10 +2491,13 @@ pub fn parse_toplevel_items(
 pub fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
+    vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+    vfs.insert(path.to_owned(), src.to_owned());
+
     let mut diagnostics = vec![];
 
     let (mut tokens, lex_errors) = lex_between(path, src, offset, end_offset);

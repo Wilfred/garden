@@ -148,8 +148,14 @@ fn handle_load_request(
     end_offset: usize,
     env: &mut Env,
 ) -> Response {
-    let (items, errors) =
-        parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
+    let (items, errors) = parse_toplevel_items_from_span(
+        path,
+        input,
+        &mut env.vfs,
+        &mut env.id_gen,
+        offset,
+        end_offset,
+    );
 
     if !errors.is_empty() {
         return as_error_response(errors, &env.vfs);
@@ -330,7 +336,6 @@ fn handle_eval_up_to_request(
 fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     match e {
         EvalError::ResumableError(position, e) => {
-            // TODO: use the original SourceString rather than reconstructing.
             let stack = format_error_with_stack(&e, &position, &env.stack.0, &env.vfs);
 
             Response {
@@ -586,6 +591,7 @@ fn handle_run_eval_request(
     let (items, errors) = parse_toplevel_items_from_span(
         path,
         input,
+        &mut env.vfs,
         &mut env.id_gen,
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),

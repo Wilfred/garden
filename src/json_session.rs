@@ -566,13 +566,16 @@ fn handle_run_request(
             }
         }
         Err(CommandParseError::NotCommandSyntax) => {
-            handle_run_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
+            let path = path
+                .clone()
+                .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__"));
+            handle_run_eval_request(&path, &input, offset, end_offset, env, session, id)
         }
     }
 }
 
 fn handle_run_eval_request(
-    path: Option<&PathBuf>,
+    path: &Path,
     input: &str,
     offset: Option<usize>,
     end_offset: Option<usize>,
@@ -581,9 +584,7 @@ fn handle_run_eval_request(
     id: Option<RequestId>,
 ) -> Response {
     let (items, errors) = parse_toplevel_items_from_span(
-        &path
-            .cloned()
-            .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
+        path,
         input,
         &mut env.id_gen,
         offset.unwrap_or(0),

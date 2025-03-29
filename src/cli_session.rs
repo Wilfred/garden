@@ -197,14 +197,14 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let _ = last_src; // should use this.
                 println!(
                     "{}",
-                    &format_error_with_stack(&msg, &position, &env.stack.0)
+                    &format_error_with_stack(&msg, &position, &env.stack.0, &env.vfs)
                 );
                 is_stopped = true;
             }
             Err(EvalError::AssertionFailed(position, msg)) => {
                 println!(
                     "{}",
-                    &format_error_with_stack(&msg, &position, &env.stack.0)
+                    &format_error_with_stack(&msg, &position, &env.stack.0, &env.vfs)
                 );
                 is_stopped = true;
             }

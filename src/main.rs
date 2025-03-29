@@ -491,6 +491,7 @@ fn dump_ast(src: &str, path: &Path) {
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         Level::Error,
+                        &vfs,
                         &SourceString {
                             src: src.to_owned(),
                             offset: 0
@@ -537,6 +538,7 @@ fn parse_toplevel_items_or_die(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         Level::Error,
+                        vfs,
                         &SourceString {
                             src: src.to_owned(),
                             offset: 0
@@ -580,6 +582,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
                     &diagnostic.message,
                     &diagnostic.position,
                     diagnostic.level,
+                    &env.vfs,
                     &SourceString {
                         offset: 0,
                         src: src.to_owned()
@@ -595,13 +598,13 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         Err(EvalError::ResumableError(position, msg)) => {
             eprintln!(
                 "{}",
-                &format_error_with_stack(&msg, &position, &env.stack.0)
+                &format_error_with_stack(&msg, &position, &env.stack.0, &env.vfs)
             );
         }
         Err(EvalError::AssertionFailed(position, msg)) => {
             eprintln!(
                 "{}",
-                &format_error_with_stack(&msg, &position, &env.stack.0)
+                &format_error_with_stack(&msg, &position, &env.stack.0, &env.vfs)
             );
         }
         Err(EvalError::Interrupted) => {

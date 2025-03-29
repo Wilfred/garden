@@ -1,0 +1,20 @@
+import "./has_bad_syntax.gdn"
+// A comment on line 2.
+// A comment on line 3.
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `=`, got `}`
+// --> /home/wilfred/projects/garden/src/test_files/check/has_bad_syntax.gdn:3
+// import "./has_bad_syntax.gdn"
+//                              
+// // A comment on line 2.
+// 
+// 
+// Error: Expected an expression, got: `}`.
+// --> /home/wilfred/projects/garden/src/test_files/check/has_bad_syntax.gdn:3
+// import "./has_bad_syntax.gdn"
+//                              
+// // A comment on line 2.
+

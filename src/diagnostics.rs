@@ -2,6 +2,7 @@
 
 use std::io::IsTerminal as _;
 
+use garden_lang_parser::ast::Vfs;
 use itertools::Itertools;
 use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
@@ -29,6 +30,7 @@ pub(crate) fn format_error_with_stack(
     message: &ErrorMessage,
     position: &Position,
     stack: &[StackFrame],
+    vfs: &Vfs,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -49,6 +51,7 @@ pub(crate) fn format_error_with_stack(
     let top_stack = stack.last().unwrap();
     res.push_str(&format_pos_in_fun(
         position,
+        vfs,
         &top_stack.src,
         Some(&top_stack.enclosing_name),
         true,
@@ -61,6 +64,7 @@ pub(crate) fn format_error_with_stack(
             res.push('\n');
             res.push_str(&format_pos_in_fun(
                 pos,
+                vfs,
                 &caller_stack_frame.src,
                 Some(&caller_stack_frame.enclosing_name),
                 false,
@@ -76,6 +80,7 @@ pub(crate) fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,
     level: Level,
+    vfs: &Vfs,
     src_string: &SourceString,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
@@ -108,6 +113,7 @@ pub(crate) fn format_diagnostic(
     );
     res.push_str(&format_pos_in_fun(
         position,
+        vfs,
         src_string,
         None,
         true,
@@ -118,15 +124,12 @@ pub(crate) fn format_diagnostic(
 
 fn format_pos_in_fun(
     position: &Position,
+    vfs: &Vfs,
     src_string: &SourceString,
     enclosing_symbol: Option<&EnclosingSymbol>,
     underline: bool,
     is_error: bool,
 ) -> String {
-    println!(
-        "My backtrace: {}",
-        std::backtrace::Backtrace::force_capture()
-    );
     let use_color = std::io::stdout().is_terminal();
 
     let mut res = String::new();
@@ -162,16 +165,21 @@ fn format_pos_in_fun(
     let end_offset =
         std::cmp::max(position.end_offset as isize - src_string.offset as isize, 0) as usize;
 
-    let src = &src_string.src;
+    let src = match vfs.src(&position.path) {
+        Some(src) => src,
+        None => "",
+    };
+
     let s_lines: Vec<_> = src.lines().collect();
-    if offset >= src.len() {
-        // TODO: this occurs when we are using the wrong
-        // SourceString, such as the main function wrapper. We
-        // should find the relevant SourceString instead.
+    if s_lines.is_empty() {
+        // Nothing to do.
+    } else if offset >= src.len() || end_offset >= src.len() {
+        // TODO: this can occur when the Vfs is stale relative to the
+        // last time these functions were re-evaluated.
         let relevant_line = s_lines[0].to_owned();
         res.push_str(&relevant_line);
     } else {
-        let line_positions = LinePositions::from(src.as_str());
+        let line_positions = LinePositions::from(src);
 
         for (i, span) in line_positions
             .from_region(offset, end_offset)

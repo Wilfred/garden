@@ -152,7 +152,7 @@ fn handle_load_request(
         parse_toplevel_items_from_span(path, input, &mut env.id_gen, offset, end_offset);
 
     if !errors.is_empty() {
-        return as_error_response(errors, input);
+        return as_error_response(errors, input, &env.vfs);
     }
 
     let (diagnostics, new_syms) = load_toplevel_items(&items, env);
@@ -195,7 +195,7 @@ fn eval_worker(receiver: Receiver<String>, session: Session) {
     }
 }
 
-fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
+fn as_error_response(errors: Vec<ParseError>, input: &str, vfs: &Vfs) -> Response {
     let response_errors: Vec<_> = errors
         .into_iter()
         .map(|e| match e {
@@ -208,6 +208,7 @@ fn as_error_response(errors: Vec<ParseError>, input: &str) -> Response {
                     &message,
                     &position,
                     Level::Error,
+                    vfs,
                     &SourceString {
                         src: input.to_owned(),
                         offset: 0,
@@ -267,6 +268,7 @@ fn handle_eval_up_to_request(
                     &message,
                     &position,
                     Level::Error,
+                    &env.vfs,
                     &SourceString {
                         src: src.to_owned(),
                         offset: 0,
@@ -342,7 +344,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     match e {
         EvalError::ResumableError(position, e) => {
             // TODO: use the original SourceString rather than reconstructing.
-            let stack = format_error_with_stack(&e, &position, &env.stack.0);
+            let stack = format_error_with_stack(&e, &position, &env.stack.0, &env.vfs);
 
             Response {
                 kind: ResponseKind::Evaluate {
@@ -359,7 +361,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             }
         }
         EvalError::AssertionFailed(position, message) => {
-            let stack = format_error_with_stack(&message, &position, &env.stack.0);
+            let stack = format_error_with_stack(&message, &position, &env.stack.0, &env.vfs);
 
             Response {
                 kind: ResponseKind::Evaluate {
@@ -602,7 +604,7 @@ fn handle_run_eval_request(
     );
 
     if !errors.is_empty() {
-        return as_error_response(errors, input);
+        return as_error_response(errors, input, &env.vfs);
     }
 
     let (mut diagnostics, new_syms) = load_toplevel_items(&items, env);

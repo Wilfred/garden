@@ -124,6 +124,8 @@ pub(crate) struct ResponseError {
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
+    /// The position of the expression we evaluated. This is useful
+    /// for eval-up-to and/or reporting where we reached the tick limit.
     pub(crate) position: Option<Position>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) id: Option<RequestId>,

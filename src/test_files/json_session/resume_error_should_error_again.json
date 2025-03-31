@@ -17,7 +17,7 @@
 //             "end_line_number": 0,
 //             "column": 4,
 //             "end_column": 5,
-//             "path": "__json_session_unnamed__"
+//             "path": "__json_session_unnamed_2702__"
 //           },
 //           "level": "Warning"
 //         }
@@ -44,10 +44,10 @@
 //               "end_line_number": 0,
 //               "column": 10,
 //               "end_column": 20,
-//               "path": "__json_session_unnamed__"
+//               "path": "__json_session_unnamed_2702__"
 //             },
 //             "message": "Error: x",
-//             "stack": "Error: x\n--> __json_session_unnamed__:1\t fun f()\nfun f() { error(\"x\") }\n          ^^^^^^^^^^\n--> __json_session_unnamed__:1\t __toplevel__\n// __toplevel__"
+//             "stack": "Error: x\n--> __json_session_unnamed_2702__:1\t fun f()\nfun f() { error(\"x\") }\n          ^^^^^^^^^^\n--> __json_session_unnamed_2709__:1\t __toplevel__\nf()"
 //           }
 //         ]
 //       },
@@ -70,7 +70,7 @@
 //               "end_line_number": 0,
 //               "column": 10,
 //               "end_column": 20,
-//               "path": "__json_session_unnamed__"
+//               "path": "__json_session_unnamed_2702__"
 //             },
 //             "message": "Error: x",
 //             "stack": null

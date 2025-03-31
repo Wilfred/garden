@@ -16,10 +16,10 @@
 //               "end_line_number": 0,
 //               "column": 11,
 //               "end_column": 23,
-//               "path": "__json_session_unnamed__"
+//               "path": "__json_session_unnamed_2702__"
 //             },
 //             "message": "Error: foo",
-//             "stack": "Error: foo\n--> __json_session_unnamed__:1\t test foo\ntest foo { error(\"foo\") }\n           ^^^^^^^^^^^^"
+//             "stack": "Error: foo\n--> __json_session_unnamed_2702__:1\t test foo\ntest foo { error(\"foo\") }\n           ^^^^^^^^^^^^"
 //           }
 //         ]
 //       },

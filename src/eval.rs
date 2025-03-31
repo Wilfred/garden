@@ -1085,7 +1085,6 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     }
 
     let stack_frame = StackFrame {
-        src: test.src_string.clone(),
         enclosing_name: EnclosingSymbol::Test(test.name_sym.clone()),
         return_hint: None,
         caller_pos: None,
@@ -2919,7 +2918,6 @@ fn eval_call(
                 evalled_values: vec![Value::unit()],
                 return_hint: fun_info.return_hint.clone(),
                 enclosing_name: EnclosingSymbol::Closure,
-                src: fun_info.src_string.clone(),
                 caller_uses_value: expr_value_is_used,
             }));
         }
@@ -2983,7 +2981,6 @@ fn eval_call(
 
             return Ok(Some(StackFrame {
                 return_hint: fi.return_hint.clone(),
-                src: fi.src_string.clone(),
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
                 enclosing_name,
@@ -3379,7 +3376,6 @@ fn eval_method_call(
     Ok(Some(StackFrame {
         return_hint: fun_info.return_hint.clone(),
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
-        src: fun_info.src_string.clone(),
         caller_pos: Some(caller_expr.position.clone()),
         caller_expr_id: Some(caller_expr.id),
         bindings: Bindings::new_with(fun_bindings),

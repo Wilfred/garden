@@ -12,8 +12,8 @@ use crate::{
     types::{BuiltinType, TypeDef},
 };
 use garden_lang_parser::ast::{
-    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, SourceString, Symbol,
-    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
+    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, Symbol, SymbolName,
+    SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
 };
 use garden_lang_parser::parse_toplevel_items;
 use garden_lang_parser::position::Position;
@@ -32,10 +32,6 @@ impl Default for Stack {
             evalled_values: vec![Value::unit()],
             return_hint: None,
             enclosing_name: EnclosingSymbol::Toplevel,
-            src: SourceString {
-                offset: 0,
-                src: "// __toplevel__".to_owned(),
-            },
             type_bindings: FxHashMap::default(),
             caller_uses_value: true,
         }])
@@ -562,7 +558,6 @@ impl Env {
 
 #[derive(Debug, Clone)]
 pub(crate) struct StackFrame {
-    pub(crate) src: SourceString,
     /// The name of the function, method or test that we're evaluating.
     pub(crate) enclosing_name: EnclosingSymbol,
     /// Used to check the type of the returned value.

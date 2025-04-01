@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>assert</code> keyword</h1>
+<p>You can use <code>assert</code> to perform a runtime check that a value is
+<code>True</code>.</p>
+<pre class="block"><code><a href="./keyword:assert.html"><span class="keyword">assert</span></a>(1 &gt; 2)</code></pre>
+<p>If the assertion fails, Garden will raise an error.</p>
+<p><code>assert</code> is particularly useful when defining a <code>test</code>.</p>
+<pre class="block"><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> add_one(i: <a href="./type:Int.html"><span class="type">Int</span></a>): <a href="./type:Int.html"><span class="type">Int</span></a> {
+  i + 1
+}
+
+<a href="./keyword:test.html"><span class="keyword">test</span></a> add_one_to_five {
+  <a href="./keyword:assert.html"><span class="keyword">assert</span></a>(add_one(5) == 6)
+}</code></pre></div>
+  </body>
+</html>

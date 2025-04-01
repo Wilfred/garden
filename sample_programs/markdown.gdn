@@ -221,7 +221,7 @@ fun render_inline_no_links(src: String): String {
 
         match after_backtick.split_once("`") {
           Some((between_backticks, after_closing_backtick)) => {
-            parts = parts.append("".join(["<code>", between_backticks, "</code>"]))
+            parts = parts.append("".join(["<code>", escape_angle_brackets(between_backticks), "</code>"]))
             s = after_closing_backtick
           }
           None => {
@@ -410,6 +410,10 @@ test render_markdown_paragraph_after_heading {
 
 test render_backtick {
   assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
+}
+
+test render_backtick_escaped {
+  assert(render_markdown("`foo<`") == "<p><code>foo&lt;</code></p>")
 }
 
 test render_backtick_in_heading {

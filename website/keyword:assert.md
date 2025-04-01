@@ -4,7 +4,7 @@ You can use `assert` to perform a runtime check that a value is
 `True`.
 
 ```
-assert(1 > 2)
+assert(1 < 2)
 ```
 
 If the assertion fails, Garden will raise an error.

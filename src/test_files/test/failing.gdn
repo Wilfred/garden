@@ -8,5 +8,5 @@ test foo {
 // Failed: foo src/test_files/test/failing.gdn:2
 //   Assertion failed: `1 == 2`.
 // 
-// 0 passed, 1 failed.
+// Ran 1 test: 0 passed and 1 failed.
 

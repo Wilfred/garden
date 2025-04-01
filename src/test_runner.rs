@@ -9,6 +9,7 @@ use garden_lang_parser::{
     ast::{IdGenerator, ToplevelItem_, Vfs},
     parse_toplevel_items,
 };
+use owo_colors::OwoColorize as _;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
@@ -197,7 +198,14 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
                 continue;
             };
 
-            print!("Failed: {}", test_sym.name);
+            print!(
+                "Failed: {}",
+                if use_color {
+                    test_sym.name.name.bold().to_string()
+                } else {
+                    test_sym.name.name.clone()
+                }
+            );
 
             let (pos, msg) = match err {
                 EvalError::Interrupted => (None, None),
@@ -209,15 +217,7 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
 
             match (pos, msg) {
                 (Some(pos), Some(msg)) => {
-                    println!(
-                        " {}\n  {}",
-                        pos.as_ide_string(),
-                        if use_color {
-                            msg.as_styled_string()
-                        } else {
-                            msg.as_string()
-                        }
-                    )
+                    println!(" {}\n  {}", pos.as_ide_string(), msg.as_string())
                 }
                 (Some(pos), None) => println!(" {}", pos.as_ide_string()),
                 _ => println!(),
@@ -228,7 +228,25 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
             println!();
         }
 
-        println!("{} passed, {} failed.", tests_passed, tests_failed);
+        let total_tests = tests_passed + tests_failed;
+
+        if tests_failed == 0 && total_tests == 1 {
+            println!("Ran 1 test: it passed.");
+        } else if tests_failed == 0 {
+            println!(
+                "Ran {} test{}: all tests passed.",
+                total_tests,
+                if total_tests == 1 { "" } else { "s" },
+            );
+        } else {
+            println!(
+                "Ran {} test{}: {} passed and {} failed.",
+                total_tests,
+                if total_tests == 1 { "" } else { "s" },
+                tests_passed,
+                tests_failed
+            );
+        }
     }
 
     // TODO: support printing back traces from every test failure.

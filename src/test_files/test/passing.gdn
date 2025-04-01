@@ -3,5 +3,5 @@ test foo {
 }
 
 // args: test
-// expected stdout: 1 passed, 0 failed.
+// expected stdout: Ran 1 test: it passed.
 

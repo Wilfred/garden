@@ -14,5 +14,5 @@ test bar {
 // Failed: bar src/test_files/test/multiple_failing.gdn:6
 //   Assertion failed: `1 == 2`.
 // 
-// 0 passed, 2 failed.
+// Ran 2 tests: 0 passed and 2 failed.
 

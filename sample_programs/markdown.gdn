@@ -429,23 +429,23 @@ test render_backtick_in_link {
 }
 
 test render_triple_backtick {
-  assert(render_markdown("```\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\nbar\n```") == "<pre class=\"block\"><code>foo\nbar</code></pre>")
 }
 
 test render_triple_backtick_escape_html {
-  assert(render_markdown("```\nfoo <bar>\n```") == "<pre><code>foo &lt;bar&gt;</code></pre>")
+  assert(render_markdown("```nocheck\nfoo <bar>\n```") == "<pre class=\"block\"><code>foo &lt;bar&gt;</code></pre>")
 }
 
 test render_triple_backtick_blank_line {
-  assert(render_markdown("```\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\n\nbar\n```") == "<pre class=\"block\"><code>foo\n\nbar</code></pre>")
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```\nfun foo\n```") == "<pre><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
+  assert(render_markdown("```garden nocheck\nfun foo\n```") == "<pre class=\"block\"><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
 }
 
 test render_triple_backtick_comment {
-  assert(render_markdown("```\nfoo // bar\n```") == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
+  assert(render_markdown("```garden nocheck\nfoo // bar\n```") == "<pre class=\"block\"><code>foo <span class=\"comment\">// bar</span></code></pre>")
 }
 
 test render_asterisk {

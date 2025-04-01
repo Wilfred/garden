@@ -224,7 +224,11 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
             }
         }
 
-        println!("\n{} passed, {} failed.", tests_passed, tests_failed);
+        if tests_failed > 0 {
+            println!();
+        }
+
+        println!("{} passed, {} failed.", tests_passed, tests_failed);
     }
 
     // TODO: support printing back traces from every test failure.

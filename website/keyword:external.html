@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="block accent" href="/">Garden</a>
+      <nav>
+        <a class="block" href="/manual.html">Manual</a>
+        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>external</code> and <code>internal</code> keywords</h1>
+<p>You can use <code>external</code> and <code>internal</code> to declare the visibility of
+your functions and methods.</p>
+<p>If you don't declare visibility, Garden will assume that your function
+or method is only used in the current file.</p>
+<pre class="block"><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> visible_in_the_current_file() {}</code></pre>
+<p>If you use <code>external</code>, you are declaring a function that can be used
+anywhere.</p>
+<pre class="block"><code><a href="./keyword:external.html"><span class="keyword">external</span></a> <a href="./keyword:fun.html"><span class="keyword">fun</span></a> visible_everywhere() {}</code></pre>
+<p><code>internal</code> is reserved for declaring a function that can be used
+from any file in the current library, but not outside the library.</p>
+<p>Implementation note: currently all functions and methods are visible
+in all files, although <code>garden check</code> will use visibility modifiers to
+warn on unused functions that aren't declared <code>external</code>.</p></div>
+  </body>
+</html>

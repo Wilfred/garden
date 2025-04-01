@@ -192,8 +192,6 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
     if tests_passed == 0 && tests_failed == 0 {
         println!("No tests found.");
     } else {
-        println!("{} passed, {} failed.", tests_passed, tests_failed,);
-
         for (test_sym, err) in &summary.tests {
             let Some(err) = err else {
                 continue;
@@ -212,7 +210,7 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
             match (pos, msg) {
                 (Some(pos), Some(msg)) => {
                     println!(
-                        " {}: {}",
+                        " {}\n  {}",
                         pos.as_ide_string(),
                         if use_color {
                             msg.as_styled_string()
@@ -225,6 +223,8 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
                 _ => println!(),
             }
         }
+
+        println!("\n{} passed, {} failed.", tests_passed, tests_failed);
     }
 
     // TODO: support printing back traces from every test failure.

@@ -8,7 +8,8 @@ struct Int {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
-// A sequence of values of type T, such as `[1, 2, 3]`.
+// An immutable sequence of values. For example, `[1, 2, 3]` is a
+// `List<Int>`.
 struct List<T> {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }
@@ -59,7 +60,7 @@ external fun shell(command: String, args: List<String>): Result<String, String> 
   __BUILTIN_IMPLEMENTATION
 }
 
-// Pretty print a value.
+// Return the pretty-printed string representation of this value.
 //
 // ```
 // string_repr(123) // "123"

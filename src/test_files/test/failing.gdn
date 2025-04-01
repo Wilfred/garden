@@ -6,7 +6,7 @@ test foo {
 // expected exit status: 1
 // expected stdout:
 // Failed: foo src/test_files/test/failing.gdn:2
-//   Assertion failed: `1 == 2`.
+//   Expected `2` but got `1`.
 // 
 // Ran 1 test: 0 passed and 1 failed.
 

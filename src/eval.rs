@@ -3073,16 +3073,29 @@ fn eval_assert(
     if let Some(b) = receiver_value.as_rust_bool() {
         if !b {
             let message = match subexpr_values {
-                Some((lhs_value, kind, rhs_value)) => vec![
-                    msgtext!("Assertion failed: "),
-                    msgcode!(
-                        "{} {} {}",
-                        lhs_value.display(env),
-                        kind,
-                        rhs_value.display(env),
-                    ),
-                    msgtext!("."),
-                ],
+                Some((lhs_value, BinaryOperatorKind::Equal, rhs_value)) => {
+                    // Convention: we the expected value is the RHS,
+                    // so `assert(value == expected_value)`.
+                    vec![
+                        msgtext!("Expected "),
+                        msgcode!("{}", rhs_value.display(env),),
+                        msgtext!(" but got "),
+                        msgcode!("{}", lhs_value.display(env),),
+                        msgtext!("."),
+                    ]
+                }
+                Some((lhs_value, kind, rhs_value)) => {
+                    vec![
+                        msgtext!("Assertion failed: "),
+                        msgcode!(
+                            "{} {} {}",
+                            lhs_value.display(env),
+                            kind,
+                            rhs_value.display(env),
+                        ),
+                        msgtext!("."),
+                    ]
+                }
                 None => vec![msgtext!("Assertion failed.")],
             };
 

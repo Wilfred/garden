@@ -1,0 +1,11 @@
+{
+  println("block")
+}
+
+println("toplevel expr")
+
+// args: run
+// expected stdout:
+// block
+// toplevel expr
+

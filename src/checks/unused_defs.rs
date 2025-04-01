@@ -28,18 +28,10 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
     for item in items {
         let (visibility, symbol, item_id) = match &item.2 {
             ToplevelItem_::Fun(symbol, fun_info, visibility) => {
-                let visibility = if symbol.name.name == "main" {
-                    // Treat main() as external for the sake of
-                    // checking unused definitions.
-                    Visibility::External(symbol.position.clone())
-                } else {
-                    visibility.clone()
-                };
-
                 (visibility, symbol, fun_info.item_id)
             }
             ToplevelItem_::Method(method_info, visibility) => (
-                visibility.clone(),
+                visibility,
                 &method_info.name_sym,
                 method_info.fun_info().and_then(|fun_info| fun_info.item_id),
             ),

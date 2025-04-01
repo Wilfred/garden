@@ -1,13 +1,11 @@
-fun main(): Unit {
+{
     let x: String = 123
 }
 
 // args: run
 // expected stderr:
 // Error: Expected `String`, but got `Int`: `123`
-// --> src/test_files/runtime/let_hint_invalid.gdn:2	 fun main()
+// --> src/test_files/runtime/let_hint_invalid.gdn:2	 __toplevel__
 //     let x: String = 123
 //                     ^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

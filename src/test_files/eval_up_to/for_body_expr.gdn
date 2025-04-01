@@ -7,7 +7,7 @@ fun split_words(src: String): String {
   ""
 }
 
-fun main() {
+{
   split_words("foo bar\nbaz")
 }
 

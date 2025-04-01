@@ -15,7 +15,7 @@ fun render_inline() {
     }
 }
 
-fun main() {
+{
     render_inline()
     println("done")
 }

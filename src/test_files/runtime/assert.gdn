@@ -1,14 +1,12 @@
-fun main() {
-    assert((1 + 1) == 2)
-    assert((1 + 1) == 3)
+{
+  assert((1 + 1) == 2)
+  assert((1 + 1) == 3)
 }
 
 // args: run
 // expected stderr:
 // Error: Assertion failed: `2 == 3`.
-// --> src/test_files/runtime/assert.gdn:3	 fun main()
-//     assert((1 + 1) == 3)
-//            ^^^^^^^^^^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
+// --> src/test_files/runtime/assert.gdn:3	 __toplevel__
+//   assert((1 + 1) == 3)
+//          ^^^^^^^^^^^^
 

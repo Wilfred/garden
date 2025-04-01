@@ -4,7 +4,7 @@ fun foo(aa: String): String {
     "world"
 }
 
-fun main() {
+{
     foo("hello")
 }
 

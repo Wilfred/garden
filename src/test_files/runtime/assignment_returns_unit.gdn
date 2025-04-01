@@ -1,4 +1,4 @@
-fun main(): Unit {
+{
     let i = 0
     i = 2
 }

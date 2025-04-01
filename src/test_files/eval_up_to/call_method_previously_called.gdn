@@ -7,7 +7,7 @@ fun (self: WrappedNum) increment(): Int {
     //    ^
 }
 
-fun main() {
+{
     let wn = WrappedNum{ value: 10 }
     wn.increment()
 }

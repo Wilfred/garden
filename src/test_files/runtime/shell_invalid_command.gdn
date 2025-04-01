@@ -1,4 +1,4 @@
-fun main() {
+{
     dbg(shell("no_such_command", []))
 }
 

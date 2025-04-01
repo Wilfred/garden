@@ -2,7 +2,7 @@ struct Foo {
     x: Int,
 }
 
-fun main(): Unit {
+{
     dbg(Foo{})
     Unit
 }
@@ -10,9 +10,7 @@ fun main(): Unit {
 // args: run
 // expected stderr:
 // Error: Missing fields from `Foo`: `x`.
-// --> src/test_files/runtime/struct_create_missing_fields.gdn:6	 fun main()
+// --> src/test_files/runtime/struct_create_missing_fields.gdn:6	 __toplevel__
 //     dbg(Foo{})
 //         ^^^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

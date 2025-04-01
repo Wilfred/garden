@@ -1,4 +1,4 @@
-fun main() {
+{
     let literal = [1]
 
     let changed = []

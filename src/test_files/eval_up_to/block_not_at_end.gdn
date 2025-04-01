@@ -7,8 +7,6 @@
     123
 }
 
-fun main() {}
-
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/block_not_at_end.gdn:4: 2
 

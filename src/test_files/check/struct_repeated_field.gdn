@@ -2,7 +2,7 @@ struct Foo {
     x: Int,
 }
 
-fun main(): Unit {
+external fun bar(): Unit {
     let _f = Foo{ x: 1 + 2, x: 42 }
 }
 

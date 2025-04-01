@@ -66,7 +66,7 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
-use crate::eval::{eval_call_main, load_toplevel_items, EvalError, Session};
+use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session};
 use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_, Vfs};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
@@ -92,8 +92,7 @@ enum CliCommands {
     Json,
     /// Print an example JSON request that's valid in JSON sessions.
     JsonExample,
-    /// Execute a Garden program at the path specified. Additional
-    /// arguments are passed as a list to the `main()` function.
+    /// Execute a Garden program at the path specified.
     Run {
         path: PathBuf,
         arguments: Vec<String>,
@@ -406,8 +405,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         pretty_print_json: true,
     };
 
-    load_toplevel_items(&items, &mut env);
-    if let Err(e) = eval_call_main(&mut env, &session) {
+    if let Err(e) = eval_toplevel_items(&items, &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
@@ -565,23 +563,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         pretty_print_json: false,
     };
 
-    let (diagnostics, _) = load_toplevel_items(&items, &mut env);
-    for diagnostic in diagnostics {
-        if matches!(diagnostic.level, Level::Error) {
-            eprintln!(
-                "{}",
-                &format_diagnostic(
-                    &diagnostic.message,
-                    &diagnostic.position,
-                    diagnostic.level,
-                    &env.vfs,
-                )
-            );
-            return;
-        }
-    }
-
-    match eval_call_main(&mut env, &session) {
+    match eval_toplevel_items(&items, &mut env, &session) {
         Ok(_) => {}
         Err(EvalError::ResumableError(position, msg)) => {
             eprintln!(

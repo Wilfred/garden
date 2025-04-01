@@ -5,7 +5,7 @@ fun takes_opt(v: Option<Int>): Int {
     }
 }
 
-fun main(): Unit {
+{
     dbg(takes_opt(None))
     Unit
 }

@@ -6,7 +6,7 @@ fun foo(): Box<Int> {
     Box{ value: "not an int" }
 }
 
-fun main(): Unit {
+{
     foo()
     return
 }
@@ -17,8 +17,6 @@ fun main(): Unit {
 // --> src/test_files/runtime/struct_invalid_type_param.gdn:5	 fun foo()
 // fun foo(): Box<Int> {
 //            ^^^^^^^^
-// --> src/test_files/runtime/struct_invalid_type_param.gdn:10	 fun main()
+// --> src/test_files/runtime/struct_invalid_type_param.gdn:10	 __toplevel__
 //     foo()
-// --> __main_fun__:1	 __toplevel__
-// main()
 

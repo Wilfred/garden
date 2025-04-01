@@ -1,13 +1,11 @@
-fun main() {
+{
   dbg(5 / 0)
 }
 
 // args: run
 // expected stderr:
 // Error: Tried to divide 5 by zero.
-// --> src/test_files/runtime/div_zero.gdn:2	 fun main()
+// --> src/test_files/runtime/div_zero.gdn:2	 __toplevel__
 //   dbg(5 / 0)
 //       ^^^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

@@ -2,7 +2,7 @@ fun option_identity<T>(value: Option<T>): Option<T> {
     value
 }
 
-fun main() {
+{
     dbg(option_identity(Some(1)))
 }
 

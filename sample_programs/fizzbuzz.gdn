@@ -3,7 +3,7 @@ fun mod(x: Int, y: Int): Int {
   x - ((x / y) * y)
 }
 
-fun main(): Unit {
+{
   let i = 1
   while i < 21 {
     if mod(i, 15) == 0 {

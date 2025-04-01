@@ -7,7 +7,7 @@ fun foo(i: Int) {
     bar(i + 1)
 }
 
-fun main() {
+{
     foo(10)
     foo(20)
 }

@@ -6,6 +6,11 @@
 # 0.19 (unreleased)
 **Goal: Website has snippets that are checked and linkified.**
 
+## Running Code
+
+Garden no longer executes a function called `main`. Instead, any
+toplevel blocks in the current file are evaluated in order.
+
 ## Syntax
 
 Added `^` to concatenate strings.

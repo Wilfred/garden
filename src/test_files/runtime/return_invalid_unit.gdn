@@ -1,8 +1,7 @@
 fun foo(): Int {}
 
-fun main(): Unit {
+{
     foo()
-    return
 }
 
 // args: run
@@ -11,8 +10,6 @@ fun main(): Unit {
 // --> src/test_files/runtime/return_invalid_unit.gdn:1	 fun foo()
 // fun foo(): Int {}
 //            ^^^
-// --> src/test_files/runtime/return_invalid_unit.gdn:4	 fun main()
+// --> src/test_files/runtime/return_invalid_unit.gdn:4	 __toplevel__
 //     foo()
-// --> __main_fun__:1	 __toplevel__
-// main()
 

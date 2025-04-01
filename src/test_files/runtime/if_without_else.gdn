@@ -5,9 +5,8 @@ fun foo(b: Bool): Int {
     }
 }
 
-fun main(): Unit {
+{
     foo(True)
-    Unit
 }
 
 // args: run
@@ -16,8 +15,6 @@ fun main(): Unit {
 // --> src/test_files/runtime/if_without_else.gdn:1	 fun foo()
 // fun foo(b: Bool): Int {
 //                   ^^^
-// --> src/test_files/runtime/if_without_else.gdn:9	 fun main()
+// --> src/test_files/runtime/if_without_else.gdn:9	 __toplevel__
 //     foo(True)
-// --> __main_fun__:1	 __toplevel__
-// main()
 

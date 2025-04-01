@@ -49,9 +49,6 @@ fun (this: String) unused_meth(): Unit {}
 
 fun (this: String) used_meth(): Unit {}
 
-// We should always allow a function called main.
-fun main() {}
-
 // args: check
 // expected exit status: 1
 // expected stdout:

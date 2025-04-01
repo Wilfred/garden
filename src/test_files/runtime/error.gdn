@@ -6,7 +6,7 @@ fun caller() {
     callee()
 }
 
-fun main() {
+{
     caller()
 }
 
@@ -19,8 +19,6 @@ fun main() {
 //     ^^^^^^^^^^^^^^^^^^^^^^^
 // --> src/test_files/runtime/error.gdn:6	 fun caller()
 //     callee()
-// --> src/test_files/runtime/error.gdn:10	 fun main()
+// --> src/test_files/runtime/error.gdn:10	 __toplevel__
 //     caller()
-// --> __main_fun__:1	 __toplevel__
-// main()
 

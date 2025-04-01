@@ -9,7 +9,7 @@ fun check_out(branch_name: String): Unit {
   print(shell("git", ["checkout", branch_name]).or_error())
 }
 
-fun main(): Unit {
+{
   let args = shell_arguments()
   if args.len() != 1 {
     println("Usage: git_fuzzy_branch <name substring>")

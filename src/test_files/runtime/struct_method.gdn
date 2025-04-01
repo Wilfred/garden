@@ -6,10 +6,9 @@ fun (self: Foo) get_x(): Int {
     self.x
 }
 
-fun main(): Unit {
+{
     let f = Foo{ x: 123 }
     dbg(f.get_x())
-    Unit
 }
 
 // args: run

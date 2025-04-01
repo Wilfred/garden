@@ -150,10 +150,6 @@ fun write_website_page(base_tmpl_src: String, page_src: String, dest_path: Path)
   build_site()
 }
 
-fun main() {
-  build_site()
-}
-
 fun source_dir_path(): Path {
   source_directory().or_exception()
 }

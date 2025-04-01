@@ -1,4 +1,4 @@
-fun main() {
+{
   match Some((1, 2)) {
     Some((x, y)) => {
       // Valid, should print 3.
@@ -21,9 +21,7 @@ fun main() {
 
 // expected stderr:
 // Error: Expected a tuple of 2 items, but got a `String`.
-// --> src/test_files/runtime/match_destructure.gdn:12	 fun main()
+// --> src/test_files/runtime/match_destructure.gdn:12	 __toplevel__
 //     Some((_, _)) => {
 //     ^^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

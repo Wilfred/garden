@@ -1,8 +1,7 @@
-fun main(): Unit {
-    let i = 1
-    i += 10
-    dbg(i)
-    return
+{
+  let i = 1
+  i += 10
+  dbg(i)
 }
 
 // args: run

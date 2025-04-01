@@ -1,4 +1,4 @@
-fun main() {
+{
   // We should evaluate the LHS first, so that should be the resulting
   // error.
   error("lhs") + error("rhs")
@@ -7,9 +7,7 @@ fun main() {
 // args: run
 // expected stderr:
 // Error: lhs
-// --> src/test_files/runtime/binop_eval_order.gdn:4	 fun main()
+// --> src/test_files/runtime/binop_eval_order.gdn:4	 __toplevel__
 //   error("lhs") + error("rhs")
 //   ^^^^^^^^^^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

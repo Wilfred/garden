@@ -1,4 +1,4 @@
-fun main(): Unit {
+{
     let x = Some(1)
     x.y
 }
@@ -6,9 +6,7 @@ fun main(): Unit {
 // args: run
 // expected stderr:
 // Error: Expected `struct`, but got `Option<Int>`: `Some(1)`
-// --> src/test_files/runtime/dot_access_enum.gdn:3	 fun main()
+// --> src/test_files/runtime/dot_access_enum.gdn:3	 __toplevel__
 //     x.y
 //     ^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

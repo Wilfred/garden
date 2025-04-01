@@ -6,7 +6,7 @@ fun get_x(foo: Foo): Int {
     foo.x
 }
 
-fun main(): Unit {
+{
     dbg(get_x(Foo{ x: 1 + 2 }))
     Unit
 }

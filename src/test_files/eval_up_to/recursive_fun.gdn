@@ -9,7 +9,7 @@ fun fib(i: Int): Int {
     }
 }
 
-fun main() {
+{
     fib(10)
 }
 

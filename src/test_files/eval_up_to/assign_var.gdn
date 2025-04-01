@@ -4,8 +4,6 @@ fun foo() {
 //^
 }
 
-fun main() {}
-
 // args: test-eval-up-to
 // expected stdout: src/test_files/eval_up_to/assign_var.gdn:3: 2
 

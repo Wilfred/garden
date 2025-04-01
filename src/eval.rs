@@ -604,25 +604,6 @@ pub(crate) fn eval_tests(
     }
 }
 
-/// Evaluate a call to the user's main() function.
-pub(crate) fn eval_call_main(
-    env: &mut Env,
-    session: &Session,
-) -> Result<ToplevelEvalSummary, EvalError> {
-    let call_src = "main()";
-    let (call_expr_items, parse_errors) = parse_toplevel_items(
-        &PathBuf::from("__main_fun__"),
-        call_src,
-        &mut env.vfs,
-        &mut env.id_gen,
-    );
-    assert!(
-        parse_errors.is_empty(),
-        "Internally constructed main() invocation should always be valid syntax."
-    );
-    eval_toplevel_items(&call_expr_items, env, session)
-}
-
 pub(crate) fn eval_up_to_param(
     env: &Env,
     items: &[ToplevelItem],

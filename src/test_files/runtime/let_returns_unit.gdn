@@ -3,7 +3,7 @@ fun foo(): Unit {
     let _ = 1
 }
 
-fun main(): Unit {
+{
     foo()
 }
 

@@ -2,7 +2,7 @@ struct Foo {
     x: Int,
 }
 
-fun main(): Unit {
+{
     dbg(Foo{ x: "abc" })
     Unit
 }
@@ -10,9 +10,7 @@ fun main(): Unit {
 // args: run
 // expected stderr:
 // Error: Incorrect type for field: Expected `Int`, but got `String`: `"abc"`
-// --> src/test_files/runtime/struct_create_invalid_types.gdn:6	 fun main()
+// --> src/test_files/runtime/struct_create_invalid_types.gdn:6	 __toplevel__
 //     dbg(Foo{ x: "abc" })
 //                 ^^^^^
-// --> __main_fun__:1	 __toplevel__
-// main()
 

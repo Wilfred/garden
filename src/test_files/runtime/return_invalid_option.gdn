@@ -2,7 +2,7 @@ fun foo(): Option<Int> {
     Some("") // should error
 }
 
-fun main(): Unit {
+{
     foo()
     return
 }
@@ -13,8 +13,6 @@ fun main(): Unit {
 // --> src/test_files/runtime/return_invalid_option.gdn:1	 fun foo()
 // fun foo(): Option<Int> {
 //            ^^^^^^^^^^^
-// --> src/test_files/runtime/return_invalid_option.gdn:6	 fun main()
+// --> src/test_files/runtime/return_invalid_option.gdn:6	 __toplevel__
 //     foo()
-// --> __main_fun__:1	 __toplevel__
-// main()
 

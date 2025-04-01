@@ -215,16 +215,14 @@ fun render_inline_no_links(src: String): String {
 
   let s = src
   while True {
-    match s.index_of("`") {
-      Some(i) => {
-        parts = parts.append(s.substring(0, i))
+    match s.split_once("`") {
+      Some((before_backtick, after_backtick)) => {
+        parts = parts.append(before_backtick)
 
-        s = s.substring(i, s.len())
-        match s.substring(1, s.len()).index_of("`") {
-          Some(j) => {
-            let between = s.substring(1, j + 1)
-            parts = parts.append("".join(["<code>", between, "</code>"]))
-            s = s.substring(j + 2, s.len())
+        match after_backtick.split_once("`") {
+          Some((between_backticks, after_closing_backtick)) => {
+            parts = parts.append("".join(["<code>", between_backticks, "</code>"]))
+            s = after_closing_backtick
           }
           None => {
             parts = parts.append(s)

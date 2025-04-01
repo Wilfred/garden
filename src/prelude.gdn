@@ -88,7 +88,7 @@ test or_error {
   assert(Ok("foo").or_error() == "foo")
 }
 
-// The absense of a value. This is an enum with no variants, so it is
+// The absence of a value. This is an enum with no variants, so it is
 // impossible to create a value of type `NoValue`.
 //
 // This is useful when you have a function that never returns, such as

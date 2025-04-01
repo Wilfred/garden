@@ -64,7 +64,7 @@ fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
   write_website_page(base_tmpl_string, page_src, dest_path)
 }
 
-// Buld the entire garden website.
+// Build the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().parent().join("website")
   let out_dir = website_dir

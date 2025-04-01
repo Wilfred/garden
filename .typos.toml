@@ -1,0 +1,3 @@
+[default.extend-words]
+# Used in a doc comment example.
+fo = "fo"

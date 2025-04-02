@@ -1125,13 +1125,13 @@ fn parse_definition(
             return Some(parse_test(src, tokens, id_gen, diagnostics));
         }
         if token.text == "enum" || token.text == "external" && next_token.text == "enum" {
-            return Some(parse_enum(src, tokens, id_gen, diagnostics));
+            return Some(parse_enum(tokens, id_gen, diagnostics));
         }
         if token.text == "struct" || token.text == "external" && next_token.text == "struct" {
-            return Some(parse_struct(src, tokens, id_gen, diagnostics));
+            return Some(parse_struct(tokens, id_gen, diagnostics));
         }
         if token.text == "import" {
-            return parse_import(src, tokens, id_gen, diagnostics);
+            return parse_import(tokens, id_gen, diagnostics);
         }
 
         // TODO: Include the token in the error message.
@@ -1216,7 +1216,6 @@ fn parse_variant(
 }
 
 fn parse_enum(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1248,21 +1247,9 @@ fn parse_enum(
         (variants, close_brace.position)
     };
 
-    let mut start_offset = enum_token.position.start_offset;
-    if let Some((comment_pos, _)) = enum_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = close_brace_pos.end_offset;
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
     let position = Position::merge(&enum_token.position, &close_brace_pos);
 
     ToplevelItem(
-        src_string,
         position.clone(),
         ToplevelItem_::Enum(EnumInfo {
             pos: position,
@@ -1276,7 +1263,6 @@ fn parse_enum(
 }
 
 fn parse_struct(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1309,21 +1295,9 @@ fn parse_struct(
         (fields, close_brace.position)
     };
 
-    let mut start_offset = struct_token.position.start_offset;
-    if let Some((comment_pos, _)) = struct_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = close_brace_pos.end_offset;
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
     let position = Position::merge(&struct_token.position, &close_brace_pos);
 
     ToplevelItem(
-        src_string,
         position.clone(),
         ToplevelItem_::Struct(StructInfo {
             pos: position,
@@ -1366,22 +1340,9 @@ fn parse_test(
     }
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
-
-    let mut start_offset = test_token.position.start_offset;
-    if let Some((comment_pos, _)) = test_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = body.close_brace.end_offset;
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
     let position = Position::merge(&test_token.position, &body.close_brace);
 
     ToplevelItem(
-        src_string,
         position.clone(),
         ToplevelItem_::Test(TestInfo {
             pos: position,
@@ -1393,7 +1354,6 @@ fn parse_test(
 }
 
 fn parse_import(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1410,11 +1370,6 @@ fn parse_import(
     };
 
     let position = Position::merge(&import_token.position, &path_token.position);
-
-    let src_string = SourceString {
-        offset: position.start_offset,
-        src: src[position.start_offset..position.end_offset].to_owned(),
-    };
 
     let path_s = if path_token.text.starts_with('\"') {
         unescape_string(path_token.text)
@@ -1436,11 +1391,7 @@ fn parse_import(
         id: id_gen.next(),
     };
 
-    Some(ToplevelItem(
-        src_string,
-        position,
-        ToplevelItem_::Import(import_info),
-    ))
+    Some(ToplevelItem(position, ToplevelItem_::Import(import_info)))
 }
 
 fn parse_type_symbol(
@@ -2030,18 +1981,7 @@ fn parse_method(
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
-
-    let mut start_offset = first_token.position.start_offset;
-    if let Some((comment_pos, _)) = first_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = body.close_brace.end_offset;
     let close_brace_pos = body.close_brace.clone();
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
 
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
@@ -2062,11 +2002,7 @@ fn parse_method(
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
-    ToplevelItem(
-        src_string,
-        position,
-        ToplevelItem_::Method(meth_info, visibility),
-    )
+    ToplevelItem(position, ToplevelItem_::Method(meth_info, visibility))
 }
 
 fn parse_function(
@@ -2092,23 +2028,10 @@ fn parse_function(
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
-
-    let mut start_offset = first_token.position.start_offset;
-    if let Some((comment_pos, _)) = first_token.preceding_comments.first() {
-        start_offset = comment_pos.start_offset;
-    }
-    let end_offset = body.close_brace.end_offset;
     let close_brace_pos = body.close_brace.clone();
-
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
     Some(ToplevelItem(
-        src_string,
         position.clone(),
         ToplevelItem_::Fun(
             name_sym.clone(),
@@ -2360,19 +2283,9 @@ fn parse_toplevel_expr(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let expr = parse_expression(src, tokens, id_gen, diagnostics);
-
     let position = expr.position.clone();
 
-    let src_string = SourceString {
-        offset: position.start_offset,
-        src: src[position.start_offset..position.end_offset].to_owned(),
-    };
-
-    ToplevelItem(
-        src_string,
-        position,
-        ToplevelItem_::Expr(ToplevelExpression(expr)),
-    )
+    ToplevelItem(position, ToplevelItem_::Expr(ToplevelExpression(expr)))
 }
 
 fn parse_toplevel_block(
@@ -2382,14 +2295,9 @@ fn parse_toplevel_block(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let block = parse_block(src, tokens, id_gen, diagnostics, false);
-
     let position = Position::merge(&block.open_brace, &block.close_brace);
-    let src_string = SourceString {
-        offset: position.start_offset,
-        src: src[position.start_offset..position.end_offset].to_owned(),
-    };
 
-    ToplevelItem(src_string, position, ToplevelItem_::Block(block))
+    ToplevelItem(position, ToplevelItem_::Block(block))
 }
 
 fn parse_toplevel_items_from_tokens(
@@ -2404,7 +2312,7 @@ fn parse_toplevel_items_from_tokens(
         let start_idx = tokens.idx;
         match parse_toplevel_item_from_tokens(src, tokens, id_gen, diagnostics) {
             Some(item) => {
-                let was_invalid = item.2.is_invalid_or_placeholder();
+                let was_invalid = item.1.is_invalid_or_placeholder();
 
                 items.push(item);
                 if was_invalid {

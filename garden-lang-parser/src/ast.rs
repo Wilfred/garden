@@ -801,7 +801,7 @@ pub enum ToplevelItem_ {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToplevelItem(pub SourceString, pub Position, pub ToplevelItem_);
+pub struct ToplevelItem(pub Position, pub ToplevelItem_);
 
 impl ToplevelItem_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {

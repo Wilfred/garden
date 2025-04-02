@@ -113,7 +113,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let mut exprs = vec![];
                 for item in items {
                     match item {
-                        ToplevelItem(_, _, ToplevelItem_::Expr(e)) => {
+                        ToplevelItem(_, ToplevelItem_::Expr(e)) => {
                             exprs.push(e.clone());
                         }
                         _ => {}

@@ -648,7 +648,6 @@ pub struct ParenthesizedParameters {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestInfo {
     pub pos: Position,
-    pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name_sym: Symbol,
     pub body: Block,

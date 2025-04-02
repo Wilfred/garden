@@ -1391,11 +1391,10 @@ fn parse_test(
     let position = Position::merge(&test_token.position, &body.close_brace);
 
     ToplevelItem(
-        src_string.clone(),
+        src_string,
         position.clone(),
         ToplevelItem_::Test(TestInfo {
             pos: position,
-            src_string,
             doc_comment,
             name_sym: name,
             body,

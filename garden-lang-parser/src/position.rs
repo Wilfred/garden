@@ -6,9 +6,11 @@ use serde::{Deserialize, Serialize};
 /// `start_offset` and `end_offset` in `path`.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct Position {
-    /// The start of this position, relative to the start of the file.
+    /// The start of this position, relative to the start of the
+    /// file. Measured in bytes.
     pub start_offset: usize,
-    /// The end of this position, relative to the start of the file.
+    /// The end of this position, relative to the start of the
+    /// file. Measured in bytes.
     pub end_offset: usize,
     // TODO: Use LineNumber instead, finding a way to serialize it.
     pub line_number: usize,

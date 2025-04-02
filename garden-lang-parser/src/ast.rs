@@ -679,7 +679,6 @@ pub struct FieldInfo {
 pub struct EnumInfo {
     pub pos: Position,
     pub visibility: Visibility,
-    pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name_sym: TypeSymbol,
     pub type_params: Vec<TypeSymbol>,

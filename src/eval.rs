@@ -2716,7 +2716,9 @@ fn eval_builtin_call(
                             Some(struct_info.src_string.src.clone())
                         }
                         TypeDef::Builtin(_, None) => None,
-                        TypeDef::Enum(enum_info) => Some(enum_info.src_string.src.clone()),
+                        TypeDef::Enum(enum_info) => {
+                            env.vfs.pos_src(&enum_info.pos).map(|s| s.to_owned())
+                        }
                         TypeDef::Struct(struct_info) => Some(struct_info.src_string.src.clone()),
                     };
 

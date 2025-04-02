@@ -12,7 +12,6 @@ external enum Bar {}
 //     EnumInfo {
 //         pos: Position { ... },
 //         visibility: CurrentFile,
-//         src_string: SourceString,
 //         doc_comment: Some(
 //             "Hello\nWorld",
 //         ),
@@ -27,7 +26,6 @@ external enum Bar {}
 //         visibility: External(
 //             Position { ... },
 //         ),
-//         src_string: SourceString,
 //         doc_comment: Some(
 //             "Hello\nWorld",
 //         ),

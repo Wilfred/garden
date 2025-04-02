@@ -1270,12 +1270,11 @@ fn parse_enum(
     let position = Position::merge(&enum_token.position, &close_brace_pos);
 
     ToplevelItem(
-        src_string.clone(),
+        src_string,
         position.clone(),
         ToplevelItem_::Enum(EnumInfo {
             pos: position,
             visibility,
-            src_string,
             doc_comment,
             name_sym: name_symbol,
             type_params,

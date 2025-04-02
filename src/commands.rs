@@ -14,9 +14,7 @@ use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
-use garden_lang_parser::ast::{
-    self, IdGenerator, MethodKind, SourceString, SymbolName, TypeHint, TypeName, Vfs,
-};
+use garden_lang_parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName, Vfs};
 use garden_lang_parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 
 #[derive(Debug, EnumIter)]
@@ -477,7 +475,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Source(name) => if let Some(name) = name {
             match find_item_source(name, env) {
-                Ok(Some(src_string)) => write!(buf, "{}", src_string.src),
+                Ok(Some(src_string)) => write!(buf, "{}", src_string),
                 Ok(None) => {
                     write!(buf, "Source not available for {name}.")
                 }
@@ -698,7 +696,7 @@ pub(crate) fn run_command<T: Write>(
     Ok(())
 }
 
-fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, String> {
+fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName {
             name: type_name.to_owned(),
@@ -708,7 +706,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
             }) {
                 Ok(method_info
                     .fun_info()
-                    .map(|fun_info| fun_info.src_string.clone()))
+                    .map(|fun_info| fun_info.src_string.src.clone()))
             } else {
                 Err(format!("No method named `{method_name}` on `{type_name}`."))
             }
@@ -720,16 +718,16 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<SourceString>, Strin
         name: name.to_owned(),
     }) {
         match type_ {
-            TypeDef::Builtin(_, Some(struct_info)) => Ok(Some(struct_info.src_string.clone())),
+            TypeDef::Builtin(_, Some(struct_info)) => Ok(Some(struct_info.src_string.src.clone())),
             TypeDef::Builtin(_, None) => Ok(None),
-            TypeDef::Enum(enum_info) => Ok(Some(enum_info.src_string.clone())),
-            TypeDef::Struct(struct_info) => Ok(Some(struct_info.src_string.clone())),
+            TypeDef::Enum(enum_info) => Ok(env.vfs.pos_src(&enum_info.pos).map(|s| s.to_owned())),
+            TypeDef::Struct(struct_info) => Ok(Some(struct_info.src_string.src.clone())),
         }
     } else if let Some(value) = env.file_scope.get(&SymbolName {
         name: name.to_owned(),
     }) {
         match value.as_ref() {
-            Value_::Fun { fun_info, .. } => Ok(Some(fun_info.src_string.clone())),
+            Value_::Fun { fun_info, .. } => Ok(Some(fun_info.src_string.src.clone())),
             // TODO: Offer source of stub for built-in functions.
             _ => Ok(None),
         }

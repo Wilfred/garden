@@ -10,30 +10,6 @@ use std::{
 
 use crate::position::Position;
 
-/// An owned string of the source text associated with a definition.
-#[derive(Clone, PartialEq, Eq)]
-pub struct SourceString {
-    /// The offset of this string into the defining file, at the time
-    /// of evaluation.
-    pub offset: usize,
-    /// The string containing this definition. This is a substring of
-    /// the defining file.
-    pub src: String,
-}
-
-impl std::fmt::Debug for SourceString {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if std::env::var("VERBOSE").is_ok() {
-            f.debug_struct("SourceString")
-                .field("offset", &self.offset)
-                .field("src", &self.src)
-                .finish()
-        } else {
-            f.write_str("SourceString")
-        }
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct TypeName {
     pub name: String,

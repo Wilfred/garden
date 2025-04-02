@@ -10,6 +10,7 @@ external enum Bar {}
 // expected stdout:
 // Enum(
 //     EnumInfo {
+//         pos: Position { ... },
 //         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: Some(
@@ -22,6 +23,7 @@ external enum Bar {}
 // )
 // Enum(
 //     EnumInfo {
+//         pos: Position { ... },
 //         visibility: External(
 //             Position { ... },
 //         ),

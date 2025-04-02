@@ -625,6 +625,7 @@ pub struct ToplevelExpression(pub Expression);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunInfo {
+    pub pos: Position,
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     /// The name of the function. This is `None` for closures.
@@ -646,6 +647,7 @@ pub struct ParenthesizedParameters {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestInfo {
+    pub pos: Position,
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name_sym: Symbol,
@@ -669,6 +671,7 @@ pub struct FieldInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumInfo {
+    pub pos: Position,
     pub visibility: Visibility,
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
@@ -679,6 +682,7 @@ pub struct EnumInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructInfo {
+    pub pos: Position,
     pub visibility: Visibility,
     pub src_string: SourceString,
     pub doc_comment: Option<String>,
@@ -694,6 +698,7 @@ pub struct StructInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImportInfo {
+    pub pos: Position,
     pub path_pos: Position,
     pub path: PathBuf,
     pub id: SyntaxId,

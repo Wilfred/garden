@@ -317,9 +317,12 @@ fn parse_lambda(
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let pos = Position::merge(&fun_keyword.position, &body.close_brace);
+
     Expression::new(
-        Position::merge(&fun_keyword.position, &body.close_brace),
+        pos.clone(),
         Expression_::FunLiteral(FunInfo {
+            pos,
             src_string,
             params,
             body,
@@ -1268,8 +1271,9 @@ fn parse_enum(
 
     ToplevelItem(
         src_string.clone(),
-        position,
+        position.clone(),
         ToplevelItem_::Enum(EnumInfo {
+            pos: position,
             visibility,
             src_string,
             doc_comment,
@@ -1329,8 +1333,9 @@ fn parse_struct(
 
     ToplevelItem(
         src_string.clone(),
-        position,
+        position.clone(),
         ToplevelItem_::Struct(StructInfo {
+            pos: position,
             visibility,
             src_string,
             doc_comment,
@@ -1387,8 +1392,9 @@ fn parse_test(
 
     ToplevelItem(
         src_string.clone(),
-        position,
+        position.clone(),
         ToplevelItem_::Test(TestInfo {
+            pos: position,
             src_string,
             doc_comment,
             name_sym: name,
@@ -1435,6 +1441,7 @@ fn parse_import(
     };
 
     let import_info = ImportInfo {
+        pos: position.clone(),
         path: path_s.into(),
         path_pos: path_token.position.clone(),
         id: id_gen.next(),
@@ -2047,7 +2054,10 @@ fn parse_method(
         src: src[start_offset..end_offset].to_owned(),
     };
 
+    let position = Position::merge(&first_token.position, &close_brace_pos);
+
     let fun_info = FunInfo {
+        pos: position.clone(),
         src_string: src_string.clone(),
         doc_comment,
         name_sym: Some(name_sym.clone()),
@@ -2063,8 +2073,6 @@ fn parse_method(
         name_sym,
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
-
-    let position = Position::merge(&first_token.position, &close_brace_pos);
 
     ToplevelItem(
         src_string.clone(),
@@ -2113,10 +2121,11 @@ fn parse_function(
 
     Some(ToplevelItem(
         src_string.clone(),
-        position,
+        position.clone(),
         ToplevelItem_::Fun(
             name_sym.clone(),
             FunInfo {
+                pos: position.clone(),
                 src_string,
                 doc_comment,
                 name_sym: Some(name_sym),

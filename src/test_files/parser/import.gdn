@@ -4,6 +4,7 @@ import "./foo.gdn"
 // expected stdout:
 // Import(
 //     ImportInfo {
+//         pos: Position { ... },
 //         path_pos: Position { ... },
 //         path: "./foo.gdn",
 //         id: SyntaxId(0),

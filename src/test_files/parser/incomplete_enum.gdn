@@ -6,6 +6,7 @@ fun bar() {}
 // expected stdout:
 // Enum(
 //     EnumInfo {
+//         pos: Position { ... },
 //         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: None,
@@ -17,6 +18,7 @@ fun bar() {}
 // Fun(
 //     Symbol"bar",
 //     FunInfo {
+//         pos: Position { ... },
 //         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: Some(

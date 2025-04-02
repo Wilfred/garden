@@ -8,6 +8,7 @@ struct Foo<T> {
 // expected stdout:
 // Struct(
 //     StructInfo {
+//         pos: Position { ... },
 //         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: None,

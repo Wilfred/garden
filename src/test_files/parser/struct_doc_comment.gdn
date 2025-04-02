@@ -10,6 +10,7 @@ external struct Bar {}
 // expected stdout:
 // Struct(
 //     StructInfo {
+//         pos: Position { ... },
 //         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: Some(
@@ -22,6 +23,7 @@ external struct Bar {}
 // )
 // Struct(
 //     StructInfo {
+//         pos: Position { ... },
 //         visibility: External(
 //             Position { ... },
 //         ),

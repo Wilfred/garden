@@ -4,6 +4,7 @@ struct { x: Int }
 // expected stdout:
 // Struct(
 //     StructInfo {
+//         pos: Position { ... },
 //         visibility: CurrentFile,
 //         src_string: SourceString,
 //         doc_comment: None,

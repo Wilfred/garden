@@ -633,7 +633,6 @@ pub struct ToplevelExpression(pub Expression);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunInfo {
     pub pos: Position,
-    pub src_string: SourceString,
     pub doc_comment: Option<String>,
     /// The name of the function. This is `None` for closures.
     pub name_sym: Option<Symbol>,

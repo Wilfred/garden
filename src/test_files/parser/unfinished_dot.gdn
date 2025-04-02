@@ -8,7 +8,6 @@ fun foo(s: String) {
 //     Symbol"foo",
 //     FunInfo {
 //         pos: Position { ... },
-//         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: Some(
 //             Symbol"foo",

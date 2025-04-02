@@ -12,7 +12,6 @@ external fun bar() {}
 //     Symbol"foo",
 //     FunInfo {
 //         pos: Position { ... },
-//         src_string: SourceString,
 //         doc_comment: Some(
 //             "Hello\nWorld",
 //         ),
@@ -43,7 +42,6 @@ external fun bar() {}
 //     Symbol"bar",
 //     FunInfo {
 //         pos: Position { ... },
-//         src_string: SourceString,
 //         doc_comment: Some(
 //             "Hello\nWorld",
 //         ),

@@ -310,20 +310,12 @@ fn parse_lambda(
 
     let body = parse_block(src, tokens, id_gen, diagnostics, false);
 
-    let start_offset = fun_keyword.position.start_offset;
-    let end_offset = body.close_brace.end_offset;
-    let src_string = SourceString {
-        offset: start_offset,
-        src: src[start_offset..end_offset].to_owned(),
-    };
-
     let pos = Position::merge(&fun_keyword.position, &body.close_brace);
 
     Expression::new(
         pos.clone(),
         Expression_::FunLiteral(FunInfo {
             pos,
-            src_string,
             params,
             body,
             doc_comment: None,
@@ -2055,7 +2047,6 @@ fn parse_method(
 
     let fun_info = FunInfo {
         pos: position.clone(),
-        src_string: src_string.clone(),
         doc_comment,
         name_sym: Some(name_sym.clone()),
         item_id: Some(ToplevelItemId(id_gen.next().0)),
@@ -2072,7 +2063,7 @@ fn parse_method(
     };
 
     ToplevelItem(
-        src_string.clone(),
+        src_string,
         position,
         ToplevelItem_::Method(meth_info, visibility),
     )
@@ -2117,13 +2108,12 @@ fn parse_function(
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
     Some(ToplevelItem(
-        src_string.clone(),
+        src_string,
         position.clone(),
         ToplevelItem_::Fun(
             name_sym.clone(),
             FunInfo {
                 pos: position.clone(),
-                src_string,
                 doc_comment,
                 name_sym: Some(name_sym),
                 item_id: Some(ToplevelItemId(id_gen.next().0)),

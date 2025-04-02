@@ -706,7 +706,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
             }) {
                 Ok(method_info
                     .fun_info()
-                    .map(|fun_info| fun_info.src_string.src.clone()))
+                    .and_then(|fun_info| env.vfs.pos_src(&fun_info.pos).map(|s| s.to_owned())))
             } else {
                 Err(format!("No method named `{method_name}` on `{type_name}`."))
             }
@@ -731,7 +731,9 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
         name: name.to_owned(),
     }) {
         match value.as_ref() {
-            Value_::Fun { fun_info, .. } => Ok(Some(fun_info.src_string.src.clone())),
+            Value_::Fun { fun_info, .. } => {
+                Ok(env.vfs.pos_src(&fun_info.pos).map(|s| s.to_owned()))
+            }
             // TODO: Offer source of stub for built-in functions.
             _ => Ok(None),
         }

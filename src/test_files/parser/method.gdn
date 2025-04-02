@@ -20,7 +20,6 @@ external fun (self: List<T>) foo<T>() {}
 //         kind: UserDefinedMethod(
 //             FunInfo {
 //                 pos: Position { ... },
-//                 src_string: SourceString,
 //                 doc_comment: None,
 //                 name_sym: Some(
 //                     Symbol"foo",

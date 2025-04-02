@@ -8,7 +8,6 @@ struct
 //     Symbol"bar",
 //     FunInfo {
 //         pos: Position { ... },
-//         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: Some(
 //             Symbol"bar",

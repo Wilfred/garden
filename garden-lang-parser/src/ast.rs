@@ -689,7 +689,6 @@ pub struct EnumInfo {
 pub struct StructInfo {
     pub pos: Position,
     pub visibility: Visibility,
-    pub src_string: SourceString,
     pub doc_comment: Option<String>,
     pub name_sym: TypeSymbol,
     pub type_params: Vec<TypeSymbol>,

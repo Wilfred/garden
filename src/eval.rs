@@ -2713,13 +2713,15 @@ fn eval_builtin_call(
                 Some(ty) => {
                     let src: Option<String> = match ty {
                         TypeDef::Builtin(_, Some(struct_info)) => {
-                            Some(struct_info.src_string.src.clone())
+                            env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned())
                         }
                         TypeDef::Builtin(_, None) => None,
                         TypeDef::Enum(enum_info) => {
                             env.vfs.pos_src(&enum_info.pos).map(|s| s.to_owned())
                         }
-                        TypeDef::Struct(struct_info) => Some(struct_info.src_string.src.clone()),
+                        TypeDef::Struct(struct_info) => {
+                            env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned())
+                        }
                     };
 
                     match src {

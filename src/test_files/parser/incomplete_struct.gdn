@@ -8,7 +8,6 @@ fun bar() {}
 //     StructInfo {
 //         pos: Position { ... },
 //         visibility: CurrentFile,
-//         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: TypeSymbol"Foo",
 //         type_params: [],

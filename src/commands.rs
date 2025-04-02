@@ -718,10 +718,14 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
         name: name.to_owned(),
     }) {
         match type_ {
-            TypeDef::Builtin(_, Some(struct_info)) => Ok(Some(struct_info.src_string.src.clone())),
+            TypeDef::Builtin(_, Some(struct_info)) => {
+                Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))
+            }
             TypeDef::Builtin(_, None) => Ok(None),
             TypeDef::Enum(enum_info) => Ok(env.vfs.pos_src(&enum_info.pos).map(|s| s.to_owned())),
-            TypeDef::Struct(struct_info) => Ok(Some(struct_info.src_string.src.clone())),
+            TypeDef::Struct(struct_info) => {
+                Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))
+            }
         }
     } else if let Some(value) = env.file_scope.get(&SymbolName {
         name: name.to_owned(),

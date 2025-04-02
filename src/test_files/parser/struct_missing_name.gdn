@@ -6,7 +6,6 @@ struct { x: Int }
 //     StructInfo {
 //         pos: Position { ... },
 //         visibility: CurrentFile,
-//         src_string: SourceString,
 //         doc_comment: None,
 //         name_sym: TypeSymbol"__placeholder",
 //         type_params: [],

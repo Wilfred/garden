@@ -1331,12 +1331,11 @@ fn parse_struct(
     let position = Position::merge(&struct_token.position, &close_brace_pos);
 
     ToplevelItem(
-        src_string.clone(),
+        src_string,
         position.clone(),
         ToplevelItem_::Struct(StructInfo {
             pos: position,
             visibility,
-            src_string,
             doc_comment,
             name_sym,
             type_params,

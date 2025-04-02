@@ -562,16 +562,23 @@ impl IdGenerator {
 pub struct Vfs {
     // TODO: support a single path having different strings, because
     // users can re-evaluate individual functions after modification.
-    srcs: FxHashMap<PathBuf, String>,
+    file_srcs: FxHashMap<PathBuf, String>,
 }
 
 impl Vfs {
     pub fn insert(&mut self, path: PathBuf, src: String) {
-        self.srcs.insert(path, src);
+        self.file_srcs.insert(path, src);
     }
 
-    pub fn src(&self, path: &Path) -> Option<&String> {
-        self.srcs.get(path)
+    pub fn file_src(&self, path: &Path) -> Option<&String> {
+        self.file_srcs.get(path)
+    }
+
+    pub fn pos_src(&self, pos: &Position) -> Option<&str> {
+        match self.file_srcs.get(pos.path.as_path()) {
+            Some(file) => Some(&file[pos.start_offset..pos.end_offset]),
+            None => None,
+        }
     }
 }
 

@@ -200,7 +200,6 @@ fn parse_variable(
 /// Parse a tuple literal `(1, 2)` or a parenthesised expression `(1 +
 /// 2)`.
 fn parse_tuple_literal_or_parentheses(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -217,7 +216,7 @@ fn parse_tuple_literal_or_parentheses(
         );
     }
 
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
     let expr_pos = expr.position.clone();
 
     if peeked_symbol_is(tokens, ",") {
@@ -248,7 +247,7 @@ fn parse_tuple_literal_or_parentheses(
             }
 
             let start_idx = tokens.idx;
-            exprs.push(parse_expression(src, tokens, id_gen, diagnostics));
+            exprs.push(parse_expression(tokens, id_gen, diagnostics));
             assert!(
                 tokens.idx > start_idx,
                 "The parser should always make forward progress."
@@ -280,13 +279,12 @@ fn parse_tuple_literal_or_parentheses(
 }
 
 fn parse_list_literal(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
-    let items = parse_comma_separated_exprs(src, tokens, id_gen, diagnostics, "]");
+    let items = parse_comma_separated_exprs(tokens, id_gen, diagnostics, "]");
     let close_bracket = require_token(tokens, diagnostics, "]");
 
     Expression::new(
@@ -297,7 +295,6 @@ fn parse_list_literal(
 }
 
 fn parse_lambda(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -308,7 +305,7 @@ fn parse_lambda(
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
-    let body = parse_block(src, tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics, false);
 
     let pos = Position::merge(&fun_keyword.position, &body.close_brace);
 
@@ -329,7 +326,6 @@ fn parse_lambda(
 }
 
 fn parse_assert(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -353,7 +349,7 @@ fn parse_assert(
         return Expression::new(position, Expression_::Invalid, id_gen.next());
     }
 
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
     let close_paren = require_token(tokens, diagnostics, ")");
 
     Expression::new(
@@ -364,21 +360,20 @@ fn parse_assert(
 }
 
 fn parse_if(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let if_token = require_token(tokens, diagnostics, "if");
 
-    let cond_expr = parse_expression(src, tokens, id_gen, diagnostics);
-    let mut then_body = parse_block(src, tokens, id_gen, diagnostics, false);
+    let cond_expr = parse_expression(tokens, id_gen, diagnostics);
+    let mut then_body = parse_block(tokens, id_gen, diagnostics, false);
 
     let else_body: Option<Block> = if peeked_symbol_is(tokens, "else") {
         tokens.pop();
 
         if peeked_symbol_is(tokens, "if") {
-            let if_expr = parse_if(src, tokens, id_gen, diagnostics);
+            let if_expr = parse_if(tokens, id_gen, diagnostics);
             Some(Block {
                 // TODO: when there is a chain of if/else if
                 // expressions, the open brace isn't meaningful. This
@@ -388,7 +383,7 @@ fn parse_if(
                 exprs: vec![if_expr.into()],
             })
         } else {
-            Some(parse_block(src, tokens, id_gen, diagnostics, false))
+            Some(parse_block(tokens, id_gen, diagnostics, false))
         }
     } else {
         None
@@ -422,15 +417,14 @@ fn parse_if(
 }
 
 fn parse_while(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let while_token = require_token(tokens, diagnostics, "while");
 
-    let cond_expr = parse_expression(src, tokens, id_gen, diagnostics);
-    let body = parse_block(src, tokens, id_gen, diagnostics, true);
+    let cond_expr = parse_expression(tokens, id_gen, diagnostics);
+    let body = parse_block(tokens, id_gen, diagnostics, true);
 
     Expression::new(
         Position::merge(&while_token.position, &body.close_brace),
@@ -440,7 +434,6 @@ fn parse_while(
 }
 
 fn parse_for_in(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -450,9 +443,9 @@ fn parse_for_in(
 
     require_token(tokens, diagnostics, "in");
 
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
 
-    let body = parse_block(src, tokens, id_gen, diagnostics, true);
+    let body = parse_block(tokens, id_gen, diagnostics, true);
 
     Expression::new(
         Position::merge(&for_token.position, &body.close_brace),
@@ -483,7 +476,6 @@ fn parse_continue(
 }
 
 fn parse_return(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -505,7 +497,7 @@ fn parse_return(
     // start on the same line as the `return` keyword.
     if let Some(next_token) = tokens.peek() {
         if return_token.position.end_line_number == next_token.position.line_number {
-            let returned_expr = parse_expression(src, tokens, id_gen, diagnostics);
+            let returned_expr = parse_expression(tokens, id_gen, diagnostics);
             pos = Position::merge(&pos, &returned_expr.position);
             expr = Some(Rc::new(returned_expr));
         }
@@ -556,26 +548,25 @@ fn unescape_string(src: &str) -> String {
 }
 
 fn parse_simple_expression(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     if let Some(token) = tokens.peek() {
         if token.text == "(" {
-            return parse_tuple_literal_or_parentheses(src, tokens, id_gen, diagnostics);
+            return parse_tuple_literal_or_parentheses(tokens, id_gen, diagnostics);
         }
 
         if token.text == "[" {
-            return parse_list_literal(src, tokens, id_gen, diagnostics);
+            return parse_list_literal(tokens, id_gen, diagnostics);
         }
 
         if token.text == "fun" {
-            return parse_lambda(src, tokens, id_gen, diagnostics);
+            return parse_lambda(tokens, id_gen, diagnostics);
         }
 
         if token.text == "assert" {
-            return parse_assert(src, tokens, id_gen, diagnostics);
+            return parse_assert(tokens, id_gen, diagnostics);
         }
 
         if SYMBOL_RE.is_match(token.text) {
@@ -587,7 +578,7 @@ fn parse_simple_expression(
                 if token.text == "{"
                     && prev_token.position.end_offset == token.position.start_offset
                 {
-                    return parse_struct_literal(src, tokens, id_gen, diagnostics);
+                    return parse_struct_literal(tokens, id_gen, diagnostics);
                 }
             }
 
@@ -633,7 +624,6 @@ fn parse_simple_expression(
 }
 
 fn parse_struct_literal_fields(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -647,7 +637,7 @@ fn parse_struct_literal_fields(
         let start_idx = tokens.idx;
         let sym = parse_symbol(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, ":");
-        let expr = parse_expression(src, tokens, id_gen, diagnostics);
+        let expr = parse_expression(tokens, id_gen, diagnostics);
 
         if tokens.idx == start_idx {
             // We haven't made forward progress, the syntax must be
@@ -684,14 +674,13 @@ fn parse_struct_literal_fields(
 }
 
 fn parse_struct_literal(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let name = parse_type_symbol(tokens, id_gen, diagnostics);
     require_token(tokens, diagnostics, "{");
-    let fields = parse_struct_literal_fields(src, tokens, id_gen, diagnostics);
+    let fields = parse_struct_literal_fields(tokens, id_gen, diagnostics);
 
     let close_brace = require_token(tokens, diagnostics, "}");
 
@@ -703,13 +692,12 @@ fn parse_struct_literal(
 }
 
 fn parse_match(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let match_keyword = require_token(tokens, diagnostics, "match");
-    let scrutinee_expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let scrutinee_expr = parse_expression(tokens, id_gen, diagnostics);
 
     let open_brace = require_token(tokens, diagnostics, "{");
     if open_brace.text != "{" {
@@ -739,7 +727,7 @@ fn parse_match(
         let start_idx = tokens.idx;
         let pattern = parse_pattern(tokens, id_gen, diagnostics);
         require_token(tokens, diagnostics, "=>");
-        let case_block = parse_case_block(src, tokens, id_gen, diagnostics);
+        let case_block = parse_case_block(tokens, id_gen, diagnostics);
 
         if tokens.idx <= start_idx {
             break;
@@ -763,17 +751,16 @@ fn parse_match(
 }
 
 fn parse_case_block(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Block {
     let block = if peeked_symbol_is(tokens, "{") {
-        parse_block(src, tokens, id_gen, diagnostics, false)
+        parse_block(tokens, id_gen, diagnostics, false)
     } else {
         // To simplify evaluation, we treat case expressions as
         // blocks, because they can have new bindings.
-        let case_expr = parse_expression(src, tokens, id_gen, diagnostics);
+        let case_expr = parse_expression(tokens, id_gen, diagnostics);
 
         let pos = case_expr.position.clone();
         Block {
@@ -813,7 +800,6 @@ fn parse_pattern(
 }
 
 fn parse_comma_separated_exprs(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -826,7 +812,7 @@ fn parse_comma_separated_exprs(
         }
 
         let start_idx = tokens.idx;
-        let arg = parse_expression(src, tokens, id_gen, diagnostics);
+        let arg = parse_expression(tokens, id_gen, diagnostics);
         let arg_pos = arg.position.clone();
 
         if arg.expr_.is_invalid_or_placeholder() {
@@ -898,13 +884,12 @@ fn parse_comma_separated_exprs(
 }
 
 fn parse_call_arguments(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ParenthesizedArguments {
     let open_paren_token = require_token(tokens, diagnostics, "(");
-    let arguments = parse_comma_separated_exprs(src, tokens, id_gen, diagnostics, ")");
+    let arguments = parse_comma_separated_exprs(tokens, id_gen, diagnostics, ")");
     let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {
@@ -921,12 +906,11 @@ fn parse_call_arguments(
 /// `parse_simple_expression`, to avoid infinite recursion. This is
 /// essentially left-recursion from a grammar perspective.
 fn parse_simple_expression_with_trailing(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression(src, tokens, id_gen, diagnostics);
+    let mut expr = parse_simple_expression(tokens, id_gen, diagnostics);
 
     loop {
         let start_idx = tokens.idx;
@@ -938,7 +922,7 @@ fn parse_simple_expression_with_trailing(
                 // function call. This allows us to disambiguabe
                 // `foo()` (a call) from `foo ()` (the variable `foo`
                 // followed by a tuple).
-                let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
+                let arguments = parse_call_arguments(tokens, id_gen, diagnostics);
 
                 expr = Expression::new(
                     Position::merge(&expr.position, &arguments.close_paren),
@@ -962,7 +946,7 @@ fn parse_simple_expression_with_trailing(
 
                     if peeked_symbol_is(tokens, "(") {
                         // TODO: just treat a method call as a call of a dot access.
-                        let arguments = parse_call_arguments(src, tokens, id_gen, diagnostics);
+                        let arguments = parse_call_arguments(tokens, id_gen, diagnostics);
 
                         expr = Expression::new(
                             Position::merge(&expr.position, &arguments.close_paren),
@@ -1029,7 +1013,6 @@ fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
 /// while z { foo() }
 /// ```
 fn parse_expression(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1038,25 +1021,25 @@ fn parse_expression(
     // complex assignments like `foo.bar = 1`.
     if let Some((_, token)) = tokens.peek_two() {
         if token.text == "=" {
-            return parse_assign(src, tokens, id_gen, diagnostics);
+            return parse_assign(tokens, id_gen, diagnostics);
         }
         if token.text == "+=" || token.text == "-=" {
-            return parse_assign_update(src, tokens, id_gen, diagnostics);
+            return parse_assign_update(tokens, id_gen, diagnostics);
         }
     }
 
     if let Some(token) = tokens.peek() {
         if token.text == "let" {
-            return parse_let(src, tokens, id_gen, diagnostics);
+            return parse_let(tokens, id_gen, diagnostics);
         }
         if token.text == "return" {
-            return parse_return(src, tokens, id_gen, diagnostics);
+            return parse_return(tokens, id_gen, diagnostics);
         }
         if token.text == "while" {
-            return parse_while(src, tokens, id_gen, diagnostics);
+            return parse_while(tokens, id_gen, diagnostics);
         }
         if token.text == "for" {
-            return parse_for_in(src, tokens, id_gen, diagnostics);
+            return parse_for_in(tokens, id_gen, diagnostics);
         }
         if token.text == "break" {
             return parse_break(tokens, id_gen, diagnostics);
@@ -1065,14 +1048,14 @@ fn parse_expression(
             return parse_continue(tokens, id_gen, diagnostics);
         }
         if token.text == "if" {
-            return parse_if(src, tokens, id_gen, diagnostics);
+            return parse_if(tokens, id_gen, diagnostics);
         }
         if token.text == "match" {
-            return parse_match(src, tokens, id_gen, diagnostics);
+            return parse_match(tokens, id_gen, diagnostics);
         }
     }
 
-    parse_simple_expression_or_binop(src, tokens, id_gen, diagnostics)
+    parse_simple_expression_or_binop(tokens, id_gen, diagnostics)
 }
 
 /// In Garden, an expression can only contain a single binary
@@ -1087,18 +1070,17 @@ fn parse_expression(
 /// also has the nice side effect of not requiring precedence logic in
 /// the parser.
 fn parse_simple_expression_or_binop(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression_with_trailing(src, tokens, id_gen, diagnostics);
+    let mut expr = parse_simple_expression_with_trailing(tokens, id_gen, diagnostics);
 
     if let Some(token) = tokens.peek() {
         if let Some(op) = token_as_binary_op(token) {
             tokens.pop();
 
-            let rhs_expr = parse_simple_expression_with_trailing(src, tokens, id_gen, diagnostics);
+            let rhs_expr = parse_simple_expression_with_trailing(tokens, id_gen, diagnostics);
 
             expr = Expression::new(
                 Position::merge(&expr.position, &rhs_expr.position),
@@ -1112,17 +1094,16 @@ fn parse_simple_expression_or_binop(
 }
 
 fn parse_definition(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     if let Some((token, next_token)) = tokens.peek_two() {
         if token.text == "fun" || token.text == "external" && next_token.text == "fun" {
-            return parse_function_or_method(src, tokens, id_gen, diagnostics);
+            return parse_function_or_method(tokens, id_gen, diagnostics);
         }
         if token.text == "test" {
-            return Some(parse_test(src, tokens, id_gen, diagnostics));
+            return Some(parse_test(tokens, id_gen, diagnostics));
         }
         if token.text == "enum" || token.text == "external" && next_token.text == "enum" {
             return Some(parse_enum(tokens, id_gen, diagnostics));
@@ -1311,7 +1292,6 @@ fn parse_struct(
 }
 
 fn parse_test(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1339,7 +1319,7 @@ fn parse_test(
         }
     }
 
-    let body = parse_block(src, tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics, false);
     let position = Position::merge(&test_token.position, &body.close_brace);
 
     ToplevelItem(
@@ -1796,7 +1776,6 @@ fn parse_struct_fields(
 }
 
 fn parse_block(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1830,7 +1809,7 @@ fn parse_block(
         }
 
         let start_idx = tokens.idx;
-        let expr = parse_expression(src, tokens, id_gen, diagnostics);
+        let expr = parse_expression(tokens, id_gen, diagnostics);
         if expr.expr_.is_invalid_or_placeholder() {
             break;
         }
@@ -1884,7 +1863,6 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
 }
 
 fn parse_function_or_method(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1914,7 +1892,6 @@ fn parse_function_or_method(
         Some(token) => {
             if token.text == "(" {
                 Some(parse_method(
-                    src,
                     tokens,
                     id_gen,
                     diagnostics,
@@ -1922,7 +1899,7 @@ fn parse_function_or_method(
                     visibility,
                 ))
             } else {
-                parse_function(src, tokens, id_gen, diagnostics, first_token, visibility)
+                parse_function(tokens, id_gen, diagnostics, first_token, visibility)
             }
         }
         None => {
@@ -1938,7 +1915,6 @@ fn parse_function_or_method(
 }
 
 fn parse_method(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1980,7 +1956,7 @@ fn parse_method(
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
-    let body = parse_block(src, tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics, false);
     let close_brace_pos = body.close_brace.clone();
 
     let position = Position::merge(&first_token.position, &close_brace_pos);
@@ -2006,7 +1982,6 @@ fn parse_method(
 }
 
 fn parse_function(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2027,7 +2002,7 @@ fn parse_function(
     let params = parse_parameters(tokens, id_gen, diagnostics);
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
-    let body = parse_block(src, tokens, id_gen, diagnostics, false);
+    let body = parse_block(tokens, id_gen, diagnostics, false);
     let close_brace_pos = body.close_brace.clone();
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
@@ -2196,7 +2171,6 @@ fn parse_symbol(
 }
 
 fn parse_let(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2207,7 +2181,7 @@ fn parse_let(
     let hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     require_token(tokens, diagnostics, "=");
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&let_token.position, &expr.position),
@@ -2217,7 +2191,6 @@ fn parse_let(
 }
 
 fn parse_assign(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2232,7 +2205,7 @@ fn parse_assign(
         return Expression::invalid(position, id_gen.next());
     }
     require_token(tokens, diagnostics, "=");
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&variable.position, &expr.position),
@@ -2242,7 +2215,6 @@ fn parse_assign(
 }
 
 fn parse_assign_update(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2267,7 +2239,7 @@ fn parse_assign_update(
         }
     };
 
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
 
     Expression::new(
         Position::merge(&variable.position, &expr.position),
@@ -2277,31 +2249,28 @@ fn parse_assign_update(
 }
 
 fn parse_toplevel_expr(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
-    let expr = parse_expression(src, tokens, id_gen, diagnostics);
+    let expr = parse_expression(tokens, id_gen, diagnostics);
     let position = expr.position.clone();
 
     ToplevelItem(position, ToplevelItem_::Expr(ToplevelExpression(expr)))
 }
 
 fn parse_toplevel_block(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
-    let block = parse_block(src, tokens, id_gen, diagnostics, false);
+    let block = parse_block(tokens, id_gen, diagnostics, false);
     let position = Position::merge(&block.open_brace, &block.close_brace);
 
     ToplevelItem(position, ToplevelItem_::Block(block))
 }
 
 fn parse_toplevel_items_from_tokens(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2310,7 +2279,7 @@ fn parse_toplevel_items_from_tokens(
 
     while !tokens.is_empty() {
         let start_idx = tokens.idx;
-        match parse_toplevel_item_from_tokens(src, tokens, id_gen, diagnostics) {
+        match parse_toplevel_item_from_tokens(tokens, id_gen, diagnostics) {
             Some(item) => {
                 let was_invalid = item.1.is_invalid_or_placeholder();
 
@@ -2331,7 +2300,6 @@ fn parse_toplevel_items_from_tokens(
 }
 
 fn parse_toplevel_item_from_tokens(
-    src: &str,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2344,15 +2312,15 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "external"
             || token.text == "import"
         {
-            return parse_definition(src, tokens, id_gen, diagnostics);
+            return parse_definition(tokens, id_gen, diagnostics);
         }
 
         if token.text == "{" {
-            return Some(parse_toplevel_block(src, tokens, id_gen, diagnostics));
+            return Some(parse_toplevel_block(tokens, id_gen, diagnostics));
         }
     }
 
-    Some(parse_toplevel_expr(src, tokens, id_gen, diagnostics))
+    Some(parse_toplevel_expr(tokens, id_gen, diagnostics))
 }
 
 pub fn parse_inline_expr_from_str(
@@ -2367,7 +2335,7 @@ pub fn parse_inline_expr_from_str(
         diagnostics.push(error);
     }
 
-    let expr = parse_expression(src, &mut tokens, id_gen, &mut diagnostics);
+    let expr = parse_expression(&mut tokens, id_gen, &mut diagnostics);
     (expr, diagnostics)
 }
 
@@ -2386,7 +2354,7 @@ pub fn parse_toplevel_items(
         diagnostics.push(error);
     }
 
-    let items = parse_toplevel_items_from_tokens(src, &mut tokens, id_gen, &mut diagnostics);
+    let items = parse_toplevel_items_from_tokens(&mut tokens, id_gen, &mut diagnostics);
     (items, diagnostics)
 }
 
@@ -2409,7 +2377,7 @@ pub fn parse_toplevel_items_from_span(
         diagnostics.push(error);
     }
 
-    let items = parse_toplevel_items_from_tokens(src, &mut tokens, id_gen, &mut diagnostics);
+    let items = parse_toplevel_items_from_tokens(&mut tokens, id_gen, &mut diagnostics);
     (items, diagnostics)
 }
 

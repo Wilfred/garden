@@ -678,8 +678,12 @@ pub struct StructInfo {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImportInfo {
     pub pos: Position,
-    pub path_pos: Position,
+    /// The actual path being imporrted. For example, if the user
+    /// wrote `import "./foo.gdn"`, then foo.gdn is the path here.
     pub path: PathBuf,
+    /// The position of the string literal within
+    /// `import "./foo.gdn"`.
+    pub path_pos: Position,
     pub id: SyntaxId,
 }
 

@@ -5,8 +5,8 @@ import "./foo.gdn"
 // Import(
 //     ImportInfo {
 //         pos: Position { ... },
-//         path_pos: Position { ... },
 //         path: "./foo.gdn",
+//         path_pos: Position { ... },
 //         id: SyntaxId(0),
 //     },
 // )

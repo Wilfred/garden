@@ -67,6 +67,10 @@ Renamed `eval_up_to_id` JSON command to `eval_up_to`.
 The `check --json` CLI command now returns line and columns in its
 output, instead of offsets.
 
+## Build
+
+Garden now requires Rust 1.79 to build.
+
 # 0.18 (released 31st December 2024)
 **Goal: Speculative sandboxed execution of tests and completions.**
 

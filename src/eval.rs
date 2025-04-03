@@ -378,12 +378,18 @@ fn load_toplevel_items_(
                 };
 
                 let path = enclosing_dir.join(&import_info.path);
-                let Ok(path) = path.canonicalize() else {
+                let Ok(path) = std::path::absolute(path) else {
+                    let current_dir_descr = match std::env::current_dir() {
+                        Ok(d) => format!(" (currently {})", d.display()),
+                        Err(_) => "".to_owned(),
+                    };
+
                     diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "Invalid path `{}`. Double-check that this file exists.",
-                            import_info.path.display()
-                        ))]),
+                        message: ErrorMessage(vec![msgtext!(
+                            "Could not convert `{}` to an absolute path. The working directory{} may not exist.",
+                            import_info.path.display(),
+                            current_dir_descr
+                        )]),
                         position: import_info.path_pos.clone(),
                         level: Level::Error,
                     });
@@ -397,12 +403,29 @@ fn load_toplevel_items_(
                 }
                 paths_seen.insert(path.clone());
 
-                let Ok(src) = std::fs::read_to_string(&path) else {
+                let src_bytes = match std::fs::read(&path) {
+                    Ok(src_bytes) => src_bytes,
+                    Err(e) => {
+                        diagnostics.push(Diagnostic {
+                            // TODO: pass the absolute path, and find
+                            // a nice way to ensure that Garden tests
+                            // still work on any machine.
+                            message: describe_read_error(&import_info.path, &e),
+                            position: import_info.path_pos.clone(),
+                            level: Level::Error,
+                        });
+
+                        continue;
+                    }
+                };
+
+                let Ok(src) = String::from_utf8(src_bytes) else {
                     diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "Could not read {} or not valid UTF-8.",
-                            path.display()
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("The file "),
+                            msgcode!("{}", path.display()),
+                            msgtext!(" is not valid UTF-8."),
+                        ]),
                         position: import_info.path_pos.clone(),
                         level: Level::Error,
                     });
@@ -468,6 +491,35 @@ fn load_toplevel_items_(
     }
 
     (diagnostics, new_syms)
+}
+
+fn describe_read_error(path: &Path, e: &std::io::Error) -> ErrorMessage {
+    let parts = match e.kind() {
+        std::io::ErrorKind::NotFound => {
+            vec![
+                msgtext!("No such file "),
+                msgcode!("{}", path.display()),
+                msgtext!("."),
+            ]
+        }
+        std::io::ErrorKind::PermissionDenied => {
+            vec![
+                msgtext!("Permission denied when reading "),
+                msgcode!("{}", path.display()),
+                msgtext!("."),
+            ]
+        }
+        _ => {
+            // TODO: specific error on the file being a directory.
+            vec![
+                msgtext!("Could not read file "),
+                msgcode!("{}", path.display()),
+                msgtext!(", got error {}", e.kind()),
+            ]
+        }
+    };
+
+    ErrorMessage(parts)
 }
 
 /// Evaluate all toplevel items: definitions, then tests, then

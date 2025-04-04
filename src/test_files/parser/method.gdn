@@ -4,6 +4,7 @@ external fun (self: List<T>) foo<T>() {}
 // expected stdout:
 // Method(
 //     MethodInfo {
+//         pos: Position { ... },
 //         receiver_hint: TypeHint {
 //             sym: TypeSymbol"List",
 //             args: [

@@ -709,6 +709,7 @@ pub enum MethodKind {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MethodInfo {
+    pub pos: Position,
     /// The type that has this method.
     pub receiver_hint: TypeHint,
     /// The name of the receiver in the method definition. This is

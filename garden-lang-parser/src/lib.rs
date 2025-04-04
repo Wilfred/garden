@@ -1972,6 +1972,7 @@ fn parse_method(
         return_hint,
     };
     let meth_info = MethodInfo {
+        pos: position.clone(),
         receiver_hint,
         receiver_sym,
         name_sym,

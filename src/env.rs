@@ -133,6 +133,7 @@ impl Env {
                 name: "exists".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -158,6 +159,7 @@ impl Env {
                 name: "read".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -192,6 +194,7 @@ impl Env {
                 name: "index_of".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -221,6 +224,7 @@ impl Env {
                 name: "len".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -246,6 +250,7 @@ impl Env {
                 name: "lines".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -271,6 +276,7 @@ impl Env {
                 name: "substring".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -309,6 +315,7 @@ impl Env {
                 name: "append".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -334,6 +341,7 @@ impl Env {
                 name: "contains".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -363,6 +371,7 @@ impl Env {
                 name: "len".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
@@ -388,6 +397,7 @@ impl Env {
                 name: "get".to_owned(),
             },
             MethodInfo {
+                pos: Position::todo(builtins_path.clone()),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {

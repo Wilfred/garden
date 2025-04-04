@@ -379,7 +379,7 @@ fn load_toplevel_items_(
                 };
 
                 let path = enclosing_dir.join(&import_info.path);
-                let Ok(path) = std::path::absolute(path) else {
+                let Ok(abs_path) = std::path::absolute(&path) else {
                     let current_dir_descr = match std::env::current_dir() {
                         Ok(d) => format!(" (currently {})", d.display()),
                         Err(_) => "".to_owned(),
@@ -398,13 +398,13 @@ fn load_toplevel_items_(
                     continue;
                 };
 
-                if paths_seen.contains(&path) {
+                if paths_seen.contains(&abs_path) {
                     // Already imported this file, so we have a cyclic import.
                     continue;
                 }
-                paths_seen.insert(path.clone());
+                paths_seen.insert(abs_path.clone());
 
-                let src_bytes = match std::fs::read(&path) {
+                let src_bytes = match std::fs::read(&abs_path) {
                     Ok(src_bytes) => src_bytes,
                     Err(e) => {
                         diagnostics.push(Diagnostic {

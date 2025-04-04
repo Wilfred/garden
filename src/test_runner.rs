@@ -61,7 +61,7 @@ fn sandboxed_tests_summary(
 
     let mut test_at_cursor = None;
     for item in items.iter() {
-        if item.0.contains_offset(offset) && matches!(item.0, ToplevelItem_::Test(_)) {
+        if item.position().contains_offset(offset) && matches!(item.0, ToplevelItem_::Test(_)) {
             test_at_cursor = Some(item.clone());
             break;
         }

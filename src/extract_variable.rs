@@ -129,7 +129,7 @@ pub(crate) fn extract_variable(
     };
 
     for item in items {
-        let item_pos = &item.0;
+        let item_pos = item.position();
         if item_pos.contains_offset(offset) {
             // All the items before this one.
             print!("{}", &src[..item_pos.start_offset]);

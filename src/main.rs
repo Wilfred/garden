@@ -501,11 +501,11 @@ fn dump_ast(src: &str, path: &Path) {
 
     for item in items {
         match item {
-            ToplevelItem(_, ToplevelItem_::Expr(e)) => {
+            ToplevelItem(ToplevelItem_::Expr(e)) => {
                 println!("{:#?}", e.0.expr_);
             }
             d => {
-                println!("{:#?}", d.1);
+                println!("{:#?}", d.0);
             }
         }
     }

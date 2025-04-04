@@ -782,7 +782,22 @@ pub enum ToplevelItem_ {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToplevelItem(pub Position, pub ToplevelItem_);
+pub struct ToplevelItem(pub ToplevelItem_);
+
+impl ToplevelItem {
+    pub fn position(&self) -> Position {
+        match &self.0 {
+            ToplevelItem_::Fun(_, fun_info, _) => fun_info.pos.clone(),
+            ToplevelItem_::Method(method_info, _) => method_info.pos.clone(),
+            ToplevelItem_::Test(test_info) => test_info.pos.clone(),
+            ToplevelItem_::Enum(enum_info) => enum_info.pos.clone(),
+            ToplevelItem_::Struct(struct_info) => struct_info.pos.clone(),
+            ToplevelItem_::Import(import_info) => import_info.pos.clone(),
+            ToplevelItem_::Expr(toplevel_expression) => toplevel_expression.0.position.clone(),
+            ToplevelItem_::Block(block) => Position::merge(&block.open_brace, &block.close_brace),
+        }
+    }
+}
 
 impl ToplevelItem_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {

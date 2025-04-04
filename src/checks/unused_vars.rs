@@ -143,14 +143,14 @@ impl UnusedVariableVisitor {
 
 impl Visitor for UnusedVariableVisitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Expr(_) => {}
             _ => {
                 self.push_scope();
             }
         }
 
-        if let ToplevelItem_::Method(method_info, _) = &item.1 {
+        if let ToplevelItem_::Method(method_info, _) = &item.0 {
             self.add_binding(&method_info.receiver_sym);
             // Always treat the method receiver as used, because we
             // can't avoid defining this parameter even when we don't
@@ -158,13 +158,13 @@ impl Visitor for UnusedVariableVisitor {
             self.mark_used(&method_info.receiver_sym.name);
         }
 
-        self.visit_item_(&item.1);
+        self.visit_item_(&item.0);
 
         // Don't worry about unused variables in top level
         // expressions, as they're legitimate in a REPL. If the user
         // has written `let x = 1` they might be planning on using `x`
         // in their next REPL expression!
-        if let ToplevelItem_::Expr(toplevel_expr) = &item.1 {
+        if let ToplevelItem_::Expr(toplevel_expr) = &item.0 {
             if let Expression_::Let(dest, _, _) = &toplevel_expr.0.expr_ {
                 match dest {
                     LetDestination::Symbol(symbol) => {
@@ -179,7 +179,7 @@ impl Visitor for UnusedVariableVisitor {
             }
         }
 
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Expr(_) => {}
             _ => {
                 self.pop_scope();

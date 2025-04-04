@@ -1230,17 +1230,14 @@ fn parse_enum(
 
     let position = Position::merge(&enum_token.position, &close_brace_pos);
 
-    ToplevelItem(
-        position.clone(),
-        ToplevelItem_::Enum(EnumInfo {
-            pos: position,
-            visibility,
-            doc_comment,
-            name_sym: name_symbol,
-            type_params,
-            variants,
-        }),
-    )
+    ToplevelItem(ToplevelItem_::Enum(EnumInfo {
+        pos: position,
+        visibility,
+        doc_comment,
+        name_sym: name_symbol,
+        type_params,
+        variants,
+    }))
 }
 
 fn parse_struct(
@@ -1278,17 +1275,14 @@ fn parse_struct(
 
     let position = Position::merge(&struct_token.position, &close_brace_pos);
 
-    ToplevelItem(
-        position.clone(),
-        ToplevelItem_::Struct(StructInfo {
-            pos: position,
-            visibility,
-            doc_comment,
-            name_sym,
-            type_params,
-            fields,
-        }),
-    )
+    ToplevelItem(ToplevelItem_::Struct(StructInfo {
+        pos: position,
+        visibility,
+        doc_comment,
+        name_sym,
+        type_params,
+        fields,
+    }))
 }
 
 fn parse_test(
@@ -1322,15 +1316,12 @@ fn parse_test(
     let body = parse_block(tokens, id_gen, diagnostics, false);
     let position = Position::merge(&test_token.position, &body.close_brace);
 
-    ToplevelItem(
-        position.clone(),
-        ToplevelItem_::Test(TestInfo {
-            pos: position,
-            doc_comment,
-            name_sym: name,
-            body,
-        }),
-    )
+    ToplevelItem(ToplevelItem_::Test(TestInfo {
+        pos: position,
+        doc_comment,
+        name_sym: name,
+        body,
+    }))
 }
 
 fn parse_import(
@@ -1371,7 +1362,7 @@ fn parse_import(
         id: id_gen.next(),
     };
 
-    Some(ToplevelItem(position, ToplevelItem_::Import(import_info)))
+    Some(ToplevelItem(ToplevelItem_::Import(import_info)))
 }
 
 fn parse_type_symbol(
@@ -1979,7 +1970,7 @@ fn parse_method(
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
-    ToplevelItem(position, ToplevelItem_::Method(meth_info, visibility))
+    ToplevelItem(ToplevelItem_::Method(meth_info, visibility))
 }
 
 fn parse_function(
@@ -2007,23 +1998,20 @@ fn parse_function(
     let close_brace_pos = body.close_brace.clone();
     let position = Position::merge(&first_token.position, &close_brace_pos);
 
-    Some(ToplevelItem(
-        position.clone(),
-        ToplevelItem_::Fun(
-            name_sym.clone(),
-            FunInfo {
-                pos: position.clone(),
-                doc_comment,
-                name_sym: Some(name_sym),
-                item_id: Some(ToplevelItemId(id_gen.next().0)),
-                type_params,
-                params,
-                body,
-                return_hint,
-            },
-            visibility,
-        ),
-    ))
+    Some(ToplevelItem(ToplevelItem_::Fun(
+        name_sym.clone(),
+        FunInfo {
+            pos: position.clone(),
+            doc_comment,
+            name_sym: Some(name_sym),
+            item_id: Some(ToplevelItemId(id_gen.next().0)),
+            type_params,
+            params,
+            body,
+            return_hint,
+        },
+        visibility,
+    )))
 }
 
 const RESERVED_WORDS: &[&str] = &[
@@ -2255,9 +2243,7 @@ fn parse_toplevel_expr(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let expr = parse_expression(tokens, id_gen, diagnostics);
-    let position = expr.position.clone();
-
-    ToplevelItem(position, ToplevelItem_::Expr(ToplevelExpression(expr)))
+    ToplevelItem(ToplevelItem_::Expr(ToplevelExpression(expr)))
 }
 
 fn parse_toplevel_block(
@@ -2266,9 +2252,7 @@ fn parse_toplevel_block(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let block = parse_block(tokens, id_gen, diagnostics, false);
-    let position = Position::merge(&block.open_brace, &block.close_brace);
-
-    ToplevelItem(position, ToplevelItem_::Block(block))
+    ToplevelItem(ToplevelItem_::Block(block))
 }
 
 fn parse_toplevel_items_from_tokens(
@@ -2282,7 +2266,7 @@ fn parse_toplevel_items_from_tokens(
         let start_idx = tokens.idx;
         match parse_toplevel_item_from_tokens(tokens, id_gen, diagnostics) {
             Some(item) => {
-                let was_invalid = item.1.is_invalid_or_placeholder();
+                let was_invalid = item.0.is_invalid_or_placeholder();
 
                 items.push(item);
                 if was_invalid {

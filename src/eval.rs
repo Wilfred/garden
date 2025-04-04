@@ -293,7 +293,7 @@ fn load_toplevel_items_(
     let mut enum_infos: Vec<&EnumInfo> = vec![];
 
     for item in items {
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Fun(name_symbol, fun_info, _) => {
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, &mut diagnostics);
@@ -364,13 +364,14 @@ fn load_toplevel_items_(
             ToplevelItem_::Expr(_) => {}
             ToplevelItem_::Block(_) => {}
             ToplevelItem_::Import(import_info) => {
-                let Some(enclosing_dir) = item.0.path.parent() else {
+                let position = item.position();
+                let Some(enclosing_dir) = position.path.parent() else {
                     diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![Text(format!(
                             "Could not find parent directory of `{}`.",
                             import_info.path.display()
                         ))]),
-                        position: item.0.clone(),
+                        position,
                         level: Level::Error,
                     });
 
@@ -532,7 +533,7 @@ pub(crate) fn eval_toplevel_items(
     let mut defs = vec![];
     let mut exprs: Vec<Expression> = vec![];
     for item in items {
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Expr(toplevel_expression) => {
                 exprs.push(toplevel_expression.0.clone());
             }
@@ -578,7 +579,7 @@ pub(crate) fn eval_tests_until_error(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem(_, ToplevelItem_::Test(test)) = item {
+        if let ToplevelItem(ToplevelItem_::Test(test)) = item {
             test_defs.push(test);
         }
     }
@@ -618,7 +619,7 @@ pub(crate) fn eval_tests(
 
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem(_, ToplevelItem_::Test(test)) = item {
+        if let ToplevelItem(ToplevelItem_::Test(test)) = item {
             test_defs.push(test);
         }
     }
@@ -662,7 +663,7 @@ pub(crate) fn eval_up_to_param(
     id: SyntaxId,
 ) -> Option<(Value, Position)> {
     for item in items {
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.params.is_empty() => vec![],
@@ -771,7 +772,10 @@ pub(crate) fn eval_up_to(
         return Err(EvalUpToErr::NoExpressionFound);
     };
 
-    let Some(item) = items.iter().find(|&item| item.0.contains_offset(offset)) else {
+    let Some(item) = items
+        .iter()
+        .find(|&item| item.position().contains_offset(offset))
+    else {
         return Err(EvalUpToErr::NoExpressionFound);
     };
 
@@ -779,7 +783,7 @@ pub(crate) fn eval_up_to(
     // destructuring tuple, we want to return the tuple element and
     // position.
 
-    let mut res: Result<_, EvalError> = match &item.1 {
+    let mut res: Result<_, EvalError> = match &item.0 {
         ToplevelItem_::Fun(name_sym, fun_info, _) => {
             load_toplevel_items(&[item.clone()], env);
             let args = match env.prev_call_args.get(&name_sym.name) {
@@ -5179,7 +5183,7 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
 ) -> Result<Option<Value>, EvalError> {
     let mut exprs = vec![];
     for item in items {
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Expr(expr) => {
                 exprs.push(expr.0.clone());
             }
@@ -5255,8 +5259,8 @@ mod tests {
         let mut exprs = vec![];
         for item in items {
             match item {
-                ToplevelItem(_, ToplevelItem_::Expr(e)) => exprs.push(e.0),
-                ToplevelItem(_, ToplevelItem_::Block(b)) => {
+                ToplevelItem(ToplevelItem_::Expr(e)) => exprs.push(e.0),
+                ToplevelItem(ToplevelItem_::Block(b)) => {
                     for e in &b.exprs {
                         exprs.push(e.as_ref().clone());
                     }

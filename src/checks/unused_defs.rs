@@ -26,7 +26,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
     let mut diagnostics = vec![];
     let mut already_covered_ids = HashSet::new();
     for item in items {
-        let (visibility, symbol, item_id) = match &item.1 {
+        let (visibility, symbol, item_id) = match &item.0 {
             ToplevelItem_::Fun(symbol, fun_info, visibility) => {
                 (visibility, symbol, fun_info.item_id)
             }
@@ -64,7 +64,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
     let reachable_from = invert(transitively_reachable);
 
     for item in items {
-        match &item.1 {
+        match &item.0 {
             ToplevelItem_::Fun(symbol, fun_info, visibility) => {
                 if matches!(visibility, Visibility::External(_)) {
                     continue;

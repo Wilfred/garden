@@ -13,7 +13,7 @@ use crate::env::Env;
 use crate::eval::{eval, load_toplevel_items, ExpressionState, Session, StdoutMode};
 use crate::eval::{push_test_stackframe, EvalError};
 use crate::prompt::prompt_symbol;
-use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_, Vfs};
+use garden_lang_parser::ast::{IdGenerator, ToplevelItem, Vfs};
 use garden_lang_parser::{parse_toplevel_items, ParseError};
 
 use owo_colors::OwoColorize;
@@ -113,7 +113,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let mut exprs = vec![];
                 for item in items {
                     match item {
-                        ToplevelItem(ToplevelItem_::Expr(e)) => {
+                        ToplevelItem::Expr(e) => {
                             exprs.push(e.clone());
                         }
                         _ => {}

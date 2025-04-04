@@ -3,7 +3,7 @@ use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::visitor::Visitor;
 use garden_lang_parser::{
-    ast::{Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem, ToplevelItem_},
+    ast::{Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem},
     position::Position,
 };
 use rustc_hash::FxHashMap;
@@ -143,14 +143,14 @@ impl UnusedVariableVisitor {
 
 impl Visitor for UnusedVariableVisitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        match &item.0 {
-            ToplevelItem_::Expr(_) => {}
+        match &item {
+            ToplevelItem::Expr(_) => {}
             _ => {
                 self.push_scope();
             }
         }
 
-        if let ToplevelItem_::Method(method_info, _) = &item.0 {
+        if let ToplevelItem::Method(method_info, _) = &item {
             self.add_binding(&method_info.receiver_sym);
             // Always treat the method receiver as used, because we
             // can't avoid defining this parameter even when we don't
@@ -158,13 +158,13 @@ impl Visitor for UnusedVariableVisitor {
             self.mark_used(&method_info.receiver_sym.name);
         }
 
-        self.visit_item_(&item.0);
+        self.visit_toplevel_item_default(item);
 
         // Don't worry about unused variables in top level
         // expressions, as they're legitimate in a REPL. If the user
         // has written `let x = 1` they might be planning on using `x`
         // in their next REPL expression!
-        if let ToplevelItem_::Expr(toplevel_expr) = &item.0 {
+        if let ToplevelItem::Expr(toplevel_expr) = &item {
             if let Expression_::Let(dest, _, _) = &toplevel_expr.0.expr_ {
                 match dest {
                     LetDestination::Symbol(symbol) => {
@@ -179,8 +179,8 @@ impl Visitor for UnusedVariableVisitor {
             }
         }
 
-        match &item.0 {
-            ToplevelItem_::Expr(_) => {}
+        match &item {
+            ToplevelItem::Expr(_) => {}
             _ => {
                 self.pop_scope();
             }

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, ToplevelItem_, Visibility};
+use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, Visibility};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 
@@ -26,11 +26,11 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
     let mut diagnostics = vec![];
     let mut already_covered_ids = HashSet::new();
     for item in items {
-        let (visibility, symbol, item_id) = match &item.0 {
-            ToplevelItem_::Fun(symbol, fun_info, visibility) => {
+        let (visibility, symbol, item_id) = match &item {
+            ToplevelItem::Fun(symbol, fun_info, visibility) => {
                 (visibility, symbol, fun_info.item_id)
             }
-            ToplevelItem_::Method(method_info, visibility) => (
+            ToplevelItem::Method(method_info, visibility) => (
                 visibility,
                 &method_info.name_sym,
                 method_info.fun_info().and_then(|fun_info| fun_info.item_id),
@@ -64,8 +64,8 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
     let reachable_from = invert(transitively_reachable);
 
     for item in items {
-        match &item.0 {
-            ToplevelItem_::Fun(symbol, fun_info, visibility) => {
+        match &item {
+            ToplevelItem::Fun(symbol, fun_info, visibility) => {
                 if matches!(visibility, Visibility::External(_)) {
                     continue;
                 }

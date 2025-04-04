@@ -2,8 +2,7 @@ use std::rc::Rc;
 
 use crate::{
     ast::ToplevelExpression, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, ToplevelItem_, TypeHint,
-    TypeSymbol,
+    MethodInfo, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -13,21 +12,21 @@ use crate::{
 /// occurrences of string literals anywhere in a function body.
 pub trait Visitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        self.visit_item_(&item.0);
+        self.visit_toplevel_item_default(item);
     }
 
-    fn visit_item_(&mut self, item_: &ToplevelItem_) {
-        match item_ {
-            ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
-            ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
-            ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
-            ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
-            ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
-            ToplevelItem_::Expr(toplevel_expression) => {
+    fn visit_toplevel_item_default(&mut self, item: &ToplevelItem) {
+        match item {
+            ToplevelItem::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
+            ToplevelItem::Method(method_info, _) => self.visit_method_info(method_info),
+            ToplevelItem::Test(test_info) => self.visit_test_info(test_info),
+            ToplevelItem::Enum(enum_info) => self.visit_enum_info(enum_info),
+            ToplevelItem::Struct(struct_info) => self.visit_struct_info(struct_info),
+            ToplevelItem::Expr(toplevel_expression) => {
                 self.visit_toplevel_expr(toplevel_expression)
             }
-            ToplevelItem_::Block(block) => self.visit_block(block),
-            ToplevelItem_::Import(_) => {}
+            ToplevelItem::Block(block) => self.visit_block(block),
+            ToplevelItem::Import(_) => {}
         }
     }
 

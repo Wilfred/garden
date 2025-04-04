@@ -6,7 +6,7 @@ use std::{
 };
 
 use garden_lang_parser::{
-    ast::{IdGenerator, ToplevelItem_, Vfs},
+    ast::{IdGenerator, ToplevelItem, Vfs},
     parse_toplevel_items,
 };
 use owo_colors::OwoColorize as _;
@@ -61,7 +61,8 @@ fn sandboxed_tests_summary(
 
     let mut test_at_cursor = None;
     for item in items.iter() {
-        if item.position().contains_offset(offset) && matches!(item.0, ToplevelItem_::Test(_)) {
+        let item_pos = item.position();
+        if item_pos.contains_offset(offset) && matches!(item, ToplevelItem::Test(_)) {
             test_at_cursor = Some(item.clone());
             break;
         }

@@ -1,6 +1,5 @@
 use garden_lang_parser::ast::{
-    AstId, Block, Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, ToplevelItem_,
-    TypeHint, TypeSymbol,
+    AstId, Block, Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 use garden_lang_parser::visitor::Visitor;
@@ -49,14 +48,14 @@ struct IdFinder {
 
 impl Visitor for IdFinder {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        if let ToplevelItem_::Import(info) = &item.0 {
+        if let ToplevelItem::Import(info) = &item {
             let item_pos = item.position();
             if item_pos.contains_offset(self.offset) && item_pos.contains_offset(self.end_offset) {
                 self.found_ids.push(AstId::Import(info.id));
             }
         }
 
-        self.visit_item_(&item.0);
+        self.visit_toplevel_item_default(item);
     }
 
     fn visit_expr(&mut self, expr: &Expression) {

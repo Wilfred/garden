@@ -742,7 +742,7 @@ impl MethodInfo {
 pub struct ToplevelItemId(pub usize);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ToplevelItem_ {
+pub enum ToplevelItem {
     /// ```garden
     /// fun foo() {}
     /// external fun bar() {}
@@ -781,35 +781,30 @@ pub enum ToplevelItem_ {
     Block(Block),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToplevelItem(pub ToplevelItem_);
-
 impl ToplevelItem {
     pub fn position(&self) -> Position {
-        match &self.0 {
-            ToplevelItem_::Fun(_, fun_info, _) => fun_info.pos.clone(),
-            ToplevelItem_::Method(method_info, _) => method_info.pos.clone(),
-            ToplevelItem_::Test(test_info) => test_info.pos.clone(),
-            ToplevelItem_::Enum(enum_info) => enum_info.pos.clone(),
-            ToplevelItem_::Struct(struct_info) => struct_info.pos.clone(),
-            ToplevelItem_::Import(import_info) => import_info.pos.clone(),
-            ToplevelItem_::Expr(toplevel_expression) => toplevel_expression.0.position.clone(),
-            ToplevelItem_::Block(block) => Position::merge(&block.open_brace, &block.close_brace),
+        match self {
+            ToplevelItem::Fun(_, fun_info, _) => fun_info.pos.clone(),
+            ToplevelItem::Method(method_info, _) => method_info.pos.clone(),
+            ToplevelItem::Test(test_info) => test_info.pos.clone(),
+            ToplevelItem::Enum(enum_info) => enum_info.pos.clone(),
+            ToplevelItem::Struct(struct_info) => struct_info.pos.clone(),
+            ToplevelItem::Import(import_info) => import_info.pos.clone(),
+            ToplevelItem::Expr(toplevel_expression) => toplevel_expression.0.position.clone(),
+            ToplevelItem::Block(block) => Position::merge(&block.open_brace, &block.close_brace),
         }
     }
-}
 
-impl ToplevelItem_ {
     pub(crate) fn is_invalid_or_placeholder(&self) -> bool {
         match self {
-            ToplevelItem_::Fun(symbol, _, _) => symbol.is_placeholder(),
-            ToplevelItem_::Method(method_info, _) => method_info.name_sym.is_placeholder(),
-            ToplevelItem_::Test(test_info) => test_info.name_sym.is_placeholder(),
-            ToplevelItem_::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
-            ToplevelItem_::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
-            ToplevelItem_::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
-            ToplevelItem_::Block(_) => false,
-            ToplevelItem_::Import(_) => false,
+            ToplevelItem::Fun(symbol, _, _) => symbol.is_placeholder(),
+            ToplevelItem::Method(method_info, _) => method_info.name_sym.is_placeholder(),
+            ToplevelItem::Test(test_info) => test_info.name_sym.is_placeholder(),
+            ToplevelItem::Enum(enum_info) => enum_info.name_sym.is_placeholder(),
+            ToplevelItem::Struct(struct_info) => struct_info.name_sym.is_placeholder(),
+            ToplevelItem::Expr(e) => e.0.expr_.is_invalid_or_placeholder(),
+            ToplevelItem::Block(_) => false,
+            ToplevelItem::Import(_) => false,
         }
     }
 }

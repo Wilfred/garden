@@ -67,7 +67,7 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session};
-use garden_lang_parser::ast::{IdGenerator, ToplevelItem, ToplevelItem_, Vfs};
+use garden_lang_parser::ast::{IdGenerator, ToplevelItem, Vfs};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 
@@ -501,11 +501,11 @@ fn dump_ast(src: &str, path: &Path) {
 
     for item in items {
         match item {
-            ToplevelItem(ToplevelItem_::Expr(e)) => {
+            ToplevelItem::Expr(e) => {
                 println!("{:#?}", e.0.expr_);
             }
             d => {
-                println!("{:#?}", d.0);
+                println!("{:#?}", d);
             }
         }
     }

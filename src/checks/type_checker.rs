@@ -5,8 +5,7 @@ use std::rc::Rc;
 use garden_lang_parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
     MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
-    TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, ToplevelItem_, TypeHint, TypeName,
-    VariantInfo,
+    TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo,
 };
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
@@ -133,13 +132,13 @@ struct TypeCheckVisitor<'a> {
 
 impl TypeCheckVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        match &item.0 {
-            ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
-            ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
-            ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
-            ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),
-            ToplevelItem_::Struct(struct_info) => self.visit_struct_info(struct_info),
-            ToplevelItem_::Import(info) => {
+        match &item {
+            ToplevelItem::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
+            ToplevelItem::Method(method_info, _) => self.visit_method_info(method_info),
+            ToplevelItem::Test(test_info) => self.visit_test_info(test_info),
+            ToplevelItem::Enum(enum_info) => self.visit_enum_info(enum_info),
+            ToplevelItem::Struct(struct_info) => self.visit_struct_info(struct_info),
+            ToplevelItem::Import(info) => {
                 self.id_to_def_pos.insert(
                     info.id,
                     Position {
@@ -153,8 +152,8 @@ impl TypeCheckVisitor<'_> {
                     },
                 );
             }
-            ToplevelItem_::Expr(toplevel_expr) => self.visit_toplevel_expr(toplevel_expr),
-            ToplevelItem_::Block(block) => self.visit_block(block),
+            ToplevelItem::Expr(toplevel_expr) => self.visit_toplevel_expr(toplevel_expr),
+            ToplevelItem::Block(block) => self.visit_block(block),
         }
     }
 

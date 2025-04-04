@@ -6,7 +6,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{SymbolName, ToplevelItem, ToplevelItem_, TypeName};
+use garden_lang_parser::ast::{SymbolName, ToplevelItem, TypeName};
 use garden_lang_parser::diagnostics::ErrorMessage;
 use garden_lang_parser::diagnostics::MessagePart::*;
 use garden_lang_parser::position::Position;
@@ -26,8 +26,8 @@ struct DuplicatesVisitor {
 
 impl Visitor for DuplicatesVisitor {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
-        match &item.0 {
-            ToplevelItem_::Fun(sym, _, _) => {
+        match &item {
+            ToplevelItem::Fun(sym, _, _) => {
                 if self.funs_seen.contains_key(&sym.name) {
                     self.diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![Text(format!(
@@ -42,7 +42,7 @@ impl Visitor for DuplicatesVisitor {
                         .insert(sym.name.clone(), sym.position.clone());
                 }
             }
-            ToplevelItem_::Method(method_info, _) => {
+            ToplevelItem::Method(method_info, _) => {
                 let meth_sym = &method_info.name_sym;
 
                 let mut is_repeat = false;
@@ -70,7 +70,7 @@ impl Visitor for DuplicatesVisitor {
                     });
                 }
             }
-            ToplevelItem_::Test(test_info) => {
+            ToplevelItem::Test(test_info) => {
                 let sym = &test_info.name_sym;
                 if self.tests_seen.contains(&sym.name) {
                     self.diagnostics.push(Diagnostic {
@@ -85,7 +85,7 @@ impl Visitor for DuplicatesVisitor {
                     self.tests_seen.insert(sym.name.clone());
                 }
             }
-            ToplevelItem_::Enum(enum_info) => {
+            ToplevelItem::Enum(enum_info) => {
                 let name_sym = &enum_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
@@ -100,7 +100,7 @@ impl Visitor for DuplicatesVisitor {
                     self.types_seen.insert(name_sym.name.clone());
                 }
             }
-            ToplevelItem_::Struct(struct_info) => {
+            ToplevelItem::Struct(struct_info) => {
                 let name_sym = &struct_info.name_sym;
                 if self.types_seen.contains(&name_sym.name) {
                     self.diagnostics.push(Diagnostic {
@@ -115,12 +115,12 @@ impl Visitor for DuplicatesVisitor {
                     self.types_seen.insert(name_sym.name.clone());
                 }
             }
-            ToplevelItem_::Expr(_) => {}
-            ToplevelItem_::Block(_) => {}
-            ToplevelItem_::Import(_) => {}
+            ToplevelItem::Expr(_) => {}
+            ToplevelItem::Block(_) => {}
+            ToplevelItem::Import(_) => {}
         }
 
-        self.visit_item_(&item.0);
+        self.visit_toplevel_item_default(item);
     }
 }
 

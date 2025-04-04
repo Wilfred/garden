@@ -31,7 +31,7 @@ use garden_lang_parser::ast::{
     MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
     SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
 };
-use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem, ToplevelItem_};
+use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
 use garden_lang_parser::position::Position;
 
 /// Bindings in a single block. For example, `x` is only bound inside
@@ -293,8 +293,8 @@ fn load_toplevel_items_(
     let mut enum_infos: Vec<&EnumInfo> = vec![];
 
     for item in items {
-        match &item.0 {
-            ToplevelItem_::Fun(name_symbol, fun_info, _) => {
+        match &item {
+            ToplevelItem::Fun(name_symbol, fun_info, _) => {
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, &mut diagnostics);
                 } else {
@@ -309,7 +309,7 @@ fn load_toplevel_items_(
 
                 new_syms.push(name_symbol.name.clone());
             }
-            ToplevelItem_::Method(meth_info, _) => {
+            ToplevelItem::Method(meth_info, _) => {
                 if let MethodKind::UserDefinedMethod(fun_info) = &meth_info.kind {
                     if is_builtin_stub(fun_info) {
                         update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
@@ -328,10 +328,10 @@ fn load_toplevel_items_(
                     name: meth_info.full_name(),
                 });
             }
-            ToplevelItem_::Test(test) => {
+            ToplevelItem::Test(test) => {
                 env.tests.insert(test.name_sym.name.clone(), test.clone());
             }
-            ToplevelItem_::Enum(enum_info) => {
+            ToplevelItem::Enum(enum_info) => {
                 // Add the enum definition to the type environment.
                 env.add_type(
                     enum_info.name_sym.name.clone(),
@@ -345,7 +345,7 @@ fn load_toplevel_items_(
                 };
                 new_syms.push(name_as_sym);
             }
-            ToplevelItem_::Struct(struct_info) => {
+            ToplevelItem::Struct(struct_info) => {
                 if is_builtin_type(struct_info) {
                     update_builtin_type_info(struct_info, env, &mut diagnostics);
                 } else {
@@ -361,9 +361,9 @@ fn load_toplevel_items_(
                 };
                 new_syms.push(name_as_sym);
             }
-            ToplevelItem_::Expr(_) => {}
-            ToplevelItem_::Block(_) => {}
-            ToplevelItem_::Import(import_info) => {
+            ToplevelItem::Expr(_) => {}
+            ToplevelItem::Block(_) => {}
+            ToplevelItem::Import(import_info) => {
                 let position = item.position();
                 let Some(enclosing_dir) = position.path.parent() else {
                     diagnostics.push(Diagnostic {
@@ -533,11 +533,11 @@ pub(crate) fn eval_toplevel_items(
     let mut defs = vec![];
     let mut exprs: Vec<Expression> = vec![];
     for item in items {
-        match &item.0 {
-            ToplevelItem_::Expr(toplevel_expression) => {
+        match &item {
+            ToplevelItem::Expr(toplevel_expression) => {
                 exprs.push(toplevel_expression.0.clone());
             }
-            ToplevelItem_::Block(block) => {
+            ToplevelItem::Block(block) => {
                 for expr in &block.exprs {
                     exprs.push(expr.as_ref().clone());
                 }
@@ -579,7 +579,7 @@ pub(crate) fn eval_tests_until_error(
 ) -> Result<ToplevelEvalSummary, EvalError> {
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem(ToplevelItem_::Test(test)) = item {
+        if let ToplevelItem::Test(test) = item {
             test_defs.push(test);
         }
     }
@@ -619,7 +619,7 @@ pub(crate) fn eval_tests(
 
     let mut test_defs = vec![];
     for item in items {
-        if let ToplevelItem(ToplevelItem_::Test(test)) = item {
+        if let ToplevelItem::Test(test) = item {
             test_defs.push(test);
         }
     }
@@ -663,8 +663,8 @@ pub(crate) fn eval_up_to_param(
     id: SyntaxId,
 ) -> Option<(Value, Position)> {
     for item in items {
-        match &item.0 {
-            ToplevelItem_::Fun(name_sym, fun_info, _) => {
+        match &item {
+            ToplevelItem::Fun(name_sym, fun_info, _) => {
                 let prev_args = match env.prev_call_args.get(&name_sym.name) {
                     _ if fun_info.params.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
@@ -683,7 +683,7 @@ pub(crate) fn eval_up_to_param(
                     }
                 }
             }
-            ToplevelItem_::Method(meth_info, _) => {
+            ToplevelItem::Method(meth_info, _) => {
                 let Some(prev_calls_on_type) = env
                     .prev_method_call_args
                     .get(&meth_info.receiver_hint.sym.name)
@@ -783,8 +783,8 @@ pub(crate) fn eval_up_to(
     // destructuring tuple, we want to return the tuple element and
     // position.
 
-    let mut res: Result<_, EvalError> = match &item.0 {
-        ToplevelItem_::Fun(name_sym, fun_info, _) => {
+    let mut res: Result<_, EvalError> = match &item {
+        ToplevelItem::Fun(name_sym, fun_info, _) => {
             load_toplevel_items(&[item.clone()], env);
             let args = match env.prev_call_args.get(&name_sym.name) {
                 _ if fun_info.params.params.is_empty() => vec![],
@@ -801,7 +801,7 @@ pub(crate) fn eval_up_to(
 
             res.map(|v| (v, position))
         }
-        ToplevelItem_::Method(method_info, _) => {
+        ToplevelItem::Method(method_info, _) => {
             load_toplevel_items(&[item.clone()], env);
             let type_name = &method_info.receiver_hint.sym.name;
 
@@ -827,7 +827,7 @@ pub(crate) fn eval_up_to(
 
             res.map(|v| (v, position))
         }
-        ToplevelItem_::Test(test) => {
+        ToplevelItem::Test(test) => {
             env.stop_at_expr_id = Some(expr_id);
 
             push_test_stackframe(test, env);
@@ -836,11 +836,11 @@ pub(crate) fn eval_up_to(
 
             res.map(|v| (v, position))
         }
-        ToplevelItem_::Enum(_) | ToplevelItem_::Struct(_) | ToplevelItem_::Import(_) => {
+        ToplevelItem::Enum(_) | ToplevelItem::Struct(_) | ToplevelItem::Import(_) => {
             // nothing to do
             return Err(EvalUpToErr::NoExpressionFound);
         }
-        ToplevelItem_::Expr(_) | ToplevelItem_::Block(_) => {
+        ToplevelItem::Expr(_) | ToplevelItem::Block(_) => {
             env.stop_at_expr_id = Some(expr_id);
 
             let res = eval_toplevel_items(&[item.clone()], env, session);
@@ -5183,11 +5183,11 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
 ) -> Result<Option<Value>, EvalError> {
     let mut exprs = vec![];
     for item in items {
-        match &item.0 {
-            ToplevelItem_::Expr(expr) => {
+        match &item {
+            ToplevelItem::Expr(expr) => {
                 exprs.push(expr.0.clone());
             }
-            ToplevelItem_::Block(block) => {
+            ToplevelItem::Block(block) => {
                 for expr in &block.exprs {
                     exprs.push(expr.as_ref().clone());
                 }
@@ -5259,8 +5259,8 @@ mod tests {
         let mut exprs = vec![];
         for item in items {
             match item {
-                ToplevelItem(ToplevelItem_::Expr(e)) => exprs.push(e.0),
-                ToplevelItem(ToplevelItem_::Block(b)) => {
+                ToplevelItem::Expr(e) => exprs.push(e.0),
+                ToplevelItem::Block(b) => {
                     for e in &b.exprs {
                         exprs.push(e.as_ref().clone());
                     }

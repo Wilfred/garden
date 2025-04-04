@@ -1230,14 +1230,14 @@ fn parse_enum(
 
     let position = Position::merge_token(&first_token, &close_brace_pos);
 
-    ToplevelItem(ToplevelItem_::Enum(EnumInfo {
+    ToplevelItem::Enum(EnumInfo {
         pos: position,
         visibility,
         doc_comment,
         name_sym: name_symbol,
         type_params,
         variants,
-    }))
+    })
 }
 
 fn parse_struct(
@@ -1275,14 +1275,14 @@ fn parse_struct(
 
     let position = Position::merge_token(&struct_token, &close_brace_pos);
 
-    ToplevelItem(ToplevelItem_::Struct(StructInfo {
+    ToplevelItem::Struct(StructInfo {
         pos: position,
         visibility,
         doc_comment,
         name_sym,
         type_params,
         fields,
-    }))
+    })
 }
 
 fn parse_test(
@@ -1316,12 +1316,12 @@ fn parse_test(
     let body = parse_block(tokens, id_gen, diagnostics, false);
     let position = Position::merge_token(&test_token, &body.close_brace);
 
-    ToplevelItem(ToplevelItem_::Test(TestInfo {
+    ToplevelItem::Test(TestInfo {
         pos: position,
         doc_comment,
         name_sym: name,
         body,
-    }))
+    })
 }
 
 fn parse_import(
@@ -1362,7 +1362,7 @@ fn parse_import(
         id: id_gen.next(),
     };
 
-    Some(ToplevelItem(ToplevelItem_::Import(import_info)))
+    Some(ToplevelItem::Import(import_info))
 }
 
 fn parse_type_symbol(
@@ -1970,7 +1970,7 @@ fn parse_method(
         kind: MethodKind::UserDefinedMethod(fun_info),
     };
 
-    ToplevelItem(ToplevelItem_::Method(meth_info, visibility))
+    ToplevelItem::Method(meth_info, visibility)
 }
 
 fn parse_function(
@@ -1998,7 +1998,7 @@ fn parse_function(
     let close_brace_pos = body.close_brace.clone();
     let position = Position::merge_token(&first_token, &close_brace_pos);
 
-    Some(ToplevelItem(ToplevelItem_::Fun(
+    Some(ToplevelItem::Fun(
         name_sym.clone(),
         FunInfo {
             pos: position.clone(),
@@ -2011,7 +2011,7 @@ fn parse_function(
             return_hint,
         },
         visibility,
-    )))
+    ))
 }
 
 const RESERVED_WORDS: &[&str] = &[
@@ -2243,7 +2243,7 @@ fn parse_toplevel_expr(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let expr = parse_expression(tokens, id_gen, diagnostics);
-    ToplevelItem(ToplevelItem_::Expr(ToplevelExpression(expr)))
+    ToplevelItem::Expr(ToplevelExpression(expr))
 }
 
 fn parse_toplevel_block(
@@ -2252,7 +2252,7 @@ fn parse_toplevel_block(
     diagnostics: &mut Vec<ParseError>,
 ) -> ToplevelItem {
     let block = parse_block(tokens, id_gen, diagnostics, false);
-    ToplevelItem(ToplevelItem_::Block(block))
+    ToplevelItem::Block(block)
 }
 
 fn parse_toplevel_items_from_tokens(
@@ -2266,7 +2266,7 @@ fn parse_toplevel_items_from_tokens(
         let start_idx = tokens.idx;
         match parse_toplevel_item_from_tokens(tokens, id_gen, diagnostics) {
             Some(item) => {
-                let was_invalid = item.0.is_invalid_or_placeholder();
+                let was_invalid = item.is_invalid_or_placeholder();
 
                 items.push(item);
                 if was_invalid {

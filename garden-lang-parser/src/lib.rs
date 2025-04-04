@@ -1228,7 +1228,7 @@ fn parse_enum(
         (variants, close_brace.position)
     };
 
-    let position = Position::merge(&enum_token.position, &close_brace_pos);
+    let position = Position::merge_token(&first_token, &close_brace_pos);
 
     ToplevelItem(ToplevelItem_::Enum(EnumInfo {
         pos: position,
@@ -1273,7 +1273,7 @@ fn parse_struct(
         (fields, close_brace.position)
     };
 
-    let position = Position::merge(&struct_token.position, &close_brace_pos);
+    let position = Position::merge_token(&struct_token, &close_brace_pos);
 
     ToplevelItem(ToplevelItem_::Struct(StructInfo {
         pos: position,
@@ -1314,7 +1314,7 @@ fn parse_test(
     }
 
     let body = parse_block(tokens, id_gen, diagnostics, false);
-    let position = Position::merge(&test_token.position, &body.close_brace);
+    let position = Position::merge_token(&test_token, &body.close_brace);
 
     ToplevelItem(ToplevelItem_::Test(TestInfo {
         pos: position,
@@ -1340,7 +1340,7 @@ fn parse_import(
         return None;
     };
 
-    let position = Position::merge(&import_token.position, &path_token.position);
+    let position = Position::merge_token(&import_token, &path_token.position);
 
     let path_s = if path_token.text.starts_with('\"') {
         unescape_string(path_token.text)
@@ -1950,7 +1950,7 @@ fn parse_method(
     let body = parse_block(tokens, id_gen, diagnostics, false);
     let close_brace_pos = body.close_brace.clone();
 
-    let position = Position::merge(&first_token.position, &close_brace_pos);
+    let position = Position::merge_token(&first_token, &close_brace_pos);
 
     let fun_info = FunInfo {
         pos: position.clone(),
@@ -1996,7 +1996,7 @@ fn parse_function(
 
     let body = parse_block(tokens, id_gen, diagnostics, false);
     let close_brace_pos = body.close_brace.clone();
-    let position = Position::merge(&first_token.position, &close_brace_pos);
+    let position = Position::merge_token(&first_token, &close_brace_pos);
 
     Some(ToplevelItem(ToplevelItem_::Fun(
         name_sym.clone(),

@@ -134,7 +134,7 @@ struct TypeCheckVisitor<'a> {
 impl TypeCheckVisitor<'_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match &item.0 {
-            ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(&fun_info),
+            ToplevelItem_::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),
             ToplevelItem_::Method(method_info, _) => self.visit_method_info(method_info),
             ToplevelItem_::Test(test_info) => self.visit_test_info(test_info),
             ToplevelItem_::Enum(enum_info) => self.visit_enum_info(enum_info),

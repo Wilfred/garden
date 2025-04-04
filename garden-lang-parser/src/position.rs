@@ -2,6 +2,8 @@ use std::{path::PathBuf, rc::Rc};
 
 use serde::{Deserialize, Serialize};
 
+use crate::lex::Token;
+
 /// A position is a range in source code. It is a span between
 /// `start_offset` and `end_offset` in `path`.
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
@@ -65,6 +67,17 @@ impl Position {
             },
             path: first.path.clone(),
         }
+    }
+
+    /// Merge the position of this token (including doc comments) with
+    /// the second position.
+    pub fn merge_token(first: &Token, second: &Self) -> Self {
+        let mut first_pos = first.position.clone();
+        if let Some((comment_pos, _)) = first.preceding_comments.first() {
+            first_pos = comment_pos.clone();
+        }
+
+        Self::merge(&first_pos, second)
     }
 
     /// Format this position as a human-friendly string, e.g. "foo.gdn:123".

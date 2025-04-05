@@ -601,7 +601,7 @@ enclosing point and print the result."
     (,(regexp-opt
        '("assert" "error" "list_directory" "print" "println"
          "shell" "string_repr" "todo"
-         "working_directory" "source_directory"
+         "set_working_directory" "working_directory" "source_directory"
          "write_file")
        'symbols)
      . font-lock-builtin-face)

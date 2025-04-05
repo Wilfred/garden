@@ -94,6 +94,19 @@ external fun working_directory(): Path {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Change the current working directory to `path`.
+//
+// This affects `working_directory()` as well as imports used in
+// `check_snippet` arguments.
+//
+// ```
+// set_working_directory(Path{ p: "/tmp" })
+// ```
+external fun set_working_directory(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+
 // Return the path of the directory that contains the current source
 // file. Returns None when run directly in a CLI or JSON session.
 //

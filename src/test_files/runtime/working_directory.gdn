@@ -1,0 +1,8 @@
+{
+  set_working_directory(Path{ p: "/tmp" })
+  dbg(working_directory())
+}
+
+// args: run
+// expected stdout: Path{ p: "/tmp" }
+

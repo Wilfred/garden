@@ -331,6 +331,7 @@ pub(crate) enum BuiltinFunctionKind {
     // we have namespaces.
     ShellArguments,
     WorkingDirectory,
+    SetWorkingDirectory,
     WriteFile,
     CheckSnippet,
     Lex,
@@ -350,6 +351,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Println => "println",
             BuiltinFunctionKind::SourceDirectory => "source_directory",
             BuiltinFunctionKind::ShellArguments => "shell_arguments",
+            BuiltinFunctionKind::SetWorkingDirectory => "set_working_directory",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
             BuiltinFunctionKind::WriteFile => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",

@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "garden-lang"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -321,7 +321,7 @@ dependencies = [
 
 [[package]]
 name = "garden-lang-parser"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "lazy_static",
  "line-numbers",

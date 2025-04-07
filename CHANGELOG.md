@@ -3,7 +3,7 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 
-# 0.19 (unreleased)
+# 0.19 (released 7th April 2025)
 **Goal: Website has snippets that are checked and linkified.**
 
 ## Running Code

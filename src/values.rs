@@ -298,6 +298,8 @@ impl Value {
     }
 }
 
+/// The name of type associated with this value. We will use this type
+/// name to look up available methods.
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
         name: match value.as_ref() {

@@ -970,6 +970,35 @@ fn parse_simple_expression_with_trailing(
                     );
                 }
             }
+            Some(token) if token.text == "::" => {
+                tokens.pop();
+
+                let next_token = tokens.peek();
+
+                // Require the symbol name to touch the :: when we're
+                // parsing a namespace access. This is an ambiguity problem
+                // when the user hasn't finished writing the dot
+                // access, but there is later code.
+                if Some(token.position.end_offset)
+                    == next_token.map(|tok| tok.position.start_offset)
+                {
+                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+
+                    expr = Expression::new(
+                        Position::merge(&expr.position, &variable.position),
+                        Expression_::NamespaceAccess(Rc::new(expr), variable),
+                        id_gen.next(),
+                    );
+                } else {
+                    let variable = placeholder_symbol(token.position, id_gen);
+
+                    expr = Expression::new(
+                        Position::merge(&expr.position, &variable.position),
+                        Expression_::NamespaceAccess(Rc::new(expr), variable),
+                        id_gen.next(),
+                    );
+                }
+            }
             _ => break,
         }
         assert!(

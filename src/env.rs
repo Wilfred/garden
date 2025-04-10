@@ -122,14 +122,23 @@ impl Env {
             );
         }
 
+        let mut prelude_values = FxHashMap::default();
+        prelude_values.insert(
+            SymbolName {
+                name: "print".to_owned(),
+            },
+            Value::new(Value_::BuiltinFunction(BuiltinFunctionKind::Print, None)),
+        );
+
+        let prelude_namespace = Value::new(Value_::Namespace {
+            name: "prelude".to_owned(),
+            values: prelude_values,
+        });
         file_scope.insert(
             SymbolName {
                 name: "prelude".to_owned(),
             },
-            Value::new(Value_::Namespace {
-                name: "prelude".to_owned(),
-                values: FxHashMap::default(),
-            }),
+            prelude_namespace,
         );
 
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =

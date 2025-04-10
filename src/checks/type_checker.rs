@@ -1371,6 +1371,12 @@ impl TypeCheckVisitor<'_> {
                     }
                 }
             }
+            Expression_::NamespaceAccess(recv, _sym) => {
+                self.verify_expr(&Type::namespace(), recv, type_bindings, expected_return_ty);
+
+                // TODO: look up the namespace and identify the type of the specific symbol being accessed.
+                Type::Top
+            }
             Expression_::FunLiteral(fun_info) => {
                 let param_tys = fun_info
                     .params

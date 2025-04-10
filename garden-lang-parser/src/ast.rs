@@ -410,6 +410,10 @@ pub enum Expression_ {
     /// ```
     DotAccess(Rc<Expression>, Symbol),
     /// ```garden
+    /// foo::bar
+    /// ```
+    NamespaceAccess(Rc<Expression>, Symbol),
+    /// ```garden
     /// fun(x, y) { x + y }
     /// ```
     FunLiteral(FunInfo),

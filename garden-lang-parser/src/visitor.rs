@@ -197,6 +197,9 @@ pub trait Visitor {
                 // TODO: custom method for this variant
                 self.visit_expr(recv);
             }
+            Expression_::NamespaceAccess(recv, _) => {
+                self.visit_expr(recv);
+            }
             Expression_::Assert(expr) => {
                 self.visit_expr(expr);
             }

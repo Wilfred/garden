@@ -4596,6 +4596,17 @@ fn eval_expr(
                 env.push_expr_to_eval(ExpressionState::NotEvaluated, recv.clone());
             }
         }
+        Expression_::NamespaceAccess(recv, sym) => {
+            if expr_state.done_children() {
+                eval_namespace_access(env, expr_value_is_used, sym, &recv.position)?;
+            } else {
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedAllSubexpressions,
+                    outer_expr.clone(),
+                );
+                env.push_expr_to_eval(ExpressionState::NotEvaluated, recv.clone());
+            }
+        }
         Expression_::Break => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             eval_break(env, expr_value_is_used);
@@ -4880,6 +4891,53 @@ fn eval_continue(env: &mut Env) {
             break;
         }
     }
+}
+
+fn eval_namespace_access(
+    env: &mut Env,
+    expr_value_is_used: bool,
+    symbol: &Symbol,
+    recv_pos: &Position,
+) -> Result<(), (RestoreValues, EvalError)> {
+    let recv_value = env
+        .pop_value()
+        .expect("Popped an empty value when evaluating namespace access");
+
+    match recv_value.as_ref() {
+        Value_::Namespace { name, values } => match values.get(&symbol.name) {
+            Some(v) => {
+                if expr_value_is_used {
+                    env.push_value(v.clone());
+                }
+            }
+            None => {
+                return Err((
+                    RestoreValues(vec![recv_value.clone()]),
+                    EvalError::ResumableError(
+                        symbol.position.clone(),
+                        ErrorMessage(vec![
+                            msgtext!("Namespace "),
+                            msgcode!("{}", name),
+                            msgtext!(" does not contain a function named "),
+                            msgcode!("{}", symbol.name),
+                            msgtext!(". "),
+                        ]),
+                    ),
+                ));
+            }
+        },
+        _ => {
+            return Err((
+                RestoreValues(vec![recv_value.clone()]),
+                EvalError::ResumableError(
+                    recv_pos.clone(),
+                    format_type_error("namespace", &recv_value, env),
+                ),
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 fn eval_dot_access(

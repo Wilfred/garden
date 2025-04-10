@@ -455,6 +455,12 @@ impl Env {
             TypeName { name: "Fun".into() },
             TypeDef::Builtin(BuiltinType::Fun, None),
         );
+        types.insert(
+            TypeName {
+                name: "Namespace".into(),
+            },
+            TypeDef::Builtin(BuiltinType::Namespace, None),
+        );
 
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) = parse_toplevel_items(

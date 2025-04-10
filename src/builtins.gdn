@@ -372,3 +372,8 @@ test type_source {
 external fun shell_arguments(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// A collection of functions and types from importing a file.
+struct Namespace {
+  __BUILTIN_IMPLEMENTATION: NoValue,
+}

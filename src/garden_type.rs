@@ -127,6 +127,16 @@ impl Type {
         }
     }
 
+    pub(crate) fn namespace() -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                name: "Namespace".to_owned(),
+            },
+            args: vec![],
+        }
+    }
+
     pub(crate) fn path() -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
@@ -172,6 +182,7 @@ impl Type {
                 TypeDef::Builtin(builtin_type, _) => match builtin_type {
                     BuiltinType::Int => Ok(Type::int()),
                     BuiltinType::String => Ok(Type::string()),
+                    BuiltinType::Namespace => Ok(Type::namespace()),
                     BuiltinType::List => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
@@ -241,6 +252,7 @@ impl Type {
             Value_::EnumVariant { runtime_type, .. } => runtime_type.clone(),
             Value_::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
             Value_::Struct { runtime_type, .. } => runtime_type.clone(),
+            Value_::Namespace { .. } => Type::namespace(),
         }
     }
 

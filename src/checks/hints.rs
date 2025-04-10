@@ -106,6 +106,7 @@ impl Visitor for HintVisitor<'_> {
                         let num_expected = match b {
                             BuiltinType::Int => Some(0),
                             BuiltinType::String => Some(0),
+                            BuiltinType::Namespace => Some(0),
                             BuiltinType::Fun => Some(2),
                             BuiltinType::List => Some(1),
                             BuiltinType::Tuple => None,

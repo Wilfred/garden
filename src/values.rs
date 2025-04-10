@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::rc::Rc;
 
+use rustc_hash::FxHashMap;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
@@ -63,6 +64,10 @@ pub(crate) enum Value_ {
         type_name: TypeName,
         fields: Vec<(SymbolName, Value)>,
         runtime_type: Type,
+    },
+    Namespace {
+        name: String,
+        items: FxHashMap<SymbolName, Value>,
     },
 }
 
@@ -314,6 +319,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
                 &type_name.name
             }
             Value_::Struct { type_name, .. } => &type_name.name,
+            Value_::Namespace { .. } => "Namespace",
         }
         .to_owned(),
     }
@@ -494,6 +500,7 @@ impl Value {
 
                 s
             }
+            Value_::Namespace { name, .. } => format!("namespace:{}", name),
         }
     }
 

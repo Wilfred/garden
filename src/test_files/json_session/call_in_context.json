@@ -17,7 +17,7 @@
 //             "end_line_number": 0,
 //             "column": 16,
 //             "end_column": 17,
-//             "path": "__json_session_unnamed_2715__"
+//             "path": "__json_session_unnamed_2720__"
 //           },
 //           "level": "Warning"
 //         },
@@ -30,7 +30,7 @@
 //             "end_line_number": 0,
 //             "column": 4,
 //             "end_column": 7,
-//             "path": "__json_session_unnamed_2715__"
+//             "path": "__json_session_unnamed_2720__"
 //           },
 //           "level": "Warning"
 //         }
@@ -57,10 +57,10 @@
 //               "end_line_number": 0,
 //               "column": 22,
 //               "end_column": 36,
-//               "path": "__json_session_unnamed_2715__"
+//               "path": "__json_session_unnamed_2720__"
 //             },
 //             "message": "Error: oh no",
-//             "stack": "Error: oh no\n--> __json_session_unnamed_2715__:1\t fun foo()\nfun foo() { let x = 1 error(\"oh no\") }\n                      ^^^^^^^^^^^^^^\n--> __json_session_unnamed_2725__:1\t __toplevel__\nfoo()"
+//             "stack": "Error: oh no\n--> __json_session_unnamed_2720__:1\t fun foo()\nfun foo() { let x = 1 error(\"oh no\") }\n                      ^^^^^^^^^^^^^^\n--> __json_session_unnamed_2730__:1\t __toplevel__\nfoo()"
 //           }
 //         ]
 //       },

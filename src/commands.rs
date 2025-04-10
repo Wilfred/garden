@@ -206,6 +206,7 @@ fn describe_type(type_: &TypeDef) -> String {
                 BuiltinType::Fun => "Fun",
                 BuiltinType::List => "List",
                 BuiltinType::Tuple => "Tuple",
+                BuiltinType::Namespace => "Namespace",
             };
             // TODO: Offer more comprehensive docs on built-in types.
             format!("{name} is a built-in type.")
@@ -507,6 +508,7 @@ pub(crate) fn run_command<T: Write>(
                     Value_::EnumVariant { .. } => false,
                     Value_::EnumConstructor { .. } => false,
                     Value_::Struct { .. } => false,
+                    Value_::Namespace { .. } => false,
                 };
 
                 if is_fun {

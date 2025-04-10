@@ -7,10 +7,14 @@ use garden_lang_parser::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub(crate) enum BuiltinType {
+    // TODO: do we need to denote BuiltinType values for these, now we
+    // have stubs in builtins.gdn?
     Int,
     String,
-    Fun,
+    Namespace,
     List,
+
+    Fun,
     Tuple,
 }
 
@@ -31,6 +35,7 @@ impl TypeDef {
             TypeDef::Builtin(built_in_type, _) => match built_in_type {
                 BuiltinType::Int => vec![],
                 BuiltinType::String => vec![],
+                BuiltinType::Namespace => vec![],
                 BuiltinType::Fun => vec![
                     TypeSymbol {
                         name: "Args".into(),

@@ -168,7 +168,7 @@ fn handle_load_request(
     let summary = if new_syms.is_empty() {
         "".to_owned()
     } else if new_syms.len() == 1 {
-        format!("Loaded {}.", new_syms[0].name)
+        format!("Loaded {}.", new_syms[0].text)
     } else {
         format!("Loaded {} definitions.", new_syms.len())
     };
@@ -627,7 +627,7 @@ fn handle_run_eval_request(
             let definition_summary = if new_syms.is_empty() {
                 "".to_owned()
             } else if new_syms.len() == 1 {
-                format!("Loaded {}", new_syms[0].name)
+                format!("Loaded {}", new_syms[0].text)
             } else {
                 format!("Loaded {} definitions", new_syms.len())
             };

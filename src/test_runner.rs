@@ -105,7 +105,7 @@ fn sandboxed_tests_summary(
                 "passed"
             }
         };
-        tests.insert(test_sym.name.name.clone(), msg.to_owned());
+        tests.insert(test_sym.name.text.clone(), msg.to_owned());
     }
 
     if test_at_cursor.is_some() {
@@ -202,9 +202,9 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
             print!(
                 "Failed: {}",
                 if use_color {
-                    test_sym.name.name.bold().to_string()
+                    test_sym.name.text.bold().to_string()
                 } else {
-                    test_sym.name.name.clone()
+                    test_sym.name.text.clone()
                 }
             );
 

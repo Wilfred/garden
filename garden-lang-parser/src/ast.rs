@@ -124,29 +124,29 @@ impl TypeHint {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct SymbolName {
-    pub name: String,
+    pub text: String,
 }
 
 impl Display for SymbolName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "{}", self.text)
     }
 }
 
 impl SymbolName {
     pub fn is_underscore(&self) -> bool {
-        self.name == "_"
+        self.text == "_"
     }
 
     pub fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing this symbol in userland code.
-        self.name == "__placeholder" || self.name == "__reserved_word_placeholder"
+        self.text == "__placeholder" || self.text == "__reserved_word_placeholder"
     }
 }
 
 impl From<&str> for SymbolName {
     fn from(s: &str) -> Self {
-        SymbolName { name: s.to_owned() }
+        SymbolName { text: s.to_owned() }
     }
 }
 
@@ -168,7 +168,7 @@ pub struct Symbol {
 impl Symbol {
     pub fn new<S: AsRef<str>>(position: Position, name: S, id_gen: &mut IdGenerator) -> Self {
         let name = SymbolName {
-            name: name.as_ref().to_owned(),
+            text: name.as_ref().to_owned(),
         };
 
         Self {
@@ -194,7 +194,7 @@ impl std::fmt::Debug for Symbol {
                 .field("interned_id", &self.interned_id)
                 .finish()
         } else {
-            write!(f, "Symbol\"{}\"", self.name.name)
+            write!(f, "Symbol\"{}\"", self.name.text)
         }
     }
 }

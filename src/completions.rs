@@ -43,7 +43,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
                 let prefix = if meth_sym.name.is_placeholder() {
                     ""
                 } else {
-                    &meth_sym.name.name
+                    &meth_sym.name.text
                 };
                 print_methods(&env, recv_ty, prefix);
             }
@@ -71,7 +71,7 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
     let mut items: Vec<CompletionItem> = vec![];
 
     for (method_name, meth_info) in methods.iter() {
-        if !method_name.name.starts_with(prefix) {
+        if !method_name.text.starts_with(prefix) {
             continue;
         }
 
@@ -96,10 +96,10 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
 
         let (name, suffix) = if params.is_empty() {
             // Complete parentheses too if there are zero parameters.
-            (format!("{}()", method_name.name), return_hint)
+            (format!("{}()", method_name.text), return_hint)
         } else {
             (
-                method_name.name.clone(),
+                method_name.text.clone(),
                 format!("({}){}", params, return_hint),
             )
         };
@@ -109,12 +109,12 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
 
     if let Some(TypeDef::Struct(struct_info)) = env.get_type_def(&type_name) {
         for field in &struct_info.fields {
-            if !field.sym.name.name.starts_with(prefix) {
+            if !field.sym.name.text.starts_with(prefix) {
                 continue;
             }
 
             items.push(CompletionItem {
-                name: field.sym.name.name.clone(),
+                name: field.sym.name.text.clone(),
                 suffix: format!(": {}", field.hint.as_src()),
             });
         }

@@ -1373,7 +1373,7 @@ fn parse_type_symbol(
     let name = parse_symbol(tokens, id_gen, diagnostics);
     TypeSymbol {
         name: TypeName {
-            name: name.name.name,
+            name: name.name.text,
         },
         position: name.position,
         id: id_gen.next(),
@@ -1683,7 +1683,7 @@ fn parse_parameters(
             continue;
         }
 
-        let param_name = &param.symbol.name.name;
+        let param_name = &param.symbol.name.text;
         if seen.contains(param_name) {
             diagnostics.push(ParseError::Invalid {
                 position: param.symbol.position.clone(),
@@ -2021,7 +2021,7 @@ const RESERVED_WORDS: &[&str] = &[
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
-        name: "__placeholder".to_string(),
+        text: "__placeholder".to_string(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),
@@ -2033,7 +2033,7 @@ pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbo
 
 fn reserved_word_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
-        name: "__reserved_word_placeholder".to_string(),
+        text: "__reserved_word_placeholder".to_string(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),
@@ -2044,7 +2044,7 @@ fn reserved_word_placeholder(position: Position, id_gen: &mut IdGenerator) -> Sy
 }
 
 fn is_reserved_word_placeholder(symbol: &Symbol) -> bool {
-    symbol.name.name == "__reserved_word_placeholder"
+    symbol.name.text == "__reserved_word_placeholder"
 }
 
 fn parse_let_destination(
@@ -2092,7 +2092,7 @@ fn parse_let_destination(
                 continue;
             }
 
-            let name = &symbol.name.name;
+            let name = &symbol.name.text;
             if seen.contains(name) {
                 diagnostics.push(ParseError::Invalid {
                     position: symbol.position.clone(),
@@ -2149,7 +2149,7 @@ fn parse_symbol(
     }
 
     let name = SymbolName {
-        name: variable_token.text.to_string(),
+        text: variable_token.text.to_string(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),

@@ -395,7 +395,7 @@ pub(crate) fn run_command<T: Write>(
             for type_name in type_names {
                 let mut method_names: Vec<_> =
                     env.methods.get(type_name).unwrap().values().collect();
-                method_names.sort_by_key(|meth| &meth.name_sym.name.name);
+                method_names.sort_by_key(|meth| &meth.name_sym.name.text);
 
                 for meth_info in method_names {
                     let name = format!("{}::{}", type_name, &meth_info.name_sym.name);
@@ -462,7 +462,7 @@ pub(crate) fn run_command<T: Write>(
             // TODO: search doc comments too.
             let mut matching_defs = vec![];
             for (global_def, _) in env.file_scope.iter() {
-                if global_def.name.contains(&text) {
+                if global_def.text.contains(&text) {
                     matching_defs.push(global_def);
                 }
             }
@@ -512,7 +512,7 @@ pub(crate) fn run_command<T: Write>(
                 };
 
                 if is_fun {
-                    names.push(&name.name);
+                    names.push(&name.text);
                 }
             }
 
@@ -530,7 +530,7 @@ pub(crate) fn run_command<T: Write>(
                     .last_mut()
                     .expect("Should always have at least one frame");
 
-                let sym_name = SymbolName { name: name.clone() };
+                let sym_name = SymbolName { text: name.clone() };
                 let sym_intern_id = env.id_gen.intern_symbol(&sym_name);
 
                 if stack_frame.bindings.has(sym_intern_id) {
@@ -554,7 +554,7 @@ pub(crate) fn run_command<T: Write>(
         Command::Forget(name) => {
             if let Some(name) = name {
                 let sym = SymbolName {
-                    name: name.to_owned(),
+                    text: name.to_owned(),
                 };
 
                 match env.file_scope.get(&sym) {
@@ -592,7 +592,7 @@ pub(crate) fn run_command<T: Write>(
             if let Some(stack_frame) = env.stack.0.last() {
                 for (i, (var_id, value)) in stack_frame.bindings.all().iter().enumerate() {
                     let name = match env.id_gen.intern_id_to_name.get(var_id) {
-                        Some(SymbolName { name }) => name.clone(),
+                        Some(SymbolName { text: name }) => name.clone(),
                         None => "INTERNAL ERROR: Could not find var with this ID".to_owned(),
                     };
 
@@ -612,7 +612,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Test(name) => match name {
             Some(name) => {
-                return Err(EvalAction::RunTest(SymbolName { name: name.clone() }));
+                return Err(EvalAction::RunTest(SymbolName { text: name.clone() }));
             }
             None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.").unwrap(),
         },
@@ -704,7 +704,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
             name: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName {
-                name: method_name.to_owned(),
+                text: method_name.to_owned(),
             }) {
                 Ok(method_info
                     .fun_info()
@@ -730,7 +730,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
             }
         }
     } else if let Some(value) = env.file_scope.get(&SymbolName {
-        name: name.to_owned(),
+        text: name.to_owned(),
     }) {
         match value.as_ref() {
             Value_::Fun { fun_info, .. } => {
@@ -752,7 +752,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             name: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName {
-                name: method_name.to_owned(),
+                text: method_name.to_owned(),
             }) {
                 Ok((
                     format!("Method `{method_name}`"),
@@ -770,7 +770,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
     }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))
     } else if let Some(value) = env.file_scope.get(&SymbolName {
-        name: name.to_owned(),
+        text: name.to_owned(),
     }) {
         // TODO: Ideally we'd print both values and type if both are defined.
         match describe_fun(value) {

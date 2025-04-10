@@ -63,7 +63,7 @@ impl UnusedVariableVisitor {
     /// Is `name` locally bound in syntactic context we're currently
     /// checking?
     fn is_locally_bound(&self, name: &SymbolName) -> bool {
-        if name.name == "__BUILTIN_IMPLEMENTATION" {
+        if name.text == "__BUILTIN_IMPLEMENTATION" {
             return true;
         }
 
@@ -78,7 +78,7 @@ impl UnusedVariableVisitor {
 
     /// Mark `name`, a local variable, as used in `self.bound_scopes`.
     fn mark_used(&mut self, name: &SymbolName) {
-        if name.name == "__BUILTIN_IMPLEMENTATION" {
+        if name.text == "__BUILTIN_IMPLEMENTATION" {
             // Mark everything as used, because this is just a stub.
             for scope in self.bound_scopes.iter_mut() {
                 let keys = scope.keys().cloned().collect::<Vec<_>>();

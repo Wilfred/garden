@@ -1053,7 +1053,7 @@ impl TypeCheckVisitor<'_> {
                         // errors.
                         self.set_binding(sym, ty.clone());
 
-                        if sym.name.name != "__BUILTIN_IMPLEMENTATION" {
+                        if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
                             self.diagnostics.push(Diagnostic {
                                 level: Level::Error,
                                 message: ErrorMessage(vec![
@@ -1070,7 +1070,7 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::Call(recv, paren_args) => {
                 if let Expression_::Variable(s) = &recv.expr_ {
-                    if s.name.name == "todo"
+                    if s.name.text == "todo"
                         && self.bindings.get(&SymbolName::from("todo")).is_none()
                     {
                         self.diagnostics.push(Diagnostic {
@@ -1126,7 +1126,7 @@ impl TypeCheckVisitor<'_> {
                                 }
                             }
                         } else {
-                            let name = name_sym.map(|sym| sym.name.name.clone());
+                            let name = name_sym.map(|sym| sym.name.text.clone());
                             self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
                         }
 
@@ -2088,7 +2088,7 @@ fn check_match_exhaustive(
                     msgtext!("This match expression does not cover all the cases of ",),
                     msgcode!("{}", type_name),
                     msgtext!(". It's missing ",),
-                    msgcode!("{}", variant.name_sym.name.name),
+                    msgcode!("{}", variant.name_sym.name.text),
                     msgtext!("."),
                 ]),
                 position: scrutinee_pos.clone(),

@@ -116,7 +116,7 @@ impl Env {
         for fun_kind in BuiltinFunctionKind::iter() {
             file_scope.insert(
                 SymbolName {
-                    name: format!("{}", fun_kind),
+                    text: format!("{}", fun_kind),
                 },
                 Value::new(Value_::BuiltinFunction(fun_kind, None)),
             );
@@ -125,7 +125,7 @@ impl Env {
         let mut prelude_values = FxHashMap::default();
         prelude_values.insert(
             SymbolName {
-                name: "print".to_owned(),
+                text: "print".to_owned(),
             },
             Value::new(Value_::BuiltinFunction(BuiltinFunctionKind::Print, None)),
         );
@@ -136,7 +136,7 @@ impl Env {
         });
         file_scope.insert(
             SymbolName {
-                name: "prelude".to_owned(),
+                text: "prelude".to_owned(),
             },
             prelude_namespace,
         );
@@ -149,7 +149,7 @@ impl Env {
         let mut path_methods = FxHashMap::default();
         path_methods.insert(
             SymbolName {
-                name: "exists".to_owned(),
+                text: "exists".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -175,7 +175,7 @@ impl Env {
         );
         path_methods.insert(
             SymbolName {
-                name: "read".to_owned(),
+                text: "read".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -210,7 +210,7 @@ impl Env {
         let mut string_methods = FxHashMap::default();
         string_methods.insert(
             SymbolName {
-                name: "index_of".to_owned(),
+                text: "index_of".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -240,7 +240,7 @@ impl Env {
         );
         string_methods.insert(
             SymbolName {
-                name: "len".to_owned(),
+                text: "len".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -266,7 +266,7 @@ impl Env {
         );
         string_methods.insert(
             SymbolName {
-                name: "lines".to_owned(),
+                text: "lines".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -292,7 +292,7 @@ impl Env {
         );
         string_methods.insert(
             SymbolName {
-                name: "substring".to_owned(),
+                text: "substring".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -331,7 +331,7 @@ impl Env {
         let mut list_methods = FxHashMap::default();
         list_methods.insert(
             SymbolName {
-                name: "append".to_owned(),
+                text: "append".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -357,7 +357,7 @@ impl Env {
         );
         list_methods.insert(
             SymbolName {
-                name: "contains".to_owned(),
+                text: "contains".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -387,7 +387,7 @@ impl Env {
         );
         list_methods.insert(
             SymbolName {
-                name: "len".to_owned(),
+                text: "len".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),
@@ -413,7 +413,7 @@ impl Env {
         );
         list_methods.insert(
             SymbolName {
-                name: "get".to_owned(),
+                text: "get".to_owned(),
             },
             MethodInfo {
                 pos: Position::todo(builtins_path.clone()),

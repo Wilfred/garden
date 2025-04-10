@@ -57,7 +57,7 @@ impl Visitor for UnreachableVisitor {
                 }
                 Expression_::Call(recv, _) => {
                     if let Expression_::Variable(v) = &recv.expr_ {
-                        if v.name.name == "error" {
+                        if v.name.text == "error" {
                             unreachable_reason = Some("Unreachable code after `error`.");
                         }
                     }
@@ -78,7 +78,7 @@ impl Visitor for UnreachableVisitor {
                     // TODO: Handle the case when `v` isn't actually
                     // `True` from the prelude because the user has
                     // rebound it.
-                    v.name.name == "True"
+                    v.name.text == "True"
                 } else {
                     false
                 };

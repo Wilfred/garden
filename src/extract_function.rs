@@ -69,7 +69,7 @@ pub(crate) fn extract_function(
 
             let arguments_src = params
                 .iter()
-                .map(|(param, _)| param.name.clone())
+                .map(|(param, _)| param.text.clone())
                 .collect::<Vec<String>>()
                 .join(", ");
 
@@ -99,8 +99,8 @@ fn extracted_fun_src(
     let params_signature = params
         .iter()
         .map(|(param, ty)| match ty {
-            Some(ty) => format!("{}: {}", param.name, ty),
-            None => param.name.to_owned(),
+            Some(ty) => format!("{}: {}", param.text, ty),
+            None => param.text.to_owned(),
         })
         .collect::<Vec<_>>()
         .join(", ");

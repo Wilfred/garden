@@ -67,7 +67,7 @@ pub(crate) enum Value_ {
     },
     Namespace {
         name: String,
-        items: FxHashMap<SymbolName, Value>,
+        values: FxHashMap<SymbolName, Value>,
     },
 }
 

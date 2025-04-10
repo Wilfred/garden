@@ -128,7 +128,7 @@ impl Env {
             },
             Value::new(Value_::Namespace {
                 name: "prelude".to_owned(),
-                items: FxHashMap::default(),
+                values: FxHashMap::default(),
             }),
         );
 

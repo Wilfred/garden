@@ -1373,7 +1373,7 @@ fn parse_type_symbol(
     let name = parse_symbol(tokens, id_gen, diagnostics);
     TypeSymbol {
         name: TypeName {
-            name: name.name.text,
+            text: name.name.text,
         },
         position: name.position,
         id: id_gen.next(),
@@ -1524,7 +1524,7 @@ fn parse_tuple_type_hint(
     TypeHint {
         sym: TypeSymbol {
             name: TypeName {
-                name: "Tuple".to_owned(),
+                text: "Tuple".to_owned(),
             },
             position: open_paren.position.clone(),
             id: id_gen.next(),
@@ -1552,7 +1552,7 @@ fn parse_type_hint(
         None => sym.position.clone(),
     };
 
-    if sym.name.name == "Tuple" {
+    if sym.name.text == "Tuple" {
         let formatted_args = args
             .iter()
             .map(|h| h.as_src())
@@ -1929,7 +1929,7 @@ fn parse_method(
             TypeHint {
                 sym: TypeSymbol {
                     name: TypeName {
-                        name: "__MISSING_TYPE".to_owned(),
+                        text: "__MISSING_TYPE".to_owned(),
                     },
                     position: receiver_sym.position.clone(),
                     id: id_gen.next(),

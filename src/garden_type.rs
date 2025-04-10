@@ -56,7 +56,7 @@ pub(crate) enum Type {
 impl Type {
     pub(crate) fn is_no_value(&self) -> bool {
         match self {
-            Type::UserDefined { name, .. } => name.name == "NoValue",
+            Type::UserDefined { name, .. } => name.text == "NoValue",
             _ => false,
         }
     }
@@ -70,7 +70,7 @@ impl Type {
             return false;
         };
 
-        name.name == "Unit"
+        name.text == "Unit"
     }
 
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
@@ -81,7 +81,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
             name: TypeName {
-                name: "NoValue".to_owned(),
+                text: "NoValue".to_owned(),
             },
             args: vec![],
         }
@@ -91,7 +91,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
             name: TypeName {
-                name: "Unit".to_owned(),
+                text: "Unit".to_owned(),
             },
             args: vec![],
         }
@@ -101,7 +101,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Enum,
             name: TypeName {
-                name: "Bool".to_owned(),
+                text: "Bool".to_owned(),
             },
             args: vec![],
         }
@@ -111,7 +111,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                name: "Int".to_owned(),
+                text: "Int".to_owned(),
             },
             args: vec![],
         }
@@ -121,7 +121,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                name: "String".to_owned(),
+                text: "String".to_owned(),
             },
             args: vec![],
         }
@@ -131,7 +131,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                name: "Namespace".to_owned(),
+                text: "Namespace".to_owned(),
             },
             args: vec![],
         }
@@ -141,7 +141,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                name: "Path".to_owned(),
+                text: "Path".to_owned(),
             },
             args: vec![],
         }
@@ -151,7 +151,7 @@ impl Type {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                name: "List".to_owned(),
+                text: "List".to_owned(),
             },
             args: vec![ty],
         }
@@ -312,7 +312,7 @@ impl Type {
             Type::Top | Type::Error(_) => None,
             Type::Tuple(_) => None,
             Type::Fun { .. } => Some(TypeName {
-                name: "Fun".to_owned(),
+                text: "Fun".to_owned(),
             }),
             Type::UserDefined {
                 kind: _,
@@ -333,12 +333,12 @@ impl Display for Type {
                 ..
             } => {
                 if args.is_empty() {
-                    write!(f, "{}", name_sym.name)
+                    write!(f, "{}", name_sym.text)
                 } else {
                     write!(
                         f,
                         "{}<{}>",
-                        name_sym.name,
+                        name_sym.text,
                         args.iter()
                             .map(|arg| format!("{}", arg))
                             .collect::<Vec<_>>()
@@ -360,7 +360,7 @@ impl Display for Type {
                 write!(f, "Fun<({}), {}>", formatted_args, return_)
             }
             Type::Top => write!(f, "_"),
-            Type::TypeParameter(name) => write!(f, "{}", name.name),
+            Type::TypeParameter(name) => write!(f, "{}", name.text),
             Type::Error(reason) => write!(f, "__ERROR({})", reason),
         }
     }
@@ -441,7 +441,7 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
         ) => {
             // Values in Garden are nominally typed, so we only need
             // to compare type names.
-            if lhs_name_sym.name != rhs_name_sym.name {
+            if lhs_name_sym.text != rhs_name_sym.text {
                 return false;
             }
 

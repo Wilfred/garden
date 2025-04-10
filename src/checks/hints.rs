@@ -127,7 +127,7 @@ impl Visitor for HintVisitor<'_> {
 
                         if matches!(b, BuiltinType::Fun) {
                             let first_arg = &type_hint.args[0];
-                            if first_arg.sym.name.name != "Tuple" {
+                            if first_arg.sym.name.text != "Tuple" {
                                 self.diagnostics.push(Diagnostic {
                                     level: Level::Error,
                                     message: ErrorMessage(vec![

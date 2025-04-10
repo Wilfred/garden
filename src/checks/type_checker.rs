@@ -777,7 +777,7 @@ impl TypeCheckVisitor<'_> {
                 self.bindings.enter_block();
 
                 let elem_ty = match expr_ty {
-                    Type::UserDefined { name, args, .. } if name.name == "List" => {
+                    Type::UserDefined { name, args, .. } if name.text == "List" => {
                         if let Some(arg) = args.first() {
                             arg.clone()
                         } else {
@@ -1847,7 +1847,7 @@ fn unify_and_solve_ty(decl_ty: &Type, solved_ty: &Type, ty_var_env: &mut TypeVar
                 name: solved_name,
                 args: solved_args,
             },
-        ) if decl_kind == solved_kind && decl_name.name == solved_name.name => {
+        ) if decl_kind == solved_kind && decl_name.text == solved_name.text => {
             for (decl_arg, solved_arg) in decl_args.iter().zip(solved_args.iter()) {
                 unify_and_solve_ty(decl_arg, solved_arg, ty_var_env);
             }
@@ -1897,7 +1897,7 @@ fn unify_and_solve_hint(
         }
     }
 
-    if hint_name.name == "Fun" && hint.args.len() == 2 {
+    if hint_name.text == "Fun" && hint.args.len() == 2 {
         if let Type::Fun {
             params, return_, ..
         } = ty
@@ -1933,7 +1933,7 @@ fn unify_and_solve_hint(
             name: name_sym,
             args,
             ..
-        } if name_sym.name == hint_name.name => {
+        } if name_sym.text == hint_name.text => {
             // TODO: stop assuming that all types are covariant.
             for (hint_arg, arg) in hint.args.iter().zip(args) {
                 unify_and_solve_hint(env, hint_arg, position, arg, ty_var_env)?;
@@ -2004,7 +2004,7 @@ fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
                 args: args_2,
             },
         ) => {
-            if kind_1 != kind_2 || name_1.name != name_2.name || args_1.len() != args_2.len() {
+            if kind_1 != kind_2 || name_1.text != name_2.text || args_1.len() != args_2.len() {
                 return None;
             }
 

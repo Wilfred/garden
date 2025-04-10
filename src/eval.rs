@@ -165,7 +165,7 @@ impl std::fmt::Display for EnclosingSymbol {
         match self {
             EnclosingSymbol::Fun(fun_sym) => write!(f, "fun {}()", fun_sym.name),
             EnclosingSymbol::Method(type_name, meth_sym) => {
-                write!(f, "fun (this: {}) {}()", type_name.name, meth_sym.name)
+                write!(f, "fun (this: {}) {}()", type_name.text, meth_sym.name)
             }
             EnclosingSymbol::Test(test_sym) => write!(f, "test {}", test_sym.name),
             EnclosingSymbol::Closure => write!(f, "closure"),
@@ -341,7 +341,7 @@ fn load_toplevel_items_(
                 enum_infos.push(enum_info);
 
                 let name_as_sym = SymbolName {
-                    text: enum_info.name_sym.name.name.clone(),
+                    text: enum_info.name_sym.name.text.clone(),
                 };
                 new_syms.push(name_as_sym);
             }
@@ -357,7 +357,7 @@ fn load_toplevel_items_(
                 }
 
                 let name_as_sym = SymbolName {
-                    text: struct_info.name_sym.name.name.clone(),
+                    text: struct_info.name_sym.name.text.clone(),
                 };
                 new_syms.push(name_as_sym);
             }
@@ -1378,7 +1378,7 @@ fn eval_if(
                 bool_position.clone(),
                 format_type_error(
                     &TypeName {
-                        name: "Bool".into(),
+                        text: "Bool".into(),
                     },
                     &condition_value,
                     env,
@@ -1408,7 +1408,7 @@ fn eval_while_body(
                 condition_pos.clone(),
                 format_type_error(
                     &TypeName {
-                        name: "Bool".into(),
+                        text: "Bool".into(),
                     },
                     &condition_value,
                     env,
@@ -1475,7 +1475,7 @@ fn eval_for_in(
                 iteree_pos.clone(),
                 format_type_error(
                     &TypeName {
-                        name: "List".into(),
+                        text: "List".into(),
                     },
                     &iteree_value,
                     env,
@@ -1573,7 +1573,7 @@ fn eval_assign_update(
             RestoreValues(vec![]),
             EvalError::ResumableError(
                 position.clone(),
-                format_type_error(&TypeName { name: "Int".into() }, &var_value, env),
+                format_type_error(&TypeName { text: "Int".into() }, &var_value, env),
             ),
         ));
     };
@@ -1587,7 +1587,7 @@ fn eval_assign_update(
             RestoreValues(vec![rhs_value.clone()]),
             EvalError::ResumableError(
                 position.clone(),
-                format_type_error(&TypeName { name: "Int".into() }, &rhs_value, env),
+                format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
             ),
         ));
     };
@@ -1780,7 +1780,7 @@ fn eval_boolean_binop(
                     lhs_position.clone(),
                     format_type_error(
                         &TypeName {
-                            name: "Bool".into(),
+                            text: "Bool".into(),
                         },
                         &lhs_value,
                         env,
@@ -1796,7 +1796,7 @@ fn eval_boolean_binop(
                     rhs_position.clone(),
                     format_type_error(
                         &TypeName {
-                            name: "Bool".into(),
+                            text: "Bool".into(),
                         },
                         &rhs_value,
                         env,
@@ -1864,7 +1864,7 @@ fn eval_integer_binop(
                     RestoreValues(vec![lhs_value.clone(), rhs_value]),
                     EvalError::ResumableError(
                         lhs_position.clone(),
-                        format_type_error(&TypeName { name: "Int".into() }, &lhs_value, env),
+                        format_type_error(&TypeName { text: "Int".into() }, &lhs_value, env),
                     ),
                 ));
             }
@@ -1876,7 +1876,7 @@ fn eval_integer_binop(
                     RestoreValues(vec![lhs_value, rhs_value.clone()]),
                     EvalError::ResumableError(
                         rhs_position.clone(),
-                        format_type_error(&TypeName { name: "Int".into() }, &rhs_value, env),
+                        format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
                     ),
                 ));
             }
@@ -1992,7 +1992,7 @@ fn eval_string_concat(
                         lhs_position.clone(),
                         format_type_error(
                             &TypeName {
-                                name: "String".into(),
+                                text: "String".into(),
                             },
                             &lhs_value,
                             env,
@@ -2010,7 +2010,7 @@ fn eval_string_concat(
                         rhs_position.clone(),
                         format_type_error(
                             &TypeName {
-                                name: "String".into(),
+                                text: "String".into(),
                             },
                             &rhs_value,
                             env,
@@ -2137,7 +2137,7 @@ fn eval_builtin_call(
                 _ => {
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2185,7 +2185,7 @@ fn eval_builtin_call(
 
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2239,7 +2239,7 @@ fn eval_builtin_call(
 
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2324,7 +2324,7 @@ fn eval_builtin_call(
 
                             let message = format_type_error(
                                 &TypeName {
-                                    name: "List".into(),
+                                    text: "List".into(),
                                 },
                                 &v,
                                 env,
@@ -2345,7 +2345,7 @@ fn eval_builtin_call(
 
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2635,7 +2635,7 @@ fn eval_builtin_call(
                 _ => {
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2674,7 +2674,7 @@ fn eval_builtin_call(
                 _ => {
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2734,7 +2734,7 @@ fn eval_builtin_call(
                 _ => {
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2790,7 +2790,7 @@ fn eval_builtin_call(
                 _ => {
                     let message = format_type_error(
                         &TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         &arg_values[0],
                         env,
@@ -2845,7 +2845,7 @@ fn eval_builtin_call(
                 Some(env) => env
                     .types
                     .keys()
-                    .map(|k| (k.name.clone()))
+                    .map(|k| (k.text.clone()))
                     .collect::<Vec<_>>(),
                 None => vec![],
             };
@@ -3088,7 +3088,7 @@ fn eval_call(
         } => {
             check_arity(
                 &SymbolName {
-                    text: type_name.name.clone(),
+                    text: type_name.text.clone(),
                 },
                 &receiver_value,
                 &caller_expr.position,
@@ -3127,7 +3127,7 @@ fn eval_call(
 
             let message = format_type_error(
                 &TypeName {
-                    name: "Function".into(),
+                    text: "Function".into(),
                 },
                 &receiver_value,
                 env,
@@ -3204,7 +3204,7 @@ fn eval_assert(
     } else {
         let message = format_type_error(
             &TypeName {
-                name: "Bool".into(),
+                text: "Bool".into(),
             },
             &receiver_value,
             env,
@@ -3485,17 +3485,17 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
     else {
         return Err(format_type_error(
             &TypeName {
-                name: "Path".into(),
+                text: "Path".into(),
             },
             value,
             env,
         ));
     };
 
-    if type_name.name != "Path" {
+    if type_name.text != "Path" {
         return Err(format_type_error(
             &TypeName {
-                name: "Path".into(),
+                text: "Path".into(),
             },
             value,
             env,
@@ -3579,7 +3579,7 @@ fn eval_builtin_method_call(
                             receiver_pos.clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "List".into(),
+                                    text: "List".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -3629,7 +3629,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "List".into(),
+                                    text: "List".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -3676,7 +3676,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "List".into(),
+                                    text: "List".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -3696,7 +3696,7 @@ fn eval_builtin_method_call(
                         EvalError::ResumableError(
                             arg_positions[1].clone(),
                             format_type_error(
-                                &TypeName { name: "Int".into() },
+                                &TypeName { text: "Int".into() },
                                 &arg_values[0],
                                 env,
                             ),
@@ -3736,7 +3736,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "List".into(),
+                                    text: "List".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -3869,7 +3869,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "String".into(),
+                                    text: "String".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -3893,7 +3893,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "String".into(),
+                                    text: "String".into(),
                                 },
                                 &arg_values[0],
                                 env,
@@ -3948,7 +3948,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "String".into(),
+                                    text: "String".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -4003,7 +4003,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "String".into(),
+                                    text: "String".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -4040,7 +4040,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    name: "String".into(),
+                                    text: "String".into(),
                                 },
                                 receiver_value,
                                 env,
@@ -4063,7 +4063,7 @@ fn eval_builtin_method_call(
                         EvalError::ResumableError(
                             arg_positions[1].clone(),
                             format_type_error(
-                                &TypeName { name: "Int".into() },
+                                &TypeName { text: "Int".into() },
                                 &arg_values[0],
                                 env,
                             ),
@@ -4085,7 +4085,7 @@ fn eval_builtin_method_call(
                         EvalError::ResumableError(
                             arg_positions[2].clone(),
                             format_type_error(
-                                &TypeName { name: "Int".into() },
+                                &TypeName { text: "Int".into() },
                                 &arg_values[1],
                                 env,
                             ),

@@ -178,7 +178,7 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                name: "Unit".to_owned(),
+                text: "Unit".to_owned(),
             },
             runtime_type: Type::unit(),
             variant_idx: 0,
@@ -191,7 +191,7 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                name: "Bool".to_owned(),
+                text: "Bool".to_owned(),
             },
             runtime_type: Type::bool(),
             variant_idx: if b { 0 } else { 1 },
@@ -217,14 +217,14 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                name: "Option".to_owned(),
+                text: "Option".to_owned(),
             },
             variant_idx: 0,
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    name: "Option".to_owned(),
+                    text: "Option".to_owned(),
                 },
                 args: vec![value_type],
             },
@@ -236,14 +236,14 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                name: "Option".to_owned(),
+                text: "Option".to_owned(),
             },
             variant_idx: 1,
             payload: None,
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    name: "Option".to_owned(),
+                    text: "Option".to_owned(),
                 },
                 args: vec![Type::no_value()],
             },
@@ -257,14 +257,14 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                name: "Result".to_owned(),
+                text: "Result".to_owned(),
             },
             variant_idx: 0,
             payload: Some(Box::new(v)),
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    name: "Result".to_owned(),
+                    text: "Result".to_owned(),
                 },
                 args: vec![value_type, Type::no_value()],
             },
@@ -278,12 +278,12 @@ impl Value {
         // prelude.
         Self::new(Value_::EnumVariant {
             type_name: TypeName {
-                name: "Result".to_owned(),
+                text: "Result".to_owned(),
             },
             runtime_type: Type::UserDefined {
                 kind: TypeDefKind::Enum,
                 name: TypeName {
-                    name: "Result".to_owned(),
+                    text: "Result".to_owned(),
                 },
                 args: vec![Type::no_value(), value_type],
             },
@@ -295,7 +295,7 @@ impl Value {
     pub(crate) fn path(inner: String) -> Self {
         Self::new(Value_::Struct {
             type_name: TypeName {
-                name: "Path".to_owned(),
+                text: "Path".to_owned(),
             },
             fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner)))],
             runtime_type: Type::path(),
@@ -307,7 +307,7 @@ impl Value {
 /// name to look up available methods.
 pub(crate) fn type_representation(value: &Value) -> TypeName {
     TypeName {
-        name: match value.as_ref() {
+        text: match value.as_ref() {
             Value_::Integer(_) => "Int",
             Value_::Fun { .. } => "Fun",
             Value_::Closure(_, _) => "Fun",
@@ -316,9 +316,9 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::List { .. } => "List",
             Value_::Tuple { .. } => "Tuple",
             Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
-                &type_name.name
+                &type_name.text
             }
-            Value_::Struct { type_name, .. } => &type_name.name,
+            Value_::Struct { type_name, .. } => &type_name.text,
             Value_::Namespace { .. } => "Namespace",
         }
         .to_owned(),
@@ -510,7 +510,7 @@ impl Value {
                 type_name,
                 variant_idx,
                 ..
-            } if type_name.name == "Unit" && *variant_idx == 0 => None,
+            } if type_name.text == "Unit" && *variant_idx == 0 => None,
             _ => Some(self.display(env)),
         }
     }

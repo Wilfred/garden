@@ -684,7 +684,7 @@ pub(crate) fn run_command<T: Write>(
             }
         }
         Command::Types => {
-            let mut names: Vec<_> = env.all_types().into_iter().map(|s| s.name).collect();
+            let mut names: Vec<_> = env.all_types().into_iter().map(|s| s.text).collect();
             names.sort();
 
             for (i, var_name) in names.iter().enumerate() {
@@ -701,7 +701,7 @@ pub(crate) fn run_command<T: Write>(
 fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName {
-            name: type_name.to_owned(),
+            text: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName {
                 text: method_name.to_owned(),
@@ -717,7 +717,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
             Err(format!("No type named `{type_name}`."))
         }
     } else if let Some(type_) = env.get_type_def(&TypeName {
-        name: name.to_owned(),
+        text: name.to_owned(),
     }) {
         match type_ {
             TypeDef::Builtin(_, Some(struct_info)) => {
@@ -749,7 +749,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
 fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> {
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName {
-            name: type_name.to_owned(),
+            text: type_name.to_owned(),
         }) {
             if let Some(method_info) = type_methods.get(&SymbolName {
                 text: method_name.to_owned(),
@@ -766,7 +766,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             Err(format!("No type named `{type_name}`."))
         }
     } else if let Some(type_) = env.get_type_def(&TypeName {
-        name: name.to_owned(),
+        text: name.to_owned(),
     }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))
     } else if let Some(value) = env.file_scope.get(&SymbolName {

@@ -12,35 +12,35 @@ use crate::position::Position;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct TypeName {
-    pub name: String,
+    pub text: String,
 }
 
 impl TypeName {
     pub fn is_no_value(&self) -> bool {
-        self.name == "NoValue"
+        self.text == "NoValue"
     }
 }
 
 impl std::fmt::Debug for TypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "{}", self.text)
     }
 }
 impl Display for TypeName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "{}", self.text)
     }
 }
 
 impl From<&str> for TypeName {
     fn from(s: &str) -> Self {
-        TypeName { name: s.to_owned() }
+        TypeName { text: s.to_owned() }
     }
 }
 
 impl From<&String> for TypeName {
     fn from(s: &String) -> Self {
-        TypeName { name: s.to_owned() }
+        TypeName { text: s.to_owned() }
     }
 }
 
@@ -68,7 +68,7 @@ impl std::fmt::Debug for TypeSymbol {
                 .field("id", &self.id)
                 .finish()
         } else {
-            write!(f, "TypeSymbol\"{}\"", self.name.name)
+            write!(f, "TypeSymbol\"{}\"", self.name.text)
         }
     }
 }
@@ -82,7 +82,7 @@ impl Display for TypeSymbol {
 impl TypeSymbol {
     pub fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing this symbol in userland code.
-        self.name.name == "__placeholder" || self.name.name == "__reserved_word_placeholder"
+        self.name.text == "__placeholder" || self.name.text == "__reserved_word_placeholder"
     }
 }
 
@@ -101,7 +101,7 @@ impl TypeHint {
     pub fn as_src(&self) -> String {
         if self.args.is_empty() {
             format!("{}", self.sym.name)
-        } else if self.sym.name.name == "Tuple" {
+        } else if self.sym.name.text == "Tuple" {
             let formatted_args = self
                 .args
                 .iter()

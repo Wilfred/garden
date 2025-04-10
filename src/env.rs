@@ -158,7 +158,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "Path".into(),
+                            text: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -184,7 +184,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "Path".into(),
+                            text: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -202,7 +202,7 @@ impl Env {
 
         methods.insert(
             TypeName {
-                name: "Path".into(),
+                text: "Path".into(),
             },
             path_methods,
         );
@@ -219,7 +219,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -249,7 +249,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -275,7 +275,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -301,7 +301,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "String".into(),
+                            text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -323,7 +323,7 @@ impl Env {
 
         methods.insert(
             TypeName {
-                name: "String".into(),
+                text: "String".into(),
             },
             string_methods,
         );
@@ -340,7 +340,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "List".into(),
+                            text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -366,7 +366,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "List".into(),
+                            text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -396,7 +396,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "List".into(),
+                            text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -422,7 +422,7 @@ impl Env {
                     sym: TypeSymbol {
                         position: Position::todo(builtins_path.clone()),
                         name: TypeName {
-                            name: "List".into(),
+                            text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
@@ -440,7 +440,7 @@ impl Env {
 
         methods.insert(
             TypeName {
-                name: "List".into(),
+                text: "List".into(),
             },
             list_methods,
         );
@@ -449,34 +449,34 @@ impl Env {
         let mut types = FxHashMap::default();
         // TODO: String literals are duplicated with type_representation.
         types.insert(
-            TypeName { name: "Int".into() },
+            TypeName { text: "Int".into() },
             TypeDef::Builtin(BuiltinType::Int, None),
         );
         types.insert(
             TypeName {
-                name: "String".into(),
+                text: "String".into(),
             },
             TypeDef::Builtin(BuiltinType::String, None),
         );
         types.insert(
             TypeName {
-                name: "List".into(),
+                text: "List".into(),
             },
             TypeDef::Builtin(BuiltinType::List, None),
         );
         types.insert(
             TypeName {
-                name: "Tuple".into(),
+                text: "Tuple".into(),
             },
             TypeDef::Builtin(BuiltinType::Tuple, None),
         );
         types.insert(
-            TypeName { name: "Fun".into() },
+            TypeName { text: "Fun".into() },
             TypeDef::Builtin(BuiltinType::Fun, None),
         );
         types.insert(
             TypeName {
-                name: "Namespace".into(),
+                text: "Namespace".into(),
             },
             TypeDef::Builtin(BuiltinType::Namespace, None),
         );

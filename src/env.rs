@@ -122,6 +122,16 @@ impl Env {
             );
         }
 
+        file_scope.insert(
+            SymbolName {
+                name: "prelude".to_owned(),
+            },
+            Value::new(Value_::Namespace {
+                name: "prelude".to_owned(),
+                items: FxHashMap::default(),
+            }),
+        );
+
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
             FxHashMap::default();
 

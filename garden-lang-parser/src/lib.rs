@@ -1353,6 +1353,8 @@ fn parse_test(
     })
 }
 
+/// Parse an import statement, e.g. `import "./foo.gdn"` or
+/// `import "./foo.gdn" as bar`.
 fn parse_import(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
@@ -1384,11 +1386,21 @@ fn parse_import(
         return None;
     };
 
+    let mut namespace_sym = None;
+
+    // Parse `as foo` syntax.
+    if peeked_symbol_is(tokens, "as") {
+        tokens.pop();
+
+        namespace_sym = Some(parse_symbol(tokens, id_gen, diagnostics));
+    }
+
     let import_info = ImportInfo {
         pos: position.clone(),
         path: path_s.into(),
         path_pos: path_token.position.clone(),
         id: id_gen.next(),
+        namespace_sym,
     };
 
     Some(ToplevelItem::Import(import_info))

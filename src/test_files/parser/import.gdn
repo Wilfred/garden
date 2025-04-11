@@ -7,6 +7,7 @@ import "./foo.gdn"
 //         pos: Position { ... },
 //         path: "./foo.gdn",
 //         path_pos: Position { ... },
+//         namespace_sym: None,
 //         id: SyntaxId(0),
 //     },
 // )

@@ -682,12 +682,14 @@ pub struct StructInfo {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ImportInfo {
     pub pos: Position,
-    /// The actual path being imporrted. For example, if the user
+    /// The actual path being imported. For example, if the user
     /// wrote `import "./foo.gdn"`, then foo.gdn is the path here.
     pub path: PathBuf,
     /// The position of the string literal within
     /// `import "./foo.gdn"`.
     pub path_pos: Position,
+    /// The `bar` in `import "./foo.gdn" as bar`.
+    pub namespace_sym: Option<Symbol>,
     pub id: SyntaxId,
 }
 
@@ -771,6 +773,7 @@ pub enum ToplevelItem {
     Struct(StructInfo),
     /// ```garden
     /// import "./foo.gdn"
+    /// import "./foo.gdn" as bar
     /// ```
     Import(ImportInfo),
     /// ```garden

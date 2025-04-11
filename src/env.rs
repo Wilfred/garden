@@ -141,6 +141,28 @@ impl Env {
             prelude_namespace,
         );
 
+        let mut fs_values = FxHashMap::default();
+        fs_values.insert(
+            SymbolName {
+                text: "write_file".to_owned(),
+            },
+            Value::new(Value_::BuiltinFunction(
+                BuiltinFunctionKind::WriteFile,
+                None,
+            )),
+        );
+
+        let fs_namespace = Value::new(Value_::Namespace {
+            name: "fs".to_owned(),
+            values: fs_values,
+        });
+        file_scope.insert(
+            SymbolName {
+                text: "fs".to_owned(),
+            },
+            fs_namespace,
+        );
+
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
             FxHashMap::default();
 

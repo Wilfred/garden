@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 
+### Syntax
+
+`as` is now a reserved word.
+
 # 0.19 (released 7th April 2025)
 **Goal: Website has snippets that are checked and linkified.**
 

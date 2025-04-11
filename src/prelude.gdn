@@ -642,5 +642,6 @@ external fun keywords(): List<String> {
     "let", "fun", "enum", "struct", "external", "internal",
     "import", "if", "else", "while", "return", "test",
     "match", "break", "continue", "for", "in", "assert",
+    "as",
   ]
 }

@@ -2045,7 +2045,7 @@ fn parse_function(
 
 const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "enum", "struct", "internal", "external", "import", "if", "else", "while",
-    "return", "test", "match", "break", "continue", "for", "in", "assert",
+    "return", "test", "match", "break", "continue", "for", "in", "assert", "as",
 ];
 
 pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {

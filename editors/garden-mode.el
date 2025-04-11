@@ -594,7 +594,8 @@ enclosing point and print the result."
        '("let" "fun" "enum" "struct"
          "import" "internal" "external"
          "if" "else" "while" "return" "test" "match"
-         "break" "continue" "for" "in" "assert")
+         "break" "continue" "for" "in" "assert"
+         "as")
        'symbols)
      . font-lock-keyword-face)
 

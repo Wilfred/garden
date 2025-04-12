@@ -11,6 +11,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::checks::check_toplevel_items_in_env;
+use crate::commands::CommandError;
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
@@ -512,7 +513,10 @@ fn handle_run_request(
                     position: None,
                     id,
                 },
-                Err(EvalAction::Abort) => Response {
+                Err(CommandError::Io(e)) => {
+                    panic!("Unexpected write error during command printing: {:?}", e)
+                }
+                Err(CommandError::Action(EvalAction::Abort)) => Response {
                     kind: ResponseKind::RunCommand {
                         message: "Aborted".to_owned(),
                         stack_frame_name: Some(env.top_frame_name()),
@@ -520,8 +524,8 @@ fn handle_run_request(
                     position: None,
                     id,
                 },
-                Err(EvalAction::Resume) => eval_to_response(env, session),
-                Err(EvalAction::RunTest(name)) => {
+                Err(CommandError::Action(EvalAction::Resume)) => eval_to_response(env, session),
+                Err(CommandError::Action(EvalAction::RunTest(name))) => {
                     let test_opt = env.tests.get(&name).cloned();
                     match test_opt {
                         Some(test) => {
@@ -537,7 +541,7 @@ fn handle_run_request(
                         },
                     }
                 }
-                Err(EvalAction::Replace(expr)) => {
+                Err(CommandError::Action(EvalAction::Replace(expr))) => {
                     let stack_frame = env.stack.0.last_mut().unwrap();
 
                     stack_frame.evalled_values.pop();
@@ -547,7 +551,7 @@ fn handle_run_request(
 
                     eval_to_response(env, session)
                 }
-                Err(EvalAction::Skip) => {
+                Err(CommandError::Action(EvalAction::Skip)) => {
                     let stack_frame = env.stack.0.last_mut().unwrap();
 
                     stack_frame

@@ -190,6 +190,18 @@ pub(crate) fn print_available_commands<T: Write>(
     Ok(())
 }
 
+#[derive(Debug)]
+pub(crate) enum CommandError {
+    Io(std::io::Error),
+    Action(EvalAction),
+}
+
+impl From<std::io::Error> for CommandError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
+}
+
 /// Actions that require an evaluation loop, and can't be run during command handling.
 #[derive(Debug)]
 pub(crate) enum EvalAction {
@@ -365,26 +377,25 @@ pub(crate) fn run_command<T: Write>(
     cmd: &Command,
     env: &mut Env,
     session: &mut Session,
-) -> Result<(), EvalAction> {
+) -> Result<(), CommandError> {
     match cmd {
         Command::Help(text) => {
             let text = text.clone().unwrap_or_default();
 
             match Command::from_string(&text) {
                 Ok(command) => {
-                    write!(buf, "{}", command_help(command)).unwrap();
+                    write!(buf, "{}", command_help(command))?;
                 }
                 Err(CommandParseError::NoSuchCommand(s)) => {
-                    print_available_commands(&s, buf).unwrap();
+                    print_available_commands(&s, buf)?;
                 }
                 // TODO: suggest :doc if user writes `:help foo`
                 Err(CommandParseError::NotCommandSyntax) => {
                     write!(
                         buf,
                         "This is the help command for interacting with Garden programs. Welcome.\n\n"
-                    )
-                    .unwrap();
-                    print_available_commands("", buf).unwrap();
+                    )?;
+                    print_available_commands("", buf)?;
                 }
             }
         }
@@ -426,9 +437,9 @@ pub(crate) fn run_command<T: Write>(
 
                     if name.contains(&text) {
                         if !is_first {
-                            writeln!(buf).unwrap();
+                            writeln!(buf)?;
                         }
-                        write!(buf, "{}{}", name, signature).unwrap();
+                        write!(buf, "{}{}", name, signature)?;
                         is_first = false;
                     }
                 }
@@ -457,7 +468,7 @@ pub(crate) fn run_command<T: Write>(
             }
 
             if namespaces_in_scope.is_empty() {
-                write!(buf, "No namespaces in the current scope.").unwrap();
+                write!(buf, "No namespaces in the current scope.")?;
             }
 
             for (i, value) in namespaces_in_scope.iter().enumerate() {
@@ -465,7 +476,7 @@ pub(crate) fn run_command<T: Write>(
                     continue;
                 };
                 if i != 0 {
-                    write!(buf, "\n").unwrap();
+                    write!(buf, "\n")?;
                 }
                 write!(
                     buf,
@@ -473,34 +484,32 @@ pub(crate) fn run_command<T: Write>(
                     name,
                     values.len(),
                     if values.len() == 1 { "" } else { "s" }
-                )
-                .unwrap();
+                )?;
             }
         }
         Command::Doc(name) => {
             if let Some(name) = name {
-                document_item(name, env, buf).unwrap();
+                document_item(name, env, buf)?;
             } else {
-                write!(buf, ":doc requires a name, e.g. `:doc print`").unwrap();
+                write!(buf, ":doc requires a name, e.g. `:doc print`")?;
             }
         }
         Command::Replace(stmt) => {
             if let Some(stmt) = stmt {
-                return Err(EvalAction::Replace(stmt.clone()));
+                return Err(CommandError::Action(EvalAction::Replace(stmt.clone())));
             } else {
                 write!(
                     buf,
                     ":replace requires a valid expression, e.g. `:replace 42`"
-                )
-                .unwrap();
+                )?;
                 return Ok(());
             }
         }
         Command::Resume => {
-            return Err(EvalAction::Resume);
+            return Err(CommandError::Action(EvalAction::Resume));
         }
         Command::Skip => {
-            return Err(EvalAction::Skip);
+            return Err(CommandError::Action(EvalAction::Skip));
         }
         Command::Search(text) => {
             let text = text.clone().unwrap_or_default();
@@ -514,31 +523,32 @@ pub(crate) fn run_command<T: Write>(
             }
 
             for name in &matching_defs {
-                writeln!(buf, "function: {}", name).unwrap();
+                writeln!(buf, "function: {}", name)?;
             }
-            write!(buf, "{} definitions found.", matching_defs.len()).unwrap();
+            write!(buf, "{} definitions found.", matching_defs.len())?;
 
             return Ok(());
         }
-        Command::Source(name) => if let Some(name) = name {
-            match find_item_source(name, env) {
-                Ok(Some(src_string)) => write!(buf, "{}", src_string),
-                Ok(None) => {
-                    write!(buf, "Source not available for {name}.")
+        Command::Source(name) => {
+            if let Some(name) = name {
+                match find_item_source(name, env) {
+                    Ok(Some(src_string)) => write!(buf, "{}", src_string),
+                    Ok(None) => {
+                        write!(buf, "Source not available for {name}.")
+                    }
+                    Err(msg) => write!(buf, "{}", msg),
                 }
-                Err(msg) => write!(buf, "{}", msg),
-            }
-        } else {
-            write!(
-                buf,
-                ":source requires a name, e.g. `:source String::contains`"
-            )
+            } else {
+                write!(
+                    buf,
+                    ":source requires a name, e.g. `:source String::contains`"
+                )
+            }?
         }
-        .unwrap(),
         Command::Uptime => {
             // Round to the nearest second.
             let uptime = Duration::from_secs(session.start_time.elapsed().as_secs());
-            write!(buf, "{}", format_duration(uptime)).unwrap();
+            write!(buf, "{}", format_duration(uptime))?;
         }
         Command::Functions => {
             let mut names = vec![];
@@ -565,7 +575,7 @@ pub(crate) fn run_command<T: Write>(
             names.sort();
 
             for (i, var_name) in names.iter().enumerate() {
-                write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name).unwrap();
+                write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name)?;
             }
         }
         Command::ForgetLocal(name) => {
@@ -586,15 +596,13 @@ pub(crate) fn run_command<T: Write>(
                         buf,
                         "No local variable named `{}` is defined in this stack frame.",
                         name
-                    )
-                    .unwrap();
+                    )?;
                 }
             } else {
                 write!(
                     buf,
                     ":forget_local requires a name, e.g. `:forget_local variable_name_here`"
-                )
-                .unwrap();
+                )?;
             }
         }
         Command::Forget(name) => {
@@ -612,25 +620,24 @@ pub(crate) fn run_command<T: Write>(
                             buf,
                             "No function or enum value named `{}` is defined.",
                             name
-                        )
-                        .unwrap();
+                        )?;
                     }
                 }
             } else {
-                write!(buf, ":forget requires a name, e.g. `:forget function_name`").unwrap();
+                write!(buf, ":forget requires a name, e.g. `:forget function_name`")?;
             }
         }
         Command::FrameStatements => {
             if let Some(stack_frame) = env.stack.0.last() {
                 for (_, expr) in stack_frame.exprs_to_eval.iter().rev() {
-                    writeln!(buf, "{:#?}", expr.expr_).unwrap();
+                    writeln!(buf, "{:#?}", expr.expr_)?;
                 }
             }
         }
         Command::FrameValues => {
             if let Some(stack_frame) = env.stack.0.last() {
                 for value in stack_frame.evalled_values.iter().rev() {
-                    writeln!(buf, "{}", value.display(env)).unwrap();
+                    writeln!(buf, "{}", value.display(env))?;
                 }
             }
         }
@@ -648,8 +655,7 @@ pub(crate) fn run_command<T: Write>(
                         if i == 0 { "" } else { "\n" },
                         name.bright_green(),
                         value.display(env)
-                    )
-                    .unwrap();
+                    )?;
                 }
             }
         }
@@ -658,9 +664,11 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Test(name) => match name {
             Some(name) => {
-                return Err(EvalAction::RunTest(SymbolName { text: name.clone() }));
+                return Err(CommandError::Action(EvalAction::RunTest(SymbolName {
+                    text: name.clone(),
+                })));
             }
-            None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.").unwrap(),
+            None => write!(buf, ":test requires a name, e.g. `:test name_of_test`.")?,
         },
         Command::Trace => {
             session.trace_exprs = !session.trace_exprs;
@@ -672,8 +680,7 @@ pub(crate) fn run_command<T: Write>(
                 } else {
                     "disabled"
                 }
-            )
-            .unwrap();
+            )?;
         }
         Command::Parse(src) => {
             if let Some(src) = src {
@@ -692,19 +699,19 @@ pub(crate) fn run_command<T: Write>(
                         ParseError::Incomplete { message, .. } => message,
                     };
 
-                    writeln!(buf, "{}: {}", "Error".bright_red(), msg.as_string()).unwrap();
+                    writeln!(buf, "{}: {}", "Error".bright_red(), msg.as_string())?;
                 }
 
                 for (i, item) in items.iter().enumerate() {
-                    write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item).unwrap()
+                    write!(buf, "{}{:#?}", if i == 0 { "" } else { "\n" }, item)?
                 }
             } else {
-                write!(buf, ":parse requires a code snippet, e.g. `:parse 1 + 2`").unwrap();
+                write!(buf, ":parse requires a code snippet, e.g. `:parse 1 + 2`")?;
             }
         }
         Command::Abort => {
             env.stack.pop_to_toplevel();
-            return Err(EvalAction::Abort);
+            return Err(CommandError::Action(EvalAction::Abort));
         }
         Command::Quit => {
             std::process::exit(0);
@@ -717,16 +724,15 @@ pub(crate) fn run_command<T: Write>(
                             buf,
                             "{}",
                             Type::from_value(&value, &env.types, &env.stack.type_bindings())
-                        )
-                        .unwrap();
+                        )?;
                     }
                     Err(e) => {
                         // TODO: Print a proper stack trace.
-                        write!(buf, "Evaluation failed: {:?}", e).unwrap();
+                        write!(buf, "Evaluation failed: {:?}", e)?;
                     }
                 }
             } else {
-                write!(buf, ":type requires a code snippet, e.g. `:type 1 + 2`").unwrap();
+                write!(buf, ":type requires a code snippet, e.g. `:type 1 + 2`")?;
             }
         }
         Command::Types => {
@@ -734,11 +740,11 @@ pub(crate) fn run_command<T: Write>(
             names.sort();
 
             for (i, var_name) in names.iter().enumerate() {
-                write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name).unwrap();
+                write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name)?;
             }
         }
         Command::Version => {
-            write!(buf, "Garden {}", VERSION.as_str()).unwrap();
+            write!(buf, "Garden {}", VERSION.as_str())?;
         }
     }
     Ok(())

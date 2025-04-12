@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crate::commands::{
-    print_available_commands, run_command, Command, CommandParseError, EvalAction,
+    print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
 };
 use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
@@ -45,9 +45,14 @@ fn read_expr(
                             println!();
                             continue;
                         }
-                        Err(e) => {
-                            return Err(ReadError::NeedsEval(e));
-                        }
+                        Err(e) => match e {
+                            CommandError::Io(e) => {
+                                panic!("Unexpected write error during command output: {:?}", e)
+                            }
+                            CommandError::Action(eval_action) => {
+                                return Err(ReadError::NeedsEval(eval_action));
+                            }
+                        },
                     },
                     Err(CommandParseError::NoSuchCommand(s)) => {
                         print_available_commands(&s, &mut std::io::stdout()).unwrap();

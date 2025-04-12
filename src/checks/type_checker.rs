@@ -1371,11 +1371,54 @@ impl TypeCheckVisitor<'_> {
                     }
                 }
             }
-            Expression_::NamespaceAccess(recv, _sym) => {
+            Expression_::NamespaceAccess(recv, sym) => {
                 self.verify_expr(&Type::namespace(), recv, type_bindings, expected_return_ty);
 
+                match &recv.expr_ {
+                    Expression_::Variable(recv_symbol)
+                        if self.bindings.get(&recv_symbol.name).is_none() =>
+                    {
+                        match self.env.file_scope.get(&recv_symbol.name) {
+                            Some(value) => match value.as_ref() {
+                                Value_::Namespace { name, values } => match values.get(&sym.name) {
+                                    Some(value) => {
+                                        Type::from_value(value, &self.env.types, type_bindings)
+                                    }
+                                    None => {
+                                        // TODO: suggest similar names here.
+                                        self.diagnostics.push(Diagnostic {
+                                            level: Level::Error,
+                                            message: ErrorMessage(vec![
+                                                msgcode!("{}", name),
+                                                msgtext!(" does not contain an item named "),
+                                                msgcode!("{}", sym.name),
+                                                msgtext!("."),
+                                            ]),
+                                            position: sym.position.clone(),
+                                        });
+
+                                        Type::error("No such symbol in this namespace")
+                                    }
+                                },
+                                _ => Type::error("Expected a namespace for namespace receiver"),
+                            },
+                            None => Type::error("Unbound symbol (expected a namespace)"),
+                        }
+                    }
+                    _ => {
+                        self.diagnostics.push(Diagnostic {
+                            level: Level::Warning,
+                            message: ErrorMessage(vec![msgtext!(
+                                "Cannot statically determine the namespace here."
+                            )]),
+                            position: recv.position.clone(),
+                        });
+
+                        Type::Top
+                    }
+                }
+
                 // TODO: look up the namespace and identify the type of the specific symbol being accessed.
-                Type::Top
             }
             Expression_::FunLiteral(fun_info) => {
                 let param_tys = fun_info

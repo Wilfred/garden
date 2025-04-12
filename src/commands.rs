@@ -476,15 +476,12 @@ pub(crate) fn run_command<T: Write>(
                     continue;
                 };
                 if i != 0 {
-                    write!(buf, "\n")?;
+                    writeln!(buf)?;
                 }
-                write!(
-                    buf,
-                    "{} (contains {} item{})",
-                    name,
-                    values.len(),
-                    if values.len() == 1 { "" } else { "s" }
-                )?;
+                write!(buf, "{}", name,)?;
+                for sym in values.keys() {
+                    write!(buf, "\n  {}", sym.text)?;
+                }
             }
         }
         Command::Doc(name) => {

@@ -1380,7 +1380,7 @@ impl TypeCheckVisitor<'_> {
                     {
                         match self.env.file_scope.get(&recv_symbol.name) {
                             Some(value) => match value.as_ref() {
-                                Value_::Namespace(NamespaceInfo { name, values }) => {
+                                Value_::Namespace(NamespaceInfo { name, values, .. }) => {
                                     match values.get(&sym.name) {
                                         Some(value) => {
                                             Type::from_value(value, &self.env.types, type_bindings)

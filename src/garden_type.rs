@@ -7,7 +7,7 @@ use rustc_hash::FxHashMap;
 
 use crate::{
     types::{BuiltinType, TypeDef},
-    values::{NamespaceInfo, Value, Value_},
+    values::{Value, Value_},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

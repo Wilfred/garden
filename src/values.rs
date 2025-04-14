@@ -28,6 +28,7 @@ impl Value {
 pub(crate) struct NamespaceInfo {
     pub(crate) name: String,
     pub(crate) values: FxHashMap<SymbolName, Value>,
+    pub(crate) types: FxHashMap<TypeName, TypeDef>,
 }
 
 #[derive(Debug, Clone)]

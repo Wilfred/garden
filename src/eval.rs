@@ -4904,7 +4904,7 @@ fn eval_namespace_access(
         .expect("Popped an empty value when evaluating namespace access");
 
     match recv_value.as_ref() {
-        Value_::Namespace(NamespaceInfo { name, values }) => match values.get(&symbol.name) {
+        Value_::Namespace(NamespaceInfo { name, values, .. }) => match values.get(&symbol.name) {
             Some(v) => {
                 if expr_value_is_used {
                     env.push_value(v.clone());

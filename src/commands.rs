@@ -472,7 +472,7 @@ pub(crate) fn run_command<T: Write>(
             }
 
             for (i, value) in namespaces_in_scope.iter().enumerate() {
-                let Value_::Namespace(NamespaceInfo { name, values }) = value.as_ref() else {
+                let Value_::Namespace(NamespaceInfo { name, values, .. }) = value.as_ref() else {
                     continue;
                 };
                 if i != 0 {

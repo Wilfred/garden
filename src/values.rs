@@ -25,12 +25,21 @@ impl Value {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct NamespaceInfo {
+    pub(crate) name: String,
+    pub(crate) values: FxHashMap<SymbolName, Value>,
+}
+
+#[derive(Debug, Clone)]
 pub(crate) enum Value_ {
     /// An integer value.
     Integer(i64),
     /// A reference to a user-defined function, along with its return
     /// type.
-    Fun { name_sym: Symbol, fun_info: FunInfo },
+    Fun {
+        name_sym: Symbol,
+        fun_info: FunInfo,
+    },
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo),
     /// A reference to a built-in function.
@@ -38,7 +47,10 @@ pub(crate) enum Value_ {
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
-    List { items: Vec<Value>, elem_type: Type },
+    List {
+        items: Vec<Value>,
+        elem_type: Type,
+    },
     /// A tuple value, along with type of each item.
     Tuple {
         items: Vec<Value>,
@@ -65,10 +77,7 @@ pub(crate) enum Value_ {
         fields: Vec<(SymbolName, Value)>,
         runtime_type: Type,
     },
-    Namespace {
-        name: String,
-        values: FxHashMap<SymbolName, Value>,
-    },
+    Namespace(NamespaceInfo),
 }
 
 impl PartialEq for Value_ {
@@ -319,7 +328,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
                 &type_name.text
             }
             Value_::Struct { type_name, .. } => &type_name.text,
-            Value_::Namespace { .. } => "Namespace",
+            Value_::Namespace(_) => "Namespace",
         }
         .to_owned(),
     }
@@ -500,7 +509,7 @@ impl Value {
 
                 s
             }
-            Value_::Namespace { name, .. } => format!("namespace:{}", name),
+            Value_::Namespace(NamespaceInfo { name, .. }) => format!("namespace:{}", name),
         }
     }
 

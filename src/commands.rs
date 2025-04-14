@@ -11,7 +11,7 @@ use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::garden_type::Type;
 use crate::types::{BuiltinType, TypeDef};
-use crate::values::{Value, Value_};
+use crate::values::{NamespaceInfo, Value, Value_};
 use crate::version::VERSION;
 use crate::{colors::green, eval::Session};
 use garden_lang_parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName, Vfs};
@@ -450,7 +450,7 @@ pub(crate) fn run_command<T: Write>(
             if let Some(stack_frame) = env.stack.0.last() {
                 for (_, value) in stack_frame.bindings.all() {
                     match value.as_ref() {
-                        Value_::Namespace { .. } => {
+                        Value_::Namespace(_) => {
                             namespaces_in_scope.push(value.clone());
                         }
                         _ => {}
@@ -460,7 +460,7 @@ pub(crate) fn run_command<T: Write>(
 
             for (_, value) in env.file_scope.iter() {
                 match value.as_ref() {
-                    Value_::Namespace { .. } => {
+                    Value_::Namespace(_) => {
                         namespaces_in_scope.push(value.clone());
                     }
                     _ => {}
@@ -472,7 +472,7 @@ pub(crate) fn run_command<T: Write>(
             }
 
             for (i, value) in namespaces_in_scope.iter().enumerate() {
-                let Value_::Namespace { name, values } = value.as_ref() else {
+                let Value_::Namespace(NamespaceInfo { name, values }) = value.as_ref() else {
                     continue;
                 };
                 if i != 0 {
@@ -561,7 +561,7 @@ pub(crate) fn run_command<T: Write>(
                     Value_::EnumVariant { .. } => false,
                     Value_::EnumConstructor { .. } => false,
                     Value_::Struct { .. } => false,
-                    Value_::Namespace { .. } => false,
+                    Value_::Namespace(_) => false,
                 };
 
                 if is_fun {

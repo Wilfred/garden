@@ -18,7 +18,7 @@ use crate::env::Env;
 use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
 use crate::types::TypeDef;
-use crate::values::{Value, Value_};
+use crate::values::{NamespaceInfo, Value, Value_};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {
@@ -1380,26 +1380,28 @@ impl TypeCheckVisitor<'_> {
                     {
                         match self.env.file_scope.get(&recv_symbol.name) {
                             Some(value) => match value.as_ref() {
-                                Value_::Namespace { name, values } => match values.get(&sym.name) {
-                                    Some(value) => {
-                                        Type::from_value(value, &self.env.types, type_bindings)
-                                    }
-                                    None => {
-                                        // TODO: suggest similar names here.
-                                        self.diagnostics.push(Diagnostic {
-                                            level: Level::Error,
-                                            message: ErrorMessage(vec![
-                                                msgcode!("{}", name),
-                                                msgtext!(" does not contain an item named "),
-                                                msgcode!("{}", sym.name),
-                                                msgtext!("."),
-                                            ]),
-                                            position: sym.position.clone(),
-                                        });
+                                Value_::Namespace(NamespaceInfo { name, values }) => {
+                                    match values.get(&sym.name) {
+                                        Some(value) => {
+                                            Type::from_value(value, &self.env.types, type_bindings)
+                                        }
+                                        None => {
+                                            // TODO: suggest similar names here.
+                                            self.diagnostics.push(Diagnostic {
+                                                level: Level::Error,
+                                                message: ErrorMessage(vec![
+                                                    msgcode!("{}", name),
+                                                    msgtext!(" does not contain an item named "),
+                                                    msgcode!("{}", sym.name),
+                                                    msgtext!("."),
+                                                ]),
+                                                position: sym.position.clone(),
+                                            });
 
-                                        Type::error("No such symbol in this namespace")
+                                            Type::error("No such symbol in this namespace")
+                                        }
                                     }
-                                },
+                                }
                                 _ => Type::error("Expected a namespace for namespace receiver"),
                             },
                             None => Type::error("Unbound symbol (expected a namespace)"),

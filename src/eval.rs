@@ -24,7 +24,7 @@ use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrT
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
-use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
+use crate::values::{type_representation, BuiltinFunctionKind, NamespaceInfo, Value, Value_};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
@@ -4904,7 +4904,7 @@ fn eval_namespace_access(
         .expect("Popped an empty value when evaluating namespace access");
 
     match recv_value.as_ref() {
-        Value_::Namespace { name, values } => match values.get(&symbol.name) {
+        Value_::Namespace(NamespaceInfo { name, values }) => match values.get(&symbol.name) {
             Some(v) => {
                 if expr_value_is_used {
                     env.push_value(v.clone());

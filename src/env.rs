@@ -6,7 +6,7 @@ use strum::IntoEnumIterator;
 
 use crate::eval::{EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
-use crate::values::{BuiltinFunctionKind, Value, Value_};
+use crate::values::{BuiltinFunctionKind, NamespaceInfo, Value, Value_};
 use crate::{
     eval::{load_toplevel_items, Bindings},
     types::{BuiltinType, TypeDef},
@@ -130,10 +130,10 @@ impl Env {
             Value::new(Value_::BuiltinFunction(BuiltinFunctionKind::Print, None)),
         );
 
-        let prelude_namespace = Value::new(Value_::Namespace {
+        let prelude_namespace = Value::new(Value_::Namespace(NamespaceInfo {
             name: "prelude".to_owned(),
             values: prelude_values,
-        });
+        }));
         file_scope.insert(
             SymbolName {
                 text: "prelude".to_owned(),
@@ -152,10 +152,10 @@ impl Env {
             )),
         );
 
-        let fs_namespace = Value::new(Value_::Namespace {
+        let fs_namespace = Value::new(Value_::Namespace(NamespaceInfo {
             name: "fs".to_owned(),
             values: fs_values,
-        });
+        }));
         file_scope.insert(
             SymbolName {
                 text: "fs".to_owned(),

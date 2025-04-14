@@ -17,8 +17,9 @@ use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
+use crate::namespaces::NamespaceInfo;
 use crate::types::TypeDef;
-use crate::values::{NamespaceInfo, Value, Value_};
+use crate::values::{Value, Value_};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {

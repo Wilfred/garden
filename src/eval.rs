@@ -22,9 +22,10 @@ use crate::diagnostics::{Diagnostic, Level};
 use crate::env::{Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{print_as_json, Response, ResponseKind};
+use crate::namespaces::NamespaceInfo;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
-use crate::values::{type_representation, BuiltinFunctionKind, NamespaceInfo, Value, Value_};
+use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
 use garden_lang_parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,

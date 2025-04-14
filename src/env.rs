@@ -6,7 +6,8 @@ use strum::IntoEnumIterator;
 
 use crate::eval::{EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
-use crate::values::{BuiltinFunctionKind, NamespaceInfo, Value, Value_};
+use crate::namespaces::NamespaceInfo;
+use crate::values::{BuiltinFunctionKind, Value, Value_};
 use crate::{
     eval::{load_toplevel_items, Bindings},
     types::{BuiltinType, TypeDef},

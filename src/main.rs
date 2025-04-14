@@ -42,6 +42,7 @@ mod garden_type;
 mod go_to_def;
 mod hover;
 mod json_session;
+mod namespaces;
 mod pos_to_id;
 mod prompt;
 mod rename;

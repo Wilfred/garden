@@ -1,13 +1,13 @@
 use std::fmt::Display;
 use std::rc::Rc;
 
-use rustc_hash::FxHashMap;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::BlockBindings;
 use crate::garden_type::Type;
 use crate::garden_type::TypeDefKind;
+use crate::namespaces::NamespaceInfo;
 use crate::types::TypeDef;
 use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 
@@ -22,13 +22,6 @@ impl Value {
     pub(crate) fn new(v: Value_) -> Self {
         Self(Rc::new(v))
     }
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct NamespaceInfo {
-    pub(crate) name: String,
-    pub(crate) values: FxHashMap<SymbolName, Value>,
-    pub(crate) types: FxHashMap<TypeName, TypeDef>,
 }
 
 #[derive(Debug, Clone)]

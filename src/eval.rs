@@ -307,6 +307,16 @@ fn load_toplevel_items_(
                             fun_info: fun_info.clone(),
                         }),
                     );
+
+                    if let Some(ns) = namespace {
+                        ns.values.insert(
+                            name_symbol.name.clone(),
+                            Value::new(Value_::Fun {
+                                name_sym: name_symbol.clone(),
+                                fun_info: fun_info.clone(),
+                            }),
+                        );
+                    }
                 }
 
                 new_syms.push(name_symbol.name.clone());
@@ -339,6 +349,13 @@ fn load_toplevel_items_(
                     enum_info.name_sym.name.clone(),
                     TypeDef::Enum(enum_info.clone()),
                 );
+
+                if let Some(ns) = namespace {
+                    ns.types.insert(
+                        enum_info.name_sym.name.clone(),
+                        TypeDef::Enum(enum_info.clone()),
+                    );
+                }
 
                 enum_infos.push(enum_info);
 

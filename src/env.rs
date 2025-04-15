@@ -116,6 +116,8 @@ pub(crate) struct Env {
 
 impl Env {
     pub(crate) fn new(mut id_gen: IdGenerator, mut vfs: Vfs) -> Self {
+        let mut namespaces = FxHashMap::default();
+
         let mut file_scope = FxHashMap::default();
 
         // Insert all the built-in functions.
@@ -136,18 +138,19 @@ impl Env {
             Value::new(Value_::BuiltinFunction(BuiltinFunctionKind::Print, None)),
         );
 
-        let prelude_namespace =
-            Value::new(Value_::Namespace(Rc::new(RefCell::new(NamespaceInfo {
-                name: "prelude".to_owned(),
-                values: prelude_values,
-                types: FxHashMap::default(),
-            }))));
+        let prelude_namespace = Rc::new(RefCell::new(NamespaceInfo {
+            name: "prelude".to_owned(),
+            values: prelude_values,
+            types: FxHashMap::default(),
+        }));
         file_scope.insert(
             SymbolName {
                 text: "prelude".to_owned(),
             },
-            prelude_namespace,
+            Value::new(Value_::Namespace(prelude_namespace.clone())).clone(),
         );
+
+        namespaces.insert(PathBuf::from("__prelude"), prelude_namespace);
 
         let mut fs_values = FxHashMap::default();
         fs_values.insert(
@@ -160,17 +163,19 @@ impl Env {
             )),
         );
 
-        let fs_namespace = Value::new(Value_::Namespace(Rc::new(RefCell::new(NamespaceInfo {
+        let fs_namespace = Rc::new(RefCell::new(NamespaceInfo {
             name: "fs".to_owned(),
             values: fs_values,
             types: FxHashMap::default(),
-        }))));
+        }));
         file_scope.insert(
             SymbolName {
                 text: "fs".to_owned(),
             },
-            fs_namespace,
+            Value::new(Value_::Namespace(fs_namespace.clone())),
         );
+
+        namespaces.insert(PathBuf::from("__fs"), fs_namespace);
 
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
             FxHashMap::default();
@@ -539,7 +544,7 @@ impl Env {
             tests: FxHashMap::default(),
             types,
             current_namespace: PathBuf::from("__user"),
-            namespaces: FxHashMap::default(),
+            namespaces,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
             stack: Stack::default(),

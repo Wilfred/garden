@@ -118,6 +118,14 @@ impl Env {
     pub(crate) fn new(mut id_gen: IdGenerator, mut vfs: Vfs) -> Self {
         let mut namespaces = FxHashMap::default();
 
+        let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
+            name: "prelude".to_owned(),
+            values: FxHashMap::default(),
+            types: FxHashMap::default(),
+        }));
+
+        namespaces.insert(PathBuf::from("__user"), user_namespace);
+
         let mut file_scope = FxHashMap::default();
 
         // Insert all the built-in functions.

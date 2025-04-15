@@ -17,7 +17,6 @@ use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
-use crate::namespaces::NamespaceInfo;
 use crate::types::TypeDef;
 use crate::values::{Value, Value_};
 
@@ -1381,7 +1380,10 @@ impl TypeCheckVisitor<'_> {
                     {
                         match self.env.file_scope.get(&recv_symbol.name) {
                             Some(value) => match value.as_ref() {
-                                Value_::Namespace(NamespaceInfo { name, values, .. }) => {
+                                Value_::Namespace(ns) => {
+                                    let values = &ns.values;
+                                    let name = &ns.name;
+
                                     match values.get(&sym.name) {
                                         Some(value) => {
                                             Type::from_value(value, &self.env.types, type_bindings)

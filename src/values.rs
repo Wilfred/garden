@@ -71,7 +71,7 @@ pub(crate) enum Value_ {
         fields: Vec<(SymbolName, Value)>,
         runtime_type: Type,
     },
-    Namespace(NamespaceInfo),
+    Namespace(Rc<NamespaceInfo>),
 }
 
 impl PartialEq for Value_ {
@@ -503,7 +503,7 @@ impl Value {
 
                 s
             }
-            Value_::Namespace(NamespaceInfo { name, .. }) => format!("namespace:{}", name),
+            Value_::Namespace(ns) => format!("namespace:{}", ns.name),
         }
     }
 

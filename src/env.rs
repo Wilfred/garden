@@ -136,11 +136,11 @@ impl Env {
             Value::new(Value_::BuiltinFunction(BuiltinFunctionKind::Print, None)),
         );
 
-        let prelude_namespace = Value::new(Value_::Namespace(NamespaceInfo {
+        let prelude_namespace = Value::new(Value_::Namespace(Rc::new(NamespaceInfo {
             name: "prelude".to_owned(),
             values: prelude_values,
             types: FxHashMap::default(),
-        }));
+        })));
         file_scope.insert(
             SymbolName {
                 text: "prelude".to_owned(),
@@ -159,11 +159,11 @@ impl Env {
             )),
         );
 
-        let fs_namespace = Value::new(Value_::Namespace(NamespaceInfo {
+        let fs_namespace = Value::new(Value_::Namespace(Rc::new(NamespaceInfo {
             name: "fs".to_owned(),
             values: fs_values,
             types: FxHashMap::default(),
-        }));
+        })));
         file_scope.insert(
             SymbolName {
                 text: "fs".to_owned(),

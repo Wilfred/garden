@@ -4923,7 +4923,7 @@ fn eval_namespace_access(
         .expect("Popped an empty value when evaluating namespace access");
 
     match recv_value.as_ref() {
-        Value_::Namespace(NamespaceInfo { name, values, .. }) => match values.get(&symbol.name) {
+        Value_::Namespace(ns) => match ns.values.get(&symbol.name) {
             Some(v) => {
                 if expr_value_is_used {
                     env.push_value(v.clone());
@@ -4936,7 +4936,7 @@ fn eval_namespace_access(
                         symbol.position.clone(),
                         ErrorMessage(vec![
                             msgtext!("Namespace "),
-                            msgcode!("{}", name),
+                            msgcode!("{}", &ns.name),
                             msgtext!(" does not contain a function named "),
                             msgcode!("{}", symbol.name),
                             msgtext!(". "),

@@ -10,7 +10,6 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::garden_type::Type;
-use crate::namespaces::NamespaceInfo;
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};
 use crate::version::VERSION;
@@ -473,14 +472,14 @@ pub(crate) fn run_command<T: Write>(
             }
 
             for (i, value) in namespaces_in_scope.iter().enumerate() {
-                let Value_::Namespace(NamespaceInfo { name, values, .. }) = value.as_ref() else {
+                let Value_::Namespace(ns) = value.as_ref() else {
                     continue;
                 };
                 if i != 0 {
                     writeln!(buf)?;
                 }
-                write!(buf, "{}", name,)?;
-                for sym in values.keys() {
+                write!(buf, "{}", &ns.name)?;
+                for sym in ns.values.keys() {
                     write!(buf, "\n  {}", sym.text)?;
                 }
             }

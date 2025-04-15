@@ -65,7 +65,10 @@ pub(crate) struct Env {
     pub(crate) methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
     pub(crate) types: FxHashMap<TypeName, TypeDef>,
+
+    pub(crate) current_namespace: PathBuf,
     pub(crate) namespaces: FxHashMap<PathBuf, NamespaceInfo>,
+
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
     pub(crate) prev_call_args: FxHashMap<SymbolName, Vec<Value>>,
@@ -533,6 +536,7 @@ impl Env {
             methods,
             tests: FxHashMap::default(),
             types,
+            current_namespace: PathBuf::from("__user"),
             namespaces: FxHashMap::default(),
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),

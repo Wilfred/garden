@@ -280,14 +280,14 @@ pub(crate) fn load_toplevel_items(
     env: &mut Env,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
-    load_toplevel_items_(items, env, &mut paths_seen, None)
+    load_toplevel_items_(items, env, &mut paths_seen, &mut None)
 }
 
 fn load_toplevel_items_(
     items: &[ToplevelItem],
     env: &mut Env,
     paths_seen: &mut FxHashSet<PathBuf>,
-    namespace: Option<&NamespaceInfo>,
+    namespace: &mut Option<NamespaceInfo>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];

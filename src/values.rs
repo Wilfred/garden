@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -71,7 +72,7 @@ pub(crate) enum Value_ {
         fields: Vec<(SymbolName, Value)>,
         runtime_type: Type,
     },
-    Namespace(Rc<NamespaceInfo>),
+    Namespace(Rc<RefCell<NamespaceInfo>>),
 }
 
 impl PartialEq for Value_ {
@@ -503,7 +504,10 @@ impl Value {
 
                 s
             }
-            Value_::Namespace(ns) => format!("namespace:{}", ns.name),
+            Value_::Namespace(ns) => {
+                let ns = ns.borrow();
+                format!("namespace:{}", ns.name)
+            }
         }
     }
 

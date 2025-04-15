@@ -1381,6 +1381,7 @@ impl TypeCheckVisitor<'_> {
                         match self.env.file_scope.get(&recv_symbol.name) {
                             Some(value) => match value.as_ref() {
                                 Value_::Namespace(ns) => {
+                                    let ns = ns.borrow();
                                     let values = &ns.values;
                                     let name = &ns.name;
 

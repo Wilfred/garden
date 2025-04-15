@@ -4923,28 +4923,32 @@ fn eval_namespace_access(
         .expect("Popped an empty value when evaluating namespace access");
 
     match recv_value.as_ref() {
-        Value_::Namespace(ns) => match ns.values.get(&symbol.name) {
-            Some(v) => {
-                if expr_value_is_used {
-                    env.push_value(v.clone());
+        Value_::Namespace(ns) => {
+            let ns = ns.borrow();
+
+            match ns.values.get(&symbol.name) {
+                Some(v) => {
+                    if expr_value_is_used {
+                        env.push_value(v.clone());
+                    }
+                }
+                None => {
+                    return Err((
+                        RestoreValues(vec![recv_value.clone()]),
+                        EvalError::ResumableError(
+                            symbol.position.clone(),
+                            ErrorMessage(vec![
+                                msgtext!("Namespace "),
+                                msgcode!("{}", &ns.name),
+                                msgtext!(" does not contain a function named "),
+                                msgcode!("{}", symbol.name),
+                                msgtext!(". "),
+                            ]),
+                        ),
+                    ));
                 }
             }
-            None => {
-                return Err((
-                    RestoreValues(vec![recv_value.clone()]),
-                    EvalError::ResumableError(
-                        symbol.position.clone(),
-                        ErrorMessage(vec![
-                            msgtext!("Namespace "),
-                            msgcode!("{}", &ns.name),
-                            msgtext!(" does not contain a function named "),
-                            msgcode!("{}", symbol.name),
-                            msgtext!(". "),
-                        ]),
-                    ),
-                ));
-            }
-        },
+        }
         _ => {
             return Err((
                 RestoreValues(vec![recv_value.clone()]),

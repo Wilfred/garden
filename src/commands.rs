@@ -478,6 +478,8 @@ pub(crate) fn run_command<T: Write>(
                 if i != 0 {
                     writeln!(buf)?;
                 }
+
+                let ns = ns.borrow();
                 write!(buf, "{}", &ns.name)?;
                 for sym in ns.values.keys() {
                     write!(buf, "\n  {}", sym.text)?;

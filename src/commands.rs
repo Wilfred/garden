@@ -485,6 +485,20 @@ pub(crate) fn run_command<T: Write>(
                     write!(buf, "\n  {}", sym.text)?;
                 }
             }
+
+            writeln!(buf, "\n\nNamespaces by file:\n")?;
+
+            for (i, (path, ns)) in env.namespaces.iter().enumerate() {
+                if i != 0 {
+                    writeln!(buf)?;
+                }
+
+                let ns = ns.borrow();
+                write!(buf, "{}", path.display())?;
+                for sym in ns.values.keys() {
+                    write!(buf, "\n  {}", sym.text)?;
+                }
+            }
         }
         Command::Doc(name) => {
             if let Some(name) = name {

@@ -300,7 +300,7 @@ fn load_toplevel_items_(
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, &mut diagnostics);
                 } else {
-                    env.set_with_file_scope(
+                    env.add_function(
                         &name_symbol.name,
                         Value::new(Value_::Fun {
                             name_sym: name_symbol.clone(),
@@ -506,7 +506,7 @@ fn load_toplevel_items_(
             // TODO: warn if we're clobbering a name from a
             // different enum (i.e. not just redefining the
             // current enum).
-            env.set_with_file_scope(&variant_sym.name_sym.name, enum_value);
+            env.add_function(&variant_sym.name_sym.name, enum_value);
         }
     }
 
@@ -1274,7 +1274,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
         // The built-in function doesn't exist, presumably the Garden
         // maintainer is still writing it. Add the function as-is to
         // the environment, so we can still type check call sites.
-        env.set_with_file_scope(
+        env.add_function(
             &symbol.name,
             Value::new(Value_::Fun {
                 name_sym: symbol.clone(),
@@ -1298,7 +1298,7 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
         return;
     };
 
-    env.set_with_file_scope(
+    env.add_function(
         &symbol.name,
         Value::new(Value_::BuiltinFunction(*kind, Some(fun_info.clone()))),
     );

@@ -570,7 +570,7 @@ impl Env {
         }
     }
 
-    pub(crate) fn set_with_file_scope(&mut self, name: &SymbolName, value: Value) {
+    pub(crate) fn add_function(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value.clone());
 
         if let Some(ns) = self.namespaces.get_mut(&self.current_namespace) {

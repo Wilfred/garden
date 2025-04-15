@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -67,7 +68,7 @@ pub(crate) struct Env {
     pub(crate) types: FxHashMap<TypeName, TypeDef>,
 
     pub(crate) current_namespace: PathBuf,
-    pub(crate) namespaces: FxHashMap<PathBuf, NamespaceInfo>,
+    pub(crate) namespaces: FxHashMap<PathBuf, Rc<RefCell<NamespaceInfo>>>,
 
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
@@ -573,7 +574,8 @@ impl Env {
     pub(crate) fn add_function(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value.clone());
 
-        if let Some(ns) = self.namespaces.get_mut(&self.current_namespace) {
+        if let Some(ns) = self.namespaces.get(&self.current_namespace) {
+            let mut ns = ns.borrow_mut();
             ns.values.insert(name.clone(), value);
         }
     }
@@ -601,7 +603,8 @@ impl Env {
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name.clone(), type_.clone());
 
-        if let Some(ns) = self.namespaces.get_mut(&self.current_namespace) {
+        if let Some(ns) = self.namespaces.get(&self.current_namespace) {
+            let mut ns = ns.borrow_mut();
             ns.types.insert(name, type_);
         }
     }

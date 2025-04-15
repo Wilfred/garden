@@ -393,7 +393,7 @@ pub(crate) fn run_command<T: Write>(
                 Err(CommandParseError::NotCommandSyntax) => {
                     write!(
                         buf,
-                        "This is the help command for interacting with Garden programs. Welcome.\n\n"
+                        "The following commands are available. For general help on using Garden, see https://www.garden-lang.org/.\n\n"
                     )?;
                     print_available_commands("", buf)?;
                 }

@@ -1,12 +1,12 @@
 use std::path::Path;
 
-use garden_lang_parser::{
-    ast::{AstId, Expression_, IdGenerator, Vfs},
-    parse_toplevel_items,
-};
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
+use crate::parser::{
+    ast::{AstId, Expression_, IdGenerator, Vfs},
+    parse_toplevel_items,
+};
 use crate::{
     checks::type_checker::check_types,
     env::Env,

@@ -6,14 +6,14 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{SymbolName, ToplevelItem, TypeName};
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::position::Position;
-use garden_lang_parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Level;
+use crate::parser::ast::{SymbolName, ToplevelItem, TypeName};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::position::Position;
+use crate::parser::visitor::Visitor;
 use crate::{diagnostics::Diagnostic, env::Env};
 
 struct DuplicatesVisitor {

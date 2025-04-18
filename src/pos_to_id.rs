@@ -1,8 +1,7 @@
-use garden_lang_parser::ast::{
+use crate::parser::ast::{
     AstId, Block, Expression, LetDestination, Symbol, SyntaxId, ToplevelItem, TypeHint, TypeSymbol,
 };
-
-use garden_lang_parser::visitor::Visitor;
+use crate::parser::visitor::Visitor;
 
 /// All the items (expressions, symbols) whose position includes
 /// `offset` and `end_offset`, outermost first.

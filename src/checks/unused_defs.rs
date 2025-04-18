@@ -1,13 +1,12 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{ToplevelItem, ToplevelItemId, Visibility};
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-
-use garden_lang_parser::msgtext;
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
+use crate::msgtext;
+use crate::parser::ast::{ToplevelItem, ToplevelItemId, Visibility};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
 
 use super::type_checker::TCSummary;
 

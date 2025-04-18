@@ -9,8 +9,8 @@ use crate::eval::BlockBindings;
 use crate::garden_type::Type;
 use crate::garden_type::TypeDefKind;
 use crate::namespaces::NamespaceInfo;
+use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 use crate::types::TypeDef;
-use garden_lang_parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Value(pub(crate) Rc<Value_>);
@@ -545,7 +545,7 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use garden_lang_parser::ast::{IdGenerator, Vfs};
+    use crate::parser::ast::{IdGenerator, Vfs};
 
     use super::*;
 

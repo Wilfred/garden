@@ -1,6 +1,6 @@
-use garden_lang_parser::ast::{SymbolName, TypeName};
 use rustc_hash::FxHashMap;
 
+use crate::parser::ast::{SymbolName, TypeName};
 use crate::{types::TypeDef, values::Value};
 
 #[derive(Debug, Clone)]

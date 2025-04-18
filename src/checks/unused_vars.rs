@@ -1,15 +1,15 @@
-use garden_lang_parser::ast::{Expression_, LetDestination};
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::visitor::Visitor;
-use garden_lang_parser::{
-    ast::{Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem},
-    position::Position,
-};
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Diagnostic;
 use crate::diagnostics::Level;
+use crate::parser::ast::{Expression_, LetDestination};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::visitor::Visitor;
+use crate::parser::{
+    ast::{Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem},
+    position::Position,
+};
 
 pub(crate) fn check_unused_variables(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut visitor = UnusedVariableVisitor::new();

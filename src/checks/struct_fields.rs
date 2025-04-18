@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use garden_lang_parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::visitor::Visitor;
-use garden_lang_parser::{msgcode, msgtext};
+use crate::parser::ast::{Expression, Symbol, ToplevelItem, TypeSymbol};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::visitor::Visitor;
+use crate::{msgcode, msgtext};
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::Level;

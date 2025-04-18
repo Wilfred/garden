@@ -1,13 +1,13 @@
 use std::path::Path;
 
-use garden_lang_parser::ast::{AstId, VariantInfo, Vfs};
-use garden_lang_parser::{ast::IdGenerator, parse_toplevel_items};
 use line_numbers::LinePositions;
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::{Type, TypeDefKind};
+use crate::parser::ast::{AstId, VariantInfo, Vfs};
+use crate::parser::{ast::IdGenerator, parse_toplevel_items};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
 use crate::BAD_CLI_REQUEST_EXIT_CODE;

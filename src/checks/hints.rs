@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
-use garden_lang_parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::diagnostics::{ErrorMessage, MessagePart};
-use garden_lang_parser::visitor::Visitor;
-use garden_lang_parser::{msgcode, msgtext};
+use crate::parser::ast::{EnumInfo, FunInfo, StructInfo, ToplevelItem, TypeHint, TypeName};
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::diagnostics::{ErrorMessage, MessagePart};
+use crate::parser::visitor::Visitor;
+use crate::{msgcode, msgtext};
 
 use crate::{
     diagnostics::{Diagnostic, Level},
@@ -34,7 +34,7 @@ struct HintVisitor<'a> {
 }
 
 impl Visitor for HintVisitor<'_> {
-    fn visit_method_info(&mut self, method_info: &garden_lang_parser::ast::MethodInfo) {
+    fn visit_method_info(&mut self, method_info: &crate::parser::ast::MethodInfo) {
         let old_type_params = self.bound_type_params.clone();
 
         // Bind type parameters before visiting the hint of self, so

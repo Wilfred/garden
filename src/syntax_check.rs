@@ -1,16 +1,15 @@
-use garden_lang_parser::ast::Vfs;
 use serde::Serialize;
 use std::io::IsTerminal;
 use std::path::Path;
 
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::{
+use crate::checks::check_toplevel_items_in_env;
+use crate::load_toplevel_items;
+use crate::parser::ast::Vfs;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::{
     ast::IdGenerator, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
     ParseError,
 };
-
-use crate::checks::check_toplevel_items_in_env;
-use crate::load_toplevel_items;
 use crate::{
     diagnostics::{format_diagnostic, Diagnostic, Level},
     Env,

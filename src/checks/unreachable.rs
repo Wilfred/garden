@@ -1,13 +1,12 @@
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::{
-    ast::{Block, Expression, Expression_, SyntaxId, ToplevelItem},
-    visitor::Visitor,
-};
-
 use rustc_hash::FxHashSet;
 
 use crate::diagnostics::{Diagnostic, Level};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::{
+    ast::{Block, Expression, Expression_, SyntaxId, ToplevelItem},
+    visitor::Visitor,
+};
 
 pub(crate) fn check_unreachable(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut visitor = UnreachableVisitor {

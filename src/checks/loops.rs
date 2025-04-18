@@ -1,8 +1,8 @@
 //! Check that loops are well-formed.
 
-use garden_lang_parser::ast::LetDestination;
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::{
+use crate::parser::ast::LetDestination;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::{
     ast::{Block, Expression, Expression_, FunInfo, ToplevelItem},
     diagnostics::ErrorMessage,
     visitor::Visitor,

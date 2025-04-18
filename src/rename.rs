@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use garden_lang_parser::{
+use crate::parser::{
     ast::{AstId, IdGenerator, Symbol, SyntaxId, Vfs},
     parse_toplevel_items,
     position::Position,

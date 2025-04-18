@@ -1,23 +1,13 @@
-[workspace]
-members = ["garden-lang-parser"]
-
-[workspace.package]
+[package]
+name = "garden-lang"
 description = "A live programming language."
 license = "MIT"
 repository = "https://github.com/Wilfred/garden"
 version = "0.20.0"
 authors = ["Wilfred Hughes <me@wilfred.me.uk>"]
-
-[package]
-name = "garden-lang"
 edition = "2021"
 keywords = ["compilers", "development-tools"]
 rust-version = "1.79.0"
-license.workspace = true
-description.workspace = true
-version.workspace = true
-authors.workspace = true
-repository.workspace = true
 include = [
         "/src/**/*.rs",
         "/src/prelude.gdn",
@@ -37,12 +27,11 @@ ordered-float = "3.7.0"
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
 regex = "1.7.1"
 rustyline = "10.1.1"
-serde = { version = "1.0.104", features = ["derive"] }
+serde = { version = "1.0.104", features = ["derive", "rc"] }
 serde_json = "1.0.48"
 strsim = "0.10.0"
 strum = "0.24.1"
 strum_macros = "0.24.1"
-garden-lang-parser = { version = "0.20.0", path = "garden-lang-parser" }
 rustc-hash = "2.1.0"
 
 [[bin]]

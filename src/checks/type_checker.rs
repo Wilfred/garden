@@ -2,23 +2,23 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use garden_lang_parser::ast::{
-    BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
-    TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo,
-};
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::position::Position;
-use garden_lang_parser::{msgcode, msgtext};
 use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
+use crate::parser::ast::{
+    BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
+    MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
+    TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo,
+};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::position::Position;
 use crate::types::TypeDef;
 use crate::values::{Value, Value_};
+use crate::{msgcode, msgtext};
 
 #[derive(Debug)]
 pub(crate) struct TCSummary {

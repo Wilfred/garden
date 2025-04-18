@@ -10,10 +10,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-use garden_lang_parser::{lex, msgcode, msgtext, parse_toplevel_items, placeholder_symbol};
-
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -23,17 +19,21 @@ use crate::env::{Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
-use crate::pos_to_id::{find_expr_of_id, find_item_at};
-use crate::types::TypeDef;
-use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
-use garden_lang_parser::ast::{
+use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
     MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
     SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
 };
-use garden_lang_parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
-use garden_lang_parser::position::Position;
+use crate::parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::position::Position;
+use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
+use crate::pos_to_id::{find_expr_of_id, find_item_at};
+use crate::types::TypeDef;
+use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
+use crate::{msgcode, msgtext};
 
 /// Bindings in a single block. For example, `x` is only bound inside
 /// the if block here.
@@ -5356,8 +5356,8 @@ pub(crate) fn eval_exprs(
 mod tests {
     use std::path::PathBuf;
 
-    use garden_lang_parser::ast::IdGenerator;
-    use garden_lang_parser::parse_toplevel_items;
+    use crate::parser::ast::IdGenerator;
+    use crate::parser::parse_toplevel_items;
 
     fn parse_items_from_str(
         src: &str,

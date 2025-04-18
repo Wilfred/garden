@@ -2,7 +2,6 @@
 
 use std::io::IsTerminal as _;
 
-use garden_lang_parser::ast::Vfs;
 use itertools::Itertools;
 use line_numbers::LinePositions;
 use owo_colors::OwoColorize;
@@ -10,8 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::env::StackFrame;
 use crate::eval::EnclosingSymbol;
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::position::Position;
+use crate::parser::ast::Vfs;
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::position::Position;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub(crate) enum Level {

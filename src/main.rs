@@ -5,8 +5,8 @@
 #![warn(clippy::todo)]
 // Catch unfinished code.
 #![warn(clippy::dbg_macro)]
-// Preferred style of making strings owned.
-#![warn(clippy::str_to_string)]
+// // Preferred style of making strings owned.
+// #![warn(clippy::str_to_string)]
 // Garden is too much of a prototype for this to be an issue.
 #![allow(clippy::too_many_arguments)]
 // Occurs in WIP code, and it's too obvious to be worth linting
@@ -25,6 +25,8 @@
 #![allow(clippy::arc_with_non_send_sync)]
 // TODO: fix this.
 #![allow(clippy::result_large_err)]
+// TODO: fix this.
+#![allow(clippy::large_enum_variant)]
 
 mod caret_finder;
 mod checks;
@@ -43,6 +45,7 @@ mod go_to_def;
 mod hover;
 mod json_session;
 mod namespaces;
+mod parser;
 mod pos_to_id;
 mod prompt;
 mod rename;
@@ -68,11 +71,10 @@ use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session};
-use garden_lang_parser::ast::{IdGenerator, ToplevelItem, Vfs};
-use garden_lang_parser::diagnostics::ErrorMessage;
-use garden_lang_parser::diagnostics::MessagePart::*;
-
-use garden_lang_parser::{parse_toplevel_items, ParseError};
+use crate::parser::ast::{IdGenerator, ToplevelItem, Vfs};
+use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::{parse_toplevel_items, ParseError};
 
 pub(crate) const BAD_CLI_REQUEST_EXIT_CODE: i32 = 10;
 

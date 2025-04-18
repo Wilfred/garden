@@ -1,12 +1,12 @@
 use std::path::Path;
 
-use garden_lang_parser::{
+use rustc_hash::{FxHashMap, FxHashSet};
+
+use crate::parser::{
     ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId, Vfs},
     parse_toplevel_items,
     visitor::Visitor,
 };
-use rustc_hash::{FxHashMap, FxHashSet};
-
 use crate::{
     checks::type_checker::check_types,
     env::Env,

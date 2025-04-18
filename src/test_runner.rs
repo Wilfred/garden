@@ -5,14 +5,14 @@ use std::{
     time::Instant,
 };
 
-use garden_lang_parser::{
-    ast::{IdGenerator, ToplevelItem, Vfs},
-    parse_toplevel_items,
-};
 use owo_colors::OwoColorize as _;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
+use crate::parser::{
+    ast::{IdGenerator, ToplevelItem, Vfs},
+    parse_toplevel_items,
+};
 use crate::{eval::eval_tests, parse_toplevel_items_or_die, EvalError};
 use crate::{load_toplevel_items, Env, Session, StdoutMode};
 

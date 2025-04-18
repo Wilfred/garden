@@ -8,17 +8,17 @@ use strum::IntoEnumIterator;
 use crate::eval::{EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
+use crate::parser::ast::{
+    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, Symbol, SymbolName,
+    SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
+};
+use crate::parser::parse_toplevel_items;
+use crate::parser::position::Position;
 use crate::values::{BuiltinFunctionKind, Value, Value_};
 use crate::{
     eval::{load_toplevel_items, Bindings},
     types::{BuiltinType, TypeDef},
 };
-use garden_lang_parser::ast::{
-    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, Symbol, SymbolName,
-    SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
-};
-use garden_lang_parser::parse_toplevel_items;
-use garden_lang_parser::position::Position;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);

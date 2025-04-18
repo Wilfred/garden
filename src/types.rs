@@ -1,6 +1,6 @@
 use std::{path::PathBuf, rc::Rc};
 
-use garden_lang_parser::{
+use crate::parser::{
     ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol},
     position::Position,
 };

@@ -2,9 +2,9 @@ use std::fmt::Display;
 
 use itertools::Itertools as _;
 
-use garden_lang_parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 use rustc_hash::FxHashMap;
 
+use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
 use crate::{
     types::{BuiltinType, TypeDef},
     values::{Value, Value_},

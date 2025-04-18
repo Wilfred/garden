@@ -301,7 +301,6 @@ dependencies = [
  "assert_cmd",
  "clap",
  "ctrlc",
- "garden-lang-parser",
  "goldentests",
  "humantime",
  "itertools",
@@ -315,20 +314,6 @@ dependencies = [
  "serde",
  "serde_json",
  "strsim 0.10.0",
- "strum",
- "strum_macros",
-]
-
-[[package]]
-name = "garden-lang-parser"
-version = "0.20.0"
-dependencies = [
- "lazy_static",
- "line-numbers",
- "owo-colors",
- "regex",
- "rustc-hash",
- "serde",
  "strum",
  "strum_macros",
 ]

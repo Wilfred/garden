@@ -1,10 +1,9 @@
 use std::{path::Path, rc::Rc};
 
-use garden_lang_parser::{
+use crate::parser::{
     ast::{AstId, Expression, Expression_, IdGenerator, Vfs},
     parse_toplevel_items,
 };
-
 use crate::{
     env::Env,
     eval::load_toplevel_items,

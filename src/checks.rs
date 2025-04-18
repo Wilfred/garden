@@ -10,7 +10,7 @@ mod unused_vars;
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
-use garden_lang_parser::ast::ToplevelItem;
+use crate::parser::ast::ToplevelItem;
 use loops::check_loops;
 use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;

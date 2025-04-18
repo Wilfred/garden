@@ -5,7 +5,7 @@ name: Continuous integration
 jobs:
   test_linux:
     name: Test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.79.0
@@ -17,14 +17,14 @@ jobs:
 
   actionlint:
     name: Actionlint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: ls
       - uses: raven-actions/actionlint@v1
 
   # dry_run_publish:
-  #   runs-on: ubuntu-20.04
+  #   runs-on: ubuntu-24.04
   #   steps:
   #     - uses: actions/checkout@v4
   #     - uses: katyo/publish-crates@v2

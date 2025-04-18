@@ -5,8 +5,8 @@
 #![warn(clippy::todo)]
 // Catch unfinished code.
 #![warn(clippy::dbg_macro)]
-// // Preferred style of making strings owned.
-// #![warn(clippy::str_to_string)]
+// Preferred style of making strings owned.
+#![warn(clippy::str_to_string)]
 // Garden is too much of a prototype for this to be an issue.
 #![allow(clippy::too_many_arguments)]
 // Occurs in WIP code, and it's too obvious to be worth linting

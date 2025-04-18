@@ -395,7 +395,7 @@ mod tests {
                         end_column: 4,
                         path: PathBuf::from("__test.gdn").into()
                     },
-                    " 2\n"
+                    "// 2\n"
                 )],
             })
         );
@@ -417,7 +417,18 @@ mod tests {
                     path: PathBuf::from("__test.gdn").into()
                 },
                 text: "1",
-                preceding_comments: vec![],
+                preceding_comments: vec![(
+                    Position {
+                        start_offset: 0,
+                        end_offset: 4,
+                        line_number: 0,
+                        end_line_number: 0,
+                        column: 0,
+                        end_column: 4,
+                        path: PathBuf::from("__test.gdn").into()
+                    },
+                    "// 2\n"
+                )],
             })
         );
     }

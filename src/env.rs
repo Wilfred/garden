@@ -26,6 +26,8 @@ pub(crate) struct Stack(pub(crate) Vec<StackFrame>);
 impl Default for Stack {
     fn default() -> Self {
         Self(vec![StackFrame {
+            // TODO: this should probably be passed in.
+            namespace_path: PathBuf::from("__user"),
             caller_pos: None,
             caller_expr_id: None,
             bindings: Bindings::default(),
@@ -660,6 +662,10 @@ impl Env {
 
 #[derive(Debug, Clone)]
 pub(crate) struct StackFrame {
+    /// The path to the namespace where the thing we're calling is
+    /// defined.
+    // TODO: this should be Rc'd.
+    pub(crate) namespace_path: PathBuf,
     /// The name of the function, method or test that we're evaluating.
     pub(crate) enclosing_name: EnclosingSymbol,
     /// Used to check the type of the returned value.

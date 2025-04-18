@@ -1142,6 +1142,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     }
 
     let stack_frame = StackFrame {
+        namespace_path: test.name_sym.position.path.to_path_buf(),
         enclosing_name: EnclosingSymbol::Test(test.name_sym.clone()),
         return_hint: None,
         caller_pos: None,
@@ -3005,6 +3006,7 @@ fn eval_call(
             });
 
             return Ok(Some(StackFrame {
+                namespace_path: fun_info.pos.path.to_path_buf(),
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
                 bindings: Bindings {
@@ -3078,6 +3080,7 @@ fn eval_call(
             }
 
             return Ok(Some(StackFrame {
+                namespace_path: fi.pos.path.to_path_buf(),
                 return_hint: fi.return_hint.clone(),
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
@@ -3485,6 +3488,7 @@ fn eval_method_call(
     }
 
     Ok(Some(StackFrame {
+        namespace_path: fun_info.pos.path.to_path_buf(),
         return_hint: fun_info.return_hint.clone(),
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         caller_pos: Some(caller_expr.position.clone()),

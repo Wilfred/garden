@@ -124,7 +124,7 @@ impl Env {
             types: FxHashMap::default(),
         }));
 
-        namespaces.insert(PathBuf::from("__user"), user_namespace);
+        namespaces.insert(PathBuf::from("__user"), user_namespace.clone());
 
         let mut file_scope = FxHashMap::default();
 
@@ -545,14 +545,14 @@ impl Env {
             cli_args: vec![],
         };
 
-        env.init_prelude();
+        env.init_prelude(user_namespace);
 
         env.initial_state = Some(Box::new(env.clone()));
 
         env
     }
 
-    fn init_prelude(&mut self) {
+    fn init_prelude(&mut self, namespace: Rc<RefCell<NamespaceInfo>>) {
         let prelude_src = include_str!("prelude.gdn");
         let (prelude_items, errors) = parse_toplevel_items(
             &PathBuf::from("prelude.gdn"),

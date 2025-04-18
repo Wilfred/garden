@@ -289,13 +289,6 @@ pub(crate) struct ExpressionWithComma {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ParenthesizedExpression {
-    pub(crate) open_paren: Position,
-    pub(crate) expr: Rc<Expression>,
-    pub(crate) close_paren: Position,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ParenthesizedArguments {
     pub(crate) open_paren: Position,
     pub(crate) arguments: Vec<ExpressionWithComma>,

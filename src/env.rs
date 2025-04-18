@@ -115,7 +115,7 @@ pub(crate) struct Env {
 }
 
 impl Env {
-    pub(crate) fn new(mut id_gen: IdGenerator, mut vfs: Vfs) -> Self {
+    pub(crate) fn new(mut id_gen: IdGenerator, vfs: Vfs) -> Self {
         let mut namespaces = FxHashMap::default();
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
@@ -525,27 +525,6 @@ impl Env {
             TypeDef::Builtin(BuiltinType::Namespace, None),
         );
 
-        let prelude_src = include_str!("prelude.gdn");
-        let (prelude_items, errors) = parse_toplevel_items(
-            &PathBuf::from("prelude.gdn"),
-            prelude_src,
-            &mut vfs,
-            &mut id_gen,
-        );
-        assert!(
-            errors.is_empty(),
-            "Prelude should be syntactically legal: {}",
-            errors.first().unwrap().position().as_ide_string()
-        );
-
-        let builtins_src = include_str!("builtins.gdn");
-        let (builtin_items, errors) =
-            parse_toplevel_items(&builtins_path, builtins_src, &mut vfs, &mut id_gen);
-        assert!(
-            errors.is_empty(),
-            "Stubs for built-ins should be syntactically legal: {}",
-            errors.first().unwrap().position().as_ide_string()
-        );
         let mut env = Self {
             file_scope,
             methods,
@@ -566,12 +545,44 @@ impl Env {
             cli_args: vec![],
         };
 
-        load_toplevel_items(&prelude_items, &mut env);
-        load_toplevel_items(&builtin_items, &mut env);
+        env.init_prelude();
 
         env.initial_state = Some(Box::new(env.clone()));
 
         env
+    }
+
+    fn init_prelude(&mut self) {
+        let prelude_src = include_str!("prelude.gdn");
+        let (prelude_items, errors) = parse_toplevel_items(
+            &PathBuf::from("prelude.gdn"),
+            prelude_src,
+            &mut self.vfs,
+            &mut self.id_gen,
+        );
+        assert!(
+            errors.is_empty(),
+            "Prelude should be syntactically legal: {}",
+            errors.first().unwrap().position().as_ide_string()
+        );
+
+        let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
+        let builtins_src = include_str!("builtins.gdn");
+
+        let (builtin_items, errors) = parse_toplevel_items(
+            &builtins_path,
+            builtins_src,
+            &mut self.vfs,
+            &mut self.id_gen,
+        );
+        assert!(
+            errors.is_empty(),
+            "Stubs for built-ins should be syntactically legal: {}",
+            errors.first().unwrap().position().as_ide_string()
+        );
+
+        load_toplevel_items(&prelude_items, self);
+        load_toplevel_items(&builtin_items, self);
     }
 
     pub(crate) fn top_frame_name(&self) -> String {

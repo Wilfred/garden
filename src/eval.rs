@@ -1,6 +1,7 @@
 // Used in some TODO that eventually should handle Err properly.
 #![allow(clippy::manual_flatten)]
 
+use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::fmt::Write;
@@ -280,14 +281,14 @@ pub(crate) fn load_toplevel_items(
     env: &mut Env,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
-    load_toplevel_items_(items, env, &mut paths_seen, &mut None)
+    load_toplevel_items_(items, env, &mut paths_seen, None)
 }
 
 fn load_toplevel_items_(
     items: &[ToplevelItem],
     env: &mut Env,
     paths_seen: &mut FxHashSet<PathBuf>,
-    namespace: &mut Option<NamespaceInfo>,
+    namespace: Option<Rc<RefCell<NamespaceInfo>>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
@@ -308,8 +309,8 @@ fn load_toplevel_items_(
                         }),
                     );
 
-                    if let Some(ns) = namespace {
-                        ns.values.insert(
+                    if let Some(ns) = &namespace {
+                        ns.borrow_mut().values.insert(
                             name_symbol.name.clone(),
                             Value::new(Value_::Fun {
                                 name_sym: name_symbol.clone(),
@@ -350,8 +351,8 @@ fn load_toplevel_items_(
                     TypeDef::Enum(enum_info.clone()),
                 );
 
-                if let Some(ns) = namespace {
-                    ns.types.insert(
+                if let Some(ns) = &namespace {
+                    ns.borrow_mut().types.insert(
                         enum_info.name_sym.name.clone(),
                         TypeDef::Enum(enum_info.clone()),
                     );
@@ -467,7 +468,7 @@ fn load_toplevel_items_(
                 }
 
                 let (import_diagnostics, imported_syms) =
-                    load_toplevel_items_(&imported_items, env, paths_seen, namespace);
+                    load_toplevel_items_(&imported_items, env, paths_seen, namespace.clone());
                 diagnostics.extend(import_diagnostics);
                 new_syms.extend(imported_syms);
             }

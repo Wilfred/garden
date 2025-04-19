@@ -624,8 +624,12 @@ impl Env {
 
 fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceInfo>>) {
     let mut ns = ns.borrow_mut();
+
     for (name, value) in prelude.borrow().values.iter() {
         ns.values.insert(name.clone(), value.clone());
+    }
+    for (name, type_) in prelude.borrow().types.iter() {
+        ns.types.insert(name.clone(), type_.clone());
     }
 }
 

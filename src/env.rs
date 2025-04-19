@@ -531,13 +531,7 @@ impl Env {
         env.initial_state = Some(Box::new(env.clone()));
 
         let prelude_namespace = fresh_prelude(&mut env);
-
-        for (name, value) in prelude_namespace.borrow().values.iter() {
-            user_namespace
-                .borrow_mut()
-                .values
-                .insert(name.clone(), value.clone());
-        }
+        insert_prelude(user_namespace.clone(), prelude_namespace.clone());
 
         env.prelude_namespace = prelude_namespace;
 
@@ -555,9 +549,7 @@ impl Env {
             types: FxHashMap::default(),
         }));
 
-        for (name, value) in self.prelude_namespace.borrow().values.iter() {
-            ns.borrow_mut().values.insert(name.clone(), value.clone());
-        }
+        insert_prelude(ns.clone(), self.prelude_namespace.clone());
 
         self.namespaces.insert(path.to_owned(), ns.clone());
         ns
@@ -627,6 +619,13 @@ impl Env {
 
     pub(crate) fn current_frame_mut(&mut self) -> &mut StackFrame {
         self.stack.0.last_mut().unwrap()
+    }
+}
+
+fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceInfo>>) {
+    let mut ns = ns.borrow_mut();
+    for (name, value) in prelude.borrow().values.iter() {
+        ns.values.insert(name.clone(), value.clone());
     }
 }
 

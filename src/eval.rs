@@ -222,6 +222,11 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
         return Some(value.clone());
     }
 
+    let ns = env.current_namespace();
+    if let Some(value) = ns.borrow().values.get(&sym.name) {
+        return Some(value.clone());
+    }
+
     if let Some(value) = env.file_scope.get(&sym.name) {
         return Some(value.clone());
     }

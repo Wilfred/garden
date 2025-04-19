@@ -555,6 +555,10 @@ impl Env {
             types: FxHashMap::default(),
         }));
 
+        for (name, value) in self.prelude_namespace.borrow().values.iter() {
+            ns.borrow_mut().values.insert(name.clone(), value.clone());
+        }
+
         self.namespaces.insert(path.to_owned(), ns.clone());
         ns
     }

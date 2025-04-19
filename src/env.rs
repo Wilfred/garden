@@ -694,10 +694,22 @@ pub(crate) fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
     let vfs = &mut env.vfs;
 
+    let mut values = FxHashMap::default();
+
+    // Insert all the built-in functions.
+    for fun_kind in BuiltinFunctionKind::iter() {
+        values.insert(
+            SymbolName {
+                text: format!("{}", fun_kind),
+            },
+            Value::new(Value_::BuiltinFunction(fun_kind, None)),
+        );
+    }
+
     let path = PathBuf::from("__prelude");
     let ns_info = NamespaceInfo {
         name: path.to_string_lossy().to_string(),
-        values: FxHashMap::default(),
+        values,
         types: FxHashMap::default(),
     };
 

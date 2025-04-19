@@ -509,7 +509,12 @@ fn load_toplevel_items_(
             // TODO: warn if we're clobbering a name from a
             // different enum (i.e. not just redefining the
             // current enum).
-            env.add_function(&variant_sym.name_sym.name, enum_value);
+            env.add_function(&variant_sym.name_sym.name, enum_value.clone());
+
+            namespace
+                .borrow_mut()
+                .values
+                .insert(variant_sym.name_sym.name.clone(), enum_value);
         }
     }
 

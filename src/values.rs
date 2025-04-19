@@ -506,7 +506,7 @@ impl Value {
             }
             Value_::Namespace(ns) => {
                 let ns = ns.borrow();
-                format!("namespace:{}", ns.name)
+                format!("namespace:{}", ns.path.display())
             }
         }
     }

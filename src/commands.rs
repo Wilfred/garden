@@ -480,7 +480,7 @@ pub(crate) fn run_command<T: Write>(
                 }
 
                 let ns = ns.borrow();
-                write!(buf, "{}", &ns.name)?;
+                write!(buf, "{}", ns.path.display())?;
                 for sym in ns.values.keys() {
                     write!(buf, "\n  {}", sym.text)?;
                 }
@@ -502,7 +502,7 @@ pub(crate) fn run_command<T: Write>(
 
             writeln!(buf, "\n\nPrelude namespace:\n")?;
             let ns = env.prelude_namespace.borrow();
-            write!(buf, "{}", ns.name)?;
+            write!(buf, "{}", ns.path.display())?;
             for sym in ns.values.keys() {
                 write!(buf, "\n  {}", sym.text)?;
             }

@@ -1383,7 +1383,6 @@ impl TypeCheckVisitor<'_> {
                                 Value_::Namespace(ns) => {
                                     let ns = ns.borrow();
                                     let values = &ns.values;
-                                    let name = &ns.name;
 
                                     match values.get(&sym.name) {
                                         Some(value) => {
@@ -1394,7 +1393,7 @@ impl TypeCheckVisitor<'_> {
                                             self.diagnostics.push(Diagnostic {
                                                 level: Level::Error,
                                                 message: ErrorMessage(vec![
-                                                    msgcode!("{}", name),
+                                                    msgcode!("{}", ns.path.display()),
                                                     msgtext!(" does not contain an item named "),
                                                     msgcode!("{}", sym.name),
                                                     msgtext!("."),

@@ -8,7 +8,6 @@ use crate::{types::TypeDef, values::Value};
 
 #[derive(Debug, Clone)]
 pub(crate) struct NamespaceInfo {
-    pub(crate) name: String,
     pub(crate) path: Rc<PathBuf>,
     pub(crate) values: FxHashMap<SymbolName, Value>,
     pub(crate) types: FxHashMap<TypeName, TypeDef>,

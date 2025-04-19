@@ -676,6 +676,10 @@ impl Env {
         stack_frame.evalled_values.pop()
     }
 
+    pub(crate) fn current_namespace(&self) -> Rc<RefCell<NamespaceInfo>> {
+        self.current_frame().namespace.clone()
+    }
+
     pub(crate) fn current_frame(&self) -> &StackFrame {
         self.stack.0.last().unwrap()
     }

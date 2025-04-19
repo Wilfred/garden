@@ -27,7 +27,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = fresh_prelude(&mut env);
-    load_toplevel_items(&items, &mut env, Some(ns));
+    load_toplevel_items(&items, &mut env, ns);
 
     let ids_at_pos = find_item_at(&items, offset, offset);
     let summary = check_types(&items, &env);

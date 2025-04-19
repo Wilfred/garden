@@ -51,7 +51,7 @@ fn sandboxed_tests_summary(
     // the current session.
     let mut env = Env::new(id_gen, vfs);
     let ns = env.current_namespace();
-    load_toplevel_items(&items, &mut env, Some(ns));
+    load_toplevel_items(&items, &mut env, ns);
 
     // TODO: allow users to choose this value.
     //
@@ -180,7 +180,7 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
     };
 
     let ns = env.current_namespace();
-    load_toplevel_items(&items, &mut env, Some(ns));
+    load_toplevel_items(&items, &mut env, ns);
 
     let summary = eval_tests(&items, &mut env, &session);
 

@@ -279,7 +279,7 @@ pub(crate) struct ToplevelEvalSummary {
 pub(crate) fn load_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
-    namespace: Option<Rc<RefCell<NamespaceInfo>>>,
+    namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
     load_toplevel_items_(items, env, &mut paths_seen, namespace)
@@ -289,7 +289,7 @@ fn load_toplevel_items_(
     items: &[ToplevelItem],
     env: &mut Env,
     paths_seen: &mut FxHashSet<PathBuf>,
-    namespace: Option<Rc<RefCell<NamespaceInfo>>>,
+    namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
@@ -310,15 +310,13 @@ fn load_toplevel_items_(
                         }),
                     );
 
-                    if let Some(ns) = &namespace {
-                        ns.borrow_mut().values.insert(
-                            name_symbol.name.clone(),
-                            Value::new(Value_::Fun {
-                                name_sym: name_symbol.clone(),
-                                fun_info: fun_info.clone(),
-                            }),
-                        );
-                    }
+                    namespace.borrow_mut().values.insert(
+                        name_symbol.name.clone(),
+                        Value::new(Value_::Fun {
+                            name_sym: name_symbol.clone(),
+                            fun_info: fun_info.clone(),
+                        }),
+                    );
                 }
 
                 new_syms.push(name_symbol.name.clone());
@@ -352,12 +350,10 @@ fn load_toplevel_items_(
                     TypeDef::Enum(enum_info.clone()),
                 );
 
-                if let Some(ns) = &namespace {
-                    ns.borrow_mut().types.insert(
-                        enum_info.name_sym.name.clone(),
-                        TypeDef::Enum(enum_info.clone()),
-                    );
-                }
+                namespace.borrow_mut().types.insert(
+                    enum_info.name_sym.name.clone(),
+                    TypeDef::Enum(enum_info.clone()),
+                );
 
                 enum_infos.push(enum_info);
 
@@ -570,7 +566,7 @@ pub(crate) fn eval_toplevel_items(
     }
 
     let ns = env.current_namespace();
-    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, Some(ns));
+    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, ns);
     for diagnostic in diagnostics.iter() {
         if matches!(diagnostic.level, Level::Error) {
             return Err(EvalError::ResumableError(
@@ -808,7 +804,7 @@ pub(crate) fn eval_up_to(
     let mut res: Result<_, EvalError> = match &item {
         ToplevelItem::Fun(name_sym, fun_info, _) => {
             let ns = env.current_namespace();
-            load_toplevel_items(&[item.clone()], env, Some(ns));
+            load_toplevel_items(&[item.clone()], env, ns);
 
             let args = match env.prev_call_args.get(&name_sym.name) {
                 _ if fun_info.params.params.is_empty() => vec![],
@@ -827,7 +823,7 @@ pub(crate) fn eval_up_to(
         }
         ToplevelItem::Method(method_info, _) => {
             let ns = env.current_namespace();
-            load_toplevel_items(&[item.clone()], env, Some(ns));
+            load_toplevel_items(&[item.clone()], env, ns);
 
             let type_name = &method_info.receiver_hint.sym.name;
 
@@ -5390,7 +5386,7 @@ mod tests {
 
     fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) {
         let ns = env.current_namespace();
-        super::load_toplevel_items(items, env, Some(ns));
+        super::load_toplevel_items(items, env, ns);
     }
 
     fn parse_items_from_str(

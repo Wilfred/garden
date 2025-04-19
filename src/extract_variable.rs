@@ -23,7 +23,7 @@ pub(crate) fn extract_variable(
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.current_namespace();
-    load_toplevel_items(&items, &mut env, Some(ns));
+    load_toplevel_items(&items, &mut env, ns);
 
     let ids_containing_pos = find_item_at(&items, offset, end_offset);
 

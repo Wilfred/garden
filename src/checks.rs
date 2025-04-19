@@ -28,7 +28,7 @@ use self::{struct_fields::check_struct_fields, unused_vars::check_unused_variabl
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
     let ns = fresh_prelude(&mut env);
-    let (mut diagnostics, _) = load_toplevel_items(items, &mut env, Some(ns));
+    let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns);
 
     diagnostics.extend(check_toplevel_items_in_env(items, &env));
     diagnostics

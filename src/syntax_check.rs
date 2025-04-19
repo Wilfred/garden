@@ -91,7 +91,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.current_namespace();
-    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, Some(ns));
+    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns);
     raw_diagnostics.extend(check_toplevel_items_in_env(&items, &env));
 
     for Diagnostic {

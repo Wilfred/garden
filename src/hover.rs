@@ -15,7 +15,7 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.current_namespace();
-    load_toplevel_items(&items, &mut env, Some(ns));
+    load_toplevel_items(&items, &mut env, ns);
 
     let summary = check_types(&items, &env);
 

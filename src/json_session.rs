@@ -165,7 +165,7 @@ fn handle_load_request(
     }
 
     let ns = env.current_namespace();
-    let (diagnostics, new_syms) = load_toplevel_items(&items, env, Some(ns));
+    let (diagnostics, new_syms) = load_toplevel_items(&items, env, ns);
 
     let summary = if new_syms.is_empty() {
         "".to_owned()
@@ -620,7 +620,7 @@ fn handle_run_eval_request(
     }
 
     let ns = env.current_namespace();
-    let (mut diagnostics, new_syms) = load_toplevel_items(&items, env, Some(ns));
+    let (mut diagnostics, new_syms) = load_toplevel_items(&items, env, ns);
     diagnostics.extend(check_toplevel_items_in_env(&items, env));
 
     let test_summary = match eval_tests_until_error(&items, env, session) {

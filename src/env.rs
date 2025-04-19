@@ -528,11 +528,18 @@ impl Env {
             cli_args: vec![],
         };
 
-        env.init_prelude(user_namespace);
-
         env.initial_state = Some(Box::new(env.clone()));
 
-        env.prelude_namespace = fresh_prelude(&mut env);
+        let prelude_namespace = fresh_prelude(&mut env);
+
+        for (name, value) in prelude_namespace.borrow().values.iter() {
+            user_namespace
+                .borrow_mut()
+                .values
+                .insert(name.clone(), value.clone());
+        }
+
+        env.prelude_namespace = prelude_namespace;
 
         env
     }
@@ -550,39 +557,6 @@ impl Env {
 
         self.namespaces.insert(path.to_owned(), ns.clone());
         ns
-    }
-
-    fn init_prelude(&mut self, namespace: Rc<RefCell<NamespaceInfo>>) {
-        let prelude_src = include_str!("prelude.gdn");
-        let (prelude_items, errors) = parse_toplevel_items(
-            &PathBuf::from("prelude.gdn"),
-            prelude_src,
-            &mut self.vfs,
-            &mut self.id_gen,
-        );
-        assert!(
-            errors.is_empty(),
-            "Prelude should be syntactically legal: {}",
-            errors.first().unwrap().position().as_ide_string()
-        );
-
-        let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
-        let builtins_src = include_str!("builtins.gdn");
-
-        let (builtin_items, errors) = parse_toplevel_items(
-            &builtins_path,
-            builtins_src,
-            &mut self.vfs,
-            &mut self.id_gen,
-        );
-        assert!(
-            errors.is_empty(),
-            "Stubs for built-ins should be syntactically legal: {}",
-            errors.first().unwrap().position().as_ide_string()
-        );
-
-        load_toplevel_items(&prelude_items, self, namespace.clone());
-        load_toplevel_items(&builtin_items, self, namespace);
     }
 
     pub(crate) fn top_frame_name(&self) -> String {

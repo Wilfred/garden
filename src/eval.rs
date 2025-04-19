@@ -227,10 +227,6 @@ fn get_var(sym: &Symbol, env: &Env) -> Option<Value> {
         return Some(value.clone());
     }
 
-    if let Some(value) = env.file_scope.get(&sym.name) {
-        return Some(value.clone());
-    }
-
     None
 }
 

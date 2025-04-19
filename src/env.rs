@@ -119,6 +119,7 @@ impl Env {
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
             name: "prelude".to_owned(),
+            path: Rc::new(PathBuf::from("__user")),
             values: FxHashMap::default(),
             types: FxHashMap::default(),
         }));
@@ -150,6 +151,7 @@ impl Env {
 
         let fs_namespace = Rc::new(RefCell::new(NamespaceInfo {
             name: "fs".to_owned(),
+            path: Rc::new(PathBuf::from("__fs")),
             values: fs_values,
             types: FxHashMap::default(),
         }));
@@ -504,6 +506,7 @@ impl Env {
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
             name: "__prelude".to_owned(),
+            path: Rc::new(PathBuf::from("__prelude")),
             values: FxHashMap::default(),
             types: FxHashMap::default(),
         }));
@@ -545,6 +548,7 @@ impl Env {
 
         let ns = Rc::new(RefCell::new(NamespaceInfo {
             name: path.to_string_lossy().to_string(),
+            path: Rc::new(path.to_owned()),
             values: FxHashMap::default(),
             types: FxHashMap::default(),
         }));
@@ -653,6 +657,7 @@ pub(crate) fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
     let path = PathBuf::from("__prelude");
     let ns_info = NamespaceInfo {
         name: path.to_string_lossy().to_string(),
+        path: Rc::new(path),
         values,
         types: FxHashMap::default(),
     };

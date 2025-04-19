@@ -599,13 +599,6 @@ impl Env {
 
     pub(crate) fn add_function(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value.clone());
-
-        let top_stack = self.stack.0.last().unwrap();
-        let namespace_path = top_stack.namespace_path.clone();
-
-        let ns = self.get_current_namespace(&namespace_path);
-        let mut ns = ns.borrow_mut();
-        ns.values.insert(name.clone(), value);
     }
 
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
@@ -630,13 +623,6 @@ impl Env {
 
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name.clone(), type_.clone());
-
-        let top_stack = self.stack.0.last().unwrap();
-        let namespace_path = top_stack.namespace_path.clone();
-
-        let ns = self.get_current_namespace(&namespace_path);
-        let mut ns = ns.borrow_mut();
-        ns.types.insert(name, type_);
     }
 
     pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {

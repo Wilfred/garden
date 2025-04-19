@@ -1152,7 +1152,6 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     let namespace = env.get_current_namespace(&namespace_path);
 
     let stack_frame = StackFrame {
-        namespace_path,
         namespace,
         enclosing_name: EnclosingSymbol::Test(test.name_sym.clone()),
         return_hint: None,
@@ -3020,7 +3019,6 @@ fn eval_call(
             let namespace = env.get_current_namespace(&namespace_path);
 
             return Ok(Some(StackFrame {
-                namespace_path,
                 namespace,
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
@@ -3098,7 +3096,6 @@ fn eval_call(
             let namespace = env.get_current_namespace(&namespace_path);
 
             return Ok(Some(StackFrame {
-                namespace_path,
                 namespace,
                 return_hint: fi.return_hint.clone(),
                 caller_pos: Some(caller_expr.position.clone()),
@@ -3512,7 +3509,6 @@ fn eval_method_call(
     let namespace = env.get_current_namespace(&namespace_path);
 
     Ok(Some(StackFrame {
-        namespace_path,
         namespace,
         return_hint,
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),

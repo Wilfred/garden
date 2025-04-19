@@ -24,9 +24,8 @@ use crate::{
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);
 
 impl Stack {
-    pub(crate) fn new(namespace_path: PathBuf, namespace: Rc<RefCell<NamespaceInfo>>) -> Self {
+    pub(crate) fn new(namespace: Rc<RefCell<NamespaceInfo>>) -> Self {
         Self(vec![StackFrame {
-            namespace_path,
             namespace,
             caller_pos: None,
             caller_expr_id: None,
@@ -518,7 +517,7 @@ impl Env {
             namespaces,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
-            stack: Stack::new(PathBuf::from("__user"), user_namespace.clone()),
+            stack: Stack::new(user_namespace.clone()),
             ticks: 0,
             tick_limit: None,
             enforce_sandbox: false,
@@ -706,10 +705,7 @@ pub(crate) fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
 
 #[derive(Debug, Clone)]
 pub(crate) struct StackFrame {
-    /// The path to the namespace where the thing we're calling is
-    /// defined.
-    // TODO: this should be Rc'd.
-    pub(crate) namespace_path: PathBuf,
+    /// The namespace we're currently in, where the callee is defined.
     pub(crate) namespace: Rc<RefCell<NamespaceInfo>>,
 
     /// The name of the function, method or test that we're evaluating.

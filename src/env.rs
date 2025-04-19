@@ -23,11 +23,10 @@ use crate::{
 #[derive(Debug, Clone)]
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);
 
-impl Default for Stack {
-    fn default() -> Self {
+impl Stack {
+    pub(crate) fn new(namespace_path: PathBuf) -> Self {
         Self(vec![StackFrame {
-            // TODO: this should probably be passed in.
-            namespace_path: PathBuf::from("__user"),
+            namespace_path,
             caller_pos: None,
             caller_expr_id: None,
             bindings: Bindings::default(),
@@ -40,9 +39,7 @@ impl Default for Stack {
             caller_uses_value: true,
         }])
     }
-}
 
-impl Stack {
     pub(crate) fn pop_to_toplevel(&mut self) {
         if self.0.is_empty() {
             return;
@@ -534,7 +531,7 @@ impl Env {
             namespaces,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
-            stack: Stack::default(),
+            stack: Stack::new(PathBuf::from("__user")),
             ticks: 0,
             tick_limit: None,
             enforce_sandbox: false,

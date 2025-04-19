@@ -138,28 +138,6 @@ impl Env {
             );
         }
 
-        let mut prelude_values = FxHashMap::default();
-        prelude_values.insert(
-            SymbolName {
-                text: "print".to_owned(),
-            },
-            Value::new(Value_::BuiltinFunction(BuiltinFunctionKind::Print, None)),
-        );
-
-        let prelude_namespace = Rc::new(RefCell::new(NamespaceInfo {
-            name: "prelude".to_owned(),
-            values: prelude_values,
-            types: FxHashMap::default(),
-        }));
-        file_scope.insert(
-            SymbolName {
-                text: "prelude".to_owned(),
-            },
-            Value::new(Value_::Namespace(prelude_namespace.clone())).clone(),
-        );
-
-        namespaces.insert(PathBuf::from("__prelude"), prelude_namespace);
-
         let mut fs_values = FxHashMap::default();
         fs_values.insert(
             SymbolName {

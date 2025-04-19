@@ -486,7 +486,7 @@ pub(crate) fn run_command<T: Write>(
                 }
             }
 
-            writeln!(buf, "\n\nNamespaces by file:\n")?;
+            writeln!(buf, "\n\nNamespaces by file:")?;
 
             for (i, (path, ns)) in env.namespaces.iter().enumerate() {
                 if i != 0 {
@@ -494,10 +494,17 @@ pub(crate) fn run_command<T: Write>(
                 }
 
                 let ns = ns.borrow();
-                write!(buf, "{}", path.display())?;
+                write!(buf, "\n{}", path.display())?;
                 for sym in ns.values.keys() {
                     write!(buf, "\n  {}", sym.text)?;
                 }
+            }
+
+            writeln!(buf, "\n\nPrelude namespace:\n")?;
+            let ns = env.prelude_namespace.borrow();
+            write!(buf, "{}", ns.name)?;
+            for sym in ns.values.keys() {
+                write!(buf, "\n  {}", sym.text)?;
             }
         }
         Command::Doc(name) => {

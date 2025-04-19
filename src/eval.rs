@@ -1141,8 +1141,12 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         exprs_to_eval.push((ExpressionState::NotEvaluated, expr.clone()));
     }
 
+    let namespace_path = test.name_sym.position.path.to_path_buf();
+    let namespace = env.get_current_namespace(&namespace_path);
+
     let stack_frame = StackFrame {
-        namespace_path: test.name_sym.position.path.to_path_buf(),
+        namespace_path,
+        namespace,
         enclosing_name: EnclosingSymbol::Test(test.name_sym.clone()),
         return_hint: None,
         caller_pos: None,
@@ -3005,8 +3009,12 @@ fn eval_call(
                 values: fun_bindings,
             });
 
+            let namespace_path = fun_info.pos.path.to_path_buf();
+            let namespace = env.get_current_namespace(&namespace_path);
+
             return Ok(Some(StackFrame {
-                namespace_path: fun_info.pos.path.to_path_buf(),
+                namespace_path,
+                namespace,
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
                 bindings: Bindings {
@@ -3079,8 +3087,12 @@ fn eval_call(
                 }
             }
 
+            let namespace_path = fi.pos.path.to_path_buf();
+            let namespace = env.get_current_namespace(&namespace_path);
+
             return Ok(Some(StackFrame {
-                namespace_path: fi.pos.path.to_path_buf(),
+                namespace_path,
+                namespace,
                 return_hint: fi.return_hint.clone(),
                 caller_pos: Some(caller_expr.position.clone()),
                 caller_expr_id: Some(caller_expr.id),
@@ -3487,9 +3499,15 @@ fn eval_method_call(
         type_bindings.insert(type_param.name.clone(), Some(Type::Top));
     }
 
+    let return_hint = fun_info.return_hint.clone();
+
+    let namespace_path = fun_info.pos.path.to_path_buf();
+    let namespace = env.get_current_namespace(&namespace_path);
+
     Ok(Some(StackFrame {
-        namespace_path: fun_info.pos.path.to_path_buf(),
-        return_hint: fun_info.return_hint.clone(),
+        namespace_path,
+        namespace,
+        return_hint,
         enclosing_name: EnclosingSymbol::Method(receiver_type_name, meth_name.clone()),
         caller_pos: Some(caller_expr.position.clone()),
         caller_expr_id: Some(caller_expr.id),

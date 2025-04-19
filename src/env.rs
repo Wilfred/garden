@@ -24,9 +24,10 @@ use crate::{
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);
 
 impl Stack {
-    pub(crate) fn new(namespace_path: PathBuf) -> Self {
+    pub(crate) fn new(namespace_path: PathBuf, namespace: Rc<RefCell<NamespaceInfo>>) -> Self {
         Self(vec![StackFrame {
             namespace_path,
+            namespace,
             caller_pos: None,
             caller_expr_id: None,
             bindings: Bindings::default(),
@@ -531,7 +532,7 @@ impl Env {
             namespaces,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
-            stack: Stack::new(PathBuf::from("__user")),
+            stack: Stack::new(PathBuf::from("__user"), user_namespace.clone()),
             ticks: 0,
             tick_limit: None,
             enforce_sandbox: false,
@@ -549,7 +550,7 @@ impl Env {
         env
     }
 
-    fn get_current_namespace(&mut self, path: &Path) -> Rc<RefCell<NamespaceInfo>> {
+    pub(crate) fn get_current_namespace(&mut self, path: &Path) -> Rc<RefCell<NamespaceInfo>> {
         if let Some(ns) = self.namespaces.get(path) {
             return ns.clone();
         }
@@ -680,6 +681,8 @@ pub(crate) struct StackFrame {
     /// defined.
     // TODO: this should be Rc'd.
     pub(crate) namespace_path: PathBuf,
+    pub(crate) namespace: Rc<RefCell<NamespaceInfo>>,
+
     /// The name of the function, method or test that we're evaluating.
     pub(crate) enclosing_name: EnclosingSymbol,
     /// Used to check the type of the returned value.

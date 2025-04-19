@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use rustc_hash::FxHashMap;
@@ -69,7 +69,6 @@ pub(crate) struct Env {
     pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
     pub(crate) types: FxHashMap<TypeName, TypeDef>,
 
-    pub(crate) current_namespace: PathBuf,
     pub(crate) namespaces: FxHashMap<PathBuf, Rc<RefCell<NamespaceInfo>>>,
 
     /// The arguments used the last time each function was
@@ -532,7 +531,6 @@ impl Env {
             methods,
             tests: FxHashMap::default(),
             types,
-            current_namespace: PathBuf::from("__user"),
             namespaces,
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
@@ -552,6 +550,21 @@ impl Env {
         env.initial_state = Some(Box::new(env.clone()));
 
         env
+    }
+
+    fn get_current_namespace(&mut self, path: &Path) -> Rc<RefCell<NamespaceInfo>> {
+        if let Some(ns) = self.namespaces.get(path) {
+            return ns.clone();
+        }
+
+        let ns = Rc::new(RefCell::new(NamespaceInfo {
+            name: path.to_string_lossy().to_string(),
+            values: FxHashMap::default(),
+            types: FxHashMap::default(),
+        }));
+
+        self.namespaces.insert(path.to_owned(), ns.clone());
+        ns
     }
 
     fn init_prelude(&mut self, namespace: Rc<RefCell<NamespaceInfo>>) {
@@ -601,10 +614,12 @@ impl Env {
     pub(crate) fn add_function(&mut self, name: &SymbolName, value: Value) {
         self.file_scope.insert(name.clone(), value.clone());
 
-        if let Some(ns) = self.namespaces.get(&self.current_namespace) {
-            let mut ns = ns.borrow_mut();
-            ns.values.insert(name.clone(), value);
-        }
+        let top_stack = self.stack.0.last().unwrap();
+        let namespace_path = top_stack.namespace_path.clone();
+
+        let ns = self.get_current_namespace(&namespace_path);
+        let mut ns = ns.borrow_mut();
+        ns.values.insert(name.clone(), value);
     }
 
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
@@ -630,10 +645,12 @@ impl Env {
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
         self.types.insert(name.clone(), type_.clone());
 
-        if let Some(ns) = self.namespaces.get(&self.current_namespace) {
-            let mut ns = ns.borrow_mut();
-            ns.types.insert(name, type_);
-        }
+        let top_stack = self.stack.0.last().unwrap();
+        let namespace_path = top_stack.namespace_path.clone();
+
+        let ns = self.get_current_namespace(&namespace_path);
+        let mut ns = ns.borrow_mut();
+        ns.types.insert(name, type_);
     }
 
     pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {

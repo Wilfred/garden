@@ -279,9 +279,10 @@ pub(crate) struct ToplevelEvalSummary {
 pub(crate) fn load_toplevel_items(
     items: &[ToplevelItem],
     env: &mut Env,
+    namespace: Option<Rc<RefCell<NamespaceInfo>>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
-    load_toplevel_items_(items, env, &mut paths_seen, None)
+    load_toplevel_items_(items, env, &mut paths_seen, namespace)
 }
 
 fn load_toplevel_items_(
@@ -568,7 +569,8 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env);
+    let ns = env.current_namespace();
+    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, Some(ns));
     for diagnostic in diagnostics.iter() {
         if matches!(diagnostic.level, Level::Error) {
             return Err(EvalError::ResumableError(
@@ -805,7 +807,9 @@ pub(crate) fn eval_up_to(
 
     let mut res: Result<_, EvalError> = match &item {
         ToplevelItem::Fun(name_sym, fun_info, _) => {
-            load_toplevel_items(&[item.clone()], env);
+            let ns = env.current_namespace();
+            load_toplevel_items(&[item.clone()], env, Some(ns));
+
             let args = match env.prev_call_args.get(&name_sym.name) {
                 _ if fun_info.params.params.is_empty() => vec![],
                 Some(prev_args) => prev_args.clone(),
@@ -822,7 +826,9 @@ pub(crate) fn eval_up_to(
             res.map(|v| (v, position))
         }
         ToplevelItem::Method(method_info, _) => {
-            load_toplevel_items(&[item.clone()], env);
+            let ns = env.current_namespace();
+            load_toplevel_items(&[item.clone()], env, Some(ns));
+
             let type_name = &method_info.receiver_hint.sym.name;
 
             let Some(prev_calls_for_type) = env.prev_method_call_args.get(type_name).cloned()
@@ -5381,6 +5387,11 @@ mod tests {
 
     use crate::parser::ast::IdGenerator;
     use crate::parser::parse_toplevel_items;
+
+    fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) {
+        let ns = env.current_namespace();
+        super::load_toplevel_items(items, env, Some(ns));
+    }
 
     fn parse_items_from_str(
         src: &str,

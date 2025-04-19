@@ -8,7 +8,7 @@ mod unused_defs;
 mod unused_vars;
 
 use crate::diagnostics::Diagnostic;
-use crate::env::Env;
+use crate::env::{fresh_prelude, Env};
 use crate::eval::load_toplevel_items;
 use crate::parser::ast::ToplevelItem;
 use loops::check_loops;
@@ -27,7 +27,8 @@ use self::{struct_fields::check_struct_fields, unused_vars::check_unused_variabl
 /// may refer to files that aren't present in `env.vfs`.
 pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
-    let (mut diagnostics, _) = load_toplevel_items(items, &mut env);
+    let ns = fresh_prelude(&mut env);
+    let (mut diagnostics, _) = load_toplevel_items(items, &mut env, Some(ns));
 
     diagnostics.extend(check_toplevel_items_in_env(items, &env));
     diagnostics

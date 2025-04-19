@@ -16,7 +16,9 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
-    load_toplevel_items(&items, &mut env);
+    let ns = env.current_namespace();
+    load_toplevel_items(&items, &mut env, Some(ns));
+
     let summary = check_types(&items, &env);
 
     let ids_at_query_pos = find_item_at(&items, offset, offset);

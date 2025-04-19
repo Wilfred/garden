@@ -3,10 +3,6 @@ use std::path::Path;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
-use crate::parser::{
-    ast::{AstId, Expression_, IdGenerator, Vfs},
-    parse_toplevel_items,
-};
 use crate::{
     checks::type_checker::check_types,
     env::Env,
@@ -14,6 +10,13 @@ use crate::{
     garden_type::Type,
     pos_to_id::{find_expr_of_id, find_item_at},
     types::TypeDef,
+};
+use crate::{
+    env::fresh_prelude,
+    parser::{
+        ast::{AstId, Expression_, IdGenerator, Vfs},
+        parse_toplevel_items,
+    },
 };
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
@@ -23,7 +26,8 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
-    load_toplevel_items(&items, &mut env);
+    let ns = fresh_prelude(&mut env);
+    load_toplevel_items(&items, &mut env, Some(ns));
 
     let ids_at_pos = find_item_at(&items, offset, offset);
     let summary = check_types(&items, &env);

@@ -604,8 +604,8 @@ impl Env {
             errors.first().unwrap().position().as_ide_string()
         );
 
-        load_toplevel_items(&prelude_items, self);
-        load_toplevel_items(&builtin_items, self);
+        load_toplevel_items(&prelude_items, self, Some(namespace.clone()));
+        load_toplevel_items(&builtin_items, self, Some(namespace));
     }
 
     pub(crate) fn top_frame_name(&self) -> String {
@@ -690,7 +690,7 @@ impl Env {
 }
 
 // TODO: this shouldn't take an Env, we're in the process of constructing it.
-fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
+pub(crate) fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
     let vfs = &mut env.vfs;
 
@@ -720,10 +720,12 @@ fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
         errors.first().unwrap().position().as_ide_string()
     );
 
-    load_toplevel_items(&prelude_items, env);
-    load_toplevel_items(&builtin_items, env);
+    let ns = Rc::new(RefCell::new(ns_info));
 
-    Rc::new(RefCell::new(ns_info))
+    load_toplevel_items(&prelude_items, env, Some(ns.clone()));
+    load_toplevel_items(&builtin_items, env, Some(ns.clone()));
+
+    ns
 }
 
 #[derive(Debug, Clone)]

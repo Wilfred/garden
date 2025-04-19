@@ -3,7 +3,7 @@ use std::path::Path;
 use line_numbers::LinePositions;
 
 use crate::checks::type_checker::check_types;
-use crate::env::Env;
+use crate::env::{fresh_prelude, Env};
 use crate::eval::load_toplevel_items;
 use crate::garden_type::{Type, TypeDefKind};
 use crate::parser::ast::{AstId, VariantInfo, Vfs};
@@ -18,7 +18,8 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
-    load_toplevel_items(&items, &mut env);
+    let ns = fresh_prelude(&mut env);
+    load_toplevel_items(&items, &mut env, Some(ns));
     let summary = check_types(&items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);

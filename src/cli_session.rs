@@ -110,7 +110,8 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             Ok((src, items)) => {
                 last_src = src;
 
-                let (diagnostics, _) = load_toplevel_items(&items, &mut env);
+                let ns = env.current_namespace();
+                let (diagnostics, _) = load_toplevel_items(&items, &mut env, Some(ns));
                 for diagnostic in diagnostics {
                     println!("Warning: {}", diagnostic.message.as_string());
                 }

@@ -5746,7 +5746,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eval_method_call_bad_airty() {
+    fn test_eval_method_call_bad_arity() {
         let id_gen = IdGenerator::default();
         let vfs = Vfs::default();
         let mut env = Env::new(id_gen, vfs);

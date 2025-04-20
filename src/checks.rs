@@ -7,6 +7,8 @@ mod unreachable;
 mod unused_defs;
 mod unused_vars;
 
+use std::path::Path;
+
 use crate::diagnostics::Diagnostic;
 use crate::env::{fresh_prelude, Env};
 use crate::eval::load_toplevel_items;
@@ -25,17 +27,25 @@ use self::{struct_fields::check_struct_fields, unused_vars::check_unused_variabl
 ///
 /// Note that this creates a new Env and Vfs, so diagnostics returned
 /// may refer to files that aren't present in `env.vfs`.
-pub(crate) fn check_toplevel_items(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_toplevel_items(
+    path: &Path,
+    items: &[ToplevelItem],
+    env: &Env,
+) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
     let ns = fresh_prelude(&mut env);
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns);
 
-    diagnostics.extend(check_toplevel_items_in_env(items, &env));
+    diagnostics.extend(check_toplevel_items_in_env(path, items, &env));
     diagnostics
 }
 
 /// Check toplevel items in this environment.
-pub(crate) fn check_toplevel_items_in_env(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
+pub(crate) fn check_toplevel_items_in_env(
+    path: &Path,
+    items: &[ToplevelItem],
+    env: &Env,
+) -> Vec<Diagnostic> {
     let mut diagnostics = vec![];
 
     diagnostics.extend(check_unused_variables(items));

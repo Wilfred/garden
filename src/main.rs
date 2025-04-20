@@ -414,7 +414,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         pretty_print_json: true,
     };
 
-    if let Err(e) = eval_toplevel_items(&items, &mut env, &session) {
+    if let Err(e) = eval_toplevel_items(path, &items, &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
@@ -577,7 +577,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         pretty_print_json: false,
     };
 
-    match eval_toplevel_items(&items, &mut env, &session) {
+    match eval_toplevel_items(path, &items, &mut env, &session) {
         Ok(_) => {}
         Err(EvalError::ResumableError(position, msg)) => {
             eprintln!(

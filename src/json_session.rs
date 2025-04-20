@@ -617,7 +617,7 @@ fn handle_run_eval_request(
 
     let ns = env.current_namespace();
     let (mut diagnostics, new_syms) = load_toplevel_items(&items, env, ns);
-    diagnostics.extend(check_toplevel_items_in_env(&items, env));
+    diagnostics.extend(check_toplevel_items_in_env(path, &items, env));
 
     let test_summary = match eval_tests_until_error(&items, env, session) {
         Ok(s) => s,

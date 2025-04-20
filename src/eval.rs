@@ -549,6 +549,7 @@ fn describe_read_error(path: &Path, e: &std::io::Error) -> ErrorMessage {
 /// Evaluate all toplevel items: definitions, then tests, then
 /// expressions.
 pub(crate) fn eval_toplevel_items(
+    path: &Path,
     items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
@@ -582,7 +583,7 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    diagnostics.extend(check_toplevel_items_in_env(items, env));
+    diagnostics.extend(check_toplevel_items_in_env(path, items, env));
 
     let mut summary = eval_tests(items, env, session);
     summary.diagnostics.extend(diagnostics);
@@ -870,7 +871,7 @@ pub(crate) fn eval_up_to(
         ToplevelItem::Expr(_) | ToplevelItem::Block(_) => {
             env.stop_at_expr_id = Some(expr_id);
 
-            let res = eval_toplevel_items(&[item.clone()], env, session);
+            let res = eval_toplevel_items(path, &[item.clone()], env, session);
             env.stop_at_expr_id = None;
 
             match res {
@@ -2916,7 +2917,7 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         error_messages.push(Value::new(Value_::String(err.message().as_string())));
     }
 
-    for Diagnostic { message, level, .. } in check_toplevel_items(&items, &check_env) {
+    for Diagnostic { message, level, .. } in check_toplevel_items(&path, &items, &check_env) {
         match level {
             Level::Warning => {}
             Level::Error => {
@@ -5946,7 +5947,7 @@ mod tests {
         let (defs, errors) =
             parse_toplevel_items(&PathBuf::new(), "test f {}", &mut env.vfs, &mut env.id_gen);
         assert!(errors.is_empty());
-        let eval_result = eval_toplevel_items(&defs, &mut env, &session);
+        let eval_result = eval_toplevel_items(&PathBuf::from("foo.gdn"), &defs, &mut env, &session);
         assert!(eval_result.is_ok());
     }
 }

@@ -301,7 +301,7 @@ fn load_toplevel_items_(
         match &item {
             ToplevelItem::Fun(name_symbol, fun_info, _) => {
                 if is_builtin_stub(fun_info) {
-                    update_builtin_fun_info(fun_info, env, &mut diagnostics);
+                    update_builtin_fun_info(fun_info, env, namespace.clone(), &mut diagnostics);
                 } else {
                     env.add_function(
                         &name_symbol.name,
@@ -1269,12 +1269,18 @@ fn update_builtin_meth_info(
     curr_meth_info.kind = MethodKind::BuiltinMethod(*kind, Some(fun_info.clone()));
 }
 
-fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut Vec<Diagnostic>) {
+fn update_builtin_fun_info(
+    fun_info: &FunInfo,
+    env: &mut Env,
+    namespace: Rc<RefCell<NamespaceInfo>>,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
     let Some(symbol) = &fun_info.name_sym else {
         return;
     };
 
-    let Some(value) = env.file_scope.get(&symbol.name) else {
+    let mut ns = namespace.borrow_mut();
+    let Some(value) = ns.values.get(&symbol.name).cloned() else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
@@ -1287,8 +1293,8 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
         // The built-in function doesn't exist, presumably the Garden
         // maintainer is still writing it. Add the function as-is to
         // the environment, so we can still type check call sites.
-        env.add_function(
-            &symbol.name,
+        ns.values.insert(
+            symbol.name.clone(),
             Value::new(Value_::Fun {
                 name_sym: symbol.clone(),
                 fun_info: fun_info.clone(),
@@ -1304,15 +1310,15 @@ fn update_builtin_fun_info(fun_info: &FunInfo, env: &mut Env, diagnostics: &mut 
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
-                Type::from_value(value, &env.types, &env.stack.type_bindings()),
+                Type::from_value(&value, &env.types, &env.stack.type_bindings()),
             ))]),
             position: symbol.position.clone(),
         });
         return;
     };
 
-    env.add_function(
-        &symbol.name,
+    ns.values.insert(
+        symbol.name.clone(),
         Value::new(Value_::BuiltinFunction(*kind, Some(fun_info.clone()))),
     );
 }

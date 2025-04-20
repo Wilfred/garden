@@ -538,7 +538,7 @@ impl Env {
         env
     }
 
-    pub(crate) fn get_current_namespace(&mut self, path: &Path) -> Rc<RefCell<NamespaceInfo>> {
+    pub(crate) fn get_namespace(&mut self, path: &Path) -> Rc<RefCell<NamespaceInfo>> {
         if let Some(ns) = self.namespaces.get(path) {
             return ns.clone();
         }

@@ -402,7 +402,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     let mut env = Env::new(id_gen, vfs);
 
     // Set the toplevel stack frame as also in the file namespace.
-    let ns = env.get_current_namespace(path);
+    let ns = env.get_namespace(path);
     let frame = env.current_frame_mut();
     frame.namespace = ns;
 
@@ -565,7 +565,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     env.cli_args = Vec::from(arguments);
 
     // Set the toplevel stack frame as also in the file namespace.
-    let ns = env.get_current_namespace(path);
+    let ns = env.get_namespace(path);
     let frame = env.current_frame_mut();
     frame.namespace = ns;
 

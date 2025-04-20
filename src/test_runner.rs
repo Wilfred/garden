@@ -50,7 +50,7 @@ fn sandboxed_tests_summary(
     // TODO: for real IDE usage we'll want to use the environment of
     // the current session.
     let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_current_namespace(path);
+    let ns = env.get_namespace(path);
     load_toplevel_items(&items, &mut env, ns);
 
     // TODO: allow users to choose this value.
@@ -179,7 +179,7 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
         pretty_print_json: false,
     };
 
-    let ns = env.get_current_namespace(path);
+    let ns = env.get_namespace(path);
     load_toplevel_items(&items, &mut env, ns);
 
     let summary = eval_tests(&items, &mut env, &session);

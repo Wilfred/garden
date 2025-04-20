@@ -1150,7 +1150,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
     }
 
     let namespace_path = test.name_sym.position.path.to_path_buf();
-    let namespace = env.get_current_namespace(&namespace_path);
+    let namespace = env.get_namespace(&namespace_path);
 
     let stack_frame = StackFrame {
         namespace,
@@ -3016,7 +3016,7 @@ fn eval_call(
             });
 
             let namespace_path = fun_info.pos.path.to_path_buf();
-            let namespace = env.get_current_namespace(&namespace_path);
+            let namespace = env.get_namespace(&namespace_path);
 
             return Ok(Some(StackFrame {
                 namespace,
@@ -3093,7 +3093,7 @@ fn eval_call(
             }
 
             let namespace_path = fi.pos.path.to_path_buf();
-            let namespace = env.get_current_namespace(&namespace_path);
+            let namespace = env.get_namespace(&namespace_path);
 
             return Ok(Some(StackFrame {
                 namespace,
@@ -3506,7 +3506,7 @@ fn eval_method_call(
     let return_hint = fun_info.return_hint.clone();
 
     let namespace_path = fun_info.pos.path.to_path_buf();
-    let namespace = env.get_current_namespace(&namespace_path);
+    let namespace = env.get_namespace(&namespace_path);
 
     Ok(Some(StackFrame {
         namespace,

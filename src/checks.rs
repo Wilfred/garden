@@ -10,7 +10,7 @@ mod unused_vars;
 use std::path::Path;
 
 use crate::diagnostics::Diagnostic;
-use crate::env::{fresh_prelude, Env};
+use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::parser::ast::ToplevelItem;
 use loops::check_loops;
@@ -33,7 +33,7 @@ pub(crate) fn check_toplevel_items(
     env: &Env,
 ) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
-    let ns = fresh_prelude(&mut env);
+    let ns = env.get_namespace(path);
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns);
 
     diagnostics.extend(check_toplevel_items_in_env(path, items, &env));

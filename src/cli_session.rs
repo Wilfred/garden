@@ -102,6 +102,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     let mut rl = new_editor();
     let mut is_stopped = false;
     let mut last_src = String::new();
+    let path = PathBuf::from("__user");
 
     loop {
         println!();
@@ -110,7 +111,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             Ok((src, items)) => {
                 last_src = src;
 
-                let ns = env.current_namespace();
+                let ns = env.get_current_namespace(&path);
                 let (diagnostics, _) = load_toplevel_items(&items, &mut env, ns);
                 for diagnostic in diagnostics {
                     println!("Warning: {}", diagnostic.message.as_string());

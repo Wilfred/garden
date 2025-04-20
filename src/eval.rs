@@ -760,14 +760,13 @@ pub(crate) enum EvalUpToErr {
 ///
 /// Returns None if we couldn't find anything to evaluate (not an error).
 pub(crate) fn eval_up_to(
+    path: &Path,
     env: &mut Env,
     session: &Session,
     items: &[ToplevelItem],
     offset: usize,
 ) -> Result<(Value, Position), EvalUpToErr> {
     let syn_ids = find_item_at(items, offset, offset);
-
-    let path = PathBuf::from("__eval_up_to__");
 
     let mut expr_id: Option<SyntaxId> = None;
     let mut position = None;
@@ -822,7 +821,7 @@ pub(crate) fn eval_up_to(
             };
 
             env.stop_at_expr_id = Some(expr_id);
-            let res = eval_toplevel_call(&name_sym.name, &args, env, session, &path);
+            let res = eval_toplevel_call(&name_sym.name, &args, env, session, path);
             env.stop_at_expr_id = None;
 
             res.map(|v| (v, position))
@@ -849,7 +848,7 @@ pub(crate) fn eval_up_to(
                 prev_args,
                 env,
                 session,
-                &path,
+                path,
             );
             env.stop_at_expr_id = None;
 

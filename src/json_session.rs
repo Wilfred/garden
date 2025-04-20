@@ -249,14 +249,10 @@ fn handle_eval_up_to_request(
     session: &Session,
     id: Option<RequestId>,
 ) -> Response {
-    let (items, mut errors) = parse_toplevel_items(
-        &path
-            .cloned()
-            .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__")),
-        src,
-        &mut env.vfs,
-        &mut env.id_gen,
-    );
+    let path = path
+        .cloned()
+        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__"));
+    let (items, mut errors) = parse_toplevel_items(&path, src, &mut env.vfs, &mut env.id_gen);
 
     if let Some(e) = errors.pop() {
         match e {
@@ -303,7 +299,7 @@ fn handle_eval_up_to_request(
         }
     }
 
-    match eval_up_to(env, session, &items, offset) {
+    match eval_up_to(&path, env, session, &items, offset) {
         Ok((v, pos)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],

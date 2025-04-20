@@ -400,6 +400,12 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     let items = parse_toplevel_items_or_die(path, src, &mut vfs, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
+
+    // Set the toplevel stack frame as also in the file namespace.
+    let ns = env.get_current_namespace(path);
+    let frame = env.current_frame_mut();
+    frame.namespace = ns;
+
     let session = Session {
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,

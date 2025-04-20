@@ -558,6 +558,11 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
     let mut env = Env::new(id_gen, vfs);
     env.cli_args = Vec::from(arguments);
 
+    // Set the toplevel stack frame as also in the file namespace.
+    let ns = env.get_current_namespace(path);
+    let frame = env.current_frame_mut();
+    frame.namespace = ns;
+
     let session = Session {
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,

@@ -446,47 +446,7 @@ pub(crate) fn run_command<T: Write>(
             }
         }
         Command::Namespaces(_name) => {
-            let mut namespaces_in_scope = vec![];
-            if let Some(stack_frame) = env.stack.0.last() {
-                for (_, value) in stack_frame.bindings.all() {
-                    match value.as_ref() {
-                        Value_::Namespace(_) => {
-                            namespaces_in_scope.push(value.clone());
-                        }
-                        _ => {}
-                    }
-                }
-            }
-
-            for (_, value) in env.file_scope.iter() {
-                match value.as_ref() {
-                    Value_::Namespace(_) => {
-                        namespaces_in_scope.push(value.clone());
-                    }
-                    _ => {}
-                }
-            }
-
-            if namespaces_in_scope.is_empty() {
-                write!(buf, "No namespaces in the current scope.")?;
-            }
-
-            for (i, value) in namespaces_in_scope.iter().enumerate() {
-                let Value_::Namespace(ns) = value.as_ref() else {
-                    continue;
-                };
-                if i != 0 {
-                    writeln!(buf)?;
-                }
-
-                let ns = ns.borrow();
-                write!(buf, "{}", ns.path.display())?;
-                for sym in ns.values.keys() {
-                    write!(buf, "\n  {}", sym.text)?;
-                }
-            }
-
-            writeln!(buf, "\n\nNamespaces by file:")?;
+            writeln!(buf, "Namespaces by file:")?;
 
             for (i, (path, ns)) in env.namespaces.iter().enumerate() {
                 if i != 0 {
@@ -886,7 +846,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::Methods(_) => "The :methods command displays all the methods currently defined. If given an argument, limits to names containing that substring.\n\nExample:\n\n:methods\n:method Str",
-        Command::Namespaces(_) => "The :namespaces command displays all the namespaces imported in the current scope.\n\nExample:\n\n:namespaces",
+        Command::Namespaces(_) => "The :namespaces command displays all the namespaces of all the files loaded.\n\nExample:\n\n:namespaces",
         Command::Parse(_) => "The :parse command displays the parse tree generated for the expression given.\n\nExample:\n\n:parse 1 + 2",
         Command::Quit => "The :quit command terminates this Garden session and exits.\n\nExample:\n\n:quit",
         Command::Replace(_) => "The :replace command discards the top value in the value stack and replaces it with the expression provided.\n\nExample:\n\n:replace 123",

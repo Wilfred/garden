@@ -2873,14 +2873,13 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let mut names = match &env.initial_state {
-                Some(env) => env
-                    .types
-                    .keys()
-                    .map(|k| (k.text.clone()))
-                    .collect::<Vec<_>>(),
-                None => vec![],
-            };
+            let mut names = env
+                .prelude_namespace
+                .borrow()
+                .types
+                .keys()
+                .map(|k| (k.text.clone()))
+                .collect::<Vec<_>>();
             names.sort();
 
             let items = names

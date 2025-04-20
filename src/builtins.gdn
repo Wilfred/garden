@@ -337,7 +337,7 @@ test type_doc_comment {
   }
 }
 
-// A list of all the built-in type names, `String`, `Option` and
+// A list of all the type names in the prelude, `String`, `Option` and
 // so on. The list is sorted alphabetically.
 external fun built_in_types(): List<String> {
   __BUILTIN_IMPLEMENTATION

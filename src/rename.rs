@@ -23,7 +23,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     let ns = env.get_current_namespace(path);
     load_toplevel_items(&items, &mut env, ns);
 
-    let summary = check_types(&items, &env);
+    let summary = check_types(path, &items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, offset);
 

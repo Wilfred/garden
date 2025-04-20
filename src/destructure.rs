@@ -20,7 +20,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     let mut env = Env::new(id_gen, vfs);
     let ns = fresh_prelude(&mut env);
     load_toplevel_items(&items, &mut env, ns);
-    let summary = check_types(&items, &env);
+    let summary = check_types(path, &items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 

@@ -30,7 +30,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     load_toplevel_items(&items, &mut env, ns);
 
     let ids_at_pos = find_item_at(&items, offset, offset);
-    let summary = check_types(&items, &env);
+    let summary = check_types(path, &items, &env);
 
     for id in ids_at_pos.iter().rev() {
         let AstId::Expr(expr_id) = id else {

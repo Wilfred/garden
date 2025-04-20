@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use rustc_hash::FxHashMap;
@@ -40,8 +40,9 @@ pub(crate) struct TCSummary {
     pub callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
-pub(crate) fn check_types(items: &[ToplevelItem], env: &Env) -> TCSummary {
+pub(crate) fn check_types(path: &Path, items: &[ToplevelItem], env: &Env) -> TCSummary {
     let mut visitor = TypeCheckVisitor {
+        path: path.to_owned(),
         env,
         diagnostics: vec![],
         bindings: LocalBindings::new(env),
@@ -120,6 +121,7 @@ impl LocalBindings {
 
 #[derive(Debug)]
 struct TypeCheckVisitor<'a> {
+    path: PathBuf,
     env: &'a Env,
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,

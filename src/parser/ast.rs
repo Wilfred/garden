@@ -534,6 +534,14 @@ impl IdGenerator {
     }
 }
 
+/// A path in the `Vfs`, alongside a generation number so we can
+/// distinguish multiple values that a file has had.
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct VfsPathBuf {
+    pub(crate) path: PathBuf,
+    pub(crate) id: u32,
+}
+
 /// Stores the source code of all the files we've loaded.
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Vfs {

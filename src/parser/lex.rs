@@ -5,6 +5,7 @@ use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
 
+use crate::parser::ast::VfsPathBuf;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
 use crate::{msgcode, msgtext, ParseError};
@@ -82,6 +83,11 @@ pub(crate) fn lex_between<'a>(
     assert!(end_offset <= s.len());
 
     let path = Rc::new(path.to_owned());
+    let vfs_path = Rc::new(VfsPathBuf {
+        path: path.to_path_buf(),
+        id: 1, // TODO
+    });
+
     let lp = LinePositions::from(s);
     let mut tokens: Vec<Token<'a>> = vec![];
     let mut errors: Vec<ParseError> = vec![];
@@ -110,6 +116,7 @@ pub(crate) fn lex_between<'a>(
                         column,
                         end_column: i,
                         path: path.clone(),
+                        vfs_path: vfs_path.clone(),
                     },
                     &s[0..i + 1],
                 ));
@@ -125,6 +132,7 @@ pub(crate) fn lex_between<'a>(
                         column,
                         end_column: s.len(),
                         path: path.clone(),
+                        vfs_path: vfs_path.clone(),
                     },
                     s,
                 ));
@@ -157,6 +165,7 @@ pub(crate) fn lex_between<'a>(
                         column,
                         end_column: column + token_str.len(),
                         path: path.clone(),
+                        vfs_path: vfs_path.clone(),
                     },
                     text: &s[0..token_str.len()],
                     preceding_comments,
@@ -182,6 +191,7 @@ pub(crate) fn lex_between<'a>(
                     column,
                     end_column: column + integer_match.end(),
                     path: path.clone(),
+                    vfs_path: vfs_path.clone(),
                 },
                 text: integer_match.as_str(),
                 preceding_comments,
@@ -208,6 +218,7 @@ pub(crate) fn lex_between<'a>(
                         column,
                         end_column: column + 1,
                         path: path.clone(),
+                        vfs_path: vfs_path.clone(),
                     },
                     text: &s[0..1],
                     preceding_comments,
@@ -230,6 +241,7 @@ pub(crate) fn lex_between<'a>(
                     column,
                     end_column: column + string_match.end(),
                     path: path.clone(),
+                    vfs_path: vfs_path.clone(),
                 },
                 text: string_match.as_str(),
                 preceding_comments,
@@ -249,6 +261,7 @@ pub(crate) fn lex_between<'a>(
                     column,
                     end_column: column + variable_match.end(),
                     path: path.clone(),
+                    vfs_path: vfs_path.clone(),
                 },
                 text: variable_match.as_str(),
                 preceding_comments,
@@ -268,6 +281,7 @@ pub(crate) fn lex_between<'a>(
                     column,
                     end_column: column + 1,
                     path: path.clone(),
+                    vfs_path: vfs_path.clone(),
                 },
                 message: ErrorMessage(vec![
                     msgtext!("Unrecognized syntax "),
@@ -314,7 +328,12 @@ mod tests {
                     end_line_number: 0,
                     column: 0,
                     end_column: 1,
-                    path: PathBuf::from("__test.gdn").into()
+                    path: PathBuf::from("__test.gdn").into(),
+                    vfs_path: VfsPathBuf {
+                        path: PathBuf::from("__test.gdn"),
+                        id: 1
+                    }
+                    .into()
                 },
                 text: "1",
                 preceding_comments: vec![],
@@ -335,7 +354,12 @@ mod tests {
                     end_line_number: 0,
                     column: 1,
                     end_column: 2,
-                    path: PathBuf::from("__test.gdn").into()
+                    path: PathBuf::from("__test.gdn").into(),
+                    vfs_path: VfsPathBuf {
+                        path: PathBuf::from("__test.gdn"),
+                        id: 1
+                    }
+                    .into()
                 },
                 text: "a",
                 preceding_comments: vec![],
@@ -382,7 +406,12 @@ mod tests {
                     end_line_number: 1,
                     column: 0,
                     end_column: 1,
-                    path: PathBuf::from("__test.gdn").into()
+                    path: PathBuf::from("__test.gdn").into(),
+                    vfs_path: VfsPathBuf {
+                        path: PathBuf::from("__test.gdn"),
+                        id: 1
+                    }
+                    .into()
                 },
                 text: "1",
                 preceding_comments: vec![(
@@ -393,7 +422,12 @@ mod tests {
                         end_line_number: 0,
                         column: 0,
                         end_column: 4,
-                        path: PathBuf::from("__test.gdn").into()
+                        path: PathBuf::from("__test.gdn").into(),
+                        vfs_path: VfsPathBuf {
+                            path: PathBuf::from("__test.gdn"),
+                            id: 1
+                        }
+                        .into()
                     },
                     "// 2\n"
                 )],
@@ -414,7 +448,12 @@ mod tests {
                     end_line_number: 2,
                     column: 0,
                     end_column: 1,
-                    path: PathBuf::from("__test.gdn").into()
+                    path: PathBuf::from("__test.gdn").into(),
+                    vfs_path: VfsPathBuf {
+                        path: PathBuf::from("__test.gdn"),
+                        id: 1
+                    }
+                    .into()
                 },
                 text: "1",
                 preceding_comments: vec![(
@@ -425,7 +464,12 @@ mod tests {
                         end_line_number: 0,
                         column: 0,
                         end_column: 4,
-                        path: PathBuf::from("__test.gdn").into()
+                        path: PathBuf::from("__test.gdn").into(),
+                        vfs_path: VfsPathBuf {
+                            path: PathBuf::from("__test.gdn"),
+                            id: 1
+                        }
+                        .into()
                     },
                     "// 2\n"
                 )],

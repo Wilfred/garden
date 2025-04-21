@@ -4,6 +4,8 @@ use serde::Serialize;
 
 use crate::parser::lex::Token;
 
+use super::ast::VfsPathBuf;
+
 /// A position is a range in source code. It is a span between
 /// `start_offset` and `end_offset` in `path`.
 #[derive(Clone, PartialEq, Eq, Serialize, PartialOrd, Ord)]
@@ -21,6 +23,11 @@ pub(crate) struct Position {
     pub(crate) column: usize,
     pub(crate) end_column: usize,
     pub(crate) path: Rc<PathBuf>,
+    /// The file where this position occurred. A Vfs path differs from
+    /// a normal PathBuf in that it has an ID, so we can distinguish
+    /// different versions of the same file that we saw.
+    #[serde(skip)]
+    pub(crate) vfs_path: Rc<VfsPathBuf>,
 }
 
 impl std::fmt::Debug for Position {
@@ -32,6 +39,7 @@ impl std::fmt::Debug for Position {
                 .field("line_number", &self.line_number)
                 .field("end_line_number", &self.end_line_number)
                 .field("path", &self.path)
+                .field("vfs_path", &self.vfs_path)
                 .finish()
         } else {
             f.write_str("Position { ... }")
@@ -48,7 +56,11 @@ impl Position {
             column: 0,
             end_column: 0,
             end_line_number: 0,
-            path,
+            path: path.clone(),
+            vfs_path: Rc::new(VfsPathBuf {
+                path: path.to_path_buf(),
+                id: 2, // TODO
+            }),
         }
     }
 
@@ -66,6 +78,7 @@ impl Position {
                 second.end_column
             },
             path: first.path.clone(),
+            vfs_path: first.vfs_path.clone(),
         }
     }
 

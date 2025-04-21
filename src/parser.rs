@@ -2365,7 +2365,7 @@ pub fn parse_toplevel_items(
     vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-    vfs.insert(path.to_owned(), src.to_owned());
+    let vfs_id = vfs.insert(path.to_owned(), src.to_owned());
 
     let mut diagnostics = vec![];
 
@@ -2388,7 +2388,7 @@ pub fn parse_toplevel_items_from_span(
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-    vfs.insert(path.to_owned(), src.to_owned());
+    let vfs_id = vfs.insert(path.to_owned(), src.to_owned());
 
     let mut diagnostics = vec![];
 

@@ -552,8 +552,11 @@ pub(crate) struct Vfs {
 }
 
 impl Vfs {
-    pub(crate) fn insert(&mut self, path: PathBuf, src: String) {
-        self.file_srcs.entry(path).or_default().push(src);
+    pub(crate) fn insert(&mut self, path: PathBuf, src: String) -> VfsId {
+        let srcs = self.file_srcs.entry(path).or_default();
+        let new_id = VfsId(srcs.len() as u32);
+        srcs.push(src);
+        new_id
     }
 
     pub(crate) fn file_src(&self, path: &Path) -> Option<&String> {

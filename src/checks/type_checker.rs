@@ -657,7 +657,7 @@ impl TypeCheckVisitor<'_> {
                         continue;
                     }
 
-                    let Some(value) = self.env.file_scope.get(&pattern.variant_sym.name) else {
+                    let Some(value) = self.get_var(&pattern.variant_sym.name) else {
                         self.diagnostics.push(Diagnostic {
                             level: Level::Error,
                             message: ErrorMessage(vec![
@@ -1014,7 +1014,7 @@ impl TypeCheckVisitor<'_> {
                     return value_ty.clone();
                 }
 
-                match self.env.file_scope.get(&sym.name) {
+                match self.get_var(&sym.name) {
                     Some(value) => {
                         let fun_info = match value.as_ref() {
                             Value_::Fun { fun_info, .. } => Some(fun_info),
@@ -1046,7 +1046,7 @@ impl TypeCheckVisitor<'_> {
                             self.save_enum_variant_id(sym, value.clone());
                         }
 
-                        Type::from_value(value, &self.env.types, type_bindings)
+                        Type::from_value(&value, &self.env.types, type_bindings)
                     }
                     None => {
                         let ty = Type::Error("Unbound variable".to_owned());
@@ -1380,7 +1380,7 @@ impl TypeCheckVisitor<'_> {
                     Expression_::Variable(recv_symbol)
                         if self.bindings.get(&recv_symbol.name).is_none() =>
                     {
-                        match self.env.file_scope.get(&recv_symbol.name) {
+                        match self.get_var(&recv_symbol.name) {
                             Some(value) => match value.as_ref() {
                                 Value_::Namespace(ns) => {
                                     let ns = ns.borrow();
@@ -1477,6 +1477,10 @@ impl TypeCheckVisitor<'_> {
         }
     }
 
+    fn get_var(&self, name: &SymbolName) -> Option<Value> {
+        self.env.file_scope.get(name).cloned()
+    }
+
     /// Get the type of `sym` in the current scope (checking both
     /// locals and globals).
     ///
@@ -1490,7 +1494,7 @@ impl TypeCheckVisitor<'_> {
             return sym_ty.clone();
         }
 
-        if let Some(value) = self.env.file_scope.get(&sym.name) {
+        if let Some(value) = self.get_var(&sym.name) {
             self.diagnostics.push(Diagnostic {
                 level: Level::Error,
                 message: ErrorMessage(vec![
@@ -1500,7 +1504,7 @@ impl TypeCheckVisitor<'_> {
                 position: sym.position.clone(),
             });
 
-            return Type::from_value(value, &self.env.types, type_bindings);
+            return Type::from_value(&value, &self.env.types, type_bindings);
         }
 
         // No such variable, user probably forgot `let`.

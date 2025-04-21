@@ -1478,6 +1478,11 @@ impl TypeCheckVisitor<'_> {
     }
 
     fn get_var(&self, name: &SymbolName) -> Option<Value> {
+        let ns = self.env.namespaces.get(&self.path).unwrap();
+        if let Some(v) = ns.borrow().values.get(name) {
+            return Some(v.clone());
+        }
+
         self.env.file_scope.get(name).cloned()
     }
 

@@ -634,7 +634,7 @@ fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceI
 }
 
 // TODO: this shouldn't take an Env, we're in the process of constructing it.
-pub(crate) fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
+fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
     let vfs = &mut env.vfs;
 

@@ -63,7 +63,7 @@ enum Request {
     },
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 pub(crate) struct DiagnosticForJson {
     // Not an ErrorMessage.
     message: String,
@@ -81,7 +81,7 @@ impl From<Diagnostic> for DiagnosticForJson {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum ResponseKind {
     Evaluate {
@@ -110,14 +110,14 @@ pub(crate) enum ResponseKind {
     },
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 pub(crate) struct ResponseError {
     position: Option<Position>,
     message: String,
     stack: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize)]
 pub(crate) struct Response {
     pub(crate) kind: ResponseKind,
     /// The position of the expression we evaluated. This is useful

@@ -1,12 +1,12 @@
 use std::{path::PathBuf, rc::Rc};
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::parser::lex::Token;
 
 /// A position is a range in source code. It is a span between
 /// `start_offset` and `end_offset` in `path`.
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Serialize, PartialOrd, Ord)]
 pub(crate) struct Position {
     /// The start of this position, relative to the start of the
     /// file. Measured in bytes.

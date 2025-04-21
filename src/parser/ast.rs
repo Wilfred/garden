@@ -548,25 +548,24 @@ pub(crate) struct VfsPathBuf {
 /// Stores the source code of all the files we've loaded.
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Vfs {
-    // TODO: support a single path having different strings, because
-    // users can re-evaluate individual functions after modification.
-    file_srcs: FxHashMap<PathBuf, String>,
+    file_srcs: FxHashMap<PathBuf, Vec<String>>,
 }
 
 impl Vfs {
     pub(crate) fn insert(&mut self, path: PathBuf, src: String) {
-        self.file_srcs.insert(path, src);
+        self.file_srcs.entry(path).or_default().push(src);
     }
 
     pub(crate) fn file_src(&self, path: &Path) -> Option<&String> {
-        self.file_srcs.get(path)
+        match self.file_srcs.get(path) {
+            Some(srcs) => srcs.last(),
+            None => None,
+        }
     }
 
     pub(crate) fn pos_src(&self, pos: &Position) -> Option<&str> {
-        match self.file_srcs.get(pos.path.as_path()) {
-            Some(file) => Some(&file[pos.start_offset..pos.end_offset]),
-            None => None,
-        }
+        let whole_file = self.file_src(pos.path.as_path())?;
+        Some(&whole_file[pos.start_offset..pos.end_offset])
     }
 }
 

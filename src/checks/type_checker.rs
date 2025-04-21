@@ -12,7 +12,7 @@ use crate::parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
     MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
     TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo,
-    VfsPathBuf,
+    VfsId, VfsPathBuf,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -154,7 +154,7 @@ impl TypeCheckVisitor<'_> {
                         path: info.path.clone().into(),
                         vfs_path: VfsPathBuf {
                             path: info.path.clone(),
-                            id: 0, // TODO
+                            id: VfsId(0), // TODO
                         }
                         .into(),
                     },

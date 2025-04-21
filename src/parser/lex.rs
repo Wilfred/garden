@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
 
-use crate::parser::ast::VfsPathBuf;
+use crate::parser::ast::{VfsId, VfsPathBuf};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
 use crate::{msgcode, msgtext, ParseError};
@@ -85,7 +85,7 @@ pub(crate) fn lex_between<'a>(
     let path = Rc::new(path.to_owned());
     let vfs_path = Rc::new(VfsPathBuf {
         path: path.to_path_buf(),
-        id: 1, // TODO
+        id: VfsId(1), // TODO
     });
 
     let lp = LinePositions::from(s);
@@ -331,7 +331,7 @@ mod tests {
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
                         path: PathBuf::from("__test.gdn"),
-                        id: 1
+                        id: VfsId(1)
                     }
                     .into()
                 },
@@ -357,7 +357,7 @@ mod tests {
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
                         path: PathBuf::from("__test.gdn"),
-                        id: 1
+                        id: VfsId(1)
                     }
                     .into()
                 },
@@ -409,7 +409,7 @@ mod tests {
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
                         path: PathBuf::from("__test.gdn"),
-                        id: 1
+                        id: VfsId(1)
                     }
                     .into()
                 },
@@ -425,7 +425,7 @@ mod tests {
                         path: PathBuf::from("__test.gdn").into(),
                         vfs_path: VfsPathBuf {
                             path: PathBuf::from("__test.gdn"),
-                            id: 1
+                            id: VfsId(1)
                         }
                         .into()
                     },
@@ -451,7 +451,7 @@ mod tests {
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
                         path: PathBuf::from("__test.gdn"),
-                        id: 1
+                        id: VfsId(1)
                     }
                     .into()
                 },
@@ -467,7 +467,7 @@ mod tests {
                         path: PathBuf::from("__test.gdn").into(),
                         vfs_path: VfsPathBuf {
                             path: PathBuf::from("__test.gdn"),
-                            id: 1
+                            id: VfsId(1)
                         }
                         .into()
                     },

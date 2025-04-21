@@ -4,7 +4,7 @@ use serde::Serialize;
 
 use crate::parser::lex::Token;
 
-use super::ast::VfsPathBuf;
+use super::ast::{VfsId, VfsPathBuf};
 
 /// A position is a range in source code. It is a span between
 /// `start_offset` and `end_offset` in `path`.
@@ -59,7 +59,7 @@ impl Position {
             path: path.clone(),
             vfs_path: Rc::new(VfsPathBuf {
                 path: path.to_path_buf(),
-                id: 2, // TODO
+                id: VfsId(2), // TODO
             }),
         }
     }

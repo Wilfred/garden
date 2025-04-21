@@ -110,11 +110,6 @@ pub(crate) enum ResponseKind {
     },
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub(crate) struct ReadyResponse {
-    message: String,
-}
-
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub(crate) struct ResponseError {
     position: Option<Position>,

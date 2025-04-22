@@ -2350,7 +2350,12 @@ pub fn parse_inline_expr_from_str(
 ) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
-    let (mut tokens, lex_errors) = lex(path, src);
+    let vfs_path = VfsPathBuf {
+        path: Rc::new(path.to_owned()),
+        id: VfsId(11), // TODO
+    };
+
+    let (mut tokens, lex_errors) = lex(&vfs_path, src);
     for error in lex_errors {
         diagnostics.push(error);
     }
@@ -2366,10 +2371,14 @@ pub fn parse_toplevel_items(
     id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let vfs_id = vfs.insert(path.to_owned(), src.to_owned());
+    let vfs_path = VfsPathBuf {
+        path: path.to_owned().into(),
+        id: vfs_id,
+    };
 
     let mut diagnostics = vec![];
 
-    let (mut tokens, lex_errors) = lex(path, src);
+    let (mut tokens, lex_errors) = lex(&vfs_path, src);
     for error in lex_errors {
         diagnostics.push(error);
     }
@@ -2389,10 +2398,14 @@ pub fn parse_toplevel_items_from_span(
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let vfs_id = vfs.insert(path.to_owned(), src.to_owned());
+    let vfs_path = VfsPathBuf {
+        path: Rc::new(path.to_owned()),
+        id: vfs_id,
+    };
 
     let mut diagnostics = vec![];
 
-    let (mut tokens, lex_errors) = lex_between(path, src, offset, end_offset);
+    let (mut tokens, lex_errors) = lex_between(&vfs_path, src, offset, end_offset);
     for error in lex_errors {
         diagnostics.push(error);
     }

@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
 
-use crate::parser::ast::{VfsId, VfsPathBuf};
+use crate::parser::ast::VfsPathBuf;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
 use crate::{msgcode, msgtext, ParseError};
@@ -75,18 +75,14 @@ impl<'a> TokenStream<'a> {
 }
 
 pub(crate) fn lex_between<'a>(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     s: &'a str,
     offset: usize,
     end_offset: usize,
 ) -> (TokenStream<'a>, Vec<ParseError>) {
     assert!(end_offset <= s.len());
 
-    let path = Rc::new(path.to_owned());
-    let vfs_path = Rc::new(VfsPathBuf {
-        path: path.clone(),
-        id: VfsId(1), // TODO
-    });
+    let vfs_path = Rc::new(vfs_path.clone());
 
     let lp = LinePositions::from(s);
     let mut tokens: Vec<Token<'a>> = vec![];
@@ -115,7 +111,7 @@ pub(crate) fn lex_between<'a>(
                         end_line_number: line_number.as_usize(),
                         column,
                         end_column: i,
-                        path: path.clone(),
+                        path: vfs_path.path.clone(),
                         vfs_path: vfs_path.clone(),
                     },
                     &s[0..i + 1],
@@ -131,7 +127,7 @@ pub(crate) fn lex_between<'a>(
                         end_line_number: line_number.as_usize(),
                         column,
                         end_column: s.len(),
-                        path: path.clone(),
+                        path: vfs_path.path.clone(),
                         vfs_path: vfs_path.clone(),
                     },
                     s,
@@ -164,7 +160,7 @@ pub(crate) fn lex_between<'a>(
                         end_line_number: line_number.as_usize(),
                         column,
                         end_column: column + token_str.len(),
-                        path: path.clone(),
+                        path: vfs_path.path.clone(),
                         vfs_path: vfs_path.clone(),
                     },
                     text: &s[0..token_str.len()],
@@ -190,7 +186,7 @@ pub(crate) fn lex_between<'a>(
                     end_line_number: line_number.as_usize(),
                     column,
                     end_column: column + integer_match.end(),
-                    path: path.clone(),
+                    path: vfs_path.path.clone(),
                     vfs_path: vfs_path.clone(),
                 },
                 text: integer_match.as_str(),
@@ -217,7 +213,7 @@ pub(crate) fn lex_between<'a>(
                         end_line_number: line_number.as_usize(),
                         column,
                         end_column: column + 1,
-                        path: path.clone(),
+                        path: vfs_path.path.clone(),
                         vfs_path: vfs_path.clone(),
                     },
                     text: &s[0..1],
@@ -240,7 +236,7 @@ pub(crate) fn lex_between<'a>(
                     end_line_number: line_number.as_usize(),
                     column,
                     end_column: column + string_match.end(),
-                    path: path.clone(),
+                    path: vfs_path.path.clone(),
                     vfs_path: vfs_path.clone(),
                 },
                 text: string_match.as_str(),
@@ -260,7 +256,7 @@ pub(crate) fn lex_between<'a>(
                     end_line_number: line_number.as_usize(),
                     column,
                     end_column: column + variable_match.end(),
-                    path: path.clone(),
+                    path: vfs_path.path.clone(),
                     vfs_path: vfs_path.clone(),
                 },
                 text: variable_match.as_str(),
@@ -280,7 +276,7 @@ pub(crate) fn lex_between<'a>(
                     end_line_number: line_number.as_usize(),
                     column,
                     end_column: column + 1,
-                    path: path.clone(),
+                    path: vfs_path.path.clone(),
                     vfs_path: vfs_path.clone(),
                 },
                 message: ErrorMessage(vec![
@@ -296,7 +292,7 @@ pub(crate) fn lex_between<'a>(
 
     (
         TokenStream {
-            path: path.clone(),
+            path: vfs_path.path.clone(),
             tokens,
             idx: 0,
             trailing_comments: preceding_comments,
@@ -305,8 +301,8 @@ pub(crate) fn lex_between<'a>(
     )
 }
 
-pub(crate) fn lex<'a>(path: &Path, s: &'a str) -> (TokenStream<'a>, Vec<ParseError>) {
-    lex_between(path, s, 0, s.len())
+pub(crate) fn lex<'a>(vfs_path: &VfsPathBuf, s: &'a str) -> (TokenStream<'a>, Vec<ParseError>) {
+    lex_between(vfs_path, s, 0, s.len())
 }
 
 #[cfg(test)]
@@ -317,7 +313,12 @@ mod tests {
 
     #[test]
     fn test_lex_no_offset() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), "1").0;
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        let tokens = lex(&vfs_path, "1").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -329,11 +330,7 @@ mod tests {
                     column: 0,
                     end_column: 1,
                     path: PathBuf::from("__test.gdn").into(),
-                    vfs_path: VfsPathBuf {
-                        path: PathBuf::from("__test.gdn").into(),
-                        id: VfsId(1)
-                    }
-                    .into()
+                    vfs_path: vfs_path.into()
                 },
                 text: "1",
                 preceding_comments: vec![],
@@ -343,7 +340,12 @@ mod tests {
 
     #[test]
     fn test_lex_with_offset() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), " a").0;
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        let tokens = lex(&vfs_path, " a").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -369,8 +371,13 @@ mod tests {
 
     #[test]
     fn test_lex_spaces() {
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
         assert_eq!(
-            lex(&PathBuf::from("__test.gdn"), "1 + 2")
+            lex(&vfs_path, "1 + 2")
                 .0
                 .tokens
                 .iter()
@@ -382,8 +389,13 @@ mod tests {
 
     #[test]
     fn test_lex_no_spaces() {
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
         assert_eq!(
-            lex(&PathBuf::from("__test.gdn"), "1+2")
+            lex(&vfs_path, "1+2")
                 .0
                 .tokens
                 .iter()
@@ -395,7 +407,12 @@ mod tests {
 
     #[test]
     fn test_lex_comment() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n1").0;
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        let tokens = lex(&vfs_path, "// 2\n1").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -437,7 +454,12 @@ mod tests {
 
     #[test]
     fn test_lex_comment_not_touching() {
-        let tokens = lex(&PathBuf::from("__test.gdn"), "// 2\n\n1").0;
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        let tokens = lex(&vfs_path, "// 2\n\n1").0;
         assert_eq!(
             tokens.peek(),
             Some(Token {
@@ -479,11 +501,21 @@ mod tests {
 
     #[test]
     fn test_lex_comment_leading_newline() {
-        assert!(lex(&PathBuf::from("__test.gdn"), "\n// 2").0.is_empty());
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        assert!(lex(&vfs_path, "\n// 2").0.is_empty());
     }
 
     #[test]
     fn test_lex_standalone_comment() {
-        assert!(lex(&PathBuf::from("__test.gdn"), "// foo").0.is_empty());
+        let vfs_path = VfsPathBuf {
+            path: Rc::new(PathBuf::from("__test.gdn")),
+            id: VfsId(1),
+        };
+
+        assert!(lex(&vfs_path, "// foo").0.is_empty());
     }
 }

@@ -24,7 +24,7 @@ use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
     MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
-    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
+    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs, VfsId, VfsPathBuf,
 };
 use crate::parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
@@ -2724,7 +2724,11 @@ fn eval_builtin_call(
                 }
             };
 
-            let (mut token_stream, _lex_errors) = lex::lex(&PathBuf::new(), src);
+            let vfs_path = VfsPathBuf {
+                path: Rc::new(PathBuf::from("__snippet")),
+                id: VfsId(10), // TODO
+            };
+            let (mut token_stream, _lex_errors) = lex::lex(&vfs_path, src);
 
             let mut items = vec![];
             while let Some(token) = token_stream.pop() {

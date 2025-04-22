@@ -84,7 +84,7 @@ pub(crate) fn lex_between<'a>(
 
     let path = Rc::new(path.to_owned());
     let vfs_path = Rc::new(VfsPathBuf {
-        path: path.to_path_buf(),
+        path: path.clone(),
         id: VfsId(1), // TODO
     });
 
@@ -330,7 +330,7 @@ mod tests {
                     end_column: 1,
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
-                        path: PathBuf::from("__test.gdn"),
+                        path: PathBuf::from("__test.gdn").into(),
                         id: VfsId(1)
                     }
                     .into()
@@ -356,7 +356,7 @@ mod tests {
                     end_column: 2,
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
-                        path: PathBuf::from("__test.gdn"),
+                        path: Rc::new(PathBuf::from("__test.gdn")),
                         id: VfsId(1)
                     }
                     .into()
@@ -408,7 +408,7 @@ mod tests {
                     end_column: 1,
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
-                        path: PathBuf::from("__test.gdn"),
+                        path: Rc::new(PathBuf::from("__test.gdn")),
                         id: VfsId(1)
                     }
                     .into()
@@ -424,7 +424,7 @@ mod tests {
                         end_column: 4,
                         path: PathBuf::from("__test.gdn").into(),
                         vfs_path: VfsPathBuf {
-                            path: PathBuf::from("__test.gdn"),
+                            path: Rc::new(PathBuf::from("__test.gdn")),
                             id: VfsId(1)
                         }
                         .into()
@@ -450,7 +450,7 @@ mod tests {
                     end_column: 1,
                     path: PathBuf::from("__test.gdn").into(),
                     vfs_path: VfsPathBuf {
-                        path: PathBuf::from("__test.gdn"),
+                        path: Rc::new(PathBuf::from("__test.gdn")),
                         id: VfsId(1)
                     }
                     .into()
@@ -466,7 +466,7 @@ mod tests {
                         end_column: 4,
                         path: PathBuf::from("__test.gdn").into(),
                         vfs_path: VfsPathBuf {
-                            path: PathBuf::from("__test.gdn"),
+                            path: Rc::new(PathBuf::from("__test.gdn")),
                             id: VfsId(1)
                         }
                         .into()

@@ -58,7 +58,7 @@ impl Position {
             end_line_number: 0,
             path: path.clone(),
             vfs_path: Rc::new(VfsPathBuf {
-                path: path.to_path_buf(),
+                path,
                 id: VfsId(2), // TODO
             }),
         }

@@ -541,7 +541,7 @@ pub(crate) struct VfsId(pub u32);
 /// distinguish multiple values that a file has had.
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct VfsPathBuf {
-    pub(crate) path: PathBuf,
+    pub(crate) path: Rc<PathBuf>,
     pub(crate) id: VfsId,
 }
 

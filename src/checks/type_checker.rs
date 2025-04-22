@@ -153,7 +153,7 @@ impl TypeCheckVisitor<'_> {
                         end_column: 0,
                         path: info.path.clone().into(),
                         vfs_path: VfsPathBuf {
-                            path: info.path.clone(),
+                            path: Rc::new(info.path.clone()),
                             id: VfsId(0), // TODO
                         }
                         .into(),

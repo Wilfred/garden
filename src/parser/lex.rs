@@ -309,6 +309,8 @@ pub(crate) fn lex<'a>(vfs_path: &VfsPathBuf, s: &'a str) -> (TokenStream<'a>, Ve
 mod tests {
     use std::path::PathBuf;
 
+    use crate::parser::ast::VfsId;
+
     use super::*;
 
     #[test]

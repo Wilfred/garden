@@ -39,7 +39,7 @@ fn read_expr(
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
-                    Ok(cmd) => match run_command(&mut std::io::stdout(), &cmd, env, session) {
+                    Ok(cmd) => match run_command(&mut std::io::stdout(), cmd, env, session) {
                         Ok(()) => {
                             println!();
                             println!();

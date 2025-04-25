@@ -496,7 +496,7 @@ fn handle_run_request(
     match Command::from_string(&input) {
         Ok(command) => {
             let mut out_buf: Vec<u8> = vec![];
-            match run_command(&mut out_buf, &command, env, session) {
+            match run_command(&mut out_buf, command, env, session) {
                 Ok(()) => Response {
                     kind: ResponseKind::RunCommand {
                         message: format!("{}", String::from_utf8_lossy(&out_buf)),

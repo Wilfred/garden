@@ -350,7 +350,7 @@ fn format_signature(
 
 pub(crate) fn run_command<T: Write>(
     buf: &mut T,
-    cmd: &Command,
+    cmd: Command,
     env: &mut Env,
     session: &mut Session,
 ) -> Result<(), CommandError> {
@@ -445,7 +445,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Doc(name) => {
             if let Some(name) = name {
-                document_item(name, env, buf)?;
+                document_item(&name, env, buf)?;
             } else {
                 write!(buf, ":doc requires a name, e.g. `:doc print`")?;
             }
@@ -456,7 +456,7 @@ pub(crate) fn run_command<T: Write>(
                 let vfs_id = env.vfs.insert(path.clone(), src.clone());
                 let vfs_path = VfsPathBuf { path, id: vfs_id };
 
-                let (expr, errors) = parse_inline_expr_from_str(&vfs_path, src, &mut env.id_gen);
+                let (expr, errors) = parse_inline_expr_from_str(&vfs_path, &src, &mut env.id_gen);
 
                 if let Some(first_err) = errors.first() {
                     write!(
@@ -502,7 +502,7 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Source(name) => {
             if let Some(name) = name {
-                match find_item_source(name, env) {
+                match find_item_source(&name, env) {
                     Ok(Some(src_string)) => write!(buf, "{}", src_string),
                     Ok(None) => {
                         write!(buf, "Source not available for {name}.")
@@ -660,7 +660,7 @@ pub(crate) fn run_command<T: Write>(
 
                 let (items, errors) = parse_toplevel_items(
                     &PathBuf::from("__interactive__"),
-                    src,
+                    &src,
                     &mut vfs,
                     &mut id_gen,
                 );
@@ -693,7 +693,7 @@ pub(crate) fn run_command<T: Write>(
                 let vfs_id = env.vfs.insert(path.clone(), src.clone());
                 let vfs_path = VfsPathBuf { path, id: vfs_id };
 
-                let (expr, errors) = parse_inline_expr_from_str(&vfs_path, src, &mut env.id_gen);
+                let (expr, errors) = parse_inline_expr_from_str(&vfs_path, &src, &mut env.id_gen);
 
                 if let Some(first_err) = errors.first() {
                     write!(

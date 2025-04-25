@@ -289,7 +289,7 @@ fn handle_eval_up_to_request(
         }
     }
 
-    match eval_up_to(&path, env, session, &items, offset) {
+    match eval_up_to(&vfs_path, env, session, &items, offset) {
         Ok((v, pos)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],

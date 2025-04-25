@@ -30,7 +30,7 @@ use crate::parser::ast::{
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
@@ -558,7 +558,7 @@ fn describe_read_error(path: &Path, e: &std::io::Error) -> ErrorMessage {
 /// Evaluate all toplevel items: definitions, then tests, then
 /// expressions.
 pub(crate) fn eval_toplevel_items(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
@@ -592,7 +592,7 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    diagnostics.extend(check_toplevel_items_in_env(path, items, env));
+    diagnostics.extend(check_toplevel_items_in_env(&vfs_path.path, items, env));
 
     let mut summary = eval_tests(items, env, session);
     summary.diagnostics.extend(diagnostics);
@@ -770,7 +770,7 @@ pub(crate) enum EvalUpToErr {
 ///
 /// Returns None if we couldn't find anything to evaluate (not an error).
 pub(crate) fn eval_up_to(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     env: &mut Env,
     session: &Session,
     items: &[ToplevelItem],
@@ -831,7 +831,7 @@ pub(crate) fn eval_up_to(
             };
 
             env.stop_at_expr_id = Some(expr_id);
-            let res = eval_toplevel_call(&name_sym.name, &args, env, session, path);
+            let res = eval_toplevel_call(&name_sym.name, &args, env, session, &vfs_path.path);
             env.stop_at_expr_id = None;
 
             res.map(|v| (v, position))
@@ -858,7 +858,7 @@ pub(crate) fn eval_up_to(
                 prev_args,
                 env,
                 session,
-                path,
+                &vfs_path.path,
             );
             env.stop_at_expr_id = None;
 
@@ -880,7 +880,7 @@ pub(crate) fn eval_up_to(
         ToplevelItem::Expr(_) | ToplevelItem::Block(_) => {
             env.stop_at_expr_id = Some(expr_id);
 
-            let res = eval_toplevel_items(path, &[item.clone()], env, session);
+            let res = eval_toplevel_items(vfs_path, &[item.clone()], env, session);
             env.stop_at_expr_id = None;
 
             match res {
@@ -5970,12 +5970,17 @@ mod tests {
         };
 
         let id_gen = IdGenerator::default();
-        let vfs = Vfs::default();
+        let mut vfs = Vfs::default();
+
+        let path = Rc::new(PathBuf::from("__test.gdn"));
+        let src = "test f {}";
+        let vfs_path = vfs.insert(path, src.to_owned());
+
         let mut env = Env::new(id_gen, vfs);
 
-        let (defs, errors) = parse_toplevel_items("test f {}", &mut env.vfs, &mut env.id_gen);
+        let (defs, errors) = super::parse_toplevel_items(&vfs_path, src, &mut env.id_gen);
         assert!(errors.is_empty());
-        let eval_result = eval_toplevel_items(&PathBuf::from("foo.gdn"), &defs, &mut env, &session);
+        let eval_result = eval_toplevel_items(&vfs_path, &defs, &mut env, &session);
         assert!(eval_result.is_ok());
     }
 }

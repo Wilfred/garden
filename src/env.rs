@@ -17,6 +17,7 @@ use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{BuiltinFunctionKind, Value, Value_};
+use crate::VfsPathBuf;
 
 #[derive(Debug, Clone)]
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);
@@ -112,7 +113,7 @@ pub(crate) struct Env {
 }
 
 impl Env {
-    pub(crate) fn new(mut id_gen: IdGenerator, vfs: Vfs) -> Self {
+    pub(crate) fn new(mut id_gen: IdGenerator, mut vfs: Vfs) -> Self {
         let mut namespaces = FxHashMap::default();
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
@@ -164,6 +165,8 @@ impl Env {
             FxHashMap::default();
 
         let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
+        let builtins_src = include_str!("builtins.gdn");
+        let builtins_vfs_path = vfs.insert(builtins_path.clone(), builtins_src.to_owned());
 
         let mut path_methods = FxHashMap::default();
         path_methods.insert(
@@ -528,7 +531,7 @@ impl Env {
 
         env.initial_state = Some(Box::new(env.clone()));
 
-        let prelude_namespace = fresh_prelude(&mut env);
+        let prelude_namespace = fresh_prelude(&mut env, &builtins_vfs_path, builtins_src);
         insert_prelude(user_namespace.clone(), prelude_namespace.clone());
 
         env.prelude_namespace = prelude_namespace;
@@ -632,7 +635,11 @@ fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceI
 }
 
 // TODO: this shouldn't take an Env, we're in the process of constructing it.
-fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
+fn fresh_prelude(
+    env: &mut Env,
+    builtins_vfs_path: &VfsPathBuf,
+    builtins_src: &str,
+) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
     let vfs = &mut env.vfs;
 
@@ -665,11 +672,7 @@ fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
         errors.first().unwrap().position().as_ide_string()
     );
 
-    let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
-    let builtins_src = include_str!("builtins.gdn");
-    let builtins_vfs_path = vfs.insert(builtins_path.clone(), builtins_src.to_owned());
-
-    let (builtin_items, errors) = parse_toplevel_items(&builtins_vfs_path, builtins_src, id_gen);
+    let (builtin_items, errors) = parse_toplevel_items(builtins_vfs_path, builtins_src, id_gen);
     assert!(
         errors.is_empty(),
         "Stubs for built-ins should be syntactically legal: {}",

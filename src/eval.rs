@@ -24,7 +24,7 @@ use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
     MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
-    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs, VfsId, VfsPathBuf,
+    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs, VfsPathBuf,
 };
 use crate::parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;

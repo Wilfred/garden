@@ -32,7 +32,7 @@ pub(crate) enum Command {
     Namespaces(Option<String>),
     Parse(Option<String>),
     Quit,
-    Replace(Option<ast::Expression>),
+    Replace(Option<String>),
     Resume,
     Skip,
     Stack,
@@ -40,7 +40,7 @@ pub(crate) enum Command {
     Source(Option<String>),
     Test(Option<String>),
     Trace,
-    Type(Option<ast::Expression>),
+    Type(Option<String>),
     Types,
     Uptime,
     Version,
@@ -115,22 +115,7 @@ impl Command {
             ":namespaces" => Ok(Command::Namespaces(args)),
             ":parse" => Ok(Command::Parse(args)),
             ":quit" => Ok(Command::Quit),
-            ":replace" => {
-                // TODO: this should continue from the last SyntaxId.
-                let mut id_gen = IdGenerator::default();
-
-                // TODO: find a better name for this.
-                let (expr, errors) = parse_inline_expr_from_str(
-                    &PathBuf::from("__interactive_inline__"),
-                    &args.unwrap_or_default(),
-                    &mut id_gen,
-                );
-                if errors.is_empty() {
-                    Ok(Command::Replace(Some(expr)))
-                } else {
-                    Ok(Command::Replace(None))
-                }
-            }
+            ":replace" => Ok(Command::Replace(Some(args.unwrap_or_default()))),
             ":resume" => Ok(Command::Resume),
             ":search" => Ok(Command::Search(args)),
             ":skip" => Ok(Command::Skip),
@@ -138,19 +123,7 @@ impl Command {
             ":test" => Ok(Command::Test(args)),
             ":stack" => Ok(Command::Stack),
             ":trace" => Ok(Command::Trace),
-            ":type" => {
-                let mut id_gen = IdGenerator::default();
-                let (expr, errors) = parse_inline_expr_from_str(
-                    &PathBuf::from("__interactive_inline__"),
-                    &args.unwrap_or_default(),
-                    &mut id_gen,
-                );
-                if errors.is_empty() {
-                    Ok(Command::Type(Some(expr)))
-                } else {
-                    Ok(Command::Type(None))
-                }
-            }
+            ":type" => Ok(Command::Type(Some(args.unwrap_or_default()))),
             ":types" => Ok(Command::Types),
             ":uptime" => Ok(Command::Uptime),
             ":version" => Ok(Command::Version),
@@ -474,9 +447,21 @@ pub(crate) fn run_command<T: Write>(
                 write!(buf, ":doc requires a name, e.g. `:doc print`")?;
             }
         }
-        Command::Replace(stmt) => {
-            if let Some(stmt) = stmt {
-                return Err(CommandError::Action(EvalAction::Replace(stmt.clone())));
+        Command::Replace(src) => {
+            if let Some(src) = src {
+                let path = PathBuf::from("__interactive_inline__");
+                let (expr, errors) = parse_inline_expr_from_str(&path, src, &mut env.id_gen);
+
+                if let Some(first_err) = errors.first() {
+                    write!(
+                        buf,
+                        ":replace requires a valid expression, e.g. `:replace 42`.\n{}",
+                        first_err.message().as_string()
+                    )?;
+                    return Ok(());
+                }
+
+                return Err(CommandError::Action(EvalAction::Replace(expr)));
             } else {
                 write!(
                     buf,
@@ -696,19 +681,30 @@ pub(crate) fn run_command<T: Write>(
         Command::Quit => {
             std::process::exit(0);
         }
-        Command::Type(expr) => {
-            if let Some(expr) = expr {
-                match eval_exprs(&[expr.clone()], env, session) {
-                    Ok(value) => {
-                        write!(
-                            buf,
-                            "{}",
-                            Type::from_value(&value, &env.types, &env.stack.type_bindings())
-                        )?;
-                    }
-                    Err(e) => {
-                        // TODO: Print a proper stack trace.
-                        write!(buf, "Evaluation failed: {:?}", e)?;
+        Command::Type(src) => {
+            if let Some(src) = src {
+                let path = PathBuf::from("__interactive_inline__");
+                let (expr, errors) = parse_inline_expr_from_str(&path, src, &mut env.id_gen);
+
+                if let Some(first_err) = errors.first() {
+                    write!(
+                        buf,
+                        ":type requires a valid expression, e.g. `:type 42`.\n{}",
+                        first_err.message().as_string()
+                    )?;
+                } else {
+                    match eval_exprs(&[expr], env, session) {
+                        Ok(value) => {
+                            write!(
+                                buf,
+                                "{}",
+                                Type::from_value(&value, &env.types, &env.stack.type_bindings())
+                            )?;
+                        }
+                        Err(e) => {
+                            // TODO: Print a proper stack trace.
+                            write!(buf, "Evaluation failed: {:?}", e)?;
+                        }
                     }
                 }
             } else {

@@ -1,6 +1,3 @@
-use std::path::PathBuf;
-use std::rc::Rc;
-
 use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
@@ -27,7 +24,7 @@ pub(crate) struct Token<'a> {
 
 #[derive(Debug, Clone)]
 pub(crate) struct TokenStream<'a> {
-    pub(crate) path: Rc<PathBuf>,
+    pub(crate) vfs_path: VfsPathBuf,
     tokens: Vec<Token<'a>>,
     /// The index of our current position in the underlying vec.
     pub(crate) idx: usize,
@@ -293,7 +290,7 @@ pub(crate) fn lex_between<'a>(
 
     (
         TokenStream {
-            path: vfs_path.path.clone(),
+            vfs_path: vfs_path.clone(),
             tokens,
             idx: 0,
             trailing_comments: preceding_comments,
@@ -309,6 +306,7 @@ pub(crate) fn lex<'a>(vfs_path: &VfsPathBuf, s: &'a str) -> (TokenStream<'a>, Ve
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
+    use std::rc::Rc;
 
     use crate::parser::vfs::VfsId;
 

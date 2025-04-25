@@ -1,8 +1,9 @@
 use std::rc::Rc;
 
+use crate::parser::ast::ToplevelExpression;
 use crate::parser::{
-    ast::ToplevelExpression, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
-    MethodInfo, Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo, Pattern,
+    StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.

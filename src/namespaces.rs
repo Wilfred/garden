@@ -4,7 +4,8 @@ use std::rc::Rc;
 use rustc_hash::FxHashMap;
 
 use crate::parser::ast::{SymbolName, TypeName};
-use crate::{types::TypeDef, values::Value};
+use crate::types::TypeDef;
+use crate::values::Value;
 
 #[derive(Debug, Clone)]
 pub(crate) struct NamespaceInfo {

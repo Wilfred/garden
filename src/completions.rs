@@ -3,19 +3,15 @@ use std::path::Path;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
-use crate::parser::{
-    ast::{AstId, Expression_, IdGenerator},
-    parse_toplevel_items,
-    vfs::Vfs,
-};
-use crate::{
-    checks::type_checker::check_types,
-    env::Env,
-    eval::load_toplevel_items,
-    garden_type::Type,
-    pos_to_id::{find_expr_of_id, find_item_at},
-    types::TypeDef,
-};
+use crate::checks::type_checker::check_types;
+use crate::env::Env;
+use crate::eval::load_toplevel_items;
+use crate::garden_type::Type;
+use crate::parser::ast::{AstId, Expression_, IdGenerator};
+use crate::parser::parse_toplevel_items;
+use crate::parser::vfs::Vfs;
+use crate::pos_to_id::{find_expr_of_id, find_item_at};
+use crate::types::TypeDef;
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let mut id_gen = IdGenerator::default();

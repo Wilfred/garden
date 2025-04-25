@@ -7,8 +7,9 @@ use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
 use rustc_hash::FxHashMap;
 
-use crate::diagnostics::Level;
-use crate::{diagnostics::Diagnostic, env::Env, types::TypeDef};
+use crate::diagnostics::{Diagnostic, Level};
+use crate::env::Env;
+use crate::types::TypeDef;
 
 struct StructFieldVisitor<'a> {
     env: &'a Env,

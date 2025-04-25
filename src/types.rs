@@ -1,9 +1,8 @@
-use std::{path::PathBuf, rc::Rc};
+use std::path::PathBuf;
+use std::rc::Rc;
 
-use crate::parser::{
-    ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol},
-    position::Position,
-};
+use crate::parser::ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol};
+use crate::parser::position::Position;
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub(crate) enum BuiltinType {

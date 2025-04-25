@@ -1,7 +1,5 @@
-use std::{
-    path::{Path, PathBuf},
-    rc::Rc,
-};
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use rustc_hash::FxHashMap;
 

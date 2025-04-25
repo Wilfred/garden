@@ -2,7 +2,9 @@
 
 use rustc_hash::FxHashMap;
 
-use std::{fmt::Display, path::PathBuf, rc::Rc};
+use std::fmt::Display;
+use std::path::PathBuf;
+use std::rc::Rc;
 
 use crate::parser::position::Position;
 

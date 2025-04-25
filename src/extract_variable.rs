@@ -1,15 +1,12 @@
-use std::{path::Path, rc::Rc};
+use std::path::Path;
+use std::rc::Rc;
 
-use crate::parser::{
-    ast::{AstId, Expression, Expression_, IdGenerator},
-    parse_toplevel_items,
-    vfs::Vfs,
-};
-use crate::{
-    env::Env,
-    eval::load_toplevel_items,
-    pos_to_id::{block_contains_id, find_expr_of_id, find_item_at},
-};
+use crate::env::Env;
+use crate::eval::load_toplevel_items;
+use crate::parser::ast::{AstId, Expression, Expression_, IdGenerator};
+use crate::parser::parse_toplevel_items;
+use crate::parser::vfs::Vfs;
+use crate::pos_to_id::{block_contains_id, find_expr_of_id, find_item_at};
 
 pub(crate) fn extract_variable(
     src: &str,

@@ -6,8 +6,7 @@ use strum_macros::EnumIter;
 
 use crate::env::Env;
 use crate::eval::BlockBindings;
-use crate::garden_type::Type;
-use crate::garden_type::TypeDefKind;
+use crate::garden_type::{Type, TypeDefKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 use crate::types::TypeDef;
@@ -545,7 +544,8 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parser::ast::IdGenerator, Vfs};
+    use crate::parser::ast::IdGenerator;
+    use crate::Vfs;
 
     use super::*;
 

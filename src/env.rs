@@ -5,7 +5,7 @@ use std::rc::Rc;
 use rustc_hash::FxHashMap;
 use strum::IntoEnumIterator;
 
-use crate::eval::{EnclosingSymbol, ExpressionState};
+use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionState};
 use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
@@ -15,11 +15,8 @@ use crate::parser::ast::{
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
+use crate::types::{BuiltinType, TypeDef};
 use crate::values::{BuiltinFunctionKind, Value, Value_};
-use crate::{
-    eval::{load_toplevel_items, Bindings},
-    types::{BuiltinType, TypeDef},
-};
 
 #[derive(Debug, Clone)]
 pub(crate) struct Stack(pub(crate) Vec<StackFrame>);

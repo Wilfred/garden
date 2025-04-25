@@ -21,12 +21,12 @@ use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrT
 use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
-    ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
-    MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
-    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
+    AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, Expression,
+    ExpressionWithComma, Expression_, FunInfo, IdGenerator, InternedSymbolId, LetDestination,
+    MethodInfo, MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo,
+    Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
+    TypeSymbol,
 };
-use crate::parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;

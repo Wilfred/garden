@@ -6,11 +6,9 @@ use crate::parser::diagnostics::{ErrorMessage, MessagePart};
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
 
-use crate::{
-    diagnostics::{Diagnostic, Level},
-    env::Env,
-    types::{BuiltinType, TypeDef},
-};
+use crate::diagnostics::{Diagnostic, Level};
+use crate::env::Env;
+use crate::types::{BuiltinType, TypeDef};
 
 pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> {
     let mut visitor = HintVisitor {

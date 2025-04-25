@@ -1,15 +1,14 @@
 use rustc_hash::FxHashMap;
 
-use crate::diagnostics::Diagnostic;
-use crate::diagnostics::Level;
-use crate::parser::ast::{Expression_, LetDestination};
+use crate::diagnostics::{Diagnostic, Level};
+use crate::parser::ast::{
+    Block, Expression, Expression_, FunInfo, LetDestination, Pattern, Symbol, SymbolName,
+    ToplevelItem,
+};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
-use crate::parser::{
-    ast::{Block, Expression, FunInfo, Pattern, Symbol, SymbolName, ToplevelItem},
-    position::Position,
-};
 
 pub(crate) fn check_unused_variables(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut visitor = UnusedVariableVisitor::new();

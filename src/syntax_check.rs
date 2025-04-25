@@ -3,17 +3,14 @@ use std::io::IsTerminal;
 use std::path::Path;
 
 use crate::checks::check_toplevel_items_in_env;
-use crate::load_toplevel_items;
+use crate::diagnostics::{format_diagnostic, Diagnostic, Level};
+use crate::parser::ast::IdGenerator;
+use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
-use crate::parser::{
-    ast::IdGenerator, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
-    ParseError,
-};
-use crate::{
-    diagnostics::{format_diagnostic, Diagnostic, Level},
-    Env,
-};
+use crate::parser::{parse_toplevel_items, ParseError};
+use crate::{load_toplevel_items, Env};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]

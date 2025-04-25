@@ -1,17 +1,16 @@
 use std::path::Path;
 
-use crate::parser::{
-    ast::{AstId, IdGenerator, Symbol, SyntaxId},
-    parse_toplevel_items,
-    position::Position,
-    vfs::Vfs,
-    visitor::Visitor,
-};
+use crate::parser::ast::{AstId, IdGenerator, Symbol, SyntaxId};
+use crate::parser::parse_toplevel_items;
+use crate::parser::position::Position;
+use crate::parser::vfs::Vfs;
+use crate::parser::visitor::Visitor;
 use rustc_hash::FxHashMap;
 
-use crate::{
-    checks::type_checker::check_types, env::Env, eval::load_toplevel_items, pos_to_id::find_item_at,
-};
+use crate::checks::type_checker::check_types;
+use crate::env::Env;
+use crate::eval::load_toplevel_items;
+use crate::pos_to_id::find_item_at;
 
 /// Rename the symbol at `offset` to `new_name`, both the definition
 /// and use sites, then print the new source code.

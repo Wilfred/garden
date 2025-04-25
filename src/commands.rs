@@ -1,6 +1,8 @@
+use std::fmt::Display;
+use std::io::Write;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::Duration;
-use std::{fmt::Display, io::Write, path::PathBuf};
 
 use humantime::format_duration;
 use itertools::Itertools as _;
@@ -8,8 +10,9 @@ use owo_colors::OwoColorize;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+use crate::colors::green;
 use crate::env::Env;
-use crate::eval::eval_exprs;
+use crate::eval::{eval_exprs, Session};
 use crate::garden_type::Type;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
 use crate::parser::vfs::{Vfs, VfsPathBuf};
@@ -17,7 +20,6 @@ use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};
 use crate::version::VERSION;
-use crate::{colors::green, eval::Session};
 
 #[derive(Debug, EnumIter)]
 pub(crate) enum Command {

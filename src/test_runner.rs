@@ -1,21 +1,20 @@
-use std::{
-    io::IsTerminal as _,
-    path::Path,
-    sync::{atomic::AtomicBool, Arc},
-    time::Instant,
-};
+use std::io::IsTerminal as _;
+use std::path::Path;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
+use std::time::Instant;
 
 use owo_colors::OwoColorize as _;
 use rustc_hash::FxHashMap;
 use serde::Serialize;
 
-use crate::parser::{
-    ast::{IdGenerator, ToplevelItem},
-    parse_toplevel_items,
-    vfs::Vfs,
+use crate::eval::eval_tests;
+use crate::parser::ast::{IdGenerator, ToplevelItem};
+use crate::parser::parse_toplevel_items;
+use crate::parser::vfs::Vfs;
+use crate::{
+    load_toplevel_items, parse_toplevel_items_or_die, Env, EvalError, Session, StdoutMode,
 };
-use crate::{eval::eval_tests, parse_toplevel_items_or_die, EvalError};
-use crate::{load_toplevel_items, Env, Session, StdoutMode};
 
 #[derive(Serialize, Debug)]
 struct SandboxedTestsSummary {

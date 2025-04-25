@@ -19,8 +19,9 @@ use unused_defs::check_unused_defs;
 
 use self::duplicates::check_duplicates;
 use self::hints::check_hints;
+use self::struct_fields::check_struct_fields;
 use self::type_checker::check_types;
-use self::{struct_fields::check_struct_fields, unused_vars::check_unused_variables};
+use self::unused_vars::check_unused_variables;
 
 /// Check toplevel items in a fresh environment, without any
 /// definitions from the current session.

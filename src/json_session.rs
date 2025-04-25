@@ -1,31 +1,27 @@
-use std::io::Read;
+use std::io::{BufRead, Read};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::Arc;
 use std::thread::JoinHandle;
 use std::time::Instant;
-use std::{
-    io::BufRead,
-    sync::{atomic::AtomicBool, Arc},
-};
 
 use serde::{Deserialize, Serialize};
 
 use crate::checks::check_toplevel_items_in_env;
-use crate::commands::CommandError;
+use crate::commands::{
+    print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
+};
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
-    push_test_stackframe, EvalUpToErr, ExpressionState, StdoutMode,
+    push_test_stackframe, EvalError, EvalUpToErr, ExpressionState, Session, StdoutMode,
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
-use crate::{
-    commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},
-    eval::{EvalError, Session},
-};
 
 type RequestId = usize;
 

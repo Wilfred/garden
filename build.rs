@@ -1,4 +1,5 @@
-use std::{path::PathBuf, process::Command};
+use std::path::PathBuf;
+use std::process::Command;
 
 fn main() {
     if !PathBuf::from(".git").exists() {

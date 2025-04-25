@@ -5,10 +5,8 @@ use itertools::Itertools as _;
 use rustc_hash::FxHashMap;
 
 use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
-use crate::{
-    types::{BuiltinType, TypeDef},
-    values::{Value, Value_},
-};
+use crate::types::{BuiltinType, TypeDef};
+use crate::values::{Value, Value_};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TypeDefKind {

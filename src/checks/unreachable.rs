@@ -1,12 +1,10 @@
 use rustc_hash::FxHashSet;
 
 use crate::diagnostics::{Diagnostic, Level};
+use crate::parser::ast::{Block, Expression, Expression_, SyntaxId, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
-use crate::parser::{
-    ast::{Block, Expression, Expression_, SyntaxId, ToplevelItem},
-    visitor::Visitor,
-};
+use crate::parser::visitor::Visitor;
 
 pub(crate) fn check_unreachable(items: &[ToplevelItem]) -> Vec<Diagnostic> {
     let mut visitor = UnreachableVisitor {

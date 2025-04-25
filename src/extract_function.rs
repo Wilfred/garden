@@ -2,19 +2,15 @@ use std::path::Path;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::parser::{
-    ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId},
-    parse_toplevel_items,
-    vfs::Vfs,
-    visitor::Visitor,
-};
-use crate::{
-    checks::type_checker::check_types,
-    env::Env,
-    eval::load_toplevel_items,
-    garden_type::Type,
-    pos_to_id::{find_expr_of_id, find_item_at},
-};
+use crate::checks::type_checker::check_types;
+use crate::env::Env;
+use crate::eval::load_toplevel_items;
+use crate::garden_type::Type;
+use crate::parser::ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId};
+use crate::parser::parse_toplevel_items;
+use crate::parser::vfs::Vfs;
+use crate::parser::visitor::Visitor;
+use crate::pos_to_id::{find_expr_of_id, find_item_at};
 
 pub(crate) fn extract_function(
     src: &str,

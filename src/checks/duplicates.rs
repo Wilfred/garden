@@ -8,13 +8,13 @@ use std::collections::HashSet;
 
 use rustc_hash::FxHashMap;
 
-use crate::diagnostics::Level;
+use crate::diagnostics::{Diagnostic, Level};
+use crate::env::Env;
 use crate::parser::ast::{SymbolName, ToplevelItem, TypeName};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
 use crate::parser::visitor::Visitor;
-use crate::{diagnostics::Diagnostic, env::Env};
 
 struct DuplicatesVisitor {
     funs_seen: FxHashMap<SymbolName, Position>,

@@ -1,12 +1,9 @@
 //! Check that loops are well-formed.
 
-use crate::parser::ast::LetDestination;
+use crate::parser::ast::{Block, Expression, Expression_, FunInfo, LetDestination, ToplevelItem};
+use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
-use crate::parser::{
-    ast::{Block, Expression, Expression_, FunInfo, ToplevelItem},
-    diagnostics::ErrorMessage,
-    visitor::Visitor,
-};
+use crate::parser::visitor::Visitor;
 
 use crate::diagnostics::{Diagnostic, Level};
 

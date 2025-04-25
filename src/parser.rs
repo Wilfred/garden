@@ -9,24 +9,16 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::rc::Rc;
 
-use ast::FieldInfo;
-use ast::StructInfo;
+use ast::{FieldInfo, StructInfo};
 use position::Position;
 
 use ast::*;
 use diagnostics::ErrorMessage;
 use diagnostics::MessagePart::*;
-use lex::lex;
-use lex::lex_between;
-use lex::Token;
-use lex::TokenStream;
-use lex::INTEGER_RE;
-use lex::SYMBOL_RE;
-use vfs::Vfs;
-use vfs::VfsPathBuf;
+use lex::{lex, lex_between, Token, TokenStream, INTEGER_RE, SYMBOL_RE};
+use vfs::{Vfs, VfsPathBuf};
 
-use crate::msgcode;
-use crate::msgtext;
+use crate::{msgcode, msgtext};
 
 // TODO: implement precedence using Pratt parsing, as discussed in
 // <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>

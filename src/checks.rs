@@ -7,12 +7,11 @@ mod unreachable;
 mod unused_defs;
 mod unused_vars;
 
-use std::path::Path;
-
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::parser::ast::ToplevelItem;
+use crate::parser::vfs::VfsPathBuf;
 use loops::check_loops;
 use unreachable::check_unreachable;
 use unused_defs::check_unused_defs;
@@ -29,21 +28,21 @@ use self::unused_vars::check_unused_variables;
 /// Note that this creates a new Env and Vfs, so diagnostics returned
 /// may refer to files that aren't present in `env.vfs`.
 pub(crate) fn check_toplevel_items(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     items: &[ToplevelItem],
     env: &Env,
 ) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
-    let ns = env.get_namespace(path);
+    let ns = env.get_namespace(&vfs_path.path);
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns);
 
-    diagnostics.extend(check_toplevel_items_in_env(path, items, &env));
+    diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, &env));
     diagnostics
 }
 
 /// Check toplevel items in this environment.
 pub(crate) fn check_toplevel_items_in_env(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     items: &[ToplevelItem],
     env: &Env,
 ) -> Vec<Diagnostic> {
@@ -53,7 +52,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
 
-    let summary = check_types(path, items, env);
+    let summary = check_types(vfs_path, items, env);
     diagnostics.extend(check_unused_defs(items, &summary));
 
     diagnostics.extend(summary.diagnostics);

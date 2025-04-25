@@ -20,7 +20,7 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     let ns = env.get_namespace(path);
     load_toplevel_items(&items, &mut env, ns);
 
-    let summary = check_types(path, &items, &env);
+    let summary = check_types(&vfs_path, &items, &env);
 
     let ids_at_query_pos = find_item_at(&items, offset, offset);
 

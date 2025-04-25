@@ -592,7 +592,7 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    diagnostics.extend(check_toplevel_items_in_env(&vfs_path.path, items, env));
+    diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, env));
 
     let mut summary = eval_tests(items, env, session);
     summary.diagnostics.extend(diagnostics);
@@ -2936,7 +2936,7 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         error_messages.push(Value::new(Value_::String(err.message().as_string())));
     }
 
-    for Diagnostic { message, level, .. } in check_toplevel_items(&path, &items, &check_env) {
+    for Diagnostic { message, level, .. } in check_toplevel_items(&vfs_path, &items, &check_env) {
         match level {
             Level::Warning => {}
             Level::Error => {

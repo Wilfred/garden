@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use crate::parser::lex::Token;
 
-use super::vfs::{VfsId, VfsPathBuf};
+use super::vfs::VfsPathBuf;
 
 /// A position is a range in source code. It is a span between
 /// `start_offset` and `end_offset` in `path`.
@@ -49,23 +49,7 @@ impl std::fmt::Debug for Position {
 }
 
 impl Position {
-    pub(crate) fn todo(path: Rc<PathBuf>) -> Self {
-        Self {
-            start_offset: 0,
-            end_offset: 0,
-            line_number: 0,
-            column: 0,
-            end_column: 0,
-            end_line_number: 0,
-            path: path.clone(),
-            vfs_path: VfsPathBuf {
-                path,
-                id: VfsId(2), // TODO
-            },
-        }
-    }
-
-    pub(crate) fn todo_vfs(vfs_path: &VfsPathBuf) -> Self {
+    pub(crate) fn todo(vfs_path: &VfsPathBuf) -> Self {
         Self {
             start_offset: 0,
             end_offset: 0,

@@ -44,18 +44,18 @@ impl TypeDef {
                 BuiltinType::Fun => vec![
                     TypeSymbol {
                         name: "Args".into(),
-                        position: Position::todo_vfs(&dummy_vfs_path),
+                        position: Position::todo(&dummy_vfs_path),
                         id: SyntaxId(0),
                     },
                     TypeSymbol {
                         name: "Ret".into(),
-                        position: Position::todo_vfs(&dummy_vfs_path),
+                        position: Position::todo(&dummy_vfs_path),
                         id: SyntaxId(0),
                     },
                 ],
                 BuiltinType::List => vec![TypeSymbol {
                     name: "T".into(),
-                    position: Position::todo_vfs(&dummy_vfs_path),
+                    position: Position::todo(&dummy_vfs_path),
                     id: SyntaxId(0),
                 }],
                 BuiltinType::Tuple => {

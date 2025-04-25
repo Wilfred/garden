@@ -1050,9 +1050,9 @@ pub(crate) fn eval_toplevel_call(
     }
 
     let recv_expr = Expression {
-        position: Position::todo_vfs(vfs_path),
+        position: Position::todo(vfs_path),
         expr_: Expression_::Variable(Symbol::new(
-            Position::todo_vfs(vfs_path),
+            Position::todo(vfs_path),
             &name.text,
             &mut env.id_gen,
         )),
@@ -1062,19 +1062,19 @@ pub(crate) fn eval_toplevel_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        let pos = Position::todo_vfs(vfs_path);
+        let pos = Position::todo(vfs_path);
         let expr = Rc::new(Expression::invalid(pos, env.id_gen.next()));
         arguments.push(ExpressionWithComma { expr, comma: None });
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo_vfs(vfs_path),
+        open_paren: Position::todo(vfs_path),
         arguments,
-        close_paren: Position::todo_vfs(vfs_path),
+        close_paren: Position::todo(vfs_path),
     };
 
     let call_expr = Expression {
-        position: Position::todo_vfs(vfs_path),
+        position: Position::todo(vfs_path),
         expr_: Expression_::Call(Rc::new(recv_expr), paren_args),
         value_is_used: true,
         id: env.id_gen.next(),
@@ -1105,9 +1105,9 @@ pub(crate) fn eval_toplevel_method_call(
     // Just create a placeholder symbol for the receiver. Since we
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
-        position: Position::todo_vfs(vfs_path),
+        position: Position::todo(vfs_path),
         expr_: Expression_::Variable(placeholder_symbol(
-            Position::todo_vfs(vfs_path),
+            Position::todo(vfs_path),
             &mut env.id_gen,
         )),
         value_is_used: true,
@@ -1115,7 +1115,7 @@ pub(crate) fn eval_toplevel_method_call(
     };
 
     let meth_sym = Symbol {
-        position: Position::todo_vfs(vfs_path),
+        position: Position::todo(vfs_path),
         name: meth_name.clone(),
         id: env.id_gen.next(),
         interned_id: env.id_gen.intern_symbol(meth_name),
@@ -1123,19 +1123,19 @@ pub(crate) fn eval_toplevel_method_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        let pos = Position::todo_vfs(vfs_path);
+        let pos = Position::todo(vfs_path);
         let expr = Rc::new(Expression::invalid(pos, env.id_gen.next()));
         arguments.push(ExpressionWithComma { expr, comma: None });
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo_vfs(vfs_path),
+        open_paren: Position::todo(vfs_path),
         arguments,
-        close_paren: Position::todo_vfs(vfs_path),
+        close_paren: Position::todo(vfs_path),
     };
 
     let call_expr = Expression {
-        position: Position::todo_vfs(vfs_path),
+        position: Position::todo(vfs_path),
         expr_: Expression_::MethodCall(Rc::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
         id: env.id_gen.next(),

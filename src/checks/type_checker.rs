@@ -89,7 +89,7 @@ impl LocalBindings {
 
                 block_bindings.insert(
                     sym_name.clone(),
-                    (ty, Position::todo_vfs(&placeholder_vfs_path)),
+                    (ty, Position::todo(&placeholder_vfs_path)),
                 );
             }
         }

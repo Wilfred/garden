@@ -74,6 +74,11 @@ struct LocalBindings {
 impl LocalBindings {
     fn new(env: &Env) -> Self {
         let placeholder_path = Rc::new(PathBuf::from("__local_scope_placeholder__"));
+        let placeholder_vfs_path = VfsPathBuf {
+            path: placeholder_path,
+            id: VfsId(u32::MAX),
+        };
+
         let mut block_bindings = FxHashMap::default();
         if let Some(stack_top) = env.stack.0.last() {
             for (sym_id, value) in stack_top.bindings.all() {
@@ -84,7 +89,7 @@ impl LocalBindings {
 
                 block_bindings.insert(
                     sym_name.clone(),
-                    (ty, Position::todo(placeholder_path.clone())),
+                    (ty, Position::todo_vfs(&placeholder_vfs_path)),
                 );
             }
         }

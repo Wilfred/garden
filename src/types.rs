@@ -3,6 +3,8 @@ use std::rc::Rc;
 
 use crate::parser::ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol};
 use crate::parser::position::Position;
+use crate::parser::vfs::VfsId;
+use crate::VfsPathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub(crate) enum BuiltinType {
@@ -29,6 +31,10 @@ pub(crate) enum TypeDef {
 impl TypeDef {
     pub(crate) fn params(&self) -> Vec<TypeSymbol> {
         let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
+        let dummy_vfs_path = VfsPathBuf {
+            path: builtins_path,
+            id: VfsId(u32::MAX),
+        };
 
         match self {
             TypeDef::Builtin(built_in_type, _) => match built_in_type {
@@ -38,18 +44,18 @@ impl TypeDef {
                 BuiltinType::Fun => vec![
                     TypeSymbol {
                         name: "Args".into(),
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&dummy_vfs_path),
                         id: SyntaxId(0),
                     },
                     TypeSymbol {
                         name: "Ret".into(),
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&dummy_vfs_path),
                         id: SyntaxId(0),
                     },
                 ],
                 BuiltinType::List => vec![TypeSymbol {
                     name: "T".into(),
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&dummy_vfs_path),
                     id: SyntaxId(0),
                 }],
                 BuiltinType::Tuple => {

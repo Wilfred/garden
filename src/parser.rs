@@ -2361,8 +2361,7 @@ pub(crate) fn parse_toplevel_items(
     id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
     let path = Rc::new(path.to_owned());
-    let vfs_id = vfs.insert(path.clone(), src.to_owned());
-    let vfs_path = VfsPathBuf { path, id: vfs_id };
+    let vfs_path = vfs.insert(path.clone(), src.to_owned());
 
     let mut diagnostics = vec![];
 
@@ -2385,9 +2384,7 @@ pub(crate) fn parse_toplevel_items_from_span(
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-    let path = Rc::new(path.to_owned());
-    let vfs_id = vfs.insert(path.clone(), src.to_owned());
-    let vfs_path = VfsPathBuf { path, id: vfs_id };
+    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
 
     let mut diagnostics = vec![];
 

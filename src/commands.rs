@@ -15,7 +15,7 @@ use crate::env::Env;
 use crate::eval::{eval_exprs, Session};
 use crate::garden_type::Type;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
-use crate::parser::vfs::{Vfs, VfsPathBuf};
+use crate::parser::vfs::Vfs;
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};
@@ -454,8 +454,7 @@ pub(crate) fn run_command<T: Write>(
         Command::Replace(src) => {
             if let Some(src) = src {
                 let path = Rc::new(PathBuf::from("__interactive_inline__"));
-                let vfs_id = env.vfs.insert(path.clone(), src.clone());
-                let vfs_path = VfsPathBuf { path, id: vfs_id };
+                let vfs_path = env.vfs.insert(path.clone(), src.clone());
 
                 let (expr, errors) = parse_inline_expr_from_str(&vfs_path, &src, &mut env.id_gen);
 
@@ -691,8 +690,7 @@ pub(crate) fn run_command<T: Write>(
         Command::Type(src) => {
             if let Some(src) = src {
                 let path = Rc::new(PathBuf::from("__interactive_inline__"));
-                let vfs_id = env.vfs.insert(path.clone(), src.clone());
-                let vfs_path = VfsPathBuf { path, id: vfs_id };
+                let vfs_path = env.vfs.insert(path.clone(), src.clone());
 
                 let (expr, errors) = parse_inline_expr_from_str(&vfs_path, &src, &mut env.id_gen);
 

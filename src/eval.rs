@@ -30,7 +30,7 @@ use crate::parser::ast::{
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
-use crate::parser::vfs::{Vfs, VfsPathBuf};
+use crate::parser::vfs::Vfs;
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
@@ -2726,9 +2726,8 @@ fn eval_builtin_call(
             };
 
             let path = Rc::new(PathBuf::from("__snippet"));
-            let id = env.vfs.insert(path.clone(), src.to_owned());
+            let vfs_path = env.vfs.insert(path.clone(), src.clone());
 
-            let vfs_path = VfsPathBuf { path, id };
             let (mut token_stream, _lex_errors) = lex::lex(&vfs_path, src);
 
             let mut items = vec![];

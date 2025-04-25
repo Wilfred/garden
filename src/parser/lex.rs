@@ -83,7 +83,7 @@ pub(crate) fn lex_between<'a>(
 ) -> (TokenStream<'a>, Vec<ParseError>) {
     assert!(end_offset <= s.len());
 
-    let vfs_path = Rc::new(vfs_path.clone());
+    let vfs_path = vfs_path.clone();
 
     let lp = LinePositions::from(s);
     let mut tokens: Vec<Token<'a>> = vec![];
@@ -333,7 +333,7 @@ mod tests {
                     column: 0,
                     end_column: 1,
                     path: PathBuf::from("__test.gdn").into(),
-                    vfs_path: vfs_path.into()
+                    vfs_path
                 },
                 text: "1",
                 preceding_comments: vec![],
@@ -364,7 +364,6 @@ mod tests {
                         path: Rc::new(PathBuf::from("__test.gdn")),
                         id: VfsId(1)
                     }
-                    .into()
                 },
                 text: "a",
                 preceding_comments: vec![],
@@ -431,7 +430,6 @@ mod tests {
                         path: Rc::new(PathBuf::from("__test.gdn")),
                         id: VfsId(1)
                     }
-                    .into()
                 },
                 text: "1",
                 preceding_comments: vec![(
@@ -447,7 +445,6 @@ mod tests {
                             path: Rc::new(PathBuf::from("__test.gdn")),
                             id: VfsId(1)
                         }
-                        .into()
                     },
                     "// 2\n"
                 )],
@@ -478,7 +475,6 @@ mod tests {
                         path: Rc::new(PathBuf::from("__test.gdn")),
                         id: VfsId(1)
                     }
-                    .into()
                 },
                 text: "1",
                 preceding_comments: vec![(
@@ -494,7 +490,6 @@ mod tests {
                             path: Rc::new(PathBuf::from("__test.gdn")),
                             id: VfsId(1)
                         }
-                        .into()
                     },
                     "// 2\n"
                 )],

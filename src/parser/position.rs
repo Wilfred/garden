@@ -28,7 +28,7 @@ pub(crate) struct Position {
     /// a normal PathBuf in that it has an ID, so we can distinguish
     /// different versions of the same file that we saw.
     #[serde(skip)]
-    pub(crate) vfs_path: Rc<VfsPathBuf>,
+    pub(crate) vfs_path: VfsPathBuf,
 }
 
 impl std::fmt::Debug for Position {
@@ -58,10 +58,10 @@ impl Position {
             end_column: 0,
             end_line_number: 0,
             path: path.clone(),
-            vfs_path: Rc::new(VfsPathBuf {
+            vfs_path: VfsPathBuf {
                 path,
                 id: VfsId(2), // TODO
-            }),
+            },
         }
     }
 

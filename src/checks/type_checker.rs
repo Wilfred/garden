@@ -155,8 +155,7 @@ impl TypeCheckVisitor<'_> {
                         vfs_path: VfsPathBuf {
                             path: Rc::new(info.path.clone()),
                             id: VfsId(0), // TODO
-                        }
-                        .into(),
+                        },
                     },
                 );
             }

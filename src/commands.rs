@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::time::Duration;
 use std::{fmt::Display, io::Write, path::PathBuf};
 
@@ -451,12 +452,9 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Replace(src) => {
             if let Some(src) = src {
-                let path = PathBuf::from("__interactive_inline__");
+                let path = Rc::new(PathBuf::from("__interactive_inline__"));
                 let vfs_id = env.vfs.insert(path.clone(), src.clone());
-                let vfs_path = VfsPathBuf {
-                    path: path.to_owned().into(),
-                    id: vfs_id,
-                };
+                let vfs_path = VfsPathBuf { path, id: vfs_id };
 
                 let (expr, errors) = parse_inline_expr_from_str(&vfs_path, src, &mut env.id_gen);
 
@@ -691,12 +689,9 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Type(src) => {
             if let Some(src) = src {
-                let path = PathBuf::from("__interactive_inline__");
+                let path = Rc::new(PathBuf::from("__interactive_inline__"));
                 let vfs_id = env.vfs.insert(path.clone(), src.clone());
-                let vfs_path = VfsPathBuf {
-                    path: path.to_owned().into(),
-                    id: vfs_id,
-                };
+                let vfs_path = VfsPathBuf { path, id: vfs_id };
 
                 let (expr, errors) = parse_inline_expr_from_str(&vfs_path, src, &mut env.id_gen);
 

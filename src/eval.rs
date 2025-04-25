@@ -2724,13 +2724,10 @@ fn eval_builtin_call(
                 }
             };
 
-            let path = PathBuf::from("__snippet");
+            let path = Rc::new(PathBuf::from("__snippet"));
             let id = env.vfs.insert(path.clone(), src.to_owned());
 
-            let vfs_path = VfsPathBuf {
-                path: Rc::new(path),
-                id,
-            };
+            let vfs_path = VfsPathBuf { path, id };
             let (mut token_stream, _lex_errors) = lex::lex(&vfs_path, src);
 
             let mut items = vec![];

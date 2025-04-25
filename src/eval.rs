@@ -831,7 +831,7 @@ pub(crate) fn eval_up_to(
             };
 
             env.stop_at_expr_id = Some(expr_id);
-            let res = eval_toplevel_call(&name_sym.name, &args, env, session, &vfs_path.path);
+            let res = eval_toplevel_call(&name_sym.name, &args, env, session, vfs_path);
             env.stop_at_expr_id = None;
 
             res.map(|v| (v, position))
@@ -858,7 +858,7 @@ pub(crate) fn eval_up_to(
                 prev_args,
                 env,
                 session,
-                &vfs_path.path,
+                vfs_path,
             );
             env.stop_at_expr_id = None;
 
@@ -1034,7 +1034,7 @@ pub(crate) fn eval_toplevel_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
-    path: &Path,
+    vfs_path: &VfsPathBuf,
 ) -> Result<Value, EvalError> {
     // TODO: return an Err() rather than kludging a string and letting
     // eval_env() return a type error.
@@ -1049,12 +1049,10 @@ pub(crate) fn eval_toplevel_call(
         env.push_value(value.clone());
     }
 
-    let path = Rc::new(path.to_owned());
-
     let recv_expr = Expression {
-        position: Position::todo(path.clone()),
+        position: Position::todo_vfs(vfs_path),
         expr_: Expression_::Variable(Symbol::new(
-            Position::todo(path.clone()),
+            Position::todo_vfs(vfs_path),
             &name.text,
             &mut env.id_gen,
         )),
@@ -1064,19 +1062,19 @@ pub(crate) fn eval_toplevel_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        let pos = Position::todo(path.clone());
+        let pos = Position::todo_vfs(vfs_path);
         let expr = Rc::new(Expression::invalid(pos, env.id_gen.next()));
         arguments.push(ExpressionWithComma { expr, comma: None });
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo(path.clone()),
+        open_paren: Position::todo_vfs(vfs_path),
         arguments,
-        close_paren: Position::todo(path.clone()),
+        close_paren: Position::todo_vfs(vfs_path),
     };
 
     let call_expr = Expression {
-        position: Position::todo(path.clone()),
+        position: Position::todo_vfs(vfs_path),
         expr_: Expression_::Call(Rc::new(recv_expr), paren_args),
         value_is_used: true,
         id: env.id_gen.next(),
@@ -1097,21 +1095,19 @@ pub(crate) fn eval_toplevel_method_call(
     args: &[Value],
     env: &mut Env,
     session: &Session,
-    path: &Path,
+    vfs_path: &VfsPathBuf,
 ) -> Result<Value, EvalError> {
     env.push_value(recv_value.clone());
     for value in args.iter().rev() {
         env.push_value(value.clone());
     }
 
-    let path = Rc::new(path.to_owned());
-
     // Just create a placeholder symbol for the receiver. Since we
     // don't evaluate children, it doesn't matter.
     let recv_expr = Expression {
-        position: Position::todo(path.clone()),
+        position: Position::todo_vfs(vfs_path),
         expr_: Expression_::Variable(placeholder_symbol(
-            Position::todo(path.clone()),
+            Position::todo_vfs(vfs_path),
             &mut env.id_gen,
         )),
         value_is_used: true,
@@ -1119,7 +1115,7 @@ pub(crate) fn eval_toplevel_method_call(
     };
 
     let meth_sym = Symbol {
-        position: Position::todo(path.clone()),
+        position: Position::todo_vfs(vfs_path),
         name: meth_name.clone(),
         id: env.id_gen.next(),
         interned_id: env.id_gen.intern_symbol(meth_name),
@@ -1127,19 +1123,19 @@ pub(crate) fn eval_toplevel_method_call(
 
     let mut arguments = vec![];
     for _ in 0..args.len() {
-        let pos = Position::todo(path.clone());
+        let pos = Position::todo_vfs(vfs_path);
         let expr = Rc::new(Expression::invalid(pos, env.id_gen.next()));
         arguments.push(ExpressionWithComma { expr, comma: None });
     }
 
     let paren_args = ParenthesizedArguments {
-        open_paren: Position::todo(path.clone()),
+        open_paren: Position::todo_vfs(vfs_path),
         arguments,
-        close_paren: Position::todo(path.clone()),
+        close_paren: Position::todo_vfs(vfs_path),
     };
 
     let call_expr = Expression {
-        position: Position::todo(path.clone()),
+        position: Position::todo_vfs(vfs_path),
         expr_: Expression_::MethodCall(Rc::new(recv_expr), meth_sym, paren_args),
         value_is_used: true,
         id: env.id_gen.next(),

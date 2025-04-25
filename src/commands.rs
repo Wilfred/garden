@@ -10,7 +10,9 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::garden_type::Type;
-use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName, Vfs};
+use crate::parser::ast::{
+    self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName, Vfs, VfsPathBuf,
+};
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};
@@ -450,7 +452,13 @@ pub(crate) fn run_command<T: Write>(
         Command::Replace(src) => {
             if let Some(src) = src {
                 let path = PathBuf::from("__interactive_inline__");
-                let (expr, errors) = parse_inline_expr_from_str(&path, src, &mut env.id_gen);
+                let vfs_id = env.vfs.insert(path.clone(), src.clone());
+                let vfs_path = VfsPathBuf {
+                    path: path.to_owned().into(),
+                    id: vfs_id,
+                };
+
+                let (expr, errors) = parse_inline_expr_from_str(&vfs_path, src, &mut env.id_gen);
 
                 if let Some(first_err) = errors.first() {
                     write!(
@@ -684,7 +692,13 @@ pub(crate) fn run_command<T: Write>(
         Command::Type(src) => {
             if let Some(src) = src {
                 let path = PathBuf::from("__interactive_inline__");
-                let (expr, errors) = parse_inline_expr_from_str(&path, src, &mut env.id_gen);
+                let vfs_id = env.vfs.insert(path.clone(), src.clone());
+                let vfs_path = VfsPathBuf {
+                    path: path.to_owned().into(),
+                    id: vfs_id,
+                };
+
+                let (expr, errors) = parse_inline_expr_from_str(&vfs_path, src, &mut env.id_gen);
 
                 if let Some(first_err) = errors.first() {
                     write!(

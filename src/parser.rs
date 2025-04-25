@@ -2344,18 +2344,13 @@ fn parse_toplevel_item_from_tokens(
 }
 
 pub fn parse_inline_expr_from_str(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     src: &str,
     id_gen: &mut IdGenerator,
 ) -> (Expression, Vec<ParseError>) {
     let mut diagnostics = vec![];
 
-    let vfs_path = VfsPathBuf {
-        path: Rc::new(path.to_owned()),
-        id: VfsId(11), // TODO
-    };
-
-    let (mut tokens, lex_errors) = lex(&vfs_path, src);
+    let (mut tokens, lex_errors) = lex(vfs_path, src);
     for error in lex_errors {
         diagnostics.push(error);
     }

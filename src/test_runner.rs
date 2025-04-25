@@ -1,5 +1,6 @@
 use std::io::IsTerminal as _;
 use std::path::Path;
+use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
@@ -167,9 +168,11 @@ pub(crate) fn run_sandboxed_tests_in_file(
 
 pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
     let id_gen = IdGenerator::default();
-    let vfs = Vfs::default();
+    let mut vfs = Vfs::default();
+    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
+
     let mut env = Env::new(id_gen, vfs);
-    let items = parse_toplevel_items_or_die(path, src, &mut env.vfs, &mut env.id_gen);
+    let items = parse_toplevel_items_or_die(&vfs_path, src, &mut env.vfs, &mut env.id_gen);
 
     let session = Session {
         interrupted,

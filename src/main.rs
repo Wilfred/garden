@@ -67,7 +67,7 @@ use eval::{eval_up_to, EvalUpToErr, StdoutMode};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
-use parser::vfs::Vfs;
+use parser::vfs::{Vfs, VfsPathBuf};
 use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
@@ -399,7 +399,9 @@ fn main() {
 fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<AtomicBool>) {
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
-    let items = parse_toplevel_items_or_die(path, src, &mut vfs, &mut id_gen);
+    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
+
+    let items = parse_toplevel_items_or_die(&vfs_path, src, &mut vfs, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
 
@@ -523,13 +525,12 @@ fn dump_ast(src: &str, path: &Path) {
 }
 
 fn parse_toplevel_items_or_die(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     src: &str,
     vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Vec<ToplevelItem> {
-    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
-    let (items, errors) = parse_toplevel_items(&vfs_path, src, id_gen);
+    let (items, errors) = parse_toplevel_items(vfs_path, src, id_gen);
 
     if !errors.is_empty() {
         for error in errors.into_iter() {
@@ -562,7 +563,9 @@ fn parse_toplevel_items_or_die(
 fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<AtomicBool>) {
     let mut id_gen = IdGenerator::default();
     let mut vfs = Vfs::default();
-    let items = parse_toplevel_items_or_die(path, src, &mut vfs, &mut id_gen);
+    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
+
+    let items = parse_toplevel_items_or_die(&vfs_path, src, &mut vfs, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
     env.cli_args = Vec::from(arguments);

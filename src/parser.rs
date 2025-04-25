@@ -2403,39 +2403,31 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn test_incomplete_expression() {
+    fn parse_toplevel_items(src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
         let mut vfs = Vfs::default();
-        let (_, errors) = parse_toplevel_items(
+        super::parse_toplevel_items(
             &PathBuf::from("__test.gdn"),
-            "1 + ",
+            src,
             &mut vfs,
             &mut IdGenerator::default(),
-        );
+        )
+    }
+
+    #[test]
+    fn test_incomplete_expression() {
+        let (_, errors) = parse_toplevel_items("1 + ");
         assert!(!errors.is_empty())
     }
 
     #[test]
     fn test_repeated_param() {
-        let mut vfs = Vfs::default();
-        let (_, errors) = parse_toplevel_items(
-            &PathBuf::from("__test.gdn"),
-            "fun f(x, x) {} ",
-            &mut vfs,
-            &mut IdGenerator::default(),
-        );
+        let (_, errors) = parse_toplevel_items("fun f(x, x) {} ");
         assert!(!errors.is_empty())
     }
 
     #[test]
     fn test_repeated_param_underscore() {
-        let mut vfs = Vfs::default();
-        let (_, errors) = parse_toplevel_items(
-            &PathBuf::from("__test.gdn"),
-            "fun f(_, _) {} ",
-            &mut vfs,
-            &mut IdGenerator::default(),
-        );
+        let (_, errors) = parse_toplevel_items("fun f(_, _) {} ");
         assert!(errors.is_empty())
     }
 }

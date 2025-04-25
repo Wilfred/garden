@@ -2355,17 +2355,13 @@ pub(crate) fn parse_inline_expr_from_str(
 }
 
 pub(crate) fn parse_toplevel_items(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     src: &str,
-    vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-    let path = Rc::new(path.to_owned());
-    let vfs_path = vfs.insert(path.clone(), src.to_owned());
-
     let mut diagnostics = vec![];
 
-    let (mut tokens, lex_errors) = lex(&vfs_path, src);
+    let (mut tokens, lex_errors) = lex(vfs_path, src);
     for error in lex_errors {
         diagnostics.push(error);
     }
@@ -2405,12 +2401,9 @@ mod tests {
 
     fn parse_toplevel_items(src: &str) -> (Vec<ToplevelItem>, Vec<ParseError>) {
         let mut vfs = Vfs::default();
-        super::parse_toplevel_items(
-            &PathBuf::from("__test.gdn"),
-            src,
-            &mut vfs,
-            &mut IdGenerator::default(),
-        )
+        let vfs_path = vfs.insert(Rc::new(PathBuf::from("__test.gdn")), src.to_owned());
+
+        super::parse_toplevel_items(&vfs_path, src, &mut IdGenerator::default())
     }
 
     #[test]

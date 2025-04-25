@@ -453,8 +453,10 @@ fn load_toplevel_items_(
                     continue;
                 };
 
+                let vfs_path = env.vfs.insert(Rc::new(abs_path), src.clone());
+
                 let (imported_items, parse_errors) =
-                    parse_toplevel_items(&path, &src, &mut env.vfs, &mut env.id_gen);
+                    parse_toplevel_items(&vfs_path, &src, &mut env.id_gen);
                 if !parse_errors.is_empty() {
                     for error in parse_errors {
                         diagnostics.push(Diagnostic {
@@ -2919,8 +2921,9 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         .as_ref()
         .map(|e| e.as_ref().clone())
         .unwrap_or_else(|| Env::new(IdGenerator::default(), Vfs::default()));
-    let (items, syntax_errors) =
-        parse_toplevel_items(&path, src, &mut check_env.vfs, &mut check_env.id_gen);
+
+    let vfs_path = check_env.vfs.insert(Rc::new(path.clone()), src.to_owned());
+    let (items, syntax_errors) = parse_toplevel_items(&vfs_path, src, &mut check_env.id_gen);
 
     let mut error_messages = vec![];
     for err in syntax_errors {
@@ -5405,8 +5408,9 @@ mod tests {
         vfs: &mut Vfs,
         id_gen: &mut IdGenerator,
     ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-        let path = PathBuf::from("__test.gdn");
-        super::parse_toplevel_items(&path, src, vfs, id_gen)
+        let path = Rc::new(PathBuf::from("__test.gdn"));
+        let vfs_path = vfs.insert(path, src.to_owned());
+        super::parse_toplevel_items(&vfs_path, src, id_gen)
     }
 
     fn parse_items_from_str(

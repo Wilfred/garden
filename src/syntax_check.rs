@@ -42,8 +42,9 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
     let mut diagnostics = vec![];
 
     let mut id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
-    let (items, errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     for e in errors.into_iter() {
         match e {

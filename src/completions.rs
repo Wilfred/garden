@@ -9,15 +9,15 @@ use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
 use crate::parser::ast::{AstId, Expression_, IdGenerator};
 use crate::parser::parse_toplevel_items;
-use crate::parser::vfs::Vfs;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
+use crate::Vfs;
 
 pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let mut id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
-    let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_namespace(path);

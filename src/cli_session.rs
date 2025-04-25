@@ -1,6 +1,7 @@
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::Instant;
@@ -15,9 +16,9 @@ use crate::eval::{
     StdoutMode,
 };
 use crate::parser::ast::{IdGenerator, ToplevelItem};
-use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::prompt::prompt_symbol;
+use crate::Vfs;
 
 use owo_colors::OwoColorize;
 use rustyline::Editor;
@@ -268,8 +269,10 @@ fn read_multiline_syntax(
     let mut src = first_line.to_owned();
 
     loop {
-        let (items, errors) =
-            parse_toplevel_items(&PathBuf::from("__interactive_session__"), &src, vfs, id_gen);
+        let path = Rc::new(PathBuf::from("__interactive_session__"));
+        let vfs_path = vfs.insert(path.clone(), src.to_owned());
+
+        let (items, errors) = parse_toplevel_items(&vfs_path, &src, id_gen);
 
         // TODO: return all errors.
         match errors.into_iter().next() {

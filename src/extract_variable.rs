@@ -16,8 +16,9 @@ pub(crate) fn extract_variable(
     name: &str,
 ) {
     let mut id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
-    let (items, _errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+
+    let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_namespace(path);

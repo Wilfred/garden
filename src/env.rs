@@ -648,16 +648,17 @@ fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
         );
     }
 
-    let path = PathBuf::from("__prelude");
+    let prelude_path = Rc::new(PathBuf::from("prelude.gdn"));
+    let prelude_src = include_str!("prelude.gdn");
+    let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
+
     let ns_info = NamespaceInfo {
-        path: Rc::new(path),
+        path: prelude_path,
         values,
         types: FxHashMap::default(),
     };
 
-    let prelude_src = include_str!("prelude.gdn");
-    let (prelude_items, errors) =
-        parse_toplevel_items(&PathBuf::from("prelude.gdn"), prelude_src, vfs, id_gen);
+    let (prelude_items, errors) = parse_toplevel_items(&prelude_vfs_path, prelude_src, id_gen);
     assert!(
         errors.is_empty(),
         "Prelude should be syntactically legal: {}",
@@ -666,8 +667,9 @@ fn fresh_prelude(env: &mut Env) -> Rc<RefCell<NamespaceInfo>> {
 
     let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
     let builtins_src = include_str!("builtins.gdn");
+    let builtins_vfs_path = vfs.insert(builtins_path.clone(), builtins_src.to_owned());
 
-    let (builtin_items, errors) = parse_toplevel_items(&builtins_path, builtins_src, vfs, id_gen);
+    let (builtin_items, errors) = parse_toplevel_items(&builtins_vfs_path, builtins_src, id_gen);
     assert!(
         errors.is_empty(),
         "Stubs for built-ins should be syntactically legal: {}",

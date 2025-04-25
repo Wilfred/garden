@@ -23,6 +23,12 @@ pub(crate) struct Vfs {
 }
 
 impl Vfs {
+    pub(crate) fn singleton(path: PathBuf, src: String) -> (Self, VfsPathBuf) {
+        let mut vfs = Self::default();
+        let vfs_path = vfs.insert(Rc::new(path.clone()), src);
+        (vfs, vfs_path)
+    }
+
     pub(crate) fn insert(&mut self, path: Rc<PathBuf>, src: String) -> VfsPathBuf {
         let srcs = self.file_srcs.entry(path.to_path_buf()).or_default();
         let vfs_id = VfsId(srcs.len() as u32);

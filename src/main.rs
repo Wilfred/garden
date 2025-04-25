@@ -56,6 +56,7 @@ mod values;
 mod version;
 
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::channel;
 use std::sync::Arc;
@@ -483,8 +484,8 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
 
 fn dump_ast(src: &str, path: &Path) {
     let mut id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
-    let (items, errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     for error in errors.into_iter() {
         match error {
@@ -527,7 +528,8 @@ fn parse_toplevel_items_or_die(
     vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Vec<ToplevelItem> {
-    let (items, errors) = parse_toplevel_items(path, src, vfs, id_gen);
+    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, id_gen);
 
     if !errors.is_empty() {
         for error in errors.into_iter() {

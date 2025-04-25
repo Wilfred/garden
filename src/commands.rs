@@ -658,12 +658,10 @@ pub(crate) fn run_command<T: Write>(
                 let mut vfs = Vfs::default();
                 let mut id_gen = IdGenerator::default();
 
-                let (items, errors) = parse_toplevel_items(
-                    &PathBuf::from("__interactive__"),
-                    &src,
-                    &mut vfs,
-                    &mut id_gen,
-                );
+                let path = Rc::new(PathBuf::from("__interactive__"));
+                let vfs_path = vfs.insert(path.clone(), src.to_owned());
+
+                let (items, errors) = parse_toplevel_items(&vfs_path, &src, &mut id_gen);
                 for error in errors {
                     let msg = match error {
                         ParseError::Invalid { message, .. } => message,

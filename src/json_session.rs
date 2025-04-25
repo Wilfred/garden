@@ -1,5 +1,6 @@
 use std::io::{BufRead, Read};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Arc;
@@ -244,7 +245,9 @@ fn handle_eval_up_to_request(
     let path = path
         .cloned()
         .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__"));
-    let (items, mut errors) = parse_toplevel_items(&path, src, &mut env.vfs, &mut env.id_gen);
+
+    let vfs_path = env.vfs.insert(Rc::new(path.clone()), src.to_owned());
+    let (items, mut errors) = parse_toplevel_items(&vfs_path, src, &mut env.id_gen);
 
     if let Some(e) = errors.pop() {
         match e {

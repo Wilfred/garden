@@ -29,9 +29,9 @@ fn sandboxed_tests_summary(
     interrupted: Arc<AtomicBool>,
 ) -> SandboxedTestsSummary {
     let mut id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
+    let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
-    let (items, errors) = parse_toplevel_items(path, src, &mut vfs, &mut id_gen);
+    let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
     if !errors.is_empty() {
         return SandboxedTestsSummary {
             description: "Parse error".to_owned(),

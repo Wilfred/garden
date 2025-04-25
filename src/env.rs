@@ -174,24 +174,28 @@ impl Env {
                 text: "exists".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "exists", &mut id_gen),
+                name_sym: Symbol::new(
+                    Position::todo_vfs(&builtins_vfs_path),
+                    "exists",
+                    &mut id_gen,
+                ),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
             },
         );
@@ -200,24 +204,24 @@ impl Env {
                 text: "read".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "read", &mut id_gen),
+                name_sym: Symbol::new(Position::todo_vfs(&builtins_vfs_path), "read", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
             },
         );
@@ -235,25 +239,25 @@ impl Env {
                 text: "index_of".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
                 name_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "index_of",
                     &mut id_gen,
                 ),
@@ -265,24 +269,24 @@ impl Env {
                 text: "len".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "len", &mut id_gen),
+                name_sym: Symbol::new(Position::todo_vfs(&builtins_vfs_path), "len", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
             },
         );
@@ -291,24 +295,24 @@ impl Env {
                 text: "lines".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "lines", &mut id_gen),
+                name_sym: Symbol::new(Position::todo_vfs(&builtins_vfs_path), "lines", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLines, None),
             },
         );
@@ -317,25 +321,25 @@ impl Env {
                 text: "substring".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "String".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
                 name_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "substring",
                     &mut id_gen,
                 ),
@@ -356,24 +360,28 @@ impl Env {
                 text: "append".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "append", &mut id_gen),
+                name_sym: Symbol::new(
+                    Position::todo_vfs(&builtins_vfs_path),
+                    "append",
+                    &mut id_gen,
+                ),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None),
             },
         );
@@ -382,25 +390,25 @@ impl Env {
                 text: "contains".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
                 name_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "contains",
                     &mut id_gen,
                 ),
@@ -412,24 +420,24 @@ impl Env {
                 text: "len".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "len", &mut id_gen),
+                name_sym: Symbol::new(Position::todo_vfs(&builtins_vfs_path), "len", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None),
             },
         );
@@ -438,24 +446,24 @@ impl Env {
                 text: "get".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(builtins_path.clone()),
+                pos: Position::todo_vfs(&builtins_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(builtins_path.clone()),
+                        position: Position::todo_vfs(&builtins_vfs_path),
                         name: TypeName {
                             text: "List".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(builtins_path.clone()),
+                    position: Position::todo_vfs(&builtins_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(builtins_path.clone()),
+                    Position::todo_vfs(&builtins_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(builtins_path.clone()), "get", &mut id_gen),
+                name_sym: Symbol::new(Position::todo_vfs(&builtins_vfs_path), "get", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None),
             },
         );

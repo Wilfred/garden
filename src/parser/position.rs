@@ -65,6 +65,19 @@ impl Position {
         }
     }
 
+    pub(crate) fn todo_vfs(vfs_path: &VfsPathBuf) -> Self {
+        Self {
+            start_offset: 0,
+            end_offset: 0,
+            line_number: 0,
+            column: 0,
+            end_column: 0,
+            end_line_number: 0,
+            path: vfs_path.path.clone(),
+            vfs_path: vfs_path.to_owned(),
+        }
+    }
+
     /// Return the merged position of `first` and `second`.
     pub(crate) fn merge(first: &Self, second: &Self) -> Self {
         Self {

@@ -4,8 +4,8 @@ use std::path::Path;
 
 use crate::checks::check_toplevel_items_in_env;
 use crate::load_toplevel_items;
-use crate::parser::ast::Vfs;
 use crate::parser::diagnostics::MessagePart::*;
+use crate::parser::vfs::Vfs;
 use crate::parser::{
     ast::IdGenerator, diagnostics::ErrorMessage, parse_toplevel_items, position::Position,
     ParseError,

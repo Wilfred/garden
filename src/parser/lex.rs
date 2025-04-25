@@ -5,10 +5,11 @@ use lazy_static::lazy_static;
 use line_numbers::LinePositions;
 use regex::Regex;
 
-use crate::parser::ast::VfsPathBuf;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
 use crate::{msgcode, msgtext, ParseError};
+
+use super::vfs::VfsPathBuf;
 
 lazy_static! {
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
@@ -309,7 +310,7 @@ pub(crate) fn lex<'a>(vfs_path: &VfsPathBuf, s: &'a str) -> (TokenStream<'a>, Ve
 mod tests {
     use std::path::PathBuf;
 
-    use crate::parser::ast::VfsId;
+    use crate::parser::vfs::VfsId;
 
     use super::*;
 

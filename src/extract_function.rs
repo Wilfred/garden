@@ -3,8 +3,9 @@ use std::path::Path;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::parser::{
-    ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId, Vfs},
+    ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId},
     parse_toplevel_items,
+    vfs::Vfs,
     visitor::Visitor,
 };
 use crate::{

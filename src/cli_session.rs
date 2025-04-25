@@ -12,7 +12,8 @@ use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
 use crate::eval::{eval, load_toplevel_items, ExpressionState, Session, StdoutMode};
 use crate::eval::{push_test_stackframe, EvalError};
-use crate::parser::ast::{IdGenerator, ToplevelItem, Vfs};
+use crate::parser::ast::{IdGenerator, ToplevelItem};
+use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::prompt::prompt_symbol;
 

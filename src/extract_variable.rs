@@ -1,8 +1,9 @@
 use std::{path::Path, rc::Rc};
 
 use crate::parser::{
-    ast::{AstId, Expression, Expression_, IdGenerator, Vfs},
+    ast::{AstId, Expression, Expression_, IdGenerator},
     parse_toplevel_items,
+    vfs::Vfs,
 };
 use crate::{
     env::Env,

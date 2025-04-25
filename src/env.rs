@@ -10,10 +10,11 @@ use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
     BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, Symbol, SymbolName,
-    SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs,
+    SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
+use crate::parser::vfs::Vfs;
 use crate::values::{BuiltinFunctionKind, Value, Value_};
 use crate::{
     eval::{load_toplevel_items, Bindings},

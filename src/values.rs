@@ -545,7 +545,7 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::ast::{IdGenerator, Vfs};
+    use crate::{parser::ast::IdGenerator, Vfs};
 
     use super::*;
 

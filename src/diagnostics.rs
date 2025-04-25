@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::env::StackFrame;
 use crate::eval::EnclosingSymbol;
-use crate::parser::ast::Vfs;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::position::Position;
+use crate::parser::vfs::Vfs;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub(crate) enum Level {

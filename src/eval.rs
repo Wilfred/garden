@@ -24,12 +24,13 @@ use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo,
     ExpressionWithComma, FunInfo, IdGenerator, InternedSymbolId, LetDestination, MethodInfo,
     MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo, Symbol,
-    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Vfs, VfsPathBuf,
+    SymbolWithHint, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
 };
 use crate::parser::ast::{Expression, Expression_, SymbolName, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
+use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;

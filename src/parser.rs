@@ -2,6 +2,7 @@ pub(crate) mod ast;
 pub(crate) mod diagnostics;
 pub(crate) mod lex;
 pub(crate) mod position;
+pub(crate) mod vfs;
 pub(crate) mod visitor;
 
 use std::collections::HashSet;
@@ -21,6 +22,8 @@ use lex::Token;
 use lex::TokenStream;
 use lex::INTEGER_RE;
 use lex::SYMBOL_RE;
+use vfs::Vfs;
+use vfs::VfsPathBuf;
 
 use crate::msgcode;
 use crate::msgtext;

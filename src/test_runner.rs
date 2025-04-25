@@ -10,8 +10,9 @@ use rustc_hash::FxHashMap;
 use serde::Serialize;
 
 use crate::parser::{
-    ast::{IdGenerator, ToplevelItem, Vfs},
+    ast::{IdGenerator, ToplevelItem},
     parse_toplevel_items,
+    vfs::Vfs,
 };
 use crate::{eval::eval_tests, parse_toplevel_items_or_die, EvalError};
 use crate::{load_toplevel_items, Env, Session, StdoutMode};

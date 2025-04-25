@@ -1,9 +1,10 @@
 use std::path::Path;
 
 use crate::parser::{
-    ast::{AstId, IdGenerator, Symbol, SyntaxId, Vfs},
+    ast::{AstId, IdGenerator, Symbol, SyntaxId},
     parse_toplevel_items,
     position::Position,
+    vfs::Vfs,
     visitor::Visitor,
 };
 use rustc_hash::FxHashMap;

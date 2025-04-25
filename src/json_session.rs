@@ -18,8 +18,9 @@ use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
     push_test_stackframe, EvalUpToErr, ExpressionState, StdoutMode,
 };
-use crate::parser::ast::{IdGenerator, Vfs};
+use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
+use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 use crate::{
     commands::{print_available_commands, run_command, Command, CommandParseError, EvalAction},

@@ -11,9 +11,8 @@ use strum_macros::EnumIter;
 use crate::env::Env;
 use crate::eval::eval_exprs;
 use crate::garden_type::Type;
-use crate::parser::ast::{
-    self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName, Vfs, VfsPathBuf,
-};
+use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
+use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};

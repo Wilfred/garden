@@ -4,8 +4,9 @@ use rustc_hash::FxHashMap;
 use serde::Serialize;
 
 use crate::parser::{
-    ast::{AstId, Expression_, IdGenerator, Vfs},
+    ast::{AstId, Expression_, IdGenerator},
     parse_toplevel_items,
+    vfs::Vfs,
 };
 use crate::{
     checks::type_checker::check_types,

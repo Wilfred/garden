@@ -1,9 +1,6 @@
 use std::path::Path;
 
-use crate::parser::{
-    ast::{IdGenerator, Vfs},
-    parse_toplevel_items,
-};
+use crate::parser::{ast::IdGenerator, parse_toplevel_items, vfs::Vfs};
 use crate::{
     checks::type_checker::check_types, env::Env, eval::load_toplevel_items, pos_to_id::find_item_at,
 };

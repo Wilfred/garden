@@ -12,11 +12,11 @@ use crate::parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
     MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
     TestInfo, ToplevelExpression, ToplevelItem, ToplevelItemId, TypeHint, TypeName, VariantInfo,
-    VfsId, VfsPathBuf,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::position::Position;
+use crate::parser::vfs::{VfsId, VfsPathBuf};
 use crate::types::TypeDef;
 use crate::values::{Value, Value_};
 use crate::{msgcode, msgtext};

@@ -66,12 +66,13 @@ use eval::{eval_up_to, EvalUpToErr, StdoutMode};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
+use parser::vfs::Vfs;
 use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
 use crate::env::Env;
 use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session};
-use crate::parser::ast::{IdGenerator, ToplevelItem, Vfs};
+use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::{parse_toplevel_items, ParseError};

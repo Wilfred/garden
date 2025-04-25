@@ -30,7 +30,7 @@ use crate::msgtext;
 
 #[derive(Debug)]
 #[allow(dead_code)] // additional isn't used yet.
-pub enum ParseError {
+pub(crate) enum ParseError {
     Invalid {
         position: Position,
         message: ErrorMessage,
@@ -43,14 +43,14 @@ pub enum ParseError {
 }
 
 impl ParseError {
-    pub fn position(&self) -> &Position {
+    pub(crate) fn position(&self) -> &Position {
         match self {
             ParseError::Invalid { position, .. } => position,
             ParseError::Incomplete { position, .. } => position,
         }
     }
 
-    pub fn message(&self) -> &ErrorMessage {
+    pub(crate) fn message(&self) -> &ErrorMessage {
         match self {
             ParseError::Invalid { message, .. } => message,
             ParseError::Incomplete { message, .. } => message,
@@ -2054,7 +2054,7 @@ const RESERVED_WORDS: &[&str] = &[
     "return", "test", "match", "break", "continue", "for", "in", "assert", "as",
 ];
 
-pub fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
+pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
         text: "__placeholder".to_owned(),
     };
@@ -2343,7 +2343,7 @@ fn parse_toplevel_item_from_tokens(
     Some(parse_toplevel_expr(tokens, id_gen, diagnostics))
 }
 
-pub fn parse_inline_expr_from_str(
+pub(crate) fn parse_inline_expr_from_str(
     vfs_path: &VfsPathBuf,
     src: &str,
     id_gen: &mut IdGenerator,
@@ -2359,7 +2359,7 @@ pub fn parse_inline_expr_from_str(
     (expr, diagnostics)
 }
 
-pub fn parse_toplevel_items(
+pub(crate) fn parse_toplevel_items(
     path: &Path,
     src: &str,
     vfs: &mut Vfs,
@@ -2384,7 +2384,7 @@ pub fn parse_toplevel_items(
 
 /// Parse all the toplevel items in `src` between `offset` and
 /// `end_offset`.
-pub fn parse_toplevel_items_from_span(
+pub(crate) fn parse_toplevel_items_from_span(
     path: &Path,
     src: &str,
     vfs: &mut Vfs,

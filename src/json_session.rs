@@ -144,14 +144,9 @@ fn handle_load_request(
     end_offset: usize,
     env: &mut Env,
 ) -> Response {
-    let (items, errors) = parse_toplevel_items_from_span(
-        path,
-        input,
-        &mut env.vfs,
-        &mut env.id_gen,
-        offset,
-        end_offset,
-    );
+    let vfs_path = env.vfs.insert(Rc::new(path.to_owned()), input.to_owned());
+    let (items, errors) =
+        parse_toplevel_items_from_span(&vfs_path, input, &mut env.id_gen, offset, end_offset);
 
     if !errors.is_empty() {
         return as_error_response(errors, &env.vfs);
@@ -597,10 +592,10 @@ fn handle_run_eval_request(
     session: &mut Session,
     id: Option<RequestId>,
 ) -> Response {
+    let vfs_path = env.vfs.insert(Rc::new(path.to_owned()), input.to_owned());
     let (items, errors) = parse_toplevel_items_from_span(
-        path,
+        &vfs_path,
         input,
-        &mut env.vfs,
         &mut env.id_gen,
         offset.unwrap_or(0),
         end_offset.unwrap_or(input.len()),

@@ -6,7 +6,6 @@ pub(crate) mod vfs;
 pub(crate) mod visitor;
 
 use std::collections::HashSet;
-use std::path::Path;
 use std::rc::Rc;
 
 use ast::{FieldInfo, StructInfo};
@@ -16,7 +15,7 @@ use ast::*;
 use diagnostics::ErrorMessage;
 use diagnostics::MessagePart::*;
 use lex::{lex, lex_between, Token, TokenStream, INTEGER_RE, SYMBOL_RE};
-use vfs::{Vfs, VfsPathBuf};
+use vfs::VfsPathBuf;
 
 use crate::{msgcode, msgtext};
 
@@ -2373,18 +2372,15 @@ pub(crate) fn parse_toplevel_items(
 /// Parse all the toplevel items in `src` between `offset` and
 /// `end_offset`.
 pub(crate) fn parse_toplevel_items_from_span(
-    path: &Path,
+    vfs_path: &VfsPathBuf,
     src: &str,
-    vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
     offset: usize,
     end_offset: usize,
 ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
-    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
-
     let mut diagnostics = vec![];
 
-    let (mut tokens, lex_errors) = lex_between(&vfs_path, src, offset, end_offset);
+    let (mut tokens, lex_errors) = lex_between(vfs_path, src, offset, end_offset);
     for error in lex_errors {
         diagnostics.push(error);
     }
@@ -2396,6 +2392,8 @@ pub(crate) fn parse_toplevel_items_from_span(
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
+
+    use crate::Vfs;
 
     use super::*;
 

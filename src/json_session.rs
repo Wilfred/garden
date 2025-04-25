@@ -571,6 +571,9 @@ fn handle_run_request(
                     // clobber values in the VFS, grab an ID from the
                     // IdGenerator.
                     //
+                    // This enables us to look up any previous JSON
+                    // input in the VFS.
+                    //
                     // TODO: VFS should allow multiple items with the
                     // same name, and have a generation number.
                     let f = format!("__json_session_unnamed_{}__", env.id_gen.next().0);

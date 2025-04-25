@@ -5393,11 +5393,20 @@ mod tests {
     use std::path::PathBuf;
 
     use crate::parser::ast::IdGenerator;
-    use crate::parser::parse_toplevel_items;
+    use crate::ParseError;
 
     fn load_toplevel_items(items: &[ToplevelItem], env: &mut Env) {
         let ns = env.current_namespace();
         super::load_toplevel_items(items, env, ns);
+    }
+
+    fn parse_toplevel_items(
+        src: &str,
+        vfs: &mut Vfs,
+        id_gen: &mut IdGenerator,
+    ) -> (Vec<ToplevelItem>, Vec<ParseError>) {
+        let path = PathBuf::from("__test.gdn");
+        super::parse_toplevel_items(&path, src, vfs, id_gen)
     }
 
     fn parse_items_from_str(
@@ -5405,14 +5414,14 @@ mod tests {
         vfs: &mut Vfs,
         id_gen: &mut IdGenerator,
     ) -> Vec<ToplevelItem> {
-        let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, vfs, id_gen);
+        let (items, errors) = parse_toplevel_items(src, vfs, id_gen);
         assert!(errors.is_empty());
 
         items
     }
 
     fn parse_exprs_from_str(src: &str, vfs: &mut Vfs, id_gen: &mut IdGenerator) -> Vec<Expression> {
-        let (items, errors) = parse_toplevel_items(&PathBuf::from("__test.gdn"), src, vfs, id_gen);
+        let (items, errors) = parse_toplevel_items(src, vfs, id_gen);
         assert!(errors.is_empty());
 
         let mut exprs = vec![];
@@ -5954,8 +5963,7 @@ mod tests {
         let vfs = Vfs::default();
         let mut env = Env::new(id_gen, vfs);
 
-        let (defs, errors) =
-            parse_toplevel_items(&PathBuf::new(), "test f {}", &mut env.vfs, &mut env.id_gen);
+        let (defs, errors) = parse_toplevel_items("test f {}", &mut env.vfs, &mut env.id_gen);
         assert!(errors.is_empty());
         let eval_result = eval_toplevel_items(&PathBuf::from("foo.gdn"), &defs, &mut env, &session);
         assert!(eval_result.is_ok());

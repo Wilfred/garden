@@ -154,7 +154,7 @@ fn format_pos_in_fun(
     let offset = position.start_offset;
     let end_offset = position.end_offset;
 
-    let src = match vfs.file_src(&position.path) {
+    let src = match vfs.file_src(&position.vfs_path) {
         Some(src) => src,
         None => "",
     };

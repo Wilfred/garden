@@ -566,19 +566,7 @@ fn handle_run_request(
         Err(CommandParseError::NotCommandSyntax) => {
             let path = match path {
                 Some(p) => p,
-                None => {
-                    // Kludge: To ensure a unique name so we don't
-                    // clobber values in the VFS, grab an ID from the
-                    // IdGenerator.
-                    //
-                    // This enables us to look up any previous JSON
-                    // input in the VFS.
-                    //
-                    // TODO: VFS should allow multiple items with the
-                    // same name, and have a generation number.
-                    let f = format!("__json_session_unnamed_{}__", env.id_gen.next().0);
-                    PathBuf::from(f)
-                }
+                None => PathBuf::from("__json_session_unnamed__"),
             };
 
             handle_run_eval_request(&path, &input, offset, end_offset, env, session, id)

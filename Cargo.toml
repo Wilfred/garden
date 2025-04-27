@@ -33,6 +33,7 @@ strsim = "0.10.0"
 strum = "0.24.1"
 strum_macros = "0.24.1"
 rustc-hash = "2.1.0"
+normalize-path = "0.2.1"
 
 [[bin]]
 name = "garden"

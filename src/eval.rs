@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
+use normalize_path::NormalizePath as _;
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -397,7 +398,7 @@ fn load_toplevel_items_(
                     continue;
                 };
 
-                let path = enclosing_dir.join(&import_info.path);
+                let path = enclosing_dir.join(&import_info.path).normalize();
                 let Ok(abs_path) = std::path::absolute(&path) else {
                     let current_dir_descr = match std::env::current_dir() {
                         Ok(d) => format!(" (currently {})", d.display()),

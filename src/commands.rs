@@ -432,7 +432,11 @@ pub(crate) fn run_command<T: Write>(
 
                 let ns = ns.borrow();
                 write!(buf, "\n{}", path.display())?;
-                for sym in ns.values.keys() {
+
+                let mut syms = ns.values.keys().collect::<Vec<_>>();
+                syms.sort_by_key(|s| s.text.to_ascii_lowercase());
+
+                for sym in syms {
                     write!(buf, "\n  {}", sym.text)?;
                 }
             }
@@ -440,7 +444,11 @@ pub(crate) fn run_command<T: Write>(
             writeln!(buf, "\n\nPrelude namespace:\n")?;
             let ns = env.prelude_namespace.borrow();
             write!(buf, "{}", ns.path.display())?;
-            for sym in ns.values.keys() {
+
+            let mut syms = ns.values.keys().collect::<Vec<_>>();
+            syms.sort_by_key(|s| s.text.to_ascii_lowercase());
+
+            for sym in syms {
                 write!(buf, "\n  {}", sym.text)?;
             }
         }

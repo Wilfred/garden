@@ -653,7 +653,7 @@ pub(crate) struct StructInfo {
 pub(crate) struct ImportInfo {
     pub(crate) pos: Position,
     /// The actual path being imported. For example, if the user
-    /// wrote `import "./foo.gdn"`, then foo.gdn is the path here.
+    /// wrote `import "./foo.gdn"`, then ./foo.gdn is the path here.
     pub(crate) path: PathBuf,
     /// The position of the string literal within
     /// `import "./foo.gdn"`.

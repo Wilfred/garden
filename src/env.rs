@@ -68,6 +68,10 @@ pub(crate) struct Env {
     pub(crate) prelude_namespace: Rc<RefCell<NamespaceInfo>>,
     pub(crate) namespaces: FxHashMap<PathBuf, Rc<RefCell<NamespaceInfo>>>,
 
+    /// File paths relative to this directory will be shown as
+    /// relative paths in e.g. errors.
+    pub(crate) project_root: PathBuf,
+
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
     pub(crate) prev_call_args: FxHashMap<SymbolName, Vec<Value>>,
@@ -504,6 +508,7 @@ impl Env {
             types,
             prelude_namespace: temp_prelude,
             namespaces,
+            project_root: std::env::current_dir().unwrap_or(PathBuf::from("/")),
             prev_call_args: FxHashMap::default(),
             prev_method_call_args: FxHashMap::default(),
             stack: Stack::new(user_namespace.clone()),

@@ -5339,6 +5339,7 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     items: &[ToplevelItem],
     env: &mut Env,
     session: &Session,
+    namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> Result<Option<Value>, EvalError> {
     let mut exprs = vec![];
     for item in items {
@@ -5358,6 +5359,14 @@ pub(crate) fn eval_toplevel_exprs_then_stop(
     let Some(last_expr) = exprs.last() else {
         return Ok(None);
     };
+
+    // Switch the namespace of the toplevel stack frame to the
+    // namespace given. This ensures that we can access whatever
+    // toplevel items we've just loaded in that namespace.
+    if env.stack.0.len() == 1 {
+        let top_stack = env.current_frame_mut();
+        top_stack.namespace = namespace;
+    }
 
     let old_stop_at_expr_id = env.stop_at_expr_id;
     env.stop_at_expr_id = Some(last_expr.id);

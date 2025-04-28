@@ -60,7 +60,6 @@ impl Stack {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Env {
-    pub(crate) file_scope: FxHashMap<SymbolName, Value>,
     pub(crate) methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
     pub(crate) types: FxHashMap<TypeName, TypeDef>,
@@ -128,18 +127,6 @@ impl Env {
 
         namespaces.insert(PathBuf::from("__user"), user_namespace.clone());
 
-        let mut file_scope = FxHashMap::default();
-
-        // Insert all the built-in functions.
-        for fun_kind in BuiltinFunctionKind::iter() {
-            file_scope.insert(
-                SymbolName {
-                    text: format!("{}", fun_kind),
-                },
-                Value::new(Value_::BuiltinFunction(fun_kind, None)),
-            );
-        }
-
         let mut fs_values = FxHashMap::default();
         fs_values.insert(
             SymbolName {
@@ -156,12 +143,6 @@ impl Env {
             values: fs_values,
             types: FxHashMap::default(),
         }));
-        file_scope.insert(
-            SymbolName {
-                text: "fs".to_owned(),
-            },
-            Value::new(Value_::Namespace(fs_namespace.clone())),
-        );
 
         namespaces.insert(PathBuf::from("__fs.gdn"), fs_namespace);
 
@@ -502,7 +483,6 @@ impl Env {
         }));
 
         let mut env = Self {
-            file_scope,
             methods,
             tests: FxHashMap::default(),
             types,
@@ -558,10 +538,6 @@ impl Env {
             EnclosingSymbol::Closure => "closure".to_owned(),
             EnclosingSymbol::Toplevel => "TOP".to_owned(),
         }
-    }
-
-    pub(crate) fn add_function(&mut self, name: &SymbolName, value: Value) {
-        self.file_scope.insert(name.clone(), value.clone());
     }
 
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {

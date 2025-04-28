@@ -307,14 +307,6 @@ fn load_toplevel_items_(
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, namespace.clone(), &mut diagnostics);
                 } else {
-                    env.add_function(
-                        &name_symbol.name,
-                        Value::new(Value_::Fun {
-                            name_sym: name_symbol.clone(),
-                            fun_info: fun_info.clone(),
-                        }),
-                    );
-
                     namespace.borrow_mut().values.insert(
                         name_symbol.name.clone(),
                         Value::new(Value_::Fun {
@@ -517,8 +509,6 @@ fn load_toplevel_items_(
             // TODO: warn if we're clobbering a name from a
             // different enum (i.e. not just redefining the
             // current enum).
-            env.add_function(&variant_sym.name_sym.name, enum_value.clone());
-
             namespace
                 .borrow_mut()
                 .values

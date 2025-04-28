@@ -152,7 +152,7 @@ impl Env {
         );
 
         let fs_namespace = Rc::new(RefCell::new(NamespaceInfo {
-            path: Rc::new(PathBuf::from("__fs")),
+            path: Rc::new(PathBuf::from("__fs.gdn")),
             values: fs_values,
             types: FxHashMap::default(),
         }));
@@ -163,7 +163,7 @@ impl Env {
             Value::new(Value_::Namespace(fs_namespace.clone())),
         );
 
-        namespaces.insert(PathBuf::from("__fs"), fs_namespace);
+        namespaces.insert(PathBuf::from("__fs.gdn"), fs_namespace);
 
         let mut methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>> =
             FxHashMap::default();
@@ -647,6 +647,15 @@ fn fresh_prelude(
             Value::new(Value_::BuiltinFunction(fun_kind, None)),
         );
     }
+
+    // Insert built-in namespaces.
+    let fs_namespace = env.namespaces.get(&PathBuf::from("__fs.gdn")).unwrap();
+    values.insert(
+        SymbolName {
+            text: "fs".to_owned(),
+        },
+        Value::new(Value_::Namespace(fs_namespace.clone())),
+    );
 
     let prelude_path = Rc::new(PathBuf::from("prelude.gdn"));
     let prelude_src = include_str!("prelude.gdn");

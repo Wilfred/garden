@@ -501,6 +501,7 @@ fn dump_ast(src: &str, path: &Path) {
                     &format_diagnostic(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
+                        None,
                         Level::Error,
                         &vfs,
                     )
@@ -532,6 +533,8 @@ fn parse_toplevel_items_or_die(
 ) -> Vec<ToplevelItem> {
     let (items, errors) = parse_toplevel_items(vfs_path, src, id_gen);
 
+    let project_root = std::env::current_dir().ok();
+
     if !errors.is_empty() {
         for error in errors.into_iter() {
             match error {
@@ -544,6 +547,7 @@ fn parse_toplevel_items_or_die(
                     &format_diagnostic(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
+                        project_root.as_ref(),
                         Level::Error,
                         vfs,
                     )

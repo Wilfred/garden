@@ -1,6 +1,7 @@
 //! Error and warning data types, along with logic to display them.
 
 use std::io::IsTerminal as _;
+use std::path::PathBuf;
 
 use itertools::Itertools;
 use line_numbers::LinePositions;
@@ -53,6 +54,7 @@ pub(crate) fn format_error_with_stack(
         position,
         vfs,
         Some(&top_stack.enclosing_name),
+        None,
         true,
         true,
     ));
@@ -65,6 +67,7 @@ pub(crate) fn format_error_with_stack(
                 pos,
                 vfs,
                 Some(&caller_stack_frame.enclosing_name),
+                None,
                 false,
                 true,
             ));
@@ -77,6 +80,7 @@ pub(crate) fn format_error_with_stack(
 pub(crate) fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,
+    project_root: Option<&PathBuf>,
     level: Level,
     vfs: &Vfs,
 ) -> String {
@@ -112,6 +116,7 @@ pub(crate) fn format_diagnostic(
         position,
         vfs,
         None,
+        project_root,
         true,
         matches!(level, Level::Error),
     ));
@@ -122,6 +127,7 @@ fn format_pos_in_fun(
     position: &Position,
     vfs: &Vfs,
     enclosing_symbol: Option<&EnclosingSymbol>,
+    project_root: Option<&PathBuf>,
     underline: bool,
     is_error: bool,
 ) -> String {
@@ -129,11 +135,14 @@ fn format_pos_in_fun(
 
     let mut res = String::new();
 
-    let formatted_pos = format!(
-        "--> {}:{}",
-        position.path.display(),
-        position.line_number + 1,
-    );
+    let mut pos_path = position.path.to_path_buf();
+    if let Some(root) = project_root {
+        if let Ok(rel_path) = pos_path.strip_prefix(root) {
+            pos_path = rel_path.to_path_buf();
+        }
+    }
+
+    let formatted_pos = format!("--> {}:{}", pos_path.display(), position.line_number + 1,);
 
     if use_color {
         res.push_str(&formatted_pos.dimmed().to_string());

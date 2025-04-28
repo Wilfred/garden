@@ -131,6 +131,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             format_diagnostic(
                 &ErrorMessage(vec![Text(diagnostic.message.clone())]),
                 &diagnostic.position,
+                Some(&env.project_root),
                 level,
                 &env.vfs,
             )

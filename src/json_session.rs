@@ -202,7 +202,13 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs) -> Response {
                 message,
                 additional: _,
             } => {
-                let stack = Some(format_diagnostic(&message, &position, Level::Error, vfs));
+                let stack = Some(format_diagnostic(
+                    &message,
+                    &position,
+                    None,
+                    Level::Error,
+                    vfs,
+                ));
 
                 ResponseError {
                     position: Some(position),
@@ -254,6 +260,7 @@ fn handle_eval_up_to_request(
                 let stack = Some(format_diagnostic(
                     &message,
                     &position,
+                    None,
                     Level::Error,
                     &env.vfs,
                 ));

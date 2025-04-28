@@ -493,9 +493,12 @@ pub(crate) fn run_command<T: Write>(
         Command::Search(text) => {
             let text = text.clone().unwrap_or_default();
 
+            let ns = env.current_namespace();
+            let ns = ns.borrow();
+
             // TODO: search doc comments too.
             let mut matching_defs = vec![];
-            for (global_def, _) in env.file_scope.iter() {
+            for (global_def, _) in ns.values.iter() {
                 if global_def.text.contains(&text) {
                     matching_defs.push(global_def);
                 }
@@ -530,8 +533,11 @@ pub(crate) fn run_command<T: Write>(
             write!(buf, "{}", format_duration(uptime))?;
         }
         Command::Functions => {
+            let ns = env.current_namespace();
+            let ns = ns.borrow();
+
             let mut names = vec![];
-            for (name, value) in env.file_scope.iter() {
+            for (name, value) in ns.values.iter() {
                 let is_fun = match value.as_ref() {
                     Value_::Fun { .. } | Value_::Closure(_, _) | Value_::BuiltinFunction(_, _) => {
                         true

@@ -590,17 +590,15 @@ pub(crate) fn run_command<T: Write>(
                     text: name.to_owned(),
                 };
 
-                match env.file_scope.get(&sym) {
-                    Some(_) => {
-                        env.file_scope.remove(&sym);
-                    }
-                    None => {
-                        write!(
-                            buf,
-                            "No function or enum value named `{}` is defined.",
-                            name
-                        )?;
-                    }
+                let ns = env.current_namespace();
+                let mut ns = ns.borrow_mut();
+
+                if ns.values.remove(&sym).is_none() {
+                    write!(
+                        buf,
+                        "No function or enum value named `{}` is defined.",
+                        name
+                    )?;
                 }
             } else {
                 write!(buf, ":forget requires a name, e.g. `:forget function_name`")?;
@@ -741,6 +739,8 @@ pub(crate) fn run_command<T: Write>(
 }
 
 fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
+    let ns = env.current_namespace();
+
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName {
             text: type_name.to_owned(),
@@ -771,7 +771,7 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
                 Ok(env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned()))
             }
         }
-    } else if let Some(value) = env.file_scope.get(&SymbolName {
+    } else if let Some(value) = ns.borrow().values.get(&SymbolName {
         text: name.to_owned(),
     }) {
         match value.as_ref() {
@@ -789,6 +789,8 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
 /// Get the name and doc comment of this item, if any is defined in
 /// `Env`. This may be a function name, method name, or type name.
 fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> {
+    let ns = env.current_namespace();
+
     if let Some((type_name, method_name)) = name.split_once("::") {
         if let Some(type_methods) = env.methods.get(&TypeName {
             text: type_name.to_owned(),
@@ -811,7 +813,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         text: name.to_owned(),
     }) {
         Ok((format!("Type `{name}`"), Some(describe_type(type_))))
-    } else if let Some(value) = env.file_scope.get(&SymbolName {
+    } else if let Some(value) = ns.borrow().values.get(&SymbolName {
         text: name.to_owned(),
     }) {
         // TODO: Ideally we'd print both values and type if both are defined.

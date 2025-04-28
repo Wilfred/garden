@@ -213,7 +213,9 @@ pub(crate) fn most_similar(available: &[&SymbolName], name: &SymbolName) -> Opti
 }
 
 fn most_similar_var(name: &SymbolName, env: &Env) -> Option<SymbolName> {
-    let file_level_names: Vec<_> = env.file_scope.keys().collect();
+    let ns = env.current_namespace();
+    let ns = ns.borrow();
+    let file_level_names: Vec<_> = ns.values.keys().collect();
 
     // TODO: suggest local variables too.
     most_similar(&file_level_names, name)

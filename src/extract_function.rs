@@ -1,4 +1,6 @@
+use std::cell::RefCell;
 use std::path::Path;
+use std::rc::Rc;
 
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -6,6 +8,7 @@ use crate::checks::type_checker::check_types;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::garden_type::Type;
+use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{self, AstId, Expression, IdGenerator, SymbolName, SyntaxId};
 use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
@@ -27,7 +30,7 @@ pub(crate) fn extract_function(
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_namespace(path);
 
-    load_toplevel_items(&items, &mut env, ns);
+    load_toplevel_items(&items, &mut env, ns.clone());
     let summary = check_types(&vfs_path, &items, &env);
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
@@ -48,7 +51,7 @@ pub(crate) fn extract_function(
         eprintln!("No expression found for the ID at the selected position.");
         return;
     };
-    let params = locals_outside_expr(&env, &summary.id_to_ty, &expr);
+    let params = locals_outside_expr(ns, &summary.id_to_ty, &expr);
 
     for item in items {
         let item_pos = item.position();
@@ -115,12 +118,12 @@ fn extracted_fun_src(
 }
 
 fn locals_outside_expr(
-    env: &Env,
+    namespace: Rc<RefCell<NamespaceInfo>>,
     id_to_ty: &FxHashMap<SyntaxId, Type>,
     expr: &Expression,
 ) -> Vec<(SymbolName, Option<Type>)> {
     let mut visitor = FreeVarsVisitor {
-        env,
+        namespace,
         id_to_ty: id_to_ty.clone(),
         local_bindings: vec![FxHashSet::default()],
         free_vars: vec![],
@@ -131,8 +134,8 @@ fn locals_outside_expr(
     visitor.free_vars
 }
 
-struct FreeVarsVisitor<'a> {
-    env: &'a Env,
+struct FreeVarsVisitor {
+    namespace: Rc<RefCell<NamespaceInfo>>,
     local_bindings: Vec<FxHashSet<SymbolName>>,
     /// Variables that are bound outside the current expression.
     free_vars: Vec<(SymbolName, Option<Type>)>,
@@ -141,9 +144,9 @@ struct FreeVarsVisitor<'a> {
     id_to_ty: FxHashMap<SyntaxId, Type>,
 }
 
-impl Visitor for FreeVarsVisitor<'_> {
+impl Visitor for FreeVarsVisitor {
     fn visit_expr_variable(&mut self, symbol: &ast::Symbol) {
-        if self.env.file_scope.contains_key(&symbol.name) {
+        if self.namespace.borrow().values.contains_key(&symbol.name) {
             return;
         }
         if self.free_vars_seen.contains(&symbol.name) {
@@ -221,7 +224,7 @@ impl Visitor for FreeVarsVisitor<'_> {
     }
 }
 
-impl FreeVarsVisitor<'_> {
+impl FreeVarsVisitor {
     fn insert_dest_bindings(&mut self, dest: &ast::LetDestination) {
         let block_bindings = self
             .local_bindings

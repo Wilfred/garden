@@ -1493,7 +1493,7 @@ impl TypeCheckVisitor<'_> {
             return Some(v.clone());
         }
 
-        self.env.file_scope.get(name).cloned()
+        None
     }
 
     /// Get the type of `sym` in the current scope (checking both

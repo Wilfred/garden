@@ -454,7 +454,7 @@ fn load_toplevel_items_(
                     continue;
                 };
 
-                let vfs_path = env.vfs.insert(Rc::new(abs_path), src.clone());
+                let vfs_path = env.vfs.insert(Rc::new(abs_path.clone()), src.clone());
 
                 let (imported_items, parse_errors) =
                     parse_toplevel_items(&vfs_path, &src, &mut env.id_gen);
@@ -469,8 +469,14 @@ fn load_toplevel_items_(
                     continue;
                 }
 
+                // Load into its own namespace.
+                let destination_ns = env.get_namespace(&abs_path);
                 let (import_diagnostics, imported_syms) =
-                    load_toplevel_items_(&imported_items, env, paths_seen, namespace.clone());
+                    load_toplevel_items_(&imported_items, env, paths_seen, destination_ns);
+
+                // Load into the current namespace.
+                load_toplevel_items_(&imported_items, env, paths_seen, namespace.clone());
+
                 diagnostics.extend(import_diagnostics);
                 new_syms.extend(imported_syms);
             }

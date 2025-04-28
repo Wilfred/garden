@@ -440,41 +440,7 @@ impl Env {
             list_methods,
         );
 
-        // Insert all the built-in types.
-        let mut types = FxHashMap::default();
-        // TODO: String literals are duplicated with type_representation.
-        types.insert(
-            TypeName { text: "Int".into() },
-            TypeDef::Builtin(BuiltinType::Int, None),
-        );
-        types.insert(
-            TypeName {
-                text: "String".into(),
-            },
-            TypeDef::Builtin(BuiltinType::String, None),
-        );
-        types.insert(
-            TypeName {
-                text: "List".into(),
-            },
-            TypeDef::Builtin(BuiltinType::List, None),
-        );
-        types.insert(
-            TypeName {
-                text: "Tuple".into(),
-            },
-            TypeDef::Builtin(BuiltinType::Tuple, None),
-        );
-        types.insert(
-            TypeName { text: "Fun".into() },
-            TypeDef::Builtin(BuiltinType::Fun, None),
-        );
-        types.insert(
-            TypeName {
-                text: "Namespace".into(),
-            },
-            TypeDef::Builtin(BuiltinType::Namespace, None),
-        );
+        let types = built_in_types();
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
             path: Rc::new(PathBuf::from("__prelude")),
@@ -592,6 +558,45 @@ impl Env {
     }
 }
 
+fn built_in_types() -> FxHashMap<TypeName, TypeDef> {
+    let mut types = FxHashMap::default();
+    // TODO: String literals are duplicated with type_representation.
+    types.insert(
+        TypeName { text: "Int".into() },
+        TypeDef::Builtin(BuiltinType::Int, None),
+    );
+    types.insert(
+        TypeName {
+            text: "String".into(),
+        },
+        TypeDef::Builtin(BuiltinType::String, None),
+    );
+    types.insert(
+        TypeName {
+            text: "List".into(),
+        },
+        TypeDef::Builtin(BuiltinType::List, None),
+    );
+    types.insert(
+        TypeName {
+            text: "Tuple".into(),
+        },
+        TypeDef::Builtin(BuiltinType::Tuple, None),
+    );
+    types.insert(
+        TypeName { text: "Fun".into() },
+        TypeDef::Builtin(BuiltinType::Fun, None),
+    );
+    types.insert(
+        TypeName {
+            text: "Namespace".into(),
+        },
+        TypeDef::Builtin(BuiltinType::Namespace, None),
+    );
+
+    types
+}
+
 fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceInfo>>) {
     let mut ns = ns.borrow_mut();
 
@@ -640,7 +645,7 @@ fn fresh_prelude(
     let ns_info = NamespaceInfo {
         path: prelude_path,
         values,
-        types: FxHashMap::default(),
+        types: built_in_types(),
     };
 
     let (prelude_items, errors) = parse_toplevel_items(&prelude_vfs_path, prelude_src, id_gen);

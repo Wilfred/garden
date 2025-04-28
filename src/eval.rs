@@ -454,13 +454,7 @@ fn load_toplevel_items_(
                     continue;
                 };
 
-                // TODO: this is wrong. We want to use absolute paths
-                // in the VFS, because relative paths will differ when
-                // imported from different directories.
-                //
-                // Find a way of using relative paths in error
-                // messages, but absolute paths in the VFS.
-                let vfs_path = env.vfs.insert(Rc::new(path), src.clone());
+                let vfs_path = env.vfs.insert(Rc::new(abs_path), src.clone());
 
                 let (imported_items, parse_errors) =
                     parse_toplevel_items(&vfs_path, &src, &mut env.id_gen);

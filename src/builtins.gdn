@@ -345,6 +345,7 @@ external fun built_in_types(): List<String> {
 
 test built_in_types {
   assert(built_in_types().contains("Unit"))
+  assert(built_in_types().contains("String"))
 
   assert(built_in_types().first() == Some("Bool"))
 }

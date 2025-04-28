@@ -361,7 +361,7 @@ fn load_toplevel_items_(
             }
             ToplevelItem::Struct(struct_info) => {
                 if is_builtin_type(struct_info) {
-                    update_builtin_type_info(struct_info, env, &mut diagnostics);
+                    update_builtin_type_info(struct_info, env, &mut diagnostics, namespace.clone());
                 } else {
                     // Add the struct definition to the type environment.
                     env.add_type(
@@ -1172,6 +1172,7 @@ fn update_builtin_type_info(
     struct_info: &StructInfo,
     env: &mut Env,
     diagnostics: &mut Vec<Diagnostic>,
+    namespace: Rc<RefCell<NamespaceInfo>>,
 ) {
     let symbol = &struct_info.name_sym;
 
@@ -1198,6 +1199,11 @@ fn update_builtin_type_info(
         });
         return;
     };
+
+    namespace.borrow_mut().types.insert(
+        symbol.name.clone(),
+        TypeDef::Builtin(*kind, Some(struct_info.clone())),
+    );
 
     env.types.insert(
         symbol.name.clone(),

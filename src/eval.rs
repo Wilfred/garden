@@ -1039,9 +1039,11 @@ pub(crate) fn eval_toplevel_call(
     session: &Session,
     vfs_path: &VfsPathBuf,
 ) -> Result<Value, EvalError> {
-    // TODO: return an Err() rather than kludging a string and letting
+    let ns = env.current_namespace();
+
+    // TODO: return an Err() rather than kludging a runtime string and letting
     // eval_env() return a type error.
-    let recv_value = env.file_scope.get(name).cloned().unwrap_or_else(|| {
+    let recv_value = ns.borrow().values.get(name).cloned().unwrap_or_else(|| {
         Value::new(Value_::String(
             "ERROR: Tried to call a function that isn't defined".to_owned(),
         ))

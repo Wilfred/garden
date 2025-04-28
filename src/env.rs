@@ -502,12 +502,12 @@ impl Env {
             cli_args: vec![],
         };
 
-        env.initial_state = Some(Box::new(env.clone()));
-
         let prelude_namespace = fresh_prelude(&mut env, &builtins_vfs_path, builtins_src);
         insert_prelude(user_namespace.clone(), prelude_namespace.clone());
 
         env.prelude_namespace = prelude_namespace;
+
+        env.initial_state = Some(Box::new(env.clone()));
 
         env
     }

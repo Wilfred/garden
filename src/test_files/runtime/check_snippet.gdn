@@ -1,0 +1,7 @@
+{
+  dbg(check_snippet("True"))
+}
+
+// args: run
+// expected stdout: Ok(Unit)
+

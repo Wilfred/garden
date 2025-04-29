@@ -16,9 +16,9 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_namespace(path);
-    load_toplevel_items(&items, &mut env, ns);
+    load_toplevel_items(&items, &mut env, ns.clone());
 
-    let summary = check_types(&vfs_path, &items, &env);
+    let summary = check_types(&vfs_path, &items, &env, ns);
 
     let hovered_ids = find_item_at(&items, offset, offset);
 

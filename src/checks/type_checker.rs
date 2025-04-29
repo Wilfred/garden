@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -8,6 +9,7 @@ use crate::diagnostics::{Diagnostic, Level};
 use crate::env::Env;
 use crate::eval::most_similar;
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy as _};
+use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
     BinaryOperatorKind, Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination,
     MethodInfo, ParenthesizedArguments, Pattern, StructInfo, Symbol, SymbolName, SyntaxId,
@@ -41,7 +43,12 @@ pub(crate) struct TCSummary {
     pub callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
-pub(crate) fn check_types(path: &VfsPathBuf, items: &[ToplevelItem], env: &Env) -> TCSummary {
+pub(crate) fn check_types(
+    path: &VfsPathBuf,
+    items: &[ToplevelItem],
+    env: &Env,
+    namespace: Rc<RefCell<NamespaceInfo>>,
+) -> TCSummary {
     let mut visitor = TypeCheckVisitor {
         path: path.to_owned(),
         env,

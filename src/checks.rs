@@ -57,7 +57,7 @@ pub(crate) fn check_toplevel_items_in_env(
     diagnostics.extend(check_struct_fields(items, env));
     diagnostics.extend(check_hints(items, env));
 
-    let summary = check_types(vfs_path, items, env);
+    let summary = check_types(vfs_path, items, env, namespace);
     diagnostics.extend(check_unused_defs(items, &summary));
 
     diagnostics.extend(summary.diagnostics);

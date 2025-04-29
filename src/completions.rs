@@ -21,10 +21,10 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
 
     let mut env = Env::new(id_gen, vfs);
     let ns = env.get_namespace(path);
-    load_toplevel_items(&items, &mut env, ns);
+    load_toplevel_items(&items, &mut env, ns.clone());
 
     let ids_at_pos = find_item_at(&items, offset, offset);
-    let summary = check_types(&vfs_path, &items, &env);
+    let summary = check_types(&vfs_path, &items, &env, ns);
 
     for id in ids_at_pos.iter().rev() {
         let AstId::Expr(expr_id) = id else {

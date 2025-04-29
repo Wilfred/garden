@@ -31,7 +31,7 @@ pub(crate) fn extract_function(
     let ns = env.get_namespace(path);
 
     load_toplevel_items(&items, &mut env, ns.clone());
-    let summary = check_types(&vfs_path, &items, &env);
+    let summary = check_types(&vfs_path, &items, &env, ns.clone());
 
     let ids_at_pos = find_item_at(&items, offset, end_offset);
 

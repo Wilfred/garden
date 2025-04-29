@@ -1211,7 +1211,7 @@ fn update_builtin_type_info(
         symbol.name.clone(),
         TypeDefAndMethods {
             def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
-            methods: FxHashMap::default(),
+            methods: current_def.methods.clone(),
         },
     );
 
@@ -1219,7 +1219,7 @@ fn update_builtin_type_info(
         symbol.name.clone(),
         TypeDefAndMethods {
             def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
-            methods: FxHashMap::default(),
+            methods: current_def.methods.clone(),
         },
     );
 }

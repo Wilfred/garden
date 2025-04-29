@@ -713,16 +713,7 @@ pub(crate) fn run_command<T: Write>(
                 } else {
                     match eval_exprs(&[expr], env, session) {
                         Ok(value) => {
-                            let namespace = env.current_namespace();
-                            write!(
-                                buf,
-                                "{}",
-                                Type::from_value(
-                                    &value,
-                                    &namespace.borrow().types,
-                                    &env.stack.type_bindings()
-                                )
-                            )?;
+                            write!(buf, "{}", Type::from_value(&value))?;
                         }
                         Err(e) => {
                             // TODO: Print a proper stack trace.

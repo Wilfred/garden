@@ -228,11 +228,7 @@ impl Type {
         }
     }
 
-    pub(crate) fn from_value(
-        value: &Value,
-        global_tys: &FxHashMap<TypeName, TypeDef>,
-        type_bindings: &TypeVarEnv,
-    ) -> Self {
+    pub(crate) fn from_value(value: &Value) -> Self {
         match value.as_ref() {
             Value_::Integer(_) => Type::int(),
             Value_::Fun { runtime_type, .. } => runtime_type.clone(),

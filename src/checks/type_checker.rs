@@ -85,7 +85,7 @@ impl LocalBindings {
                 let Some(sym_name) = env.id_gen.intern_id_to_name.get(&sym_id) else {
                     continue;
                 };
-                let ty = Type::from_value(&value, &env.types, &stack_top.type_bindings);
+                let ty = Type::from_value(&value);
 
                 block_bindings.insert(
                     sym_name.clone(),
@@ -814,7 +814,7 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::Assign(sym, expr) => {
                 // TODO: also enforce the type of an assignment at runtime.
-                let expected_ty = self.get_var_for_assignment(sym, type_bindings);
+                let expected_ty = self.get_var_for_assignment(sym);
 
                 self.verify_expr(&expected_ty, expr, type_bindings, expected_return_ty);
                 Type::unit()
@@ -822,7 +822,7 @@ impl TypeCheckVisitor<'_> {
             Expression_::AssignUpdate(sym, op, expr) => {
                 // TODO: also enforce the type of an assignment at runtime.
 
-                let sym_ty = self.get_var_for_assignment(sym, type_bindings);
+                let sym_ty = self.get_var_for_assignment(sym);
                 if !is_subtype(&sym_ty, &Type::int()) {
                     self.diagnostics.push(Diagnostic {
                         level: Level::Error,
@@ -1056,7 +1056,7 @@ impl TypeCheckVisitor<'_> {
                             self.save_enum_variant_id(sym, value.clone());
                         }
 
-                        Type::from_value(&value, &self.env.types, type_bindings)
+                        Type::from_value(&value)
                     }
                     None => {
                         let ty = Type::Error("Unbound variable".to_owned());
@@ -1397,9 +1397,7 @@ impl TypeCheckVisitor<'_> {
                                     let values = &ns.values;
 
                                     match values.get(&sym.name) {
-                                        Some(value) => {
-                                            Type::from_value(value, &self.env.types, type_bindings)
-                                        }
+                                        Some(value) => Type::from_value(value),
                                         None => {
                                             // TODO: suggest similar names here.
                                             self.diagnostics.push(Diagnostic {
@@ -1503,7 +1501,7 @@ impl TypeCheckVisitor<'_> {
     ///
     /// If `sym` is unbound, also insert it in the current scope, to
     /// prevent cascading errors.
-    fn get_var_for_assignment(&mut self, sym: &Symbol, type_bindings: &TypeVarEnv) -> Type {
+    fn get_var_for_assignment(&mut self, sym: &Symbol) -> Type {
         if let Some((sym_ty, position)) = self.bindings.get(&sym.name) {
             self.id_to_def_pos.insert(sym.id, position.clone());
             return sym_ty.clone();
@@ -1519,7 +1517,7 @@ impl TypeCheckVisitor<'_> {
                 position: sym.position.clone(),
             });
 
-            return Type::from_value(&value, &self.env.types, type_bindings);
+            return Type::from_value(&value);
         }
 
         // No such variable, user probably forgot `let`.

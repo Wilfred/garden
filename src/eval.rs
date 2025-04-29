@@ -1324,7 +1324,7 @@ fn update_builtin_fun_info(
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
-                Type::from_value(&value, &env.types, &env.stack.type_bindings()),
+                Type::from_value(&value),
             ))]),
             position: symbol.position.clone(),
         });
@@ -1791,7 +1791,7 @@ fn eval_let(
 }
 
 fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &Env) -> ErrorMessage {
-    let actual_ty = Type::from_value(value, &env.types, &env.stack.type_bindings());
+    let actual_ty = Type::from_value(value);
 
     let parts = if actual_ty.is_unit() {
         vec![
@@ -1805,10 +1805,7 @@ fn format_type_error<T: ToString + ?Sized>(expected: &T, value: &Value, env: &En
             msgtext!("Expected "),
             Code(expected.to_string()),
             msgtext!(", but got "),
-            Code(format!(
-                "{}",
-                Type::from_value(value, &env.types, &env.stack.type_bindings())
-            )),
+            Code(format!("{}", Type::from_value(value))),
             msgtext!(": "),
             Code(value.display(env)),
         ]
@@ -2135,7 +2132,7 @@ fn check_arity(
 
 /// Check that `value` has `expected` type.
 fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMessage> {
-    let value_type = Type::from_value(value, &env.types, &env.stack.type_bindings());
+    let value_type = Type::from_value(value);
 
     if is_subtype(&value_type, expected) {
         Ok(())
@@ -2359,14 +2356,14 @@ fn eval_builtin_call(
                                         .unwrap();
 
                                     if output.status.success() {
-                                        Value::ok(Value::new(Value_::String(s)), env)
+                                        Value::ok(Value::new(Value_::String(s)))
                                     } else {
-                                        Value::err(Value::new(Value_::String(s)), env)
+                                        Value::err(Value::new(Value_::String(s)))
                                     }
                                 }
                                 Err(e) => {
                                     let s = Value::new(Value_::String(format!("{}", e)));
-                                    Value::err(s, env)
+                                    Value::err(s)
                                 }
                             };
 
@@ -2484,17 +2481,14 @@ fn eval_builtin_call(
                         }
                     }
 
-                    Value::ok(
-                        Value::new(Value_::List {
-                            items,
-                            elem_type: Type::list(Type::path()),
-                        }),
-                        env,
-                    )
+                    Value::ok(Value::new(Value_::List {
+                        items,
+                        elem_type: Type::list(Type::path()),
+                    }))
                 }
                 Err(e) => {
                     let s = Value::new(Value_::String(format!("{e} {path_s}")));
-                    Value::err(s, env)
+                    Value::err(s)
                 }
             };
 
@@ -2515,7 +2509,7 @@ fn eval_builtin_call(
             )?;
 
             let v = match std::fs::canonicalize(position.path.as_ref()) {
-                Ok(abspath) => Value::some(Value::path(abspath.display().to_string()), env),
+                Ok(abspath) => Value::some(Value::path(abspath.display().to_string())),
                 Err(_) => Value::none(),
             };
 
@@ -2577,8 +2571,8 @@ fn eval_builtin_call(
 
             let path = PathBuf::from(path_s);
             let v = match std::env::set_current_dir(path) {
-                Ok(()) => Value::ok(Value::unit(), env),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e))), env),
+                Ok(()) => Value::ok(Value::unit()),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e)))),
             };
 
             if expr_value_is_used {
@@ -2664,8 +2658,8 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::write(path, content_s) {
-                Ok(()) => Value::ok(Value::unit(), env),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e))), env),
+                Ok(()) => Value::ok(Value::unit()),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e)))),
             };
 
             if expr_value_is_used {
@@ -2819,7 +2813,7 @@ fn eval_builtin_call(
                     };
 
                     match doc_comment {
-                        Some(s) => Value::some(Value::new(Value_::String(s)), env),
+                        Some(s) => Value::some(Value::new(Value_::String(s))),
                         None => Value::none(),
                     }
                 }
@@ -2880,7 +2874,7 @@ fn eval_builtin_call(
                     };
 
                     match src {
-                        Some(s) => Value::some(Value::new(Value_::String(s)), env),
+                        Some(s) => Value::some(Value::new(Value_::String(s))),
                         None => Value::none(),
                     }
                 }
@@ -2958,15 +2952,12 @@ fn check_snippet(src: &str, env: &Env) -> Value {
     }
 
     if error_messages.is_empty() {
-        Value::ok(Value::unit(), env)
+        Value::ok(Value::unit())
     } else {
-        Value::err(
-            Value::new(Value_::List {
-                items: error_messages,
-                elem_type: Type::string(),
-            }),
-            env,
-        )
+        Value::err(Value::new(Value_::List {
+            items: error_messages,
+            elem_type: Type::string(),
+        }))
     }
 }
 
@@ -2996,7 +2987,6 @@ fn eval_call(
         .expect("Popped an empty value stack for call receiver");
 
     let stack_frame = env.current_frame_mut();
-    let frame_type_bindings = stack_frame.type_bindings.clone();
 
     match receiver_value.as_ref() {
         Value_::Closure(bindings, fun_info, _) => {
@@ -3172,7 +3162,7 @@ fn eval_call(
                 env,
                 type_name,
                 *variant_idx,
-                &Type::from_value(&arg_values[0], &env.types, &frame_type_bindings),
+                &Type::from_value(&arg_values[0]),
             )
             .unwrap_or(Type::no_value());
 
@@ -3628,12 +3618,7 @@ fn eval_builtin_method_call(
                     new_items.push(arg_values[0].clone());
 
                     if expr_value_is_used {
-                        let stack_frame = env.current_frame();
-                        let elem_type = Type::from_value(
-                            &arg_values[0],
-                            &env.types,
-                            &stack_frame.type_bindings,
-                        );
+                        let elem_type = Type::from_value(&arg_values[0]);
 
                         // TODO: check that the new value has the same
                         // type as the existing list items.
@@ -3733,7 +3718,7 @@ fn eval_builtin_method_call(
                     let v = if *i >= items.len() as i64 || *i < 0 {
                         Value::none()
                     } else {
-                        Value::some(items[*i as usize].clone(), env)
+                        Value::some(items[*i as usize].clone())
                     };
 
                     if expr_value_is_used {
@@ -3911,8 +3896,8 @@ fn eval_builtin_method_call(
             let path = PathBuf::from(path_s.clone());
 
             let v = match std::fs::read_to_string(path) {
-                Ok(s) => Value::ok(Value::new(Value_::String(s)), env),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e} {path_s}"))), env),
+                Ok(s) => Value::ok(Value::new(Value_::String(s))),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{e} {path_s}")))),
             };
 
             if expr_value_is_used {
@@ -3984,7 +3969,7 @@ fn eval_builtin_method_call(
             if let Some(needle_byte_offset) = receiver_s.find(arg_s) {
                 for (i, (byte_offset, _)) in receiver_s.char_indices().enumerate() {
                     if byte_offset == needle_byte_offset {
-                        value = Value::some(Value::new(Value_::Integer(i as i64)), env);
+                        value = Value::some(Value::new(Value_::Integer(i as i64)));
                         break;
                     }
                 }
@@ -4408,14 +4393,13 @@ fn eval_expr(
                 let mut list_values: Vec<Value> = Vec::with_capacity(items.len());
                 let mut element_type = Type::no_value();
 
-                let type_bindings = env.current_frame().type_bindings.clone();
                 for _ in 0..items.len() {
                     let element = env
                         .pop_value()
                         .expect("Value stack should have sufficient items for the list literal");
                     // TODO: check that all elements are of a compatible type.
                     // [1, None] should be an error.
-                    element_type = Type::from_value(&element, &env.types, &type_bindings);
+                    element_type = Type::from_value(&element);
                     list_values.push(element);
                 }
 
@@ -4441,13 +4425,12 @@ fn eval_expr(
                 let mut items_values: Vec<Value> = Vec::with_capacity(items.len());
                 let mut item_types: Vec<Type> = Vec::with_capacity(items.len());
 
-                let type_bindings = env.current_frame().type_bindings.clone();
                 for _ in 0..items.len() {
                     let element = env
                         .pop_value()
                         .expect("Value stack should have sufficient items for the tuple literal");
 
-                    item_types.push(Type::from_value(&element, &env.types, &type_bindings));
+                    item_types.push(Type::from_value(&element));
                     items_values.push(element);
                 }
 
@@ -5145,7 +5128,7 @@ fn eval_struct_value(
         if type_params.contains(&field_info.hint.sym.name) {
             type_arg_bindings.insert(
                 field_info.hint.sym.name.clone(),
-                Type::from_value(&field_value, &env.types, &type_bindings),
+                Type::from_value(&field_value),
             );
         }
 
@@ -5228,10 +5211,9 @@ fn eval_match_cases(
         ..
     } = scrutinee_value.as_ref()
     else {
-        let stack_frame = env.current_frame();
         let msg = ErrorMessage(vec![Text(format!(
             "Expected an enum value, but got {}: {}",
-            Type::from_value(&scrutinee_value, &env.types, &stack_frame.type_bindings),
+            Type::from_value(&scrutinee_value),
             scrutinee_value.display(env)
         ))]);
         return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));

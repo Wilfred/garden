@@ -27,6 +27,8 @@
 #![allow(clippy::result_large_err)]
 // TODO: fix this.
 #![allow(clippy::large_enum_variant)]
+// TODO: fix this.
+#![allow(clippy::map_entry)]
 
 mod caret_finder;
 mod checks;

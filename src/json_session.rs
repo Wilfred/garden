@@ -604,7 +604,12 @@ fn handle_run_eval_request(
 
     let ns = env.get_namespace(path);
     let (mut diagnostics, new_syms) = load_toplevel_items(&items, env, ns.clone());
-    diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, env));
+    diagnostics.extend(check_toplevel_items_in_env(
+        &vfs_path,
+        &items,
+        env,
+        ns.clone(),
+    ));
 
     let test_summary = match eval_tests_until_error(&items, env, session) {
         Ok(s) => s,

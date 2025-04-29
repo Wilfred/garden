@@ -7,9 +7,13 @@ mod unreachable;
 mod unused_defs;
 mod unused_vars;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use crate::diagnostics::Diagnostic;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
+use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::ToplevelItem;
 use crate::parser::vfs::VfsPathBuf;
 use loops::check_loops;
@@ -34,9 +38,9 @@ pub(crate) fn check_toplevel_items(
 ) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
     let ns = env.get_namespace(&vfs_path.path);
-    let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns);
+    let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns.clone());
 
-    diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, &env));
+    diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, &env, ns));
     diagnostics
 }
 
@@ -45,6 +49,7 @@ pub(crate) fn check_toplevel_items_in_env(
     vfs_path: &VfsPathBuf,
     items: &[ToplevelItem],
     env: &Env,
+    namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> Vec<Diagnostic> {
     let mut diagnostics = vec![];
 

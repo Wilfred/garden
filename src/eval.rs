@@ -579,7 +579,7 @@ pub(crate) fn eval_toplevel_items(
     }
 
     let ns = env.current_namespace();
-    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, ns);
+    let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, ns.clone());
     for diagnostic in diagnostics.iter() {
         if matches!(diagnostic.level, Level::Error) {
             return Err(EvalError::ResumableError(
@@ -589,7 +589,7 @@ pub(crate) fn eval_toplevel_items(
         }
     }
 
-    diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, env));
+    diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, env, ns));
 
     let mut summary = eval_tests(items, env, session);
     summary.diagnostics.extend(diagnostics);

@@ -180,7 +180,7 @@ impl TypeCheckVisitor<'_> {
     fn visit_method_info(&mut self, method_info: &MethodInfo) {
         self.bindings.enter_block();
 
-        let mut type_bindings = self.env.stack.type_bindings();
+        let mut type_bindings = FxHashMap::default();
         if let Some(fun_info) = method_info.fun_info() {
             for type_param in &fun_info.type_params {
                 type_bindings.insert(type_param.name.clone(), None);
@@ -256,7 +256,7 @@ impl TypeCheckVisitor<'_> {
             self.current_item = Some(def_id);
         }
 
-        let mut type_bindings = self.env.stack.type_bindings();
+        let mut type_bindings = FxHashMap::default();
         for type_param in &fun_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);
         }
@@ -298,7 +298,7 @@ impl TypeCheckVisitor<'_> {
     fn visit_struct_info(&mut self, struct_info: &StructInfo) {
         self.bindings.enter_block();
 
-        let mut type_bindings = self.env.stack.type_bindings();
+        let mut type_bindings = FxHashMap::default();
         for type_param in &struct_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);
         }
@@ -315,7 +315,7 @@ impl TypeCheckVisitor<'_> {
     fn visit_enum_info(&mut self, enum_info: &EnumInfo) {
         self.bindings.enter_block();
 
-        let mut type_bindings = self.env.stack.type_bindings();
+        let mut type_bindings = FxHashMap::default();
         for type_param in &enum_info.type_params {
             type_bindings.insert(type_param.name.clone(), None);
         }
@@ -334,15 +334,11 @@ impl TypeCheckVisitor<'_> {
 
     fn visit_block(&mut self, block: &Block) {
         // infer_block recurses, so don't recurse in the visitor.
-        self.infer_block(block, &self.env.stack.type_bindings(), &Type::Top);
+        self.infer_block(block, &FxHashMap::default(), &Type::Top);
     }
 
     fn visit_toplevel_expr(&mut self, toplevel_expr: &ToplevelExpression) {
-        self.infer_expr(
-            &toplevel_expr.0,
-            &self.env.stack.type_bindings(),
-            &Type::Top,
-        );
+        self.infer_expr(&toplevel_expr.0, &FxHashMap::default(), &Type::Top);
     }
 
     /// Update `id_to_pos` for this occurrence of an enum variant,
@@ -1760,7 +1756,7 @@ fn enum_payload_type(env: &Env, scrutinee_ty: &Type, variant_sym: &Symbol) -> Ty
 
     // The payload is not a generic type, so the type hint is
     // referring to a defined type.
-    Type::from_hint(&payload_hint, &env.types, &env.stack.type_bindings()).unwrap_or_err_ty()
+    Type::from_hint(&payload_hint, &env.types, &FxHashMap::default()).unwrap_or_err_ty()
 }
 
 /// Solve the type variables in this method, and return the resolved

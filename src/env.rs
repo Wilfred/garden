@@ -513,7 +513,9 @@ impl Env {
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
 
         if let Some(type_and_methods) = self.types.get_mut(&type_name) {
-            type_and_methods.methods.push(method_info.clone());
+            type_and_methods
+                .methods
+                .insert(method_info.name_sym.name.clone(), method_info.clone());
         }
     }
 
@@ -534,7 +536,7 @@ impl Env {
             name.clone(),
             TypeDefAndMethods {
                 def: type_.clone(),
-                methods: vec![],
+                methods: FxHashMap::default(),
             },
         );
     }
@@ -574,7 +576,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
         TypeName { text: "Int".into() },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::Int, None),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
     types.insert(
@@ -583,7 +585,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::String, None),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
     types.insert(
@@ -592,7 +594,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::List, None),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
     types.insert(
@@ -601,14 +603,14 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::Tuple, None),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
     types.insert(
         TypeName { text: "Fun".into() },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::Fun, None),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
     types.insert(
@@ -617,7 +619,7 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::Namespace, None),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
 

@@ -355,7 +355,7 @@ fn load_toplevel_items_(
                     enum_info.name_sym.name.clone(),
                     TypeDefAndMethods {
                         def: TypeDef::Enum(enum_info.clone()),
-                        methods: vec![],
+                        methods: FxHashMap::default(),
                     },
                 );
 
@@ -1211,7 +1211,7 @@ fn update_builtin_type_info(
         symbol.name.clone(),
         TypeDefAndMethods {
             def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
 
@@ -1219,7 +1219,7 @@ fn update_builtin_type_info(
         symbol.name.clone(),
         TypeDefAndMethods {
             def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
-            methods: vec![],
+            methods: FxHashMap::default(),
         },
     );
 }

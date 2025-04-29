@@ -1,7 +1,9 @@
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use crate::parser::ast::{EnumInfo, MethodInfo, StructInfo, SyntaxId, TypeSymbol};
+use rustc_hash::FxHashMap;
+
+use crate::parser::ast::{EnumInfo, MethodInfo, StructInfo, SymbolName, SyntaxId, TypeSymbol};
 use crate::parser::position::Position;
 use crate::parser::vfs::VfsId;
 use crate::VfsPathBuf;
@@ -31,7 +33,7 @@ pub(crate) enum TypeDef {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct TypeDefAndMethods {
     pub(crate) def: TypeDef,
-    pub(crate) methods: Vec<MethodInfo>,
+    pub(crate) methods: FxHashMap<SymbolName, MethodInfo>,
 }
 
 impl TypeDef {

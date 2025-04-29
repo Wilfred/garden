@@ -135,6 +135,7 @@ impl Env {
             Value::new(Value_::BuiltinFunction(
                 BuiltinFunctionKind::WriteFile,
                 None,
+                None,
             )),
         );
 
@@ -625,7 +626,7 @@ fn fresh_prelude(
             SymbolName {
                 text: format!("{}", fun_kind),
             },
-            Value::new(Value_::BuiltinFunction(fun_kind, None)),
+            Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
         );
     }
 

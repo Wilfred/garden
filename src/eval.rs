@@ -1318,7 +1318,7 @@ fn update_builtin_fun_info(
         return;
     };
 
-    let Value_::BuiltinFunction(kind, _) = value.as_ref() else {
+    let Value_::BuiltinFunction(kind, _, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
@@ -1331,9 +1331,16 @@ fn update_builtin_fun_info(
         return;
     };
 
+    let runtime_type =
+        Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings()).unwrap_or_err_ty();
+
     ns.values.insert(
         symbol.name.clone(),
-        Value::new(Value_::BuiltinFunction(*kind, Some(fun_info.clone()))),
+        Value::new(Value_::BuiltinFunction(
+            *kind,
+            Some(fun_info.clone()),
+            Some(runtime_type),
+        )),
     );
 }
 
@@ -3134,7 +3141,7 @@ fn eval_call(
                 caller_uses_value: expr_value_is_used,
             }));
         }
-        Value_::BuiltinFunction(kind, _) => eval_builtin_call(
+        Value_::BuiltinFunction(kind, _, _) => eval_builtin_call(
             env,
             *kind,
             &receiver_value,

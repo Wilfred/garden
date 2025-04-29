@@ -237,12 +237,8 @@ impl Type {
             Value_::Integer(_) => Type::int(),
             Value_::Fun { runtime_type, .. } => runtime_type.clone(),
             Value_::Closure(_, _, runtime_type) => runtime_type.clone(),
-            Value_::BuiltinFunction(_, fun_info) => match fun_info {
-                Some(fun_info) => {
-                    Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()
-                }
-                None => Self::error("No fun_info for built-in function"),
-            },
+            Value_::BuiltinFunction(_, _, Some(runtime_type)) => runtime_type.clone(),
+            Value_::BuiltinFunction(_, _, None) => Self::error("No fun_info for built-in function"),
             Value_::String(_) => Type::string(),
             Value_::List { elem_type, .. } => Type::list(elem_type.clone()),
             Value_::Tuple { item_types, .. } => Type::Tuple(item_types.clone()),

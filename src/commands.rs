@@ -266,7 +266,7 @@ fn describe_fun(value: &Value) -> Option<String> {
         Value_::Fun {
             name_sym, fun_info, ..
         } => Some(format_fun_info(fun_info, name_sym, None)),
-        Value_::BuiltinFunction(_kind, fun_info) => {
+        Value_::BuiltinFunction(_kind, fun_info, _) => {
             if let Some(fun_info) = fun_info {
                 if let Some(fun_name) = &fun_info.name_sym {
                     return Some(format_fun_info(fun_info, fun_name, None));
@@ -541,7 +541,7 @@ pub(crate) fn run_command<T: Write>(
                 let is_fun = match value.as_ref() {
                     Value_::Fun { .. }
                     | Value_::Closure(_, _, _)
-                    | Value_::BuiltinFunction(_, _) => true,
+                    | Value_::BuiltinFunction(_, _, _) => true,
                     Value_::Integer(_) => false,
                     Value_::String(_) => false,
                     Value_::List { .. } => false,

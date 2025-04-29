@@ -38,7 +38,7 @@ pub(crate) enum Value_ {
     /// A closure value.
     Closure(Vec<BlockBindings>, FunInfo, Type),
     /// A reference to a built-in function.
-    BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>),
+    BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>, Option<Type>),
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
@@ -92,9 +92,10 @@ impl PartialEq for Value_ {
                 // false.
                 false
             }
-            (Value_::BuiltinFunction(self_kind, _), Value_::BuiltinFunction(other_kind, _)) => {
-                self_kind == other_kind
-            }
+            (
+                Value_::BuiltinFunction(self_kind, _, _),
+                Value_::BuiltinFunction(other_kind, _, _),
+            ) => self_kind == other_kind,
             (Value_::String(s1), Value_::String(s2)) => s1 == s2,
             (
                 Value_::List {
@@ -321,7 +322,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::Integer(_) => "Int",
             Value_::Fun { .. } => "Fun",
             Value_::Closure(_, _, _) => "Fun",
-            Value_::BuiltinFunction(_, _) => "Fun",
+            Value_::BuiltinFunction(_, _, _) => "Fun",
             Value_::String(_) => "String",
             Value_::List { .. } => "List",
             Value_::Tuple { .. } => "Tuple",
@@ -389,7 +390,7 @@ impl Value {
             Value_::Integer(i) => format!("{}", i),
             Value_::Fun { name_sym, .. } => format!("(function: {})", name_sym.name),
             Value_::Closure(..) => "(closure)".to_owned(),
-            Value_::BuiltinFunction(kind, _) => format!("(function: {})", kind),
+            Value_::BuiltinFunction(kind, _, _) => format!("(function: {})", kind),
             Value_::String(s) => escape_string_literal(s),
             Value_::List { items, .. } => {
                 let mut s = String::new();

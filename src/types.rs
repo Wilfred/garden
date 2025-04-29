@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use crate::parser::ast::{EnumInfo, StructInfo, SyntaxId, TypeSymbol};
+use crate::parser::ast::{EnumInfo, MethodInfo, StructInfo, SyntaxId, TypeSymbol};
 use crate::parser::position::Position;
 use crate::parser::vfs::VfsId;
 use crate::VfsPathBuf;
@@ -26,6 +26,12 @@ pub(crate) enum TypeDef {
     Builtin(BuiltinType, Option<StructInfo>),
     Enum(EnumInfo),
     Struct(StructInfo),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct TypeDefAndMethods {
+    pub(crate) def: TypeDef,
+    pub(crate) methods: Vec<MethodInfo>,
 }
 
 impl TypeDef {

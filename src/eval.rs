@@ -34,7 +34,7 @@ use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
-use crate::types::TypeDef;
+use crate::types::{TypeDef, TypeDefAndMethods};
 use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
 use crate::{msgcode, msgtext};
 
@@ -353,7 +353,10 @@ fn load_toplevel_items_(
 
                 namespace.borrow_mut().types.insert(
                     enum_info.name_sym.name.clone(),
-                    TypeDef::Enum(enum_info.clone()),
+                    TypeDefAndMethods {
+                        def: TypeDef::Enum(enum_info.clone()),
+                        methods: vec![],
+                    },
                 );
 
                 enum_infos.push(enum_info);
@@ -1192,7 +1195,7 @@ fn update_builtin_type_info(
         return;
     };
 
-    let TypeDef::Builtin(kind, _) = current_def else {
+    let TypeDef::Builtin(kind, _) = &current_def.def else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
@@ -1206,12 +1209,18 @@ fn update_builtin_type_info(
 
     namespace.borrow_mut().types.insert(
         symbol.name.clone(),
-        TypeDef::Builtin(*kind, Some(struct_info.clone())),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
+            methods: vec![],
+        },
     );
 
     env.types.insert(
         symbol.name.clone(),
-        TypeDef::Builtin(*kind, Some(struct_info.clone())),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(*kind, Some(struct_info.clone())),
+            methods: vec![],
+        },
     );
 }
 
@@ -2804,7 +2813,7 @@ fn eval_builtin_call(
 
             let v = match env.types.get(&TypeName::from(name)) {
                 Some(ty) => {
-                    let doc_comment: Option<String> = match ty {
+                    let doc_comment: Option<String> = match &ty.def {
                         TypeDef::Builtin(_, struct_info) => {
                             struct_info.as_ref().and_then(|si| si.doc_comment.clone())
                         }
@@ -2860,7 +2869,7 @@ fn eval_builtin_call(
 
             let v = match env.types.get(&TypeName::from(name)) {
                 Some(ty) => {
-                    let src: Option<String> = match ty {
+                    let src: Option<String> = match &ty.def {
                         TypeDef::Builtin(_, Some(struct_info)) => {
                             env.vfs.pos_src(&struct_info.pos).map(|s| s.to_owned())
                         }

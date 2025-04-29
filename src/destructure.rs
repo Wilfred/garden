@@ -116,7 +116,7 @@ fn enum_variants(env: &Env, ty: &Type) -> Option<Vec<VariantInfo>> {
     }
 
     let type_def = env.types.get(name)?;
-    let TypeDef::Enum(enum_info) = type_def else {
+    let TypeDef::Enum(enum_info) = &type_def.def else {
         return None;
     };
 

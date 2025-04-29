@@ -5,7 +5,7 @@ use itertools::Itertools as _;
 use rustc_hash::FxHashMap;
 
 use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
-use crate::types::{BuiltinType, TypeDef};
+use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
 use crate::values::{Value, Value_};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -157,7 +157,7 @@ impl Type {
 
     pub(crate) fn from_hint(
         hint: &TypeHint,
-        global_tys: &FxHashMap<TypeName, TypeDef>,
+        global_tys: &FxHashMap<TypeName, TypeDefAndMethods>,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let name = &hint.sym.name;
@@ -176,7 +176,7 @@ impl Type {
         }
 
         match global_tys.get(name) {
-            Some(type_) => match type_ {
+            Some(type_) => match &type_.def {
                 TypeDef::Builtin(builtin_type, _) => match builtin_type {
                     BuiltinType::Int => Ok(Type::int()),
                     BuiltinType::String => Ok(Type::string()),
@@ -247,7 +247,7 @@ impl Type {
 
     pub(crate) fn from_fun_info(
         fun_info: &FunInfo,
-        global_tys: &FxHashMap<TypeName, TypeDef>,
+        global_tys: &FxHashMap<TypeName, TypeDefAndMethods>,
         type_bindings: &TypeVarEnv,
     ) -> Result<Self, String> {
         let mut type_bindings = type_bindings.clone();

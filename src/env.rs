@@ -15,7 +15,7 @@ use crate::parser::ast::{
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
-use crate::types::{BuiltinType, TypeDef};
+use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
 use crate::values::{BuiltinFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
 
@@ -62,7 +62,7 @@ impl Stack {
 pub(crate) struct Env {
     pub(crate) methods: FxHashMap<TypeName, FxHashMap<SymbolName, MethodInfo>>,
     pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
-    pub(crate) types: FxHashMap<TypeName, TypeDef>,
+    pub(crate) types: FxHashMap<TypeName, TypeDefAndMethods>,
 
     pub(crate) prelude_namespace: Rc<RefCell<NamespaceInfo>>,
     pub(crate) namespaces: FxHashMap<PathBuf, Rc<RefCell<NamespaceInfo>>>,
@@ -520,7 +520,7 @@ impl Env {
     /// This handles global type definitions, and type variables are
     /// not considered here.
     pub(crate) fn get_type_def<'a>(&'a self, name: &TypeName) -> Option<&'a TypeDef> {
-        self.types.get(name)
+        self.types.get(name).map(|td| &td.def)
     }
 
     pub(crate) fn all_types(&self) -> Vec<TypeName> {
@@ -528,7 +528,13 @@ impl Env {
     }
 
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
-        self.types.insert(name.clone(), type_.clone());
+        self.types.insert(
+            name.clone(),
+            TypeDefAndMethods {
+                def: type_.clone(),
+                methods: vec![],
+            },
+        );
     }
 
     pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {
@@ -559,40 +565,58 @@ impl Env {
     }
 }
 
-fn built_in_types() -> FxHashMap<TypeName, TypeDef> {
+fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
     let mut types = FxHashMap::default();
     // TODO: String literals are duplicated with type_representation.
     types.insert(
         TypeName { text: "Int".into() },
-        TypeDef::Builtin(BuiltinType::Int, None),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::Int, None),
+            methods: vec![],
+        },
     );
     types.insert(
         TypeName {
             text: "String".into(),
         },
-        TypeDef::Builtin(BuiltinType::String, None),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::String, None),
+            methods: vec![],
+        },
     );
     types.insert(
         TypeName {
             text: "List".into(),
         },
-        TypeDef::Builtin(BuiltinType::List, None),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::List, None),
+            methods: vec![],
+        },
     );
     types.insert(
         TypeName {
             text: "Tuple".into(),
         },
-        TypeDef::Builtin(BuiltinType::Tuple, None),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::Tuple, None),
+            methods: vec![],
+        },
     );
     types.insert(
         TypeName { text: "Fun".into() },
-        TypeDef::Builtin(BuiltinType::Fun, None),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::Fun, None),
+            methods: vec![],
+        },
     );
     types.insert(
         TypeName {
             text: "Namespace".into(),
         },
-        TypeDef::Builtin(BuiltinType::Namespace, None),
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::Namespace, None),
+            methods: vec![],
+        },
     );
 
     types

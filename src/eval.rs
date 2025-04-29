@@ -307,11 +307,15 @@ fn load_toplevel_items_(
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, namespace.clone(), &mut diagnostics);
                 } else {
+                    let runtime_type =
+                        Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
+                            .unwrap_or_err_ty();
                     namespace.borrow_mut().values.insert(
                         name_symbol.name.clone(),
                         Value::new(Value_::Fun {
                             name_sym: name_symbol.clone(),
                             fun_info: fun_info.clone(),
+                            runtime_type,
                         }),
                     );
                 }
@@ -1296,6 +1300,9 @@ fn update_builtin_fun_info(
             position: symbol.position.clone(),
         });
 
+        let runtime_type = Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
+            .unwrap_or_err_ty();
+
         // The built-in function doesn't exist, presumably the Garden
         // maintainer is still writing it. Add the function as-is to
         // the environment, so we can still type check call sites.
@@ -1304,6 +1311,7 @@ fn update_builtin_fun_info(
             Value::new(Value_::Fun {
                 name_sym: symbol.clone(),
                 fun_info: fun_info.clone(),
+                runtime_type,
             }),
         );
 
@@ -2984,7 +2992,7 @@ fn eval_call(
     let frame_type_bindings = stack_frame.type_bindings.clone();
 
     match receiver_value.as_ref() {
-        Value_::Closure(bindings, fun_info) => {
+        Value_::Closure(bindings, fun_info, _) => {
             let mut bindings = bindings.clone();
 
             if fun_info.params.params.len() != arg_values.len() {
@@ -3058,6 +3066,7 @@ fn eval_call(
                     body,
                     ..
                 },
+            ..
         } => {
             // Calling a user-defined function.
 
@@ -4583,8 +4592,15 @@ fn eval_expr(
             if expr_value_is_used {
                 let stack_frame = env.current_frame_mut();
                 let bindings = stack_frame.bindings.block_bindings.clone();
+                let runtime_type =
+                    Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
+                        .unwrap_or_err_ty();
 
-                env.push_value(Value::new(Value_::Closure(bindings, fun_info.clone())));
+                env.push_value(Value::new(Value_::Closure(
+                    bindings,
+                    fun_info.clone(),
+                    runtime_type,
+                )));
             }
         }
         Expression_::Call(receiver, paren_args) => match expr_state {

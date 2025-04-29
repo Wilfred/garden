@@ -539,9 +539,9 @@ pub(crate) fn run_command<T: Write>(
             let mut names = vec![];
             for (name, value) in ns.values.iter() {
                 let is_fun = match value.as_ref() {
-                    Value_::Fun { .. } | Value_::Closure(_, _) | Value_::BuiltinFunction(_, _) => {
-                        true
-                    }
+                    Value_::Fun { .. }
+                    | Value_::Closure(_, _, _)
+                    | Value_::BuiltinFunction(_, _) => true,
                     Value_::Integer(_) => false,
                     Value_::String(_) => false,
                     Value_::List { .. } => false,

@@ -235,9 +235,8 @@ impl Type {
     ) -> Self {
         match value.as_ref() {
             Value_::Integer(_) => Type::int(),
-            Value_::Fun { fun_info, .. } | Value_::Closure(_, fun_info) => {
-                Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()
-            }
+            Value_::Fun { runtime_type, .. } => runtime_type.clone(),
+            Value_::Closure(_, _, runtime_type) => runtime_type.clone(),
             Value_::BuiltinFunction(_, fun_info) => match fun_info {
                 Some(fun_info) => {
                     Self::from_fun_info(fun_info, global_tys, type_bindings).unwrap_or_err_ty()

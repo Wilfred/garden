@@ -1028,7 +1028,7 @@ impl TypeCheckVisitor<'_> {
                     Some(value) => {
                         let fun_info = match value.as_ref() {
                             Value_::Fun { fun_info, .. } => Some(fun_info),
-                            Value_::Closure(_, fun_info) => Some(fun_info),
+                            Value_::Closure(_, fun_info, _) => Some(fun_info),
                             Value_::BuiltinFunction(_, fun_info) => fun_info.as_ref(),
                             _ => None,
                         };

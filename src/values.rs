@@ -33,9 +33,10 @@ pub(crate) enum Value_ {
     Fun {
         name_sym: Symbol,
         fun_info: FunInfo,
+        runtime_type: Type,
     },
     /// A closure value.
-    Closure(Vec<BlockBindings>, FunInfo),
+    Closure(Vec<BlockBindings>, FunInfo, Type),
     /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>),
     /// A string value.
@@ -85,7 +86,7 @@ impl PartialEq for Value_ {
                     ..
                 },
             ) => name_sym == other_name_sym,
-            (Value_::Closure(_, _), Value_::Closure(_, _)) => {
+            (Value_::Closure(_, _, _), Value_::Closure(_, _, _)) => {
                 // TODO: we should probably use reference equality on
                 // closures in Value, instead of always returning
                 // false.
@@ -319,7 +320,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
         text: match value.as_ref() {
             Value_::Integer(_) => "Int",
             Value_::Fun { .. } => "Fun",
-            Value_::Closure(_, _) => "Fun",
+            Value_::Closure(_, _, _) => "Fun",
             Value_::BuiltinFunction(_, _) => "Fun",
             Value_::String(_) => "String",
             Value_::List { .. } => "List",

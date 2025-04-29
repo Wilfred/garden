@@ -47,7 +47,7 @@ pub(crate) fn check_types(
     path: &VfsPathBuf,
     items: &[ToplevelItem],
     env: &Env,
-    namespace: Rc<RefCell<NamespaceInfo>>,
+    _namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> TCSummary {
     let mut visitor = TypeCheckVisitor {
         path: path.to_owned(),

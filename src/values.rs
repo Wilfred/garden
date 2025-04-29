@@ -214,7 +214,9 @@ impl Value {
     }
 
     pub(crate) fn some(v: Value, env: &Env) -> Self {
-        let value_type = Type::from_value(&v, &env.types, &env.stack.type_bindings());
+        let namespace = env.current_namespace();
+        let value_type =
+            Type::from_value(&v, &namespace.borrow().types, &env.stack.type_bindings());
 
         // We can assume that Option is always defined because it's in the
         // prelude.
@@ -254,7 +256,9 @@ impl Value {
     }
 
     pub(crate) fn ok(v: Value, env: &Env) -> Self {
-        let value_type = Type::from_value(&v, &env.types, &env.stack.type_bindings());
+        let namespace = env.current_namespace();
+        let value_type =
+            Type::from_value(&v, &namespace.borrow().types, &env.stack.type_bindings());
 
         // We can assume that Result is always defined because it's in the
         // prelude.
@@ -275,7 +279,9 @@ impl Value {
     }
 
     pub(crate) fn err(v: Value, env: &Env) -> Self {
-        let value_type = Type::from_value(&v, &env.types, &env.stack.type_bindings());
+        let namespace = env.current_namespace();
+        let value_type =
+            Type::from_value(&v, &namespace.borrow().types, &env.stack.type_bindings());
 
         // We can assume that Result is always defined because it's in the
         // prelude.

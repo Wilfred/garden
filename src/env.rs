@@ -508,11 +508,13 @@ impl Env {
     }
 
     pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
-        let type_methods = self
-            .methods
-            .entry(method_info.receiver_hint.sym.name.clone())
-            .or_default();
+        let type_name = method_info.receiver_hint.sym.name.clone();
+        let type_methods = self.methods.entry(type_name.clone()).or_default();
         type_methods.insert(method_info.name_sym.name.clone(), method_info.clone());
+
+        if let Some(type_and_methods) = self.types.get_mut(&type_name) {
+            type_and_methods.methods.push(method_info.clone());
+        }
     }
 
     /// Get the type definition associated with this `name`.

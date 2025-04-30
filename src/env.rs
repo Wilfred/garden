@@ -831,6 +831,53 @@ fn fresh_prelude(
     let id_gen = &mut env.id_gen;
     let vfs = &mut env.vfs;
 
+    let mut path_methods = FxHashMap::default();
+
+    path_methods.insert(
+        SymbolName {
+            text: "exists".to_owned(),
+        },
+        MethodInfo {
+            pos: Position::todo(builtins_vfs_path),
+            receiver_hint: TypeHint {
+                args: vec![],
+                sym: TypeSymbol {
+                    position: Position::todo(builtins_vfs_path),
+                    name: TypeName {
+                        text: "Path".into(),
+                    },
+                    id: id_gen.next(),
+                },
+                position: Position::todo(builtins_vfs_path),
+            },
+            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "exists", id_gen),
+            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
+        },
+    );
+    path_methods.insert(
+        SymbolName {
+            text: "read".to_owned(),
+        },
+        MethodInfo {
+            pos: Position::todo(builtins_vfs_path),
+            receiver_hint: TypeHint {
+                args: vec![],
+                sym: TypeSymbol {
+                    position: Position::todo(builtins_vfs_path),
+                    name: TypeName {
+                        text: "Path".into(),
+                    },
+                    id: id_gen.next(),
+                },
+                position: Position::todo(builtins_vfs_path),
+            },
+            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "read", id_gen),
+            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
+        },
+    );
+
     let mut values = FxHashMap::default();
 
     // Insert all the built-in functions.
@@ -880,6 +927,12 @@ fn fresh_prelude(
 
     load_toplevel_items(&prelude_items, env, ns.clone());
     load_toplevel_items(&builtin_items, env, ns.clone());
+
+    if let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
+        text: "Path".into(),
+    }) {
+        path_def_and_methods.methods.extend(path_methods);
+    }
 
     ns
 }

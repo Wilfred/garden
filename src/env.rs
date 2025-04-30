@@ -582,13 +582,104 @@ fn built_in_types(
             methods: FxHashMap::default(),
         },
     );
+
+    let mut string_methods = FxHashMap::default();
+    string_methods.insert(
+        SymbolName {
+            text: "index_of".to_owned(),
+        },
+        MethodInfo {
+            pos: Position::todo(builtins_vfs_path),
+            receiver_hint: TypeHint {
+                args: vec![],
+                sym: TypeSymbol {
+                    position: Position::todo(builtins_vfs_path),
+                    name: TypeName {
+                        text: "String".into(),
+                    },
+                    id: id_gen.next(),
+                },
+                position: Position::todo(builtins_vfs_path),
+            },
+            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "index_of", id_gen),
+            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringIndexOf, None),
+        },
+    );
+    string_methods.insert(
+        SymbolName {
+            text: "len".to_owned(),
+        },
+        MethodInfo {
+            pos: Position::todo(builtins_vfs_path),
+            receiver_hint: TypeHint {
+                args: vec![],
+                sym: TypeSymbol {
+                    position: Position::todo(builtins_vfs_path),
+                    name: TypeName {
+                        text: "String".into(),
+                    },
+                    id: id_gen.next(),
+                },
+                position: Position::todo(builtins_vfs_path),
+            },
+            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "len", id_gen),
+            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
+        },
+    );
+    string_methods.insert(
+        SymbolName {
+            text: "lines".to_owned(),
+        },
+        MethodInfo {
+            pos: Position::todo(builtins_vfs_path),
+            receiver_hint: TypeHint {
+                args: vec![],
+                sym: TypeSymbol {
+                    position: Position::todo(builtins_vfs_path),
+                    name: TypeName {
+                        text: "String".into(),
+                    },
+                    id: id_gen.next(),
+                },
+                position: Position::todo(builtins_vfs_path),
+            },
+            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "lines", id_gen),
+            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLines, None),
+        },
+    );
+    string_methods.insert(
+        SymbolName {
+            text: "substring".to_owned(),
+        },
+        MethodInfo {
+            pos: Position::todo(builtins_vfs_path),
+            receiver_hint: TypeHint {
+                args: vec![],
+                sym: TypeSymbol {
+                    position: Position::todo(builtins_vfs_path),
+                    name: TypeName {
+                        text: "String".into(),
+                    },
+                    id: id_gen.next(),
+                },
+                position: Position::todo(builtins_vfs_path),
+            },
+            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "substring", id_gen),
+            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
+        },
+    );
+
     types.insert(
         TypeName {
             text: "String".into(),
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::String, None),
-            methods: FxHashMap::default(),
+            methods: string_methods,
         },
     );
 

@@ -473,10 +473,21 @@ fn load_toplevel_items_(
                 // Load into its own namespace.
                 let destination_ns = env.get_namespace(&abs_path);
                 let (import_diagnostics, imported_syms) =
-                    load_toplevel_items_(&imported_items, env, paths_seen, destination_ns);
+                    load_toplevel_items_(&imported_items, env, paths_seen, destination_ns.clone());
 
-                // Load into the current namespace.
-                load_toplevel_items_(&imported_items, env, paths_seen, namespace.clone());
+                match &import_info.namespace_sym {
+                    Some(namespace_sym) => {
+                        let v = Value::new(Value_::Namespace(destination_ns));
+                        namespace
+                            .borrow_mut()
+                            .values
+                            .insert(namespace_sym.name.clone(), v);
+                    }
+                    None => {
+                        // Load all items into the current namespace.
+                        load_toplevel_items_(&imported_items, env, paths_seen, namespace.clone());
+                    }
+                }
 
                 diagnostics.extend(import_diagnostics);
                 new_syms.extend(imported_syms);

@@ -660,6 +660,7 @@ pub(crate) struct ImportInfo {
     pub(crate) path_pos: Position,
     /// The `bar` in `import "./foo.gdn" as bar`.
     pub(crate) namespace_sym: Option<Symbol>,
+
     pub(crate) id: SyntaxId,
 }
 

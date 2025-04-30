@@ -1,0 +1,9 @@
+import "./lib.gdn" as f
+
+{
+  dbg(f::foo())
+}
+
+// args: run
+// expected stdout: 42
+

@@ -25,21 +25,21 @@
 
     <div class="container"><h1><code>let</code> keyword</h1>
 <p><code>let</code> introduces a new variable.</p>
-<pre class="block"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> x = 0
+<pre class="block fixed"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> x = 0
 <span class="comment">// Variables can be reassigned.</span>
 x = 1</code></pre>
 <p>You can add type annotations to <code>let</code>.</p>
-<pre class="block"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> x: <a href="./type:List.html"><span class="type">List</span></a>&lt;<a href="./type:Int.html"><span class="type">Int</span></a>&gt; = []</code></pre>
+<pre class="block fixed"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> x: <a href="./type:List.html"><span class="type">List</span></a>&lt;<a href="./type:Int.html"><span class="type">Int</span></a>&gt; = []</code></pre>
 <p>If you have a tuple, you can use <code>let</code> to destructure the tuple
 elements.</p>
-<pre class="block"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> position = (1, 2)
+<pre class="block fixed"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> position = (1, 2)
 <a href="./keyword:let.html"><span class="keyword">let</span></a> (x, y) = position
 
 dbg(x) <span class="comment">// 1</span>
 dbg(y) <span class="comment">// 2</span></code></pre>
 <p>You can also use <code>let</code> to shadow variables, where you introduce a new
 variable that hides the old value.</p>
-<pre class="block"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> i = 0
+<pre class="block fixed"><code><a href="./keyword:let.html"><span class="keyword">let</span></a> i = 0
 
 <a href="./keyword:if.html"><span class="keyword">if</span></a> <span class="type">True</span> {
   <a href="./keyword:let.html"><span class="keyword">let</span></a> i = 1

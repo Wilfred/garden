@@ -64,7 +64,11 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
     };
 
     let empty_hashmap = FxHashMap::default();
-    let methods = env.methods.get(&type_name).unwrap_or(&empty_hashmap);
+    let methods = env
+        .types
+        .get(&type_name)
+        .map(|tdm| &tdm.methods)
+        .unwrap_or(&empty_hashmap);
 
     let mut items: Vec<CompletionItem> = vec![];
 

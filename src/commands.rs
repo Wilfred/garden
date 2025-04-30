@@ -379,13 +379,13 @@ pub(crate) fn run_command<T: Write>(
         Command::Methods(text) => {
             let text = text.clone().unwrap_or_default();
 
-            let mut type_names: Vec<_> = env.methods.keys().collect();
+            let mut type_names: Vec<_> = env.types.keys().collect();
             type_names.sort_by_key(|typename| format!("{typename}"));
 
             let mut is_first = true;
             for type_name in type_names {
                 let mut method_names: Vec<_> =
-                    env.methods.get(type_name).unwrap().values().collect();
+                    env.types.get(type_name).unwrap().methods.values().collect();
                 method_names.sort_by_key(|meth| &meth.name_sym.name.text);
 
                 for meth_info in method_names {
@@ -744,10 +744,10 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
     let ns = env.current_namespace();
 
     if let Some((type_name, method_name)) = name.split_once("::") {
-        if let Some(type_methods) = env.methods.get(&TypeName {
+        if let Some(type_def_and_methods) = env.types.get(&TypeName {
             text: type_name.to_owned(),
         }) {
-            if let Some(method_info) = type_methods.get(&SymbolName {
+            if let Some(method_info) = type_def_and_methods.methods.get(&SymbolName {
                 text: method_name.to_owned(),
             }) {
                 Ok(method_info
@@ -794,10 +794,10 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
     let ns = env.current_namespace();
 
     if let Some((type_name, method_name)) = name.split_once("::") {
-        if let Some(type_methods) = env.methods.get(&TypeName {
+        if let Some(type_def_and_methods) = env.types.get(&TypeName {
             text: type_name.to_owned(),
         }) {
-            if let Some(method_info) = type_methods.get(&SymbolName {
+            if let Some(method_info) = type_def_and_methods.methods.get(&SymbolName {
                 text: method_name.to_owned(),
             }) {
                 Ok((

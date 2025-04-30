@@ -1239,7 +1239,8 @@ fn update_builtin_meth_info(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     let type_name = &meth_info.receiver_hint.sym.name;
-    let Some(type_methods) = env.methods.get_mut(type_name) else {
+
+    let Some(type_def_and_methods) = env.types.get_mut(type_name) else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
@@ -1251,7 +1252,10 @@ fn update_builtin_meth_info(
         return;
     };
 
-    let Some(curr_meth_info) = type_methods.get_mut(&meth_info.name_sym.name) else {
+    let Some(curr_meth_info) = type_def_and_methods
+        .methods
+        .get_mut(&meth_info.name_sym.name)
+    else {
         diagnostics.push(Diagnostic {
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
@@ -3453,7 +3457,7 @@ fn eval_method_call(
         );
     }
 
-    let Some(receiver_methods) = env.methods.get(&receiver_type_name) else {
+    let Some(receiver_type_and_methods) = env.types.get(&receiver_type_name) else {
         let mut saved_values = vec![receiver_value.clone()];
         for value in arg_values.iter().rev() {
             saved_values.push(value.clone());
@@ -3471,7 +3475,7 @@ fn eval_method_call(
         ));
     };
 
-    let Some(receiver_method) = receiver_methods.get(&meth_name.name) else {
+    let Some(receiver_method) = receiver_type_and_methods.methods.get(&meth_name.name) else {
         let mut saved_values = vec![receiver_value.clone()];
         for value in arg_values.iter().rev() {
             saved_values.push(value.clone());

@@ -1205,9 +1205,10 @@ impl TypeCheckVisitor<'_> {
 
                 let methods = self
                     .env
-                    .methods
+                    .types
                     .get(&receiver_ty_name)
                     .cloned()
+                    .map(|tdm| tdm.methods)
                     .unwrap_or_default();
 
                 match methods.get(&sym.name) {

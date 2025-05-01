@@ -346,6 +346,7 @@ pub(crate) enum BuiltinFunctionKind {
     WorkingDirectory,
     SetWorkingDirectory,
     WriteFile,
+    WriteFile2,
     CheckSnippet,
     Lex,
     TypeDocComment,
@@ -372,6 +373,7 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::TypeDocComment
             | BuiltinFunctionKind::TypeSource
             | BuiltinFunctionKind::BuiltInTypes => "__prelude.gdn",
+            BuiltinFunctionKind::WriteFile2 => "__fs.gdn",
         }
     }
 }
@@ -389,7 +391,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::ShellArguments => "shell_arguments",
             BuiltinFunctionKind::SetWorkingDirectory => "set_working_directory",
             BuiltinFunctionKind::WorkingDirectory => "working_directory",
-            BuiltinFunctionKind::WriteFile => "write_file",
+            BuiltinFunctionKind::WriteFile | BuiltinFunctionKind::WriteFile2 => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
             BuiltinFunctionKind::Lex => "lex",
             BuiltinFunctionKind::TypeDocComment => "type_doc_comment",

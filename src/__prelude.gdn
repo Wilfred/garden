@@ -1,3 +1,5 @@
+import "./__fs.gdn" as fss
+
 // Basic types.
 
 // The boolean type. This type represents when something is true or

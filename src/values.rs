@@ -353,6 +353,29 @@ pub(crate) enum BuiltinFunctionKind {
     BuiltInTypes,
 }
 
+impl BuiltinFunctionKind {
+    pub(crate) fn namespace_file(&self) -> &'static str {
+        match self {
+            BuiltinFunctionKind::Error
+            | BuiltinFunctionKind::ListDirectory
+            | BuiltinFunctionKind::Shell
+            | BuiltinFunctionKind::StringRepr
+            | BuiltinFunctionKind::Print
+            | BuiltinFunctionKind::Println
+            | BuiltinFunctionKind::SourceDirectory
+            | BuiltinFunctionKind::ShellArguments
+            | BuiltinFunctionKind::WorkingDirectory
+            | BuiltinFunctionKind::SetWorkingDirectory
+            | BuiltinFunctionKind::WriteFile
+            | BuiltinFunctionKind::CheckSnippet
+            | BuiltinFunctionKind::Lex
+            | BuiltinFunctionKind::TypeDocComment
+            | BuiltinFunctionKind::TypeSource
+            | BuiltinFunctionKind::BuiltInTypes => "__prelude.gdn",
+        }
+    }
+}
+
 impl Display for BuiltinFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {

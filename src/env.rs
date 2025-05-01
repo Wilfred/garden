@@ -641,6 +641,11 @@ fn fresh_prelude(
 
     // Insert all the built-in functions.
     for fun_kind in BuiltinFunctionKind::iter() {
+        let namespace_file = fun_kind.namespace_file();
+        if namespace_file != "__prelude.gdn" {
+            continue;
+        }
+
         values.insert(
             SymbolName {
                 text: format!("{}", fun_kind),

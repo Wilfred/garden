@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::fmt::Display;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use strum_macros::EnumIter;
@@ -355,7 +356,7 @@ pub(crate) enum BuiltinFunctionKind {
 }
 
 impl BuiltinFunctionKind {
-    pub(crate) fn namespace_file(&self) -> &'static str {
+    pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
             BuiltinFunctionKind::Error
             | BuiltinFunctionKind::ListDirectory
@@ -372,8 +373,8 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::Lex
             | BuiltinFunctionKind::TypeDocComment
             | BuiltinFunctionKind::TypeSource
-            | BuiltinFunctionKind::BuiltInTypes => "__prelude.gdn",
-            BuiltinFunctionKind::WriteFile2 => "__fs.gdn",
+            | BuiltinFunctionKind::BuiltInTypes => PathBuf::from("__prelude.gdn"),
+            BuiltinFunctionKind::WriteFile2 => PathBuf::from("__fs.gdn"),
         }
     }
 }

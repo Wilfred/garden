@@ -637,12 +637,16 @@ fn fresh_prelude(
         },
     );
 
+    let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
+    let prelude_src = include_str!("__prelude.gdn");
+    let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
+
     let mut values = FxHashMap::default();
 
     // Insert all the built-in functions.
     for fun_kind in BuiltinFunctionKind::iter() {
-        let namespace_file = fun_kind.namespace_file();
-        if namespace_file != "__prelude.gdn" {
+        let namespace_file = fun_kind.namespace_path();
+        if namespace_file != *prelude_path {
             continue;
         }
 
@@ -662,10 +666,6 @@ fn fresh_prelude(
         },
         Value::new(Value_::Namespace(fs_namespace.clone())),
     );
-
-    let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
-    let prelude_src = include_str!("__prelude.gdn");
-    let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
 
     let ns_info = NamespaceInfo {
         path: prelude_path,

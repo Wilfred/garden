@@ -7,6 +7,10 @@
 
 `as` is now a reserved word.
 
+### Commands
+
+Added a `:globals` command to view all values in the current namespace.
+
 # 0.19 (released 7th April 2025)
 **Goal: Website has snippets that are checked and linkified.**
 

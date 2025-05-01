@@ -32,6 +32,7 @@ pub(crate) enum Command {
     Forget(Option<String>),
     FrameValues,
     FrameStatements,
+    Globals,
     Methods(Option<String>),
     Namespaces(Option<String>),
     Parse(Option<String>),
@@ -76,6 +77,7 @@ impl Display for Command {
             Command::FrameStatements => ":fstmts",
             Command::FrameValues => ":fvalues",
             Command::Functions => ":funs",
+            Command::Globals => ":globals",
             Command::Help(_) => ":help",
             Command::Locals => ":locals",
             Command::Methods(_) => ":methods",
@@ -113,6 +115,7 @@ impl Command {
             ":fstmts" => Ok(Command::FrameStatements),
             ":fvalues" => Ok(Command::FrameValues),
             ":funs" => Ok(Command::Functions),
+            ":globals" => Ok(Command::Globals),
             ":help" => Ok(Command::Help(args)),
             ":locals" => Ok(Command::Locals),
             ":methods" => Ok(Command::Methods(args)),
@@ -642,6 +645,23 @@ pub(crate) fn run_command<T: Write>(
                 }
             }
         }
+        Command::Globals => {
+            let namespace = env.current_namespace();
+            let namespace = namespace.borrow();
+
+            let mut values = namespace.values.iter().collect::<Vec<_>>();
+            values.sort_by_key(|s| s.0.text.to_lowercase());
+
+            for (i, (sym_name, value)) in values.into_iter().enumerate() {
+                write!(
+                    buf,
+                    "{}{}\t{}",
+                    if i == 0 { "" } else { "\n" },
+                    sym_name.text.bright_green(),
+                    value.display(env)
+                )?;
+            }
+        }
         Command::Stack => {
             print_stack(buf, env);
         }
@@ -858,6 +878,7 @@ fn command_help(command: Command) -> &'static str {
         Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",
+        Command::Globals => "The :globals command displays information about global values in the current file.\n\nExample:\n\n:globals",
         Command::Locals => "The :locals command displays information about local variables in the current stack frame.\n\nExample:\n\n:locals",
         Command::Methods(_) => "The :methods command displays all the methods currently defined. If given an argument, limits to names containing that substring.\n\nExample:\n\n:methods\n:method Str",
         Command::Namespaces(_) => "The :namespaces command displays all the namespaces of all the files loaded.\n\nExample:\n\n:namespaces",

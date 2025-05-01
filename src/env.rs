@@ -246,9 +246,23 @@ impl Env {
             return ns.clone();
         }
 
+        let mut values = FxHashMap::default();
+        for fun_kind in BuiltinFunctionKind::iter() {
+            if fun_kind.namespace_path() != path {
+                continue;
+            }
+
+            values.insert(
+                SymbolName {
+                    text: format!("{}", fun_kind),
+                },
+                Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
+            );
+        }
+
         let ns = Rc::new(RefCell::new(NamespaceInfo {
             path: Rc::new(path.to_owned()),
-            values: FxHashMap::default(),
+            values,
             types: FxHashMap::default(),
         }));
 
@@ -643,7 +657,7 @@ fn fresh_prelude(
 
     let mut values = FxHashMap::default();
 
-    // Insert all the built-in functions.
+    // Insert all the built-in prelude functions.
     for fun_kind in BuiltinFunctionKind::iter() {
         let namespace_file = fun_kind.namespace_path();
         if namespace_file != *prelude_path {

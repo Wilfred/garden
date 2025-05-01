@@ -15,7 +15,7 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
     let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_namespace(path);
+    let ns = env.get_or_create_namespace(path);
     load_toplevel_items(&items, &mut env, ns.clone());
 
     let summary = check_types(&vfs_path, &items, &env, ns);

@@ -37,7 +37,7 @@ pub(crate) fn check_toplevel_items(
     env: &Env,
 ) -> Vec<Diagnostic> {
     let mut env: Env = env.clone();
-    let ns = env.get_namespace(&vfs_path.path);
+    let ns = env.get_or_create_namespace(&vfs_path.path);
     let (mut diagnostics, _) = load_toplevel_items(items, &mut env, ns.clone());
 
     diagnostics.extend(check_toplevel_items_in_env(vfs_path, items, &env, ns));

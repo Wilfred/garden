@@ -152,7 +152,7 @@ fn handle_load_request(
         return as_error_response(errors, &env.vfs);
     }
 
-    let ns = env.get_namespace(path);
+    let ns = env.get_or_create_namespace(path);
     let (diagnostics, new_syms) = load_toplevel_items(&items, env, ns);
 
     let summary = if new_syms.is_empty() {
@@ -603,7 +603,7 @@ fn handle_run_eval_request(
         return as_error_response(errors, &env.vfs);
     }
 
-    let ns = env.get_namespace(path);
+    let ns = env.get_or_create_namespace(path);
     let (mut diagnostics, new_syms) = load_toplevel_items(&items, env, ns.clone());
     diagnostics.extend(check_toplevel_items_in_env(
         &vfs_path,

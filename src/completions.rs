@@ -20,7 +20,7 @@ pub(crate) fn complete(src: &str, path: &Path, offset: usize) {
     let (items, _errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
 
     let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_namespace(path);
+    let ns = env.get_or_create_namespace(path);
     load_toplevel_items(&items, &mut env, ns.clone());
 
     let ids_at_pos = find_item_at(&items, offset, offset);

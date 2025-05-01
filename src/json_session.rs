@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::thread::JoinHandle;
 use std::time::Instant;
 
+use rand::seq::IndexedRandom;
 use serde::{Deserialize, Serialize};
 
 use crate::checks::check_toplevel_items_in_env;
@@ -760,9 +761,19 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
 }
 
 pub(crate) fn json_session(interrupted: Arc<AtomicBool>) {
+    let messages = [
+        "Garden: Good programs take time to grow.",
+        "Garden: You will see bugs occasionally.",
+        "Garden: All programs go through seasons.",
+        "Garden: Small changes can make a big difference.",
+    ];
+
+    let mut rng = rand::rng();
+    let message = messages.choose(&mut rng).unwrap();
+
     let response = Response {
         kind: ResponseKind::Ready {
-            message: "The Garden: Good programs take time to grow.".to_owned(),
+            message: (*message).to_owned(),
         },
         position: None,
         id: None,

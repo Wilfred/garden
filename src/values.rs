@@ -507,7 +507,22 @@ impl Value {
             }
             Value_::Namespace(ns) => {
                 let ns = ns.borrow();
-                format!("namespace:{}", ns.path.display())
+
+                let mut names = ns
+                    .values
+                    .keys()
+                    .map(|sym| format!("  ::{}", sym.text))
+                    .collect::<Vec<_>>();
+                names.sort();
+
+                let names_str = names.join("\n");
+
+                format!(
+                    "namespace:{}{}{}",
+                    ns.path.display(),
+                    if names_str.is_empty() { "" } else { "\n" },
+                    names_str
+                )
             }
         }
     }

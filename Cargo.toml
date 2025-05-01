@@ -10,8 +10,7 @@ keywords = ["compilers", "development-tools"]
 rust-version = "1.79.0"
 include = [
         "/src/**/*.rs",
-        "/src/prelude.gdn",
-        "/src/builtins.gdn",
+        "/src/*.gdn",
         "/LICENSE",
         "/README.md",
 ]

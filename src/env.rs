@@ -146,8 +146,8 @@ impl Env {
 
         namespaces.insert(PathBuf::from("__fs.gdn"), fs_namespace);
 
-        let builtins_path = Rc::new(PathBuf::from("builtins.gdn"));
-        let builtins_src = include_str!("builtins.gdn");
+        let builtins_path = Rc::new(PathBuf::from("__builtins.gdn"));
+        let builtins_src = include_str!("__builtins.gdn");
         let builtins_vfs_path = vfs.insert(builtins_path.clone(), builtins_src.to_owned());
 
         let mut path_methods = FxHashMap::default();

@@ -1294,8 +1294,8 @@ fn update_builtin_meth_info(
         return;
     };
 
-    // Prefer hints and symbols from builtins.gdn, as they have better
-    // positions and full type parameters.
+    // Prefer hints and symbols from __builtins.gdn, as they have
+    // better positions and full type parameters.
     curr_meth_info.receiver_hint = meth_info.receiver_hint.clone();
     curr_meth_info.receiver_sym = meth_info.receiver_sym.clone();
     curr_meth_info.name_sym = meth_info.name_sym.clone();

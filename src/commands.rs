@@ -629,18 +629,31 @@ pub(crate) fn run_command<T: Write>(
         }
         Command::Locals => {
             if let Some(stack_frame) = env.stack.0.last() {
-                for (i, (var_id, value)) in stack_frame.bindings.all().iter().enumerate() {
+                let mut locals = vec![];
+                for (var_id, value) in stack_frame.bindings.all().iter() {
                     let name = match env.id_gen.intern_id_to_name.get(var_id) {
                         Some(SymbolName { text: name }) => name.clone(),
                         None => "INTERNAL ERROR: Could not find var with this ID".to_owned(),
                     };
 
+                    locals.push((name, value.clone()));
+                }
+
+                locals.sort_by_key(|(s, _)| s.to_lowercase());
+
+                let mut max_length = 0;
+                for (name, _) in &locals {
+                    max_length = std::cmp::max(max_length, name.len());
+                }
+
+                for (i, (name, value)) in locals.iter().enumerate() {
                     write!(
                         buf,
-                        "{}{}\t{}",
+                        "{}{:width$} {}",
                         if i == 0 { "" } else { "\n" },
                         name.bright_green(),
-                        value.display(env)
+                        value.display(env),
+                        width = max_length,
                     )?;
                 }
             }
@@ -652,13 +665,20 @@ pub(crate) fn run_command<T: Write>(
             let mut values = namespace.values.iter().collect::<Vec<_>>();
             values.sort_by_key(|s| s.0.text.to_lowercase());
 
+            let mut max_length = 0;
+            for (name, _) in &values {
+                max_length = std::cmp::max(max_length, name.text.len());
+            }
+
             for (i, (sym_name, value)) in values.into_iter().enumerate() {
+                // here
                 write!(
                     buf,
-                    "{}{}\t{}",
+                    "{}{:width$} {}",
                     if i == 0 { "" } else { "\n" },
                     sym_name.text.bright_green(),
-                    value.display(env)
+                    value.display(env),
+                    width = max_length,
                 )?;
             }
         }

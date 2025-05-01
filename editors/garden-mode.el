@@ -411,7 +411,7 @@ the user entering a value in the *garden* buffer."
        (s-starts-with-p "./" file-name))
       (find-file file-name)
     ;; For prelude and builtins, we don't have a fully qualified
-    ;; path. Switch to the current prelude.gdn or __builtins.gdn,
+    ;; path. Switch to the current __prelude.gdn or __builtins.gdn,
     ;; relative to this elisp file.
     (let* ((elisp-file-path (symbol-file 'garden-mode))
            (elisp-dir (directory-file-name (file-name-directory elisp-file-path)))

@@ -637,7 +637,7 @@ mod tests {
         let path = assert_cmd::cargo::cargo_bin("garden");
         let mut cmd = Command::new(path);
 
-        cmd.arg("test").arg("src/prelude.gdn");
+        cmd.arg("test").arg("src/__prelude.gdn");
         cmd.assert().success();
     }
 
@@ -646,7 +646,7 @@ mod tests {
         let path = assert_cmd::cargo::cargo_bin("garden");
         let mut cmd = Command::new(path);
 
-        cmd.arg("check").arg("src/prelude.gdn");
+        cmd.arg("check").arg("src/__prelude.gdn");
         cmd.assert().success();
     }
 

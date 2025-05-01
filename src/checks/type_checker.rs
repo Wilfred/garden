@@ -249,7 +249,7 @@ impl TypeCheckVisitor<'_> {
             // Skip typechecking builtins and prelude to help print debugging.
             if let Some(n) = &fun_info.name_sym {
                 let path = n.position.path.clone();
-                if path.display().to_string().ends_with("prelude.gdn") {
+                if path.display().to_string().ends_with("__prelude.gdn") {
                     return;
                 }
                 if path.display().to_string().ends_with("__builtins.gdn") {

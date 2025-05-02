@@ -94,7 +94,7 @@ fun build_site(): Unit {
     write_markdown_page(base_tmpl_src, md_path)
   }
 
-  for keyword in keywords() {
+  for keyword in garden::keywords() {
     if seen_keyword_pages.contains(keyword).not() {
       println("Expected a page documenting: " ^ keyword)
     }
@@ -122,7 +122,7 @@ fun join_with_commas_and(items: List<String>): String {
 
 // Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(src: String): String {
-  let keyword_links = keywords().map(fun(keyword: String) {
+  let keyword_links = garden::keywords().map(fun(keyword: String) {
     "".join(["[`", keyword, "`](./keyword:", keyword, ".html)"])
   })
 

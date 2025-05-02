@@ -6,7 +6,7 @@
 ### Standard Library
 
 `write_file()` is now `fs::write_file()`, `list_directory()` is now
-`fs::list_directory()`.
+`fs::list_directory()`, `keywords()` is now `garden::keywords()`.
 
 ### Syntax
 

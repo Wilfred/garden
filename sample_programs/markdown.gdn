@@ -149,7 +149,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
     }
   }
 
-  let keywords = keywords()
+  let keywords = garden::keywords()
   let rendered_lines: List<String> = []
 
   for line in snippet.content.lines() {

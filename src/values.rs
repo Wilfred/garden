@@ -545,7 +545,7 @@ impl Value {
 
                 format!(
                     "namespace:{}{}{}",
-                    ns.path.display(),
+                    ns.src_path.display(),
                     if names_str.is_empty() { "" } else { "\n" },
                     names_str
                 )

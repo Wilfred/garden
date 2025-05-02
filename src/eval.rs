@@ -5027,7 +5027,7 @@ fn eval_namespace_access(
                             symbol.position.clone(),
                             ErrorMessage(vec![
                                 msgtext!("Namespace "),
-                                msgcode!("{}", env.relative_to_project(&ns.path).display()),
+                                msgcode!("{}", env.relative_to_project(&ns.abs_path).display()),
                                 msgtext!(" does not contain a function named "),
                                 msgcode!("{}", symbol.name),
                                 msgtext!(". "),

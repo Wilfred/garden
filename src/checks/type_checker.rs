@@ -1410,7 +1410,7 @@ impl TypeCheckVisitor<'_> {
                                                     msgcode!(
                                                         "{}",
                                                         self.env
-                                                            .relative_to_project(&ns.path)
+                                                            .relative_to_project(&ns.abs_path)
                                                             .display()
                                                     ),
                                                     msgtext!(" does not contain an item named "),

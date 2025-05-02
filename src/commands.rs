@@ -446,7 +446,7 @@ pub(crate) fn run_command<T: Write>(
 
             writeln!(buf, "\n\nPrelude namespace:\n")?;
             let ns = env.prelude_namespace.borrow();
-            write!(buf, "{}", ns.path.display())?;
+            write!(buf, "{}", ns.src_path.display())?;
 
             let mut syms = ns.values.keys().collect::<Vec<_>>();
             syms.sort_by_key(|s| s.text.to_ascii_lowercase());

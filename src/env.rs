@@ -128,7 +128,7 @@ impl Env {
         let mut namespaces = FxHashMap::default();
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
-            path: Rc::new(PathBuf::from("__user")),
+            src_path: Rc::new(PathBuf::from("__user")),
             abs_path: Rc::new(PathBuf::from("__user.gdn")),
             values: FxHashMap::default(),
             types: FxHashMap::default(),
@@ -197,7 +197,7 @@ impl Env {
         let types = built_in_types(&builtins_vfs_path, &mut id_gen);
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
-            path: Rc::new(PathBuf::from("__prelude")),
+            src_path: Rc::new(PathBuf::from("__prelude.gdn")),
             abs_path: Rc::new(PathBuf::from("__prelude.gdn")),
             values: FxHashMap::default(),
             types: FxHashMap::default(),
@@ -232,14 +232,17 @@ impl Env {
         env
     }
 
-    pub(crate) fn get_or_create_namespace(&mut self, path: &Path) -> Rc<RefCell<NamespaceInfo>> {
-        if let Some(ns) = self.namespaces.get(path) {
+    pub(crate) fn get_or_create_namespace(
+        &mut self,
+        abs_path: &Path,
+    ) -> Rc<RefCell<NamespaceInfo>> {
+        if let Some(ns) = self.namespaces.get(abs_path) {
             return ns.clone();
         }
 
         let mut values = FxHashMap::default();
         for fun_kind in BuiltinFunctionKind::iter() {
-            if fun_kind.namespace_path() != path {
+            if fun_kind.namespace_path() != abs_path {
                 continue;
             }
 
@@ -252,15 +255,15 @@ impl Env {
         }
 
         let ns = Rc::new(RefCell::new(NamespaceInfo {
-            path: Rc::new(path.to_owned()),
-            abs_path: Rc::new(path.to_owned()),
+            src_path: Rc::new(abs_path.to_owned()),
+            abs_path: Rc::new(abs_path.to_owned()),
             values,
             types: FxHashMap::default(),
         }));
 
         insert_prelude(ns.clone(), self.prelude_namespace.clone());
 
-        self.namespaces.insert(path.to_owned(), ns.clone());
+        self.namespaces.insert(abs_path.to_owned(), ns.clone());
         ns
     }
 
@@ -675,7 +678,7 @@ fn fresh_prelude(
     }
 
     let ns_info = NamespaceInfo {
-        path: prelude_path.clone(),
+        src_path: prelude_path.clone(),
         abs_path: prelude_path,
         values,
         types: built_in_types(builtins_vfs_path, id_gen),

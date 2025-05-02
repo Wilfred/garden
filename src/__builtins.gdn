@@ -23,15 +23,6 @@ external fun error(message: String): NoValue {
   __BUILTIN_IMPLEMENTATION
 }
 
-// List the contents of the specified directory.
-//
-// ```
-// list_directory(Path{ p: "/" })
-// ```
-external fun list_directory(path: Path): Result<List<Path>, String> {
-  __BUILTIN_IMPLEMENTATION
-}
-
 // Write a string to stdout.
 //
 // ```

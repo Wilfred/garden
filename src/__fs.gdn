@@ -3,7 +3,7 @@
 // If `path` already exists, its content is replaced with `content`.
 //
 // ```
-// write_file("hello world", Path{ p: "/tmp/foo.txt" })
+// fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
 // ```
 external fun write_file(content: String, path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
@@ -14,4 +14,12 @@ test write_file {
   write_file("hello world", Path{ p: "/tmp/file_from_garden_testing.txt" })
 }
 
+// List the contents of the specified directory.
+//
+// ```
+// fs::list_directory(Path{ p: "/" })
+// ```
+external fun list_directory(path: Path): Result<List<Path>, String> {
+  __BUILTIN_IMPLEMENTATION
+}
 

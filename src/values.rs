@@ -358,7 +358,6 @@ impl BuiltinFunctionKind {
     pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
             BuiltinFunctionKind::Error
-            | BuiltinFunctionKind::ListDirectory
             | BuiltinFunctionKind::Shell
             | BuiltinFunctionKind::StringRepr
             | BuiltinFunctionKind::Print
@@ -372,7 +371,9 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::TypeDocComment
             | BuiltinFunctionKind::TypeSource
             | BuiltinFunctionKind::BuiltInTypes => PathBuf::from("__prelude.gdn"),
-            BuiltinFunctionKind::WriteFile => PathBuf::from("__fs.gdn"),
+            BuiltinFunctionKind::WriteFile | BuiltinFunctionKind::ListDirectory => {
+                PathBuf::from("__fs.gdn")
+            }
         }
     }
 }

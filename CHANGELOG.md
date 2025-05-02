@@ -5,7 +5,8 @@
 
 ### Standard Library
 
-`write_file()` is now `fs::write_file()`.
+`write_file()` is now `fs::write_file()`, `list_directory()` is now
+`fs::list_directory()`.
 
 ### Syntax
 

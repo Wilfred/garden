@@ -1,5 +1,5 @@
 {
-  list_directory(Path{ p: "/" }).or_error()
+  fs::list_directory(Path{ p: "/" }).or_error()
 }
 
 // args: run

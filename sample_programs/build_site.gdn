@@ -2,7 +2,7 @@ import "./markdown.gdn"
 
 // A list of all the files in `website_dir` that have a .md extension.
 fun markdown_files(website_dir: Path): List<Path> {
-  let dir_files = list_directory(website_dir).or_error()
+  let dir_files = fs::list_directory(website_dir).or_error()
   dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
 }
 

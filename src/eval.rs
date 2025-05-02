@@ -2646,7 +2646,7 @@ fn eval_builtin_call(
                 env.push_value(Value::path(path.display().to_string()));
             }
         }
-        BuiltinFunctionKind::WriteFile | BuiltinFunctionKind::WriteFile2 => {
+        BuiltinFunctionKind::WriteFile => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {

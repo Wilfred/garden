@@ -3,6 +3,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 
+### Standard Library
+
+`write_file()` is now `fs::write_file()`.
+
 ### Syntax
 
 `as` is now a reserved word.

@@ -682,15 +682,6 @@ fn fresh_prelude(
         );
     }
 
-    // Insert built-in namespaces.
-    let fs_namespace = env.namespaces.get(&PathBuf::from("__fs.gdn")).unwrap();
-    values.insert(
-        SymbolName {
-            text: "fs".to_owned(),
-        },
-        Value::new(Value_::Namespace(fs_namespace.clone())),
-    );
-
     let ns_info = NamespaceInfo {
         path: prelude_path,
         values,

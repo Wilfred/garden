@@ -1407,7 +1407,12 @@ impl TypeCheckVisitor<'_> {
                                             self.diagnostics.push(Diagnostic {
                                                 level: Level::Error,
                                                 message: ErrorMessage(vec![
-                                                    msgcode!("{}", ns.path.display()),
+                                                    msgcode!(
+                                                        "{}",
+                                                        self.env
+                                                            .relative_to_project(&ns.path)
+                                                            .display()
+                                                    ),
                                                     msgtext!(" does not contain an item named "),
                                                     msgcode!("{}", sym.name),
                                                     msgtext!("."),

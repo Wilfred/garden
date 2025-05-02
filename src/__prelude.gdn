@@ -1,4 +1,4 @@
-import "__fs.gdn" as fss
+import "__fs.gdn" as fs
 
 // Basic types.
 

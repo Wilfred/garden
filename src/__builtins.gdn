@@ -326,22 +326,6 @@ test built_in_types {
   assert(built_in_types().first() == Some("Bool"))
 }
 
-// Get the source code for the type definition of `name`.
-external fun type_source(name: String): Option<String> {
-  __BUILTIN_IMPLEMENTATION
-}
-
-test type_source {
-  match type_source("Unit") {
-    Some(source) => {
-      assert(source.starts_with("// "))
-    }
-    None => {
-      assert(False)
-    }
-  }
-}
-
 // Get the arguments passed when this program was run.
 //
 // For example, if the shell command was `garden run my_program.gdn

@@ -516,6 +516,14 @@ fn load_toplevel_items_(
 }
 
 fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {
+    if import_info.path == PathBuf::from("__prelude.gdn") {
+        return Ok(include_str!("__prelude.gdn").to_owned());
+    } else if import_info.path == PathBuf::from("__builtins.gdn") {
+        return Ok(include_str!("__builtins.gdn").to_owned());
+    } else if import_info.path == PathBuf::from("__fs.gdn") {
+        return Ok(include_str!("__fs.gdn").to_owned());
+    }
+
     let src_bytes = match std::fs::read(abs_path) {
         Ok(src_bytes) => src_bytes,
         Err(e) => {

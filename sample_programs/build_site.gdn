@@ -145,7 +145,7 @@ fun write_website_page(base_tmpl_src: String, page_src: String, dest_path: Path)
   }
 
   let src = "".join([header.trim_right(), page_src, footer.trim_left()])
-  write_file(src, dest_path).or_error()
+  fs::write_file(src, dest_path).or_error()
 }
 
 {

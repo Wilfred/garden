@@ -1,6 +1,6 @@
 test write_file_is_unsafe {
-    write_file("hello world", "/tmp/foo.txt")
-    // ^
+    fs::write_file("hello world", "/tmp/foo.txt")
+    //   ^
 }
 
 // args: sandboxed-test

@@ -340,6 +340,16 @@ impl Env {
     pub(crate) fn current_frame_mut(&mut self) -> &mut StackFrame {
         self.stack.0.last_mut().unwrap()
     }
+
+    /// If `path` is a subdirectory of the current project, convert it
+    /// to a relative path. This is intended to keep error messages
+    /// more concise.
+    pub(crate) fn relative_to_project<'a>(&self, path: &'a Path) -> &'a Path {
+        match path.strip_prefix(&self.project_root) {
+            Ok(rel_path) => rel_path,
+            Err(_) => path,
+        }
+    }
 }
 
 fn built_in_types(

@@ -126,26 +126,6 @@ impl Env {
 
         namespaces.insert(PathBuf::from("__user"), user_namespace.clone());
 
-        let mut fs_values = FxHashMap::default();
-        fs_values.insert(
-            SymbolName {
-                text: "write_file".to_owned(),
-            },
-            Value::new(Value_::BuiltinFunction(
-                BuiltinFunctionKind::WriteFile,
-                None,
-                None,
-            )),
-        );
-
-        let fs_namespace = Rc::new(RefCell::new(NamespaceInfo {
-            path: Rc::new(PathBuf::from("__fs.gdn")),
-            values: fs_values,
-            types: FxHashMap::default(),
-        }));
-
-        namespaces.insert(PathBuf::from("__fs.gdn"), fs_namespace);
-
         let builtins_path = Rc::new(PathBuf::from("__builtins.gdn"));
         let builtins_src = include_str!("__builtins.gdn");
         let builtins_vfs_path = vfs.insert(builtins_path.clone(), builtins_src.to_owned());

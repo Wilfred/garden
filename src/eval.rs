@@ -23,10 +23,10 @@ use crate::json_session::{print_as_json, Response, ResponseKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
     AssignUpdateKind, AstId, BinaryOperatorKind, Block, BuiltinMethodKind, EnumInfo, Expression,
-    ExpressionWithComma, Expression_, FunInfo, IdGenerator, InternedSymbolId, LetDestination,
-    MethodInfo, MethodKind, ParenthesizedArguments, ParenthesizedParameters, Pattern, StructInfo,
-    Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem, TypeHint, TypeName,
-    TypeSymbol,
+    ExpressionWithComma, Expression_, FunInfo, IdGenerator, ImportInfo, InternedSymbolId,
+    LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, ParenthesizedParameters,
+    Pattern, StructInfo, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem,
+    TypeHint, TypeName, TypeSymbol,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -425,34 +425,12 @@ fn load_toplevel_items_(
                 }
                 paths_seen.insert(abs_path.clone());
 
-                let src_bytes = match std::fs::read(&abs_path) {
-                    Ok(src_bytes) => src_bytes,
-                    Err(e) => {
-                        diagnostics.push(Diagnostic {
-                            // TODO: pass the absolute path, and find
-                            // a nice way to ensure that Garden tests
-                            // still work on any machine.
-                            message: describe_read_error(&import_info.path, &e),
-                            position: import_info.path_pos.clone(),
-                            level: Level::Error,
-                        });
-
+                let src = match read_src(&abs_path, import_info) {
+                    Ok(src) => src,
+                    Err(diagnostic) => {
+                        diagnostics.push(diagnostic);
                         continue;
                     }
-                };
-
-                let Ok(src) = String::from_utf8(src_bytes) else {
-                    diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![
-                            msgtext!("The file "),
-                            msgcode!("{}", path.display()),
-                            msgtext!(" is not valid UTF-8."),
-                        ]),
-                        position: import_info.path_pos.clone(),
-                        level: Level::Error,
-                    });
-
-                    continue;
                 };
 
                 let vfs_path = env.vfs.insert(Rc::new(abs_path.clone()), src.clone());
@@ -535,6 +513,36 @@ fn load_toplevel_items_(
     }
 
     (diagnostics, new_syms)
+}
+
+fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {
+    let src_bytes = match std::fs::read(abs_path) {
+        Ok(src_bytes) => src_bytes,
+        Err(e) => {
+            return Err(Diagnostic {
+                // TODO: pass the absolute path, and find
+                // a nice way to ensure that Garden tests
+                // still work on any machine.
+                message: describe_read_error(&import_info.path, &e),
+                position: import_info.path_pos.clone(),
+                level: Level::Error,
+            });
+        }
+    };
+
+    let Ok(src) = String::from_utf8(src_bytes) else {
+        return Err(Diagnostic {
+            message: ErrorMessage(vec![
+                msgtext!("The file "),
+                msgcode!("{}", import_info.path.display()),
+                msgtext!(" is not valid UTF-8."),
+            ]),
+            position: import_info.path_pos.clone(),
+            level: Level::Error,
+        });
+    };
+
+    Ok(src)
 }
 
 fn describe_read_error(path: &Path, e: &std::io::Error) -> ErrorMessage {

@@ -399,14 +399,19 @@ fn load_toplevel_items_(
                     continue;
                 };
 
-                let path = enclosing_dir.join(&import_info.path).normalize();
-                let Ok(abs_path) = std::path::absolute(&path) else {
-                    let current_dir_descr = match std::env::current_dir() {
-                        Ok(d) => format!(" (currently {})", d.display()),
-                        Err(_) => "".to_owned(),
-                    };
+                let abs_path = if import_info.path.display().to_string().starts_with("__") {
+                    // TODO: warn on user trying to name files with
+                    // two underscores.
+                    import_info.path.to_owned()
+                } else {
+                    let norm_path = enclosing_dir.join(&import_info.path).normalize();
+                    let Ok(abs_path) = std::path::absolute(&norm_path) else {
+                        let current_dir_descr = match std::env::current_dir() {
+                            Ok(d) => format!(" (currently {})", d.display()),
+                            Err(_) => "".to_owned(),
+                        };
 
-                    diagnostics.push(Diagnostic {
+                        diagnostics.push(Diagnostic {
                         message: ErrorMessage(vec![msgtext!(
                             "Could not convert `{}` to an absolute path. The working directory{} may not exist.",
                             import_info.path.display(),
@@ -416,7 +421,10 @@ fn load_toplevel_items_(
                         level: Level::Error,
                     });
 
-                    continue;
+                        continue;
+                    };
+
+                    abs_path
                 };
 
                 if paths_seen.contains(&abs_path) {

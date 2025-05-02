@@ -63,7 +63,16 @@ pub(crate) struct Env {
     pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
     pub(crate) types: FxHashMap<TypeName, TypeDefAndMethods>,
 
+    /// A copy of the prelude. This contains the values inserted in
+    /// every new namespace.
     pub(crate) prelude_namespace: Rc<RefCell<NamespaceInfo>>,
+
+    /// Namespaces in Garden are defined by the file that own
+    /// them. For every file, the corresponding namespace information.
+    ///
+    /// Note that the namespace information may not match the file on
+    /// disk, if the user has loaded additional definitions or if the
+    /// file has been changed after loading.
     pub(crate) namespaces: FxHashMap<PathBuf, Rc<RefCell<NamespaceInfo>>>,
 
     /// File paths relative to this directory will be shown as

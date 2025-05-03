@@ -368,12 +368,13 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::SetWorkingDirectory
             | BuiltinFunctionKind::CheckSnippet
             | BuiltinFunctionKind::Lex
-            | BuiltinFunctionKind::TypeDocComment
-            | BuiltinFunctionKind::BuiltInTypes => PathBuf::from("__prelude.gdn"),
+            | BuiltinFunctionKind::TypeDocComment => PathBuf::from("__prelude.gdn"),
             BuiltinFunctionKind::WriteFile | BuiltinFunctionKind::ListDirectory => {
                 PathBuf::from("__fs.gdn")
             }
-            BuiltinFunctionKind::TypeSource => PathBuf::from("__garden.gdn"),
+            BuiltinFunctionKind::TypeSource | BuiltinFunctionKind::BuiltInTypes => {
+                PathBuf::from("__garden.gdn")
+            }
         }
     }
 }

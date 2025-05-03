@@ -1,3 +1,17 @@
+// A list of all the type names in the prelude, `String`, `Option` and
+// so on. The list is sorted alphabetically.
+external fun built_in_types(): List<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test built_in_types {
+  assert(built_in_types().contains("Unit"))
+  assert(built_in_types().contains("Fun"))
+  assert(built_in_types().contains("String"))
+
+  assert(built_in_types().first() == Some("Bool"))
+}
+
 external fun keywords(): List<String> {
   // TODO: Add support for constants so this doesn't need to be a function.
   [

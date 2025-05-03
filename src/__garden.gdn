@@ -1,3 +1,71 @@
+// Check the syntax of `src`.
+external fun check_snippet(src: String): Result<Unit, List<String>> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test check_snippet_good {
+  match check_snippet("fun foo() {}") {
+    Ok(_) => {}
+    Err(_) => {
+      assert(False)
+    }
+  }
+}
+
+test check_snippet_bad_syntax {
+  match check_snippet("fun foo(") {
+    Ok(_) => {
+      assert(False)
+    }
+    Err(_) => {}
+  }
+}
+
+test check_snippet_bad_name {
+  match check_snippet("fun foo() { bar() }") {
+    Ok(_) => {
+      assert(False)
+    }
+    Err(_) => {}
+  }
+}
+
+// Split `src` into individual lexed tokens, along with their offsets
+// in the original string.
+external fun lex(src: String): List<(Int, String)> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test lex {
+  // Basic case.
+  assert(lex("a 123 \"b c d\"") == [(0, "a"), (2, "123"), (6, "\"b c d\"")])
+
+  // We should include preceding comments on tokens.
+  assert(lex("a // b\n c") == [(0, "a"), (2, "// b\n"), (8, "c")])
+
+  // We should include comments that have no token afterwards.
+  assert(lex("a // b\n") == [(0, "a"), (2, "// b\n")])
+
+  // Comments should not require a newline at EOF.
+  assert(lex("a // b") == [(0, "a"), (2, "// b")])
+}
+
+external fun type_doc_comment(type_name: String): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test type_doc_comment {
+  match type_doc_comment("Unit") {
+    Some(_) => {}
+    None => { assert(False) }
+  }
+
+  match type_doc_comment("NoSuchTypeExists") {
+    Some(_) => { assert(False) }
+    None => {}
+  }
+}
+
 // A list of all the type names in the prelude, `String`, `Option` and
 // so on. The list is sorted alphabetically.
 external fun built_in_types(): List<String> {

@@ -7,7 +7,9 @@
 
 `write_file()` is now `fs::write_file()`, `list_directory()` is now
 `fs::list_directory()`, `keywords()` is now `garden::keywords()`,
-`type_source()` is now `garden::type_source()`.
+`type_source()` is now `garden::type_source()`, `lex()` is now
+`garden::lex()`, `check_snippet()` is now `garden::check_snippet()`,
+`type_doc_comment()` is now `garden::type_doc_comment()`,
 
 ### Syntax
 

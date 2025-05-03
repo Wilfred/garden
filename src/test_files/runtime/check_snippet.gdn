@@ -1,5 +1,5 @@
 {
-  dbg(check_snippet("True"))
+  dbg(garden::check_snippet("True"))
 }
 
 // args: run

@@ -86,28 +86,32 @@ fn sandboxed_tests_summary(
     let mut tests = FxHashMap::default();
     for (test_sym, err) in &summary.tests {
         let msg = match err {
-            Some(EvalError::Interrupted | EvalError::ResumableError(_, _)) => {
+            Some(EvalError::Interrupted) => {
                 num_errored += 1;
-                "errored"
+                "errored: interrupted".to_owned()
             }
-            Some(EvalError::AssertionFailed(_, _)) => {
+            Some(EvalError::ResumableError(_, msg)) => {
+                num_errored += 1;
+                format!("errored: {}", msg.as_string())
+            }
+            Some(EvalError::AssertionFailed(_, msg)) => {
                 num_failed += 1;
-                "failed"
+                format!("failed: {}", msg.as_string())
             }
             Some(EvalError::ReachedTickLimit(_)) => {
                 num_timed_out += 1;
-                "timed_out"
+                "timed_out".to_owned()
             }
             Some(EvalError::ForbiddenInSandbox(_)) => {
                 num_sandboxed += 1;
-                "sandboxed"
+                "sandboxed".to_owned()
             }
             None => {
                 num_passed += 1;
-                "passed"
+                "passed".to_owned()
             }
         };
-        tests.insert(test_sym.name.text.clone(), msg.to_owned());
+        tests.insert(test_sym.name.text.clone(), msg);
     }
 
     if test_at_cursor.is_some() {

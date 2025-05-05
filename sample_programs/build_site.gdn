@@ -100,7 +100,7 @@ fun build_site(): Unit {
     }
   }
 
-  for type_name in garden::built_in_types() {
+  for type_name in garden::prelude_types() {
     write_type_page(type_name, out_dir, base_tmpl_src)
   }
 }
@@ -128,7 +128,7 @@ fun substitute_shorthand(src: String): String {
 
   let keyword_links = join_with_commas_and(keyword_links)
 
-  let type_links = garden::built_in_types().map(fun(name: String) {
+  let type_links = garden::prelude_types().map(fun(name: String) {
     "".join(["[`", name, "`](./type:", name, ".html)"])
   })
 

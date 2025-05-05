@@ -68,16 +68,16 @@ test doc_comment_for_type {
 
 // A list of all the type names in the prelude, `String`, `Option` and
 // so on. The list is sorted alphabetically.
-external fun built_in_types(): List<String> {
+external fun prelude_types(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
-test built_in_types {
-  assert(built_in_types().contains("Unit"))
-  assert(built_in_types().contains("Fun"))
-  assert(built_in_types().contains("String"))
+test prelude_types {
+  assert(prelude_types().contains("Unit"))
+  assert(prelude_types().contains("Fun"))
+  assert(prelude_types().contains("String"))
 
-  assert(built_in_types().first() == Some("Bool"))
+  assert(prelude_types().first() == Some("Bool"))
 }
 
 external fun keywords(): List<String> {

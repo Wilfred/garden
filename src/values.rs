@@ -351,7 +351,7 @@ pub(crate) enum BuiltinFunctionKind {
     Lex,
     DocCommentForType,
     SourceForType,
-    BuiltInTypes,
+    PreludeTypes,
 }
 
 impl BuiltinFunctionKind {
@@ -370,7 +370,7 @@ impl BuiltinFunctionKind {
                 PathBuf::from("__fs.gdn")
             }
             BuiltinFunctionKind::SourceForType
-            | BuiltinFunctionKind::BuiltInTypes
+            | BuiltinFunctionKind::PreludeTypes
             | BuiltinFunctionKind::Lex
             | BuiltinFunctionKind::DocCommentForType
             | BuiltinFunctionKind::CheckSnippet => PathBuf::from("__garden.gdn"),
@@ -396,7 +396,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Lex => "lex",
             BuiltinFunctionKind::DocCommentForType => "doc_comment_for_type",
             BuiltinFunctionKind::SourceForType => "source_for_type",
-            BuiltinFunctionKind::BuiltInTypes => "built_in_types",
+            BuiltinFunctionKind::PreludeTypes => "prelude_types",
         };
         write!(f, "{}", name)
     }

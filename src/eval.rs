@@ -2935,7 +2935,7 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
-        BuiltinFunctionKind::BuiltInTypes => {
+        BuiltinFunctionKind::PreludeTypes => {
             check_arity(
                 &SymbolName {
                     text: format!("{}", kind),

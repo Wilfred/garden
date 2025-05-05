@@ -2818,7 +2818,7 @@ fn eval_builtin_call(
                 env.push_value(Value::new(v));
             }
         }
-        BuiltinFunctionKind::TypeDocComment => {
+        BuiltinFunctionKind::DocCommentForType => {
             check_arity(
                 &SymbolName {
                     text: format!("{}", kind),

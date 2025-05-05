@@ -30,7 +30,7 @@ fun drop_leading_comments(src: String): String {
 // Look up the doc comment for `type_name`, render it to HTML and
 // write it to `out_dir`.
 fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Unit {
-  match garden::type_doc_comment(type_name) {
+  match garden::doc_comment_for_type(type_name) {
     Some(doc_comment) => {
       let (intro, rest) = match doc_comment.split_once("\n\n") {
         Some(tup) => tup,

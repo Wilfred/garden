@@ -50,17 +50,17 @@ test lex {
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
 }
 
-external fun type_doc_comment(type_name: String): Option<String> {
+external fun doc_comment_for_type(type_name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
-test type_doc_comment {
-  match type_doc_comment("Unit") {
+test doc_comment_for_type {
+  match doc_comment_for_type("Unit") {
     Some(_) => {}
     None => { assert(False) }
   }
 
-  match type_doc_comment("NoSuchTypeExists") {
+  match doc_comment_for_type("NoSuchTypeExists") {
     Some(_) => { assert(False) }
     None => {}
   }

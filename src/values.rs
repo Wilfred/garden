@@ -349,7 +349,7 @@ pub(crate) enum BuiltinFunctionKind {
     WriteFile,
     CheckSnippet,
     Lex,
-    TypeDocComment,
+    DocCommentForType,
     SourceForType,
     BuiltInTypes,
 }
@@ -372,7 +372,7 @@ impl BuiltinFunctionKind {
             BuiltinFunctionKind::SourceForType
             | BuiltinFunctionKind::BuiltInTypes
             | BuiltinFunctionKind::Lex
-            | BuiltinFunctionKind::TypeDocComment
+            | BuiltinFunctionKind::DocCommentForType
             | BuiltinFunctionKind::CheckSnippet => PathBuf::from("__garden.gdn"),
         }
     }
@@ -394,7 +394,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::WriteFile => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
             BuiltinFunctionKind::Lex => "lex",
-            BuiltinFunctionKind::TypeDocComment => "type_doc_comment",
+            BuiltinFunctionKind::DocCommentForType => "doc_comment_for_type",
             BuiltinFunctionKind::SourceForType => "source_for_type",
             BuiltinFunctionKind::BuiltInTypes => "built_in_types",
         };

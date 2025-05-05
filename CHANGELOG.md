@@ -9,7 +9,7 @@
 `fs::list_directory()`, `keywords()` is now `garden::keywords()`,
 `type_source()` is now `garden::source_for_type()`, `lex()` is now
 `garden::lex()`, `check_snippet()` is now `garden::check_snippet()`,
-`type_doc_comment()` is now `garden::type_doc_comment()`,
+`type_doc_comment()` is now `garden::doc_comment_for_type()`,
 
 ### Syntax
 

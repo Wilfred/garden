@@ -350,7 +350,7 @@ pub(crate) enum BuiltinFunctionKind {
     CheckSnippet,
     Lex,
     TypeDocComment,
-    TypeSource,
+    SourceForType,
     BuiltInTypes,
 }
 
@@ -369,7 +369,7 @@ impl BuiltinFunctionKind {
             BuiltinFunctionKind::WriteFile | BuiltinFunctionKind::ListDirectory => {
                 PathBuf::from("__fs.gdn")
             }
-            BuiltinFunctionKind::TypeSource
+            BuiltinFunctionKind::SourceForType
             | BuiltinFunctionKind::BuiltInTypes
             | BuiltinFunctionKind::Lex
             | BuiltinFunctionKind::TypeDocComment
@@ -395,7 +395,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
             BuiltinFunctionKind::Lex => "lex",
             BuiltinFunctionKind::TypeDocComment => "type_doc_comment",
-            BuiltinFunctionKind::TypeSource => "type_source",
+            BuiltinFunctionKind::SourceForType => "source_for_type",
             BuiltinFunctionKind::BuiltInTypes => "built_in_types",
         };
         write!(f, "{}", name)

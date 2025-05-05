@@ -91,12 +91,12 @@ external fun keywords(): List<String> {
 }
 
 // Get the source code for the type definition of `name`.
-external fun type_source(name: String): Option<String> {
+external fun source_for_type(name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
-test type_source {
-  match type_source("Unit") {
+test source_for_type {
+  match source_for_type("Unit") {
     Some(source) => {
       assert(source.starts_with("// "))
     }

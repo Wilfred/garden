@@ -37,7 +37,7 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
         None => (doc_comment, ""),
       }
 
-      let src = match garden::type_source(type_name) {
+      let src = match garden::source_for_type(type_name) {
         Some(src) => {
           "```\n" ^ (drop_leading_comments(src) ^ "\n```")
         }

@@ -192,11 +192,11 @@ repeated parentheses/brackets on the same line."
 
 (defface garden-test-sandboxed-face
   '((t :inherit warning))
-  "Face for highlighting passing tests")
+  "Face for highlighting tests that aren't run due to the sandbox")
 
 (defface garden-test-failed-face
   '((t :inherit error))
-  "Face for highlighting passing tests")
+  "Face for highlighting failing tests")
 
 (defun garden--apply-test-faces (buf)
   "Given a plist of test names to test results, apply faces accordingly."

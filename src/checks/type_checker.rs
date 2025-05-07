@@ -699,10 +699,11 @@ impl TypeCheckVisitor<'_> {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Expected an enum variant here, but got `{}`.",
-                                    value.display(self.env)
-                                ))]),
+                                message: ErrorMessage(vec![
+                                    msgtext!("Expected an enum variant here, but got "),
+                                    msgcode!("{}", value.display(self.env)),
+                                    msgtext!("."),
+                                ]),
                                 position: pattern.variant_sym.position.clone(),
                             });
                             continue;
@@ -719,10 +720,13 @@ impl TypeCheckVisitor<'_> {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             level: Level::Error,
-                            message: ErrorMessage(vec![Text(format!(
-                                "This match case is for `{}`, but you're matching on a `{}`.",
-                                pattern_type_name, &scrutinee_ty_name,
-                            ))]),
+                            message: ErrorMessage(vec![
+                                msgtext!("This match case is for "),
+                                msgcode!("{}", pattern_type_name),
+                                msgtext!(", but you're matching on a "),
+                                msgcode!("{}", scrutinee_ty_name),
+                                msgtext!("."),
+                            ]),
                             position: pattern.variant_sym.position.clone(),
                         });
                     }
@@ -734,9 +738,10 @@ impl TypeCheckVisitor<'_> {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             level: Level::Error,
-                            message: ErrorMessage(vec![Text(
-                                "`match` cases have different types.".to_owned(),
-                            )]),
+                            message: ErrorMessage(vec![
+                                msgcode!("match"),
+                                msgtext!(" cases have different types."),
+                            ]),
                             position,
                         });
 
@@ -757,10 +762,16 @@ impl TypeCheckVisitor<'_> {
                         match unify(&then_ty, &else_ty) {
                             Some(ty) => ty,
                             None => {
-                                let message = ErrorMessage(vec![Text(format!(
-                                    "`if` and `else` have incompatible types: `{}` and `{}`.",
-                                    then_ty, else_ty
-                                ))]);
+                                let message = ErrorMessage(vec![
+                                    msgcode!("if"),
+                                    msgtext!(" and "),
+                                    msgcode!("else"),
+                                    msgtext!(" have incompatible types: "),
+                                    msgcode!("{}", then_ty),
+                                    msgtext!(" and "),
+                                    msgcode!("{}", else_ty),
+                                    msgtext!("."),
+                                ]);
 
                                 let position = match then_block.exprs.last() {
                                     Some(last_expr) => last_expr.position.clone(),
@@ -843,11 +854,14 @@ impl TypeCheckVisitor<'_> {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         level: Level::Error,
-                        message: ErrorMessage(vec![Text(format!(
-                            "`{}` can only be used with `Int` variables, but got `{}`.",
-                            op.as_src(),
-                            sym_ty
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgcode!("{}", op.as_src()),
+                            msgtext!(" can only be used with "),
+                            msgcode!("Int"),
+                            msgtext!(" variables, but got "),
+                            msgcode!("{}", sym_ty),
+                            msgtext!("."),
+                        ]),
                         position: sym.position.clone(),
                     });
                 }
@@ -883,10 +897,13 @@ impl TypeCheckVisitor<'_> {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Expected this function to return `{}`, but got `Unit`.",
-                                    expr_ty,
-                                ))]),
+                                message: ErrorMessage(vec![
+                                    msgtext!("Expected this function to return "),
+                                    msgcode!("{}", expr_ty),
+                                    msgtext!(", but got "),
+                                    msgcode!("Unit"),
+                                    msgtext!("."),
+                                ]),
                                 position: pos.clone(),
                             });
                         }
@@ -967,10 +984,13 @@ impl TypeCheckVisitor<'_> {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Expected `{}` for this field but got `{}`.",
-                                    field_ty, ty
-                                ))]),
+                                message: ErrorMessage(vec![
+                                    msgtext!("Expected "),
+                                    msgcode!("{}", field_ty),
+                                    msgtext!(" for this field but got "),
+                                    msgcode!("{}", ty),
+                                    msgtext!("."),
+                                ]),
                                 position: expr_pos,
                             });
                         }
@@ -1012,13 +1032,17 @@ impl TypeCheckVisitor<'_> {
 
                     if !is_subtype(&lhs_ty, &rhs_ty) && !is_subtype(&rhs_ty, &lhs_ty) {
                         self.diagnostics.push(Diagnostic {
-                                notes: vec![], level: Level::Warning,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "You should compare values of the same type, but got `{}` and `{}`.",
-                                    lhs_ty, rhs_ty
-                                ))]),
-                                position: pos.clone(),
-                            });
+                            notes: vec![],
+                            level: Level::Warning,
+                            message: ErrorMessage(vec![
+                                msgtext!("You should compare values of the same type, but got "),
+                                msgcode!("{}", lhs_ty),
+                                msgtext!(" and "),
+                                msgcode!("{}", rhs_ty),
+                                msgtext!("."),
+                            ]),
+                            position: pos.clone(),
+                        });
                     }
 
                     Type::bool()
@@ -1186,10 +1210,11 @@ impl TypeCheckVisitor<'_> {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             level: Level::Error,
-                            message: ErrorMessage(vec![Text(format!(
-                                "Expected a function, but got a `{}`.",
-                                recv_ty
-                            ))]),
+                            message: ErrorMessage(vec![
+                                msgtext!("Expected a function, but got a "),
+                                msgcode!("{}", recv_ty),
+                                msgtext!("."),
+                            ]),
                             position: recv.position.clone(),
                         });
 
@@ -1216,10 +1241,13 @@ impl TypeCheckVisitor<'_> {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         level: Level::Error,
-                        message: ErrorMessage(vec![Text(format!(
-                            "Expected a type with a `{}` method, but got a `{}`.",
-                            &sym.name, receiver_ty
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("Expected a type with a "),
+                            msgcode!("{}", sym.name),
+                            msgtext!(" method, but got a "),
+                            msgcode!("{}", receiver_ty),
+                            msgtext!("."),
+                        ]),
                         position: recv.position.clone(),
                     });
                     return Type::error("No type name for this method receiver");
@@ -1339,10 +1367,12 @@ impl TypeCheckVisitor<'_> {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             level: Level::Error,
-                            message: ErrorMessage(vec![Text(format!(
-                                "`{}` has no method `{}`.{}",
-                                receiver_ty_name, sym.name, suggest
-                            ))]),
+                            message: ErrorMessage(vec![
+                                msgcode!("{}", receiver_ty_name),
+                                msgtext!(" has no method "),
+                                msgcode!("{}", sym.name),
+                                msgtext!(".{}", suggest),
+                            ]),
                             position: sym.position.clone(),
                         });
                         Type::error("No such method on this type")
@@ -1377,10 +1407,13 @@ impl TypeCheckVisitor<'_> {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Struct `{}` has no field `{}`.",
-                                    recv_ty_name, field_sym.name
-                                ))]),
+                                message: ErrorMessage(vec![
+                                    msgtext!("Struct "),
+                                    msgcode!("{}", recv_ty_name),
+                                    msgtext!(" has no field "),
+                                    msgcode!("{}", field_sym.name),
+                                    msgtext!("."),
+                                ]),
                                 position: field_sym.position.clone(),
                             });
 
@@ -1389,28 +1422,28 @@ impl TypeCheckVisitor<'_> {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "`{}` is not a struct.",
-                                    recv_ty_name
-                                ))]),
+                                message: ErrorMessage(vec![
+                                    msgcode!("{}", recv_ty_name),
+                                    msgtext!(" is not a struct."),
+                                ]),
                                 position: field_sym.position.clone(),
                             });
 
-                            Type::error("No struct with this name")
+                            Type::error("No type with this name or type is not a struct")
                         }
                     }
                     _ => {
                         self.diagnostics.push(Diagnostic {
                             notes: vec![],
                             level: Level::Error,
-                            message: ErrorMessage(vec![Text(format!(
-                                "`{}` is not a struct.",
-                                recv_ty_name
-                            ))]),
+                            message: ErrorMessage(vec![
+                                msgcode!("{}", recv_ty_name),
+                                msgtext!(" is not a struct."),
+                            ]),
                             position: field_sym.position.clone(),
                         });
 
-                        Type::error("This type is not a struct")
+                        Type::error("This type is not a user-defined type")
                     }
                 }
             }
@@ -1614,10 +1647,11 @@ impl TypeCheckVisitor<'_> {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
                         level: Level::Error,
-                        message: ErrorMessage(vec![Text(format!(
-                            "Expected a tuple, but got `{}`.",
-                            ty
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("Expected a tuple, but got "),
+                            msgcode!("{}", ty),
+                            msgtext!("."),
+                        ]),
                         position: expr_pos.clone(),
                     });
 
@@ -1709,10 +1743,13 @@ impl TypeCheckVisitor<'_> {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
                                 level: Level::Error,
-                                message: ErrorMessage(vec![Text(format!(
-                                    "Expected a function with return type `{}` but got `{}`.",
-                                    expected_return_ty, hint_ty
-                                ))]),
+                                message: ErrorMessage(vec![
+                                    msgtext!("Expected a function with return type "),
+                                    msgcode!("{}", expected_return_ty),
+                                    msgtext!(" but got "),
+                                    msgcode!("{}", hint_ty),
+                                    msgtext!("."),
+                                ]),
                                 position: pos.clone(),
                             });
                         }
@@ -1986,10 +2023,17 @@ fn unify_and_solve_hint(
                 // same type.
                 if !is_subtype(ty, bound_ty) {
                     return Err(Diagnostic {
-                        message: ErrorMessage(vec![Text(format!(
-                            "Expected `{bound_ty}` (because {} is {bound_ty}), but got `{ty}`.",
-                            hint.as_src(),
-                        ))]),
+                        message: ErrorMessage(vec![
+                            msgtext!("Expected "),
+                            msgcode!("{}", bound_ty),
+                            msgtext!(" (because "),
+                            msgcode!("{}", hint.as_src()),
+                            msgtext!(" is "),
+                            msgcode!("{}", bound_ty),
+                            msgtext!("), but got "),
+                            msgcode!("{}", ty),
+                            msgtext!("."),
+                        ]),
                         position: position.clone(),
                         notes: vec![],
                         level: Level::Warning,

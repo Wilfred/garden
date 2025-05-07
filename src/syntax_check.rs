@@ -27,6 +27,8 @@ enum Severity {
 struct CheckDiagnostic {
     #[serde(skip)]
     position: Position,
+    #[serde(skip)]
+    notes: Vec<(ErrorMessage, Position)>,
     // TODO: Could we just use Position here? The only downside of
     // using Position directly is that a file with a large number of
     // errors will repeat the same file name many times in the JSON
@@ -68,6 +70,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                         message.as_string()
                     },
                     severity: Severity::Error,
+                    notes: vec![],
                 });
             }
             ParseError::Incomplete {
@@ -86,6 +89,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                         message.as_string()
                     },
                     severity: Severity::Error,
+                    notes: vec![],
                 });
             }
         };
@@ -100,7 +104,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         message,
         position,
         level,
-        notes: _,
+        notes,
     } in raw_diagnostics
     {
         // TODO: merge Level and Severity types.
@@ -121,6 +125,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 message.as_string()
             },
             severity,
+            notes,
         });
     }
 

@@ -505,6 +505,7 @@ fn dump_ast(src: &str, path: &Path) {
                         &position,
                         None,
                         Severity::Error,
+                        &[],
                         &vfs,
                     )
                 );
@@ -551,6 +552,7 @@ fn parse_toplevel_items_or_die(
                         &position,
                         project_root.as_ref(),
                         Severity::Error,
+                        &[],
                         vfs,
                     )
                 ),

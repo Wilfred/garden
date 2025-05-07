@@ -84,27 +84,48 @@ pub(crate) fn format_diagnostic(
     position: &Position,
     project_root: Option<&PathBuf>,
     severity: Severity,
+    notes: &[(ErrorMessage, Position)],
     vfs: &Vfs,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
-    let severity_s = match severity {
-        Severity::Warning => {
-            if use_color {
-                "Warning".bold().yellow().to_string()
-            } else {
-                "Warning".to_owned()
-            }
-        }
-        Severity::Error => {
-            if use_color {
-                "Error".bold().red().to_string()
-            } else {
-                "Error".to_owned()
-            }
-        }
-    };
+    let severity_s = format_severity(severity, use_color);
+    let mut s = format_diagnostic_item(
+        message,
+        position,
+        project_root,
+        &severity_s,
+        vfs,
+        use_color,
+        matches!(severity, Severity::Error),
+    );
 
+    for (message, position) in notes {
+        s.push('\n');
+
+        s.push_str(&format_diagnostic_item(
+            message,
+            position,
+            project_root,
+            &format_note_severity(use_color),
+            vfs,
+            use_color,
+            false,
+        ));
+    }
+
+    s
+}
+
+fn format_diagnostic_item(
+    message: &ErrorMessage,
+    position: &Position,
+    project_root: Option<&PathBuf>,
+    severity_s: &str,
+    vfs: &Vfs,
+    use_color: bool,
+    is_error: bool,
+) -> String {
     let mut res = format!(
         "{}: {}\n",
         severity_s,
@@ -120,9 +141,37 @@ pub(crate) fn format_diagnostic(
         None,
         project_root,
         true,
-        matches!(severity, Severity::Error),
+        is_error,
     ));
+
     res
+}
+
+fn format_severity(severity: Severity, use_color: bool) -> String {
+    match severity {
+        Severity::Warning => {
+            if use_color {
+                "Warning".bold().yellow().to_string()
+            } else {
+                "Warning".to_owned()
+            }
+        }
+        Severity::Error => {
+            if use_color {
+                "Error".bold().red().to_string()
+            } else {
+                "Error".to_owned()
+            }
+        }
+    }
+}
+
+fn format_note_severity(use_color: bool) -> String {
+    if use_color {
+        "Note".dimmed().to_string()
+    } else {
+        "Note".to_owned()
+    }
 }
 
 fn format_pos_in_fun(

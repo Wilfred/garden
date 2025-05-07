@@ -125,6 +125,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                 &diagnostic.position,
                 Some(&env.project_root),
                 diagnostic.severity,
+                &diagnostic.notes,
                 &env.vfs,
             )
         };

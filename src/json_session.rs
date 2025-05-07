@@ -207,6 +207,7 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs) -> Response {
                     &position,
                     None,
                     Severity::Error,
+                    &[],
                     vfs,
                 ));
 
@@ -262,6 +263,7 @@ fn handle_eval_up_to_request(
                     &position,
                     None,
                     Severity::Error,
+                    &[],
                     &env.vfs,
                 ));
                 return Response {

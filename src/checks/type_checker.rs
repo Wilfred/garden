@@ -1365,7 +1365,6 @@ impl TypeCheckVisitor<'_> {
                             };
 
                         self.diagnostics.push(Diagnostic {
-                            notes: vec![],
                             severity: Severity::Error,
                             message: ErrorMessage(vec![
                                 msgcode!("{}", receiver_ty_name),
@@ -1374,6 +1373,15 @@ impl TypeCheckVisitor<'_> {
                                 msgtext!(".{}", suggest),
                             ]),
                             position: sym.position.clone(),
+                            notes: vec![
+                            //     (
+                            //     ErrorMessage(vec![Text(format!(
+                            //         "`{}` is defined here",
+                            //         receiver_ty_name,
+                            //     ))]),
+                            //     sym.position.clone(),
+                            // )
+                            ],
                         });
                         Type::error("No such method on this type")
                     }

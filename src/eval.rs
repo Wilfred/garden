@@ -394,7 +394,7 @@ fn load_toplevel_items_(
                         ))]),
                         position,
                         notes: vec![],
-                        level: Severity::Error,
+                        severity: Severity::Error,
                     });
 
                     continue;
@@ -413,14 +413,15 @@ fn load_toplevel_items_(
                         };
 
                         diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![msgtext!(
-                            "Could not convert `{}` to an absolute path. The working directory{} may not exist.",
-                            import_info.path.display(),
-                            current_dir_descr
-                        )]),
-                        position: import_info.path_pos.clone(),
-                        notes: vec![], level: Severity::Error,
-                    });
+                            message: ErrorMessage(vec![msgtext!(
+                                "Could not convert `{}` to an absolute path. The working directory{} may not exist.",
+                                import_info.path.display(),
+                                current_dir_descr
+                            )]),
+                            position: import_info.path_pos.clone(),
+                            notes: vec![],
+                            severity: Severity::Error,
+                        });
 
                         continue;
                     };
@@ -452,7 +453,7 @@ fn load_toplevel_items_(
                             message: ErrorMessage(vec![Text(error.message().as_string())]),
                             position: error.position().clone(),
                             notes: vec![],
-                            level: Severity::Error,
+                            severity: Severity::Error,
                         });
                     }
                     continue;
@@ -546,7 +547,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
                 message: describe_read_error(&import_info.path, &e),
                 position: import_info.path_pos.clone(),
                 notes: vec![],
-                level: Severity::Error,
+                severity: Severity::Error,
             });
         }
     };
@@ -560,7 +561,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
             ]),
             position: import_info.path_pos.clone(),
             notes: vec![],
-            level: Severity::Error,
+            severity: Severity::Error,
         });
     };
 
@@ -625,7 +626,7 @@ pub(crate) fn eval_toplevel_items(
     let ns = env.current_namespace();
     let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, ns.clone());
     for diagnostic in diagnostics.iter() {
-        if matches!(diagnostic.level, Severity::Error) {
+        if matches!(diagnostic.severity, Severity::Error) {
             return Err(EvalError::ResumableError(
                 diagnostic.position.clone(),
                 diagnostic.message.clone(),
@@ -1227,7 +1228,7 @@ fn update_builtin_type_info(
     let Some(current_def) = env.types.get(&symbol.name) else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type `{}` that doesn't exist.",
                 symbol.name
@@ -1240,7 +1241,7 @@ fn update_builtin_type_info(
     let TypeDef::Builtin(kind, _) = &current_def.def else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but {} isn't a built-in type.",
                 symbol.name,
@@ -1286,7 +1287,7 @@ fn update_builtin_meth_info(
     let Some(type_def_and_methods) = env.types.get_mut(type_name) else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
@@ -1302,7 +1303,7 @@ fn update_builtin_meth_info(
     else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
                 meth_info.name_sym.name, type_name
@@ -1315,7 +1316,7 @@ fn update_builtin_meth_info(
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 // TODO: we need a better design principle around
                 // warning phrasing. It should probably always include
@@ -1352,7 +1353,7 @@ fn update_builtin_fun_info(
     let Some(value) = ns.values.get(&symbol.name).cloned() else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a function `{}` that doesn't exist.",
                 symbol.name
@@ -1381,7 +1382,7 @@ fn update_builtin_fun_info(
     let Value_::BuiltinFunction(kind, _, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Severity::Warning,
+            severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
@@ -3003,8 +3004,11 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         error_messages.push(Value::new(Value_::String(err.message().as_string())));
     }
 
-    for Diagnostic { message, level, .. } in check_toplevel_items(&vfs_path, &items, &check_env) {
-        match level {
+    for Diagnostic {
+        message, severity, ..
+    } in check_toplevel_items(&vfs_path, &items, &check_env)
+    {
+        match severity {
             Severity::Warning => {}
             Severity::Error => {
                 error_messages.push(Value::new(Value_::String(message.as_string())));

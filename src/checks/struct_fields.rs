@@ -29,7 +29,7 @@ impl Visitor for StructFieldVisitor<'_> {
         let Some(type_def) = self.env.get_type_def(&name_sym.name) else {
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
-                level: Severity::Error,
+                severity: Severity::Error,
                 message: ErrorMessage(vec![
                     msgtext!("No such type "),
                     msgcode!("{}", name_sym),
@@ -42,7 +42,7 @@ impl Visitor for StructFieldVisitor<'_> {
         let TypeDef::Struct(struct_info) = type_def else {
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
-                level: Severity::Error,
+                severity: Severity::Error,
                 message: ErrorMessage(vec![
                     msgcode!("{}", name_sym),
                     msgtext!(" is not a struct."),
@@ -63,7 +63,7 @@ impl Visitor for StructFieldVisitor<'_> {
             if seen_fields.contains(&field_sym.name) {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    level: Severity::Warning,
+                    severity: Severity::Warning,
                     message: ErrorMessage(vec![
                         msgtext!("Duplicate field "),
                         msgcode!("{}", field_sym.name),
@@ -78,7 +78,7 @@ impl Visitor for StructFieldVisitor<'_> {
             if !fields_by_name.contains_key(&field_sym.name) {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    level: Severity::Error,
+                    severity: Severity::Error,
                     message: ErrorMessage(vec![
                         msgtext!("Struct "),
                         msgcode!("{}", name_sym.name),
@@ -95,7 +95,7 @@ impl Visitor for StructFieldVisitor<'_> {
             if !seen_fields.contains(&field_info.sym.name) {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    level: Severity::Error,
+                    severity: Severity::Error,
                     message: ErrorMessage(vec![
                         msgtext!("This struct literal is missing the field "),
                         msgcode!("{}", field_info.sym.name),

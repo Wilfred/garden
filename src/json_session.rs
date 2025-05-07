@@ -67,7 +67,7 @@ pub(crate) struct DiagnosticForJson {
     // Not an ErrorMessage.
     message: String,
     position: Position,
-    level: Severity,
+    severity: Severity,
 }
 
 impl From<Diagnostic> for DiagnosticForJson {
@@ -75,7 +75,7 @@ impl From<Diagnostic> for DiagnosticForJson {
         Self {
             message: value.message.as_string(),
             position: value.position,
-            level: value.level,
+            severity: value.severity,
         }
     }
 }

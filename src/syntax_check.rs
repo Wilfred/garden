@@ -96,7 +96,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
     for Diagnostic {
         message,
         position,
-        level,
+        severity,
         notes,
     } in raw_diagnostics
     {
@@ -111,7 +111,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             } else {
                 message.as_string()
             },
-            severity: level,
+            severity,
             notes,
         });
     }

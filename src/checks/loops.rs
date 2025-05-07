@@ -54,7 +54,7 @@ impl Visitor for LoopVisitor {
                         )]),
                         position: expr.position.clone(),
                         notes: vec![],
-                        level: Severity::Error,
+                        severity: Severity::Error,
                     });
                 }
             }
@@ -67,7 +67,7 @@ impl Visitor for LoopVisitor {
                         )]),
                         position: expr.position.clone(),
                         notes: vec![],
-                        level: Severity::Error,
+                        severity: Severity::Error,
                     });
                 }
             }

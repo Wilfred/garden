@@ -19,7 +19,7 @@
 //             "end_column": 5,
 //             "path": "__json_session_unnamed__"
 //           },
-//           "level": "warning"
+//           "severity": "warning"
 //         }
 //       ],
 //       "value": {

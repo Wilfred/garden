@@ -19,7 +19,7 @@
 //             "end_column": 17,
 //             "path": "__json_session_unnamed__"
 //           },
-//           "level": "warning"
+//           "severity": "warning"
 //         },
 //         {
 //           "message": "`foo` is never called.",
@@ -32,7 +32,7 @@
 //             "end_column": 7,
 //             "path": "__json_session_unnamed__"
 //           },
-//           "level": "warning"
+//           "severity": "warning"
 //         }
 //       ],
 //       "value": {

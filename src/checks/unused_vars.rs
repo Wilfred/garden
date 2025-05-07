@@ -48,7 +48,7 @@ impl UnusedVariableVisitor {
         for (name, position) in unused {
             diagnostics.push(Diagnostic {
                 notes: vec![],
-                level: Severity::Warning,
+                severity: Severity::Warning,
                 message: ErrorMessage(vec![
                     Code(format!("{name}")),
                     Text(" is unused.".to_owned()),

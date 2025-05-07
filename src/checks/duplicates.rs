@@ -36,7 +36,7 @@ impl Visitor for DuplicatesVisitor {
                         ))]),
                         position: sym.position.clone(),
                         notes: vec![],
-                        level: Severity::Warning,
+                        severity: Severity::Warning,
                     });
                 } else {
                     self.funs_seen
@@ -68,7 +68,7 @@ impl Visitor for DuplicatesVisitor {
                         ))]),
                         position: meth_sym.position.clone(),
                         notes: vec![],
-                        level: Severity::Warning,
+                        severity: Severity::Warning,
                     });
                 }
             }
@@ -82,7 +82,7 @@ impl Visitor for DuplicatesVisitor {
                         ))]),
                         position: sym.position.clone(),
                         notes: vec![],
-                        level: Severity::Warning,
+                        severity: Severity::Warning,
                     });
                 } else {
                     self.tests_seen.insert(sym.name.clone());
@@ -98,7 +98,7 @@ impl Visitor for DuplicatesVisitor {
                         ))]),
                         position: name_sym.position.clone(),
                         notes: vec![],
-                        level: Severity::Warning,
+                        severity: Severity::Warning,
                     });
                 } else {
                     self.types_seen.insert(name_sym.name.clone());
@@ -114,7 +114,7 @@ impl Visitor for DuplicatesVisitor {
                         ))]),
                         position: name_sym.position.clone(),
                         notes: vec![],
-                        level: Severity::Warning,
+                        severity: Severity::Warning,
                     });
                 } else {
                     self.types_seen.insert(name_sym.name.clone());

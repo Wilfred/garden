@@ -25,7 +25,7 @@ pub(crate) enum Severity {
 pub(crate) struct Diagnostic {
     pub(crate) message: ErrorMessage,
     pub(crate) position: Position,
-    pub(crate) level: Severity,
+    pub(crate) severity: Severity,
     pub(crate) notes: Vec<(ErrorMessage, Position)>,
 }
 
@@ -83,12 +83,12 @@ pub(crate) fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,
     project_root: Option<&PathBuf>,
-    level: Severity,
+    severity: Severity,
     vfs: &Vfs,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
-    let level_s = match level {
+    let severity_s = match severity {
         Severity::Warning => {
             if use_color {
                 "Warning".bold().yellow().to_string()
@@ -107,7 +107,7 @@ pub(crate) fn format_diagnostic(
 
     let mut res = format!(
         "{}: {}\n",
-        level_s,
+        severity_s,
         if use_color {
             message.as_styled_string()
         } else {
@@ -120,7 +120,7 @@ pub(crate) fn format_diagnostic(
         None,
         project_root,
         true,
-        matches!(level, Severity::Error),
+        matches!(severity, Severity::Error),
     ));
     res
 }

@@ -53,6 +53,7 @@ impl Visitor for LoopVisitor {
                             "`break` can only be used inside loops.".to_owned(),
                         )]),
                         position: expr.position.clone(),
+                        notes: vec![],
                         level: Level::Error,
                     });
                 }
@@ -65,6 +66,7 @@ impl Visitor for LoopVisitor {
                             "`continue` can only be used inside loops.".to_owned(),
                         )]),
                         position: expr.position.clone(),
+                        notes: vec![],
                         level: Level::Error,
                     });
                 }

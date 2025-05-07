@@ -393,6 +393,7 @@ fn load_toplevel_items_(
                             import_info.path.display()
                         ))]),
                         position,
+                        notes: vec![],
                         level: Level::Error,
                     });
 
@@ -418,7 +419,7 @@ fn load_toplevel_items_(
                             current_dir_descr
                         )]),
                         position: import_info.path_pos.clone(),
-                        level: Level::Error,
+                        notes: vec![], level: Level::Error,
                     });
 
                         continue;
@@ -450,6 +451,7 @@ fn load_toplevel_items_(
                         diagnostics.push(Diagnostic {
                             message: ErrorMessage(vec![Text(error.message().as_string())]),
                             position: error.position().clone(),
+                            notes: vec![],
                             level: Level::Error,
                         });
                     }
@@ -543,6 +545,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
                 // still work on any machine.
                 message: describe_read_error(&import_info.path, &e),
                 position: import_info.path_pos.clone(),
+                notes: vec![],
                 level: Level::Error,
             });
         }
@@ -556,6 +559,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
                 msgtext!(" is not valid UTF-8."),
             ]),
             position: import_info.path_pos.clone(),
+            notes: vec![],
             level: Level::Error,
         });
     };
@@ -1222,6 +1226,7 @@ fn update_builtin_type_info(
 
     let Some(current_def) = env.types.get(&symbol.name) else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type `{}` that doesn't exist.",
@@ -1234,6 +1239,7 @@ fn update_builtin_type_info(
 
     let TypeDef::Builtin(kind, _) = &current_def.def else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but {} isn't a built-in type.",
@@ -1279,6 +1285,7 @@ fn update_builtin_meth_info(
 
     let Some(type_def_and_methods) = env.types.get_mut(type_name) else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
@@ -1294,6 +1301,7 @@ fn update_builtin_meth_info(
         .get_mut(&meth_info.name_sym.name)
     else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
@@ -1306,6 +1314,7 @@ fn update_builtin_meth_info(
 
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 // TODO: we need a better design principle around
@@ -1342,6 +1351,7 @@ fn update_builtin_fun_info(
     let mut ns = namespace.borrow_mut();
     let Some(value) = ns.values.get(&symbol.name).cloned() else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a function `{}` that doesn't exist.",
@@ -1370,6 +1380,7 @@ fn update_builtin_fun_info(
 
     let Value_::BuiltinFunction(kind, _, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",

@@ -37,6 +37,7 @@ impl Visitor for UnreachableVisitor {
                 self.diagnostics.push(Diagnostic {
                     message: ErrorMessage(vec![Text(reason.to_owned())]),
                     position: expr.position.clone(),
+                    notes: vec![],
                     level: Level::Warning,
                 });
                 unreachable_reason = None;

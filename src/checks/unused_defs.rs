@@ -53,6 +53,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                     msgtext!(" is never called."),
                 ]),
                 position: symbol.position.clone(),
+                notes: vec![],
                 level: Level::Warning,
             });
             already_covered_ids.insert(item_id);
@@ -93,6 +94,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                             msgtext!(" is never called."),
                         ]),
                         position: symbol.position.clone(),
+                        notes: vec![],
                         level: Level::Warning,
                     });
                 }

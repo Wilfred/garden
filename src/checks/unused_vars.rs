@@ -47,6 +47,7 @@ impl UnusedVariableVisitor {
         let mut diagnostics = vec![];
         for (name, position) in unused {
             diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Warning,
                 message: ErrorMessage(vec![
                     Code(format!("{name}")),

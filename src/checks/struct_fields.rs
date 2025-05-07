@@ -28,6 +28,7 @@ impl Visitor for StructFieldVisitor<'_> {
 
         let Some(type_def) = self.env.get_type_def(&name_sym.name) else {
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: ErrorMessage(vec![
                     msgtext!("No such type "),
@@ -40,6 +41,7 @@ impl Visitor for StructFieldVisitor<'_> {
         };
         let TypeDef::Struct(struct_info) = type_def else {
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: ErrorMessage(vec![
                     msgcode!("{}", name_sym),
@@ -60,6 +62,7 @@ impl Visitor for StructFieldVisitor<'_> {
         for (field_sym, _) in field_exprs {
             if seen_fields.contains(&field_sym.name) {
                 self.diagnostics.push(Diagnostic {
+                    notes: vec![],
                     level: Level::Warning,
                     message: ErrorMessage(vec![
                         msgtext!("Duplicate field "),
@@ -74,6 +77,7 @@ impl Visitor for StructFieldVisitor<'_> {
 
             if !fields_by_name.contains_key(&field_sym.name) {
                 self.diagnostics.push(Diagnostic {
+                    notes: vec![],
                     level: Level::Error,
                     message: ErrorMessage(vec![
                         msgtext!("Struct "),
@@ -90,6 +94,7 @@ impl Visitor for StructFieldVisitor<'_> {
         for field_info in struct_info.fields.iter() {
             if !seen_fields.contains(&field_info.sym.name) {
                 self.diagnostics.push(Diagnostic {
+                    notes: vec![],
                     level: Level::Error,
                     message: ErrorMessage(vec![
                         msgtext!("This struct literal is missing the field "),

@@ -197,6 +197,7 @@ impl TypeCheckVisitor<'_> {
         let type_hint = &method_info.receiver_hint;
         if type_bindings.contains_key(&type_hint.sym.name) {
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: ErrorMessage(vec![Text(
                     "Methods must be defined on specific types, such as `List`, not generic types."
@@ -211,6 +212,7 @@ impl TypeCheckVisitor<'_> {
             if type_bindings.contains_key(&type_arg.sym.name) {
                 if generic_args_seen.contains(&type_arg.sym.name) {
                     self.diagnostics.push(Diagnostic {
+                        notes: vec![],
                         level: Level::Error,
                         message: ErrorMessage(vec![Text(
                             "Methods cannot repeat generic type parameters.".to_owned(),
@@ -222,7 +224,7 @@ impl TypeCheckVisitor<'_> {
                 }
             } else {
                 self.diagnostics.push(Diagnostic {
-                    level: Level::Error,
+                    notes: vec![], level: Level::Error,
                     message:
                       ErrorMessage(vec![Text("Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`."
                                              .to_owned())]),
@@ -465,6 +467,7 @@ impl TypeCheckVisitor<'_> {
                         }
                     }
                     self.diagnostics.push(Diagnostic {
+                        notes: vec![],
                         level: Level::Error,
                         message,
                         position,
@@ -494,6 +497,7 @@ impl TypeCheckVisitor<'_> {
                 }
 
                 self.diagnostics.push(Diagnostic {
+                    notes: vec![],
                     level: Level::Error,
                     message,
                     position,
@@ -511,6 +515,7 @@ impl TypeCheckVisitor<'_> {
                     msgtext!(" argument."),
                 ]);
                 self.diagnostics.push(Diagnostic {
+                    notes: vec![],
                     level: Level::Error,
                     message,
                     position: paren_args.close_paren.clone(),
@@ -538,6 +543,7 @@ impl TypeCheckVisitor<'_> {
                 Position::merge(&first_excess_arg.expr.position, &last_arg.expr.position);
 
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message,
                 position,
@@ -545,6 +551,7 @@ impl TypeCheckVisitor<'_> {
         } else if expected_args.len() > paren_args.arguments.len() {
             // Got too few arguments.
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message,
                 position: paren_args.close_paren.clone(),
@@ -591,6 +598,7 @@ impl TypeCheckVisitor<'_> {
 
         if block.exprs.is_empty() && !is_subtype(&ty, expected_ty) {
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: format_type_mismatch(expected_ty, &ty),
                 position: block.close_brace.clone(),
@@ -672,6 +680,7 @@ impl TypeCheckVisitor<'_> {
 
                     let Some(value) = self.get_var(&pattern.variant_sym.name) else {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![
                                 msgtext!("No such type "),
@@ -688,6 +697,7 @@ impl TypeCheckVisitor<'_> {
                         Value_::EnumConstructor { type_name, .. } => type_name,
                         _ => {
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![Text(format!(
                                     "Expected an enum variant here, but got `{}`.",
@@ -707,6 +717,7 @@ impl TypeCheckVisitor<'_> {
                     }
                     if pattern_type_name != scrutinee_ty_name {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(format!(
                                 "This match case is for `{}`, but you're matching on a `{}`.",
@@ -721,6 +732,7 @@ impl TypeCheckVisitor<'_> {
                     Ok(ty) => ty,
                     Err(position) => {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(
                                 "`match` cases have different types.".to_owned(),
@@ -756,6 +768,7 @@ impl TypeCheckVisitor<'_> {
                                 };
 
                                 self.diagnostics.push(Diagnostic {
+                                    notes: vec![],
                                     level: Level::Error,
                                     message,
                                     position,
@@ -828,6 +841,7 @@ impl TypeCheckVisitor<'_> {
                 let sym_ty = self.get_var_for_assignment(sym);
                 if !is_subtype(&sym_ty, &Type::int()) {
                     self.diagnostics.push(Diagnostic {
+                        notes: vec![],
                         level: Level::Error,
                         message: ErrorMessage(vec![Text(format!(
                             "`{}` can only be used with `Int` variables, but got `{}`.",
@@ -867,6 +881,7 @@ impl TypeCheckVisitor<'_> {
                     None => {
                         if !is_subtype(&Type::unit(), expr_ty) {
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![Text(format!(
                                     "Expected this function to return `{}`, but got `Unit`.",
@@ -898,6 +913,7 @@ impl TypeCheckVisitor<'_> {
                     Ok(ty) => ty,
                     Err(position) => {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(
                                 "List elements have different types.".to_owned(),
@@ -949,6 +965,7 @@ impl TypeCheckVisitor<'_> {
 
                         if !is_subtype(&ty, field_ty) {
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![Text(format!(
                                     "Expected `{}` for this field but got `{}`.",
@@ -995,7 +1012,7 @@ impl TypeCheckVisitor<'_> {
 
                     if !is_subtype(&lhs_ty, &rhs_ty) && !is_subtype(&rhs_ty, &lhs_ty) {
                         self.diagnostics.push(Diagnostic {
-                                level: Level::Warning,
+                                notes: vec![], level: Level::Warning,
                                 message: ErrorMessage(vec![Text(format!(
                                     "You should compare values of the same type, but got `{}` and `{}`.",
                                     lhs_ty, rhs_ty
@@ -1070,6 +1087,7 @@ impl TypeCheckVisitor<'_> {
 
                         if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![
                                     msgtext!("Unbound symbol: "),
@@ -1091,6 +1109,7 @@ impl TypeCheckVisitor<'_> {
                         self.diagnostics.push(Diagnostic {
                             message: ErrorMessage(vec![Text("Unfinished code.".to_owned())]),
                             position: pos.clone(),
+                            notes: vec![],
                             level: Level::Warning,
                         });
                     }
@@ -1134,6 +1153,7 @@ impl TypeCheckVisitor<'_> {
                             for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
                                 if !is_subtype(arg_ty, param_ty) {
                                     self.diagnostics.push(Diagnostic {
+                                        notes: vec![],
                                         level: Level::Error,
                                         message: format_type_mismatch(param_ty, arg_ty),
                                         position: arg_pos.clone(),
@@ -1164,6 +1184,7 @@ impl TypeCheckVisitor<'_> {
                         }
 
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(format!(
                                 "Expected a function, but got a `{}`.",
@@ -1193,6 +1214,7 @@ impl TypeCheckVisitor<'_> {
                     }
 
                     self.diagnostics.push(Diagnostic {
+                        notes: vec![],
                         level: Level::Error,
                         message: ErrorMessage(vec![Text(format!(
                             "Expected a type with a `{}` method, but got a `{}`.",
@@ -1271,6 +1293,7 @@ impl TypeCheckVisitor<'_> {
                         for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
                             if !is_subtype(arg_ty, param_ty) {
                                 self.diagnostics.push(Diagnostic {
+                                    notes: vec![],
                                     level: Level::Error,
                                     message: format_type_mismatch(param_ty, arg_ty),
                                     position: arg_pos.clone(),
@@ -1314,6 +1337,7 @@ impl TypeCheckVisitor<'_> {
                             };
 
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(format!(
                                 "`{}` has no method `{}`.{}",
@@ -1351,6 +1375,7 @@ impl TypeCheckVisitor<'_> {
                             }
 
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![Text(format!(
                                     "Struct `{}` has no field `{}`.",
@@ -1362,6 +1387,7 @@ impl TypeCheckVisitor<'_> {
                             Type::error("No struct field with this name")
                         } else {
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![Text(format!(
                                     "`{}` is not a struct.",
@@ -1375,6 +1401,7 @@ impl TypeCheckVisitor<'_> {
                     }
                     _ => {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(format!(
                                 "`{}` is not a struct.",
@@ -1405,6 +1432,7 @@ impl TypeCheckVisitor<'_> {
                                         None => {
                                             // TODO: suggest similar names here.
                                             self.diagnostics.push(Diagnostic {
+                                                notes: vec![],
                                                 level: Level::Error,
                                                 message: ErrorMessage(vec![
                                                     msgcode!(
@@ -1431,6 +1459,7 @@ impl TypeCheckVisitor<'_> {
                     }
                     _ => {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Warning,
                             message: ErrorMessage(vec![msgtext!(
                                 "Cannot statically determine the namespace here."
@@ -1518,6 +1547,7 @@ impl TypeCheckVisitor<'_> {
 
         if let Some(value) = self.get_var(&sym.name) {
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: ErrorMessage(vec![
                     msgcode!("{}", &sym.name),
@@ -1531,6 +1561,7 @@ impl TypeCheckVisitor<'_> {
 
         // No such variable, user probably forgot `let`.
         self.diagnostics.push(Diagnostic {
+            notes: vec![],
             level: Level::Error,
             message: ErrorMessage(vec![
                 msgtext!("No such variable "),
@@ -1555,6 +1586,7 @@ impl TypeCheckVisitor<'_> {
                 Type::Tuple(item_tys) => {
                     if item_tys.len() != symbols.len() {
                         self.diagnostics.push(Diagnostic {
+                            notes: vec![],
                             level: Level::Error,
                             message: ErrorMessage(vec![Text(format!(
                                 "Expected a tuple of size {}, but got {}.",
@@ -1580,6 +1612,7 @@ impl TypeCheckVisitor<'_> {
                 }
                 _ => {
                     self.diagnostics.push(Diagnostic {
+                        notes: vec![],
                         level: Level::Error,
                         message: ErrorMessage(vec![Text(format!(
                             "Expected a tuple, but got `{}`.",
@@ -1674,6 +1707,7 @@ impl TypeCheckVisitor<'_> {
 
                         if !is_subtype(&hint_ty, expected_return_ty) {
                             self.diagnostics.push(Diagnostic {
+                                notes: vec![],
                                 level: Level::Error,
                                 message: ErrorMessage(vec![Text(format!(
                                     "Expected a function with return type `{}` but got `{}`.",
@@ -1703,6 +1737,7 @@ impl TypeCheckVisitor<'_> {
 
         if !is_subtype(&ty, expected_ty) {
             self.diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: format_type_mismatch(expected_ty, &ty),
                 position: pos.clone(),
@@ -1956,6 +1991,7 @@ fn unify_and_solve_hint(
                             hint.as_src(),
                         ))]),
                         position: position.clone(),
+                        notes: vec![],
                         level: Level::Warning,
                     });
                 }
@@ -2136,6 +2172,7 @@ fn check_match_exhaustive(
                 }
                 None => {
                     diagnostics.push(Diagnostic {
+                        notes: vec![],
                         level: Level::Error,
                         message: ErrorMessage(vec![Text(
                             "Duplicate case in pattern match.".to_owned(),
@@ -2159,6 +2196,7 @@ fn check_match_exhaustive(
     for variant in &enum_info.variants {
         if variants_remaining.contains_key(&variant.name_sym.name) {
             diagnostics.push(Diagnostic {
+                notes: vec![],
                 level: Level::Error,
                 message: ErrorMessage(vec![
                     msgtext!("This match expression does not cover all the cases of ",),

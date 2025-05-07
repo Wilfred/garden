@@ -96,6 +96,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         message,
         position,
         level,
+        notes: _,
     } in raw_diagnostics
     {
         // TODO: merge Level and Severity types.

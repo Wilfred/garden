@@ -25,6 +25,7 @@ pub(crate) struct Diagnostic {
     pub(crate) message: ErrorMessage,
     pub(crate) position: Position,
     pub(crate) level: Level,
+    pub(crate) notes: Vec<(ErrorMessage, Position)>,
 }
 
 pub(crate) fn format_error_with_stack(

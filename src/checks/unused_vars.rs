@@ -1,6 +1,6 @@
 use rustc_hash::FxHashMap;
 
-use crate::diagnostics::{Diagnostic, Level};
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::parser::ast::{
     Block, Expression, Expression_, FunInfo, LetDestination, Pattern, Symbol, SymbolName,
     ToplevelItem,
@@ -48,7 +48,7 @@ impl UnusedVariableVisitor {
         for (name, position) in unused {
             diagnostics.push(Diagnostic {
                 notes: vec![],
-                level: Level::Warning,
+                level: Severity::Warning,
                 message: ErrorMessage(vec![
                     Code(format!("{name}")),
                     Text(" is unused.".to_owned()),

@@ -15,7 +15,8 @@ use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
-pub(crate) enum Level {
+#[serde(rename_all = "snake_case")]
+pub(crate) enum Severity {
     Warning,
     Error,
 }
@@ -24,7 +25,7 @@ pub(crate) enum Level {
 pub(crate) struct Diagnostic {
     pub(crate) message: ErrorMessage,
     pub(crate) position: Position,
-    pub(crate) level: Level,
+    pub(crate) level: Severity,
     pub(crate) notes: Vec<(ErrorMessage, Position)>,
 }
 
@@ -82,20 +83,20 @@ pub(crate) fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,
     project_root: Option<&PathBuf>,
-    level: Level,
+    level: Severity,
     vfs: &Vfs,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
     let level_s = match level {
-        Level::Warning => {
+        Severity::Warning => {
             if use_color {
                 "Warning".bold().yellow().to_string()
             } else {
                 "Warning".to_owned()
             }
         }
-        Level::Error => {
+        Severity::Error => {
             if use_color {
                 "Error".bold().red().to_string()
             } else {
@@ -119,7 +120,7 @@ pub(crate) fn format_diagnostic(
         None,
         project_root,
         true,
-        matches!(level, Level::Error),
+        matches!(level, Severity::Error),
     ));
     res
 }

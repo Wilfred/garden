@@ -14,7 +14,7 @@ use crate::checks::check_toplevel_items_in_env;
 use crate::commands::{
     print_available_commands, run_command, Command, CommandError, CommandParseError, EvalAction,
 };
-use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Level};
+use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Severity};
 use crate::env::Env;
 use crate::eval::{
     eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
@@ -67,7 +67,7 @@ pub(crate) struct DiagnosticForJson {
     // Not an ErrorMessage.
     message: String,
     position: Position,
-    level: Level,
+    level: Severity,
 }
 
 impl From<Diagnostic> for DiagnosticForJson {
@@ -206,7 +206,7 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs) -> Response {
                     &message,
                     &position,
                     None,
-                    Level::Error,
+                    Severity::Error,
                     vfs,
                 ));
 
@@ -261,7 +261,7 @@ fn handle_eval_up_to_request(
                     &message,
                     &position,
                     None,
-                    Level::Error,
+                    Severity::Error,
                     &env.vfs,
                 ));
                 return Response {

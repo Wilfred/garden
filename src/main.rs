@@ -72,7 +72,7 @@ use json_session::{handle_request, start_eval_thread};
 use parser::vfs::{Vfs, VfsPathBuf};
 use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
 
-use crate::diagnostics::{format_diagnostic, format_error_with_stack, Level};
+use crate::diagnostics::{format_diagnostic, format_error_with_stack, Severity};
 use crate::env::Env;
 use crate::eval::{eval_toplevel_items, load_toplevel_items, EvalError, Session};
 use crate::parser::ast::{IdGenerator, ToplevelItem};
@@ -504,7 +504,7 @@ fn dump_ast(src: &str, path: &Path) {
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         None,
-                        Level::Error,
+                        Severity::Error,
                         &vfs,
                     )
                 );
@@ -550,7 +550,7 @@ fn parse_toplevel_items_or_die(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
                         project_root.as_ref(),
-                        Level::Error,
+                        Severity::Error,
                         vfs,
                     )
                 ),

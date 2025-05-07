@@ -5,7 +5,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::visitor::Visitor;
 
-use crate::diagnostics::{Diagnostic, Level};
+use crate::diagnostics::{Diagnostic, Severity};
 
 struct LoopVisitor {
     in_loop: bool,
@@ -54,7 +54,7 @@ impl Visitor for LoopVisitor {
                         )]),
                         position: expr.position.clone(),
                         notes: vec![],
-                        level: Level::Error,
+                        level: Severity::Error,
                     });
                 }
             }
@@ -67,7 +67,7 @@ impl Visitor for LoopVisitor {
                         )]),
                         position: expr.position.clone(),
                         notes: vec![],
-                        level: Level::Error,
+                        level: Severity::Error,
                     });
                 }
             }

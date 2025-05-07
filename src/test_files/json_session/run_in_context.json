@@ -20,7 +20,7 @@
 //             "end_column": 17,
 //             "path": "__json_session_unnamed__"
 //           },
-//           "level": "Warning"
+//           "level": "warning"
 //         },
 //         {
 //           "message": "`y` is unused.",
@@ -33,7 +33,7 @@
 //             "end_column": 27,
 //             "path": "__json_session_unnamed__"
 //           },
-//           "level": "Warning"
+//           "level": "warning"
 //         },
 //         {
 //           "message": "`foo` is never called.",
@@ -46,7 +46,7 @@
 //             "end_column": 7,
 //             "path": "__json_session_unnamed__"
 //           },
-//           "level": "Warning"
+//           "level": "warning"
 //         }
 //       ],
 //       "value": {

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use rustc_hash::FxHashMap;
 
-use crate::diagnostics::{Diagnostic, Level};
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::msgtext;
 use crate::parser::ast::{ToplevelItem, ToplevelItemId, Visibility};
 use crate::parser::diagnostics::ErrorMessage;
@@ -54,7 +54,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                 ]),
                 position: symbol.position.clone(),
                 notes: vec![],
-                level: Level::Warning,
+                level: Severity::Warning,
             });
             already_covered_ids.insert(item_id);
         }
@@ -95,7 +95,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
                         ]),
                         position: symbol.position.clone(),
                         notes: vec![],
-                        level: Level::Warning,
+                        level: Severity::Warning,
                     });
                 }
             }

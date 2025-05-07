@@ -16,7 +16,7 @@ use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
-use crate::diagnostics::{Diagnostic, Level};
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::{Env, StackFrame};
 use crate::garden_type::{is_subtype, Type, TypeDefKind, TypeVarEnv, UnwrapOrErrTy};
 use crate::json_session::{print_as_json, Response, ResponseKind};
@@ -394,7 +394,7 @@ fn load_toplevel_items_(
                         ))]),
                         position,
                         notes: vec![],
-                        level: Level::Error,
+                        level: Severity::Error,
                     });
 
                     continue;
@@ -419,7 +419,7 @@ fn load_toplevel_items_(
                             current_dir_descr
                         )]),
                         position: import_info.path_pos.clone(),
-                        notes: vec![], level: Level::Error,
+                        notes: vec![], level: Severity::Error,
                     });
 
                         continue;
@@ -452,7 +452,7 @@ fn load_toplevel_items_(
                             message: ErrorMessage(vec![Text(error.message().as_string())]),
                             position: error.position().clone(),
                             notes: vec![],
-                            level: Level::Error,
+                            level: Severity::Error,
                         });
                     }
                     continue;
@@ -546,7 +546,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
                 message: describe_read_error(&import_info.path, &e),
                 position: import_info.path_pos.clone(),
                 notes: vec![],
-                level: Level::Error,
+                level: Severity::Error,
             });
         }
     };
@@ -560,7 +560,7 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
             ]),
             position: import_info.path_pos.clone(),
             notes: vec![],
-            level: Level::Error,
+            level: Severity::Error,
         });
     };
 
@@ -625,7 +625,7 @@ pub(crate) fn eval_toplevel_items(
     let ns = env.current_namespace();
     let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, ns.clone());
     for diagnostic in diagnostics.iter() {
-        if matches!(diagnostic.level, Level::Error) {
+        if matches!(diagnostic.level, Severity::Error) {
             return Err(EvalError::ResumableError(
                 diagnostic.position.clone(),
                 diagnostic.message.clone(),
@@ -1227,7 +1227,7 @@ fn update_builtin_type_info(
     let Some(current_def) = env.types.get(&symbol.name) else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type `{}` that doesn't exist.",
                 symbol.name
@@ -1240,7 +1240,7 @@ fn update_builtin_type_info(
     let TypeDef::Builtin(kind, _) = &current_def.def else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but {} isn't a built-in type.",
                 symbol.name,
@@ -1286,7 +1286,7 @@ fn update_builtin_meth_info(
     let Some(type_def_and_methods) = env.types.get_mut(type_name) else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a type {} that doesn't exist.",
                 type_name
@@ -1302,7 +1302,7 @@ fn update_builtin_meth_info(
     else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
                 meth_info.name_sym.name, type_name
@@ -1315,7 +1315,7 @@ fn update_builtin_meth_info(
     let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 // TODO: we need a better design principle around
                 // warning phrasing. It should probably always include
@@ -1352,7 +1352,7 @@ fn update_builtin_fun_info(
     let Some(value) = ns.values.get(&symbol.name).cloned() else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub for a function `{}` that doesn't exist.",
                 symbol.name
@@ -1381,7 +1381,7 @@ fn update_builtin_fun_info(
     let Value_::BuiltinFunction(kind, _, _) = value.as_ref() else {
         diagnostics.push(Diagnostic {
             notes: vec![],
-            level: Level::Warning,
+            level: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
                 "Tried to update a built-in stub but `{}` isn't a built-in function (it's a {}).",
                 symbol.name,
@@ -3005,8 +3005,8 @@ fn check_snippet(src: &str, env: &Env) -> Value {
 
     for Diagnostic { message, level, .. } in check_toplevel_items(&vfs_path, &items, &check_env) {
         match level {
-            Level::Warning => {}
-            Level::Error => {
+            Severity::Warning => {}
+            Severity::Error => {
                 error_messages.push(Value::new(Value_::String(message.as_string())));
             }
         }

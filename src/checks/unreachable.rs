@@ -1,6 +1,6 @@
 use rustc_hash::FxHashSet;
 
-use crate::diagnostics::{Diagnostic, Level};
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::parser::ast::{Block, Expression, Expression_, SyntaxId, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -38,7 +38,7 @@ impl Visitor for UnreachableVisitor {
                     message: ErrorMessage(vec![Text(reason.to_owned())]),
                     position: expr.position.clone(),
                     notes: vec![],
-                    level: Level::Warning,
+                    level: Severity::Warning,
                 });
                 unreachable_reason = None;
             }

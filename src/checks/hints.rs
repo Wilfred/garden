@@ -6,7 +6,7 @@ use crate::parser::diagnostics::{ErrorMessage, MessagePart};
 use crate::parser::visitor::Visitor;
 use crate::{msgcode, msgtext};
 
-use crate::diagnostics::{Diagnostic, Level};
+use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
 use crate::types::{BuiltinType, TypeDef};
 
@@ -86,7 +86,7 @@ impl Visitor for HintVisitor<'_> {
                 if let Some(first_arg) = type_hint.args.first() {
                     self.diagnostics.push(Diagnostic {
                         notes: vec![],
-                        level: Level::Error,
+                        level: Severity::Error,
                         message: ErrorMessage(vec![Text(
                             "Generic type arguments cannot take parameters.".to_owned(),
                         )]),
@@ -115,7 +115,7 @@ impl Visitor for HintVisitor<'_> {
                             if num_expected != type_hint.args.len() {
                                 self.diagnostics.push(Diagnostic {
                                     notes: vec![],
-                                    level: Level::Error,
+                                    level: Severity::Error,
                                     message: ErrorMessage(vec![format_type_arity_error(
                                         type_hint,
                                         num_expected,
@@ -130,7 +130,7 @@ impl Visitor for HintVisitor<'_> {
                             if first_arg.sym.name.text != "Tuple" {
                                 self.diagnostics.push(Diagnostic {
                                     notes: vec![],
-                                    level: Level::Error,
+                                    level: Severity::Error,
                                     message: ErrorMessage(vec![
                                         msgtext!("Expected a tuple here, e.g. "),
                                         msgcode!("Fun<(Int, Int), String>"),
@@ -147,7 +147,7 @@ impl Visitor for HintVisitor<'_> {
                         if enum_info.type_params.len() != type_hint.args.len() {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
-                                level: Level::Error,
+                                level: Severity::Error,
                                 message: ErrorMessage(vec![format_type_arity_error(
                                     type_hint,
                                     enum_info.type_params.len(),
@@ -160,7 +160,7 @@ impl Visitor for HintVisitor<'_> {
                         if struct_info.type_params.len() != type_hint.args.len() {
                             self.diagnostics.push(Diagnostic {
                                 notes: vec![],
-                                level: Level::Error,
+                                level: Severity::Error,
                                 message: ErrorMessage(vec![format_type_arity_error(
                                     type_hint,
                                     struct_info.type_params.len(),
@@ -174,7 +174,7 @@ impl Visitor for HintVisitor<'_> {
             None => {
                 self.diagnostics.push(Diagnostic {
                     notes: vec![],
-                    level: Level::Error,
+                    level: Severity::Error,
                     message: ErrorMessage(vec![
                         msgtext!("No such type "),
                         msgcode!("{}", type_hint.sym),

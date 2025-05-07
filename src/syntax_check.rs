@@ -3,7 +3,7 @@ use std::io::IsTerminal;
 use std::path::Path;
 
 use crate::checks::check_toplevel_items_in_env;
-use crate::diagnostics::{format_diagnostic, Diagnostic, Level};
+use crate::diagnostics::{format_diagnostic, Diagnostic, Severity};
 use crate::parser::ast::IdGenerator;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -11,13 +11,6 @@ use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::{load_toplevel_items, Env};
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-enum Severity {
-    Error,
-    Warning,
-}
 
 /// A diagnostic that can be serialized. Messages and positions are
 /// stored in an IDE friendly format.
@@ -107,12 +100,6 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         notes,
     } in raw_diagnostics
     {
-        // TODO: merge Level and Severity types.
-        let severity = match level {
-            Level::Warning => Severity::Warning,
-            Level::Error => Severity::Error,
-        };
-
         diagnostics.push(CheckDiagnostic {
             position: position.clone(),
             line_number: position.line_number + 1,
@@ -124,7 +111,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             } else {
                 message.as_string()
             },
-            severity,
+            severity: level,
             notes,
         });
     }
@@ -133,16 +120,11 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
         let s = if json {
             serde_json::to_string(diagnostic).expect("TODO: can this ever fail?")
         } else {
-            let level = match diagnostic.severity {
-                Severity::Error => Level::Error,
-                Severity::Warning => Level::Warning,
-            };
-
             format_diagnostic(
                 &ErrorMessage(vec![Text(diagnostic.message.clone())]),
                 &diagnostic.position,
                 Some(&env.project_root),
-                level,
+                diagnostic.severity,
                 &env.vfs,
             )
         };

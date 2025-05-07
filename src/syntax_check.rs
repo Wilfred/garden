@@ -19,6 +19,10 @@ enum Severity {
     Warning,
 }
 
+/// A diagnostic that can be serialized. Messages and positions are
+/// stored in an IDE friendly format.
+///
+/// See also `Diagnostic`.
 #[derive(Debug, Serialize)]
 struct CheckDiagnostic {
     #[serde(skip)]

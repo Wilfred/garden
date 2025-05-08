@@ -26,6 +26,8 @@ external fun demo() {
 // expected stdout:
 // Error: Expected `Snippet`, but got `String`.
 // ---| src/test_files/check/enum_payload_value.gdn:18:8
+// 17 |   // Bad, we should still check types from forward references.
 // 18 |   Code("")
 //    |        ^^
+// 19 |
 

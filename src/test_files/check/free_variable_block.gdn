@@ -7,6 +7,8 @@
 // expected stdout:
 // Error: Unbound symbol: `foo`
 // ---| src/test_files/check/free_variable_block.gdn:2:5
+// 1  | {
 // 2  |     foo
 //    |     ^^^
+// 3  | }
 

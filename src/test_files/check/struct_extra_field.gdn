@@ -11,6 +11,8 @@ external fun bar(): Unit {
 // expected stdout:
 // Error: Struct `Foo` does not have a field named `y`.
 // ---| src/test_files/check/struct_extra_field.gdn:6:29
+// 5  | external fun bar(): Unit {
 // 6  |     let _f = Foo{ x: 1 + 2, y: 2 }
 //    |                             ^
+// 7  | }
 

@@ -9,9 +9,11 @@ external fun (this: List<NoSuchType>) foo<T>() {
 // ---| src/test_files/check/missing_type_receiver_param.gdn:1:26
 // 1  | external fun (this: List<NoSuchType>) foo<T>() {
 //    |                          ^^^^^^^^^^
+// 2  |   None
 // 
 // Error: Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`.
 // ---| src/test_files/check/missing_type_receiver_param.gdn:1:26
 // 1  | external fun (this: List<NoSuchType>) foo<T>() {
 //    |                          ^^^^^^^^^^
+// 2  |   None
 

@@ -16,16 +16,22 @@ fun foo() {
 // expected stdout:
 // Error: Invalid syntax: Expected `,` or `)`, got `x`
 // ---| src/test_files/check/missing_paren.gdn:11:3
+// 10 | 
 // 11 |   x = 2
 //    |   ^
+// 12 | }
 // 
 // Error: Expected `)`, got `x`
 // ---| src/test_files/check/missing_paren.gdn:11:3
+// 10 | 
 // 11 |   x = 2
 //    |   ^
+// 12 | }
 // 
 // Warning: `foo` is never called.
 // ---| src/test_files/check/missing_paren.gdn:5:5
+// 4  | 
 // 5  | fun foo() {
 //    |     ^^^
+// 6  |   let x = 1
 

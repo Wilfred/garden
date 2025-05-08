@@ -8,6 +8,8 @@ external fun foo() {
 // expected stdout:
 // Error: `String` has no method `no_such_meth`.
 // ---| src/test_files/check/type_error_return.gdn:3:14
+// 2  |     let s = ""
 // 3  |     return s.no_such_meth()
 //    |              ^^^^^^^^^^^^
+// 4  | }
 

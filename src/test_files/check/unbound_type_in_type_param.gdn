@@ -9,4 +9,5 @@ external fun foo(): Option<NoSuchType> {
 // ---| src/test_files/check/unbound_type_in_type_param.gdn:1:28
 // 1  | external fun foo(): Option<NoSuchType> {
 //    |                            ^^^^^^^^^^
+// 2  |     None
 

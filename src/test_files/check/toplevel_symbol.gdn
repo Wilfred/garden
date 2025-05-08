@@ -7,4 +7,5 @@ foo
 // ---| src/test_files/check/toplevel_symbol.gdn:1:1
 // 1  | foo
 //    | ^^^
+// 2  |
 

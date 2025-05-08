@@ -11,11 +11,15 @@ external fun foo() {
 // expected stdout:
 // Warning: Unfinished code.
 // ---| src/test_files/check/assign_update_error_type.gdn:2:11
+// 1  | external fun foo() {
 // 2  |   let x = todo()
 //    |           ^^^^^^
+// 3  |   x += 1
 // 
 // Error: Unbound symbol: `no_such_func`
 // ---| src/test_files/check/assign_update_error_type.gdn:5:11
+// 4  | 
 // 5  |   let y = no_such_func()
 //    |           ^^^^^^^^^^^^
+// 6  |   y += 1
 

@@ -13,16 +13,22 @@ external fun (this: T) very_bad<T>() {}
 // expected stdout:
 // Error: Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`.
 // ---| src/test_files/check/type_error_method_specialised_type.gdn:5:26
+// 4  | // dispatches to this method or not.
 // 5  | external fun (this: List<Int>) bad() {}
 //    |                          ^^^
+// 6  | 
 // 
 // Error: Methods cannot repeat generic type parameters.
 // ---| src/test_files/check/type_error_method_specialised_type.gdn:7:31
+// 6  | 
 // 7  | external fun (this: Result<T, T>) also_bad<T>() {}
 //    |                               ^
+// 8  | 
 // 
 // Error: Methods must be defined on specific types, such as `List`, not generic types.
 // ---| src/test_files/check/type_error_method_specialised_type.gdn:9:21
+// 8  | 
 // 9  | external fun (this: T) very_bad<T>() {}
 //    |                     ^
+// 10 |
 

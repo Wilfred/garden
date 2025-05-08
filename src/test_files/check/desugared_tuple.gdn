@@ -13,9 +13,12 @@ external fun bar(): Tuple<Int> {
 // ---| src/test_files/check/desugared_tuple.gdn:1:21
 // 1  | external fun foo(): Tuple {
 //    |                     ^^^^^
+// 2  |   error("")
 // 
 // Error: `Tuple` cannot be used a type hint. Use `(Int)` instead.
 // ---| src/test_files/check/desugared_tuple.gdn:5:21
+// 4  | 
 // 5  | external fun bar(): Tuple<Int> {
 //    |                     ^^^^^^^^^^
+// 6  |   error("")
 

@@ -9,9 +9,12 @@ struct Foo {}
 // expected stdout:
 // Error: Struct `Foo` has no field `bar`.
 // ---| src/test_files/check/no_such_struct_field.gdn:4:11
+// 3  | {
 // 4  |     Foo{}.bar
 //    |           ^^^
+// 5  | }
 // ---| src/test_files/check/no_such_struct_field.gdn:1:8
 // 1  | struct Foo {}
 //    |        ^^^ Note: `Foo` is defined here.
+// 2  |
 

@@ -7,6 +7,8 @@ external fun map_over_strings(value) {
 // expected stdout:
 // Error: Expected a type with a `foo` method, but got a `_`.
 // ---| src/test_files/check/method_on_top.gdn:2:5
+// 1  | external fun map_over_strings(value) {
 // 2  |     value.foo()
 //    |     ^^^^^
+// 3  | }
 

@@ -61,4 +61,5 @@ external fun foo: Option<Int> {
 // ---| src/test_files/parser/unfinished_params.gdn:1:17
 // 1  | external fun foo: Option<Int> {
 //    |                 ^
+// 2  |   None
 

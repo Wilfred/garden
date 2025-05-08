@@ -54,31 +54,43 @@ fun (this: String) used_meth(): Unit {}
 // expected stdout:
 // Warning: `not_called` is never called.
 // ---| src/test_files/check/unused_func.gdn:5:5
+// 4  | 
 // 5  | fun not_called() {
 //    |     ^^^^^^^^^^
+// 6  |   called_from_uncalled()
 // 
 // Warning: `unreachable_cycle` is never called.
 // ---| src/test_files/check/unused_func.gdn:25:5
+// 24 | 
 // 25 | fun unreachable_cycle() {
 //    |     ^^^^^^^^^^^^^^^^^
+// 26 |   unreachable_cycle()
 // 
 // Warning: `called_via_test` is never called.
 // ---| src/test_files/check/unused_func.gdn:35:5
+// 34 | 
 // 35 | fun called_via_test() {}
 //    |     ^^^^^^^^^^^^^^^
+// 36 | 
 // 
 // Warning: `unused_meth` is never called.
 // ---| src/test_files/check/unused_func.gdn:48:20
+// 47 | 
 // 48 | fun (this: String) unused_meth(): Unit {}
 //    |                    ^^^^^^^^^^^
+// 49 | 
 // 
 // Warning: `unreachable_cycle_1` is never called.
 // ---| src/test_files/check/unused_func.gdn:17:5
+// 16 | // reachable from an externaled function.
 // 17 | fun unreachable_cycle_1() {
 //    |     ^^^^^^^^^^^^^^^^^^^
+// 18 |   unreachable_cycle_2()
 // 
 // Warning: `unreachable_cycle_2` is never called.
 // ---| src/test_files/check/unused_func.gdn:21:5
+// 20 | 
 // 21 | fun unreachable_cycle_2() {
 //    |     ^^^^^^^^^^^^^^^^^^^
+// 22 |   unreachable_cycle_1()
 

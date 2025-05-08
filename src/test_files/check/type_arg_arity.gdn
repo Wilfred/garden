@@ -9,4 +9,5 @@ external fun foo(): List<Int, Int, Int> {
 // ---| src/test_files/check/type_arg_arity.gdn:1:36
 // 1  | external fun foo(): List<Int, Int, Int> {
 //    |                                    ^^^
+// 2  |     error("")
 

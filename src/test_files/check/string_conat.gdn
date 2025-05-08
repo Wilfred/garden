@@ -8,11 +8,15 @@ external fun foo() {
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
 // ---| src/test_files/check/string_conat.gdn:3:3
+// 2  |   "a" ^ "b"
 // 3  |   1 ^ 2
 //    |   ^
+// 4  | }
 // 
 // Error: Expected `String`, but got `Int`.
 // ---| src/test_files/check/string_conat.gdn:3:7
+// 2  |   "a" ^ "b"
 // 3  |   1 ^ 2
 //    |       ^
+// 4  | }
 

@@ -7,6 +7,8 @@ test bar {
 // expected stderr:
 // Error: Parse error: 'test' is a reserved word that cannot be used as a name
 // ---| src/test_files/parser/incomplete_fun.gdn:3:1
+// 2  | 
 // 3  | test bar {
 //    | ^^^^
+// 4  | }
 

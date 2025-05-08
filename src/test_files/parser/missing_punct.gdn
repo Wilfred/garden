@@ -46,4 +46,5 @@ foo(a b)
 // ---| src/test_files/parser/missing_punct.gdn:1:7
 // 1  | foo(a b)
 //    |       ^
+// 2  |
 

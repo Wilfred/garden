@@ -10,6 +10,8 @@ external fun takes_bools(_: List<Bool>) {}
 // expected stdout:
 // Error: List elements have different types.
 // ---| src/test_files/check/list_mixed.gdn:4:17
+// 3  | {
 // 4  |     let x = [1, True]
 //    |                 ^^^^
+// 5  |     takes_bools(x)
 

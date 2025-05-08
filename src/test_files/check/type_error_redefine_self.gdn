@@ -8,6 +8,8 @@ external fun (self: String) foo() {
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
 // ---| src/test_files/check/type_error_redefine_self.gdn:2:12
+// 1  | external fun (self: String) foo() {
 // 2  |     self = 123
 //    |            ^^^
+// 3  |     self.index_of("a")
 

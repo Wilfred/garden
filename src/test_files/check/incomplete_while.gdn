@@ -9,6 +9,8 @@ while {
 // expected stdout:
 // Error: Expected an expression, got: `{`.
 // ---| src/test_files/check/incomplete_while.gdn:3:7
+// 2  | // `break`.
 // 3  | while {
 //    |       ^
+// 4  |   break
 

@@ -7,6 +7,8 @@
 // expected stdout:
 // Error: Expected `Fun<(Int), Bool>`, but got `Fun<(), Bool>`.
 // ---| src/test_files/check/type_error_arity_lambda.gdn:2:19
+// 1  | {
 // 2  |     [1, 2].filter(fun() { True })
 //    |                   ^^^^^^^^^^^^^^
+// 3  | }
 

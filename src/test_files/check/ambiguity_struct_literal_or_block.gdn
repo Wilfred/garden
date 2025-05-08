@@ -15,26 +15,36 @@ external fun foo(): Unit {
 // expected stdout:
 // Error: Expected an expression, got: `{`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:3
+// 9  |   // struct literal.
 // 10 |   {}
 //    |   ^
+// 11 | }
 // 
 // Error: Expected `}`, got `{`
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:3
+// 9  |   // struct literal.
 // 10 |   {}
 //    |   ^
+// 11 | }
 // 
 // Error: Expected an expression, got: `}`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:11:1
+// 10 |   {}
 // 11 | }
 //    | ^
+// 12 | 
 // 
 // Error: No such type `SomeStruct`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:4:9
+// 3  |   // literals.
 // 4  |   while SomeStruct{} {}
 //    |         ^^^^^^^^^^
+// 5  | 
 // 
 // Error: Unbound symbol: `SomeValue`
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:9
+// 5  | 
 // 6  |   while SomeValue {}
 //    |         ^^^^^^^^^
+// 7  |
 

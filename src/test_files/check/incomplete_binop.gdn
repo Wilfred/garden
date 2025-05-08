@@ -7,9 +7,11 @@
 // ---| src/test_files/check/incomplete_binop.gdn:1:1
 // 1  | /
 //    | ^
+// 2  | 
 // 
 // Error: Expected an expression.
 // ---| src/test_files/check/incomplete_binop.gdn:1:1
 // 1  | /
-//    |
+//    | 
+// 2  |
 

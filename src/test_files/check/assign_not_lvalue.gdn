@@ -9,16 +9,22 @@ external fun foo() {
 // expected stdout:
 // Error: Expected an expression, got: `=`.
 // ---| src/test_files/check/assign_not_lvalue.gdn:4:11
+// 3  |     // TODO: why does this produce duplicate errors?
 // 4  |     x + 1 = 2
 //    |           ^
+// 5  | }
 // 
 // Error: Expected `}`, got `=`
 // ---| src/test_files/check/assign_not_lvalue.gdn:4:11
+// 3  |     // TODO: why does this produce duplicate errors?
 // 4  |     x + 1 = 2
 //    |           ^
+// 5  | }
 // 
 // Error: Expected an expression, got: `=`.
 // ---| src/test_files/check/assign_not_lvalue.gdn:4:11
+// 3  |     // TODO: why does this produce duplicate errors?
 // 4  |     x + 1 = 2
 //    |           ^
+// 5  | }
 

@@ -7,11 +7,15 @@ import "./has_bad_syntax.gdn"
 // expected stdout:
 // Error: Expected `=`, got `}`
 // ---| src/test_files/check/has_bad_syntax.gdn:3:1
+// 2  |   let x
 // 3  | }
 //    | ^
+// 4  | 
 // 
 // Error: Expected an expression, got: `}`.
 // ---| src/test_files/check/has_bad_syntax.gdn:3:1
+// 2  |   let x
 // 3  | }
 //    | ^
+// 4  |
 

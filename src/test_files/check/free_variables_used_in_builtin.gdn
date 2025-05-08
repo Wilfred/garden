@@ -10,4 +10,5 @@ external fun foo(x: Int) {
 // ---| src/test_files/check/free_variables_used_in_builtin.gdn:1:14
 // 1  | external fun foo(x: Int) {
 //    |              ^^^
+// 2  |     // We should not complain about unused variables in built-in signatures.
 

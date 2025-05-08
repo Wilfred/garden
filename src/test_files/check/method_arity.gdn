@@ -12,11 +12,15 @@
 // expected stdout:
 // Error: `String::len` expects 0 arguments, but got 2.
 // ---| src/test_files/check/method_arity.gdn:3:13
+// 2  |   // Too many arguments
 // 3  |   "abc".len(1, 2)
 //    |             ^^^^
+// 4  | 
 // 
 // Error: `List::slice` requires an additional `Int` argument.
 // ---| src/test_files/check/method_arity.gdn:7:12
+// 6  |   // Too few.
 // 7  |   x.slice(0)
 //    |            ^
+// 8  | }
 

@@ -11,6 +11,8 @@ external fun takes_int(b: Bool): Int {
 // expected stdout:
 // Error: Expected this function to return `Int`, but got `Unit`.
 // ---| src/test_files/check/type_error_early_return_unit.gdn:3:9
+// 2  |     if b {
 // 3  |         return
 //    |         ^^^^^^
+// 4  |     }
 

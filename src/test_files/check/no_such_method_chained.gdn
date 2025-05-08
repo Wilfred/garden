@@ -8,11 +8,15 @@
 // expected stdout:
 // Error: `String` has no method `foo`.
 // ---| src/test_files/check/no_such_method_chained.gdn:2:20
+// 1  | {
 // 2  |     string_repr(1).foo()
 //    |                    ^^^
+// 3  |     "abc".substring(0, 1).foo()
 // 
 // Error: `String` has no method `foo`.
 // ---| src/test_files/check/no_such_method_chained.gdn:3:27
+// 2  |     string_repr(1).foo()
 // 3  |     "abc".substring(0, 1).foo()
 //    |                           ^^^
+// 4  | }
 

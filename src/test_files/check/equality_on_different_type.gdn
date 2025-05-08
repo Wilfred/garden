@@ -17,11 +17,15 @@ external fun bar(s: Option<String>, i: Option<Int>) {
 // expected stdout:
 // Warning: You should compare values of the same type, but got `String` and `Int`.
 // ---| src/test_files/check/equality_on_different_type.gdn:3:8
+// 2  |     // Always False.
 // 3  |     if s == i {
 //    |        ^^^^^^
+// 4  |         print("hello world")
 // 
 // Warning: You should compare values of the same type, but got `Option<String>` and `Option<Int>`.
 // ---| src/test_files/check/equality_on_different_type.gdn:10:8
+// 9  |     // Only True when both values are None.
 // 10 |     if s == i {
 //    |        ^^^^^^
+// 11 |         print("hello world")
 

@@ -7,6 +7,8 @@ external fun foo(parts: List<String>): String {
 // expected stdout:
 // Error: Expected `String`, but got `Option<String>`.
 // ---| src/test_files/check/type_error_return_option.gdn:2:5
+// 1  | external fun foo(parts: List<String>): String {
 // 2  |     parts.first()
 //    |     ^^^^^^^^^^^^^
+// 3  | }
 

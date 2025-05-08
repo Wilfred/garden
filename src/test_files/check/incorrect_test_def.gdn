@@ -11,14 +11,19 @@ test baz(x: Int) {}
 // ---| src/test_files/check/incorrect_test_def.gdn:1:9
 // 1  | test foo() {}
 //    |         ^^
+// 2  | 
 // 
 // Error: Tests should not have arguments, e.g. `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:3:9
+// 2  | 
 // 3  | test bar(x) {}
 //    |         ^^^
+// 4  | 
 // 
 // Error: Tests should not have arguments, e.g. `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:5:9
+// 4  | 
 // 5  | test baz(x: Int) {}
 //    |         ^^^^^^^^
+// 6  |
 

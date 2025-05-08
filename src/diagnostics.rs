@@ -60,6 +60,7 @@ pub(crate) fn format_error_with_stack(
         true,
         None,
         true,
+        0,
     ));
 
     // For the rest of the stack, we want the positions of calls.
@@ -74,6 +75,7 @@ pub(crate) fn format_error_with_stack(
                 false,
                 None,
                 true,
+                0,
             ));
         }
     }
@@ -110,6 +112,7 @@ pub(crate) fn format_diagnostic(
         true,
         None,
         matches!(severity, Severity::Error),
+        1,
     ));
 
     for (message, position) in notes {
@@ -127,6 +130,7 @@ pub(crate) fn format_diagnostic(
                 message.as_string()
             }),
             false,
+            1,
         ));
     }
 
@@ -168,6 +172,7 @@ fn format_pos_in_fun(
     underline: bool,
     underline_msg: Option<String>,
     is_error: bool,
+    context_lines: usize,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -227,18 +232,43 @@ fn format_pos_in_fun(
     } else {
         let line_positions = LinePositions::from(src);
 
-        for (i, span) in line_positions
-            .from_region(offset, end_offset)
-            .iter()
-            .enumerate()
-        {
+        let spans = line_positions.from_region(offset, end_offset);
+
+        let mut is_first = true;
+
+        if let Some(span) = spans.first() {
+            let min_line =
+                std::cmp::max(span.line.as_usize() as isize - context_lines as isize, 0) as usize;
+            for line_i in min_line..span.line.as_usize() {
+                let Some(relevant_line) = s_lines.get(line_i) else {
+                    continue;
+                };
+
+                if is_first {
+                    is_first = false;
+                } else {
+                    res.push('\n');
+                }
+
+                res.push_str(&format_margin_num(
+                    &format!("{}", line_i + 1),
+                    margin_width,
+                    use_color,
+                ));
+                res.push_str(relevant_line);
+            }
+        }
+
+        for span in &spans {
             // .lines() in the Rust stdlib discards the trailing
             // newline, so we end up with s_lines not having the last line.
             let Some(relevant_line) = s_lines.get(span.line.as_usize()) else {
                 continue;
             };
 
-            if i != 0 {
+            if is_first {
+                is_first = false;
+            } else {
                 res.push('\n');
             }
 
@@ -271,6 +301,27 @@ fn format_pos_in_fun(
                     res.push_str(": ");
                     res.push_str(msg);
                 }
+            }
+        }
+
+        if let Some(span) = spans.last() {
+            for line_i in span.line.as_usize() + 1..span.line.as_usize() + 1 + context_lines {
+                let Some(relevant_line) = s_lines.get(line_i) else {
+                    break;
+                };
+
+                if is_first {
+                    is_first = false;
+                } else {
+                    res.push('\n');
+                }
+
+                res.push_str(&format_margin_num(
+                    &format!("{}", line_i + 1),
+                    margin_width,
+                    use_color,
+                ));
+                res.push_str(relevant_line);
             }
         }
     }

@@ -13,4 +13,5 @@ external fun bar() {
 // ---| src/test_files/check/builtin_impl.gdn:1:14
 // 1  | external fun foo(_: String): NoValue {
 //    |              ^^^
+// 2  |   __BUILTIN_IMPLEMENTATION
 

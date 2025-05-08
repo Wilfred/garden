@@ -2,8 +2,8 @@
 
 use crate::parser::ast::{Block, Expression, Expression_, FunInfo, LetDestination, ToplevelItem};
 use crate::parser::diagnostics::ErrorMessage;
-use crate::parser::diagnostics::MessagePart::*;
 use crate::parser::visitor::Visitor;
+use crate::{msgcode, msgtext};
 
 use crate::diagnostics::{Diagnostic, Severity};
 
@@ -49,9 +49,14 @@ impl Visitor for LoopVisitor {
             Expression_::Break => {
                 if !self.in_loop {
                     self.diagnostics.push(Diagnostic {
-                        message: ErrorMessage(vec![Text(
-                            "`break` can only be used inside loops.".to_owned(),
-                        )]),
+                        message: ErrorMessage(vec![
+                            msgcode!("break"),
+                            msgtext!(" can only be used inside "),
+                            msgcode!("for"),
+                            msgtext!(" or "),
+                            msgcode!("while"),
+                            msgtext!(" loops."),
+                        ]),
                         position: expr.position.clone(),
                         notes: vec![],
                         severity: Severity::Error,
@@ -62,9 +67,14 @@ impl Visitor for LoopVisitor {
                 if !self.in_loop {
                     self.diagnostics.push(Diagnostic {
                         // TODO: Add an example of valid usage.
-                        message: ErrorMessage(vec![Text(
-                            "`continue` can only be used inside loops.".to_owned(),
-                        )]),
+                        message: ErrorMessage(vec![
+                            msgcode!("continue"),
+                            msgtext!(" can only be used inside "),
+                            msgcode!("for"),
+                            msgtext!(" or "),
+                            msgcode!("while"),
+                            msgtext!(" loops."),
+                        ]),
                         position: expr.position.clone(),
                         notes: vec![],
                         severity: Severity::Error,

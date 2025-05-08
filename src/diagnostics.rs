@@ -58,6 +58,7 @@ pub(crate) fn format_error_with_stack(
         Some(&top_stack.enclosing_name),
         None,
         true,
+        None,
         true,
     ));
 
@@ -71,6 +72,7 @@ pub(crate) fn format_error_with_stack(
                 Some(&caller_stack_frame.enclosing_name),
                 None,
                 false,
+                None,
                 true,
             ));
         }
@@ -90,43 +92,8 @@ pub(crate) fn format_diagnostic(
     let use_color = std::io::stdout().is_terminal();
 
     let severity_s = format_severity(severity, use_color);
-    let mut s = format_diagnostic_item(
-        message,
-        position,
-        project_root,
-        &severity_s,
-        vfs,
-        use_color,
-        matches!(severity, Severity::Error),
-    );
 
-    for (message, position) in notes {
-        s.push('\n');
-
-        s.push_str(&format_diagnostic_item(
-            message,
-            position,
-            project_root,
-            &format_note_severity(use_color),
-            vfs,
-            use_color,
-            false,
-        ));
-    }
-
-    s
-}
-
-fn format_diagnostic_item(
-    message: &ErrorMessage,
-    position: &Position,
-    project_root: Option<&PathBuf>,
-    severity_s: &str,
-    vfs: &Vfs,
-    use_color: bool,
-    is_error: bool,
-) -> String {
-    let mut res = format!(
+    let mut s = format!(
         "{}: {}\n",
         severity_s,
         if use_color {
@@ -135,16 +102,35 @@ fn format_diagnostic_item(
             message.as_string()
         }
     );
-    res.push_str(&format_pos_in_fun(
+    s.push_str(&format_pos_in_fun(
         position,
         vfs,
         None,
         project_root,
         true,
-        is_error,
+        None,
+        matches!(severity, Severity::Error),
     ));
 
-    res
+    for (message, position) in notes {
+        s.push('\n');
+
+        s.push_str(&format_pos_in_fun(
+            position,
+            vfs,
+            None,
+            project_root,
+            true,
+            Some(if use_color {
+                message.as_styled_string()
+            } else {
+                message.as_string()
+            }),
+            false,
+        ));
+    }
+
+    s
 }
 
 fn format_severity(severity: Severity, use_color: bool) -> String {
@@ -180,6 +166,7 @@ fn format_pos_in_fun(
     enclosing_symbol: Option<&EnclosingSymbol>,
     project_root: Option<&PathBuf>,
     underline: bool,
+    underline_msg: Option<String>,
     is_error: bool,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
@@ -276,6 +263,13 @@ fn format_pos_in_fun(
                     });
                 } else {
                     res.push_str(&carets);
+                }
+
+                if let Some(ref msg) = underline_msg {
+                    res.push(' ');
+                    res.push_str(&format_note_severity(use_color));
+                    res.push_str(": ");
+                    res.push_str(msg);
                 }
             }
         }

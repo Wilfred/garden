@@ -4,7 +4,9 @@ use itertools::Itertools as _;
 
 use rustc_hash::FxHashMap;
 
+use crate::env::Env;
 use crate::parser::ast::{FunInfo, Symbol, TypeHint, TypeName};
+use crate::parser::position::Position;
 use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
 use crate::values::{Value, Value_};
 
@@ -309,6 +311,30 @@ impl Type {
                 ..
             } => Some(name_sym.clone()),
             Type::TypeParameter(name) => Some(name.clone()),
+        }
+    }
+
+    /// The position of the definition of this type. If a type isn't
+    /// user-denotable, return None.
+    pub(crate) fn def_sym_pos(&self, env: &Env) -> Option<Position> {
+        match self {
+            Type::Top | Type::Error(_) => None,
+            Type::Tuple(_) => None,
+            Type::Fun { .. } => None,
+            Type::UserDefined { name, .. } => {
+                let def = env.get_type_def(name)?;
+                let name_sym = match def {
+                    TypeDef::Builtin(_, Some(struct_info)) => Some(&struct_info.name_sym),
+                    TypeDef::Builtin(_, None) => None,
+                    TypeDef::Enum(enum_info) => Some(&enum_info.name_sym),
+                    TypeDef::Struct(struct_info) => Some(&struct_info.name_sym),
+                }?;
+                Some(name_sym.position.clone())
+            }
+            Type::TypeParameter(_) => {
+                // TODO: type parameters should store positions too.
+                None
+            }
         }
     }
 }

@@ -11,4 +11,8 @@ struct Foo {}
 // --> src/test_files/check/no_such_struct_field.gdn:4
 //     Foo{}.bar
 //           ^^^
+// Note: `Foo` is defined here.
+// --> src/test_files/check/no_such_struct_field.gdn:1
+// struct Foo {}
+//        ^^^
 

@@ -1373,15 +1373,7 @@ impl TypeCheckVisitor<'_> {
                                 msgtext!(".{}", suggest),
                             ]),
                             position: sym.position.clone(),
-                            notes: vec![
-                            //     (
-                            //     ErrorMessage(vec![Text(format!(
-                            //         "`{}` is defined here",
-                            //         receiver_ty_name,
-                            //     ))]),
-                            //     sym.position.clone(),
-                            // )
-                            ],
+                            notes: vec![],
                         });
                         Type::error("No such method on this type")
                     }
@@ -1396,10 +1388,10 @@ impl TypeCheckVisitor<'_> {
                 match recv_ty {
                     Type::UserDefined {
                         kind: TypeDefKind::Struct,
-                        name,
+                        ref name,
                         ..
                     } => {
-                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name) {
+                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(name) {
                             for field in &struct_info.fields {
                                 if field.sym.name == field_sym.name {
                                     let field_ty = Type::from_hint(
@@ -1412,8 +1404,19 @@ impl TypeCheckVisitor<'_> {
                                 }
                             }
 
+                            let notes = match recv_ty.def_sym_pos(self.env) {
+                                Some(pos) => vec![(
+                                    ErrorMessage(vec![
+                                        msgcode!("{}", recv_ty_name),
+                                        msgtext!(" is defined here."),
+                                    ]),
+                                    pos,
+                                )],
+                                None => vec![],
+                            };
+
                             self.diagnostics.push(Diagnostic {
-                                notes: vec![],
+                                notes,
                                 severity: Severity::Error,
                                 message: ErrorMessage(vec![
                                     msgtext!("Struct "),

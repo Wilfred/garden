@@ -4,7 +4,7 @@ let x = 1 + True
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `Bool`.
-// --| src/test_files/check/type_error_toplevel.gdn:1:13
-// let x = 1 + True
-//             ^^^^
+// ---| src/test_files/check/type_error_toplevel.gdn:1:13
+// 1  | let x = 1 + True
+//    |             ^^^^
 

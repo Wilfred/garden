@@ -8,7 +8,7 @@ external fun foo(v: Result<Int, Unit>) {
 // expected exit status: 1
 // expected stdout:
 // Error: This match expression does not cover all the cases of `Result`. It's missing `Ok`.
-// --| src/test_files/check/match_missing_cases.gdn:3:9
-//   match v {
-//         ^
+// ---| src/test_files/check/match_missing_cases.gdn:3:9
+// 3  |   match v {
+//    |         ^
 

@@ -8,11 +8,11 @@ struct Foo {}
 // expected exit status: 1
 // expected stdout:
 // Error: Struct `Foo` has no field `bar`.
-// --| src/test_files/check/no_such_struct_field.gdn:4:11
-//     Foo{}.bar
-//           ^^^
+// ---| src/test_files/check/no_such_struct_field.gdn:4:11
+// 4  |     Foo{}.bar
+//    |           ^^^
 // Note: `Foo` is defined here.
-// --| src/test_files/check/no_such_struct_field.gdn:1:8
-// struct Foo {}
-//        ^^^
+// ---| src/test_files/check/no_such_struct_field.gdn:1:8
+// 1  | struct Foo {}
+//    |        ^^^
 

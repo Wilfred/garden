@@ -15,12 +15,12 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: `break` can only be used inside loops.
-// --| src/test_files/check/break_without_loop.gdn:2:5
-//     break
-//     ^^^^^
+// ---| src/test_files/check/break_without_loop.gdn:2:5
+// 2  |     break
+//    |     ^^^^^
 // 
 // Error: `break` can only be used inside loops.
-// --| src/test_files/check/break_without_loop.gdn:9:17
-//         fun() { break }
-//                 ^^^^^
+// ---| src/test_files/check/break_without_loop.gdn:9:17
+// 9  |         fun() { break }
+//    |                 ^^^^^
 

@@ -11,7 +11,7 @@ external fun foo(x: Option<Int>) {
 // expected exit status: 1
 // expected stdout:
 // Error: `Int` has no method `foo`.
-// --| src/test_files/check/type_error_method_after_match.gdn:7:7
-//     i.foo()
-//       ^^^
+// ---| src/test_files/check/type_error_method_after_match.gdn:7:7
+// 7  |     i.foo()
+//    |       ^^^
 

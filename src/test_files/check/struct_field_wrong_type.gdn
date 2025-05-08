@@ -10,7 +10,7 @@ external fun bar(): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int` for this field but got `String`.
-// --| src/test_files/check/struct_field_wrong_type.gdn:6:20
-//   let _f = Foo{ x: "abc" }
-//                    ^^^^^
+// ---| src/test_files/check/struct_field_wrong_type.gdn:6:20
+// 6  |   let _f = Foo{ x: "abc" }
+//    |                    ^^^^^
 

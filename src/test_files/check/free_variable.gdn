@@ -6,7 +6,7 @@ external fun foo(): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `x`
-// --| src/test_files/check/free_variable.gdn:2:5
-//     x
-//     ^
+// ---| src/test_files/check/free_variable.gdn:2:5
+// 2  |     x
+//    |     ^
 

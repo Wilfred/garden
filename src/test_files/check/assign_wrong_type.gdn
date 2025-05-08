@@ -7,7 +7,7 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// --| src/test_files/check/assign_wrong_type.gdn:3:9
-//     x = ""
-//         ^^
+// ---| src/test_files/check/assign_wrong_type.gdn:3:9
+// 3  |     x = ""
+//    |         ^^
 

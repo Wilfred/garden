@@ -8,7 +8,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: No such type `NoSuchType`.
-// --| src/test_files/check/no_such_type_match.gdn:3:9
-//         NoSuchType => {}
-//         ^^^^^^^^^^
+// ---| src/test_files/check/no_such_type_match.gdn:3:9
+// 3  |         NoSuchType => {}
+//    |         ^^^^^^^^^^
 

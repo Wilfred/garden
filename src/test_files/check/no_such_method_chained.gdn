@@ -7,12 +7,12 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `String` has no method `foo`.
-// --| src/test_files/check/no_such_method_chained.gdn:2:20
-//     string_repr(1).foo()
-//                    ^^^
+// ---| src/test_files/check/no_such_method_chained.gdn:2:20
+// 2  |     string_repr(1).foo()
+//    |                    ^^^
 // 
 // Error: `String` has no method `foo`.
-// --| src/test_files/check/no_such_method_chained.gdn:3:27
-//     "abc".substring(0, 1).foo()
-//                           ^^^
+// ---| src/test_files/check/no_such_method_chained.gdn:3:27
+// 3  |     "abc".substring(0, 1).foo()
+//    |                           ^^^
 

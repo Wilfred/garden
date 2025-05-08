@@ -8,12 +8,12 @@ external fun bad(): Bool {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `Bool`.
-// --| src/test_files/check/type_error_return_type.gdn:2:27
-//     let _f = fun(): Int { True }
-//                           ^^^^
+// ---| src/test_files/check/type_error_return_type.gdn:2:27
+// 2  |     let _f = fun(): Int { True }
+//    |                           ^^^^
 // 
 // Error: Expected `Bool`, but got `String`.
-// --| src/test_files/check/type_error_return_type.gdn:4:5
-//     "abc"
-//     ^^^^^
+// ---| src/test_files/check/type_error_return_type.gdn:4:5
+// 4  |     "abc"
+//    |     ^^^^^
 

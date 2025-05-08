@@ -11,12 +11,12 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `String::len` expects 0 arguments, but got 2.
-// --| src/test_files/check/method_arity.gdn:3:13
-//   "abc".len(1, 2)
-//             ^^^^
+// ---| src/test_files/check/method_arity.gdn:3:13
+// 3  |   "abc".len(1, 2)
+//    |             ^^^^
 // 
 // Error: `List::slice` requires an additional `Int` argument.
-// --| src/test_files/check/method_arity.gdn:7:12
-//   x.slice(0)
-//            ^
+// ---| src/test_files/check/method_arity.gdn:7:12
+// 7  |   x.slice(0)
+//    |            ^
 

@@ -10,9 +10,9 @@ fun foo(): List<Int> {
 // args: run
 // expected stderr:
 // Error: Expected `List<Int>`, but got `List<String>`: `[""]`
-// --| src/test_files/runtime/return_invalid_list.gdn:1:12	 fun foo()
-// fun foo(): List<Int> {
-//            ^^^^^^^^^
-// --| src/test_files/runtime/return_invalid_list.gdn:6:5	 __toplevel__
-//     foo()
+// ---| src/test_files/runtime/return_invalid_list.gdn:1:12	 fun foo()
+// 1  | fun foo(): List<Int> {
+//    |            ^^^^^^^^^
+// ---| src/test_files/runtime/return_invalid_list.gdn:6:5	 __toplevel__
+// 6  |     foo()
 

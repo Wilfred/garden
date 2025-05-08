@@ -193,8 +193,11 @@ fn format_pos_in_fun(
         }
     }
 
+    let margin_width = 4;
+
     let formatted_pos = format!(
-        "--| {}:{}:{}",
+        "{}| {}:{}:{}",
+        "-".repeat(margin_width - 1),
         pos_path.display(),
         position.line_number + 1,
         position.column + 1
@@ -231,6 +234,8 @@ fn format_pos_in_fun(
         // TODO: this can occur when the Vfs is stale relative to the
         // last time these functions were re-evaluated.
         let relevant_line = s_lines[0].to_owned();
+
+        res.push_str(&format_margin_num("?", margin_width, use_color));
         res.push_str(&relevant_line);
     } else {
         let line_positions = LinePositions::from(src);
@@ -250,10 +255,16 @@ fn format_pos_in_fun(
                 res.push('\n');
             }
 
+            res.push_str(&format_margin_num(
+                &span.line.display(),
+                margin_width,
+                use_color,
+            ));
             res.push_str(relevant_line);
 
             if underline {
                 res.push('\n');
+                res.push_str(&format_margin_num("", margin_width, use_color));
                 res.push_str(&" ".repeat(span.start_col as usize));
 
                 let carets = "^".repeat((span.end_col - span.start_col) as usize);
@@ -271,4 +282,14 @@ fn format_pos_in_fun(
     }
 
     res
+}
+
+fn format_margin_num(num: &str, margin_width: usize, use_color: bool) -> String {
+    let s = format!("{:width$}| ", num, width = margin_width - 1);
+
+    if use_color {
+        s.dimmed().to_string()
+    } else {
+        s
+    }
 }

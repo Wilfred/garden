@@ -16,7 +16,7 @@ enum Foo {
 // expected exit status: 1
 // expected stdout:
 // Error: `match` cases have different types.
-// --| src/test_files/check/type_error_match_different_cases.gdn:11:18
-//         Three => "stuff",
-//                  ^^^^^^^
+// ---| src/test_files/check/type_error_match_different_cases.gdn:11:18
+// 11 |         Three => "stuff",
+//    |                  ^^^^^^^
 

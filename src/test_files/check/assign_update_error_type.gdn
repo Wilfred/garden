@@ -10,12 +10,12 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unfinished code.
-// --| src/test_files/check/assign_update_error_type.gdn:2:11
-//   let x = todo()
-//           ^^^^^^
+// ---| src/test_files/check/assign_update_error_type.gdn:2:11
+// 2  |   let x = todo()
+//    |           ^^^^^^
 // 
 // Error: Unbound symbol: `no_such_func`
-// --| src/test_files/check/assign_update_error_type.gdn:5:11
-//   let y = no_such_func()
-//           ^^^^^^^^^^^^
+// ---| src/test_files/check/assign_update_error_type.gdn:5:11
+// 5  |   let y = no_such_func()
+//    |           ^^^^^^^^^^^^
 

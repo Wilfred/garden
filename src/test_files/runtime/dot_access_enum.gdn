@@ -6,7 +6,7 @@
 // args: run
 // expected stderr:
 // Error: Expected `struct`, but got `Option<Int>`: `Some(1)`
-// --| src/test_files/runtime/dot_access_enum.gdn:3:5	 __toplevel__
-//     x.y
-//     ^
+// ---| src/test_files/runtime/dot_access_enum.gdn:3:5	 __toplevel__
+// 3  |     x.y
+//    |     ^
 

@@ -7,7 +7,7 @@
 // args: run
 // expected stderr:
 // Error: lhs
-// --| src/test_files/runtime/binop_eval_order.gdn:4:3	 __toplevel__
-//   error("lhs") + error("rhs")
-//   ^^^^^^^^^^^^
+// ---| src/test_files/runtime/binop_eval_order.gdn:4:3	 __toplevel__
+// 4  |   error("lhs") + error("rhs")
+//    |   ^^^^^^^^^^^^
 

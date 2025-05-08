@@ -38,19 +38,19 @@ ffun foo(_: Bool) {
 
 // expected stderr:
 // Error: Parse error: Invalid syntax: Expected `,` or `)`, got `:`
-// --| src/test_files/parser/malformed_fun_keyword.gdn:2:11
-// ffun foo(_: Bool) {
-//           ^
+// ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
+// 2  | ffun foo(_: Bool) {
+//    |           ^
 // Error: Parse error: Expected an expression, got: `:`.
-// --| src/test_files/parser/malformed_fun_keyword.gdn:2:11
-// ffun foo(_: Bool) {
-//           ^
+// ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
+// 2  | ffun foo(_: Bool) {
+//    |           ^
 // Error: Parse error: Expected `)`, got `:`
-// --| src/test_files/parser/malformed_fun_keyword.gdn:2:11
-// ffun foo(_: Bool) {
-//           ^
+// ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
+// 2  | ffun foo(_: Bool) {
+//    |           ^
 // Error: Parse error: Expected an expression, got: `:`.
-// --| src/test_files/parser/malformed_fun_keyword.gdn:2:11
-// ffun foo(_: Bool) {
-//           ^
+// ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
+// 2  | ffun foo(_: Bool) {
+//    |           ^
 

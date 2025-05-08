@@ -14,7 +14,7 @@ external fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Option<Int>`, but got `Option<String>`.
-// --| src/test_files/check/type_error_solve_generics.gdn:10:19
-//     takes_options(Some("foo"), Some(123))
-//                   ^^^^^^^^^^^
+// ---| src/test_files/check/type_error_solve_generics.gdn:10:19
+// 10 |     takes_options(Some("foo"), Some(123))
+//    |                   ^^^^^^^^^^^
 

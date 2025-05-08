@@ -10,7 +10,7 @@ external fun id<T>(v: T): T {
 // expected exit status: 1
 // expected stdout:
 // Error: `Int` has no method `no_such_meth`.
-// --| src/test_files/check/type_error_after_identity_fun.gdn:6:11
-//     id(1).no_such_meth()
-//           ^^^^^^^^^^^^
+// ---| src/test_files/check/type_error_after_identity_fun.gdn:6:11
+// 6  |     id(1).no_such_meth()
+//    |           ^^^^^^^^^^^^
 

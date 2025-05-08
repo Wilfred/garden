@@ -8,7 +8,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Bool`, but got `Int`.
-// --| src/test_files/check/type_error_while.gdn:2:11
-//     while 1 {
-//           ^
+// ---| src/test_files/check/type_error_while.gdn:2:11
+// 2  |     while 1 {
+//    |           ^
 

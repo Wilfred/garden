@@ -7,12 +7,12 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// --| src/test_files/check/type_error_arguments_method.gdn:3:17
-//     s.substring("", "")
-//                 ^^
+// ---| src/test_files/check/type_error_arguments_method.gdn:3:17
+// 3  |     s.substring("", "")
+//    |                 ^^
 // 
 // Error: Expected `Int`, but got `String`.
-// --| src/test_files/check/type_error_arguments_method.gdn:3:21
-//     s.substring("", "")
-//                     ^^
+// ---| src/test_files/check/type_error_arguments_method.gdn:3:21
+// 3  |     s.substring("", "")
+//    |                     ^^
 

@@ -19,7 +19,7 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a tuple, but got `String`.
-// --| src/test_files/check/match_destructure.gdn:13:5
-//     Some((x, y)) => { let _ = x + y }
-//     ^^^^
+// ---| src/test_files/check/match_destructure.gdn:13:5
+// 13 |     Some((x, y)) => { let _ = x + y }
+//    |     ^^^^
 

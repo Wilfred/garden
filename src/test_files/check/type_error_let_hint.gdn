@@ -6,7 +6,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Bool`, but got `Int`.
-// --| src/test_files/check/type_error_let_hint.gdn:2:19
-//     let _: Bool = 123
-//                   ^^^
+// ---| src/test_files/check/type_error_let_hint.gdn:2:19
+// 2  |     let _: Bool = 123
+//    |                   ^^^
 

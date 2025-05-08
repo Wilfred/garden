@@ -10,7 +10,7 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `no_such_func`
-// --| src/test_files/check/equality_on_error_type.gdn:2:13
-//     let v = no_such_func()
-//             ^^^^^^^^^^^^
+// ---| src/test_files/check/equality_on_error_type.gdn:2:13
+// 2  |     let v = no_such_func()
+//    |             ^^^^^^^^^^^^
 

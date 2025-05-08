@@ -10,7 +10,7 @@ struct Foo {
 // args: run
 // expected stderr:
 // Error: Missing fields from `Foo`: `x`.
-// --| src/test_files/runtime/struct_create_missing_fields.gdn:6:9	 __toplevel__
-//     dbg(Foo{})
-//         ^^^^^
+// ---| src/test_files/runtime/struct_create_missing_fields.gdn:6:9	 __toplevel__
+// 6  |     dbg(Foo{})
+//    |         ^^^^^
 

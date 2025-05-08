@@ -8,17 +8,17 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an expression, got: `=`.
-// --| src/test_files/check/assign_not_lvalue.gdn:4:11
-//     x + 1 = 2
-//           ^
+// ---| src/test_files/check/assign_not_lvalue.gdn:4:11
+// 4  |     x + 1 = 2
+//    |           ^
 // 
 // Error: Expected `}`, got `=`
-// --| src/test_files/check/assign_not_lvalue.gdn:4:11
-//     x + 1 = 2
-//           ^
+// ---| src/test_files/check/assign_not_lvalue.gdn:4:11
+// 4  |     x + 1 = 2
+//    |           ^
 // 
 // Error: Expected an expression, got: `=`.
-// --| src/test_files/check/assign_not_lvalue.gdn:4:11
-//     x + 1 = 2
-//           ^
+// ---| src/test_files/check/assign_not_lvalue.gdn:4:11
+// 4  |     x + 1 = 2
+//    |           ^
 

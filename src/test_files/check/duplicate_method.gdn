@@ -6,7 +6,7 @@ external fun (self: String) foo() {}
 // expected exit status: 1
 // expected stdout:
 // Warning: The method `String::foo` is already defined in this file.
-// --| src/test_files/check/duplicate_method.gdn:3:29
-// external fun (self: String) foo() {}
-//                             ^^^
+// ---| src/test_files/check/duplicate_method.gdn:3:29
+// 3  | external fun (self: String) foo() {}
+//    |                             ^^^
 

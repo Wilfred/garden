@@ -10,17 +10,17 @@ struct Bar {}
 // expected exit status: 1
 // expected stdout:
 // Error: `String` has no method `foo`.
-// --| src/test_files/check/no_such_method.gdn:4:11
-//     "abc".foo()
-//           ^^^
+// ---| src/test_files/check/no_such_method.gdn:4:11
+// 4  |     "abc".foo()
+//    |           ^^^
 // 
 // Error: `List` has no method `foo`.
-// --| src/test_files/check/no_such_method.gdn:5:9
-//     [1].foo()
-//         ^^^
+// ---| src/test_files/check/no_such_method.gdn:5:9
+// 5  |     [1].foo()
+//    |         ^^^
 // 
 // Error: `Bar` has no method `foo`.
-// --| src/test_files/check/no_such_method.gdn:6:11
-//     Bar{}.foo()
-//           ^^^
+// ---| src/test_files/check/no_such_method.gdn:6:11
+// 6  |     Bar{}.foo()
+//    |           ^^^
 

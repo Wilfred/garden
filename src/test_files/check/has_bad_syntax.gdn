@@ -9,17 +9,17 @@ external fun bar() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `=`, got `}`
-// --| src/test_files/check/has_bad_syntax.gdn:3:1
-// }
-// ^
+// ---| src/test_files/check/has_bad_syntax.gdn:3:1
+// 3  | }
+//    | ^
 // 
 // Error: Expected an expression, got: `}`.
-// --| src/test_files/check/has_bad_syntax.gdn:3:1
-// }
-// ^
+// ---| src/test_files/check/has_bad_syntax.gdn:3:1
+// 3  | }
+//    | ^
 // 
 // Warning: `x` is unused.
-// --| src/test_files/check/has_bad_syntax.gdn:2:7
-//   let x
-//       ^
+// ---| src/test_files/check/has_bad_syntax.gdn:2:7
+// 2  |   let x
+//    |       ^
 

@@ -6,7 +6,7 @@ struct MyStruct {
 // expected exit status: 1
 // expected stdout:
 // Error: No such type `NoSuchType`.
-// --| src/test_files/check/missing_type_arg_struct_field.gdn:2:8
-//     x: NoSuchType,
-//        ^^^^^^^^^^
+// ---| src/test_files/check/missing_type_arg_struct_field.gdn:2:8
+// 2  |     x: NoSuchType,
+//    |        ^^^^^^^^^^
 

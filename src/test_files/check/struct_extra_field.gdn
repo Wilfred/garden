@@ -10,7 +10,7 @@ external fun bar(): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: Struct `Foo` does not have a field named `y`.
-// --| src/test_files/check/struct_extra_field.gdn:6:29
-//     let _f = Foo{ x: 1 + 2, y: 2 }
-//                             ^
+// ---| src/test_files/check/struct_extra_field.gdn:6:29
+// 6  |     let _f = Foo{ x: 1 + 2, y: 2 }
+//    |                             ^
 

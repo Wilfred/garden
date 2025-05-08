@@ -29,17 +29,17 @@ external fun foo(x: Option<Int>) {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unfinished code.
-// --| src/test_files/check/type_error_missing_case.gdn:9:11
-//     match todo() {
-//           ^^^^^^
+// ---| src/test_files/check/type_error_missing_case.gdn:9:11
+// 9  |     match todo() {
+//    |           ^^^^^^
 // 
 // Error: This match expression does not cover all the cases of `Option`. It's missing `None`.
-// --| src/test_files/check/type_error_missing_case.gdn:15:11
-//     match x {
-//           ^
+// ---| src/test_files/check/type_error_missing_case.gdn:15:11
+// 15 |     match x {
+//    |           ^
 // 
 // Error: Duplicate case in pattern match.
-// --| src/test_files/check/type_error_missing_case.gdn:23:9
-//         None => {}
-//         ^^^^
+// ---| src/test_files/check/type_error_missing_case.gdn:23:9
+// 23 |         None => {}
+//    |         ^^^^
 

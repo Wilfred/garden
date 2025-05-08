@@ -6,7 +6,7 @@
 // args: run
 // expected stderr:
 // Error: Expected `struct`, but got `Int`: `1`
-// --> src/test_files/runtime/dot_access_bad_type.gdn:3	 __toplevel__
+// --| src/test_files/runtime/dot_access_bad_type.gdn:3:5	 __toplevel__
 //     x.y
 //     ^
 

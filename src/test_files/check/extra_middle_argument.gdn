@@ -8,7 +8,7 @@ external fun bar() {
 // expected exit status: 1
 // expected stdout:
 // Error: Unexpected extra argument. `foo` requires 3 arguments.
-// --> src/test_files/check/extra_middle_argument.gdn:4
+// --| src/test_files/check/extra_middle_argument.gdn:4:25
 //   foo(1, Path{ p: "" }, [], "stuff")
 //                         ^^^
 

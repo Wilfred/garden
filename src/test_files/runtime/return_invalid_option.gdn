@@ -10,9 +10,9 @@ fun foo(): Option<Int> {
 // args: run
 // expected stderr:
 // Error: Expected `Option<Int>`, but got `Option<String>`: `Some("")`
-// --> src/test_files/runtime/return_invalid_option.gdn:1	 fun foo()
+// --| src/test_files/runtime/return_invalid_option.gdn:1:12	 fun foo()
 // fun foo(): Option<Int> {
 //            ^^^^^^^^^^^
-// --> src/test_files/runtime/return_invalid_option.gdn:6	 __toplevel__
+// --| src/test_files/runtime/return_invalid_option.gdn:6:5	 __toplevel__
 //     foo()
 

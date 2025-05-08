@@ -10,7 +10,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// --> src/test_files/check/type_error_option_match.gdn:4
+// --| src/test_files/check/type_error_option_match.gdn:4:20
 //         Some(v) => v + 1,
 //                    ^
 

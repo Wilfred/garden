@@ -10,7 +10,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Bool`, but got `Int`.
-// --> src/test_files/check/type_error_if.gdn:2
+// --| src/test_files/check/type_error_if.gdn:2:8
 //     if 1 {
 //        ^
 

@@ -5,7 +5,7 @@
 // args: run
 // expected stderr:
 // Error: Expected `String`, but got `Int`: `123`
-// --> src/test_files/runtime/let_hint_invalid.gdn:2	 __toplevel__
+// --| src/test_files/runtime/let_hint_invalid.gdn:2:21	 __toplevel__
 //     let x: String = 123
 //                     ^^^
 

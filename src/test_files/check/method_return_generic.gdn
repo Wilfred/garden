@@ -12,7 +12,7 @@ external fun subst_method_return_tys<T>() {
 // expected exit status: 1
 // expected stdout:
 // Warning: Unfinished code.
-// --> src/test_files/check/method_return_generic.gdn:4
+// --| src/test_files/check/method_return_generic.gdn:4:25
 //   let t: (Int, T) = (0, todo())
 //                         ^^^^^^
 

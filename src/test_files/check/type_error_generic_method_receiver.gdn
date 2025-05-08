@@ -6,7 +6,7 @@ external fun (this: List<T>) foo<T>(): String {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `String`, but got `T`.
-// --> src/test_files/check/type_error_generic_method_receiver.gdn:2
+// --| src/test_files/check/type_error_generic_method_receiver.gdn:2:3
 //   this.get(1).or_exception()
 //   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

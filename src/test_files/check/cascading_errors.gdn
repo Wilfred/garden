@@ -14,7 +14,7 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `no_such_fun`
-// --> src/test_files/check/cascading_errors.gdn:2
+// --| src/test_files/check/cascading_errors.gdn:2:11
 //   let x = no_such_fun()
 //           ^^^^^^^^^^^
 

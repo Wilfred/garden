@@ -8,12 +8,12 @@ external fun bar() {}
 // expected exit status: 1
 // expected stdout:
 // Error: `bar` is a function definition, which cannot be reassigned.
-// --> src/test_files/check/assign_toplevel_fun_name.gdn:2
+// --| src/test_files/check/assign_toplevel_fun_name.gdn:2:3
 //   bar = 1
 //   ^^^
 // 
 // Error: Expected `Fun<(), Unit>`, but got `Int`.
-// --> src/test_files/check/assign_toplevel_fun_name.gdn:2
+// --| src/test_files/check/assign_toplevel_fun_name.gdn:2:9
 //   bar = 1
 //         ^
 

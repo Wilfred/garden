@@ -12,7 +12,7 @@ external fun foo(): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: `String` is not a struct.
-// --> src/test_files/check/ambiguity_dot_access_or_assign.gdn:7
+// --| src/test_files/check/ambiguity_dot_access_or_assign.gdn:7:6
 //     s.
 //      ^
 

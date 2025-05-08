@@ -8,17 +8,17 @@ test baz(x: Int) {}
 // expected exit status: 1
 // expected stdout:
 // Error: Tests should not have arguments, e.g. `test foo {}`.
-// --> src/test_files/check/incorrect_test_def.gdn:1
+// --| src/test_files/check/incorrect_test_def.gdn:1:9
 // test foo() {}
 //         ^^
 // 
 // Error: Tests should not have arguments, e.g. `test foo {}`.
-// --> src/test_files/check/incorrect_test_def.gdn:3
+// --| src/test_files/check/incorrect_test_def.gdn:3:9
 // test bar(x) {}
 //         ^^^
 // 
 // Error: Tests should not have arguments, e.g. `test foo {}`.
-// --> src/test_files/check/incorrect_test_def.gdn:5
+// --| src/test_files/check/incorrect_test_def.gdn:5:9
 // test baz(x: Int) {}
 //         ^^^^^^^^
 

@@ -10,7 +10,7 @@ external fun foo(b: Bool): Option<Int> {
 // expected exit status: 1
 // expected stdout:
 // Error: `if` and `else` have incompatible types: `Option<NoValue>` and `Int`.
-// --> src/test_files/check/type_error_if_else.gdn:3
+// --| src/test_files/check/type_error_if_else.gdn:3:9
 //         None
 //         ^^^^
 

@@ -10,7 +10,7 @@ external fun takes_int(b: Bool): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected this function to return `Int`, but got `Unit`.
-// --> src/test_files/check/type_error_early_return_unit.gdn:3
+// --| src/test_files/check/type_error_early_return_unit.gdn:3:9
 //         return
 //         ^^^^^^
 

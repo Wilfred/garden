@@ -8,7 +8,7 @@ while {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected an expression, got: `{`.
-// --> src/test_files/check/incomplete_while.gdn:3
+// --| src/test_files/check/incomplete_while.gdn:3:7
 // while {
 //       ^
 

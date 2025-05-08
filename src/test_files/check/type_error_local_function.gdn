@@ -8,7 +8,7 @@ external fun takes_int(_v: Int) {}
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// --> src/test_files/check/type_error_local_function.gdn:4
+// --| src/test_files/check/type_error_local_function.gdn:4:15
 //     takes_int("foo")
 //               ^^^^^
 

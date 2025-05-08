@@ -10,12 +10,12 @@ external fun bar(): Int<String> {
 // expected exit status: 1
 // expected stdout:
 // Error: List takes 1 type argument, but got 0 arguments.
-// --> src/test_files/check/missing_type_arg_list.gdn:1
+// --| src/test_files/check/missing_type_arg_list.gdn:1:21
 // external fun foo(): List {
 //                     ^^^^
 // 
 // Error: Int takes 0 type arguments, but got 1 argument.
-// --> src/test_files/check/missing_type_arg_list.gdn:5
+// --| src/test_files/check/missing_type_arg_list.gdn:5:25
 // external fun bar(): Int<String> {
 //                         ^^^^^^
 

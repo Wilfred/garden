@@ -12,12 +12,12 @@ external fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// --> src/test_files/check/assign_add.gdn:5
+// --| src/test_files/check/assign_add.gdn:5:10
 //     x += "" // bad
 //          ^^
 // 
 // Error: `-=` can only be used with `Int` variables, but got `String`.
-// --> src/test_files/check/assign_add.gdn:8
+// --| src/test_files/check/assign_add.gdn:8:5
 //     y -= 2 // bad
 //     ^
 

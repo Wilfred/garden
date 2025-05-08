@@ -8,7 +8,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `__fs.gdn` does not contain an item named `no_such_func`.
-// --> src/test_files/check/namespaced_fun.gdn:4
+// --| src/test_files/check/namespaced_fun.gdn:4:7
 //   fs::no_such_func()
 //       ^^^^^^^^^^^^
 

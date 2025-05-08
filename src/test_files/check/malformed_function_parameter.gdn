@@ -6,7 +6,7 @@ external fun foo(f: Fun<Int, Int>): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `Int`.
-// --> src/test_files/check/malformed_function_parameter.gdn:1
+// --| src/test_files/check/malformed_function_parameter.gdn:1:25
 // external fun foo(f: Fun<Int, Int>): Int {
 //                         ^^^
 

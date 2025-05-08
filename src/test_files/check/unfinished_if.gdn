@@ -11,7 +11,7 @@ external fun foo(i: Option<Int>) {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `{`, got `}`
-// --> src/test_files/check/unfinished_if.gdn:5
+// --| src/test_files/check/unfinished_if.gdn:5:9
 //         }
 //         ^
 

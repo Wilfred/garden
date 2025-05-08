@@ -7,7 +7,7 @@ import "./no_such_file.gdn"
 // args: run
 // expected stderr:
 // Error: No such file `./no_such_file.gdn`.
-// --> src/test_files/runtime/import_missing_file.gdn:1	 __toplevel__
+// --| src/test_files/runtime/import_missing_file.gdn:1:8	 __toplevel__
 // import "./no_such_file.gdn"
 //        ^^^^^^^^^^^^^^^^^^^^
 

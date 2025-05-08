@@ -193,7 +193,12 @@ fn format_pos_in_fun(
         }
     }
 
-    let formatted_pos = format!("--> {}:{}", pos_path.display(), position.line_number + 1,);
+    let formatted_pos = format!(
+        "--| {}:{}:{}",
+        pos_path.display(),
+        position.line_number + 1,
+        position.column + 1
+    );
 
     if use_color {
         res.push_str(&formatted_pos.dimmed().to_string());

@@ -15,17 +15,17 @@ fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Invalid syntax: Expected `,` or `)`, got `x`
-// --> src/test_files/check/missing_paren.gdn:11
+// --| src/test_files/check/missing_paren.gdn:11:3
 //   x = 2
 //   ^
 // 
 // Error: Expected `)`, got `x`
-// --> src/test_files/check/missing_paren.gdn:11
+// --| src/test_files/check/missing_paren.gdn:11:3
 //   x = 2
 //   ^
 // 
 // Warning: `foo` is never called.
-// --> src/test_files/check/missing_paren.gdn:5
+// --| src/test_files/check/missing_paren.gdn:5:5
 // fun foo() {
 //     ^^^
 

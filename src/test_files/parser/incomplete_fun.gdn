@@ -6,7 +6,7 @@ test bar {
 // args: dump-ast
 // expected stderr:
 // Error: Parse error: 'test' is a reserved word that cannot be used as a name
-// --> src/test_files/parser/incomplete_fun.gdn:3
+// --| src/test_files/parser/incomplete_fun.gdn:3:1
 // test bar {
 // ^^^^
 

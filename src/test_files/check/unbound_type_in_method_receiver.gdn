@@ -5,7 +5,7 @@ external fun (self: NoSuchType) foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: No such type `NoSuchType`.
-// --> src/test_files/check/unbound_type_in_method_receiver.gdn:1
+// --| src/test_files/check/unbound_type_in_method_receiver.gdn:1:21
 // external fun (self: NoSuchType) foo() {
 //                     ^^^^^^^^^^
 

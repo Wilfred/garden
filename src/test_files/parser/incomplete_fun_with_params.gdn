@@ -63,7 +63,7 @@ fun bar() {}
 
 // expected stderr:
 // Error: Parse error: Expected `{`, got `fun`
-// --> src/test_files/parser/incomplete_fun_with_params.gdn:3
+// --| src/test_files/parser/incomplete_fun_with_params.gdn:3:1
 // fun bar() {}
 // ^^^
 

@@ -10,7 +10,7 @@ external fun takes_int(b: Bool): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// --> src/test_files/check/type_error_early_return.gdn:3
+// --| src/test_files/check/type_error_early_return.gdn:3:16
 //         return "foo"
 //                ^^^^^
 

@@ -6,7 +6,7 @@ external fun foo(parts: List<String>): String {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `String`, but got `Option<String>`.
-// --> src/test_files/check/type_error_return_option.gdn:2
+// --| src/test_files/check/type_error_return_option.gdn:2:5
 //     parts.first()
 //     ^^^^^^^^^^^^^
 

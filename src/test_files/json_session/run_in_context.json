@@ -74,7 +74,7 @@
 //               "path": "__json_session_unnamed__"
 //             },
 //             "message": "Error: oh no",
-//             "stack": "Error: oh no\n--> __json_session_unnamed__:1\t fun foo()\nfun foo() { let x = 1 let y = 2 error(\"oh no\") }\n                                ^^^^^^^^^^^^^^\n--> __json_session_unnamed__:1\t __toplevel__\nfoo()"
+//             "stack": "Error: oh no\n--| __json_session_unnamed__:1:33\t fun foo()\nfun foo() { let x = 1 let y = 2 error(\"oh no\") }\n                                ^^^^^^^^^^^^^^\n--| __json_session_unnamed__:1:1\t __toplevel__\nfoo()"
 //           }
 //         ]
 //       },

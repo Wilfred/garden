@@ -6,12 +6,12 @@ import "./has_bad_syntax.gdn"
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `=`, got `}`
-// --> src/test_files/check/has_bad_syntax.gdn:3
+// --| src/test_files/check/has_bad_syntax.gdn:3:1
 // }
 // ^
 // 
 // Error: Expected an expression, got: `}`.
-// --> src/test_files/check/has_bad_syntax.gdn:3
+// --| src/test_files/check/has_bad_syntax.gdn:3:1
 // }
 // ^
 

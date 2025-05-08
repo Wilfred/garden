@@ -6,7 +6,7 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
-// --> src/test_files/check/type_error_arguments_fun.gdn:2
+// --| src/test_files/check/type_error_arguments_fun.gdn:2:11
 //     print(123)
 //           ^^^
 

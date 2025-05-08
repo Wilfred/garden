@@ -6,7 +6,7 @@ external fun foo() {}
 // expected exit status: 1
 // expected stdout:
 // Warning: The function `foo` is already defined in this file.
-// --> src/test_files/check/duplicate_function.gdn:3
+// --| src/test_files/check/duplicate_function.gdn:3:14
 // external fun foo() {}
 //              ^^^
 

@@ -14,11 +14,11 @@ fun caller() {
 // expected stderr:
 // Error: oh no
 // oh dear
-// --> src/test_files/runtime/error.gdn:2	 fun callee()
+// --| src/test_files/runtime/error.gdn:2:5	 fun callee()
 //     error("oh no\noh dear")
 //     ^^^^^^^^^^^^^^^^^^^^^^^
-// --> src/test_files/runtime/error.gdn:6	 fun caller()
+// --| src/test_files/runtime/error.gdn:6:5	 fun caller()
 //     callee()
-// --> src/test_files/runtime/error.gdn:10	 __toplevel__
+// --| src/test_files/runtime/error.gdn:10:5	 __toplevel__
 //     caller()
 

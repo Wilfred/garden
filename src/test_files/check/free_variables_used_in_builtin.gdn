@@ -7,7 +7,7 @@ external fun foo(x: Int) {
 // expected exit status: 1
 // expected stdout:
 // Warning: Tried to update a built-in stub for a function `foo` that doesn't exist.
-// --> src/test_files/check/free_variables_used_in_builtin.gdn:1
+// --| src/test_files/check/free_variables_used_in_builtin.gdn:1:14
 // external fun foo(x: Int) {
 //              ^^^
 

@@ -9,9 +9,9 @@ fun foo(): Option<NoSuchType> {
 // args: run
 // expected stderr:
 // Error: No such type: NoSuchType
-// --> src/test_files/runtime/nonexistent_type_return_type_arg.gdn:1	 fun foo()
+// --| src/test_files/runtime/nonexistent_type_return_type_arg.gdn:1:12	 fun foo()
 // fun foo(): Option<NoSuchType> {
 //            ^^^^^^^^^^^^^^^^^^
-// --> src/test_files/runtime/nonexistent_type_return_type_arg.gdn:6	 __toplevel__
+// --| src/test_files/runtime/nonexistent_type_return_type_arg.gdn:6:5	 __toplevel__
 //     foo()
 

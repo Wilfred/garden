@@ -9,12 +9,12 @@
 // expected exit status: 1
 // expected stdout:
 // Error: This match case is for `Option`, but you're matching on a `Int`.
-// --> src/test_files/check/type_error_match.gdn:3
+// --| src/test_files/check/type_error_match.gdn:3:9
 //         Some(_) => {}
 //         ^^^^
 // 
 // Error: This match case is for `Option`, but you're matching on a `Int`.
-// --> src/test_files/check/type_error_match.gdn:4
+// --| src/test_files/check/type_error_match.gdn:4:9
 //         None => {}
 //         ^^^^
 

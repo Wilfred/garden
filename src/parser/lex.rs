@@ -37,6 +37,7 @@ impl<'a> TokenStream<'a> {
         self.tokens.get(self.idx).is_none()
     }
 
+    /// Get the next token in this stream.
     pub(crate) fn pop(&mut self) -> Option<Token<'a>> {
         match self.tokens.get(self.idx) {
             Some(token) => {

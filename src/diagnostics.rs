@@ -348,7 +348,7 @@ fn format_pos_in_fun(
                     margin_width,
                     use_color,
                 ));
-                res.push_str(relevant_line);
+                res.push_str(&format_src_line(relevant_line, use_color));
             }
         }
     }

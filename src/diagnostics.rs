@@ -287,16 +287,9 @@ fn format_pos_in_fun(
             if underline {
                 res.push('\n');
 
-                let short_next_line = match s_lines.get(span.line.as_usize() + 1) {
-                    Some(line) => {
-                        if line.len() < span.start_col as usize {
-                            Some(line)
-                        } else {
-                            None
-                        }
-                    }
-                    None => None,
-                };
+                let short_next_line = s_lines
+                    .get(span.line.as_usize() + 1)
+                    .filter(|&line| line.len() < span.start_col as usize);
 
                 // If we're printing context and the following line
                 // has space for carets, use that line rather than

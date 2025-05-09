@@ -7,13 +7,13 @@ test baz(x: Int) {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Tests should not have arguments, e.g. `test foo {}`.
+// Error: Tests should not have arguments. A valid test look like this: `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:1:9
 // 1  | test foo() {}
 // 2  |         ^^
 // 3  | test bar(x) {}
 // 
-// Error: Tests should not have arguments, e.g. `test foo {}`.
+// Error: Tests should not have arguments. A valid test look like this: `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:3:9
 // 1  | test foo() {}
 // 2  | 
@@ -21,7 +21,7 @@ test baz(x: Int) {}
 // 4  |         ^^^
 // 5  | test baz(x: Int) {}
 // 
-// Error: Tests should not have arguments, e.g. `test foo {}`.
+// Error: Tests should not have arguments. A valid test look like this: `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:5:9
 // 3  | test bar(x) {}
 // 4  | 

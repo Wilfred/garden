@@ -44,7 +44,7 @@ fun bar() {}
 // )
 
 // expected stderr:
-// Error: Parse error: Expected `{`, got `fun`
+// Error: Parse error: Expected `{`, but got `fun`.
 // ---| src/test_files/parser/incomplete_enum.gdn:3:1
 // 1  | enum Foo
 // 2  | 

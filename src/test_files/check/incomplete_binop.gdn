@@ -3,7 +3,7 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an expression, got: `/`.
+// Error: Expected an expression, but got `/`.
 // ---| src/test_files/check/incomplete_binop.gdn:1:1
 // 1  | /
 //    | ^

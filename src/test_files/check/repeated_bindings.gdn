@@ -14,20 +14,20 @@ external fun bar(_: Int, _: Int, _: String) {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Duplicate parameter: `x`
+// Error: Duplicate parameter `x`.
 // ---| src/test_files/check/repeated_bindings.gdn:1:26
 // 1  | external fun foo(x: Int, x: Int) {
 // 2  |     let (y, y) = (1, 2)  ^
 // 3  | 
 // 
-// Error: Duplicate destructure variable: `y`.
+// Error: Duplicate variable  `y` in destructuring `let`.
 // ---| src/test_files/check/repeated_bindings.gdn:2:13
 // 1  | external fun foo(x: Int, x: Int) {
 // 2  |     let (y, y) = (1, 2)
 // 3  |             ^
 // 4  |     let _f = fun(z, z) {}
 // 
-// Error: Duplicate parameter: `z`
+// Error: Duplicate parameter `z`.
 // ---| src/test_files/check/repeated_bindings.gdn:4:21
 // 2  |     let (y, y) = (1, 2)
 // 3  | 

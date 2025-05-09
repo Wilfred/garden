@@ -10,7 +10,7 @@ external fun foo(i: Option<Int>) {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `{`, got `}`
+// Error: Expected `{`, but got `}`.
 // ---| src/test_files/check/unfinished_if.gdn:5:9
 // 3  |         Some(_) => {
 // 4  |             if True 

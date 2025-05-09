@@ -8,7 +8,7 @@ external fun bar() {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `=`, got `}`
+// Error: Expected `=`, but got `}`.
 // ---| src/test_files/check/has_bad_syntax.gdn:3:1
 // 1  | external fun bar() {
 // 2  |   let x
@@ -17,7 +17,7 @@ external fun bar() {
 // 4  | 
 // 5  | // This file is imported, we don't really chare about the errors
 // 
-// Error: Expected an expression, got: `}`.
+// Error: Expected an expression, but got `}`.
 // ---| src/test_files/check/has_bad_syntax.gdn:3:1
 // 1  | external fun bar() {
 // 2  |   let x

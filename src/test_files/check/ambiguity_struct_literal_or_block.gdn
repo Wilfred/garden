@@ -13,7 +13,7 @@ external fun foo(): Unit {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an expression, got: `{`.
+// Error: Expected an expression, but got `{`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:3
 // 8  |   // This is therefore a syntax error, because SomeValue cannot be a
 // 9  |   // struct literal.
@@ -21,7 +21,7 @@ external fun foo(): Unit {
 // 11 | } ^
 // 12 | 
 // 
-// Error: Expected `}`, got `{`
+// Error: Expected `}`, but got `{`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:3
 // 8  |   // This is therefore a syntax error, because SomeValue cannot be a
 // 9  |   // struct literal.
@@ -29,7 +29,7 @@ external fun foo(): Unit {
 // 11 | } ^
 // 12 | 
 // 
-// Error: Expected an expression, got: `}`.
+// Error: Expected an expression, but got `}`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:11:1
 // 9  |   // struct literal.
 // 10 |   {}

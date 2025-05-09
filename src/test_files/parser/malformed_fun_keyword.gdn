@@ -37,25 +37,25 @@ ffun foo(_: Bool) {
 // Invalid
 
 // expected stderr:
-// Error: Parse error: Invalid syntax: Expected `,` or `)`, got `:`
+// Error: Parse error: Expected `,` or `)`, but got `:`.
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
 // 3  | }         ^
 // 4  | 
-// Error: Parse error: Expected an expression, got: `:`.
+// Error: Parse error: Expected an expression, but got `:`.
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
 // 3  | }         ^
 // 4  | 
-// Error: Parse error: Expected `)`, got `:`
+// Error: Parse error: Expected `)`, but got `:`.
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
 // 3  | }         ^
 // 4  | 
-// Error: Parse error: Expected an expression, got: `:`.
+// Error: Parse error: Expected an expression, but got `:`.
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {

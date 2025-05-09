@@ -12,4 +12,5 @@ external fun (self: String) foo() {
 // 2  |     self = 123
 //    |            ^^^
 // 3  |     self.index_of("a")
+// 4  | }
 

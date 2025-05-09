@@ -77,8 +77,10 @@ fun foo(src) {
 // expected stderr:
 // Error: Parse error: Expected `{`, got `(`
 // ---| src/test_files/parser/unfinished_match.gdn:4:5
+// 2  |     match src
 // 3  |             
 // 4  |     ("")
 //    |     ^
 // 5  | }
+// 6  |
 

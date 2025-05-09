@@ -2,6 +2,7 @@
 
 use std::io::IsTerminal as _;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use itertools::Itertools;
 use line_numbers::LinePositions;
@@ -11,8 +12,10 @@ use serde::{Deserialize, Serialize};
 use crate::env::StackFrame;
 use crate::eval::EnclosingSymbol;
 use crate::parser::diagnostics::ErrorMessage;
+use crate::parser::lex::lex;
 use crate::parser::position::Position;
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{Vfs, VfsId};
+use crate::VfsPathBuf;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
@@ -112,7 +115,7 @@ pub(crate) fn format_diagnostic(
         true,
         None,
         matches!(severity, Severity::Error),
-        1,
+        2,
     ));
 
     for (message, position) in notes {
@@ -130,7 +133,7 @@ pub(crate) fn format_diagnostic(
                 message.as_string()
             }),
             false,
-            1,
+            2,
         ));
     }
 
@@ -228,7 +231,7 @@ fn format_pos_in_fun(
         let relevant_line = s_lines[0].to_owned();
 
         res.push_str(&format_margin_num("?", margin_width, use_color));
-        res.push_str(&relevant_line);
+        res.push_str(&format_src_line(&relevant_line, use_color));
     } else {
         let line_positions = LinePositions::from(src);
 
@@ -255,7 +258,7 @@ fn format_pos_in_fun(
                     margin_width,
                     use_color,
                 ));
-                res.push_str(relevant_line);
+                res.push_str(&format_src_line(relevant_line, use_color));
             }
         }
 
@@ -277,7 +280,7 @@ fn format_pos_in_fun(
                 margin_width,
                 use_color,
             ));
-            res.push_str(relevant_line);
+            res.push_str(&format_src_line(relevant_line, use_color));
 
             if underline {
                 res.push('\n');
@@ -336,5 +339,43 @@ fn format_margin_num(num: &str, margin_width: usize, use_color: bool) -> String 
         s.dimmed().to_string()
     } else {
         s
+    }
+}
+
+fn format_src_line(line: &str, use_color: bool) -> String {
+    if !use_color {
+        return line.to_owned();
+    }
+
+    // TODO: this naively assumes that there are no multiline string literals
+    // that start on the previous line.
+
+    let vfs_path = VfsPathBuf {
+        path: Rc::new(PathBuf::from("irrelevant")),
+        id: VfsId(0),
+    };
+    let (mut stream, _errs) = lex(&vfs_path, line);
+
+    let mut tokens = vec![];
+    while let Some(token) = stream.pop() {
+        tokens.push(token);
+    }
+
+    match tokens.last() {
+        Some(last_token) => {
+            // Comments are stored on the *following* token. If this line ends
+            // with a comment, the last token will come before the comment.
+            let (before_comment, after_comment) = line.split_at(last_token.position.end_column);
+
+            let mut s = String::new();
+            s.push_str(before_comment);
+            s.push_str(&after_comment.dimmed().to_string());
+            s
+        }
+        None => {
+            // No tokens, this line is pure whitespace or only a
+            // comment.
+            line.dimmed().to_string()
+        }
     }
 }

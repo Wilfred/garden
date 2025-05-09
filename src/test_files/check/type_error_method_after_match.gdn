@@ -12,8 +12,10 @@ external fun foo(x: Option<Int>) {
 // expected stdout:
 // Error: `Int` has no method `foo`.
 // ---| src/test_files/check/type_error_method_after_match.gdn:7:7
+// 5  |     }
 // 6  | 
 // 7  |     i.foo()
 //    |       ^^^
 // 8  | }
+// 9  |
 

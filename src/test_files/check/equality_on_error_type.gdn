@@ -15,4 +15,5 @@ external fun foo() {
 // 2  |     let v = no_such_func()
 //    |             ^^^^^^^^^^^^
 // 3  |     // should not emit an equality warning
+// 4  |     if v == "" {
 

@@ -9,8 +9,10 @@ while {
 // expected stdout:
 // Error: Expected an expression, got: `{`.
 // ---| src/test_files/check/incomplete_while.gdn:3:7
+// 1  | // We want to complain about the missing expression, but not about the
 // 2  | // `break`.
 // 3  | while {
 //    |       ^
 // 4  |   break
+// 5  | }
 

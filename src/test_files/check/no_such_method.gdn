@@ -11,22 +11,28 @@ struct Bar {}
 // expected stdout:
 // Error: `String` has no method `foo`.
 // ---| src/test_files/check/no_such_method.gdn:4:11
+// 2  | 
 // 3  | {
 // 4  |     "abc".foo()
 //    |           ^^^
 // 5  |     [1].foo()
+// 6  |     Bar{}.foo()
 // 
 // Error: `List` has no method `foo`.
 // ---| src/test_files/check/no_such_method.gdn:5:9
+// 3  | {
 // 4  |     "abc".foo()
 // 5  |     [1].foo()
 //    |         ^^^
 // 6  |     Bar{}.foo()
+// 7  | }
 // 
 // Error: `Bar` has no method `foo`.
 // ---| src/test_files/check/no_such_method.gdn:6:11
+// 4  |     "abc".foo()
 // 5  |     [1].foo()
 // 6  |     Bar{}.foo()
 //    |           ^^^
 // 7  | }
+// 8  |
 

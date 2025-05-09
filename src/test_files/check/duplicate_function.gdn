@@ -7,8 +7,10 @@ external fun foo() {}
 // expected stdout:
 // Warning: The function `foo` is already defined in this file.
 // ---| src/test_files/check/duplicate_function.gdn:3:14
+// 1  | external fun foo() {}
 // 2  | 
 // 3  | external fun foo() {}
 //    |              ^^^
-// 4  |
+// 4  | 
+// 5  | // args: check
 

@@ -8,8 +8,10 @@
 // expected stdout:
 // Error: `String` has no method `no_such_meth`.
 // ---| src/test_files/check/type_error_local.gdn:3:7
+// 1  | {
 // 2  |     let s = ""
 // 3  |     s.no_such_meth()
 //    |       ^^^^^^^^^^^^
 // 4  | }
+// 5  |
 

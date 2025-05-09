@@ -64,8 +64,10 @@ fun bar() {}
 // expected stderr:
 // Error: Parse error: Expected `{`, got `fun`
 // ---| src/test_files/parser/incomplete_fun_with_params.gdn:3:1
+// 1  | fun foo()
 // 2  | 
 // 3  | fun bar() {}
 //    | ^^^
-// 4  |
+// 4  | 
+// 5  | // args: dump-ast
 

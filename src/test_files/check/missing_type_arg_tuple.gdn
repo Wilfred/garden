@@ -10,4 +10,5 @@ external fun foo(): (Int, List) {
 // 1  | external fun foo(): (Int, List) {
 //    |                           ^^^^
 // 2  |     error("")
+// 3  | }
 

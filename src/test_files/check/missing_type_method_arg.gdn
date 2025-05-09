@@ -7,5 +7,6 @@ external fun (self: String) do_stuff(_arg: NoSuchType): Unit {}
 // ---| src/test_files/check/missing_type_method_arg.gdn:1:44
 // 1  | external fun (self: String) do_stuff(_arg: NoSuchType): Unit {}
 //    |                                            ^^^^^^^^^^
-// 2  |
+// 2  | 
+// 3  | // args: check
 

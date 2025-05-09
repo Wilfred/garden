@@ -11,4 +11,5 @@ external fun map_over_strings(value) {
 // 2  |     value.foo()
 //    |     ^^^^^
 // 3  | }
+// 4  |
 

@@ -16,8 +16,10 @@
 // expected stdout:
 // Warning: `x` is unused.
 // ---| src/test_files/check/let_shadow_lambda.gdn:3:9
+// 1  | {
 // 2  |     // This is unused.
 // 3  |     let x = "a"
 //    |         ^
-// 4  |
+// 4  | 
+// 5  |     let f = fun() {
 

@@ -19,6 +19,7 @@ external fun bar(_: Int, _: Int, _: String) {
 // 1  | external fun foo(x: Int, x: Int) {
 //    |                          ^
 // 2  |     let (y, y) = (1, 2)
+// 3  | 
 // 
 // Error: Duplicate destructure variable: `y`.
 // ---| src/test_files/check/repeated_bindings.gdn:2:13
@@ -26,19 +27,23 @@ external fun bar(_: Int, _: Int, _: String) {
 // 2  |     let (y, y) = (1, 2)
 //    |             ^
 // 3  | 
+// 4  |     let _f = fun(z, z) {}
 // 
 // Error: Duplicate parameter: `z`
 // ---| src/test_files/check/repeated_bindings.gdn:4:21
+// 2  |     let (y, y) = (1, 2)
 // 3  | 
 // 4  |     let _f = fun(z, z) {}
 //    |                     ^
 // 5  | }
+// 6  | 
 // 
 // Warning: `x` is unused.
 // ---| src/test_files/check/repeated_bindings.gdn:1:26
 // 1  | external fun foo(x: Int, x: Int) {
 //    |                          ^
 // 2  |     let (y, y) = (1, 2)
+// 3  | 
 // 
 // Warning: `y` is unused.
 // ---| src/test_files/check/repeated_bindings.gdn:2:13
@@ -46,11 +51,14 @@ external fun bar(_: Int, _: Int, _: String) {
 // 2  |     let (y, y) = (1, 2)
 //    |             ^
 // 3  | 
+// 4  |     let _f = fun(z, z) {}
 // 
 // Warning: `z` is unused.
 // ---| src/test_files/check/repeated_bindings.gdn:4:21
+// 2  |     let (y, y) = (1, 2)
 // 3  | 
 // 4  |     let _f = fun(z, z) {}
 //    |                     ^
 // 5  | }
+// 6  |
 

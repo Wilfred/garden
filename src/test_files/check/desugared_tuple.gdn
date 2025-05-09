@@ -14,11 +14,14 @@ external fun bar(): Tuple<Int> {
 // 1  | external fun foo(): Tuple {
 //    |                     ^^^^^
 // 2  |   error("")
+// 3  | }
 // 
 // Error: `Tuple` cannot be used a type hint. Use `(Int)` instead.
 // ---| src/test_files/check/desugared_tuple.gdn:5:21
+// 3  | }
 // 4  | 
 // 5  | external fun bar(): Tuple<Int> {
 //    |                     ^^^^^^^^^^
 // 6  |   error("")
+// 7  | }
 

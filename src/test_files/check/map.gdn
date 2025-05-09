@@ -11,8 +11,10 @@ external fun get_ints_inferred(items: List<String>): List<Int> {
 // expected stdout:
 // Error: Expected a type with a `len` method, but got a `_`.
 // ---| src/test_files/check/map.gdn:6:27
+// 4  | 
 // 5  | external fun get_ints_inferred(items: List<String>): List<Int> {
 // 6  |     items.map(fun(item) { item.len() })
 //    |                           ^^^^
 // 7  | }
+// 8  |
 

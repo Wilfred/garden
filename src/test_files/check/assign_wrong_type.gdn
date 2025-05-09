@@ -8,8 +8,10 @@ external fun foo() {
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
 // ---| src/test_files/check/assign_wrong_type.gdn:3:9
+// 1  | external fun foo() {
 // 2  |     let x = 1
 // 3  |     x = ""
 //    |         ^^
 // 4  | }
+// 5  |
 

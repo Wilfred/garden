@@ -7,8 +7,10 @@ external fun (self: String) foo() {}
 // expected stdout:
 // Warning: The method `String::foo` is already defined in this file.
 // ---| src/test_files/check/duplicate_method.gdn:3:29
+// 1  | external fun (self: String) foo() {}
 // 2  | 
 // 3  | external fun (self: String) foo() {}
 //    |                             ^^^
-// 4  |
+// 4  | 
+// 5  | // args: check
 

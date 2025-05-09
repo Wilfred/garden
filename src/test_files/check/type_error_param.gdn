@@ -11,4 +11,5 @@ external fun foo(s: String) {
 // 2  |     s.no_such_meth()
 //    |       ^^^^^^^^^^^^
 // 3  | }
+// 4  |
 

@@ -11,4 +11,5 @@ external fun (self: String) bad(): Bool {
 // 2  |     self.no_such_meth()
 //    |          ^^^^^^^^^^^^
 // 3  | }
+// 4  |
 

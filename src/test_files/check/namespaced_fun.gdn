@@ -9,8 +9,10 @@
 // expected stdout:
 // Error: `__fs.gdn` does not contain an item named `no_such_func`.
 // ---| src/test_files/check/namespaced_fun.gdn:4:7
+// 2  |   fs::write_file("stuff", Path{ p: "/tmp/foo.txt"})
 // 3  | 
 // 4  |   fs::no_such_func()
 //    |       ^^^^^^^^^^^^
 // 5  | }
+// 6  |
 

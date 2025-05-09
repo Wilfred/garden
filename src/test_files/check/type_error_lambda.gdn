@@ -12,11 +12,14 @@
 // 2  |     let f = fun(x: Int): Int { x.no_such_meth() }
 //    |                                  ^^^^^^^^^^^^
 // 3  |     f()
+// 4  | }
 // 
 // Error: This function call requires an additional `Int` argument.
 // ---| src/test_files/check/type_error_lambda.gdn:3:7
+// 1  | {
 // 2  |     let f = fun(x: Int): Int { x.no_such_meth() }
 // 3  |     f()
 //    |       ^
 // 4  | }
+// 5  |
 

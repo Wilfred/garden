@@ -11,4 +11,5 @@ external fun (this: List<T>) foo<T>(): String {
 // 2  |   this.get(1).or_exception()
 //    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 // 3  | }
+// 4  |
 

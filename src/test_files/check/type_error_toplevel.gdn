@@ -7,5 +7,6 @@ let x = 1 + True
 // ---| src/test_files/check/type_error_toplevel.gdn:1:13
 // 1  | let x = 1 + True
 //    |             ^^^^
-// 2  |
+// 2  | 
+// 3  | // args: check
 

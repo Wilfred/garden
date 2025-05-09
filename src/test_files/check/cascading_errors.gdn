@@ -19,4 +19,5 @@ external fun foo() {
 // 2  |   let x = no_such_fun()
 //    |           ^^^^^^^^^^^
 // 3  |   // Calling methods on an error type is fine.
+// 4  |   x.len()
 

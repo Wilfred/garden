@@ -9,10 +9,12 @@ external fun foo(b: Bool): Int {
 // expected stdout:
 // Error: Expected `Unit`, but got `Int`.
 // ---| src/test_files/check/type_error_if_without_else.gdn:3:9
+// 1  | external fun foo(b: Bool): Int {
 // 2  |     if b {
 // 3  |         123
 //    |         ^^^
 // 4  |     }
+// 5  | }
 // 
 // Error: Expected `Int`, but got `Unit`.
 // ---| src/test_files/check/type_error_if_without_else.gdn:2:5
@@ -24,4 +26,5 @@ external fun foo(b: Bool): Int {
 // 4  |     }
 //    | ^^^^^
 // 5  | }
+// 6  |
 

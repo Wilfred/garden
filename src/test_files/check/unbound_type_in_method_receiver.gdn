@@ -9,4 +9,5 @@ external fun (self: NoSuchType) foo() {
 // 1  | external fun (self: NoSuchType) foo() {
 //    |                     ^^^^^^^^^^
 // 2  | }
+// 3  |
 

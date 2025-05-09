@@ -20,8 +20,10 @@ external fun foo() {
 // expected stdout:
 // Error: Expected a tuple, but got `String`.
 // ---| src/test_files/check/match_destructure.gdn:13:5
+// 11 | 
 // 12 |   match Some("") {
 // 13 |     Some((x, y)) => { let _ = x + y }
 //    |     ^^^^
 // 14 |     None => {}
+// 15 |   }
 

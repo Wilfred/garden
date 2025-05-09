@@ -62,4 +62,5 @@ external fun foo: Option<Int> {
 // 1  | external fun foo: Option<Int> {
 //    |                 ^
 // 2  |   None
+// 3  | }
 

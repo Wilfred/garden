@@ -11,7 +11,6 @@ external fun foo() {
 // 1  | external fun foo() {
 // 2  |     let s = ""
 // 3  |     return s.no_such_meth()
-//    |              ^^^^^^^^^^^^
-// 4  | }
+// 4  | }            ^^^^^^^^^^^^
 // 5  |
 

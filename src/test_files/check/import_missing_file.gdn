@@ -6,7 +6,6 @@ import "./no_such_file.gdn"
 // Error: No such file `./no_such_file.gdn`.
 // ---| src/test_files/check/import_missing_file.gdn:1:8
 // 1  | import "./no_such_file.gdn"
-//    |        ^^^^^^^^^^^^^^^^^^^^
-// 2  | 
+// 2  |        ^^^^^^^^^^^^^^^^^^^^
 // 3  | // args: check
 

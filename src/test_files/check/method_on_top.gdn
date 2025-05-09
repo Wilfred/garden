@@ -9,7 +9,6 @@ external fun map_over_strings(value) {
 // ---| src/test_files/check/method_on_top.gdn:2:5
 // 1  | external fun map_over_strings(value) {
 // 2  |     value.foo()
-//    |     ^^^^^
-// 3  | }
+// 3  | }   ^^^^^
 // 4  |
 

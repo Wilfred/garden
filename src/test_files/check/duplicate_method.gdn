@@ -10,7 +10,6 @@ external fun (self: String) foo() {}
 // 1  | external fun (self: String) foo() {}
 // 2  | 
 // 3  | external fun (self: String) foo() {}
-//    |                             ^^^
-// 4  | 
+// 4  |                             ^^^
 // 5  | // args: check
 

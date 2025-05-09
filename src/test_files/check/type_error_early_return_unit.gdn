@@ -14,7 +14,6 @@ external fun takes_int(b: Bool): Int {
 // 1  | external fun takes_int(b: Bool): Int {
 // 2  |     if b {
 // 3  |         return
-//    |         ^^^^^^
-// 4  |     }
+// 4  |     }   ^^^^^^
 // 5  |
 

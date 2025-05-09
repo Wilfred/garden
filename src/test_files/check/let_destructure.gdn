@@ -23,8 +23,7 @@ external fun destructure() {
 // 6  |     // good destructure, bad usage
 // 7  |     let (x, y) = get_tuple()
 // 8  |     let _ = x + y
-//    |                 ^
-// 9  | 
+// 9  |                 ^
 // 10 |     // bad tuple size
 // 
 // Error: Expected a tuple of size 3, but got 2.
@@ -41,8 +40,7 @@ external fun destructure() {
 // 10 |     // bad tuple size
 // 11 |     let (_x, _y, _z) = get_tuple()
 // 12 |     let (_x) = get_tuple()
-//    |                ^^^^^^^^^^^
-// 13 | 
+// 13 |                ^^^^^^^^^^^
 // 14 |     // not a tuple
 // 
 // Error: Expected a tuple, but got `String`.
@@ -50,7 +48,6 @@ external fun destructure() {
 // 13 | 
 // 14 |     // not a tuple
 // 15 |     let () = "foo"
-//    |              ^^^^^
-// 16 | }
+// 16 | }            ^^^^^
 // 17 |
 

@@ -133,15 +133,13 @@ f{
 // 2  |     let xx = 99
 // 3  |     let yy = xx + 1
 // 4  |     yy + 10
-//    |        ^
-// 5  | }
+// 5  | }      ^
 // 6  | 
 // Error: Parse error: Expected an expression, got: `+`.
 // ---| src/test_files/parser/unfinished_fun_header.gdn:4:8
 // 2  |     let xx = 99
 // 3  |     let yy = xx + 1
 // 4  |     yy + 10
-//    |        ^
-// 5  | }
+// 5  | }      ^
 // 6  |
 

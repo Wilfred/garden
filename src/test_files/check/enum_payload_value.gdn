@@ -29,7 +29,6 @@ external fun demo() {
 // 16 | 
 // 17 |   // Bad, we should still check types from forward references.
 // 18 |   Code("")
-//    |        ^^
-// 19 | 
+// 19 |        ^^
 // 20 |   // TODO: what if we have a cyclice reference to a type in another
 

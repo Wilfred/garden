@@ -6,7 +6,6 @@ external fun foo(_f: Fun<(Int, Int)>) {}
 // Error: Fun takes 2 type arguments, but got 1 argument.
 // ---| src/test_files/check/bad_fun_arity.gdn:1:26
 // 1  | external fun foo(_f: Fun<(Int, Int)>) {}
-//    |                          ^^^^^^^^^^
-// 2  | 
+// 2  |                          ^^^^^^^^^^
 // 3  | // args: check
 

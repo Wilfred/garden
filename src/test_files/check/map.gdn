@@ -14,7 +14,6 @@ external fun get_ints_inferred(items: List<String>): List<Int> {
 // 4  | 
 // 5  | external fun get_ints_inferred(items: List<String>): List<Int> {
 // 6  |     items.map(fun(item) { item.len() })
-//    |                           ^^^^
-// 7  | }
+// 7  | }                         ^^^^
 // 8  |
 

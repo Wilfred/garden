@@ -64,14 +64,12 @@ fun foo() {
 // ---| src/test_files/parser/accidental_rust_dbg.gdn:2:8
 // 1  | fun foo() {
 // 2  |     dbg!(1);
-//    |        ^
-// 3  | }
+// 3  | }      ^
 // 4  | 
 // Error: Parse error: Unrecognized syntax `;`
 // ---| src/test_files/parser/accidental_rust_dbg.gdn:2:12
 // 1  | fun foo() {
 // 2  |     dbg!(1);
-//    |            ^
-// 3  | }
+// 3  | }          ^
 // 4  |
 

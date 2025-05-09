@@ -9,7 +9,6 @@
 // ---| src/test_files/check/type_error_arguments_fun.gdn:2:11
 // 1  | {
 // 2  |     print(123)
-//    |           ^^^
-// 3  | }
+// 3  | }         ^^^
 // 4  |
 

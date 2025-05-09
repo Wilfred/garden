@@ -16,7 +16,6 @@ external fun subst_method_return_tys<T>() {
 // 2  |   let items: List<(Int, T)> = []
 // 3  | 
 // 4  |   let t: (Int, T) = (0, todo())
-//    |                         ^^^^^^
-// 5  | 
+// 5  |                         ^^^^^^
 // 6  |   // Regression test: we should only substitute T once, so this code
 

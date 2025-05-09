@@ -23,7 +23,6 @@ external fun foo(items: List<Int>) {
 // 11 | 
 // 12 |   // Bad
 // 13 |   for (x, y) in items {
-//    |                 ^^^^^
-// 14 |     x + y
+// 14 |     x + y       ^^^^^
 // 15 |   }
 

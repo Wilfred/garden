@@ -6,7 +6,6 @@ let x = 1 + True
 // Error: Expected `Int`, but got `Bool`.
 // ---| src/test_files/check/type_error_toplevel.gdn:1:13
 // 1  | let x = 1 + True
-//    |             ^^^^
-// 2  | 
+// 2  |             ^^^^
 // 3  | // args: check
 

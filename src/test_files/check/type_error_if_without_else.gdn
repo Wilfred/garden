@@ -12,8 +12,7 @@ external fun foo(b: Bool): Int {
 // 1  | external fun foo(b: Bool): Int {
 // 2  |     if b {
 // 3  |         123
-//    |         ^^^
-// 4  |     }
+// 4  |     }   ^^^
 // 5  | }
 // 
 // Error: Expected `Int`, but got `Unit`.

@@ -18,8 +18,7 @@ external fun foo() {
 // ---| src/test_files/check/break_without_loop.gdn:2:5
 // 1  | external fun foo() {
 // 2  |     break
-//    |     ^^^^^
-// 3  | 
+// 3  |     ^^^^^
 // 4  |     while True {
 // 
 // Error: `break` can only be used inside `for` or `while` loops.
@@ -27,7 +26,6 @@ external fun foo() {
 // 7  | 
 // 8  |         // Bad
 // 9  |         fun() { break }
-//    |                 ^^^^^
-// 10 |     }
+// 10 |     }           ^^^^^
 // 11 |
 

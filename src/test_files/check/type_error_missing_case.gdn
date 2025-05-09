@@ -51,7 +51,6 @@ external fun foo(x: Option<Int>) {
 // 21 |         Some(_) => {}
 // 22 |         None => {}
 // 23 |         None => {}
-//    |         ^^^^
-// 24 |     }
+// 24 |     }   ^^^^
 // 25 |
 

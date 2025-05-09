@@ -9,7 +9,6 @@ test foo {
 // ---| src/test_files/check/free_variable_in_test.gdn:2:5
 // 1  | test foo {
 // 2  |     x
-//    |     ^
-// 3  | }
+// 3  | }   ^
 // 4  |
 

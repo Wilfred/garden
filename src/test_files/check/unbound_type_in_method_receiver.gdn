@@ -7,7 +7,6 @@ external fun (self: NoSuchType) foo() {
 // Error: No such type `NoSuchType`.
 // ---| src/test_files/check/unbound_type_in_method_receiver.gdn:1:21
 // 1  | external fun (self: NoSuchType) foo() {
-//    |                     ^^^^^^^^^^
-// 2  | }
+// 2  | }                   ^^^^^^^^^^
 // 3  |
 

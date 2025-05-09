@@ -9,7 +9,6 @@
 // ---| src/test_files/check/type_error_let_hint.gdn:2:19
 // 1  | {
 // 2  |     let _: Bool = 123
-//    |                   ^^^
-// 3  | }
+// 3  | }                 ^^^
 // 4  |
 

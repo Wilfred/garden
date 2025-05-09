@@ -12,12 +12,10 @@ struct Foo {}
 // 2  | 
 // 3  | {
 // 4  |     Foo{}.bar
-//    |           ^^^
-// 5  | }
+// 5  | }         ^^^
 // 6  | 
 // ---| src/test_files/check/no_such_struct_field.gdn:1:8
 // 1  | struct Foo {}
-//    |        ^^^ Note: `Foo` is defined here.
-// 2  | 
+// 2  |        ^^^ Note: `Foo` is defined here.
 // 3  | {
 

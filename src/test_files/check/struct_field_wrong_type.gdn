@@ -14,7 +14,6 @@ external fun bar(): Unit {
 // 4  | 
 // 5  | external fun bar(): Unit {
 // 6  |   let _f = Foo{ x: "abc" }
-//    |                    ^^^^^
-// 7  | }
+// 7  | }                  ^^^^^
 // 8  |
 

@@ -9,7 +9,6 @@ struct MyStruct {
 // ---| src/test_files/check/missing_type_arg_struct_field.gdn:2:8
 // 1  | struct MyStruct {
 // 2  |     x: NoSuchType,
-//    |        ^^^^^^^^^^
-// 3  | }
+// 3  | }      ^^^^^^^^^^
 // 4  |
 

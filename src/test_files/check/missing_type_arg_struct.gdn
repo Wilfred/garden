@@ -12,7 +12,6 @@ external fun foo(): MyStruct {
 // 1  | struct MyStruct<T> {}
 // 2  | 
 // 3  | external fun foo(): MyStruct {
-//    |                     ^^^^^^^^
-// 4  |     error("")
+// 4  |     error("")       ^^^^^^^^
 // 5  | }
 

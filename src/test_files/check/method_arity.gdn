@@ -15,8 +15,7 @@
 // 1  | {
 // 2  |   // Too many arguments
 // 3  |   "abc".len(1, 2)
-//    |             ^^^^
-// 4  | 
+// 4  |             ^^^^
 // 5  |   let x = [1, 2]
 // 
 // Error: `List::slice` requires an additional `Int` argument.
@@ -24,7 +23,6 @@
 // 5  |   let x = [1, 2]
 // 6  |   // Too few.
 // 7  |   x.slice(0)
-//    |            ^
-// 8  | }
+// 8  | }          ^
 // 9  |
 

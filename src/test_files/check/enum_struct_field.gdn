@@ -9,7 +9,6 @@ external fun foo(b: Bool) {
 // ---| src/test_files/check/enum_struct_field.gdn:2:7
 // 1  | external fun foo(b: Bool) {
 // 2  |     b.some_field
-//    |       ^^^^^^^^^^
-// 3  | }
+// 3  | }     ^^^^^^^^^^
 // 4  |
 

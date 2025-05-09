@@ -75,8 +75,7 @@ fun (this: String) used_meth(): Unit {}
 // 33 | }
 // 34 | 
 // 35 | fun called_via_test() {}
-//    |     ^^^^^^^^^^^^^^^
-// 36 | 
+// 36 |     ^^^^^^^^^^^^^^^
 // 37 | test my_test {
 // 
 // Warning: `unused_meth` is never called.
@@ -84,8 +83,7 @@ fun (this: String) used_meth(): Unit {}
 // 46 | }
 // 47 | 
 // 48 | fun (this: String) unused_meth(): Unit {}
-//    |                    ^^^^^^^^^^^
-// 49 | 
+// 49 |                    ^^^^^^^^^^^
 // 50 | fun (this: String) used_meth(): Unit {}
 // 
 // Warning: `unreachable_cycle_1` is never called.

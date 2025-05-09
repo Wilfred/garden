@@ -12,7 +12,6 @@
 // 2  |   fs::write_file("stuff", Path{ p: "/tmp/foo.txt"})
 // 3  | 
 // 4  |   fs::no_such_func()
-//    |       ^^^^^^^^^^^^
-// 5  | }
+// 5  | }     ^^^^^^^^^^^^
 // 6  |
 

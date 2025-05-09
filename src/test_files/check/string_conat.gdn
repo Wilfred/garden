@@ -11,8 +11,7 @@ external fun foo() {
 // 1  | external fun foo() {
 // 2  |   "a" ^ "b"
 // 3  |   1 ^ 2
-//    |   ^
-// 4  | }
+// 4  | } ^
 // 5  | 
 // 
 // Error: Expected `String`, but got `Int`.
@@ -20,7 +19,6 @@ external fun foo() {
 // 1  | external fun foo() {
 // 2  |   "a" ^ "b"
 // 3  |   1 ^ 2
-//    |       ^
-// 4  | }
+// 4  | }     ^
 // 5  |
 

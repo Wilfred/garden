@@ -12,7 +12,6 @@ external fun foo(v: Result<Int, Unit>) {
 // 1  | external fun foo(v: Result<Int, Unit>) {
 // 2  |   // We should complain about Ok here.
 // 3  |   match v {
-//    |         ^
-// 4  |   }
+// 4  |   }     ^
 // 5  | }
 

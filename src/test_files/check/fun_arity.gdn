@@ -9,7 +9,6 @@
 // ---| src/test_files/check/fun_arity.gdn:2:20
 // 1  | {
 // 2  |     string_repr(1, 2, 3)
-//    |                    ^^^^
-// 3  | }
+// 3  | }                  ^^^^
 // 4  |
 

@@ -16,7 +16,6 @@ external fun foo() {
 // 6  | 
 // 7  | external fun foo() {
 // 8  |     Color{}
-//    |     ^^^^^
-// 9  | }
+// 9  | }   ^^^^^
 // 10 |
 

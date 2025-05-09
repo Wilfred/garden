@@ -11,8 +11,7 @@ external fun bad(): Bool {
 // ---| src/test_files/check/type_error_return_type.gdn:2:27
 // 1  | external fun bad(): Bool {
 // 2  |     let _f = fun(): Int { True }
-//    |                           ^^^^
-// 3  |     
+// 3  |                           ^^^^
 // 4  |     "abc"
 // 
 // Error: Expected `Bool`, but got `String`.
@@ -20,7 +19,6 @@ external fun bad(): Bool {
 // 2  |     let _f = fun(): Int { True }
 // 3  |     
 // 4  |     "abc"
-//    |     ^^^^^
-// 5  | }
+// 5  | }   ^^^^^
 // 6  |
 

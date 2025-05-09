@@ -18,7 +18,6 @@ external fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 // 8  |     // takes_options(Some(123), None)
 // 9  | 
 // 10 |     takes_options(Some("foo"), Some(123))
-//    |                   ^^^^^^^^^^^
-// 11 | }
+// 11 | }                 ^^^^^^^^^^^
 // 12 |
 

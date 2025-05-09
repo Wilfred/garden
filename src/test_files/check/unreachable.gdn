@@ -64,8 +64,7 @@ external fun good2(): Int {
 // 1  | external fun bad1(): Int {
 // 2  |   while True {}
 // 3  |   1
-//    |   ^
-// 4  | }
+// 4  | } ^
 // 5  | 
 // 
 // Warning: Unreachable code after `return`.
@@ -73,8 +72,7 @@ external fun good2(): Int {
 // 6  | external fun bad2(): Int {
 // 7  |   return 1
 // 8  |   2
-//    |   ^
-// 9  | }
+// 9  | } ^
 // 10 | 
 // 
 // Warning: Unreachable code after `error`.
@@ -82,7 +80,6 @@ external fun good2(): Int {
 // 11 | external fun bad3(): Int {
 // 12 |   error("")
 // 13 |   2
-//    |   ^
-// 14 | }
+// 14 | } ^
 // 15 |
 

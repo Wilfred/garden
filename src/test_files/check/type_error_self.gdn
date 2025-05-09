@@ -9,7 +9,6 @@ external fun (self: String) bad(): Bool {
 // ---| src/test_files/check/type_error_self.gdn:2:10
 // 1  | external fun (self: String) bad(): Bool {
 // 2  |     self.no_such_meth()
-//    |          ^^^^^^^^^^^^
-// 3  | }
+// 3  | }        ^^^^^^^^^^^^
 // 4  |
 

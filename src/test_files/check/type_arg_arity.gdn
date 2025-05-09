@@ -8,7 +8,6 @@ external fun foo(): List<Int, Int, Int> {
 // Error: List takes 1 type argument, but got 3 arguments.
 // ---| src/test_files/check/type_arg_arity.gdn:1:36
 // 1  | external fun foo(): List<Int, Int, Int> {
-//    |                                    ^^^
-// 2  |     error("")
+// 2  |     error("")                      ^^^
 // 3  | }
 

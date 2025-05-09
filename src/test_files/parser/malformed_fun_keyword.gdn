@@ -41,28 +41,24 @@ ffun foo(_: Bool) {
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
-//    |           ^
-// 3  | }
+// 3  | }         ^
 // 4  | 
 // Error: Parse error: Expected an expression, got: `:`.
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
-//    |           ^
-// 3  | }
+// 3  | }         ^
 // 4  | 
 // Error: Parse error: Expected `)`, got `:`
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
-//    |           ^
-// 3  | }
+// 3  | }         ^
 // 4  | 
 // Error: Parse error: Expected an expression, got: `:`.
 // ---| src/test_files/parser/malformed_fun_keyword.gdn:2:11
 // 1  | // We don't really care how this parses, but it shouldn't crash the parser.
 // 2  | ffun foo(_: Bool) {
-//    |           ^
-// 3  | }
+// 3  | }         ^
 // 4  |
 

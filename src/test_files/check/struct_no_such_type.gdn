@@ -9,7 +9,6 @@ external fun foo(): Unit {
 // ---| src/test_files/check/struct_no_such_type.gdn:2:5
 // 1  | external fun foo(): Unit {
 // 2  |     NoSuchType{ x: 1 + 2 }
-//    |     ^^^^^^^^^^
-// 3  | }
+// 3  | }   ^^^^^^^^^^
 // 4  |
 

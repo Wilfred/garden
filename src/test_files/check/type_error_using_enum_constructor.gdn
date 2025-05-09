@@ -9,7 +9,6 @@ external fun foo(): Int {
 // ---| src/test_files/check/type_error_using_enum_constructor.gdn:2:5
 // 1  | external fun foo(): Int {
 // 2  |     Some
-//    |     ^^^^
-// 3  | }
+// 3  | }   ^^^^
 // 4  |
 

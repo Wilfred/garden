@@ -9,7 +9,6 @@
 // ---| src/test_files/check/missing_type_let_hint.gdn:2:12
 // 1  | {
 // 2  |     let _: NoSuchType = 1
-//    |            ^^^^^^^^^^
-// 3  | }
+// 3  | }          ^^^^^^^^^^
 // 4  |
 

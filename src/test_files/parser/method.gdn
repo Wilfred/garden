@@ -1,4 +1,4 @@
-external fun (self: List<T>) foo<T>() {}
+external fun (this: List<T>) foo<T>() {}
 
 // args: dump-ast
 // expected stdout:
@@ -16,7 +16,7 @@ external fun (self: List<T>) foo<T>() {}
 //             ],
 //             position: Position { ... },
 //         },
-//         receiver_sym: Symbol"self",
+//         receiver_sym: Symbol"this",
 //         name_sym: Symbol"foo",
 //         kind: UserDefinedMethod(
 //             FunInfo {

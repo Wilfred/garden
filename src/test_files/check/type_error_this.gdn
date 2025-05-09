@@ -1,0 +1,14 @@
+external fun (this: String) bad(): Bool {
+  this.no_such_meth()
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `String` has no method `no_such_meth`.
+// ---| src/test_files/check/type_error_this.gdn:2:8
+// 1  | external fun (this: String) bad(): Bool {
+// 2  |   this.no_such_meth()
+// 3  | }      ^^^^^^^^^^^^
+// 4  |
+

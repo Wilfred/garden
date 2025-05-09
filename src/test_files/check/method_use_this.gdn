@@ -1,0 +1,5 @@
+external fun (this: String) doStuff(): String {
+  this
+}
+
+// args: check

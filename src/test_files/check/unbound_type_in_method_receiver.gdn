@@ -1,4 +1,4 @@
-external fun (self: NoSuchType) foo() {
+external fun (this: NoSuchType) foo() {
 }
 
 // args: check
@@ -6,7 +6,7 @@ external fun (self: NoSuchType) foo() {
 // expected stdout:
 // Error: No such type `NoSuchType`.
 // ---| src/test_files/check/unbound_type_in_method_receiver.gdn:1:21
-// 1  | external fun (self: NoSuchType) foo() {
+// 1  | external fun (this: NoSuchType) foo() {
 // 2  | }                   ^^^^^^^^^^
 // 3  |
 

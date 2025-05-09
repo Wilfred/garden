@@ -1,14 +1,14 @@
 struct Foo {
-    x: Int,
+  x: Int,
 }
 
-fun (self: Foo) get_x(): Int {
-    self.x
+fun (this: Foo) get_x(): Int {
+  this.x
 }
 
 {
-    let f = Foo{ x: 123 }
-    dbg(f.get_x())
+  let f = Foo{ x: 123 }
+  dbg(f.get_x())
 }
 
 // args: run

@@ -1,15 +1,15 @@
 struct WrappedNum {
-    value: Int,
+  value: Int,
 }
 
-fun (self: WrappedNum) increment(): Int {
-    self.value + 1
-    //    ^
+fun (this: WrappedNum) increment(): Int {
+  this.value + 1
+  //    ^
 }
 
 {
-    let wn = WrappedNum{ value: 10 }
-    wn.increment()
+  let wn = WrappedNum{ value: 10 }
+  wn.increment()
 }
 
 // args: test-eval-up-to

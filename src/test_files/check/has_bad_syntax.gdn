@@ -31,5 +31,4 @@ external fun bar() {
 // 1  | external fun bar() {
 // 2  |   let x
 // 3  | }     ^
-// 4  |
 

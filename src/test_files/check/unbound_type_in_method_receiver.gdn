@@ -8,5 +8,4 @@ external fun (this: NoSuchType) foo() {
 // ---| src/test_files/check/unbound_type_in_method_receiver.gdn:1:21
 // 1  | external fun (this: NoSuchType) foo() {
 // 2  | }                   ^^^^^^^^^^
-// 3  |
 

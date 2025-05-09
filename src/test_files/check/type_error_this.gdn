@@ -10,5 +10,4 @@ external fun (this: String) bad(): Bool {
 // 1  | external fun (this: String) bad(): Bool {
 // 2  |   this.no_such_meth()
 // 3  | }      ^^^^^^^^^^^^
-// 4  |
 

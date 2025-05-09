@@ -12,5 +12,4 @@
 // 2  |     let value = Some("foo")
 // 3  |     value.or_exception() + 1
 // 4  | }   ^^^^^^^^^^^^^^^^^^^^
-// 5  |
 

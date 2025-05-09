@@ -25,5 +25,4 @@ external fun foo(b: Bool): Int {
 // 4  |     }
 //    | ^^^^^
 // 5  | }
-// 6  |
 

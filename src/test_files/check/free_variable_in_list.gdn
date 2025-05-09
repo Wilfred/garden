@@ -10,5 +10,4 @@ external fun foo() {
 // 1  | external fun foo() {
 // 2  |     [x]
 // 3  | }    ^
-// 4  |
 

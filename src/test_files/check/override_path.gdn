@@ -10,5 +10,4 @@ external fun foo(): Int {
 // 1  | external fun foo(): Int {
 // 2  |     "Not an int"
 // 3  | }   ^^^^^^^^^^^^
-// 4  |
 

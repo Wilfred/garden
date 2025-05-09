@@ -12,5 +12,4 @@ external fun foo() {
 // 2  |     let x = 1
 // 3  |     x = ""
 // 4  | }       ^^
-// 5  |
 

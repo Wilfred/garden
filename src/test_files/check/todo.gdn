@@ -15,5 +15,4 @@ external fun weird_but_ok() {
 // 1  | external fun bad() {
 // 2  |   todo()
 // 3  | } ^^^^^^
-// 4  |
 

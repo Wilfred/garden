@@ -16,5 +16,4 @@ external fun foo(x: Option<Int>) {
 // 6  | 
 // 7  |     i.foo()
 // 8  | }     ^^^
-// 9  |
 

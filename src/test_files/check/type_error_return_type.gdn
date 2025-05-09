@@ -20,5 +20,4 @@ external fun bad(): Bool {
 // 3  |     
 // 4  |     "abc"
 // 5  | }   ^^^^^
-// 6  |
 

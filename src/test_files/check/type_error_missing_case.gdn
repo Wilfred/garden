@@ -30,7 +30,6 @@ external fun foo(x: Option<Int>) {
 // expected stdout:
 // Warning: Unfinished code.
 // ---| src/test_files/check/type_error_missing_case.gdn:9:11
-// 7  | 
 // 8  |     // Matching on NoValue is harmless.
 // 9  |     match todo() {
 //    |           ^^^^^^
@@ -39,7 +38,6 @@ external fun foo(x: Option<Int>) {
 // 
 // Error: This match expression does not cover all the cases of `Option`. It's missing `None`.
 // ---| src/test_files/check/type_error_missing_case.gdn:15:11
-// 13 | 
 // 14 |     // Missing None.
 // 15 |     match x {
 //    |           ^
@@ -52,5 +50,4 @@ external fun foo(x: Option<Int>) {
 // 22 |         None => {}
 // 23 |         None => {}
 // 24 |     }   ^^^^
-// 25 |
 

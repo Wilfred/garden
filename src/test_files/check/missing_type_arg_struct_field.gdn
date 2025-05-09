@@ -10,5 +10,4 @@ struct MyStruct {
 // 1  | struct MyStruct {
 // 2  |     x: NoSuchType,
 // 3  | }      ^^^^^^^^^^
-// 4  |
 

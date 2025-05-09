@@ -11,9 +11,7 @@ external fun bar(): Unit {
 // expected stdout:
 // Warning: Duplicate field `x` in struct literal.
 // ---| src/test_files/check/struct_repeated_field.gdn:6:29
-// 4  | 
 // 5  | external fun bar(): Unit {
 // 6  |     let _f = Foo{ x: 1 + 2, x: 42 }
 // 7  | }                           ^
-// 8  |
 

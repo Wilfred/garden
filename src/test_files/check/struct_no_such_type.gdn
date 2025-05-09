@@ -10,5 +10,4 @@ external fun foo(): Unit {
 // 1  | external fun foo(): Unit {
 // 2  |     NoSuchType{ x: 1 + 2 }
 // 3  | }   ^^^^^^^^^^
-// 4  |
 

@@ -9,9 +9,7 @@ external fun bar() {
 // expected stdout:
 // Error: `foo` requires an additional `Path` argument here.
 // ---| src/test_files/check/missing_middle_argument.gdn:4:8
-// 2  | 
 // 3  | external fun bar() {
 // 4  |   foo(1, "stuff")
 // 5  | }      ^
-// 6  |
 

@@ -248,6 +248,11 @@ fn format_pos_in_fun(
                     continue;
                 };
 
+                // Skip the leading context lines if blank.
+                if is_first && relevant_line.trim().is_empty() {
+                    continue;
+                }
+
                 if is_first {
                     is_first = false;
                 } else {
@@ -340,6 +345,12 @@ fn format_pos_in_fun(
                 };
                 if line_i == span.line.as_usize() + 1 && has_inline_carets {
                     continue;
+                }
+
+                // Skip the last context line if blank.
+                if line_i == span.line.as_usize() + context_lines && relevant_line.trim().is_empty()
+                {
+                    break;
                 }
 
                 res.push('\n');

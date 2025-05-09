@@ -12,5 +12,4 @@ enum Foo {
 // 2  |     One,
 // 3  |     Two(NoSuchType),
 // 4  | }       ^^^^^^^^^^
-// 5  |
 

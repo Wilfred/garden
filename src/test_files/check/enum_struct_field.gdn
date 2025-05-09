@@ -10,5 +10,4 @@ external fun foo(b: Bool) {
 // 1  | external fun foo(b: Bool) {
 // 2  |     b.some_field
 // 3  | }     ^^^^^^^^^^
-// 4  |
 

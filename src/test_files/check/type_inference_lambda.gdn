@@ -15,5 +15,4 @@
 // 5  |   // when checking addition.
 // 6  |   [1, 2, 3].map(fun(x) { x + 1 })
 // 7  | }                        ^
-// 8  |
 

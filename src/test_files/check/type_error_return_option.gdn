@@ -10,5 +10,4 @@ external fun foo(parts: List<String>): String {
 // 1  | external fun foo(parts: List<String>): String {
 // 2  |     parts.first()
 // 3  | }   ^^^^^^^^^^^^^
-// 4  |
 

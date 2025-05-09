@@ -14,7 +14,6 @@ external fun foo() {
 // 1  | external fun foo() {
 // 2  |   let x = todo()
 // 3  |   x += 1  ^^^^^^
-// 4  | 
 // 
 // Error: Unbound symbol: `no_such_func`
 // ---| src/test_files/check/assign_update_error_type.gdn:5:11

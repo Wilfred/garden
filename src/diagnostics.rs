@@ -15,6 +15,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::lex::lex;
 use crate::parser::position::Position;
 use crate::parser::vfs::{Vfs, VfsId};
+use crate::parser::RESERVED_WORDS;
 use crate::VfsPathBuf;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
@@ -380,26 +381,24 @@ fn format_src_line(line: &str, use_color: bool) -> String {
     };
     let (mut stream, _errs) = lex(&vfs_path, line);
 
-    let mut tokens = vec![];
+    let mut s = String::new();
+    let mut offset = 0;
     while let Some(token) = stream.pop() {
-        tokens.push(token);
+        let before_text = &line[offset..token.position.start_offset];
+        s.push_str(before_text);
+
+        if RESERVED_WORDS.contains(&token.text) {
+            s.push_str(&token.text.bold().to_string());
+        } else {
+            s.push_str(token.text);
+        }
+
+        offset = token.position.start_offset + token.text.len();
     }
 
-    match tokens.last() {
-        Some(last_token) => {
-            // Comments are stored on the *following* token. If this line ends
-            // with a comment, the last token will come before the comment.
-            let (before_comment, after_comment) = line.split_at(last_token.position.end_column);
+    // Anything after the last token is whitespace or a comment.
+    let after_text = &line[offset..];
+    s.push_str(&after_text.dimmed().to_string());
 
-            let mut s = String::new();
-            s.push_str(before_comment);
-            s.push_str(&after_comment.dimmed().to_string());
-            s
-        }
-        None => {
-            // No tokens, this line is pure whitespace or only a
-            // comment.
-            line.dimmed().to_string()
-        }
-    }
+    s
 }

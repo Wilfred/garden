@@ -199,10 +199,11 @@ impl TypeCheckVisitor<'_> {
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Error,
-                message: ErrorMessage(vec![Text(
-                    "Methods must be defined on specific types, such as `List`, not generic types."
-                        .to_owned(),
-                )]),
+                message: ErrorMessage(vec![
+                    msgtext!("Methods must be defined on specific types, such as "),
+                    msgcode!("List"),
+                    msgtext!(", not generic types."),
+                ]),
                 position: type_hint.position.clone(),
             });
         }
@@ -224,10 +225,17 @@ impl TypeCheckVisitor<'_> {
                 }
             } else {
                 self.diagnostics.push(Diagnostic {
-                    notes: vec![], severity: Severity::Error,
-                    message:
-                      ErrorMessage(vec![Text("Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`."
-                                             .to_owned())]),
+                    notes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!(
+                            "Methods must be generic in all their type parameters, for example "
+                        ),
+                        msgcode!("List<T>"),
+                        msgtext!(" rather than "),
+                        msgcode!("List<Int>"),
+                        msgtext!("."),
+                    ]),
                     position: type_arg.position.clone(),
                 });
             }

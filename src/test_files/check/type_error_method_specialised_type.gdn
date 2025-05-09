@@ -11,7 +11,7 @@ external fun (this: T) very_bad<T>() {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Methods must be generic in all their type parameters, e.g. `List<T>` not `List<Int>`.
+// Error: Methods must be generic in all their type parameters, for example `List<T>` rather than `List<Int>`.
 // ---| src/test_files/check/type_error_method_specialised_type.gdn:5:26
 // 3  | // We shouldn't allow this, because it's unclear whether `[].bad()`
 // 4  | // dispatches to this method or not.

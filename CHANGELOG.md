@@ -3,6 +3,11 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 
+### Diagnostics
+
+Error and warning printing now uses a new formatter, showing context
+and syntax highlighting the source code.
+
 ### Standard Library
 
 `write_file()` is now `fs::write_file()`, `list_directory()` is now

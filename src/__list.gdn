@@ -1,0 +1,195 @@
+// An immutable sequence of values. For example, `[1, 2, 3]` is a
+// `List<Int>`.
+struct List<T> {
+  __BUILTIN_IMPLEMENTATION: NoValue,
+}
+
+// Return a new list with the value added to the end.
+//
+// ```
+// [10].append(11) // [10, 11]
+// ```
+external fun (this: List<T>) append<T>(value: T): List<T> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+// Does this list contain `item`?
+//
+// ```
+// [10, 11, 12].contains(12) // True
+// ```
+external fun (this: List<T>) contains<T>(item: T): Bool {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test list_contains {
+  assert([].contains(10) == False)
+  assert([10, 11].contains(10) == True)
+  assert([12, 11, 10, 10].contains(10) == True)
+}
+
+// Get the item in the list at the index specified.
+//
+// Returns `None` if the index is less than 0 or if the index is greater
+// than `length - 1`.
+//
+// ```
+// [4, 5, 6].get(1) // Some(5)
+// [4, 5, 6].get(3) // None
+// ```
+external fun (this: List<T>) get<T>(index: Int): Option<T> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test list_get {
+  assert([4, 5, 6].get(1) == Some(5))
+  assert([4, 5, 6].get(3) == None)
+
+  assert([].get(0) == None)
+  assert([].get(-1) == None)
+}
+
+// Return the length of the list.
+//
+// ```
+// [10, 11, 12].len() // 3
+// ```
+external fun (this: List<T>) len<T>(): Int {
+  __BUILTIN_IMPLEMENTATION
+}
+
+// Get the first item in this list, if the list is not empty.
+external fun (this: List<T>) first<T>(): Option<T> {
+  this.get(0)
+}
+
+test first {
+  assert([].first() == None)
+  assert([123].first() == Some(123))
+}
+
+// Get the last item in this list, if the list is not empty.
+external fun (this: List<T>) last<T>(): Option<T> {
+  this.get(this.len() - 1)
+}
+
+test last {
+  assert([].last() == None)
+  assert([123].last() == Some(123))
+}
+
+// Return a copy of this list with the items where `f(item)` returns
+// True.
+external fun (this: List<T>) filter<T>(f: Fun<(T), Bool>): List<T> {
+  let result: List<T> = []
+
+  for item in this {
+    if f(item) {
+      result = result.append(item)
+    }
+  }
+
+  result
+}
+
+test filter {
+  assert([1, 2].filter(fun(_) { True }) == [1, 2])
+}
+
+// Is this list empty?
+external fun (this: List<T>) is_empty<T>(): Bool {
+  this.len() == 0
+}
+
+test is_empty {
+  assert([].is_empty())
+  assert([1].is_empty().not())
+}
+
+// Is this list non-empty?
+external fun (this: List<T>) is_non_empty<T>(): Bool {
+  this.len() != 0
+}
+
+test is_non_empty {
+  assert([].is_non_empty().not())
+  assert([1].is_non_empty())
+}
+
+// Call `f` on every item in this list, and return a list of the
+// results.
+//
+// ```
+// [1, 2].map(fun(x) { x + 1 }) // [2, 3]
+// ```
+external fun (this: List<T>) map<T, U>(f: Fun<(T), U>): List<U> {
+  let items: List<U> = []
+  for item in this {
+    items = items.append(f(item))
+  }
+
+  items
+}
+
+test list_map {
+  let incremented = [1, 2, 3].map(fun(x: Int) { x + 1 })
+  assert(incremented == [2, 3, 4])
+}
+
+// Return a new list consisting of the items from index i (inclusive)
+// to index j (exclusive). If `j` is negative, count backwards from
+// the end.
+//
+// ```
+// [10, 11, 12].slice(0, 2) // [10, 11]
+// [10, 11, 12].slice(1, -1) // [11]
+// ```
+external fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
+  if (j < 0) {
+    j = this.len() + j
+  }
+
+  let items: List<T> = []
+
+  let index = 0
+  for item in this {
+    if (index >= i) && (index < j) {
+      items = items.append(item)
+    }
+
+    index += 1
+  }
+
+  items
+}
+
+test list_slice {
+  assert([10, 11, 12].slice(0, 1) == [10])
+  assert([10, 11, 12].slice(1, 2) == [11])
+  assert([10, 11, 12].slice(0, 2) == [10, 11])
+
+  assert([10, 11, 12].slice(0, -1) == [10, 11])
+}
+
+// Return a new list consisting of the items themselves, plus the
+// index of the position of each value.
+//
+// ```
+// ["a", "b"].enumerate() // [(0, "a"), (1, "b")]
+// ```
+external fun (this: List<T>) enumerate<T>(): List<(Int, T)> {
+  let items: List<(Int, T)> = []
+
+  let i = 0
+  for item in this {
+    let t = (i, item)
+    items = items.append(t)
+    i += 1
+  }
+
+  items
+}
+
+test list_enumerate {
+  assert(["a", "b"].enumerate() == [(0, "a"), (1, "b")])
+}

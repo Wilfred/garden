@@ -8,12 +8,6 @@ struct Int {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
-// An immutable sequence of values. For example, `[1, 2, 3]` is a
-// `List<Int>`.
-struct List<T> {
-  __BUILTIN_IMPLEMENTATION: NoValue,
-}
-
 // Stop the program immediately, and report the error message given.
 //
 // ```
@@ -89,60 +83,6 @@ external fun set_working_directory(path: Path): Result<Unit, String> {
 // source_directory() // Some(Path{ p: "/home/yourname/awesome_garden_project" })
 // ```
 external fun source_directory(): Option<Path> {
-  __BUILTIN_IMPLEMENTATION
-}
-
-// Return a new list with the value added to the end.
-//
-// ```
-// [10].append(11) // [10, 11]
-// ```
-external fun (this: List<T>) append<T>(value: T): List<T> {
-  __BUILTIN_IMPLEMENTATION
-}
-
-// Does this list contain `item`?
-//
-// ```
-// [10, 11, 12].contains(12) // True
-// ```
-external fun (this: List<T>) contains<T>(item: T): Bool {
-  __BUILTIN_IMPLEMENTATION
-}
-
-test list_contains {
-  assert([].contains(10) == False)
-  assert([10, 11].contains(10) == True)
-  assert([12, 11, 10, 10].contains(10) == True)
-}
-
-// Get the item in the list at the index specified.
-//
-// Returns `None` if the index is less than 0 or if the index is greater
-// than `length - 1`.
-//
-// ```
-// [4, 5, 6].get(1) // Some(5)
-// [4, 5, 6].get(3) // None
-// ```
-external fun (this: List<T>) get<T>(index: Int): Option<T> {
-  __BUILTIN_IMPLEMENTATION
-}
-
-test list_get {
-  assert([4, 5, 6].get(1) == Some(5))
-  assert([4, 5, 6].get(3) == None)
-
-  assert([].get(0) == None)
-  assert([].get(-1) == None)
-}
-
-// Return the length of the list.
-//
-// ```
-// [10, 11, 12].len() // 3
-// ```
-external fun (this: List<T>) len<T>(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 

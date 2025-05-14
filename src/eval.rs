@@ -567,6 +567,8 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
         return Ok(include_str!("__builtins.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__fs.gdn") {
         return Ok(include_str!("__fs.gdn").to_owned());
+    } else if import_info.path == PathBuf::from("__list.gdn") {
+        return Ok(include_str!("__list.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__option.gdn") {
         return Ok(include_str!("__option.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__garden.gdn") {

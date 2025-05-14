@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
 use strum::IntoEnumIterator;
 
 use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionState};
@@ -131,6 +131,7 @@ impl Env {
             src_path: Rc::new(PathBuf::from("__user")),
             abs_path: Rc::new(PathBuf::from("__user.gdn")),
             values: FxHashMap::default(),
+            external_syms: FxHashSet::default(),
             types: FxHashMap::default(),
         }));
 
@@ -200,6 +201,7 @@ impl Env {
             src_path: Rc::new(PathBuf::from("__prelude.gdn")),
             abs_path: Rc::new(PathBuf::from("__prelude.gdn")),
             values: FxHashMap::default(),
+            external_syms: FxHashSet::default(),
             types: FxHashMap::default(),
         }));
 
@@ -257,6 +259,7 @@ impl Env {
         let ns = Rc::new(RefCell::new(NamespaceInfo {
             src_path: Rc::new(abs_path.to_owned()),
             abs_path: Rc::new(abs_path.to_owned()),
+            external_syms: FxHashSet::default(),
             values,
             types: FxHashMap::default(),
         }));
@@ -611,6 +614,15 @@ fn fresh_prelude(
 
     let mut path_methods = FxHashMap::default();
 
+    // Users shouldn't be able to see private functions in a
+    // namespace. Where should this be enforced? When the namespace in
+    // constructed during eval?
+    //
+    // Private functions still need to be stored somewhere.
+    //
+    // Store a separate list of public functions for access?
+    // Fundamentally namespace access during evaluation is different
+    // from foo::bar() access from another file.
     path_methods.insert(
         SymbolName {
             text: "exists".to_owned(),
@@ -680,6 +692,7 @@ fn fresh_prelude(
     let ns_info = NamespaceInfo {
         src_path: prelude_path.clone(),
         abs_path: prelude_path,
+        external_syms: FxHashSet::default(),
         values,
         types: built_in_types(builtins_vfs_path, id_gen),
     };

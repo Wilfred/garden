@@ -26,7 +26,7 @@ use crate::parser::ast::{
     ExpressionWithComma, Expression_, FunInfo, IdGenerator, ImportInfo, InternedSymbolId,
     LetDestination, MethodInfo, MethodKind, ParenthesizedArguments, ParenthesizedParameters,
     Pattern, StructInfo, Symbol, SymbolName, SymbolWithHint, SyntaxId, TestInfo, ToplevelItem,
-    TypeHint, TypeName, TypeSymbol,
+    TypeHint, TypeName, TypeSymbol, Visibility,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -303,7 +303,7 @@ fn load_toplevel_items_(
 
     for item in items {
         match &item {
-            ToplevelItem::Fun(name_symbol, fun_info, _) => {
+            ToplevelItem::Fun(name_symbol, fun_info, visibility) => {
                 if is_builtin_stub(fun_info) {
                     update_builtin_fun_info(fun_info, env, namespace.clone(), &mut diagnostics);
                 } else {
@@ -318,6 +318,21 @@ fn load_toplevel_items_(
                             runtime_type,
                         }),
                     );
+                }
+
+                match visibility {
+                    Visibility::External(_) => {
+                        namespace
+                            .borrow_mut()
+                            .external_syms
+                            .insert(name_symbol.name.clone());
+                    }
+                    Visibility::CurrentFile => {
+                        namespace
+                            .borrow_mut()
+                            .external_syms
+                            .remove(&name_symbol.name);
+                    }
                 }
 
                 new_syms.push(name_symbol.name.clone());

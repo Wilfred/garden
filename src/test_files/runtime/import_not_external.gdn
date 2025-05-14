@@ -1,0 +1,13 @@
+import "./lib.gdn"
+
+{
+  dbg(bar())
+}
+
+// args: run
+// expected stderr:
+// Error: Undefined variable: bar.
+// ---| src/test_files/runtime/import_not_external.gdn:4:7	 __toplevel__
+// 4  |   dbg(bar())
+//    |       ^^^
+

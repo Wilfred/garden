@@ -488,8 +488,27 @@ fn load_toplevel_items_(
                             .insert(namespace_sym.name.clone(), v);
                     }
                     None => {
-                        // Load all items into the current namespace.
-                        load_toplevel_items_(&imported_items, env, paths_seen, namespace.clone());
+                        // Load all the external items into the current namespace.
+                        let mut external_items = vec![];
+                        for item in imported_items {
+                            match item {
+                                ToplevelItem::Fun(_, _, Visibility::CurrentFile) => {
+                                    continue;
+                                }
+                                ToplevelItem::Fun(..) => {}
+                                ToplevelItem::Method(..) => {}
+                                ToplevelItem::Test(_) => {}
+                                ToplevelItem::Enum(_) => {}
+                                ToplevelItem::Struct(_) => {}
+                                ToplevelItem::Import(_)
+                                | ToplevelItem::Expr(_)
+                                | ToplevelItem::Block(_) => continue,
+                            }
+
+                            external_items.push(item);
+                        }
+
+                        load_toplevel_items_(&external_items, env, paths_seen, namespace.clone());
                     }
                 }
 

@@ -1,0 +1,9 @@
+external fun foo(): Int {
+  bar() + 1
+}
+
+fun bar(): Int {
+  41
+}
+
+// args: check

@@ -1480,7 +1480,52 @@ impl TypeCheckVisitor<'_> {
                                     let values = &ns.values;
 
                                     match values.get(&sym.name) {
-                                        Some(value) => Type::from_value(value),
+                                        Some(value) => {
+                                            if !ns.external_syms.contains(&sym.name) {
+                                                let mut name_pos = None;
+                                                match value.as_ref() {
+                                                    Value_::Fun { fun_info, .. }
+                                                    | Value_::BuiltinFunction(
+                                                        _,
+                                                        Some(fun_info),
+                                                        _,
+                                                    ) => {
+                                                        if let Some(name_sym) = &fun_info.name_sym {
+                                                            name_pos =
+                                                                Some(name_sym.position.clone());
+                                                        }
+                                                    }
+                                                    _ => {}
+                                                }
+
+                                                let notes = match name_pos {
+                                                    Some(name_pos) => {
+                                                        vec![(
+                                                            ErrorMessage(vec![
+                                                                msgcode!("{}", sym.name),
+                                                                msgtext!(" is defined here."),
+                                                            ]),
+                                                            name_pos,
+                                                        )]
+                                                    }
+                                                    None => vec![],
+                                                };
+
+                                                self.diagnostics.push(Diagnostic {
+                                                    notes,
+                                                    severity: Severity::Error,
+                                                    message: ErrorMessage(vec![
+                                                        msgcode!("{}", sym.name),
+                                                        msgtext!(" is not marked as "),
+                                                        msgcode!("external"),
+                                                        msgtext!(" so it cannot be used outside the file that contains it."),
+                                                    ]),
+                                                    position: sym.position.clone(),
+                                                });
+                                            }
+
+                                            Type::from_value(value)
+                                        }
                                         None => {
                                             // TODO: suggest similar names here.
                                             self.diagnostics.push(Diagnostic {

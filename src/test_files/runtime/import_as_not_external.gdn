@@ -1,0 +1,13 @@
+import "./lib.gdn" as f
+
+{
+  dbg(f::bar())
+}
+
+// args: run
+// expected stderr:
+// Error: `bar` is not marked as `external` in `src/test_files/runtime/lib.gdn`. 
+// ---| src/test_files/runtime/import_as_not_external.gdn:4:10	 __toplevel__
+// 4  |   dbg(f::bar())
+//    |          ^^^
+

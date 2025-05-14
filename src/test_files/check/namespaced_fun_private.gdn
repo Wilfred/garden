@@ -1,0 +1,22 @@
+import "./lib.gdn" as f
+
+{
+  f::bar()
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `bar` is not marked as `external` so it cannot be used outside the file that contains it.
+// ---| src/test_files/check/namespaced_fun_private.gdn:4:6
+// 3  | {
+// 4  |   f::bar()
+// 5  | }    ^^^
+// ---| src/test_files/check/lib.gdn:5:5
+// 3  | }
+// 4  | 
+// 5  | fun bar(): Int {
+//    |     ^^^ Note: `bar` is defined here.
+// 6  |   41
+// 7  | }
+

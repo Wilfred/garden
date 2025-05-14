@@ -5056,6 +5056,23 @@ fn eval_namespace_access(
 
             match ns.values.get(&symbol.name) {
                 Some(v) => {
+                    if !ns.external_syms.contains(&symbol.name) {
+                        return Err((
+                            RestoreValues(vec![recv_value.clone()]),
+                            EvalError::ResumableError(
+                                symbol.position.clone(),
+                                ErrorMessage(vec![
+                                    msgcode!("{}", symbol.name),
+                                    msgtext!(" is not marked as "),
+                                    msgcode!("external"),
+                                    msgtext!(" in "),
+                                    msgcode!("{}", env.relative_to_project(&ns.abs_path).display()),
+                                    msgtext!(". "),
+                                ]),
+                            ),
+                        ));
+                    }
+
                     if expr_value_is_used {
                         env.push_value(v.clone());
                     }

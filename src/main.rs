@@ -104,8 +104,9 @@ enum CliCommands {
         path: PathBuf,
         arguments: Vec<String>,
     },
-    /// Run all the tests in the Garden program at the path specified.
-    Test { path: PathBuf },
+    /// Run all the tests in the Garden program at the paths
+    /// specified.
+    Test { paths: Vec<PathBuf> },
     /// Run the tests associated with the definition at this offset,
     /// but give up if the program exceeds a time limit or attempts
     /// I/O.
@@ -228,9 +229,14 @@ fn main() {
             let src_path = override_path.unwrap_or(path);
             syntax_check::check(&src_path, &src, json)
         }
-        CliCommands::Test { path } => {
-            let src = read_utf8_or_die(&path);
-            run_tests_in_files(&[(src, path)], interrupted)
+        CliCommands::Test { paths } => {
+            let mut paths_and_srcs = vec![];
+            for path in paths.into_iter() {
+                let src = read_utf8_or_die(&path);
+                paths_and_srcs.push((src, path));
+            }
+
+            run_tests_in_files(&paths_and_srcs, interrupted)
         }
         CliCommands::SandboxedTest { path, offset } => {
             let src = read_utf8_or_die(&path);
@@ -639,7 +645,12 @@ mod tests {
         let path = assert_cmd::cargo::cargo_bin("garden");
         let mut cmd = Command::new(path);
 
-        cmd.arg("test").arg("src/__prelude.gdn");
+        cmd.arg("test")
+            .arg("src/__prelude.gdn")
+            .arg("src/__list.gdn")
+            .arg("src/__option.gdn")
+            .arg("src/__fs.gdn")
+            .arg("src/__garden.gdn");
         cmd.assert().success();
     }
 

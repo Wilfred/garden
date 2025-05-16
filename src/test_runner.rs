@@ -1,5 +1,5 @@
 use std::io::IsTerminal as _;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
@@ -170,14 +170,10 @@ pub(crate) fn run_sandboxed_tests_in_file(
     println!("{}", serde_json::to_string(&summary).unwrap());
 }
 
-pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicBool>) {
-    let id_gen = IdGenerator::default();
-    let mut vfs = Vfs::default();
-    let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
-
-    let mut env = Env::new(id_gen, vfs);
-    let items = parse_toplevel_items_or_die(&vfs_path, src, &mut env.vfs, &mut env.id_gen);
-
+pub(crate) fn run_tests_in_files(
+    srcs_and_paths: &[(String, PathBuf)],
+    interrupted: Arc<AtomicBool>,
+) {
     let session = Session {
         interrupted,
         stdout_mode: StdoutMode::WriteDirectly,
@@ -186,83 +182,92 @@ pub(crate) fn run_tests_in_file(src: &str, path: &Path, interrupted: Arc<AtomicB
         pretty_print_json: false,
     };
 
-    let ns = env.get_or_create_namespace(path);
-    load_toplevel_items(&items, &mut env, ns);
+    for (src, path) in srcs_and_paths {
+        let id_gen = IdGenerator::default();
+        let mut vfs = Vfs::default();
+        let vfs_path = vfs.insert(Rc::new(path.to_owned()), src.to_owned());
 
-    let summary = eval_tests(&items, &mut env, &session);
+        let mut env = Env::new(id_gen, vfs);
+        let items = parse_toplevel_items_or_die(&vfs_path, src, &mut env.vfs, &mut env.id_gen);
 
-    let total_tests = summary.tests.len();
-    let tests_failed = summary
-        .tests
-        .iter()
-        .filter(|(_, err)| err.is_some())
-        .count();
-    let tests_passed = total_tests - tests_failed;
+        let ns = env.get_or_create_namespace(path);
+        load_toplevel_items(&items, &mut env, ns);
 
-    let use_color = std::io::stdout().is_terminal();
-    if tests_passed == 0 && tests_failed == 0 {
-        println!("No tests found.");
-    } else {
-        for (test_sym, err) in &summary.tests {
-            let Some(err) = err else {
-                continue;
-            };
+        let summary = eval_tests(&items, &mut env, &session);
 
-            print!(
-                "Failed: {}",
-                if use_color {
-                    test_sym.name.text.bold().to_string()
-                } else {
-                    test_sym.name.text.clone()
+        let total_tests = summary.tests.len();
+        let tests_failed = summary
+            .tests
+            .iter()
+            .filter(|(_, err)| err.is_some())
+            .count();
+        let tests_passed = total_tests - tests_failed;
+
+        let use_color = std::io::stdout().is_terminal();
+        if tests_passed == 0 && tests_failed == 0 {
+            println!("No tests found.");
+        } else {
+            for (test_sym, err) in &summary.tests {
+                let Some(err) = err else {
+                    continue;
+                };
+
+                print!(
+                    "Failed: {}",
+                    if use_color {
+                        test_sym.name.text.bold().to_string()
+                    } else {
+                        test_sym.name.text.clone()
+                    }
+                );
+
+                let (pos, msg) = match err {
+                    EvalError::Interrupted => (None, None),
+                    EvalError::ResumableError(position, msg) => (Some(position), Some(msg)),
+                    EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
+                    EvalError::ReachedTickLimit(position) => (Some(position), None),
+                    EvalError::ForbiddenInSandbox(position) => (Some(position), None),
+                };
+
+                match (pos, msg) {
+                    (Some(pos), Some(msg)) => {
+                        println!(" {}\n  {}", pos.as_ide_string(), msg.as_string())
+                    }
+                    (Some(pos), None) => println!(" {}", pos.as_ide_string()),
+                    _ => println!(),
                 }
-            );
+            }
 
-            let (pos, msg) = match err {
-                EvalError::Interrupted => (None, None),
-                EvalError::ResumableError(position, msg) => (Some(position), Some(msg)),
-                EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
-                EvalError::ReachedTickLimit(position) => (Some(position), None),
-                EvalError::ForbiddenInSandbox(position) => (Some(position), None),
-            };
+            if tests_failed > 0 {
+                println!();
+            }
 
-            match (pos, msg) {
-                (Some(pos), Some(msg)) => {
-                    println!(" {}\n  {}", pos.as_ide_string(), msg.as_string())
-                }
-                (Some(pos), None) => println!(" {}", pos.as_ide_string()),
-                _ => println!(),
+            let total_tests = tests_passed + tests_failed;
+
+            if tests_failed == 0 && total_tests == 1 {
+                println!("Ran 1 test: it passed.");
+            } else if tests_failed == 0 {
+                println!(
+                    "Ran {} test{}: all tests passed.",
+                    total_tests,
+                    if total_tests == 1 { "" } else { "s" },
+                );
+            } else {
+                println!(
+                    "Ran {} test{}: {} passed and {} failed.",
+                    total_tests,
+                    if total_tests == 1 { "" } else { "s" },
+                    tests_passed,
+                    tests_failed
+                );
             }
         }
 
+        // TODO: support printing back traces from every test failure.
+        // TODO: print incremental progress as tests run.
+
         if tests_failed > 0 {
-            println!();
+            std::process::exit(1);
         }
-
-        let total_tests = tests_passed + tests_failed;
-
-        if tests_failed == 0 && total_tests == 1 {
-            println!("Ran 1 test: it passed.");
-        } else if tests_failed == 0 {
-            println!(
-                "Ran {} test{}: all tests passed.",
-                total_tests,
-                if total_tests == 1 { "" } else { "s" },
-            );
-        } else {
-            println!(
-                "Ran {} test{}: {} passed and {} failed.",
-                total_tests,
-                if total_tests == 1 { "" } else { "s" },
-                tests_passed,
-                tests_failed
-            );
-        }
-    }
-
-    // TODO: support printing back traces from every test failure.
-    // TODO: print incremental progress as tests run.
-
-    if tests_failed > 0 {
-        std::process::exit(1);
     }
 }

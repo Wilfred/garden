@@ -70,7 +70,7 @@ use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
 use parser::vfs::{Vfs, VfsPathBuf};
-use test_runner::{run_sandboxed_tests_in_file, run_tests_in_file};
+use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Severity};
 use crate::env::Env;
@@ -230,7 +230,7 @@ fn main() {
         }
         CliCommands::Test { path } => {
             let src = read_utf8_or_die(&path);
-            run_tests_in_file(&src, &path, interrupted)
+            run_tests_in_files(&[(src, path)], interrupted)
         }
         CliCommands::SandboxedTest { path, offset } => {
             let src = read_utf8_or_die(&path);

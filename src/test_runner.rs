@@ -236,7 +236,15 @@ pub(crate) fn run_tests_in_files(
 
             match (pos, msg) {
                 (Some(pos), Some(msg)) => {
-                    println!(" {}\n  {}", pos.as_ide_string(), msg.as_string())
+                    println!(
+                        " {}\n  {}",
+                        pos.as_ide_string(),
+                        if use_color {
+                            msg.as_styled_string()
+                        } else {
+                            msg.as_string()
+                        }
+                    )
                 }
                 (Some(pos), None) => println!(" {}", pos.as_ide_string()),
                 _ => println!(),

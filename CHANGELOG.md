@@ -23,7 +23,12 @@ and syntax highlighting the source code.
 
 ### Commands
 
-Added a `:globals` command to view all values in the current namespace.
+Added a `:globals` command to view all values in the current
+namespace.
+
+### CLI
+
+`garden test` can now take multiple file arguments.
 
 # 0.19 (released 7th April 2025)
 **Goal: Website has snippets that are checked and linkified.**

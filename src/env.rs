@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::hash_map;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -303,13 +304,18 @@ impl Env {
     }
 
     pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
-        self.types.insert(
-            name.clone(),
-            TypeDefAndMethods {
-                def: type_.clone(),
-                methods: FxHashMap::default(),
-            },
-        );
+        match self.types.entry(name.clone()) {
+            hash_map::Entry::Occupied(mut occupied_entry) => {
+                let type_def_and_meths = occupied_entry.get_mut();
+                type_def_and_meths.def = type_;
+            }
+            hash_map::Entry::Vacant(vacant_entry) => {
+                vacant_entry.insert(TypeDefAndMethods {
+                    def: type_.clone(),
+                    methods: FxHashMap::default(),
+                });
+            }
+        }
     }
 
     pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {

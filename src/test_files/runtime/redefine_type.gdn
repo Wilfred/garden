@@ -1,0 +1,21 @@
+struct Foo {
+  first_name: String,
+}
+
+fun (this: Foo) do_stuff(): Int {
+  123
+}
+
+struct Foo {
+  name: String,
+}
+
+{
+  // We should still be able to call the method after redefining the
+  // type of that name.
+  dbg(Foo{ name: "" }.do_stuff())
+}
+
+// args: run
+// expected stdout: 123
+

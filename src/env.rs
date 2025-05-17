@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::collections::hash_map;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -303,19 +302,32 @@ impl Env {
         self.types.keys().cloned().collect()
     }
 
-    pub(crate) fn add_type(&mut self, name: TypeName, type_: TypeDef) {
-        match self.types.entry(name.clone()) {
-            hash_map::Entry::Occupied(mut occupied_entry) => {
-                let type_def_and_meths = occupied_entry.get_mut();
-                type_def_and_meths.def = type_;
-            }
-            hash_map::Entry::Vacant(vacant_entry) => {
-                vacant_entry.insert(TypeDefAndMethods {
-                    def: type_.clone(),
-                    methods: FxHashMap::default(),
-                });
-            }
-        }
+    pub(crate) fn add_type(
+        &mut self,
+        name: TypeName,
+        type_: TypeDef,
+        namespace: Rc<RefCell<NamespaceInfo>>,
+    ) {
+        let methods = match self.types.remove(&name) {
+            Some(type_def_and_meths) => type_def_and_meths.methods,
+            None => FxHashMap::default(),
+        };
+
+        self.types.insert(
+            name.clone(),
+            TypeDefAndMethods {
+                def: type_.clone(),
+                methods: methods.clone(),
+            },
+        );
+
+        namespace.borrow_mut().types.insert(
+            name.clone(),
+            TypeDefAndMethods {
+                def: type_,
+                methods,
+            },
+        );
     }
 
     pub(crate) fn push_expr_to_eval(&mut self, state: ExpressionState, expr: Rc<Expression>) {

@@ -364,14 +364,7 @@ fn load_toplevel_items_(
                 env.add_type(
                     enum_info.name_sym.name.clone(),
                     TypeDef::Enum(enum_info.clone()),
-                );
-
-                namespace.borrow_mut().types.insert(
-                    enum_info.name_sym.name.clone(),
-                    TypeDefAndMethods {
-                        def: TypeDef::Enum(enum_info.clone()),
-                        methods: FxHashMap::default(),
-                    },
+                    namespace.clone(),
                 );
 
                 enum_infos.push(enum_info);
@@ -389,6 +382,7 @@ fn load_toplevel_items_(
                     env.add_type(
                         struct_info.name_sym.name.clone(),
                         TypeDef::Struct(struct_info.clone()),
+                        namespace.clone(),
                     );
                 }
 

@@ -473,38 +473,14 @@ fn load_toplevel_items_(
                 let (import_diagnostics, imported_syms) =
                     load_toplevel_items_(&imported_items, env, paths_seen, destination_ns.clone());
 
-                match &import_info.namespace_sym {
-                    Some(namespace_sym) => {
-                        let v = Value::new(Value_::Namespace(destination_ns));
-                        namespace
-                            .borrow_mut()
-                            .values
-                            .insert(namespace_sym.name.clone(), v);
-                    }
-                    None => {
-                        // Load all the external items into the current namespace.
-                        let mut external_items = vec![];
-                        for item in imported_items {
-                            match item {
-                                ToplevelItem::Fun(_, _, Visibility::CurrentFile) => {
-                                    continue;
-                                }
-                                ToplevelItem::Fun(..) => {}
-                                ToplevelItem::Method(..) => {}
-                                ToplevelItem::Test(_) => {}
-                                ToplevelItem::Enum(_) => {}
-                                ToplevelItem::Struct(_) => {}
-                                ToplevelItem::Import(_)
-                                | ToplevelItem::Expr(_)
-                                | ToplevelItem::Block(_) => continue,
-                            }
-
-                            external_items.push(item);
-                        }
-
-                        load_toplevel_items_(&external_items, env, paths_seen, namespace.clone());
-                    }
-                }
+                load_namespace(
+                    env,
+                    paths_seen,
+                    import_info.namespace_sym.as_ref(),
+                    namespace.clone(),
+                    imported_items,
+                    destination_ns,
+                );
 
                 diagnostics.extend(import_diagnostics);
                 new_syms.extend(imported_syms);
@@ -552,6 +528,48 @@ fn load_toplevel_items_(
     }
 
     (diagnostics, new_syms)
+}
+
+fn load_namespace(
+    env: &mut Env,
+    paths_seen: &mut HashSet<PathBuf, rustc_hash::FxBuildHasher>,
+    namespace_sym: Option<&Symbol>,
+    namespace: Rc<RefCell<NamespaceInfo>>,
+    imported_items: Vec<ToplevelItem>,
+    imported_ns: Rc<RefCell<NamespaceInfo>>,
+) {
+    match namespace_sym {
+        Some(namespace_sym) => {
+            let v = Value::new(Value_::Namespace(imported_ns));
+            namespace
+                .borrow_mut()
+                .values
+                .insert(namespace_sym.name.clone(), v);
+        }
+        None => {
+            // Load all the external items into the current namespace.
+            let mut external_items = vec![];
+            for item in imported_items {
+                match item {
+                    ToplevelItem::Fun(_, _, Visibility::CurrentFile) => {
+                        continue;
+                    }
+                    ToplevelItem::Fun(..) => {}
+                    ToplevelItem::Method(..) => {}
+                    ToplevelItem::Test(_) => {}
+                    ToplevelItem::Enum(_) => {}
+                    ToplevelItem::Struct(_) => {}
+                    ToplevelItem::Import(_) | ToplevelItem::Expr(_) | ToplevelItem::Block(_) => {
+                        continue
+                    }
+                }
+
+                external_items.push(item);
+            }
+
+            load_toplevel_items_(&external_items, env, paths_seen, namespace.clone());
+        }
+    }
 }
 
 fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {

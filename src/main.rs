@@ -647,8 +647,6 @@ mod tests {
 
         cmd.arg("test")
             .arg("src/__prelude.gdn")
-            .arg("src/__list.gdn")
-            .arg("src/__option.gdn")
             .arg("src/__fs.gdn")
             .arg("src/__garden.gdn");
         cmd.assert().success();

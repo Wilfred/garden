@@ -234,6 +234,10 @@ impl Env {
         env
     }
 
+    pub(crate) fn get_namespace(&self, abs_path: &Path) -> Option<Rc<RefCell<NamespaceInfo>>> {
+        self.namespaces.get(abs_path).cloned()
+    }
+
     pub(crate) fn get_or_create_namespace(
         &mut self,
         abs_path: &Path,

@@ -439,7 +439,17 @@ fn load_toplevel_items_(
                 };
 
                 if paths_seen.contains(&abs_path) {
-                    // Already imported this file, so we have a cyclic import.
+                    // Already loaded this file, so we have a cyclic
+                    // import. We don't need to load the namespace
+                    // again, but we do need to still add the values
+                    // to the current namespace.
+                    let imported_ns = env.get_namespace(&abs_path).unwrap();
+                    insert_imported_namespace(
+                        import_info.namespace_sym.as_ref(),
+                        namespace.clone(),
+                        imported_ns,
+                    );
+
                     continue;
                 }
                 paths_seen.insert(abs_path.clone());
@@ -473,7 +483,7 @@ fn load_toplevel_items_(
                 let (import_diagnostics, imported_syms) =
                     load_toplevel_items_(&imported_items, env, paths_seen, destination_ns.clone());
 
-                load_namespace(
+                insert_imported_namespace(
                     import_info.namespace_sym.as_ref(),
                     namespace.clone(),
                     destination_ns,
@@ -527,7 +537,9 @@ fn load_toplevel_items_(
     (diagnostics, new_syms)
 }
 
-fn load_namespace(
+/// Insert `imported_ns` into `current_ns`, either as a single value
+/// or as all the external symbols as values.
+fn insert_imported_namespace(
     namespace_sym: Option<&Symbol>,
     current_ns: Rc<RefCell<NamespaceInfo>>,
     imported_ns: Rc<RefCell<NamespaceInfo>>,

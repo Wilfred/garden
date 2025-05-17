@@ -4572,22 +4572,21 @@ fn eval_expr(
                     env.push_value(value);
                 }
             } else {
-                let suggestion = match most_similar_var(&name_sym.name, env) {
-                    Some(closest_name) => {
-                        format!(" Did you mean {}?", closest_name)
-                    }
-                    None => "".to_owned(),
-                };
+                let mut message = vec![
+                    msgtext!("No such variable "),
+                    msgcode!("{}", name_sym.name),
+                    msgtext!("."),
+                ];
+
+                if let Some(closest_name) = most_similar_var(&name_sym.name, env) {
+                    message.push(msgtext!(" Did you mean "));
+                    message.push(msgcode!("{}", closest_name));
+                    message.push(msgtext!(" instead?"));
+                }
 
                 return Err((
                     RestoreValues(vec![]),
-                    EvalError::ResumableError(
-                        name_sym.position.clone(),
-                        ErrorMessage(vec![Text(format!(
-                            "Undefined variable: {}.{}",
-                            name_sym.name, suggestion
-                        ))]),
-                    ),
+                    EvalError::ResumableError(name_sym.position.clone(), ErrorMessage(message)),
                 ));
             }
         }

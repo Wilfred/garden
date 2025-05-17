@@ -6,7 +6,7 @@ import "./lib.gdn"
 
 // args: run
 // expected stderr:
-// Error: Undefined variable: bar.
+// Error: No such variable `bar`.
 // ---| src/test_files/runtime/import_not_external.gdn:4:7	 __toplevel__
 // 4  |   dbg(bar())
 //    |       ^^^

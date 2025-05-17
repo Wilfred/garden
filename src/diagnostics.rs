@@ -50,7 +50,11 @@ pub(crate) fn format_error_with_stack(
         } else {
             "Error".to_owned()
         },
-        message.as_string()
+        if use_color {
+            message.as_styled_string()
+        } else {
+            message.as_string()
+        }
     ));
 
     // For the topmost (most recently called) stack frame, the

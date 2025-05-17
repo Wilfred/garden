@@ -235,14 +235,17 @@ impl Env {
     }
 
     pub(crate) fn get_namespace(&self, abs_path: &Path) -> Option<Rc<RefCell<NamespaceInfo>>> {
-        self.namespaces.get(abs_path).cloned()
+        let abs_path = canonicalize_namespace_path(abs_path);
+        self.namespaces.get(&abs_path).cloned()
     }
 
     pub(crate) fn get_or_create_namespace(
         &mut self,
         abs_path: &Path,
     ) -> Rc<RefCell<NamespaceInfo>> {
-        if let Some(ns) = self.namespaces.get(abs_path) {
+        let abs_path = canonicalize_namespace_path(abs_path);
+
+        if let Some(ns) = self.namespaces.get(&abs_path) {
             return ns.clone();
         }
 
@@ -261,8 +264,8 @@ impl Env {
         }
 
         let ns = Rc::new(RefCell::new(NamespaceInfo {
-            src_path: Rc::new(abs_path.to_owned()),
-            abs_path: Rc::new(abs_path.to_owned()),
+            src_path: Rc::new(abs_path.clone()),
+            abs_path: Rc::new(abs_path.clone()),
             external_syms: FxHashSet::default(),
             values,
             types: FxHashMap::default(),
@@ -270,7 +273,7 @@ impl Env {
 
         insert_prelude(ns.clone(), self.prelude_namespace.clone());
 
-        self.namespaces.insert(abs_path.to_owned(), ns.clone());
+        self.namespaces.insert(abs_path, ns.clone());
         ns
     }
 
@@ -780,4 +783,21 @@ pub(crate) struct StackFrame {
     pub(crate) exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)>,
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
+}
+
+fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
+    // Canonicalise stdlib paths, which always start with __.
+    //
+    // We treat "foo/bar/__fs.gdn" as "__fs.gdn". This ensures we can
+    // use refer to stdlib files directly (e.g. `import "__fs.gdn"`)
+    // as well as pass them to the CLI (e.g. `garden check
+    // src/__fs.gdn`).
+    if let Some(name_osstr) = abs_path.file_name() {
+        let name = name_osstr.to_string_lossy();
+        if name.starts_with("__") {
+            return PathBuf::from(name_osstr);
+        }
+    }
+
+    abs_path.to_owned()
 }

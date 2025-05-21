@@ -696,7 +696,7 @@ pub(crate) struct MethodInfo {
     /// clunky to have it for all methods.
     pub(crate) receiver_sym: Symbol,
     /// The name of the method itself, e.g. `len` in
-    /// `some_string.len()`.
+    /// `fun (this: String) len(): Int {}`.
     pub(crate) name_sym: Symbol,
     /// User-defined or built-in.
     pub(crate) kind: MethodKind,

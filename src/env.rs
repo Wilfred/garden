@@ -9,8 +9,8 @@ use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionStat
 use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
-    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, Symbol, SymbolName,
-    SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol,
+    BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol,
+    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Visibility,
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
@@ -288,12 +288,45 @@ impl Env {
         }
     }
 
-    pub(crate) fn add_method(&mut self, method_info: &MethodInfo) {
+    pub(crate) fn add_method(&mut self, method_info: &MethodInfo, load_stubs: bool) {
         let type_name = method_info.receiver_hint.sym.name.clone();
-        if let Some(type_and_methods) = self.types.get_mut(&type_name) {
-            type_and_methods
-                .methods
-                .insert(method_info.name_sym.name.clone(), method_info.clone());
+        match self.types.get_mut(&type_name) {
+            Some(type_and_methods) => {
+                type_and_methods
+                    .methods
+                    .insert(method_info.name_sym.name.clone(), method_info.clone());
+            }
+            None => {
+                if !load_stubs {
+                    return;
+                }
+
+                // The user is loading a method without a
+                // corresponding type behind defined. Define a stub so
+                // we have somewhere to attach the method.
+                //
+                // This ensures that the method is available when the
+                // user (presumably) defines their type.
+                let stub_struct = TypeDef::Struct(StructInfo {
+                    pos: method_info.receiver_hint.position.clone(),
+                    visibility: Visibility::CurrentFile,
+                    doc_comment: None,
+                    name_sym: method_info.receiver_hint.sym.clone(),
+                    type_params: vec![],
+                    fields: vec![],
+                });
+
+                let mut type_and_methods = TypeDefAndMethods {
+                    def: stub_struct,
+                    methods: FxHashMap::default(),
+                };
+
+                type_and_methods
+                    .methods
+                    .insert(method_info.name_sym.name.clone(), method_info.clone());
+
+                self.types.insert(type_name, type_and_methods);
+            }
         }
     }
 

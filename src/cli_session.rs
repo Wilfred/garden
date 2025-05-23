@@ -12,8 +12,8 @@ use crate::commands::{
 use crate::diagnostics::format_error_with_stack;
 use crate::env::Env;
 use crate::eval::{
-    eval, load_toplevel_items, push_test_stackframe, EvalError, ExpressionState, Session,
-    StdoutMode,
+    eval, load_toplevel_items_with_stubs, push_test_stackframe, EvalError, ExpressionState,
+    Session, StdoutMode,
 };
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::{parse_toplevel_items, ParseError};
@@ -116,7 +116,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 last_src = src;
 
                 let ns = env.get_or_create_namespace(&path);
-                let (diagnostics, _) = load_toplevel_items(&items, &mut env, ns);
+                let (diagnostics, _) = load_toplevel_items_with_stubs(&items, &mut env, ns);
                 for diagnostic in diagnostics {
                     println!("Warning: {}", diagnostic.message.as_string());
                 }

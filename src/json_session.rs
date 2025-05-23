@@ -17,8 +17,9 @@ use crate::commands::{
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Diagnostic, Severity};
 use crate::env::Env;
 use crate::eval::{
-    eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to, load_toplevel_items,
-    push_test_stackframe, EvalError, EvalUpToErr, ExpressionState, Session, StdoutMode,
+    eval, eval_tests_until_error, eval_toplevel_exprs_then_stop, eval_up_to,
+    load_toplevel_items_with_stubs, push_test_stackframe, EvalError, EvalUpToErr, ExpressionState,
+    Session, StdoutMode,
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
@@ -153,7 +154,7 @@ fn handle_load_request(
     }
 
     let ns = env.get_or_create_namespace(path);
-    let (diagnostics, new_syms) = load_toplevel_items(&items, env, ns);
+    let (diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns);
 
     let summary = if new_syms.is_empty() {
         "".to_owned()
@@ -606,7 +607,7 @@ fn handle_run_eval_request(
     }
 
     let ns = env.get_or_create_namespace(path);
-    let (mut diagnostics, new_syms) = load_toplevel_items(&items, env, ns.clone());
+    let (mut diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns.clone());
     diagnostics.extend(check_toplevel_items_in_env(
         &vfs_path,
         &items,

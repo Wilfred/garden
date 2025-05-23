@@ -287,7 +287,16 @@ pub(crate) fn load_toplevel_items(
     namespace: Rc<RefCell<NamespaceInfo>>,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut paths_seen = FxHashSet::default();
-    load_toplevel_items_(items, env, &mut paths_seen, namespace)
+    load_toplevel_items_(items, env, &mut paths_seen, namespace, false)
+}
+
+pub(crate) fn load_toplevel_items_with_stubs(
+    items: &[ToplevelItem],
+    env: &mut Env,
+    namespace: Rc<RefCell<NamespaceInfo>>,
+) -> (Vec<Diagnostic>, Vec<SymbolName>) {
+    let mut paths_seen = FxHashSet::default();
+    load_toplevel_items_(items, env, &mut paths_seen, namespace, true)
 }
 
 fn load_toplevel_items_(
@@ -295,6 +304,7 @@ fn load_toplevel_items_(
     env: &mut Env,
     paths_seen: &mut FxHashSet<PathBuf>,
     namespace: Rc<RefCell<NamespaceInfo>>,
+    load_stubs: bool,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
@@ -342,13 +352,7 @@ fn load_toplevel_items_(
                     if is_builtin_stub(fun_info) {
                         update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
                     } else {
-                        // TODO: check that types in definitions are defined, and emit
-                        // warnings otherwise.
-                        //
-                        // ```
-                        // fun (this: NoSuchType) foo(x: NoSuchType): NoSuchType {}
-                        // ```
-                        env.add_method(meth_info);
+                        env.add_method(meth_info, load_stubs);
                     }
                 }
 
@@ -480,8 +484,13 @@ fn load_toplevel_items_(
 
                 // Load into its own namespace.
                 let destination_ns = env.get_or_create_namespace(&abs_path);
-                let (import_diagnostics, imported_syms) =
-                    load_toplevel_items_(&imported_items, env, paths_seen, destination_ns.clone());
+                let (import_diagnostics, imported_syms) = load_toplevel_items_(
+                    &imported_items,
+                    env,
+                    paths_seen,
+                    destination_ns.clone(),
+                    load_stubs,
+                );
 
                 insert_imported_namespace(
                     import_info.namespace_sym.as_ref(),

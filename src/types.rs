@@ -11,7 +11,7 @@ use crate::VfsPathBuf;
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub(crate) enum BuiltinType {
     // TODO: do we need to denote BuiltinType values for these, now we
-    // have stubs in __builtins.gdn?
+    // have stubs in __prelude.gdn?
     Int,
     String,
     Namespace,
@@ -24,7 +24,7 @@ pub(crate) enum BuiltinType {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TypeDef {
     /// A built-in type, such as Int. StructInfo includes the
-    /// definition position and doc comment from __builtins.gdn.
+    /// definition position and doc comment from __prelude.gdn.
     Builtin(BuiltinType, Option<StructInfo>),
     Enum(EnumInfo),
     Struct(StructInfo),
@@ -38,9 +38,9 @@ pub(crate) struct TypeDefAndMethods {
 
 impl TypeDef {
     pub(crate) fn params(&self) -> Vec<TypeSymbol> {
-        let builtins_path = Rc::new(PathBuf::from("__builtins.gdn"));
+        let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
         let dummy_vfs_path = VfsPathBuf {
-            path: builtins_path,
+            path: prelude_path,
             id: VfsId(u32::MAX),
         };
 

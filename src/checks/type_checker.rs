@@ -262,9 +262,6 @@ impl TypeCheckVisitor<'_> {
                 if path.display().to_string().ends_with("__prelude.gdn") {
                     return;
                 }
-                if path.display().to_string().ends_with("__builtins.gdn") {
-                    return;
-                }
             }
         }
 

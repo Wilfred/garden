@@ -587,8 +587,6 @@ fn insert_imported_namespace(
 fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnostic> {
     if import_info.path == PathBuf::from("__prelude.gdn") {
         return Ok(include_str!("__prelude.gdn").to_owned());
-    } else if import_info.path == PathBuf::from("__builtins.gdn") {
-        return Ok(include_str!("__builtins.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__fs.gdn") {
         return Ok(include_str!("__fs.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__garden.gdn") {
@@ -1388,7 +1386,7 @@ fn update_builtin_meth_info(
         return;
     };
 
-    // Prefer hints and symbols from __builtins.gdn, as they have
+    // Prefer hints and symbols from __prelude.gdn, as they have
     // better positions and full type parameters.
     curr_meth_info.receiver_hint = meth_info.receiver_hint.clone();
     curr_meth_info.receiver_sym = meth_info.receiver_sym.clone();

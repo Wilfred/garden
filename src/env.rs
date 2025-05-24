@@ -137,9 +137,9 @@ impl Env {
 
         namespaces.insert(PathBuf::from("__user"), user_namespace.clone());
 
-        let builtins_path = Rc::new(PathBuf::from("__builtins.gdn"));
-        let builtins_src = include_str!("__builtins.gdn");
-        let builtins_vfs_path = vfs.insert(builtins_path.clone(), builtins_src.to_owned());
+        let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
+        let prelude_src = include_str!("__prelude.gdn");
+        let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
 
         let mut path_methods = FxHashMap::default();
         path_methods.insert(
@@ -147,24 +147,24 @@ impl Env {
                 text: "exists".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(&builtins_vfs_path),
+                pos: Position::todo(&prelude_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(&builtins_vfs_path),
+                        position: Position::todo(&prelude_vfs_path),
                         name: TypeName {
                             text: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(&builtins_vfs_path),
+                    position: Position::todo(&prelude_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(&builtins_vfs_path),
+                    Position::todo(&prelude_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(&builtins_vfs_path), "exists", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(&prelude_vfs_path), "exists", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
             },
         );
@@ -173,29 +173,29 @@ impl Env {
                 text: "read".to_owned(),
             },
             MethodInfo {
-                pos: Position::todo(&builtins_vfs_path),
+                pos: Position::todo(&prelude_vfs_path),
                 receiver_hint: TypeHint {
                     args: vec![],
                     sym: TypeSymbol {
-                        position: Position::todo(&builtins_vfs_path),
+                        position: Position::todo(&prelude_vfs_path),
                         name: TypeName {
                             text: "Path".into(),
                         },
                         id: id_gen.next(),
                     },
-                    position: Position::todo(&builtins_vfs_path),
+                    position: Position::todo(&prelude_vfs_path),
                 },
                 receiver_sym: Symbol::new(
-                    Position::todo(&builtins_vfs_path),
+                    Position::todo(&prelude_vfs_path),
                     "__irrelevant",
                     &mut id_gen,
                 ),
-                name_sym: Symbol::new(Position::todo(&builtins_vfs_path), "read", &mut id_gen),
+                name_sym: Symbol::new(Position::todo(&prelude_vfs_path), "read", &mut id_gen),
                 kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
             },
         );
 
-        let types = built_in_types(&builtins_vfs_path, &mut id_gen);
+        let types = built_in_types(&prelude_vfs_path, &mut id_gen);
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
             src_path: Rc::new(PathBuf::from("__prelude.gdn")),
@@ -224,7 +224,7 @@ impl Env {
             cli_args: vec![],
         };
 
-        let prelude_namespace = fresh_prelude(&mut env, &builtins_vfs_path, builtins_src);
+        let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);
         insert_prelude(user_namespace.clone(), prelude_namespace.clone());
 
         env.prelude_namespace = prelude_namespace;
@@ -662,11 +662,7 @@ fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceI
 }
 
 // TODO: this shouldn't take an Env, we're in the process of constructing it.
-fn fresh_prelude(
-    env: &mut Env,
-    builtins_vfs_path: &VfsPathBuf,
-    builtins_src: &str,
-) -> Rc<RefCell<NamespaceInfo>> {
+fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
     let vfs = &mut env.vfs;
 
@@ -686,20 +682,20 @@ fn fresh_prelude(
             text: "exists".to_owned(),
         },
         MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
+            pos: Position::todo(prelude_vfs_path),
             receiver_hint: TypeHint {
                 args: vec![],
                 sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
+                    position: Position::todo(prelude_vfs_path),
                     name: TypeName {
                         text: "Path".into(),
                     },
                     id: id_gen.next(),
                 },
-                position: Position::todo(builtins_vfs_path),
+                position: Position::todo(prelude_vfs_path),
             },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "exists", id_gen),
+            receiver_sym: Symbol::new(Position::todo(prelude_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(prelude_vfs_path), "exists", id_gen),
             kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
         },
     );
@@ -708,27 +704,26 @@ fn fresh_prelude(
             text: "read".to_owned(),
         },
         MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
+            pos: Position::todo(prelude_vfs_path),
             receiver_hint: TypeHint {
                 args: vec![],
                 sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
+                    position: Position::todo(prelude_vfs_path),
                     name: TypeName {
                         text: "Path".into(),
                     },
                     id: id_gen.next(),
                 },
-                position: Position::todo(builtins_vfs_path),
+                position: Position::todo(prelude_vfs_path),
             },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "read", id_gen),
+            receiver_sym: Symbol::new(Position::todo(prelude_vfs_path), "__irrelevant", id_gen),
+            name_sym: Symbol::new(Position::todo(prelude_vfs_path), "read", id_gen),
             kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
         },
     );
 
     let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
     let prelude_src = include_str!("__prelude.gdn");
-    let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
 
     let mut values = FxHashMap::default();
 
@@ -752,27 +747,18 @@ fn fresh_prelude(
         abs_path: prelude_path,
         external_syms: FxHashSet::default(),
         values,
-        types: built_in_types(builtins_vfs_path, id_gen),
+        types: built_in_types(prelude_vfs_path, id_gen),
     };
 
-    let (prelude_items, errors) = parse_toplevel_items(&prelude_vfs_path, prelude_src, id_gen);
+    let (prelude_items, errors) = parse_toplevel_items(prelude_vfs_path, prelude_src, id_gen);
     assert!(
         errors.is_empty(),
         "Prelude should be syntactically legal: {}",
         errors.first().unwrap().position().as_ide_string()
     );
 
-    let (builtin_items, errors) = parse_toplevel_items(builtins_vfs_path, builtins_src, id_gen);
-    assert!(
-        errors.is_empty(),
-        "Stubs for built-ins should be syntactically legal: {}",
-        errors.first().unwrap().position().as_ide_string()
-    );
-
     let ns = Rc::new(RefCell::new(ns_info));
-
     load_toplevel_items(&prelude_items, env, ns.clone());
-    load_toplevel_items(&builtin_items, env, ns.clone());
 
     if let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
         text: "Path".into(),

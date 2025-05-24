@@ -1,0 +1,1 @@
+external fun defined_in_foo() {}

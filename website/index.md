@@ -1,4 +1,4 @@
-# 🌻 The Garden Programming Language
+# The Garden Programming Language
 
 Garden is an experimental programming language focused on interactive
 tooling.

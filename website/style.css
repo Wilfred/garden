@@ -5,11 +5,31 @@ body {
   margin: 24px auto 52px auto;
   font-size: 18px;
   background-color: #ebeee3;
-  font-family: "Ubuntu";
+  font-family: "Lora", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
 
 p {
   font-family: "Lora";
+}
+
+h1,
+h2,
+h3,
+h4,
+h6,
+h6,
+header > a {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
+}
+
+header > a {
+  padding-left: 16px;
+  color: #ebeee3;
+  font-size: 36px;
 }
 
 pre,

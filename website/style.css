@@ -55,6 +55,7 @@ pre.block {
 .container {
   margin-top: 86px;
   margin-left: 10px;
+  margin-right: 10px;
 }
 header {
   display: flex;

@@ -1,4 +1,5 @@
 import "__fs.gdn" as fs
+import "__garden.gdn" as garden
 import "./markdown.gdn"
 
 // A list of all the files in `website_dir` that have a .md extension.

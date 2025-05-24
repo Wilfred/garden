@@ -1,3 +1,5 @@
+import "__garden.gdn" as garden
+
 {
   dbg(garden::check_snippet("True"))
 }

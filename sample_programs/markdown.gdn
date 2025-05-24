@@ -1,3 +1,5 @@
+import "__garden.gdn" as garden
+
 enum MarkdownPart {
   Heading(String),
   Paragraph(String),

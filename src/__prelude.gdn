@@ -1,5 +1,3 @@
-import "__garden.gdn" as garden
-
 // Basic types.
 
 // The boolean type. This type represents when something is true or

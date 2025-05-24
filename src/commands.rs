@@ -28,6 +28,7 @@ pub(crate) enum Command {
     Help(Option<String>),
     Functions,
     Locals,
+    File(Option<String>),
     ForgetLocal(Option<String>),
     Forget(Option<String>),
     FrameValues,
@@ -72,6 +73,7 @@ impl Display for Command {
         let name = match self {
             Command::Abort => ":abort",
             Command::Doc(_) => ":doc",
+            Command::File(_) => ":file",
             Command::ForgetLocal(_) => ":forget_local",
             Command::Forget(_) => ":forget",
             Command::FrameStatements => ":fstmts",
@@ -110,6 +112,7 @@ impl Command {
         match command_name.to_lowercase().as_str() {
             ":abort" => Ok(Command::Abort),
             ":doc" => Ok(Command::Doc(args)),
+            ":file" => Ok(Command::File(args)),
             ":forget" => Ok(Command::Forget(args)),
             ":forget_local" => Ok(Command::ForgetLocal(args)),
             ":fstmts" => Ok(Command::FrameStatements),
@@ -566,6 +569,24 @@ pub(crate) fn run_command<T: Write>(
                 write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name)?;
             }
         }
+        Command::File(name) => match name {
+            Some(_) => todo!(),
+            None => {
+                let stack_frame = env
+                    .stack
+                    .0
+                    .last_mut()
+                    .expect("Should always have at least one frame");
+
+                let ns = stack_frame.namespace.borrow();
+                write!(
+                    buf,
+                    "Current namespace is {} (absolute path {}).",
+                    ns.src_path.display(),
+                    ns.abs_path.display()
+                )?;
+            }
+        },
         Command::ForgetLocal(name) => {
             if let Some(name) = name {
                 let stack_frame = env
@@ -892,6 +913,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Abort => "The :abort command stops evaluation of the current expression, brining you back to the toplevel.\n\nExample usage:\n\n:abort",
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
+        Command::File(_) => todo!(),
         // TODO: add a more comprehensive example of :forget_local usage.
         Command::ForgetLocal(_) => "The :forget_local command undefines the local variable in the current stack frame.\n\nExample:\n\n:forget_local foo",
         Command::Forget(_) => "The :forget command undefines a function or enum value.\n\nExample:\n\n:forget function_name",

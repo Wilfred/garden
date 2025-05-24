@@ -26,6 +26,9 @@ and syntax highlighting the source code.
 Added a `:globals` command to view all values in the current
 namespace.
 
+Added `:file` command to view which file namespace the current stack
+frame is in.
+
 ### CLI
 
 `garden test` can now take multiple file arguments.

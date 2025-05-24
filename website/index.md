@@ -4,8 +4,12 @@ Garden is an experimental programming language focused on interactive
 tooling.
 
 ```
-{
-  print("hello world")
+fun fib(i: Int): Int {
+  if i < 2 {
+    return 1
+  }
+  
+  fib(i - 1) + fib(i - 2)
 }
 ```
 

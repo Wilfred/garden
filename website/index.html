@@ -27,8 +27,12 @@
     <div class="container"><h1>The Garden Programming Language</h1>
 <p>Garden is an experimental programming language focused on interactive
 tooling.</p>
-<pre><code>{
-  print(<span class="string">"hello world"</span>)
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> fib(i: <a href="./type:Int.html"><span class="type">Int</span></a>): <a href="./type:Int.html"><span class="type">Int</span></a> {
+  <a href="./keyword:if.html"><span class="keyword">if</span></a> i &lt; 2 {
+    <a href="./keyword:return.html"><span class="keyword">return</span></a> 1
+  }
+
+  fib(i - 1) + fib(i - 2)
 }</code></pre>
 <h2>Taking REPLs Seriously</h2>
 <p>Common Lisp and Smalltalk have a superpower: you can modify running

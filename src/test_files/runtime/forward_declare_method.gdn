@@ -1,0 +1,12 @@
+fun (this: MyStruct) do_stuff(): Unit {
+  print("hello world")
+}
+
+struct MyStruct {}
+
+{
+  MyStruct{}.do_stuff()
+}
+
+// args: run
+// expected stdout: hello world

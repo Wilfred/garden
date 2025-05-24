@@ -19,7 +19,3 @@ external fun visible_everywhere() {}
 
 `internal` is reserved for declaring a function that can be used
 from any file in the current library, but not outside the library.
-
-Implementation note: currently all functions and methods are visible
-in all files, although `garden check` will use visibility modifiers to
-warn on unused functions that aren't declared `external`.

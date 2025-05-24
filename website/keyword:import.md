@@ -19,4 +19,3 @@ fun bar() {
   defined_in_foo()
 }
 ```
-

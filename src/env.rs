@@ -664,7 +664,6 @@ fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceI
 // TODO: this shouldn't take an Env, we're in the process of constructing it.
 fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
-    let vfs = &mut env.vfs;
 
     let mut path_methods = FxHashMap::default();
 

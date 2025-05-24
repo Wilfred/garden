@@ -106,7 +106,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     let mut rl = new_editor();
     let mut is_stopped = false;
     let mut last_src = String::new();
-    let path = PathBuf::from("__user");
+    let path = PathBuf::from("__user.gdn");
 
     loop {
         println!();

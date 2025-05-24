@@ -128,14 +128,14 @@ impl Env {
         let mut namespaces = FxHashMap::default();
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
-            src_path: Rc::new(PathBuf::from("__user")),
+            src_path: Rc::new(PathBuf::from("__user.gdn")),
             abs_path: Rc::new(PathBuf::from("__user.gdn")),
             values: FxHashMap::default(),
             external_syms: FxHashSet::default(),
             types: FxHashMap::default(),
         }));
 
-        namespaces.insert(PathBuf::from("__user"), user_namespace.clone());
+        namespaces.insert(PathBuf::from("__user.gdn"), user_namespace.clone());
 
         let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
         let prelude_src = include_str!("__prelude.gdn");

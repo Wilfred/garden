@@ -311,7 +311,15 @@ fn load_toplevel_items_(
 
     let mut enum_infos: Vec<&EnumInfo> = vec![];
 
-    for item in items {
+    // Load types first, so we known which types are defined when we
+    // start loading methods.
+    let mut items = items.to_vec();
+    items.sort_by_key(|item| match item {
+        ToplevelItem::Enum(_) | ToplevelItem::Struct(_) => 0,
+        _ => 1,
+    });
+
+    for item in &items {
         match &item {
             ToplevelItem::Fun(name_symbol, fun_info, visibility) => {
                 if is_builtin_stub(fun_info) {

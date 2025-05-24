@@ -1,0 +1,9 @@
+fun (this: MyStruct) do_stuff(): Unit {}
+
+struct MyStruct {}
+
+{
+  MyStruct{}.do_stuff()
+}
+
+// args: check

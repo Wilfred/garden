@@ -26,7 +26,7 @@
 
     <div class="container"><h1><code>match</code> keyword</h1>
 <p><code>match</code> evaluates code depending on a value of an enum.</p>
-<pre class="block fixed"><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> say_hello(name: <a href="./type:Option.html"><span class="type">Option</span></a>&lt;<a href="./type:String.html"><span class="type">String</span></a>&gt;) {
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> say_hello(name: <a href="./type:Option.html"><span class="type">Option</span></a>&lt;<a href="./type:String.html"><span class="type">String</span></a>&gt;) {
   <a href="./keyword:match.html"><span class="keyword">match</span></a> name {
     <span class="type">Some</span>(n) =&gt; println(<span class="string">"Hello " </span>^ n)
     <span class="type">None</span> =&gt; println(<span class="string">"Hello there!"</span>)
@@ -36,7 +36,7 @@
 say_hello(<span class="type">None</span>) <span class="comment">// Hello there!</span>
 say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>)) <span class="comment">// Hello Wilfred</span></code></pre>
 <p>If you want to ignore some cases, use <code>_</code>.</p>
-<pre class="block fixed"><code><a href="./keyword:enum.html"><span class="keyword">enum</span></a> <span class="type">Flavor</span> {
+<pre><code><a href="./keyword:enum.html"><span class="keyword">enum</span></a> <span class="type">Flavor</span> {
   <span class="type">Chocolate</span>,
   <span class="type">Strawberry</span>,
   <span class="type">Vanilla</span>,
@@ -52,7 +52,7 @@ say_hello(<span class="type">Some</span>(<span class="string">"Wilfred"</span>))
   }
 }</code></pre>
 <p><code>match</code> also supports destructuring of tuples.</p>
-<pre class="block fixed"><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> describe_email(address: <a href="./type:String.html"><span class="type">String</span></a>) {
+<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> describe_email(address: <a href="./type:String.html"><span class="type">String</span></a>) {
   <a href="./keyword:match.html"><span class="keyword">match</span></a> address.split_once(<span class="string">"@"</span>) {
     <span class="type">Some</span>((_, domain)) =&gt; {
       println(<span class="string">"Looks like an email at domain " </span>^ domain)

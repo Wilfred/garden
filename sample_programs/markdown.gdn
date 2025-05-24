@@ -134,7 +134,7 @@ fun render_markdown_code(snippet: Snippet): String {
   if (snippet.language == "") || (snippet.language.starts_with("garden")) {
     render_markdown_garden_code(snippet)
   } else {
-    ("<pre class=\"block fixed\"><code>" ^ escape_angle_brackets(snippet.content)) ^ "</code></pre>"
+    ("<pre><code>" ^ escape_angle_brackets(snippet.content)) ^ "</code></pre>"
   }
 }
 
@@ -189,7 +189,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
   }
 
   let inner_src = "\n".join(rendered_lines)
-  ("<pre class=\"block fixed\"><code>" ^ inner_src) ^ "</code></pre>"
+  ("<pre><code>" ^ inner_src) ^ "</code></pre>"
 }
 
 fun escape_angle_brackets(s: String): String {
@@ -435,23 +435,23 @@ test render_backtick_in_link {
 }
 
 test render_triple_backtick {
-  assert(render_markdown("```nocheck\nfoo\nbar\n```") == "<pre class=\"block fixed\"><code>foo\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
 }
 
 test render_triple_backtick_escape_html {
-  assert(render_markdown("```nocheck\nfoo <bar>\n```") == "<pre class=\"block fixed\"><code>foo &lt;bar&gt;</code></pre>")
+  assert(render_markdown("```nocheck\nfoo <bar>\n```") == "<pre><code>foo &lt;bar&gt;</code></pre>")
 }
 
 test render_triple_backtick_blank_line {
-  assert(render_markdown("```nocheck\nfoo\n\nbar\n```") == "<pre class=\"block fixed\"><code>foo\n\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```garden nocheck\nfun foo\n```") == "<pre class=\"block fixed\"><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
+  assert(render_markdown("```garden nocheck\nfun foo\n```") == "<pre><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
 }
 
 test render_triple_backtick_comment {
-  assert(render_markdown("```garden nocheck\nfoo // bar\n```") == "<pre class=\"block fixed\"><code>foo <span class=\"comment\">// bar</span></code></pre>")
+  assert(render_markdown("```garden nocheck\nfoo // bar\n```") == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
 }
 
 test render_asterisk {

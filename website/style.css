@@ -134,3 +134,50 @@ header a {
 .type {
   color: #57269c;
 }
+
+/* Style pre like .block, but don't animate and don't modify the
+   pointer. */
+pre {
+  font-weight: 700;
+
+  border: 3px solid black;
+  border-radius: 3px;
+  padding: 8px;
+  margin: 8px 6px 10px;
+
+  position: relative;
+  top: -2px;
+  left: -2px;
+
+  z-index: 1;
+}
+
+pre::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  background: var(--block-shadow-color);
+  border: 3px solid var(--block-text-color);
+  border-radius: 3px;
+  height: calc(100% + 6px);
+  width: calc(100% + 6px);
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 0;
+  z-index: -2;
+}
+
+pre::before {
+  content: "";
+  background: #ebeee3;
+  border: 3px solid var(--block-text-color);
+  border-radius: 3px;
+  box-sizing: border-box;
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  height: calc(100% + 6px);
+  width: calc(100% + 6px);
+  z-index: -1;
+}

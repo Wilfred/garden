@@ -20,13 +20,15 @@ h2,
 h3,
 h4,
 h6,
-h6,
-header > a {
+h6 {
   font-family: "Protest Riot", sans-serif;
   font-weight: 400;
+  margin-bottom: 0;
 }
 
 header > a {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
   padding-left: 16px;
   color: #ebeee3;
   font-size: 36px;

@@ -28,9 +28,17 @@
 <p><code>fun</code> defines functions and methods.</p>
 <pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> add_one(x: <a href="./type:Int.html"><span class="type">Int</span></a>): <a href="./type:Int.html"><span class="type">Int</span></a> {
   x + 1
+}
+
+<a href="./keyword:test.html"><span class="keyword">test</span></a> two_add_one {
+  <a href="./keyword:assert.html"><span class="keyword">assert</span></a>(add_one(2) == 3)
 }</code></pre>
 <pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> (this: <a href="./type:Int.html"><span class="type">Int</span></a>) increment(): <a href="./type:Int.html"><span class="type">Int</span></a> {
   this + 1
+}
+
+<a href="./keyword:test.html"><span class="keyword">test</span></a> two_increment {
+  <a href="./keyword:assert.html"><span class="keyword">assert</span></a>(2.increment() == 3)
 }</code></pre></div>
   </body>
 </html>

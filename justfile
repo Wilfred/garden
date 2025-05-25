@@ -2,7 +2,7 @@ default:
     @just --list
 
 watch:
-    REGENERATE=y cargo watch -x b -x t
+    REGENERATE=y GDN_NO_ABS_PATH=y cargo watch -x b -x t
 
 tag_then_bump:
     #!/bin/bash

@@ -14,7 +14,7 @@ use crate::parser::ast::{
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{to_abs_path, Vfs};
 use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
 use crate::values::{BuiltinFunctionKind, Value, Value_};
 use crate::VfsPathBuf;
@@ -817,5 +817,5 @@ fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
         }
     }
 
-    abs_path.to_owned()
+    to_abs_path(abs_path)
 }

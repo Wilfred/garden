@@ -1,6 +1,7 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use normalize_path::NormalizePath as _;
 use rustc_hash::FxHashMap;
 
 use super::position::Position;
@@ -48,4 +49,19 @@ impl Vfs {
         let whole_file = self.file_src(&pos.vfs_path)?;
         Some(&whole_file[pos.start_offset..pos.end_offset])
     }
+}
+
+pub(crate) fn to_abs_path(path: &Path) -> PathBuf {
+    let current_dir: PathBuf = match std::env::current_dir() {
+        Ok(p) => {
+            if std::env::var("GDN_NO_ABS_PATH").is_ok() {
+                PathBuf::from("GDN_ABS_PATH_REPLACED")
+            } else {
+                p
+            }
+        }
+        Err(_) => "/".into(),
+    };
+
+    current_dir.join(path).normalize()
 }

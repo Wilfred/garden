@@ -15,7 +15,7 @@ use crate::env::Env;
 use crate::eval::{eval_exprs, Session};
 use crate::garden_type::Type;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
-use crate::parser::vfs::{to_project_relative, Vfs};
+use crate::parser::vfs::Vfs;
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};

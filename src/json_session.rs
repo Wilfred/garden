@@ -25,6 +25,7 @@ use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
 use crate::parser::vfs::Vfs;
 use crate::parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
+use crate::to_abs_path;
 
 type RequestId = usize;
 
@@ -145,7 +146,9 @@ fn handle_load_request(
     end_offset: usize,
     env: &mut Env,
 ) -> Response {
-    let vfs_path = env.vfs.insert(Rc::new(path.to_owned()), input.to_owned());
+    let abs_path = to_abs_path(path);
+
+    let vfs_path = env.vfs.insert(Rc::new(abs_path.clone()), input.to_owned());
     let (items, errors) =
         parse_toplevel_items_from_span(&vfs_path, input, &mut env.id_gen, offset, end_offset);
 
@@ -153,7 +156,7 @@ fn handle_load_request(
         return as_error_response(errors, &env.vfs, &env.project_root);
     }
 
-    let ns = env.get_or_create_namespace(path);
+    let ns = env.get_or_create_namespace(&abs_path);
     let (diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns);
 
     let summary = if new_syms.is_empty() {
@@ -246,7 +249,7 @@ fn handle_eval_up_to_request(
     id: Option<RequestId>,
 ) -> Response {
     let path = match path {
-        Some(p) => p.to_owned(),
+        Some(p) => to_abs_path(p),
         None => {
             let stack_frame = env.stack.0.last().unwrap();
             stack_frame.namespace.borrow().abs_path.to_path_buf()
@@ -600,7 +603,7 @@ fn handle_run_eval_request(
     id: Option<RequestId>,
 ) -> Response {
     let path = match path {
-        Some(p) => p.to_owned(),
+        Some(p) => to_abs_path(p),
         None => {
             let stack_frame = env.stack.0.last().unwrap();
             stack_frame.namespace.borrow().abs_path.to_path_buf()

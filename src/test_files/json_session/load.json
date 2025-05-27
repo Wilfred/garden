@@ -1,0 +1,17 @@
+{ "method": "load", "input": "fun foo() {}", "path": "x.gdn", "offset": 0, "end_offset": 12 }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "Loaded foo."
+//       },
+//       "stack_frame_name": "TOP"
+//     }
+//   },
+//   "position": null
+// }
+

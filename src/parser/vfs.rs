@@ -25,12 +25,24 @@ pub(crate) struct Vfs {
 
 impl Vfs {
     pub(crate) fn singleton(path: PathBuf, src: String) -> (Self, VfsPathBuf) {
+        debug_assert!(
+            path.is_absolute() || path.display().to_string().starts_with("__"),
+            "path {} was not absolute or a built-in file",
+            path.display()
+        );
+
         let mut vfs = Self::default();
         let vfs_path = vfs.insert(Rc::new(path.clone()), src);
         (vfs, vfs_path)
     }
 
     pub(crate) fn insert(&mut self, path: Rc<PathBuf>, src: String) -> VfsPathBuf {
+        debug_assert!(
+            path.is_absolute() || path.display().to_string().starts_with("__"),
+            "path {} was not absolute or a built-in file",
+            path.display()
+        );
+
         let srcs = self.file_srcs.entry(path.to_path_buf()).or_default();
         let vfs_id = VfsId(srcs.len() as u32);
         srcs.push(src);
@@ -53,13 +65,7 @@ impl Vfs {
 
 pub(crate) fn to_abs_path(path: &Path) -> PathBuf {
     let current_dir: PathBuf = match std::env::current_dir() {
-        Ok(p) => {
-            if std::env::var("GDN_NO_ABS_PATH").is_ok() {
-                PathBuf::from("GDN_ABS_PATH_REPLACED")
-            } else {
-                p
-            }
-        }
+        Ok(p) => p,
         Err(_) => "/".into(),
     };
 

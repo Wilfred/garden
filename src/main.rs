@@ -69,7 +69,7 @@ use eval::{eval_up_to, EvalUpToErr, StdoutMode};
 use go_to_def::print_pos;
 use hover::show_type;
 use json_session::{handle_request, start_eval_thread};
-use parser::vfs::{Vfs, VfsPathBuf};
+use parser::vfs::{to_abs_path, Vfs, VfsPathBuf};
 use test_runner::{run_sandboxed_tests_in_file, run_tests_in_files};
 
 use crate::diagnostics::{format_diagnostic, format_error_with_stack, Severity};
@@ -214,8 +214,9 @@ fn main() {
         CliCommands::Repl => cli_session::repl(interrupted),
         CliCommands::Json => json_session::json_session(interrupted),
         CliCommands::Run { path, arguments } => {
-            let src = read_utf8_or_die(&path);
-            run_file(&src, &path, &arguments, interrupted)
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            run_file(&src, &abs_path, &arguments, interrupted)
         }
         CliCommands::JsonExample => {
             println!("{}", json_session::sample_request_as_json());
@@ -225,69 +226,78 @@ fn main() {
             json,
             override_path,
         } => {
-            let src = read_utf8_or_die(&path);
-            let src_path = override_path.unwrap_or(path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
             syntax_check::check(&src_path, &src, json)
         }
         CliCommands::Test { paths } => {
             let mut paths_and_srcs = vec![];
             for path in paths.into_iter() {
-                let src = read_utf8_or_die(&path);
-                paths_and_srcs.push((src, path));
+                let abs_path = to_abs_path(&path);
+                let src = read_utf8_or_die(&abs_path);
+                paths_and_srcs.push((src, abs_path));
             }
 
             run_tests_in_files(&paths_and_srcs, interrupted)
         }
         CliCommands::SandboxedTest { path, offset } => {
-            let src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            run_sandboxed_tests_in_file(&src, &path, offset, interrupted)
+            run_sandboxed_tests_in_file(&src, &abs_path, offset, interrupted)
         }
         CliCommands::TestEvalUpTo { path } => {
-            let src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
             let offset = caret_finder::find_caret_offset(&src)
                 .expect("Could not find comment containing `^` in source.");
-            test_eval_up_to(&src, &path, offset, interrupted);
+            test_eval_up_to(&src, &abs_path, offset, interrupted);
         }
         CliCommands::DumpAst { path } => {
-            let src = read_utf8_or_die(&path);
-            dump_ast(&src, &path)
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
+            dump_ast(&src, &abs_path)
         }
         CliCommands::ShowType { path, offset } => {
-            let src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            show_type(&src, &path, offset)
+            show_type(&src, &abs_path, offset)
         }
         CliCommands::DefinitionPosition {
             path,
             offset,
             override_path,
         } => {
-            let src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
 
-            let src_path = override_path.unwrap_or(path);
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
             print_pos(&src, &src_path, offset)
         }
         CliCommands::Complete { offset, path } => {
-            let src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
             let offset = offset.unwrap_or_else(|| {
                 caret_finder::find_caret_offset(&src)
                     .expect("Could not find comment containing `^` in source.")
             });
-            completions::complete(&src, &path, offset);
+            completions::complete(&src, &abs_path, offset);
         }
         CliCommands::TestJson { path } => {
-            let src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let src = read_utf8_or_die(&abs_path);
 
             let session = Session {
                 interrupted: Arc::clone(&interrupted),
@@ -318,7 +328,8 @@ fn main() {
             offset,
             override_path,
         } => {
-            let mut src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
 
             let offset = offset.unwrap_or_else(|| {
                 src = remove_testing_footer(&src);
@@ -329,7 +340,7 @@ fn main() {
                 offset
             });
 
-            let src_path = override_path.unwrap_or(path);
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
             rename::rename(&src, &src_path, offset, &new_name)
         }
         CliCommands::ExtractVariable {
@@ -339,7 +350,8 @@ fn main() {
             override_path,
             name,
         } => {
-            let mut src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
             let (offset, end_offset) = match (offset, end_offset) {
                 (Some(offset), Some(end_offset)) => (offset, end_offset),
                 _ => {
@@ -352,7 +364,7 @@ fn main() {
                 }
             };
 
-            let src_path = override_path.unwrap_or(path);
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
             extract_variable::extract_variable(&src, &src_path, offset, end_offset, &name);
         }
         CliCommands::ExtractFunction {
@@ -362,7 +374,8 @@ fn main() {
             override_path,
             name,
         } => {
-            let mut src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
             let (offset, end_offset) = match (offset, end_offset) {
                 (Some(offset), Some(end_offset)) => (offset, end_offset),
                 _ => {
@@ -375,7 +388,7 @@ fn main() {
                 }
             };
 
-            let src_path = override_path.unwrap_or(path);
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
             extract_function::extract_function(&src, &src_path, offset, end_offset, &name);
         }
         CliCommands::Destructure {
@@ -384,7 +397,8 @@ fn main() {
             end_offset,
             override_path,
         } => {
-            let mut src = read_utf8_or_die(&path);
+            let abs_path = to_abs_path(&path);
+            let mut src = read_utf8_or_die(&abs_path);
             let (offset, end_offset) = match (offset, end_offset) {
                 (Some(offset), Some(end_offset)) => (offset, end_offset),
                 _ => {
@@ -397,7 +411,7 @@ fn main() {
                 }
             };
 
-            let src_path = override_path.unwrap_or(path);
+            let src_path = to_abs_path(&override_path.unwrap_or(path));
             destructure::destructure(&src, &src_path, offset, end_offset);
         }
     }
@@ -497,6 +511,8 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
 }
 
 fn dump_ast(src: &str, path: &Path) {
+    let project_root = std::env::current_dir().ok();
+
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
     let (items, errors) = parse_toplevel_items(&vfs_path, src, &mut id_gen);
@@ -513,7 +529,7 @@ fn dump_ast(src: &str, path: &Path) {
                     &format_diagnostic(
                         &ErrorMessage(vec![Text(format!("Parse error: {}", e.as_string()))]),
                         &position,
-                        None,
+                        project_root.as_ref(),
                         Severity::Error,
                         &[],
                         &vfs,
@@ -606,13 +622,25 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
         Err(EvalError::ResumableError(position, msg)) => {
             eprintln!(
                 "{}",
-                &format_error_with_stack(&msg, &position, &env.stack.0, &env.vfs)
+                &format_error_with_stack(
+                    &msg,
+                    &position,
+                    &env.stack.0,
+                    &env.vfs,
+                    &env.project_root
+                )
             );
         }
         Err(EvalError::AssertionFailed(position, msg)) => {
             eprintln!(
                 "{}",
-                &format_error_with_stack(&msg, &position, &env.stack.0, &env.vfs)
+                &format_error_with_stack(
+                    &msg,
+                    &position,
+                    &env.stack.0,
+                    &env.vfs,
+                    &env.project_root
+                )
             );
         }
         Err(EvalError::Interrupted) => {

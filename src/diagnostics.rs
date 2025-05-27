@@ -38,6 +38,7 @@ pub(crate) fn format_error_with_stack(
     position: &Position,
     stack: &[StackFrame],
     vfs: &Vfs,
+    project_root: &PathBuf,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -64,7 +65,7 @@ pub(crate) fn format_error_with_stack(
         position,
         vfs,
         Some(&top_stack.enclosing_name),
-        None,
+        Some(project_root),
         true,
         None,
         true,
@@ -79,7 +80,7 @@ pub(crate) fn format_error_with_stack(
                 pos,
                 vfs,
                 Some(&caller_stack_frame.enclosing_name),
-                None,
+                Some(project_root),
                 false,
                 None,
                 true,

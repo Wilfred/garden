@@ -1,11 +1,12 @@
 use std::path::Path;
+use std::rc::Rc;
 
 use crate::checks::type_checker::check_types;
 use crate::env::Env;
 use crate::eval::load_toplevel_items;
 use crate::parser::ast::IdGenerator;
 use crate::parser::parse_toplevel_items;
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::pos_to_id::find_item_at;
 
 /// Print the position of the definition associated with the
@@ -26,7 +27,10 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
 
     for id in ids_at_query_pos.iter().rev() {
         if let Some(pos) = summary.id_to_def_pos.get(&id.id()) {
-            println!("{}", serde_json::to_string(pos).unwrap());
+            let mut pos = pos.clone();
+            pos.path = Rc::new(to_project_relative(&pos.path, &env.project_root));
+
+            println!("{}", serde_json::to_string(&pos).unwrap());
             return;
         }
     }

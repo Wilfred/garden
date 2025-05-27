@@ -3044,7 +3044,7 @@ fn eval_builtin_call(
 }
 
 fn check_snippet(src: &str, env: &Env) -> Value {
-    let path = PathBuf::from("snippet.gdn");
+    let path = PathBuf::from("__snippet.gdn");
 
     let mut check_env = env
         .initial_state

@@ -336,7 +336,8 @@ fn handle_eval_up_to_request(
 fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     match e {
         EvalError::ResumableError(position, e) => {
-            let stack = format_error_with_stack(&e, &position, &env.stack.0, &env.vfs);
+            let stack =
+                format_error_with_stack(&e, &position, &env.stack.0, &env.vfs, &env.project_root);
 
             Response {
                 kind: ResponseKind::Evaluate {
@@ -353,7 +354,13 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             }
         }
         EvalError::AssertionFailed(position, message) => {
-            let stack = format_error_with_stack(&message, &position, &env.stack.0, &env.vfs);
+            let stack = format_error_with_stack(
+                &message,
+                &position,
+                &env.stack.0,
+                &env.vfs,
+                &env.project_root,
+            );
 
             Response {
                 kind: ResponseKind::Evaluate {

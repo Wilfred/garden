@@ -213,13 +213,22 @@ repeated parentheses/brackets on the same line."
               nil t)
         (let* ((test-name (match-string 1))
                (status (gethash test-name garden--test-states))
+               (err-msg nil)
                (color
                 (cond
                  ((string= status "passed") 'garden-test-pass-face)
                  ((string= status "sandboxed") 'garden-test-sandboxed-face)
-                 (t 'garden-test-failed-face))))
+                 (t
+                  (setq err-msg status)
+                  'garden-test-failed-face))))
           (when status
-            (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face color)))))))
+            (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face color)
+            ;; Show the test failure information when hovering over a
+            ;; test name with the mouse.
+            ;;
+            ;; TODO: support the cursor too.
+            (when err-msg
+              (put-text-property (match-beginning 1) (match-end 1) 'help-echo err-msg))))))))
 
 (define-minor-mode garden-speculative-mode
   "Speculatively run tests when point is at the beginning of a definition."

@@ -23,7 +23,7 @@ use crate::eval::{
 };
 use crate::parser::ast::IdGenerator;
 use crate::parser::position::Position;
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::parser::{parse_toplevel_items, parse_toplevel_items_from_span, ParseError};
 use crate::to_abs_path;
 
@@ -159,12 +159,21 @@ fn handle_load_request(
     let ns = env.get_or_create_namespace(&abs_path);
     let (diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns);
 
+    let relative_path = to_project_relative(&abs_path, &env.project_root);
     let summary = if new_syms.is_empty() {
         "".to_owned()
     } else if new_syms.len() == 1 {
-        format!("Loaded {}.", new_syms[0].text)
+        format!(
+            "Loaded {} in {}.",
+            new_syms[0].text,
+            relative_path.display()
+        )
     } else {
-        format!("Loaded {} definitions.", new_syms.len())
+        format!(
+            "Loaded {} definitions in {}.",
+            new_syms.len(),
+            relative_path.display()
+        )
     };
 
     Response {
@@ -639,12 +648,18 @@ fn handle_run_eval_request(
 
     match eval_toplevel_exprs_then_stop(&items, env, session, ns) {
         Ok(value) => {
+            let relative_path = to_project_relative(&path, &env.project_root);
+
             let definition_summary = if new_syms.is_empty() {
                 "".to_owned()
             } else if new_syms.len() == 1 {
-                format!("Loaded {}", new_syms[0].text)
+                format!("Loaded {} in {}", new_syms[0].text, relative_path.display())
             } else {
-                format!("Loaded {} definitions", new_syms.len())
+                format!(
+                    "Loaded {} definitions in {}",
+                    new_syms.len(),
+                    relative_path.display()
+                )
             };
 
             let total_tests = test_summary.tests.len();

@@ -230,7 +230,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
             Err(EvalError::ForbiddenInSandbox(pos)) => {
                 println!(
                     "{}: This call is forbidden in a sandbox.",
-                    pos.as_ide_string()
+                    pos.as_ide_string(&env.project_root)
                 );
                 is_stopped = false;
             }

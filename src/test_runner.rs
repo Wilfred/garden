@@ -238,7 +238,7 @@ pub(crate) fn run_tests_in_files(
                 (Some(pos), Some(msg)) => {
                     println!(
                         " {}\n  {}",
-                        pos.as_ide_string(),
+                        pos.as_ide_string(&env.project_root),
                         if use_color {
                             msg.as_styled_string()
                         } else {
@@ -246,7 +246,7 @@ pub(crate) fn run_tests_in_files(
                         }
                     )
                 }
-                (Some(pos), None) => println!(" {}", pos.as_ide_string()),
+                (Some(pos), None) => println!(" {}", pos.as_ide_string(&env.project_root)),
                 _ => println!(),
             }
         }

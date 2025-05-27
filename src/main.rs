@@ -440,7 +440,11 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     }
 
     match eval_up_to(&vfs_path, &mut env, &session, &items, offset) {
-        Ok((v, pos)) => println!("{}: {}", pos.as_ide_string(), v.display(&env)),
+        Ok((v, pos)) => println!(
+            "{}: {}",
+            pos.as_ide_string(&env.project_root),
+            v.display(&env)
+        ),
         Err(EvalUpToErr::EvalError(e)) => match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
             EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
@@ -615,12 +619,15 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
             eprintln!("Interrupted");
         }
         Err(EvalError::ReachedTickLimit(position)) => {
-            eprintln!("{}: Reached the tick limit.", position.as_ide_string());
+            eprintln!(
+                "{}: Reached the tick limit.",
+                position.as_ide_string(&env.project_root)
+            );
         }
         Err(EvalError::ForbiddenInSandbox(position)) => {
             eprintln!(
                 "{}: Tried to execute unsafe code in sandboxed mode.",
-                position.as_ide_string()
+                position.as_ide_string(&env.project_root)
             );
         }
     }

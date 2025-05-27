@@ -1,6 +1,6 @@
 use std::fmt::Display;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::Duration;
 
@@ -267,15 +267,15 @@ fn describe_type(type_: &TypeDef) -> String {
     }
 }
 
-fn describe_fun(value: &Value) -> Option<String> {
+fn describe_fun(value: &Value, project_root: &Path) -> Option<String> {
     match value.as_ref() {
         Value_::Fun {
             name_sym, fun_info, ..
-        } => Some(format_fun_info(fun_info, name_sym, None)),
+        } => Some(format_fun_info(fun_info, name_sym, None, project_root)),
         Value_::BuiltinFunction(_kind, fun_info, _) => {
             if let Some(fun_info) = fun_info {
                 if let Some(fun_name) = &fun_info.name_sym {
-                    return Some(format_fun_info(fun_info, fun_name, None));
+                    return Some(format_fun_info(fun_info, fun_name, None, project_root));
                 }
             }
 
@@ -290,6 +290,7 @@ fn format_fun_info(
     fun_info: &ast::FunInfo,
     name_symbol: &ast::Symbol,
     recv_hint: Option<&TypeHint>,
+    project_root: &Path,
 ) -> String {
     let mut res = String::new();
     if let Some(doc_comment) = &fun_info.doc_comment {
@@ -300,7 +301,7 @@ fn format_fun_info(
     if let Some(name_symbol) = &fun_info.name_sym {
         res.push_str(&format!(
             "// Defined in {}\n",
-            name_symbol.position.as_ide_string()
+            name_symbol.position.as_ide_string(project_root)
         ));
     }
     res.push_str(&format_signature(fun_info, name_symbol, recv_hint));
@@ -863,7 +864,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
             }) {
                 Ok((
                     format!("Method `{method_name}`"),
-                    format_method_info(method_info),
+                    format_method_info(method_info, &env.project_root),
                 ))
             } else {
                 Err(format!("No method named `{method_name}` on `{type_name}`."))
@@ -880,7 +881,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         text: name.to_owned(),
     }) {
         // TODO: Ideally we'd print both values and type if both are defined.
-        match describe_fun(value) {
+        match describe_fun(value, &env.project_root) {
             Some(description) => Ok((format!("Function `{name}`"), Some(description))),
             None => Err(format!("`{name}` is not a function.")),
         }
@@ -889,13 +890,20 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
     }
 }
 
-fn format_method_info(method_info: &ast::MethodInfo) -> Option<String> {
+fn format_method_info(method_info: &ast::MethodInfo, project_root: &Path) -> Option<String> {
     let fun_info = match &method_info.kind {
         MethodKind::BuiltinMethod(_, fun_info) => fun_info.as_ref(),
         MethodKind::UserDefinedMethod(fun_info) => Some(fun_info),
     };
 
-    fun_info.map(|fi| format_fun_info(fi, &method_info.name_sym, Some(&method_info.receiver_hint)))
+    fun_info.map(|fi| {
+        format_fun_info(
+            fi,
+            &method_info.name_sym,
+            Some(&method_info.receiver_hint),
+            project_root,
+        )
+    })
 }
 
 fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {
@@ -945,7 +953,7 @@ pub(crate) fn print_stack<T: Write>(buf: &mut T, env: &Env) {
     for (i, stack_frame) in env.stack.0.iter().rev().enumerate() {
         let name = &stack_frame.enclosing_name;
         let formatted_pos = match &stack_frame.caller_pos {
-            Some(pos) => format!("{} ", pos.as_ide_string()),
+            Some(pos) => format!("{} ", pos.as_ide_string(&env.project_root)),
             None => "".to_owned(),
         };
 

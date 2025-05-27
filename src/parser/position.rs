@@ -1,9 +1,10 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use serde::Serialize;
 
 use crate::parser::lex::Token;
+use crate::parser::vfs::to_project_relative;
 
 use super::vfs::VfsPathBuf;
 
@@ -92,10 +93,12 @@ impl Position {
     }
 
     /// Format this position as a human-friendly string, e.g. "foo.gdn:123".
-    pub(crate) fn as_ide_string(&self) -> String {
+    pub(crate) fn as_ide_string(&self, project_root: &Path) -> String {
+        let path = to_project_relative(&self.path, project_root);
+
         format!(
             "{}:{}",
-            self.path.display(),
+            path.display(),
             // 1-indexed line number
             self.line_number + 1,
         )

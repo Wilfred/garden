@@ -753,7 +753,11 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     assert!(
         errors.is_empty(),
         "Prelude should be syntactically legal: {}",
-        errors.first().unwrap().position().as_ide_string()
+        errors
+            .first()
+            .unwrap()
+            .position()
+            .as_ide_string(&env.project_root)
     );
 
     let ns = Rc::new(RefCell::new(ns_info));

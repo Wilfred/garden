@@ -1640,7 +1640,7 @@ fn eval_for_in(
             unreachable!(
                 "`for` loop index should always be an `Int`, got `{}`: {}",
                 iteree_idx.display(env),
-                outer_expr.position.as_ide_string()
+                outer_expr.position.as_ide_string(&env.project_root)
             )
         }
     };

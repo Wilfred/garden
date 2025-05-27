@@ -65,3 +65,11 @@ pub(crate) fn to_abs_path(path: &Path) -> PathBuf {
 
     current_dir.join(path).normalize()
 }
+
+pub(crate) fn to_project_relative(abs_path: &Path, project_root: &Path) -> PathBuf {
+    if let Ok(rel_path) = abs_path.strip_prefix(project_root) {
+        return rel_path.to_path_buf();
+    }
+
+    abs_path.to_path_buf()
+}

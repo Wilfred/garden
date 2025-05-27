@@ -14,7 +14,7 @@ use crate::eval::EnclosingSymbol;
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::lex::lex;
 use crate::parser::position::Position;
-use crate::parser::vfs::{Vfs, VfsId};
+use crate::parser::vfs::{to_project_relative, Vfs, VfsId};
 use crate::parser::RESERVED_WORDS;
 use crate::VfsPathBuf;
 
@@ -188,9 +188,7 @@ fn format_pos_in_fun(
 
     let mut pos_path = position.path.to_path_buf();
     if let Some(root) = project_root {
-        if let Ok(rel_path) = pos_path.strip_prefix(root) {
-            pos_path = rel_path.to_path_buf();
-        }
+        pos_path = to_project_relative(&pos_path, root);
     }
 
     let margin_width = 4;

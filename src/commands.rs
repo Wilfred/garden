@@ -15,7 +15,7 @@ use crate::env::Env;
 use crate::eval::{eval_exprs, Session};
 use crate::garden_type::Type;
 use crate::parser::ast::{self, IdGenerator, MethodKind, SymbolName, TypeHint, TypeName};
-use crate::parser::vfs::Vfs;
+use crate::parser::vfs::{to_project_relative, Vfs};
 use crate::parser::{parse_inline_expr_from_str, parse_toplevel_items, ParseError};
 use crate::types::{BuiltinType, TypeDef};
 use crate::values::{Value, Value_};
@@ -450,7 +450,7 @@ pub(crate) fn run_command<T: Write>(
 
             writeln!(buf, "\n\nPrelude namespace:\n")?;
             let ns = env.prelude_namespace.borrow();
-            write!(buf, "{}", ns.src_path.display())?;
+            write!(buf, "{}", ns.abs_path.display())?;
 
             let mut syms = ns.values.keys().collect::<Vec<_>>();
             syms.sort_by_key(|s| s.text.to_ascii_lowercase());
@@ -582,9 +582,8 @@ pub(crate) fn run_command<T: Write>(
                 let ns = stack_frame.namespace.borrow();
                 write!(
                     buf,
-                    "Current namespace is {} (absolute path {}).",
-                    ns.src_path.display(),
-                    ns.abs_path.display()
+                    "Current namespace is {}",
+                    to_project_relative(&ns.abs_path, &env.project_root).display()
                 )?;
             }
         },

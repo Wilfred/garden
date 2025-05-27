@@ -10,6 +10,7 @@ use crate::eval::BlockBindings;
 use crate::garden_type::{Type, TypeDefKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
+use crate::parser::vfs::to_project_relative;
 use crate::types::TypeDef;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -544,7 +545,7 @@ impl Value {
 
                 format!(
                     "namespace:{}{}{}",
-                    ns.src_path.display(),
+                    to_project_relative(&ns.abs_path, &env.project_root).display(),
                     if names_str.is_empty() { "" } else { "\n" },
                     names_str
                 )

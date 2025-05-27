@@ -128,7 +128,6 @@ impl Env {
         let mut namespaces = FxHashMap::default();
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
-            src_path: Rc::new(PathBuf::from("__user.gdn")),
             abs_path: Rc::new(PathBuf::from("__user.gdn")),
             values: FxHashMap::default(),
             external_syms: FxHashSet::default(),
@@ -198,7 +197,6 @@ impl Env {
         let types = built_in_types(&prelude_vfs_path, &mut id_gen);
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
-            src_path: Rc::new(PathBuf::from("__prelude.gdn")),
             abs_path: Rc::new(PathBuf::from("__prelude.gdn")),
             values: FxHashMap::default(),
             external_syms: FxHashSet::default(),
@@ -264,7 +262,6 @@ impl Env {
         }
 
         let ns = Rc::new(RefCell::new(NamespaceInfo {
-            src_path: Rc::new(abs_path.clone()),
             abs_path: Rc::new(abs_path.clone()),
             external_syms: FxHashSet::default(),
             values,
@@ -742,7 +739,6 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     }
 
     let ns_info = NamespaceInfo {
-        src_path: prelude_path.clone(),
         abs_path: prelude_path,
         external_syms: FxHashSet::default(),
         values,

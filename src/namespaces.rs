@@ -9,9 +9,6 @@ use crate::values::Value;
 
 #[derive(Debug, Clone)]
 pub(crate) struct NamespaceInfo {
-    /// The path used when we first encountered this namespace
-    /// file. For example, "./foo.gdn".
-    pub(crate) src_path: Rc<PathBuf>,
     /// The absolute path to this loaded file. Note that built-in
     /// namespaces like the prelude are still just "__prelude.gdn".
     pub(crate) abs_path: Rc<PathBuf>,

@@ -245,9 +245,13 @@ fn handle_eval_up_to_request(
     session: &Session,
     id: Option<RequestId>,
 ) -> Response {
-    let path = path
-        .cloned()
-        .unwrap_or_else(|| PathBuf::from("__json_session_unnamed__"));
+    let path = match path {
+        Some(p) => p.to_owned(),
+        None => {
+            let stack_frame = env.stack.0.last().unwrap();
+            stack_frame.namespace.borrow().abs_path.to_path_buf()
+        }
+    };
 
     let vfs_path = env.vfs.insert(Rc::new(path.clone()), src.to_owned());
     let (items, mut errors) = parse_toplevel_items(&vfs_path, src, &mut env.id_gen);
@@ -581,18 +585,13 @@ fn handle_run_request(
             }
         }
         Err(CommandParseError::NotCommandSyntax) => {
-            let path = match path {
-                Some(p) => p,
-                None => PathBuf::from("__json_session_unnamed__"),
-            };
-
-            handle_run_eval_request(&path, &input, offset, end_offset, env, session, id)
+            handle_run_eval_request(path.as_ref(), &input, offset, end_offset, env, session, id)
         }
     }
 }
 
 fn handle_run_eval_request(
-    path: &Path,
+    path: Option<&PathBuf>,
     input: &str,
     offset: Option<usize>,
     end_offset: Option<usize>,
@@ -600,7 +599,15 @@ fn handle_run_eval_request(
     session: &mut Session,
     id: Option<RequestId>,
 ) -> Response {
-    let vfs_path = env.vfs.insert(Rc::new(path.to_owned()), input.to_owned());
+    let path = match path {
+        Some(p) => p.to_owned(),
+        None => {
+            let stack_frame = env.stack.0.last().unwrap();
+            stack_frame.namespace.borrow().abs_path.to_path_buf()
+        }
+    };
+
+    let vfs_path = env.vfs.insert(Rc::new(path.clone()), input.to_owned());
     let (items, errors) = parse_toplevel_items_from_span(
         &vfs_path,
         input,
@@ -613,7 +620,7 @@ fn handle_run_eval_request(
         return as_error_response(errors, &env.vfs, &env.project_root);
     }
 
-    let ns = env.get_or_create_namespace(path);
+    let ns = env.get_or_create_namespace(&path);
     let (mut diagnostics, new_syms) = load_toplevel_items_with_stubs(&items, env, ns.clone());
     diagnostics.extend(check_toplevel_items_in_env(
         &vfs_path,

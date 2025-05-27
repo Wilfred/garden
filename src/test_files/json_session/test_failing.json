@@ -16,10 +16,10 @@
 //               "end_line_number": 0,
 //               "column": 11,
 //               "end_column": 23,
-//               "path": "__json_session_unnamed__"
+//               "path": "__user.gdn"
 //             },
 //             "message": "Error: foo",
-//             "stack": "Error: foo\n---| __json_session_unnamed__:1:12\t test foo\n1  | test foo { error(\"foo\") }\n   |            ^^^^^^^^^^^^"
+//             "stack": "Error: foo\n---| __user.gdn:1:12\t test foo\n1  | test foo { error(\"foo\") }\n   |            ^^^^^^^^^^^^"
 //           }
 //         ]
 //       },

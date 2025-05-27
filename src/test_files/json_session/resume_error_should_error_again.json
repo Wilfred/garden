@@ -17,7 +17,7 @@
 //             "end_line_number": 0,
 //             "column": 4,
 //             "end_column": 5,
-//             "path": "__json_session_unnamed__"
+//             "path": "__user.gdn"
 //           },
 //           "severity": "warning"
 //         }
@@ -44,10 +44,10 @@
 //               "end_line_number": 0,
 //               "column": 10,
 //               "end_column": 20,
-//               "path": "__json_session_unnamed__"
+//               "path": "__user.gdn"
 //             },
 //             "message": "Error: x",
-//             "stack": "Error: x\n---| __json_session_unnamed__:1:11\t fun f()\n1  | fun f() { error(\"x\") }\n   |           ^^^^^^^^^^\n---| __json_session_unnamed__:1:1\t __toplevel__\n?  | f()"
+//             "stack": "Error: x\n---| __user.gdn:1:11\t fun f()\n1  | fun f() { error(\"x\") }\n   |           ^^^^^^^^^^\n---| __user.gdn:1:1\t __toplevel__\n?  | f()"
 //           }
 //         ]
 //       },
@@ -70,7 +70,7 @@
 //               "end_line_number": 0,
 //               "column": 10,
 //               "end_column": 20,
-//               "path": "__json_session_unnamed__"
+//               "path": "__user.gdn"
 //             },
 //             "message": "Error: x",
 //             "stack": null

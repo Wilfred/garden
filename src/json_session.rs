@@ -150,7 +150,7 @@ fn handle_load_request(
         parse_toplevel_items_from_span(&vfs_path, input, &mut env.id_gen, offset, end_offset);
 
     if !errors.is_empty() {
-        return as_error_response(errors, &env.vfs);
+        return as_error_response(errors, &env.vfs, &env.project_root);
     }
 
     let ns = env.get_or_create_namespace(path);
@@ -194,7 +194,7 @@ fn eval_worker(receiver: Receiver<String>, session: Session) {
     }
 }
 
-fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs) -> Response {
+fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs, project_root: &Path) -> Response {
     let response_errors: Vec<_> = errors
         .into_iter()
         .map(|e| match e {
@@ -206,7 +206,7 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs) -> Response {
                 let stack = Some(format_diagnostic(
                     &message,
                     &position,
-                    None,
+                    project_root,
                     Severity::Error,
                     &[],
                     vfs,
@@ -262,7 +262,7 @@ fn handle_eval_up_to_request(
                 let stack = Some(format_diagnostic(
                     &message,
                     &position,
-                    None,
+                    &env.project_root,
                     Severity::Error,
                     &[],
                     &env.vfs,
@@ -610,7 +610,7 @@ fn handle_run_eval_request(
     );
 
     if !errors.is_empty() {
-        return as_error_response(errors, &env.vfs);
+        return as_error_response(errors, &env.vfs, &env.project_root);
     }
 
     let ns = env.get_or_create_namespace(path);

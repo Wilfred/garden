@@ -1,7 +1,7 @@
 //! Error and warning data types, along with logic to display them.
 
 use std::io::IsTerminal as _;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use itertools::Itertools;
@@ -38,7 +38,7 @@ pub(crate) fn format_error_with_stack(
     position: &Position,
     stack: &[StackFrame],
     vfs: &Vfs,
-    project_root: &PathBuf,
+    project_root: &Path,
 ) -> String {
     let use_color = std::io::stdout().is_terminal();
 
@@ -65,7 +65,7 @@ pub(crate) fn format_error_with_stack(
         position,
         vfs,
         Some(&top_stack.enclosing_name),
-        Some(project_root),
+        project_root,
         true,
         None,
         true,
@@ -80,7 +80,7 @@ pub(crate) fn format_error_with_stack(
                 pos,
                 vfs,
                 Some(&caller_stack_frame.enclosing_name),
-                Some(project_root),
+                project_root,
                 false,
                 None,
                 true,
@@ -95,7 +95,7 @@ pub(crate) fn format_error_with_stack(
 pub(crate) fn format_diagnostic(
     message: &ErrorMessage,
     position: &Position,
-    project_root: Option<&PathBuf>,
+    project_root: &Path,
     severity: Severity,
     notes: &[(ErrorMessage, Position)],
     vfs: &Vfs,
@@ -177,7 +177,7 @@ fn format_pos_in_fun(
     position: &Position,
     vfs: &Vfs,
     enclosing_symbol: Option<&EnclosingSymbol>,
-    project_root: Option<&PathBuf>,
+    project_root: &Path,
     underline: bool,
     underline_msg: Option<String>,
     is_error: bool,
@@ -187,10 +187,7 @@ fn format_pos_in_fun(
 
     let mut res = String::new();
 
-    let mut pos_path = position.path.to_path_buf();
-    if let Some(root) = project_root {
-        pos_path = to_project_relative(&pos_path, root);
-    }
+    let pos_path = to_project_relative(&position.path, project_root);
 
     let margin_width = 4;
 

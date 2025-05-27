@@ -570,23 +570,48 @@ pub(crate) fn run_command<T: Write>(
                 write!(buf, "{}{}", if i == 0 { "" } else { "\n" }, var_name)?;
             }
         }
-        Command::File(name) => match name {
-            Some(_) => todo!(),
-            None => {
-                let stack_frame = env
-                    .stack
-                    .0
-                    .last_mut()
-                    .expect("Should always have at least one frame");
+        Command::File(name) => {
+            let working_dir = std::env::current_dir().unwrap_or(PathBuf::from("/"));
 
-                let ns = stack_frame.namespace.borrow();
-                write!(
-                    buf,
-                    "Current namespace is {}",
-                    to_project_relative(&ns.abs_path, &env.project_root).display()
-                )?;
+            match name {
+                Some(file_name) => {
+                    let abs_path = working_dir.join(PathBuf::from(file_name));
+
+                    let stack_frame = env
+                        .stack
+                        .0
+                        .last()
+                        .expect("Should always have at least one frame");
+                    let mut ns = stack_frame.namespace.borrow_mut();
+
+                    let old_abs_path = ns.abs_path.clone();
+
+                    ns.abs_path = Rc::new(abs_path.clone());
+
+                    write!(
+                        buf,
+                        "Switched from {} to {}.",
+                        old_abs_path.display(),
+                        abs_path.display(),
+                    )?;
+                }
+                None => {
+                    let stack_frame = env
+                        .stack
+                        .0
+                        .last()
+                        .expect("Should always have at least one frame");
+
+                    let ns = stack_frame.namespace.borrow();
+                    write!(
+                        buf,
+                        "The current namespace is {}, the working directory is {}.",
+                        ns.abs_path.display(),
+                        working_dir.display(),
+                    )?;
+                }
             }
-        },
+        }
         Command::ForgetLocal(name) => {
             if let Some(name) = name {
                 let stack_frame = env

@@ -199,7 +199,7 @@ repeated parentheses/brackets on the same line."
   "Face for highlighting failing tests")
 
 (defun garden--apply-test-faces (buf)
-  "Given a plist of test names to test results, apply faces accordingly."
+  "Apply faces in BUF based on the last test results in `garden--test-states."
   (with-current-buffer buf
     (save-mark-and-excursion
       (widen)

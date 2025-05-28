@@ -955,7 +955,7 @@ fn command_help(command: Command) -> &'static str {
         Command::Abort => "The :abort command stops evaluation of the current expression, brining you back to the toplevel.\n\nExample usage:\n\n:abort",
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
-        Command::File(_) => todo!(),
+        Command::File(_) => "The :file command shows the current file where evaluation is occurring. It can also switch the current file context.\n\nExample:\n\n:file\n:file myproject.gdn",
         // TODO: add a more comprehensive example of :forget_local usage.
         Command::Forget(_) => "The :forget command undefines a function or enum value.\n\nExample:\n\n:forget function_name",
         Command::ForgetCalls => "The :forget_calls command discards previously saved values from function and method calls. This ensures that the next call is saved instead.\n\nExample:\n\n:forget_calls",

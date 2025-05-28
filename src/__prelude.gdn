@@ -27,6 +27,9 @@ enum Unit {
 
 // `Result` represents a value that succeeded, with `Ok(...)`, or
 // failed, with `Err(...)`.
+//
+// For example, reading a file might return `Ok("contents of file")`
+// or `Err("file did not exist")`.
 enum Result<T, E> {
   Ok(T),
   Err(E),

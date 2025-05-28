@@ -1,7 +1,9 @@
-# 0.20 (unreleased)
-**Goal: Namespaces.**
+# 0.21 (unreleased)
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
+
+# 0.20 (unreleased)
+**Goal: Namespaces.**
 
 ### Diagnostics
 

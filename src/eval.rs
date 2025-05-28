@@ -800,7 +800,10 @@ pub(crate) fn eval_up_to_param(
     for item in items {
         match &item {
             ToplevelItem::Fun(name_sym, fun_info, _) => {
-                let prev_args = match env.prev_call_args.get(&name_sym.name) {
+                let prev_args = match env
+                    .prev_call_args
+                    .get(&(name_sym.name.clone(), name_sym.position.path.to_path_buf()))
+                {
                     _ if fun_info.params.params.is_empty() => vec![],
                     Some(prev_args) => prev_args.clone(),
                     None => {
@@ -922,7 +925,10 @@ pub(crate) fn eval_up_to(
             let ns = env.current_namespace();
             load_toplevel_items(&[item.clone()], env, ns);
 
-            let args = match env.prev_call_args.get(&name_sym.name) {
+            let args = match env
+                .prev_call_args
+                .get(&(name_sym.name.clone(), name_sym.position.path.to_path_buf()))
+            {
                 _ if fun_info.params.params.is_empty() => vec![],
                 Some(prev_args) => prev_args.clone(),
                 None => {
@@ -3207,8 +3213,10 @@ fn eval_call(
             // self-recursive call, as the initial arguments are
             // generally more interesting.
             if !is_self_call {
-                env.prev_call_args
-                    .insert(name_sym.name.clone(), arg_values.to_vec());
+                env.prev_call_args.insert(
+                    (name_sym.name.clone(), name_sym.position.path.to_path_buf()),
+                    arg_values.to_vec(),
+                );
             }
 
             let mut type_bindings = TypeVarEnv::default();

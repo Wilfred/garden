@@ -81,7 +81,7 @@ pub(crate) struct Env {
 
     /// The arguments used the last time each function was
     /// called. Used for eval-up-to.
-    pub(crate) prev_call_args: FxHashMap<SymbolName, Vec<Value>>,
+    pub(crate) prev_call_args: FxHashMap<(SymbolName, PathBuf), Vec<Value>>,
     /// The receiver and arguments used the last time each method was
     /// called. Used for eval-up-to.
     pub(crate) prev_method_call_args:

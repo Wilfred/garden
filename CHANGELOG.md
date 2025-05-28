@@ -28,8 +28,11 @@ and syntax highlighting the source code.
 Added a `:globals` command to view all values in the current
 namespace.
 
-Added `:file` command to view which file namespace the current stack
+Added a `:file` command to view which file namespace the current stack
 frame is in.
+
+Added a `:forget_calls` command to discard saved values from previous
+function and method calls.
 
 ### CLI
 

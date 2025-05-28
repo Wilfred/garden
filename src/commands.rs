@@ -7,6 +7,7 @@ use std::time::Duration;
 use humantime::format_duration;
 use itertools::Itertools as _;
 use owo_colors::OwoColorize;
+use rustc_hash::FxHashMap;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -29,8 +30,9 @@ pub(crate) enum Command {
     Functions,
     Locals,
     File(Option<String>),
-    ForgetLocal(Option<String>),
     Forget(Option<String>),
+    ForgetCalls,
+    ForgetLocal(Option<String>),
     FrameValues,
     FrameStatements,
     Globals,
@@ -74,8 +76,9 @@ impl Display for Command {
             Command::Abort => ":abort",
             Command::Doc(_) => ":doc",
             Command::File(_) => ":file",
-            Command::ForgetLocal(_) => ":forget_local",
             Command::Forget(_) => ":forget",
+            Command::ForgetCalls => ":forget_calls",
+            Command::ForgetLocal(_) => ":forget_local",
             Command::FrameStatements => ":fstmts",
             Command::FrameValues => ":fvalues",
             Command::Functions => ":funs",
@@ -114,6 +117,7 @@ impl Command {
             ":doc" => Ok(Command::Doc(args)),
             ":file" => Ok(Command::File(args)),
             ":forget" => Ok(Command::Forget(args)),
+            ":forget_calls" => Ok(Command::ForgetCalls),
             ":forget_local" => Ok(Command::ForgetLocal(args)),
             ":fstmts" => Ok(Command::FrameStatements),
             ":fvalues" => Ok(Command::FrameValues),
@@ -822,6 +826,12 @@ pub(crate) fn run_command<T: Write>(
         Command::Version => {
             write!(buf, "Garden {}", VERSION.as_str())?;
         }
+        Command::ForgetCalls => {
+            env.prev_call_args = FxHashMap::default();
+            env.prev_method_call_args = FxHashMap::default();
+
+            write!(buf, "Discarded all saved values for method and function calls. The next call will be saved.")?;
+        }
     }
     Ok(())
 }
@@ -947,8 +957,9 @@ fn command_help(command: Command) -> &'static str {
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
         Command::File(_) => todo!(),
         // TODO: add a more comprehensive example of :forget_local usage.
-        Command::ForgetLocal(_) => "The :forget_local command undefines the local variable in the current stack frame.\n\nExample:\n\n:forget_local foo",
         Command::Forget(_) => "The :forget command undefines a function or enum value.\n\nExample:\n\n:forget function_name",
+        Command::ForgetCalls => "The :forget_calls command discards previously saved values from function and method calls. This ensures that the next call is saved instead.\n\nExample:\n\n:forget_calls",
+        Command::ForgetLocal(_) => "The :forget_local command undefines the local variable in the current stack frame.\n\nExample:\n\n:forget_local foo",
         Command::FrameValues => "The :fvalues command displays the intermediate value stack when evaluating the expressions in the current stack frame.\n\nExample:\n\n:fvalues",
         Command::FrameStatements => "The :fstmts command displays the statement stack in the current stack frame.\n\nExample:\n\n:fstmts",
         Command::Functions => "The :funs command displays information about toplevel functions.\n\nExample:\n\n:funs",

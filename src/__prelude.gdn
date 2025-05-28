@@ -415,10 +415,25 @@ external fun (this: Path) extension(): Option<String> {
   name.split(".").last()
 }
 
-// The file name of this path, if this path is a file (i.e. not a
-// directory).
+// The last component of this path.
+//
+// ```
+// Path{ p: "/foo/bar.txt" }.file_name() // Some("bar.txt")
+// Path{ p: "/foo/" }.file_name() // Some("foo")
+// Path{ p: "/" }.file_name() // None
+// ```
 external fun (this: Path) file_name(): Option<String> {
-  this.p.split("/").last()
+  if this.p == "/" {
+    return None
+  }
+
+  this.p.strip_suffix("/").split("/").last()
+}
+
+test path_file_name {
+  assert(Path{ p: "/foo/bar.txt"}.file_name() == Some("bar.txt"))
+  assert(Path{ p: "/foo/"}.file_name() == Some("foo"))
+  assert(Path{ p: "/"}.file_name() == None)
 }
 
 // Return a list from `i` (inclusive) to `j` (exclusive).

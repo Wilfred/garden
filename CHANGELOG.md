@@ -17,6 +17,8 @@ and syntax highlighting the source code.
 `type_doc_comment()` is now `garden::doc_comment_for_type()`,
 `built_in_types` is now `garden::prelude_types`.
 
+`Path::file_name()` now handles paths with trailing slashes correctly.
+
 ### Syntax
 
 `as` is now a reserved word.

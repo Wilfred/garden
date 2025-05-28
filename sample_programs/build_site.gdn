@@ -60,10 +60,9 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
 }
 
 fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
-  let dest_path = Path{ p: md_path.p.strip_suffix(".md") ^ ".html" }
   let page_src_md = md_path.read().or_error()
   let page_src = render_markdown(substitute_shorthand(page_src_md))
-  write_website_page(base_tmpl_string, page_src, dest_path)
+  write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"))
 }
 
 // Build the entire garden website.

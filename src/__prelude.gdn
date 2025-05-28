@@ -436,6 +436,33 @@ test path_file_name {
   assert(Path{ p: "/"}.file_name() == None)
 }
 
+// Set the extension of the filename to `new_ext`.
+//
+// ```
+// Path{ p: "/foo/bar"}.set_extension("log") // Path{ p: "/foo/bar.log"}
+// Path{ p: "/foo/bar.txt"}.set_extension("log") // Path{ p: "/foo/bar.log"}
+// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") // Path{ p: "/foo/bar.log"}
+// ```
+external fun (this: Path) set_extension(new_ext: String): Path {
+  let new_ext = "." ^ new_ext
+  match this.file_name() {
+    Some(file_name) => {
+      let c = this.parent()
+      match file_name.split_once(".") {
+        Some((base_file_name, _ext)) => c.join(base_file_name ^ new_ext)
+        None => c.join(file_name ^ new_ext)
+      }
+    },
+    None => this,
+  }
+}
+
+test path_set_extension {
+  assert(Path{ p: "/foo/bar"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
+  assert(Path{ p: "/foo/bar.txt"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
+  assert(Path{ p: "/foo/bar.txt.gz"}.set_extension("log") == Path{ p: "/foo/bar.log"} )
+}
+
 // Return a list from `i` (inclusive) to `j` (exclusive).
 //
 // ```

@@ -19,6 +19,8 @@ and syntax highlighting the source code.
 
 `Path::file_name()` now handles paths with trailing slashes correctly.
 
+Added `Path::set_extension()`.
+
 ### Syntax
 
 `as` is now a reserved word.

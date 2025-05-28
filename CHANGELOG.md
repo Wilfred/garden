@@ -11,11 +11,20 @@ and syntax highlighting the source code.
 ### Standard Library
 
 `write_file()` is now `fs::write_file()`, `list_directory()` is now
-`fs::list_directory()`, `keywords()` is now `garden::keywords()`,
-`type_source()` is now `garden::source_for_type()`, `lex()` is now
-`garden::lex()`, `check_snippet()` is now `garden::check_snippet()`,
-`type_doc_comment()` is now `garden::doc_comment_for_type()`,
-`built_in_types` is now `garden::prelude_types`.
+`__fs::list_directory()`, `keywords()` is now `__garden::keywords()`,
+`type_source()` is now `__garden::source_for_type()`, `lex()` is now
+`__garden::lex()`, `check_snippet()` is now `__garden::check_snippet()`,
+`type_doc_comment()` is now `__garden::doc_comment_for_type()`,
+`built_in_types` is now `__garden::prelude_types`.
+
+The `__fs` and `__garden` definitions are no longer in the prelude,
+and must be explicitly imported. For example:
+
+```
+import "__fs.gdn" as fs
+
+dbg(fs::list_directory())
+```
 
 `Path::file_name()` now handles paths with trailing slashes correctly.
 

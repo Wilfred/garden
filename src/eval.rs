@@ -789,6 +789,9 @@ pub(crate) fn eval_tests(
     }
 }
 
+/// If we have a function that was previously called, and `id`
+/// corresponds to one of its parameters, return the position of that
+/// parameter along with the last saved value.
 pub(crate) fn eval_up_to_param(
     env: &Env,
     items: &[ToplevelItem],

@@ -60,7 +60,7 @@ impl UnusedVariableVisitor {
         diagnostics
     }
 
-    /// Is `name` locally bound in syntactic context we're currently
+    /// Is `name` locally bound in the syntactic context we're currently
     /// checking?
     fn is_locally_bound(&self, name: &SymbolName) -> bool {
         if name.text == "__BUILTIN_IMPLEMENTATION" {

@@ -10,6 +10,10 @@
 Error and warning printing now uses a new formatter, showing context
 and syntax highlighting the source code.
 
+### Checks
+
+`import "x.gdn" as y` now warns if `y` is unused.
+
 ### Standard Library
 
 `write_file()` is now `fs::write_file()`, `list_directory()` is now

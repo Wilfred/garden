@@ -2,6 +2,7 @@ import "__fs.gdn" as x
 import "__fs.gdn" as y
 
 {
+  dbg(x)
   dbg(y)
 }
 

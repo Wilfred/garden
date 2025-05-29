@@ -2,8 +2,8 @@ use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parser::ast::{
-    Block, Expression, Expression_, FunInfo, LetDestination, Pattern, Symbol, SymbolName,
-    ToplevelItem,
+    Block, Expression, Expression_, FunInfo, ImportInfo, LetDestination, Pattern, Symbol,
+    SymbolName, ToplevelItem,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -29,6 +29,10 @@ struct UnusedVariableVisitor {
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
     bound_scopes: Vec<FxHashMap<SymbolName, UseState>>,
+    /// Symbols that are bound in the current file, such as `foo` in
+    /// `import "x.gdn" as foo`.
+    file_bindings: FxHashMap<SymbolName, UseState>,
+
     unused: Vec<(SymbolName, Position)>,
 }
 
@@ -36,16 +40,14 @@ impl UnusedVariableVisitor {
     fn new() -> UnusedVariableVisitor {
         UnusedVariableVisitor {
             bound_scopes: vec![FxHashMap::default()],
+            file_bindings: FxHashMap::default(),
             unused: vec![],
         }
     }
 
     fn diagnostics(&self) -> Vec<Diagnostic> {
-        let mut unused = self.unused.clone();
-        unused.sort_by_key(|(_, position)| position.clone());
-
         let mut diagnostics = vec![];
-        for (name, position) in unused {
+        for (name, position) in &self.unused {
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
@@ -57,6 +59,22 @@ impl UnusedVariableVisitor {
             });
         }
 
+        for (name, use_state) in &self.file_bindings {
+            let UseState::NotUsed(position) = use_state else {
+                continue;
+            };
+            diagnostics.push(Diagnostic {
+                notes: vec![],
+                severity: Severity::Warning,
+                message: ErrorMessage(vec![
+                    Code(format!("{name}")),
+                    Text(" is unused.".to_owned()),
+                ]),
+                position: position.clone(),
+            });
+        }
+
+        diagnostics.sort_by_key(|d| d.position.clone());
         diagnostics
     }
 
@@ -135,6 +153,11 @@ impl UnusedVariableVisitor {
     }
 
     fn check_symbol(&mut self, var: &Symbol) {
+        if let Some(use_state) = self.file_bindings.get_mut(&var.name) {
+            *use_state = UseState::Used;
+            return;
+        }
+
         if self.is_locally_bound(&var.name) {
             self.mark_used(&var.name);
         }
@@ -185,6 +208,16 @@ impl Visitor for UnusedVariableVisitor {
                 self.pop_scope();
             }
         }
+    }
+
+    fn visit_import_info(&mut self, import_info: &ImportInfo) {
+        let Some(namespace_sym) = &import_info.namespace_sym else {
+            return;
+        };
+        self.file_bindings.insert(
+            namespace_sym.name.clone(),
+            UseState::NotUsed(namespace_sym.position.clone()),
+        );
     }
 
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {

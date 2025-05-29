@@ -2,8 +2,8 @@ use std::rc::Rc;
 
 use crate::parser::ast::ToplevelExpression;
 use crate::parser::{
-    Block, EnumInfo, Expression, Expression_, FunInfo, LetDestination, MethodInfo, Pattern,
-    StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
+    Block, EnumInfo, Expression, Expression_, FunInfo, ImportInfo, LetDestination, MethodInfo,
+    Pattern, StructInfo, Symbol, TestInfo, ToplevelItem, TypeHint, TypeSymbol,
 };
 
 /// A visitor for ASTs.
@@ -27,7 +27,7 @@ pub(crate) trait Visitor {
                 self.visit_toplevel_expr(toplevel_expression)
             }
             ToplevelItem::Block(block) => self.visit_block(block),
-            ToplevelItem::Import(_) => {}
+            ToplevelItem::Import(import_info) => self.visit_import_info(import_info),
         }
     }
 
@@ -63,6 +63,8 @@ pub(crate) trait Visitor {
             }
         }
     }
+
+    fn visit_import_info(&mut self, _: &ImportInfo) {}
 
     fn visit_struct_info(&mut self, struct_info: &StructInfo) {
         self.visit_struct_info_default(struct_info);

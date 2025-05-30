@@ -36,6 +36,8 @@ dbg(fs::list_directory())
 
 Added `Path::set_extension()`.
 
+Added `__garden::namespace_functions`.
+
 ### Syntax
 
 `as` is now a reserved word.

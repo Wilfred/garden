@@ -105,3 +105,17 @@ test source_for_type {
     }
   }
 }
+
+// All the `external` functions in `ns`.
+external fun namespace_functions(ns: Namespace): List<String> {
+  // This is deliberately not a method on Namespace, so code
+  // completion isn't confusing.
+  __BUILTIN_IMPLEMENTATION
+}
+
+import "__fs.gdn" as fs
+
+test namespace_functions {
+  let items = namespace_functions(fs)
+  assert(items.contains("list_directory"))
+}

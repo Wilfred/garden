@@ -2556,6 +2556,60 @@ fn eval_builtin_call(
                 env.push_value(Value::new(Value_::String(arg_values[0].display(env))));
             }
         }
+        BuiltinFunctionKind::NamespaceFunctions => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let Value_::Namespace(namespace_info) = arg_values[0].as_ref() else {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                let message = format_type_error(
+                    &TypeName {
+                        text: "Namespace".into(),
+                    },
+                    &arg_values[0],
+                    env,
+                );
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::ResumableError(arg_positions[0].clone(), message),
+                ));
+            };
+
+            let mut fun_names = vec![];
+
+            let ns = namespace_info.borrow();
+            for sym_name in ns.values.keys() {
+                if ns.external_syms.contains(sym_name) {
+                    fun_names.push(sym_name.text.clone());
+                }
+            }
+
+            fun_names.sort();
+            let items = fun_names
+                .into_iter()
+                .map(|n| Value::new(Value_::String(n)))
+                .collect::<Vec<_>>();
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                }));
+            }
+        }
         BuiltinFunctionKind::ListDirectory => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];

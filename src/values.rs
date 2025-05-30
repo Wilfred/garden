@@ -353,6 +353,7 @@ pub(crate) enum BuiltinFunctionKind {
     DocCommentForType,
     SourceForType,
     PreludeTypes,
+    NamespaceFunctions,
 }
 
 impl BuiltinFunctionKind {
@@ -374,7 +375,8 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::PreludeTypes
             | BuiltinFunctionKind::Lex
             | BuiltinFunctionKind::DocCommentForType
-            | BuiltinFunctionKind::CheckSnippet => PathBuf::from("__garden.gdn"),
+            | BuiltinFunctionKind::CheckSnippet
+            | BuiltinFunctionKind::NamespaceFunctions => PathBuf::from("__garden.gdn"),
         }
     }
 }
@@ -398,6 +400,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::DocCommentForType => "doc_comment_for_type",
             BuiltinFunctionKind::SourceForType => "source_for_type",
             BuiltinFunctionKind::PreludeTypes => "prelude_types",
+            BuiltinFunctionKind::NamespaceFunctions => "namespace_functions",
         };
         write!(f, "{}", name)
     }

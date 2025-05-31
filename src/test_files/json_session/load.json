@@ -7,7 +7,7 @@
 //     "evaluate": {
 //       "warnings": [],
 //       "value": {
-//         "Ok": "Loaded foo in x.gdn."
+//         "Ok": "Loaded foo into x.gdn."
 //       },
 //       "stack_frame_name": "TOP"
 //     }

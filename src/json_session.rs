@@ -164,13 +164,13 @@ fn handle_load_request(
         "".to_owned()
     } else if new_syms.len() == 1 {
         format!(
-            "Loaded {} in {}.",
+            "Loaded {} into {}.",
             new_syms[0].text,
             relative_path.display()
         )
     } else {
         format!(
-            "Loaded {} definitions in {}.",
+            "Loaded {} definitions into {}.",
             new_syms.len(),
             relative_path.display()
         )

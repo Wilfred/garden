@@ -492,7 +492,7 @@ fn load_toplevel_items_(
 
                 // Load into its own namespace.
                 let destination_ns = env.get_or_create_namespace(&abs_path);
-                let (import_diagnostics, imported_syms) = load_toplevel_items_(
+                let (import_diagnostics, _) = load_toplevel_items_(
                     &imported_items,
                     env,
                     paths_seen,
@@ -500,7 +500,7 @@ fn load_toplevel_items_(
                     load_stubs,
                 );
 
-                insert_imported_namespace(
+                let imported_syms = insert_imported_namespace(
                     import_info.namespace_sym.as_ref(),
                     namespace.clone(),
                     destination_ns,
@@ -560,7 +560,7 @@ fn insert_imported_namespace(
     namespace_sym: Option<&Symbol>,
     current_ns: Rc<RefCell<NamespaceInfo>>,
     imported_ns: Rc<RefCell<NamespaceInfo>>,
-) {
+) -> Vec<SymbolName> {
     match namespace_sym {
         Some(namespace_sym) => {
             let v = Value::new(Value_::Namespace(imported_ns));
@@ -568,8 +568,12 @@ fn insert_imported_namespace(
                 .borrow_mut()
                 .values
                 .insert(namespace_sym.name.clone(), v);
+
+            vec![namespace_sym.name.clone()]
         }
         None => {
+            let mut syms = vec![];
+
             // Load all the external items into the current namespace.
             let imported_ns = imported_ns.borrow();
             for (sym, value) in &imported_ns.values {
@@ -578,8 +582,11 @@ fn insert_imported_namespace(
                         .borrow_mut()
                         .values
                         .insert(sym.clone(), value.clone());
+                    syms.push(sym.clone());
                 }
             }
+
+            syms
         }
     }
 }

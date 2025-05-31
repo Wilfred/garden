@@ -538,8 +538,8 @@ impl Value {
                 let ns = ns.borrow();
 
                 let mut names = ns
-                    .values
-                    .keys()
+                    .external_syms
+                    .iter()
                     .map(|sym| format!("  ::{}", sym.text))
                     .collect::<Vec<_>>();
                 names.sort();

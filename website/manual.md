@@ -14,9 +14,7 @@ These functions are available in all Garden code.
 
 __PRELUDE_FUNS
 
-## Filesystem Namespace
-
-These functions are accessible after importing `__fs.gdn`.
+## Filesystem Namespace `__fs.gdn`
 
 __FS_FUNS
 
@@ -27,9 +25,7 @@ import "__fs.gdn" as fs
 fs::list_directory(Path{ p: "/" })
 ```
 
-## Garden Reflection Namespace
-
-These functions are accessible after importing `__garden.gdn`.
+## Garden Reflection Namespace `__garden.gdn`
 
 __GARDEN_FUNS
 

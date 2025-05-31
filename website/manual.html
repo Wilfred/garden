@@ -32,14 +32,12 @@
 <h2>Prelude</h2>
 <p>These functions are available in all Garden code.</p>
 <p><code>dbg</code>, <code>error</code>, <code>print</code>, <code>println</code>, <code>range</code>, <code>set_working_directory</code>, <code>shell</code>, <code>shell_arguments</code>, <code>source_directory</code>, <code>string_repr</code>, <code>todo</code> and <code>working_directory</code>.</p>
-<h2>Filesystem Namespace</h2>
-<p>These functions are accessible after importing <code>__fs.gdn</code>.</p>
+<h2>Filesystem Namespace <code>__fs.gdn</code></h2>
 <p><code>list_directory</code> and <code>write_file</code>.</p>
 <p>Example usage:</p>
 <pre><code><a href="./keyword:import.html"><span class="keyword">import</span></a> <span class="string">"__fs.gdn" </span><a href="./keyword:as.html"><span class="keyword">as</span></a> fs
 fs::list_directory(<a href="./type:Path.html"><span class="type">Path</span></a>{ p: <span class="string">"/" </span>})</code></pre>
-<h2>Garden Reflection Namespace</h2>
-<p>These functions are accessible after importing <code>__garden.gdn</code>.</p>
+<h2>Garden Reflection Namespace <code>__garden.gdn</code></h2>
 <p><code>check_snippet</code>, <code>doc_comment_for_type</code>, <code>keywords</code>, <code>lex</code>, <code>namespace_functions</code>, <code>prelude_types</code> and <code>source_for_type</code>.</p>
 <p>Example usage:</p>
 <pre><code><a href="./keyword:import.html"><span class="keyword">import</span></a> <span class="string">"__garden.gdn" </span><a href="./keyword:as.html"><span class="keyword">as</span></a> garden

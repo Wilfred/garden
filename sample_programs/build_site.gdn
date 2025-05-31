@@ -1,5 +1,6 @@
 import "__fs.gdn" as fs
 import "__garden.gdn" as garden
+import "__prelude.gdn" as prelude
 import "./markdown.gdn"
 
 // A list of all the files in `website_dir` that have a .md extension.
@@ -135,7 +136,27 @@ fun substitute_shorthand(src: String): String {
 
   let type_links = join_with_commas_and(type_links)
 
-  src.replace("__KEYWORDS", keyword_links).replace("__BUILTIN_TYPES", type_links)
+  let prelude_funs = garden::namespace_functions(prelude).map(fun(name: String) {
+    "".join(["`", name, "`"])
+  })
+  let prelude_funs = join_with_commas_and(prelude_funs)
+
+  let fs_funs = garden::namespace_functions(fs).map(fun(name: String) {
+    "".join(["`", name, "`"])
+  })
+  let fs_funs = join_with_commas_and(fs_funs)
+
+  let garden_funs = garden::namespace_functions(garden).map(fun(name: String) {
+    "".join(["`", name, "`"])
+  })
+  let garden_funs = join_with_commas_and(garden_funs)
+
+  src
+    .replace("__KEYWORDS", keyword_links)
+    .replace("__BUILTIN_TYPES", type_links)
+    .replace("__PRELUDE_FUNS", prelude_funs)
+    .replace("__FS_FUNS", fs_funs)
+    .replace("__GARDEN_FUNS", garden_funs)
 }
 
 // Wrap `page_src` in the base template and write to the file `dest_path`.

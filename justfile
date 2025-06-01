@@ -4,7 +4,7 @@ default:
 watch:
     REGENERATE=y cargo watch -x b -x t
 
-tag_then_bump:
+release:
     #!/bin/bash
 
     set -ex
@@ -13,11 +13,8 @@ tag_then_bump:
     git tag $VERSION
     git push --tags
 
+    cargo publish
     cargo set-version --bump minor
 
 web:
     cd website && python -m http.server
-
-publish:
-    cd garden-lang-parser && cargo publish
-    cargo publish

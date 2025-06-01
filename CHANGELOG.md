@@ -16,10 +16,14 @@ and syntax highlighting the source code.
 
 ### Standard Library
 
-`write_file()` is now `fs::write_file()`, `list_directory()` is now
-`__fs::list_directory()`, `keywords()` is now `__garden::keywords()`,
-`type_source()` is now `__garden::source_for_type()`, `lex()` is now
-`__garden::lex()`, `check_snippet()` is now `__garden::check_snippet()`,
+`write_file()` is now `__fs::write_file()`, `list_directory()` is now
+`__fs::list_directory()`, `working_directory()` is now
+`__fs::working_directory()`, and `set_working_directory()` is now
+`__fs::set_working_directory()`.
+
+`keywords()` is now `__garden::keywords()`, `type_source()` is now
+`__garden::source_for_type()`, `lex()` is now `__garden::lex()`,
+`check_snippet()` is now `__garden::check_snippet()`,
 `type_doc_comment()` is now `__garden::doc_comment_for_type()`,
 `built_in_types` is now `__garden::prelude_types`.
 

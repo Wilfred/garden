@@ -31,9 +31,9 @@
 <p><a href="./type:Bool.html"><code>Bool</code></a>, <a href="./type:Fun.html"><code>Fun</code></a>, <a href="./type:Int.html"><code>Int</code></a>, <a href="./type:List.html"><code>List</code></a>, <a href="./type:Namespace.html"><code>Namespace</code></a>, <a href="./type:NoValue.html"><code>NoValue</code></a>, <a href="./type:Option.html"><code>Option</code></a>, <a href="./type:Path.html"><code>Path</code></a>, <a href="./type:Result.html"><code>Result</code></a>, <a href="./type:String.html"><code>String</code></a>, <a href="./type:Tuple.html"><code>Tuple</code></a> and <a href="./type:Unit.html"><code>Unit</code></a>.</p>
 <h2>Prelude</h2>
 <p>These functions are available in all Garden code.</p>
-<p><code>dbg</code>, <code>error</code>, <code>print</code>, <code>println</code>, <code>range</code>, <code>set_working_directory</code>, <code>shell</code>, <code>shell_arguments</code>, <code>source_directory</code>, <code>string_repr</code>, <code>todo</code> and <code>working_directory</code>.</p>
+<p><code>dbg</code>, <code>error</code>, <code>print</code>, <code>println</code>, <code>range</code>, <code>shell</code>, <code>shell_arguments</code>, <code>source_directory</code>, <code>string_repr</code> and <code>todo</code>.</p>
 <h2>Filesystem Namespace <code>__fs.gdn</code></h2>
-<p><code>list_directory</code> and <code>write_file</code>.</p>
+<p><code>list_directory</code>, <code>set_working_directory</code>, <code>working_directory</code> and <code>write_file</code>.</p>
 <p>Example usage:</p>
 <pre><code><a href="./keyword:import.html"><span class="keyword">import</span></a> <span class="string">"__fs.gdn" </span><a href="./keyword:as.html"><span class="keyword">as</span></a> fs
 fs::list_directory(<a href="./type:Path.html"><span class="type">Path</span></a>{ p: <span class="string">"/" </span>})</code></pre>

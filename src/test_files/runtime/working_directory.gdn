@@ -1,6 +1,8 @@
+import "__fs.gdn" as fs
+
 {
-  set_working_directory(Path{ p: "/tmp" })
-  dbg(working_directory())
+  fs::set_working_directory(Path{ p: "/tmp" })
+  dbg(fs::working_directory())
 }
 
 // args: run

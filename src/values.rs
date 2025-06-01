@@ -365,12 +365,11 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::Print
             | BuiltinFunctionKind::Println
             | BuiltinFunctionKind::SourceDirectory
-            | BuiltinFunctionKind::ShellArguments
+            | BuiltinFunctionKind::ShellArguments => PathBuf::from("__prelude.gdn"),
+            BuiltinFunctionKind::WriteFile
+            | BuiltinFunctionKind::ListDirectory
             | BuiltinFunctionKind::WorkingDirectory
-            | BuiltinFunctionKind::SetWorkingDirectory => PathBuf::from("__prelude.gdn"),
-            BuiltinFunctionKind::WriteFile | BuiltinFunctionKind::ListDirectory => {
-                PathBuf::from("__fs.gdn")
-            }
+            | BuiltinFunctionKind::SetWorkingDirectory => PathBuf::from("__fs.gdn"),
             BuiltinFunctionKind::SourceForType
             | BuiltinFunctionKind::PreludeTypes
             | BuiltinFunctionKind::Lex

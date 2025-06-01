@@ -610,10 +610,9 @@ enclosing point and print the result."
      . font-lock-keyword-face)
 
     (,(regexp-opt
-       '("assert" "error" "list_directory" "print" "println"
+       '("assert" "error" "print" "println"
          "shell" "string_repr" "todo"
-         "set_working_directory" "working_directory" "source_directory"
-         "write_file")
+         "source_directory")
        'symbols)
      . font-lock-builtin-face)
 

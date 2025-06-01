@@ -23,3 +23,23 @@ external fun list_directory(path: Path): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Return the path of the current working directory.
+//
+// ```
+// working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
+// ```
+external fun working_directory(): Path {
+  __BUILTIN_IMPLEMENTATION
+}
+
+// Change the current working directory to `path`.
+//
+// This affects `working_directory()` as well as imports used in
+// `check_snippet` arguments.
+//
+// ```
+// set_working_directory(Path{ p: "/tmp" })
+// ```
+external fun set_working_directory(path: Path): Result<Unit, String> {
+  __BUILTIN_IMPLEMENTATION
+}

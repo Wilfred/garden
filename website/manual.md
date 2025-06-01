@@ -10,7 +10,7 @@ __BUILTIN_TYPES
 
 ## Prelude
 
-These functions are available in all Garden code.
+These functions are available everywhere.
 
 __PRELUDE_FUNS
 

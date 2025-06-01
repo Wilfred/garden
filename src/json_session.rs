@@ -148,6 +148,19 @@ fn handle_load_request(
 ) -> Response {
     let abs_path = to_abs_path(path);
 
+    {
+        // Change the top stack frame to match the file we're loading,
+        // so we can immediately start experimenting with locally
+        // defined files.
+        let stack_frame = env
+            .stack
+            .0
+            .first()
+            .expect("Should always have at least one frame");
+        let mut ns = stack_frame.namespace.borrow_mut();
+        ns.abs_path = Rc::new(abs_path.clone());
+    }
+
     let vfs_path = env.vfs.insert(Rc::new(abs_path.clone()), input.to_owned());
     let (items, errors) =
         parse_toplevel_items_from_span(&vfs_path, input, &mut env.id_gen, offset, end_offset);

@@ -277,11 +277,17 @@ impl Env {
     pub(crate) fn top_frame_name(&self) -> String {
         let top_stack = self.stack.0.last().unwrap();
         match &top_stack.enclosing_name {
-            EnclosingSymbol::Fun(symbol) => format!("{}", symbol.name),
+            EnclosingSymbol::Fun(symbol) => format!("fun {}", symbol.name),
             EnclosingSymbol::Method(type_name, symbol) => format!("{}::{}", type_name, symbol.name),
             EnclosingSymbol::Test(symbol) => format!("test {}", symbol.name),
             EnclosingSymbol::Closure => "closure".to_owned(),
-            EnclosingSymbol::Toplevel => "TOP".to_owned(),
+            EnclosingSymbol::Toplevel => {
+                let ns = top_stack.namespace.borrow();
+                ns.abs_path
+                    .file_name()
+                    .map(|name| name.to_string_lossy().to_string())
+                    .unwrap_or_else(|| ns.abs_path.display().to_string())
+            }
         }
     }
 

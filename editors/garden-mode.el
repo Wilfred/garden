@@ -318,7 +318,7 @@ the user entering a value in the *garden* buffer."
         ;; Convert to one-indexed Emacs point positions.
         (garden--flash-region (1+ position-offset) (1+ end-offset))))))
 
-(defvar garden--top-stack-name "TOP"
+(defvar garden--top-stack-name "__user.gdn"
   "The name of the innermost stack frame that we're currently in.")
 
 (defun garden-process-filter (proc output)
@@ -559,7 +559,7 @@ enclosing point and print the result."
 (defun garden-stop-session ()
   (interactive)
   (setq garden--output "")
-  (setq garden--top-stack-name "TOP")
+  (setq garden--top-stack-name "__user.gdn")
   (let ((buf (garden--buffer)))
     (kill-buffer buf)))
 
@@ -579,7 +579,7 @@ enclosing point and print the result."
   (let* ((buf (garden--buffer))
          (proc (garden--start-process "garden" buf garden-executable "json")))
     (setq garden--output "")
-    (setq garden--top-stack-name "TOP")
+    (setq garden--top-stack-name "__user.gdn")
     (set-process-filter proc #'garden-process-filter)))
 
 (defun garden-start-session ()

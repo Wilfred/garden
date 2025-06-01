@@ -9,7 +9,7 @@
 //       "value": {
 //         "Ok": "Loaded foo into x.gdn."
 //       },
-//       "stack_frame_name": "TOP"
+//       "stack_frame_name": "__user.gdn"
 //     }
 //   },
 //   "position": null

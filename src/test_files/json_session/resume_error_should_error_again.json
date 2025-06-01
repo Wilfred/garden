@@ -25,7 +25,7 @@
 //       "value": {
 //         "Ok": "Loaded f in __user.gdn."
 //       },
-//       "stack_frame_name": "TOP"
+//       "stack_frame_name": "__user.gdn"
 //     }
 //   },
 //   "position": null
@@ -51,7 +51,7 @@
 //           }
 //         ]
 //       },
-//       "stack_frame_name": "f"
+//       "stack_frame_name": "fun f"
 //     }
 //   },
 //   "position": null
@@ -77,7 +77,7 @@
 //           }
 //         ]
 //       },
-//       "stack_frame_name": "f"
+//       "stack_frame_name": "fun f"
 //     }
 //   },
 //   "position": null

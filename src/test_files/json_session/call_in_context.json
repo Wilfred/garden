@@ -38,7 +38,7 @@
 //       "value": {
 //         "Ok": "Loaded foo in __user.gdn."
 //       },
-//       "stack_frame_name": "TOP"
+//       "stack_frame_name": "__user.gdn"
 //     }
 //   },
 //   "position": null
@@ -64,7 +64,7 @@
 //           }
 //         ]
 //       },
-//       "stack_frame_name": "foo"
+//       "stack_frame_name": "fun foo"
 //     }
 //   },
 //   "position": null
@@ -84,7 +84,7 @@
 //       "value": {
 //         "Ok": "1"
 //       },
-//       "stack_frame_name": "foo"
+//       "stack_frame_name": "fun foo"
 //     }
 //   },
 //   "position": null

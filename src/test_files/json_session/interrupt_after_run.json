@@ -16,7 +16,7 @@
 // {
 //   "kind": {
 //     "interrupted": {
-//       "stack_frame_name": "TOP"
+//       "stack_frame_name": "__user.gdn"
 //     }
 //   },
 //   "position": null
@@ -28,7 +28,7 @@
 //       "value": {
 //         "Ok": "3"
 //       },
-//       "stack_frame_name": "TOP"
+//       "stack_frame_name": "__user.gdn"
 //     }
 //   },
 //   "position": null
@@ -40,7 +40,7 @@
 //       "value": {
 //         "Ok": "5"
 //       },
-//       "stack_frame_name": "TOP"
+//       "stack_frame_name": "__user.gdn"
 //     }
 //   },
 //   "position": null

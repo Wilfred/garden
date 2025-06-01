@@ -580,17 +580,16 @@ pub(crate) fn run_command<T: Write>(
             match name {
                 Some(file_name) => {
                     let abs_path = working_dir.join(PathBuf::from(file_name));
+                    let ns = env.get_or_create_namespace(&abs_path);
 
                     let stack_frame = env
                         .stack
                         .0
-                        .last()
+                        .first_mut()
                         .expect("Should always have at least one frame");
-                    let mut ns = stack_frame.namespace.borrow_mut();
 
-                    let old_abs_path = ns.abs_path.clone();
-
-                    ns.abs_path = Rc::new(abs_path.clone());
+                    let old_abs_path = stack_frame.namespace.borrow().abs_path.clone();
+                    stack_frame.namespace = ns;
 
                     write!(
                         buf,
@@ -952,10 +951,10 @@ fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Resul
 
 fn command_help(command: Command) -> &'static str {
     match command {
-        Command::Abort => "The :abort command stops evaluation of the current expression, brining you back to the toplevel.\n\nExample usage:\n\n:abort",
+        Command::Abort => "The :abort command stops evaluation of the current expression, bringing you back to the toplevel.\n\nExample usage:\n\n:abort",
         Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
-        Command::File(_) => "The :file command shows the current file where evaluation is occurring. It can also switch the current file context.\n\nExample:\n\n:file\n:file myproject.gdn",
+        Command::File(_) => "The :file command shows the current file where evaluation is occurring. It can also change the file of the toplevel.\n\nExample:\n\n:file\n:file myproject.gdn",
         // TODO: add a more comprehensive example of :forget_local usage.
         Command::Forget(_) => "The :forget command undefines a function or enum value.\n\nExample:\n\n:forget function_name",
         Command::ForgetCalls => "The :forget_calls command discards previously saved values from function and method calls. This ensures that the next call is saved instead.\n\nExample:\n\n:forget_calls",

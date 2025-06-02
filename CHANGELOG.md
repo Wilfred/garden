@@ -1,4 +1,6 @@
 # 0.21 (unreleased)
+**Goal: Blog.**
+**Goal: Playground.**
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 

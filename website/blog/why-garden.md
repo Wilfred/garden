@@ -1,77 +1,49 @@
-# Introducing the Garden Programming Language
+# An Experiment in Developer Experience
 
-I've decided to create a programming language!
+Garden is a programming language created to explore developer
+tooling. It's very slow, very incomplete, but enables some interesting
+experiences.
 
-I enjoy contributing to other programming languages, but I've never
-been entirely happy with any language I've used. Programming languages
-are missing features that I want, and I can't add these features to an
-existing language.
+## Incremental Programming
 
-## Interactive Evaluation
+Very few programming languages allow you to redefine functions and
+types whilst your program runs. Smalltalk and Lisp actively encourage
+this. A few other languages kinda allow it, if you're willing to
+commit lovecraftian horrors and accept the limitations.
 
-Most programming languages require you to start over when you change
-something.
+Incremental programming is a feature that requires runtime support to
+work properly. Typechecking code written incrementally is also
+challenging.
 
-Fixed an off-by-one error? Compile and re-run the program to see if it
-works.
-
-Added a field to a struct? Compile and re-run the program to see if it
-works.
-
-Defined a new function? Add a call to the function, compile, and
-re-run the program.
-
-Programming doesn't have to be like this. Programming in Pharo
-Smalltalk or Common Lisp lets you make change against a running
-program.
-
-This is sometimes called a REPL, after the Read-Eval-Print-Loop
-environment in Lisp, but that term leads to confusion. GHCI for
-Haskell is a REPL of sorts, but you can't redefine types and call
-existing functions.
-
-Interactive evaluation requires language-level support for very late
-binding. It can't be added to an existing language.
+It's a wonderful way to write code, and I want more options in this
+space. Garden is designed to use incremental programming everywhere.
 
 ## Sandboxing
 
-My computer doesn't try hard enough when I'm coding. I rarely use more
-than one core, and I'm writing this on a 12 core machine.
+It's also really hard to add a sandbox to an existing language. Having
+a sandbox enables a bunch of interesting experiences.
 
-If I start writing a function, my IDE should speculatively evaluate it
-and see if it passes all my tests. Consider a max function:
+You can speculatively execute work-in-progress code to see if tests
+pass. You can safely do mutation testing, program synthesis,
+speculative library installation, or LLM experiments.
 
-```
-fun max(x: Int, y: Int): Int {
-  if x > y {
-    return x
-  }
-  
-  // cursor is here
-}
+Garden has a basic sandbox today, and I hope to add a pledge-style
+granular sandbox in future.
 
-test max {
-  assert(max(1, 2) == 2)
-  assert(max(3, 2) == 3)
-}
+## Can I use it?
 
-```
+Garden is extremely incomplete and slow. Its focus on tooling
+means that I added an 'extract function' operation before I added a garbage
+collector! Even now, the GC is bad and doesn't handle cycles at all.
 
-There are very few possibilities here, and only one is correct. Why
-can't my IDE help me here?
+Garden is being fully developed in the open, but please set your
+expectations low.
 
-Doing this properly requires a reliable sandbox. To safely run
-arbitrary code, the language implementation needs to help. JavaScript
-is the only major sandboxed language today.
+## Why 'Garden'?
 
-## Why Garden?
+If you have a vegetable garden and one vegetable dies because of
+frost, you don't raze the whole plot and start over. Programming
+should be like this, rather than starting from fresh every time.
 
-What happens when plants in a garden don't grow exactly how you hoped?
-
-You don't level the whole area and plant seeds again. You modify the
-existing situation until it meets your goals anyway.
-
-A good garden is also a pleasant environment to be in.
-
-So that's Garden. A tooling-first, interactive, sandboxed programming
-language. Wish me luck.
+If Garden succeeds, it should be a pleasant environment to work in
+too.

@@ -1,0 +1,12 @@
+fun add_one(x: Int) {
+  x + 1
+}
+
+fun foo () {
+  add_one(2)
+  //     ^
+}
+
+// args: test-eval-up-to
+// expected stdout: src/test_files/eval_up_to/call_expression.gdn:6: 3
+

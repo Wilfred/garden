@@ -12,8 +12,11 @@ pub(crate) fn find_caret_offset(src: &str) -> Option<usize> {
     let prev_line_end = src[..end_comment_offset].rfind('\n')?;
     let column = end_comment_offset - prev_line_end;
 
-    let prev_line_start = src[..prev_line_end].rfind('\n').unwrap_or(0);
-    Some(prev_line_start + column)
+    let prev_line_start = match src[..prev_line_end].rfind('\n') {
+        Some(i) => i as isize,
+        None => -1,
+    };
+    Some((prev_line_start + column as isize) as usize)
 }
 
 /// Given a string that contains `// ^^^`, return the byte offset of
@@ -24,16 +27,19 @@ pub(crate) fn find_caret_region(src: &str) -> Option<(usize, usize)> {
 
     let comment_caps = re.captures(src)?;
 
-    let last_caret_offset = comment_caps.get(0).unwrap().end();
-    let first_caret_offset = comment_caps.get(1).unwrap().start();
+    let last_caret_offset = comment_caps.get(0).unwrap().end() as isize;
+    let first_caret_offset = comment_caps.get(1).unwrap().start() as isize;
 
-    let prev_line_end = src[..first_caret_offset].rfind('\n')?;
-    let prev_line_start = src[..prev_line_end].rfind('\n').unwrap_or(0);
+    let prev_line_end = src[..first_caret_offset as usize].rfind('\n')? as isize;
+    let prev_line_start = match src[..prev_line_end as usize].rfind('\n') {
+        Some(i) => i as isize,
+        None => -1,
+    };
 
     let first_char_offset = prev_line_start + (first_caret_offset - prev_line_end);
-    let last_char_offset = prev_line_start + (last_caret_offset - prev_line_end);
+    let last_char_offset = prev_line_start + (last_caret_offset - 1 - prev_line_end);
 
-    Some((first_char_offset, last_char_offset))
+    Some((first_char_offset as usize, last_char_offset as usize))
 }
 
 /// Remove the comment containing `//^` to make test output more readable.

@@ -105,6 +105,6 @@ impl Position {
     }
 
     pub(crate) fn contains_offset(&self, offset: usize) -> bool {
-        self.start_offset <= offset && offset <= self.end_offset
+        self.start_offset <= offset && offset < self.end_offset
     }
 }

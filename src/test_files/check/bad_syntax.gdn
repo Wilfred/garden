@@ -5,12 +5,9 @@ external fun foo(): Int {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an expression, but got `}`.
-// ---| src/test_files/check/bad_syntax.gdn:3:1
+// Error: Expected an expression after this.
+// ---| src/test_files/check/bad_syntax.gdn:2:7
 // 1  | external fun foo(): Int {
 // 2  |     1 +
-// 3  | }
-//    | ^
-// 4  | 
-// 5  | // args: check
+// 3  | }     ^
 

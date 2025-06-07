@@ -13,12 +13,13 @@ external fun foo(): Unit {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected an expression, but got `{`.
-// ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:3
+// Error: Expected an expression after this.
+// ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:6:20
+// 4  |   while SomeStruct{} {}
+// 5  | 
+// 6  |   while SomeValue {}
+// 7  |                    ^
 // 8  |   // This is therefore a syntax error, because SomeValue cannot be a
-// 9  |   // struct literal.
-// 10 |   {}
-// 11 | } ^
 // 
 // Error: Expected `}`, but got `{`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:3
@@ -27,14 +28,12 @@ external fun foo(): Unit {
 // 10 |   {}
 // 11 | } ^
 // 
-// Error: Expected an expression, but got `}`.
-// ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:11:1
+// Error: Expected an expression after this.
+// ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:10:4
+// 8  |   // This is therefore a syntax error, because SomeValue cannot be a
 // 9  |   // struct literal.
 // 10 |   {}
-// 11 | }
-//    | ^
-// 12 | 
-// 13 | // args: check
+// 11 | }  ^
 // 
 // Error: No such type `SomeStruct`.
 // ---| src/test_files/check/ambiguity_struct_literal_or_block.gdn:4:9

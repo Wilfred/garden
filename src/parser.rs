@@ -558,6 +558,8 @@ fn parse_simple_expression(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
+    let prev_token = tokens.prev();
+
     if let Some(token) = tokens.peek() {
         if token.text == "(" {
             return parse_tuple_literal_or_parentheses(tokens, id_gen, diagnostics);
@@ -605,13 +607,14 @@ fn parse_simple_expression(
             return parse_integer(tokens, id_gen, diagnostics);
         }
 
+        let error_position = match prev_token {
+            Some(prev_token) => prev_token.position.clone(),
+            None => token.position.clone(),
+        };
+
         diagnostics.push(ParseError::Invalid {
-            position: token.position.clone(),
-            message: ErrorMessage(vec![
-                msgtext!("Expected an expression, but got "),
-                msgcode!("{}", token.text),
-                msgtext!("."),
-            ]),
+            position: error_position,
+            message: ErrorMessage(vec![msgtext!("Expected an expression after this.")]),
             additional: vec![],
         });
 

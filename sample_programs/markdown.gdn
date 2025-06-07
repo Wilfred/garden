@@ -202,6 +202,8 @@ fun render_inline(src: String): String {
   for piece in split_inline_parts(src) {
     if piece.starts_with("[") {
       parts = parts.append(render_link(piece))
+    } else if piece.starts_with("![") {
+      parts = parts.append(render_image(piece))
     } else if piece.starts_with("<") {
       parts = parts.append(piece)
     } else {
@@ -243,18 +245,18 @@ fun render_inline_no_links(src: String): String {
 }
 
 // Split `src` into a list of strings, where each string is either a
-// link or something else.
+// link, image, HTML or a piece of plain text.
 fun split_inline_parts(src: String): List<String> {
   let parts: List<String> = []
 
   let s = src
   while True {
-    match first_idx(s, ["[", "<"]) {
+    match first_idx(s, ["[", "![", "<"]) {
       Some(idx) => {
         let before_bracket = s.substring(0, idx)
         let after_bracket = s.substring(idx, s.len())
 
-        let terminator = if after_bracket.starts_with("[") { ")" } else { ">" }
+        let terminator = if after_bracket.starts_with("<") { ">" } else { ")" }
 
         match split_on_terminator(after_bracket, terminator) {
           Some((part, after_part)) => {
@@ -346,6 +348,19 @@ fun render_link(src: String): String {
       let link_text = src.substring(1, i)
       let link_url = src.substring(i + 2, src.len() - 1)
       "".join(["<a href=\"", link_url, "\">", render_inline_no_links(link_text), "</a>"])
+    }
+    None => src
+  }
+}
+
+fun render_image(src: String): String {
+  assert(src.starts_with("!["))
+
+  match src.index_of("]") {
+    Some(i) => {
+      let image_descr = src.substring(2, i)
+      let image_url = src.substring(i + 2, src.len() - 1)
+      "".join(["<img src=\"", image_url, "\" alt=\"", image_descr, "\" />"])
     }
     None => src
   }
@@ -463,6 +478,10 @@ test render_asterisk {
 
 test render_thematic_break {
   assert(render_markdown("---") == "<hr />")
+}
+
+test render_image {
+  assert(render_markdown("![foo](/url)") == "<p><img src=\"/url\" alt=\"foo\" /></p>")
 }
 
 fun looks_like_type(name: String): Bool {

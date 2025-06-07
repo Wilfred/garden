@@ -1,0 +1,17 @@
+// This comment applies to demo.
+fun demo() {
+  let y = 1 + 2
+  //      ^^^^^
+}
+
+// args: extract-function --name extracted_fun
+// expected stdout:
+// fun extracted_fun(): Int {
+//   1 + 2
+// }
+// 
+// // This comment applies to demo.
+// fun demo() {
+//   let y = extracted_fun()
+// }
+

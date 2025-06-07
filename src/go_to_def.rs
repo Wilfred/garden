@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::checks::type_checker::check_types;
@@ -28,7 +28,15 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
     for id in ids_at_query_pos.iter().rev() {
         if let Some(pos) = summary.id_to_def_pos.get(&id.id()) {
             let mut pos = pos.clone();
-            pos.path = Rc::new(to_project_relative(&pos.path, &env.project_root));
+
+            // For Garden's test suite we don't want to use absolute
+            // paths in the expected output.
+            if std::env::var("GDN_TEST").is_ok() {
+                let mut path = PathBuf::from("GDN_TEST_ROOT");
+                path.push(to_project_relative(&pos.path, &env.project_root));
+
+                pos.path = Rc::new(path);
+            }
 
             println!("{}", serde_json::to_string(&pos).unwrap());
             return;

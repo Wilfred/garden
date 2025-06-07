@@ -7,5 +7,5 @@ fun demo() {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":7,"end_offset":12,"line_number":0,"end_line_number":0,"column":7,"end_column":12,"path":"src/test_files/go_to_def/struct_literal.gdn"}
+// {"start_offset":7,"end_offset":12,"line_number":0,"end_line_number":0,"column":7,"end_column":12,"path":"GDN_TEST_ROOT/src/test_files/go_to_def/struct_literal.gdn"}
 

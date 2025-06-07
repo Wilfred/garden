@@ -5,5 +5,5 @@ struct Thing {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":16303,"end_offset":16309,"line_number":740,"end_line_number":740,"column":7,"end_column":13,"path":"__prelude.gdn"}
+// {"start_offset":16303,"end_offset":16309,"line_number":740,"end_line_number":740,"column":7,"end_column":13,"path":"GDN_TEST_ROOT/__prelude.gdn"}
 

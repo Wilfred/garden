@@ -6,5 +6,5 @@ fun file_name() {
 
 // args: definition-position --override-path="new_path.gdn"
 // expected stdout:
-// {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"column":8,"end_column":11,"path":"new_path.gdn"}
+// {"start_offset":26,"end_offset":29,"line_number":1,"end_line_number":1,"column":8,"end_column":11,"path":"GDN_TEST_ROOT/new_path.gdn"}
 

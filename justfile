@@ -2,7 +2,7 @@ default:
     @just --list
 
 watch:
-    REGENERATE=y cargo watch -x b -x t
+    REGENERATE=y GDN_TEST=y cargo watch -x b -x t
 
 release:
     #!/bin/bash

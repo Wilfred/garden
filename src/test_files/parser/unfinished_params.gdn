@@ -57,9 +57,9 @@ external fun foo: Option<Int> {
 // )
 
 // expected stderr:
-// Error: Parse error: Expected `(`, but got `:`.
-// ---| src/test_files/parser/unfinished_params.gdn:1:17
+// Error: Parse error: Expected `(` after this.
+// ---| src/test_files/parser/unfinished_params.gdn:1:14
 // 1  | external fun foo: Option<Int> {
-// 2  |   None          ^
+// 2  |   None       ^^^
 // 3  | }
 

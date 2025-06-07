@@ -3,9 +3,9 @@ external fun (this String) doStuff() {}
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `:`, but got `String`.
-// ---| src/test_files/check/missing_colon_method_receiver.gdn:1:20
+// Error: Expected `:` after this.
+// ---| src/test_files/check/missing_colon_method_receiver.gdn:1:15
 // 1  | external fun (this String) doStuff() {}
-// 2  |                    ^^^^^^
+// 2  |               ^^^^
 // 3  | // args: check
 

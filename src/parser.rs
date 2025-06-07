@@ -94,20 +94,20 @@ fn check_required_token<'a>(
     diagnostics: &mut Vec<ParseError>,
     expected: &str,
 ) -> (bool, Token<'a>) {
+    let prev_token = tokens.prev();
+
     match tokens.pop() {
         Some(token) => {
             let mut ok = true;
             if token.text != expected {
-                let position = token.position.clone();
+                let position = prev_token.as_ref().unwrap_or(&token).position.clone();
 
                 diagnostics.push(ParseError::Invalid {
                     position,
                     message: ErrorMessage(vec![
                         msgtext!("Expected "),
                         msgcode!("{}", expected),
-                        msgtext!(", but got "),
-                        msgcode!("{}", token.text),
-                        msgtext!("."),
+                        msgtext!(" after this."),
                     ]),
                     additional: vec![],
                 });
@@ -122,19 +122,21 @@ fn check_required_token<'a>(
             (ok, token)
         }
         None => {
+            let position = prev_token
+                .as_ref()
+                .map(|t| t.position.clone())
+                .unwrap_or(Position::todo(&tokens.vfs_path));
+
             diagnostics.push(ParseError::Incomplete {
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!("{}", expected),
                     msgtext!(", but got EOF."),
                 ]),
-                position: Position::todo(&tokens.vfs_path),
+                position,
             });
 
-            (
-                false,
-                tokens.prev().expect("TODO: handle empty file properly"),
-            )
+            (false, prev_token.expect("TODO: handle empty file properly"))
         }
     }
 }

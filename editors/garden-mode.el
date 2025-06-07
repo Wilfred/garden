@@ -878,6 +878,8 @@ the result."
          (column (plist-get info :column)))
     (unless info
       (user-error "No position available."))
+    (unless (file-exists-p path)
+      (user-error "No such file %S" path))
     (garden--visit-path path)
     (widen)
     (goto-char (point-min))

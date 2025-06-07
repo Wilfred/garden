@@ -1,0 +1,14 @@
+fun foo(_: String) {}
+
+external fun bar() {
+  // Cursor position is often rendered between characters in IDEs. Try
+  // the previous character if the character after the cursor doesn't
+  // have a symbol.
+  foo("hello world")
+  // ^
+}
+
+// args: definition-position
+// expected stdout:
+// {"start_offset":4,"end_offset":7,"line_number":0,"end_line_number":0,"column":4,"end_column":7,"path":"GDN_TEST_ROOT/src/test_files/go_to_def/fun_paren.gdn"}
+

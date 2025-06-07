@@ -23,7 +23,14 @@ pub(crate) fn print_pos(src: &str, path: &Path, offset: usize) {
 
     let summary = check_types(&vfs_path, &items, &env, ns);
 
-    let ids_at_query_pos = find_item_at(&items, offset, offset);
+    let mut ids_at_query_pos = vec![];
+    if offset > 0 {
+        // When the cursor is rendered between characters,
+        // e.g. `foobar|()`, then we want to consider `foobar` as a
+        // thing to do go-to-def on.
+        ids_at_query_pos.extend(find_item_at(&items, offset - 1, offset - 1));
+    }
+    ids_at_query_pos.extend(find_item_at(&items, offset, offset));
 
     for id in ids_at_query_pos.iter().rev() {
         if let Some(pos) = summary.id_to_def_pos.get(&id.id()) {

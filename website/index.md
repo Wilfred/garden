@@ -54,6 +54,10 @@ is important for two workflows:
 (1) The IDE can speculatively evaluate snippets of code safely. This
 is convenient and enables 'mutation testing' for code completion.
 
+<video controls>
+  <source src="./speculative_eval_tests.mp4" type="video/mp4" />
+</video>
+
 (2) Libraries can declare what capabilities they need, such as network
 or disk. This makes third-party libraries safer to install. This will
 be coarse permissions, similar to OpenBSD's Pledge.

@@ -24,9 +24,10 @@ struct { x: Int }
 // )
 
 // expected stderr:
-// Error: Parse error: Invalid name `{`.
-// ---| src/test_files/parser/struct_missing_name.gdn:1:8
+// Error: Parse error: Expected a symbol after this.
+// ---| src/test_files/parser/struct_missing_name.gdn:1:1
 // 1  | struct { x: Int }
-// 2  |        ^
+//    | ^^^^^^
+// 2  | 
 // 3  | // args: dump-ast
 

@@ -1,0 +1,24 @@
+import "__fs.gdn" as
+import "__fs.gdn" as foo
+
+{
+  dbg(foo)
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a symbol after this.
+// ---| src/test_files/check/incomplete_import.gdn:1:19
+// 1  | import "__fs.gdn" as
+//    |                   ^^
+// 2  | import "__fs.gdn" as foo
+// 
+// Warning: `__reserved_word_placeholder` is unused.
+// ---| src/test_files/check/incomplete_import.gdn:2:1
+// 1  | import "__fs.gdn" as
+// 2  | import "__fs.gdn" as foo
+//    | ^^^^^^
+// 3  | 
+// 4  | {
+

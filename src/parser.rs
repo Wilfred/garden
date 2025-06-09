@@ -2259,15 +2259,18 @@ fn parse_symbol(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Symbol {
+    let prev_token = tokens.prev();
     let variable_token = require_a_token(tokens, diagnostics, "variable name");
+
+    let prev_token_pos = match prev_token {
+        Some(t) => t.position.clone(),
+        None => variable_token.position.clone(),
+    };
+
     if !SYMBOL_RE.is_match(variable_token.text) {
         diagnostics.push(ParseError::Invalid {
-            position: variable_token.position.clone(),
-            message: ErrorMessage(vec![
-                msgtext!("Invalid name "),
-                msgcode!("{}", variable_token.text),
-                msgtext!("."),
-            ]),
+            position: prev_token_pos,
+            message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
             additional: vec![],
         });
         tokens.unpop();
@@ -2277,11 +2280,8 @@ fn parse_symbol(
     for reserved in RESERVED_WORDS {
         if variable_token.text == *reserved {
             diagnostics.push(ParseError::Invalid {
-                position: variable_token.position.clone(),
-                message: ErrorMessage(vec![
-                    msgcode!("{}", variable_token.text),
-                    msgtext!(" is a reserved word that cannot be used as a name."),
-                ]),
+                position: prev_token_pos,
+                message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
                 additional: vec![],
             });
             tokens.unpop();

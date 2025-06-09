@@ -54,7 +54,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       }
     } else if in_code_block {
       current_section = current_section.append(line)
-    } else if line == "---" {
+    } else if ((line == "---") || (line == "***")) || (line == "___") {
       if current_section.is_non_empty() {
         parts = parts.append(finish_section(in_bullets, current_section))
       }
@@ -477,7 +477,9 @@ test render_asterisk {
 }
 
 test render_thematic_break {
+  assert(render_markdown("***") == "<hr />")
   assert(render_markdown("---") == "<hr />")
+  assert(render_markdown("___") == "<hr />")
 }
 
 test render_image {

@@ -533,6 +533,10 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
                     res.push('\n');
                     i += 2;
                 }
+                Some('t') => {
+                    res.push('\t');
+                    i += 2;
+                }
                 Some('\\') => {
                     res.push('\\');
                     i += 2;

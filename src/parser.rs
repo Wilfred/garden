@@ -514,7 +514,10 @@ fn parse_return(
     Expression::new(pos, Expression_::Return(expr), id_gen.next())
 }
 
-fn unescape_string(src: &str) -> String {
+fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
+    let mut diagnostics = vec![];
+    let src = token.text;
+
     // Trim doublequotes.
     let s = &src[1..src.len() - 1];
 
@@ -539,8 +542,25 @@ fn unescape_string(src: &str) -> String {
                     i += 2;
                 }
                 _ => {
-                    // TODO: an invalid escape sequence such as \z
-                    // should be a parse error.
+                    diagnostics.push(ParseError::Invalid {
+                        position: token.position.clone(),
+                        message: ErrorMessage(vec![
+                            msgtext!("Invalid escape sequence "),
+                            msgcode!("\\{}", c),
+                            msgtext!(". Only "),
+                            msgcode!("\\\\"),
+                            msgtext!(", "),
+                            msgcode!("\\\""),
+                            msgtext!(", "),
+                            msgcode!("\\n"),
+                            msgtext!(" and "),
+                            msgcode!("\\t"),
+                            msgtext!(" are supported."),
+                        ]),
+                        additional: vec![],
+                    });
+
+                    // Treat \z as \\z.
                     res.push(c);
 
                     i += 1;
@@ -552,7 +572,7 @@ fn unescape_string(src: &str) -> String {
         }
     }
 
-    res
+    (diagnostics, res)
 }
 
 fn parse_simple_expression(
@@ -598,9 +618,12 @@ fn parse_simple_expression(
         if token.text.starts_with('\"') {
             tokens.pop();
 
+            let (errors, unescaped) = unescape_string(&token);
+            diagnostics.extend(errors);
+
             return Expression::new(
                 token.position,
-                Expression_::StringLiteral(unescape_string(token.text)),
+                Expression_::StringLiteral(unescaped),
                 id_gen.next(),
             );
         }
@@ -1415,7 +1438,10 @@ fn parse_import(
     let position = Position::merge_token(&import_token, &path_token.position);
 
     let path_s = if path_token.text.starts_with('\"') {
-        unescape_string(path_token.text)
+        let (errors, s) = unescape_string(&path_token);
+        diagnostics.extend(errors);
+
+        s
     } else {
         diagnostics.push(ParseError::Incomplete {
             position: path_token.position,

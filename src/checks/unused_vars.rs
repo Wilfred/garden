@@ -214,6 +214,13 @@ impl Visitor for UnusedVariableVisitor {
         let Some(namespace_sym) = &import_info.namespace_sym else {
             return;
         };
+
+        // We don't want to complain on unused placeholder symbols,
+        // they indicate an incomplete expression with a parse error.
+        if namespace_sym.name.is_placeholder() {
+            return;
+        }
+
         self.file_bindings.insert(
             namespace_sym.name.clone(),
             UseState::NotUsed(namespace_sym.position.clone()),

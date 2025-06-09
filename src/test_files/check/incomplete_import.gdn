@@ -13,12 +13,4 @@ import "__fs.gdn" as foo
 // 1  | import "__fs.gdn" as
 //    |                   ^^
 // 2  | import "__fs.gdn" as foo
-// 
-// Warning: `__reserved_word_placeholder` is unused.
-// ---| src/test_files/check/incomplete_import.gdn:2:1
-// 1  | import "__fs.gdn" as
-// 2  | import "__fs.gdn" as foo
-//    | ^^^^^^
-// 3  | 
-// 4  | {
 

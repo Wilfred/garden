@@ -18,9 +18,14 @@ use crate::{
 };
 
 #[derive(Serialize, Debug)]
+struct TestState {
+    description: String,
+}
+
+#[derive(Serialize, Debug)]
 struct SandboxedTestsSummary {
     description: String,
-    tests: FxHashMap<String, String>,
+    tests: FxHashMap<String, TestState>,
 }
 
 fn sandboxed_tests_summary(
@@ -83,7 +88,7 @@ fn sandboxed_tests_summary(
     let mut num_sandboxed = 0;
     let mut num_timed_out = 0;
 
-    let mut tests = FxHashMap::default();
+    let mut tests: FxHashMap<_, TestState> = FxHashMap::default();
     for (test_sym, err) in &summary.tests {
         let msg = match err {
             Some(EvalError::Interrupted) => {
@@ -111,7 +116,7 @@ fn sandboxed_tests_summary(
                 "passed".to_owned()
             }
         };
-        tests.insert(test_sym.name.text.clone(), msg);
+        tests.insert(test_sym.name.text.clone(), TestState { description: msg });
     }
 
     if test_at_cursor.is_some() {

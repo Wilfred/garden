@@ -178,7 +178,8 @@ repeated parentheses/brackets on the same line."
        (let* ((summary (json-parse-string result :object-type 'hash-table :null-object nil))
               (test-details (gethash "tests" summary (make-hash-table))))
          (dolist (test-name (hash-table-keys test-details))
-           (let ((test-result (gethash test-name test-details)))
+           (let* ((test-state (gethash test-name test-details))
+                  (test-result (gethash "description" test-state)))
              (puthash test-name test-result garden--test-states)))
 
          (garden--apply-test-faces buf)

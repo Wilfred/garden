@@ -6,5 +6,6 @@ test write_file_is_unsafe {
 }
 
 // args: sandboxed-test
-// expected stdout: {"description":"sandboxed","tests":{"write_file_is_unsafe":"sandboxed"}}
+// expected stdout:
+// {"description":"sandboxed","tests":{"write_file_is_unsafe":{"description":"sandboxed"}}}
 

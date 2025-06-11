@@ -4,5 +4,6 @@ test shell_is_unsafe {
 }
 
 // args: sandboxed-test
-// expected stdout: {"description":"sandboxed","tests":{"shell_is_unsafe":"sandboxed"}}
+// expected stdout:
+// {"description":"sandboxed","tests":{"shell_is_unsafe":{"description":"sandboxed"}}}
 

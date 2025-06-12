@@ -98,15 +98,20 @@ fun parse_markdown(src: String): List<MarkdownPart> {
 fun render_markdown_header(src: String): String {
   let h_count = 0
 
-  while src.starts_with("#") {
+  let content = src
+  while content.starts_with("#") {
     h_count += 1
-    src = src.strip_prefix("#")
+    content = content.strip_prefix("#")
+  }
+
+  if h_count > 6 {
+    return "".join(["<p>", src, "</p>"])
   }
 
   let open_tag = "".join(["<h", string_repr(h_count), ">"])
   let close_tag = "".join(["</h", string_repr(h_count), ">"])
 
-  "".join([open_tag, render_inline(src.strip_prefix(" ")), close_tag])
+  "".join([open_tag, render_inline(content.strip_prefix(" ")), close_tag])
 }
 
 fun lex_with_ranges(s: String): List<(Int, Int, String)> {
@@ -409,12 +414,12 @@ test render_markdown_paragraph_newlines {
   assert(render_markdown("foo\nbar") == "<p>foo\nbar</p>")
 }
 
-test render_h1 {
+test render_headers {
   assert(render_markdown("# foo") == "<h1>foo</h1>")
-}
-
-test render_h2 {
   assert(render_markdown("## foo") == "<h2>foo</h2>")
+  assert(render_markdown("###### foo") == "<h6>foo</h6>")
+
+  assert(render_markdown("####### foo") == "<p>####### foo</p>")
 }
 
 test render_markdown_paragraph {

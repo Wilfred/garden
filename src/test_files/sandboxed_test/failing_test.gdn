@@ -5,5 +5,5 @@ test foo {
 
 // args: sandboxed-test
 // expected stdout:
-// {"description":"failing","tests":{"foo":{"description":"failed: Expected `2` but got `1`."}}}
+// {"description":"failing","tests":{"foo":{"description":"failed: Expected `2` but got `1`.","failure_start_offset":22,"failure_end_offset":28}}}
 

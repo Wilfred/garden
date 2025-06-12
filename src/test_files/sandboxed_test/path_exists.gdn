@@ -5,5 +5,5 @@ test path_exists_is_unsafe {
 
 // args: sandboxed-test
 // expected stdout:
-// {"description":"sandboxed","tests":{"path_exists_is_unsafe":{"description":"sandboxed"}}}
+// {"description":"sandboxed","tests":{"path_exists_is_unsafe":{"description":"sandboxed","failure_start_offset":null,"failure_end_offset":null}}}
 

@@ -9,5 +9,6 @@ test one {
 }
 
 // args: sandboxed-test
-// expected stdout: {"description":"1 passed","tests":{"one":{"description":"passed"}}}
+// expected stdout:
+// {"description":"1 passed","tests":{"one":{"description":"passed","failure_start_offset":null,"failure_end_offset":null}}}
 

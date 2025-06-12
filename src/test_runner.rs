@@ -20,6 +20,8 @@ use crate::{
 #[derive(Serialize, Debug)]
 struct TestState {
     description: String,
+    failure_start_offset: Option<usize>,
+    failure_end_offset: Option<usize>,
 }
 
 #[derive(Serialize, Debug)]
@@ -90,6 +92,9 @@ fn sandboxed_tests_summary(
 
     let mut tests: FxHashMap<_, TestState> = FxHashMap::default();
     for (test_sym, err) in &summary.tests {
+        let mut failure_start_offset = None;
+        let mut failure_end_offset = None;
+
         let msg = match err {
             Some(EvalError::Interrupted) => {
                 num_errored += 1;
@@ -99,8 +104,11 @@ fn sandboxed_tests_summary(
                 num_errored += 1;
                 format!("errored: {}", msg.as_string())
             }
-            Some(EvalError::AssertionFailed(_, msg)) => {
+            Some(EvalError::AssertionFailed(pos, msg)) => {
                 num_failed += 1;
+                failure_start_offset = Some(pos.start_offset);
+                failure_end_offset = Some(pos.end_offset);
+
                 format!("failed: {}", msg.as_string())
             }
             Some(EvalError::ReachedTickLimit(_)) => {
@@ -116,7 +124,14 @@ fn sandboxed_tests_summary(
                 "passed".to_owned()
             }
         };
-        tests.insert(test_sym.name.text.clone(), TestState { description: msg });
+        tests.insert(
+            test_sym.name.text.clone(),
+            TestState {
+                description: msg,
+                failure_start_offset,
+                failure_end_offset,
+            },
+        );
     }
 
     if test_at_cursor.is_some() {

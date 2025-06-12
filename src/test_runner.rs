@@ -98,18 +98,18 @@ fn sandboxed_tests_summary(
         let msg = match err {
             Some(EvalError::Interrupted) => {
                 num_errored += 1;
-                "errored: interrupted".to_owned()
+                "interrupted".to_owned()
             }
             Some(EvalError::ResumableError(_, msg)) => {
                 num_errored += 1;
-                format!("errored: {}", msg.as_string())
+                msg.as_string()
             }
             Some(EvalError::AssertionFailed(pos, msg)) => {
                 num_failed += 1;
                 failure_start_offset = Some(pos.start_offset);
                 failure_end_offset = Some(pos.end_offset);
 
-                format!("failed: {}", msg.as_string())
+                msg.as_string()
             }
             Some(EvalError::ReachedTickLimit(_)) => {
                 num_timed_out += 1;

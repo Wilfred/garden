@@ -204,6 +204,12 @@ repeated parentheses/brackets on the same line."
       (widen)
       (goto-char (point-min))
 
+      ;; Remove all existing test failure overlays.
+      (let ((overlays (overlays-in (point-min) (point-max))))
+        (dolist (overlay overlays)
+          (when (eq (overlay-get overlay 'face) 'garden-test-failed-face)
+            (delete-overlay overlay))))
+
       (while (re-search-forward
               (rx
                line-start "test" (1+ whitespace)
@@ -218,11 +224,23 @@ repeated parentheses/brackets on the same line."
                       ((string= status "passed") 'garden-test-pass-face)
                       ((string= status "sandboxed") 'garden-test-sandboxed-face)
                       (t 'garden-test-failed-face))))
-          (let ((err-msg (if (eq color 'garden-test-failed-face)
-                             status
-                           nil)))
+          (let* ((err-msg (if (eq color 'garden-test-failed-face)
+                              status
+                            nil))
+                 (failure-start (gethash "failure_start_offset" state))
+                 (failure-end (gethash "failure_end_offset" state)))
             (with-silent-modifications
               (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face color)
+
+              ;; Create an overlay for the failure
+              (when (and failure-start failure-end)
+                (let ((overlay (make-overlay (1+ failure-start) (1+ failure-end))))
+                  (overlay-put overlay 'face 'garden-test-failed-face)
+                  ;; Show the test failure information when hovering over the
+                  ;; test name with the mouse.
+                  (when err-msg
+                    (overlay-put overlay 'help-echo err-msg))))
+
               ;; Show the test failure information when hovering over a
               ;; test name with the mouse.
               ;;

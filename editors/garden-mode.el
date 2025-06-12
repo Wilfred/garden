@@ -166,8 +166,7 @@ repeated parentheses/brackets on the same line."
   "A plist recording the last test result for each file, as a string description.")
 
 (defvar garden--test-states (make-hash-table :test #'equal)
-  "The passing/failing state of each individual test."
-  )
+  "The passing/failing state of each individual test.")
 
 (defun garden-test-sandboxed ()
   (interactive)
@@ -178,9 +177,8 @@ repeated parentheses/brackets on the same line."
        (let* ((summary (json-parse-string result :object-type 'hash-table :null-object nil))
               (test-details (gethash "tests" summary (make-hash-table))))
          (dolist (test-name (hash-table-keys test-details))
-           (let* ((test-state (gethash test-name test-details))
-                  (test-result (gethash "description" test-state)))
-             (puthash test-name test-result garden--test-states)))
+           (let* ((test-state (gethash test-name test-details)))
+             (puthash test-name test-state garden--test-states)))
 
          (garden--apply-test-faces buf)
          (setq
@@ -212,18 +210,18 @@ repeated parentheses/brackets on the same line."
                (group (1+ (or (syntax word) (syntax symbol))))
                symbol-end)
               nil t)
-        (let* ((test-name (match-string 1))
-               (status (gethash test-name garden--test-states))
-               (err-msg nil)
-               (color
-                (cond
-                 ((string= status "passed") 'garden-test-pass-face)
-                 ((string= status "sandboxed") 'garden-test-sandboxed-face)
-                 (t
-                  (setq err-msg status)
-                  'garden-test-failed-face))))
-          (with-silent-modifications
-            (when status
+        (when-let* ((test-name (match-string 1))
+                    (state (gethash test-name garden--test-states))
+                    (status (gethash "description" state))
+                    (color
+                     (cond
+                      ((string= status "passed") 'garden-test-pass-face)
+                      ((string= status "sandboxed") 'garden-test-sandboxed-face)
+                      (t 'garden-test-failed-face))))
+          (let ((err-msg (if (eq color 'garden-test-failed-face)
+                             status
+                           nil)))
+            (with-silent-modifications
               (put-text-property (match-beginning 1) (match-end 1) 'font-lock-face color)
               ;; Show the test failure information when hovering over a
               ;; test name with the mouse.

@@ -165,7 +165,7 @@ repeated parentheses/brackets on the same line."
 (defvar garden--last-test-result nil
   "A plist recording the last test result for each file, as a string description.")
 
-(defvar garden--test-states (make-hash-table :test #'equal)
+(defvar-local garden--test-states (make-hash-table :test #'equal)
   "The passing/failing state of each individual test.")
 
 (defun garden-test-sandboxed ()

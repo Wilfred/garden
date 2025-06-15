@@ -13,7 +13,7 @@ jobs:
       - name: Build binary for assert_cmd
         run: cargo build
 
-      - run: cargo test
+      - run: GDN_TEST=y cargo test
 
   actionlint:
     name: Actionlint

@@ -64,18 +64,24 @@ fn require_a_token<'a>(
     match tokens.pop() {
         Some(token) => token,
         None => {
+            let prev_token = tokens.prev();
+            let position = prev_token
+                .as_ref()
+                .map(|t| t.position.clone())
+                .unwrap_or(Position::todo(&tokens.vfs_path));
+
             diagnostics.push(ParseError::Incomplete {
                 message: ErrorMessage(vec![msgtext!(
                     "Expected {}, but got EOF.",
                     token_description
                 )]),
-                position: Position::todo(&tokens.vfs_path),
+                position,
             });
 
             // TODO: this is arbitrarily choosing the previous token,
             // which is a horrible hack. It would be better to have a
             // way of generating placeholder tokens.
-            tokens.prev().expect("TODO: handle empty token streams")
+            prev_token.expect("TODO: handle empty token streams")
         }
     }
 }
@@ -754,8 +760,13 @@ fn parse_match(
     let mut cases = vec![];
     loop {
         let Some(token) = tokens.peek() else {
+            let position = match tokens.prev() {
+                Some(prev_token) => prev_token.position.clone(),
+                None => Position::todo(&tokens.vfs_path),
+            };
+
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position,
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!("}}"),
@@ -914,13 +925,14 @@ fn parse_comma_separated_exprs(
                 });
             }
         } else {
+            let position = arg.position.clone();
             items.push(ExpressionWithComma {
                 expr: Rc::new(arg),
                 comma: None,
             });
 
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position,
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!(","),
@@ -1206,8 +1218,13 @@ fn parse_definition(
         return None;
     }
 
+    let position = match tokens.prev() {
+        Some(prev_token) => prev_token.position.clone(),
+        None => Position::todo(&tokens.vfs_path),
+    };
+
     diagnostics.push(ParseError::Incomplete {
-        position: Position::todo(&tokens.vfs_path),
+        position,
         message: ErrorMessage(vec![Text("Unfinished definition".to_owned())]),
     });
     None
@@ -1249,8 +1266,13 @@ fn parse_enum_body(
                 break;
             }
         } else {
+            let position = match tokens.prev() {
+                Some(prev_token) => prev_token.position.clone(),
+                None => Position::todo(&tokens.vfs_path),
+            };
+
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position,
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!(","),
@@ -1428,7 +1450,7 @@ fn parse_import(
 
     let Some(path_token) = tokens.pop() else {
         diagnostics.push(ParseError::Incomplete {
-            position: Position::todo(&tokens.vfs_path),
+            position: import_token.position.clone(),
             message: ErrorMessage(vec![
                 msgtext!("Unfinished"),
                 msgcode!("import"),
@@ -1515,6 +1537,7 @@ fn parse_type_arguments(
             }
         }
         let arg = parse_type_hint(tokens, id_gen, diagnostics);
+        let arg_pos = arg.position.clone();
         args.push(arg);
 
         if let Some(token) = tokens.peek() {
@@ -1540,7 +1563,7 @@ fn parse_type_arguments(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position: arg_pos.clone(),
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!(","),
@@ -1549,7 +1572,7 @@ fn parse_type_arguments(
                     msgtext!(" here, but got EOF."),
                 ]),
             });
-            break Position::todo(&tokens.vfs_path);
+            break arg_pos;
         }
     };
 
@@ -1577,6 +1600,7 @@ fn parse_type_params(
         }
 
         let arg = parse_type_symbol(tokens, id_gen, diagnostics);
+        let arg_pos = arg.position.clone();
         params.push(arg);
 
         if let Some(token) = tokens.peek() {
@@ -1602,7 +1626,7 @@ fn parse_type_params(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position: arg_pos,
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!(","),
@@ -1635,7 +1659,9 @@ fn parse_tuple_type_hint(
             break;
         }
 
-        item_hints.push(parse_type_hint(tokens, id_gen, diagnostics));
+        let hint = parse_type_hint(tokens, id_gen, diagnostics);
+        let hint_pos = hint.position.clone();
+        item_hints.push(hint);
 
         if let Some(token) = tokens.peek() {
             if token.text == "," {
@@ -1643,7 +1669,7 @@ fn parse_tuple_type_hint(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position: hint_pos,
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!(","),
@@ -1782,6 +1808,7 @@ fn parse_parameters(
         }
 
         let param = parse_parameter(tokens, id_gen, diagnostics, false);
+        let param_pos = param.symbol.position.clone();
         params.push(param);
 
         if let Some(token) = tokens.peek() {
@@ -1807,7 +1834,7 @@ fn parse_parameters(
             }
         } else {
             diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
+                position: param_pos,
                 message: ErrorMessage(vec![
                     msgtext!("Expected "),
                     msgcode!(","),

@@ -22,6 +22,7 @@ fun file_name(s: String) {
 // {"name":"strip_prefix","suffix":"(String): String"}
 // {"name":"strip_suffix","suffix":"(String): String"}
 // {"name":"substring","suffix":"(Int, Int): String"}
+// {"name":"trim()","suffix":": String"}
 // {"name":"trim_left()","suffix":": String"}
 // {"name":"trim_right()","suffix":": String"}
 

@@ -4,6 +4,10 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 
+### Standard Library
+
+Added `String::trim()`.
+
 # 0.20 (released 1st June 2025)
 **Goal: Namespaces.**
 

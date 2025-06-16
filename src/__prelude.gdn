@@ -263,6 +263,19 @@ test trim_right {
   assert("a  ".trim_right() == "a")
 }
 
+// Remove whitespace from both the start and end of this string.
+external fun (this: String) trim(): String {
+  this.trim_left().trim_right()
+}
+
+test trim {
+  assert("a".trim() == "a")
+  assert("a b".trim() == "a b")
+  assert(" a".trim() == "a")
+  assert("a  ".trim() == "a")
+}
+
+
 // Returns this string without the suffix specified. If this string
 // does not end with the suffix, return the string unchanged.
 //

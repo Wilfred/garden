@@ -5,7 +5,7 @@ external fun (this String) doStuff() {}
 // expected stdout:
 // Error: Expected `:` after this.
 // ---| src/test_files/check/missing_colon_method_receiver.gdn:1:15
-// 1  | external fun (this String) doStuff() {}
-// 2  |               ^^^^
-// 3  | // args: check
+//   1| external fun (this String) doStuff() {}
+//   2|               ^^^^
+//   3| // args: check
 

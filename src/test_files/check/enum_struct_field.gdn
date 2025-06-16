@@ -7,7 +7,7 @@ external fun foo(b: Bool) {
 // expected stdout:
 // Error: `Bool` is not a struct.
 // ---| src/test_files/check/enum_struct_field.gdn:2:7
-// 1  | external fun foo(b: Bool) {
-// 2  |     b.some_field
-// 3  | }     ^^^^^^^^^^
+//   1| external fun foo(b: Bool) {
+//   2|     b.some_field
+//   3| }     ^^^^^^^^^^
 

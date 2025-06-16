@@ -13,9 +13,9 @@ external fun subst_method_return_tys<T>() {
 // expected stdout:
 // Warning: Unfinished code.
 // ---| src/test_files/check/method_return_generic.gdn:4:25
-// 2  |   let items: List<(Int, T)> = []
-// 3  | 
-// 4  |   let t: (Int, T) = (0, todo())
-// 5  |                         ^^^^^^
-// 6  |   // Regression test: we should only substitute T once, so this code
+//   2|   let items: List<(Int, T)> = []
+//   3| 
+//   4|   let t: (Int, T) = (0, todo())
+//   5|                         ^^^^^^
+//   6|   // Regression test: we should only substitute T once, so this code
 

@@ -8,6 +8,6 @@
 // expected stderr:
 // Error: lhs
 // ---| src/test_files/runtime/binop_eval_order.gdn:4:3	 __toplevel__
-// 4  |   error("lhs") + error("rhs")
+//   4|   error("lhs") + error("rhs")
 //    |   ^^^^^^^^^^^^
 

@@ -18,10 +18,10 @@ fun call_it2() {
 // expected stderr:
 // Error: No such variable `no_such`.
 // ---| src/test_files/runtime/stack_trace.gdn:6:5	 fun call_it()
-// 6  |     no_such()
+//   6|     no_such()
 //    |     ^^^^^^^
 // ---| src/test_files/runtime/stack_trace.gdn:10:5	 fun call_it2()
-// 10 |     call_it()
+//  10|     call_it()
 // ---| src/test_files/runtime/stack_trace.gdn:14:5	 __toplevel__
-// 14 |     call_it2()
+//  14|     call_it2()
 

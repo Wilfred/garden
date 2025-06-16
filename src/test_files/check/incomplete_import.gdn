@@ -10,7 +10,7 @@ import "__fs.gdn" as foo
 // expected stdout:
 // Error: Expected a symbol after this.
 // ---| src/test_files/check/incomplete_import.gdn:1:19
-// 1  | import "__fs.gdn" as
+//   1| import "__fs.gdn" as
 //    |                   ^^
-// 2  | import "__fs.gdn" as foo
+//   2| import "__fs.gdn" as foo
 

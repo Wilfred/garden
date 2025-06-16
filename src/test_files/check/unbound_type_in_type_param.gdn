@@ -7,7 +7,7 @@ external fun foo(): Option<NoSuchType> {
 // expected stdout:
 // Error: No such type `NoSuchType`.
 // ---| src/test_files/check/unbound_type_in_type_param.gdn:1:28
-// 1  | external fun foo(): Option<NoSuchType> {
-// 2  |     None                   ^^^^^^^^^^
-// 3  | }
+//   1| external fun foo(): Option<NoSuchType> {
+//   2|     None                   ^^^^^^^^^^
+//   3| }
 

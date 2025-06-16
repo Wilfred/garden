@@ -7,9 +7,9 @@ enum Foo {}
 // expected stdout:
 // Warning: The type `Foo` is already defined in this file.
 // ---| src/test_files/check/duplicate_type.gdn:3:6
-// 1  | struct Foo {}
-// 2  | 
-// 3  | enum Foo {}
-// 4  |      ^^^
-// 5  | // args: check
+//   1| struct Foo {}
+//   2| 
+//   3| enum Foo {}
+//   4|      ^^^
+//   5| // args: check
 

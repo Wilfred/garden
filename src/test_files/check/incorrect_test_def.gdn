@@ -9,23 +9,23 @@ test baz(x: Int) {}
 // expected stdout:
 // Error: Tests should not have arguments. A valid test look like this: `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:1:9
-// 1  | test foo() {}
-// 2  |         ^^
-// 3  | test bar(x) {}
+//   1| test foo() {}
+//   2|         ^^
+//   3| test bar(x) {}
 // 
 // Error: Tests should not have arguments. A valid test look like this: `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:3:9
-// 1  | test foo() {}
-// 2  | 
-// 3  | test bar(x) {}
-// 4  |         ^^^
-// 5  | test baz(x: Int) {}
+//   1| test foo() {}
+//   2| 
+//   3| test bar(x) {}
+//   4|         ^^^
+//   5| test baz(x: Int) {}
 // 
 // Error: Tests should not have arguments. A valid test look like this: `test foo {}`.
 // ---| src/test_files/check/incorrect_test_def.gdn:5:9
-// 3  | test bar(x) {}
-// 4  | 
-// 5  | test baz(x: Int) {}
-// 6  |         ^^^^^^^^
-// 7  | // args: check
+//   3| test bar(x) {}
+//   4| 
+//   5| test baz(x: Int) {}
+//   6|         ^^^^^^^^
+//   7| // args: check
 

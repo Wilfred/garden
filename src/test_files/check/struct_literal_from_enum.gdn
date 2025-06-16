@@ -13,7 +13,7 @@ external fun foo() {
 // expected stdout:
 // Error: `Color` is not a struct.
 // ---| src/test_files/check/struct_literal_from_enum.gdn:8:5
-// 7  | external fun foo() {
-// 8  |     Color{}
-// 9  | }   ^^^^^
+//   7| external fun foo() {
+//   8|     Color{}
+//   9| }   ^^^^^
 

@@ -8,6 +8,6 @@ enum Foo { X }
 // expected stderr:
 // Error: `Foo` is not a struct, so it cannot be initialized with struct syntax.
 // ---| src/test_files/runtime/struct_syntax_invalid_type.gdn:4:5	 __toplevel__
-// 4  |     Foo{ x: 1 }
+//   4|     Foo{ x: 1 }
 //    |     ^^^
 

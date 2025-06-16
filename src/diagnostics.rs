@@ -369,7 +369,7 @@ fn format_pos_in_fun(
 }
 
 fn format_margin_num(num: &str, margin_width: usize, use_color: bool) -> String {
-    let s = format!("{:width$}| ", num, width = margin_width - 1);
+    let s = format!("{:>width$}| ", num, width = margin_width - 1);
 
     if use_color {
         s.dimmed().to_string()

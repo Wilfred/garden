@@ -21,10 +21,10 @@ struct Foo {
 // expected stdout:
 // Warning: The type `Foo` is already defined in this file.
 // ---| src/test_files/check/redefine_type.gdn:9:8
-// 7  | }
-// 8  | 
-// 9  | struct Foo {
+//   7| }
+//   8| 
+//   9| struct Foo {
 //    |        ^^^
-// 10 |   name: String,
-// 11 | }
+//  10|   name: String,
+//  11| }
 

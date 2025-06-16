@@ -16,20 +16,20 @@ external fun bar(_: Int, _: Int, _: String) {
 // expected stdout:
 // Error: Duplicate parameter `x`.
 // ---| src/test_files/check/repeated_bindings.gdn:1:26
-// 1  | external fun foo(x: Int, x: Int) {
-// 2  |     let (y, y) = (1, 2)  ^
+//   1| external fun foo(x: Int, x: Int) {
+//   2|     let (y, y) = (1, 2)  ^
 // 
 // Error: Duplicate variable  `y` in destructuring `let`.
 // ---| src/test_files/check/repeated_bindings.gdn:2:13
-// 1  | external fun foo(x: Int, x: Int) {
-// 2  |     let (y, y) = (1, 2)
-// 3  |             ^
-// 4  |     let _f = fun(z, z) {}
+//   1| external fun foo(x: Int, x: Int) {
+//   2|     let (y, y) = (1, 2)
+//   3|             ^
+//   4|     let _f = fun(z, z) {}
 // 
 // Error: Duplicate parameter `z`.
 // ---| src/test_files/check/repeated_bindings.gdn:4:21
-// 2  |     let (y, y) = (1, 2)
-// 3  | 
-// 4  |     let _f = fun(z, z) {}
-// 5  | }                   ^
+//   2|     let (y, y) = (1, 2)
+//   3| 
+//   4|     let _f = fun(z, z) {}
+//   5| }                   ^
 

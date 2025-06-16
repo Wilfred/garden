@@ -8,9 +8,9 @@ external fun (this: String) foo() {
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
 // ---| src/test_files/check/type_error_redefine_this.gdn:2:12
-// 1  | external fun (this: String) foo() {
-// 2  |     this = 123
+//   1| external fun (this: String) foo() {
+//   2|     this = 123
 //    |            ^^^
-// 3  |     this.index_of("a")
-// 4  | }
+//   3|     this.index_of("a")
+//   4| }
 

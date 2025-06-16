@@ -8,8 +8,8 @@ fun foo(): Int {}
 // expected stderr:
 // Error: Expected `Int`, but got `Unit`
 // ---| src/test_files/runtime/return_invalid_unit.gdn:1:12	 fun foo()
-// 1  | fun foo(): Int {}
+//   1| fun foo(): Int {}
 //    |            ^^^
 // ---| src/test_files/runtime/return_invalid_unit.gdn:4:5	 __toplevel__
-// 4  |     foo()
+//   4|     foo()
 

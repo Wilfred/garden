@@ -15,8 +15,8 @@ fun foo(): Box<Int> {
 // expected stderr:
 // Error: Expected `Box<Int>`, but got `Box<String>`: `Box{ value: "not an int" }`
 // ---| src/test_files/runtime/struct_invalid_type_param.gdn:5:12	 fun foo()
-// 5  | fun foo(): Box<Int> {
+//   5| fun foo(): Box<Int> {
 //    |            ^^^^^^^^
 // ---| src/test_files/runtime/struct_invalid_type_param.gdn:10:5	 __toplevel__
-// 10 |     foo()
+//  10|     foo()
 

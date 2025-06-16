@@ -11,10 +11,10 @@
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
 // ---| src/test_files/check/type_error_option_match.gdn:4:20
-// 2  |     let value = Some("foo")
-// 3  |     match value {
-// 4  |         Some(v) => v + 1,
+//   2|     let value = Some("foo")
+//   3|     match value {
+//   4|         Some(v) => v + 1,
 //    |                    ^
-// 5  |         None => error("")
-// 6  |     }
+//   5|         None => error("")
+//   6|     }
 

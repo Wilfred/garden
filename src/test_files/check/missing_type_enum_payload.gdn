@@ -8,8 +8,8 @@ enum Foo {
 // expected stdout:
 // Error: No such type `NoSuchType`.
 // ---| src/test_files/check/missing_type_enum_payload.gdn:3:9
-// 1  | enum Foo {
-// 2  |     One,
-// 3  |     Two(NoSuchType),
-// 4  | }       ^^^^^^^^^^
+//   1| enum Foo {
+//   2|     One,
+//   3|     Two(NoSuchType),
+//   4| }       ^^^^^^^^^^
 

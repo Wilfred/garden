@@ -17,9 +17,9 @@ enum Foo {
 // expected stdout:
 // Error: `match` cases have different types.
 // ---| src/test_files/check/type_error_match_different_cases.gdn:11:18
-// 9  |         One => [],
-// 10 |         Two => error(""),
-// 11 |         Three => "stuff",
-// 12 |     }            ^^^^^^^
-// 13 | }
+//   9|         One => [],
+//  10|         Two => error(""),
+//  11|         Three => "stuff",
+//  12|     }            ^^^^^^^
+//  13| }
 

@@ -9,7 +9,7 @@ external fun takes_int(_v: Int) {}
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
 // ---| src/test_files/check/type_error_local_function.gdn:4:15
-// 3  | {
-// 4  |     takes_int("foo")
-// 5  | }             ^^^^^
+//   3| {
+//   4|     takes_int("foo")
+//   5| }             ^^^^^
 

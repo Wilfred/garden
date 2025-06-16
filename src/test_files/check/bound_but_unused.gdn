@@ -5,7 +5,7 @@ external fun foo(x: Int) {}
 // expected stdout:
 // Warning: `x` is unused.
 // ---| src/test_files/check/bound_but_unused.gdn:1:18
-// 1  | external fun foo(x: Int) {}
-// 2  |                  ^
-// 3  | // args: check
+//   1| external fun foo(x: Int) {}
+//   2|                  ^
+//   3| // args: check
 

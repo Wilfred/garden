@@ -7,8 +7,8 @@ test bar {
 // expected stderr:
 // Error: Parse error: Expected a symbol after this.
 // ---| src/test_files/parser/incomplete_fun.gdn:1:1
-// 1  | fun
+//   1| fun
 //    | ^^^
-// 2  | 
-// 3  | test bar {
+//   2| 
+//   3| test bar {
 

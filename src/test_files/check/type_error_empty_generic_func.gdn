@@ -5,7 +5,7 @@ external fun empty_block<T>(): List<T> {}
 // expected stdout:
 // Error: Expected `List<T>`, but got `Unit`.
 // ---| src/test_files/check/type_error_empty_generic_func.gdn:1:41
-// 1  | external fun empty_block<T>(): List<T> {}
-// 2  |                                         ^
-// 3  | // args: check
+//   1| external fun empty_block<T>(): List<T> {}
+//   2|                                         ^
+//   3| // args: check
 

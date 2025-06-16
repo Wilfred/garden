@@ -77,9 +77,9 @@ fun foo(src) {
 // expected stderr:
 // Error: Parse error: Expected `{` after this.
 // ---| src/test_files/parser/unfinished_match.gdn:2:11
-// 1  | fun foo(src) {
-// 2  |     match src
+//   1| fun foo(src) {
+//   2|     match src
 //    |           ^^^
-// 3  |             
-// 4  |     ("")
+//   3|             
+//   4|     ("")
 

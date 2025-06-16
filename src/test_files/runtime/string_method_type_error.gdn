@@ -6,6 +6,6 @@
 // expected stderr:
 // Error: Expected `String`, but got `Int`: `123`
 // ---| src/test_files/runtime/string_method_type_error.gdn:2:18	 __toplevel__
-// 2  |   "foo".index_of(123)
+//   2|   "foo".index_of(123)
 //    |                  ^^^
 

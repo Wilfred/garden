@@ -15,8 +15,8 @@ external fun takes_options<T>(_x: Option<T>, _y: Option<T>) {}
 // expected stdout:
 // Error: Expected `Option<Int>`, but got `Option<String>`.
 // ---| src/test_files/check/type_error_solve_generics.gdn:10:19
-// 8  |     // takes_options(Some(123), None)
-// 9  | 
-// 10 |     takes_options(Some("foo"), Some(123))
-// 11 | }                 ^^^^^^^^^^^
+//   8|     // takes_options(Some(123), None)
+//   9| 
+//  10|     takes_options(Some("foo"), Some(123))
+//  11| }                 ^^^^^^^^^^^
 

@@ -9,9 +9,9 @@
 // expected stdout:
 // Error: No such type `NoSuchType`.
 // ---| src/test_files/check/no_such_type_match.gdn:3:9
-// 1  | {
-// 2  |     match 1 {
-// 3  |         NoSuchType => {}
-// 4  |     }   ^^^^^^^^^^
-// 5  | }
+//   1| {
+//   2|     match 1 {
+//   3|         NoSuchType => {}
+//   4|     }   ^^^^^^^^^^
+//   5| }
 

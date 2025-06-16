@@ -13,8 +13,8 @@ fun foo(b: Bool): Int {
 // expected stderr:
 // Error: Expected `Int`, but got `Unit`
 // ---| src/test_files/runtime/if_without_else.gdn:1:19	 fun foo()
-// 1  | fun foo(b: Bool): Int {
+//   1| fun foo(b: Bool): Int {
 //    |                   ^^^
 // ---| src/test_files/runtime/if_without_else.gdn:9:5	 __toplevel__
-// 9  |     foo(True)
+//   9|     foo(True)
 

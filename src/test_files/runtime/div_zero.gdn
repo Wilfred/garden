@@ -6,6 +6,6 @@
 // expected stderr:
 // Error: Tried to divide 5 by zero.
 // ---| src/test_files/runtime/div_zero.gdn:2:7	 __toplevel__
-// 2  |   dbg(5 / 0)
+//   2|   dbg(5 / 0)
 //    |       ^^^^^
 

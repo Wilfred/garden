@@ -6,6 +6,6 @@
 // expected stderr:
 // Error: No type exists named `Foo`.
 // ---| src/test_files/runtime/struct_undefined_type.gdn:2:5	 __toplevel__
-// 2  |     Foo{ x: 1 }
+//   2|     Foo{ x: 1 }
 //    |     ^^^
 

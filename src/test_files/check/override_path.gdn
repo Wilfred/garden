@@ -7,7 +7,7 @@ external fun foo(): Int {
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
 // ---| foo.gdn:2:5
-// 1  | external fun foo(): Int {
-// 2  |     "Not an int"
-// 3  | }   ^^^^^^^^^^^^
+//   1| external fun foo(): Int {
+//   2|     "Not an int"
+//   3| }   ^^^^^^^^^^^^
 

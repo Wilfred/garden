@@ -26,8 +26,8 @@ struct { x: Int }
 // expected stderr:
 // Error: Parse error: Expected a symbol after this.
 // ---| src/test_files/parser/struct_missing_name.gdn:1:1
-// 1  | struct { x: Int }
+//   1| struct { x: Int }
 //    | ^^^^^^
-// 2  | 
-// 3  | // args: dump-ast
+//   2| 
+//   3| // args: dump-ast
 

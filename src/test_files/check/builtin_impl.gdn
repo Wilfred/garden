@@ -11,8 +11,8 @@ external fun bar() {
 // expected stdout:
 // Warning: Tried to update a built-in stub for a function `foo` that doesn't exist.
 // ---| src/test_files/check/builtin_impl.gdn:1:14
-// 1  | external fun foo(_: String): NoValue {
+//   1| external fun foo(_: String): NoValue {
 //    |              ^^^
-// 2  |   __BUILTIN_IMPLEMENTATION
-// 3  | }
+//   2|   __BUILTIN_IMPLEMENTATION
+//   3| }
 

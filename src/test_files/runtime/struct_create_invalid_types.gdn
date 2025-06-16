@@ -11,6 +11,6 @@ struct Foo {
 // expected stderr:
 // Error: Incorrect type for field: Expected `Int`, but got `String`: `"abc"`
 // ---| src/test_files/runtime/struct_create_invalid_types.gdn:6:17	 __toplevel__
-// 6  |     dbg(Foo{ x: "abc" })
+//   6|     dbg(Foo{ x: "abc" })
 //    |                 ^^^^^
 

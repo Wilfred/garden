@@ -13,15 +13,15 @@ external fun foo() {
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
 // ---| src/test_files/check/assign_add.gdn:5:10
-// 3  |     x += 1 // OK
-// 4  | 
-// 5  |     x += "" // bad
-// 6  |          ^^
-// 7  |     let y = "abc"
+//   3|     x += 1 // OK
+//   4| 
+//   5|     x += "" // bad
+//   6|          ^^
+//   7|     let y = "abc"
 // 
 // Error: `-=` can only be used with `Int` variables, but got `String`.
 // ---| src/test_files/check/assign_add.gdn:8:5
-// 7  |     let y = "abc"
-// 8  |     y -= 2 // bad
-// 9  | }   ^
+//   7|     let y = "abc"
+//   8|     y -= 2 // bad
+//   9| }   ^
 

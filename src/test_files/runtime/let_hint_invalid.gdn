@@ -6,6 +6,6 @@
 // expected stderr:
 // Error: Expected `String`, but got `Int`: `123`
 // ---| src/test_files/runtime/let_hint_invalid.gdn:2:21	 __toplevel__
-// 2  |     let x: String = 123
+//   2|     let x: String = 123
 //    |                     ^^^
 

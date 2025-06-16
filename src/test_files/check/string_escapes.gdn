@@ -6,8 +6,8 @@ let x = "\n\t\z"
 // expected stdout:
 // Error: Invalid escape sequence `\\`. Only `\\`, `\"`, `\n` and `\t` are supported.
 // ---| src/test_files/check/string_escapes.gdn:2:9
-// 1  | // \n and \t are legal, \z is not
-// 2  | let x = "\n\t\z"
-// 3  |         ^^^^^^^^
-// 4  | // args: check
+//   1| // \n and \t are legal, \z is not
+//   2| let x = "\n\t\z"
+//   3|         ^^^^^^^^
+//   4| // args: check
 

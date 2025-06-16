@@ -7,7 +7,7 @@ external fun foo() {
 // expected stdout:
 // Error: Unbound symbol: `x`
 // ---| src/test_files/check/free_variable_in_list.gdn:2:6
-// 1  | external fun foo() {
-// 2  |     [x]
-// 3  | }    ^
+//   1| external fun foo() {
+//   2|     [x]
+//   3| }    ^
 

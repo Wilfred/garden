@@ -89,31 +89,37 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
     }
 
     let mut env = Env::new(id_gen, vfs);
-    let ns = env.get_or_create_namespace(path);
-    let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
-    raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
 
-    for Diagnostic {
-        message,
-        position,
-        severity,
-        notes,
-    } in raw_diagnostics
-    {
-        diagnostics.push(CheckDiagnostic {
-            position: position.clone(),
-            line_number: position.line_number + 1,
-            end_line_number: position.end_line_number + 1,
-            column: position.column,
-            end_column: position.end_column,
-            message: if use_color {
-                message.as_styled_string()
-            } else {
-                message.as_string()
-            },
+    // If we have syntax errors, don't bother checking anything else,
+    // as it has a high false positive rate and it's hard to see what
+    // needs fixing next.
+    if diagnostics.is_empty() {
+        let ns = env.get_or_create_namespace(path);
+        let (mut raw_diagnostics, _) = load_toplevel_items(&items, &mut env, ns.clone());
+        raw_diagnostics.extend(check_toplevel_items_in_env(&vfs_path, &items, &env, ns));
+
+        for Diagnostic {
+            message,
+            position,
             severity,
             notes,
-        });
+        } in raw_diagnostics
+        {
+            diagnostics.push(CheckDiagnostic {
+                position: position.clone(),
+                line_number: position.line_number + 1,
+                end_line_number: position.end_line_number + 1,
+                column: position.column,
+                end_column: position.end_column,
+                message: if use_color {
+                    message.as_styled_string()
+                } else {
+                    message.as_string()
+                },
+                severity,
+                notes,
+            });
+        }
     }
 
     for (i, diagnostic) in diagnostics.iter().enumerate() {

@@ -8,6 +8,11 @@
 
 Added `String::trim()`.
 
+### Checks
+
+`check` now stops if syntax errors occur, as type errors are rarely
+actionable or accurate when syntax errors are present.
+
 # 0.20 (released 1st June 2025)
 **Goal: Namespaces.**
 

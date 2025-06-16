@@ -27,12 +27,4 @@ fun foo() {
 // 9  |   takes_arg(inc(x)
 // 10 |                  ^
 // 11 |   x = 2
-// 
-// Warning: `foo` is never called.
-// ---| src/test_files/check/missing_paren.gdn:5:5
-// 3  | fun inc(x: Int) { x + 1}
-// 4  | 
-// 5  | fun foo() {
-//    |     ^^^
-// 6  |   let x = 1
 

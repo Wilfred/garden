@@ -33,5 +33,4 @@ external fun (this: T) very_bad<T>() {}
 //   8| 
 //   9| external fun (this: T) very_bad<T>() {}
 //  10|                     ^
-//  11| // args: check
 

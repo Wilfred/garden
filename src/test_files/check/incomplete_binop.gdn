@@ -8,12 +8,10 @@
 //   1| /
 //    | ^
 //   2| 
-//   3| // args: check
 // 
 // Error: Expected an expression.
 // ---| src/test_files/check/incomplete_binop.gdn:1:1
 //   1| /
 //    | 
-//   2| 
-//   3| // args: check
+//   2|
 

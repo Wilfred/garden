@@ -7,5 +7,4 @@ import "__fs.gdn" as fs
 // ---| src/test_files/check/unused_import.gdn:1:22
 //   1| import "__fs.gdn" as fs
 //   2|                      ^^
-//   3| // args: check
 

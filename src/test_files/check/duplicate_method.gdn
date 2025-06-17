@@ -11,5 +11,4 @@ external fun (this: String) foo() {}
 //   2| 
 //   3| external fun (this: String) foo() {}
 //   4|                             ^^^
-//   5| // args: check
 

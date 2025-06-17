@@ -227,7 +227,8 @@ fn main() {
             override_path,
         } => {
             let abs_path = to_abs_path(&path);
-            let src = read_utf8_or_die(&abs_path);
+            let mut src = read_utf8_or_die(&abs_path);
+            src = remove_testing_footer(&src);
             let src_path = to_abs_path(&override_path.unwrap_or(path));
             syntax_check::check(&src_path, &src, json)
         }

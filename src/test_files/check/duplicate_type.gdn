@@ -11,5 +11,4 @@ enum Foo {}
 //   2| 
 //   3| enum Foo {}
 //   4|      ^^^
-//   5| // args: check
 

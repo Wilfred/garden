@@ -7,5 +7,4 @@ external fun foo(_f: Fun<(Int, Int)>) {}
 // ---| src/test_files/check/bad_fun_arity.gdn:1:26
 //   1| external fun foo(_f: Fun<(Int, Int)>) {}
 //   2|                          ^^^^^^^^^^
-//   3| // args: check
 

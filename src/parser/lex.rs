@@ -10,7 +10,7 @@ use super::vfs::VfsPathBuf;
 
 lazy_static! {
     pub(crate) static ref INTEGER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
-    pub(crate) static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*""#).unwrap();
+    pub(crate) static ref STRING_RE: Regex = Regex::new(r#"^"(\\"|[^"])*("|\z)"#).unwrap();
     pub(crate) static ref SYMBOL_RE: Regex = Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
 }
 
@@ -225,25 +225,64 @@ pub(crate) fn lex_between<'a>(
             }
         }
         if let Some(string_match) = STRING_RE.find(s) {
+            let text = string_match.as_str();
             let (line_number, column) = lp.from_offset(offset);
+            if text.ends_with('"') {
+                // Well-formed string literal.
+                tokens.push(Token {
+                    position: Position {
+                        start_offset: offset,
+                        end_offset: offset + string_match.end(),
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
+                        end_column: column + string_match.end(),
+                        path: vfs_path.path.clone(),
+                        vfs_path: vfs_path.clone(),
+                    },
+                    text,
+                    preceding_comments,
+                });
 
-            tokens.push(Token {
-                position: Position {
-                    start_offset: offset,
-                    end_offset: offset + string_match.end(),
-                    line_number: line_number.as_usize(),
-                    end_line_number: line_number.as_usize(),
-                    column,
-                    end_column: column + string_match.end(),
-                    path: vfs_path.path.clone(),
-                    vfs_path: vfs_path.clone(),
-                },
-                text: string_match.as_str(),
-                preceding_comments,
-            });
+                offset += string_match.end();
+            } else {
+                // String literal without a closing doublequote.
+                errors.push(ParseError::Invalid {
+                    position: Position {
+                        start_offset: offset,
+                        end_offset: offset + 1,
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
+                        end_column: column + 1,
+                        path: vfs_path.path.clone(),
+                        vfs_path: vfs_path.clone(),
+                    },
+                    message: ErrorMessage(vec![msgtext!("Unclosed string literal.")]),
+                    // TODO: include previous string position, which
+                    // was probably not closed correctly.
+                    additional: vec![],
+                });
+
+                tokens.push(Token {
+                    position: Position {
+                        start_offset: offset,
+                        end_offset: offset + 1,
+                        line_number: line_number.as_usize(),
+                        end_line_number: line_number.as_usize(),
+                        column,
+                        end_column: column + 1,
+                        path: vfs_path.path.clone(),
+                        vfs_path: vfs_path.clone(),
+                    },
+                    text: &text[..1],
+                    preceding_comments,
+                });
+
+                offset += 1;
+            }
+
             preceding_comments = vec![];
-
-            offset += string_match.end();
         } else if let Some(variable_match) = SYMBOL_RE.find(s) {
             let (line_number, column) = lp.from_offset(offset);
 

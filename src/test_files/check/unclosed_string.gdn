@@ -1,0 +1,13 @@
+test foo {
+  "bar
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Unclosed string literal.
+// ---| src/test_files/check/unclosed_string.gdn:2:3
+//   1| test foo {
+//   2|   "bar
+//   3| } ^
+

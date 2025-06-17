@@ -525,7 +525,10 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
     let src = token.text;
 
     // Trim doublequotes.
-    let s = &src[1..src.len() - 1];
+    let mut s = &src[1..];
+    if s.ends_with('"') {
+        s = &s[..s.len() - 1];
+    }
 
     let mut res = String::with_capacity(s.len());
 

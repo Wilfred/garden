@@ -2956,6 +2956,73 @@ fn eval_builtin_call(
                 env.push_value(Value::new(v));
             }
         }
+        BuiltinFunctionKind::DocComment => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{}", kind),
+                },
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let namespace = match arg_values[0].as_ref() {
+                Value_::Namespace(ns) => ns,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            text: "Namespace".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let target_name = match arg_values[1].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            text: "String".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let ns = namespace.borrow();
+
+            let mut ret_value = Value::none();
+            for (name, value) in &ns.values {
+                if name.text == *target_name {
+                    if let Some(doc_comment_text) = value.doc_comment() {
+                        ret_value = Value::some(Value::new(Value_::String(doc_comment_text)));
+                    }
+                    break;
+                }
+            }
+
+            if expr_value_is_used {
+                env.push_value(ret_value);
+            }
+        }
         BuiltinFunctionKind::DocCommentForType => {
             check_arity(
                 &SymbolName {

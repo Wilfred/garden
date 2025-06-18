@@ -1,3 +1,6 @@
+// Only used in tests.
+import "__fs.gdn" as fs
+
 // Check the syntax of `src`.
 external fun check_snippet(src: String): Result<Unit, List<String>> {
   __BUILTIN_IMPLEMENTATION
@@ -48,6 +51,17 @@ test lex {
 
   // Comments should not require a newline at EOF.
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
+}
+
+external fun doc_comment(ns: Namespace, name: String): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test doc_comment {
+  match doc_comment(fs, "write_file") {
+    Some(_) => {}
+    None => { assert(False) }
+  }
 }
 
 external fun doc_comment_for_type(type_name: String): Option<String> {
@@ -112,8 +126,6 @@ external fun namespace_functions(ns: Namespace): List<String> {
   // completion isn't confusing.
   __BUILTIN_IMPLEMENTATION
 }
-
-import "__fs.gdn" as fs
 
 test namespace_functions {
   let items = namespace_functions(fs)

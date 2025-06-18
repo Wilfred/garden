@@ -24,6 +24,18 @@ impl Value {
     pub(crate) fn new(v: Value_) -> Self {
         Self(Rc::new(v))
     }
+
+    /// If this value is a function, return its doc comment.
+    pub(crate) fn doc_comment(&self) -> Option<String> {
+        let fun_info = match self.as_ref() {
+            Value_::Fun { fun_info, .. } => Some(fun_info),
+            Value_::Closure(_, fun_info, _) => Some(fun_info),
+            Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
+            _ => None,
+        }?;
+
+        fun_info.doc_comment.clone()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -350,6 +362,7 @@ pub(crate) enum BuiltinFunctionKind {
     WriteFile,
     CheckSnippet,
     Lex,
+    DocComment,
     DocCommentForType,
     SourceForType,
     PreludeTypes,
@@ -373,6 +386,7 @@ impl BuiltinFunctionKind {
             BuiltinFunctionKind::SourceForType
             | BuiltinFunctionKind::PreludeTypes
             | BuiltinFunctionKind::Lex
+            | BuiltinFunctionKind::DocComment
             | BuiltinFunctionKind::DocCommentForType
             | BuiltinFunctionKind::CheckSnippet
             | BuiltinFunctionKind::NamespaceFunctions => PathBuf::from("__garden.gdn"),
@@ -396,6 +410,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::WriteFile => "write_file",
             BuiltinFunctionKind::CheckSnippet => "check_snippet",
             BuiltinFunctionKind::Lex => "lex",
+            BuiltinFunctionKind::DocComment => "doc_comment",
             BuiltinFunctionKind::DocCommentForType => "doc_comment_for_type",
             BuiltinFunctionKind::SourceForType => "source_for_type",
             BuiltinFunctionKind::PreludeTypes => "prelude_types",

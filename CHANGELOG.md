@@ -6,7 +6,7 @@
 
 ### Standard Library
 
-Added `String::trim()`.
+Added `String::trim()` and `garden::doc_comment()`.
 
 ### Checks
 

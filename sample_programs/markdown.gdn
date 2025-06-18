@@ -104,14 +104,14 @@ fun render_markdown_header(src: String): String {
     content = content.strip_prefix("#")
   }
 
-  if h_count > 6 {
+  if (h_count > 6) || content.starts_with(" ").not() {
     return "".join(["<p>", src, "</p>"])
   }
 
   let open_tag = "".join(["<h", string_repr(h_count), ">"])
   let close_tag = "".join(["</h", string_repr(h_count), ">"])
 
-  "".join([open_tag, render_inline(content.strip_prefix(" ")), close_tag])
+  "".join([open_tag, render_inline(content.trim()), close_tag])
 }
 
 fun lex_with_ranges(s: String): List<(Int, Int, String)> {
@@ -416,9 +416,12 @@ test render_markdown_paragraph_newlines {
 
 test render_headers {
   assert(render_markdown("# foo") == "<h1>foo</h1>")
+  assert(render_markdown("#  foo ") == "<h1>foo</h1>")
+
   assert(render_markdown("## foo") == "<h2>foo</h2>")
   assert(render_markdown("###### foo") == "<h6>foo</h6>")
 
+  assert(render_markdown("#foo") == "<p>#foo</p>")
   assert(render_markdown("####### foo") == "<p>####### foo</p>")
 }
 

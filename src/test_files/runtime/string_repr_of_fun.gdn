@@ -1,0 +1,10 @@
+{
+  println(string_repr(println))
+  println(string_repr(fun() {}))
+}
+
+// args: run
+// expected stdout:
+// println
+// (closure)
+

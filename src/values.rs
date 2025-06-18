@@ -425,9 +425,9 @@ impl Value {
     pub(crate) fn display(&self, env: &Env) -> String {
         match self.as_ref() {
             Value_::Integer(i) => format!("{}", i),
-            Value_::Fun { name_sym, .. } => format!("(function: {})", name_sym.name),
+            Value_::Fun { name_sym, .. } => format!("{}", name_sym.name),
             Value_::Closure(..) => "(closure)".to_owned(),
-            Value_::BuiltinFunction(kind, _, _) => format!("(function: {})", kind),
+            Value_::BuiltinFunction(kind, _, _) => format!("{}", kind),
             Value_::String(s) => escape_string_literal(s),
             Value_::List { items, .. } => {
                 let mut s = String::new();

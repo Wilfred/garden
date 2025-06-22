@@ -1,0 +1,17 @@
+{ "method": "run", "input": "println" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [],
+//       "value": {
+//         "Ok": "println\n\nWrite a string to stdout, with a newline appended.\n\n```\nprintln(\"hello world\")\n```"
+//       },
+//       "stack_frame_name": "__user.gdn"
+//     }
+//   },
+//   "position": null
+// }
+

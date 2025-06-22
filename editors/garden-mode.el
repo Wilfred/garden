@@ -622,7 +622,7 @@ enclosing point and print the result."
          "import" "internal" "external"
          "if" "else" "while" "return" "test" "match"
          "break" "continue" "for" "in" "assert"
-         "as")
+         "as" "method")
        'symbols)
      . font-lock-keyword-face)
 

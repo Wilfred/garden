@@ -7,7 +7,7 @@ enum Bool {
   False,
 }
 
-external fun (this: Bool) not(): Bool {
+external method not(this: Bool): Bool {
   match this {
     True => False,
     False => True,
@@ -57,7 +57,7 @@ external fun todo(): NoValue {
 }
 
 // If this value is `Ok`, unwrap it, otherwise error.
-external fun (this: Result<T, E>) or_error<T, E>(): T {
+external method or_error<T, E>(this: Result<T, E>): T {
   match this {
     Ok(v) => v
     Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
@@ -83,7 +83,7 @@ enum NoValue {}
 // String methods.
 
 // Does this string start with `s`?
-external fun (this: String) starts_with(s: String): Bool {
+external method starts_with(this: String, s: String): Bool {
   if s.len() > this.len() {
     return False
   }
@@ -101,7 +101,7 @@ test starts_with {
 }
 
 // Does this string end with `s`?
-external fun (this: String) ends_with(s: String): Bool {
+external method ends_with(this: String, s: String): Bool {
   if s.len() > this.len() {
     return False
   }
@@ -118,7 +118,7 @@ test ends_with {
   assert("abc".ends_with("aabc") == False)
 }
 
-external fun (this: String) replace(before: String, after: String): String {
+external method replace(this: String, before: String, after: String): String {
   let parts: List<String> = []
 
   let s = this
@@ -150,7 +150,7 @@ test string_replace {
 // ```
 // "abcd".split_once("b") // Some(["a", "cd"])
 // ```
-external fun (this: String) split_once(needle: String): Option<(String, String)> {
+external method split_once(this: String, needle: String): Option<(String, String)> {
   match this.index_of(needle) {
     None => None
     Some(i) => {
@@ -175,7 +175,7 @@ test split_once {
 // ```
 // ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
-external fun (this: String) join(items: List<String>): String {
+external method join(this: String, items: List<String>): String {
   let first = match items.first() {
     Some(item) => item
     None => return ""
@@ -200,7 +200,7 @@ test join {
 }
 
 // Does this string contain `substring`?
-external fun (this: String) contains(substring: String): Bool {
+external method contains(this: String, substring: String): Bool {
   if substring.len() > this.len() {
     return False
   }
@@ -221,7 +221,7 @@ external fun (this: String) contains(substring: String): Bool {
   False
 }
 
-external fun (this: String) trim_left(): String {
+external method trim_left(this: String): String {
   let i = 0
   while i < this.len() {
     let char = this.substring(i, i + 1)
@@ -242,7 +242,7 @@ test trim_left {
   assert("a ".trim_left() == "a ")
 }
 
-external fun (this: String) trim_right(): String {
+external method trim_right(this: String, ): String {
   let i = this.len() - 1
   while i >= 0 {
     let char = this.substring(i, i + 1)
@@ -264,7 +264,7 @@ test trim_right {
 }
 
 // Remove whitespace from both the start and end of this string.
-external fun (this: String) trim(): String {
+external method trim(this: String, ): String {
   this.trim_left().trim_right()
 }
 
@@ -283,7 +283,7 @@ test trim {
 // "foo".strip_suffix("o") // "fo"
 // "bar".strip_suffix("o") // "bar"
 // ```
-external fun (this: String) strip_suffix(suffix: String): String {
+external method strip_suffix(this: String, suffix: String): String {
   if this.ends_with(suffix) {
     return this.substring(0, this.len() - suffix.len())
   }
@@ -304,7 +304,7 @@ test strip_suffix {
 // "bar".strip_prefix("f") // "bar"
 // "ffoo".strip_prefix("f") // "foo"
 // ```
-external fun (this: String) strip_prefix(prefix: String): String {
+external method strip_prefix(this: String, prefix: String): String {
   if this.starts_with(prefix) {
     // return this.substring(prefix.len(), this.len(), 1)
     return this.substring(prefix.len(), this.len())
@@ -325,7 +325,7 @@ test strip_prefix {
 // "ab".split(",") // ["ab"]
 // "a,,b,".split(",") // ["a", "", "b", ""]
 // ```
-external fun (this: String) split(needle: String): List<String> {
+external method split(this: String, needle: String): List<String> {
   let s = this
 
   let parts: List<String> = []
@@ -353,7 +353,7 @@ test split {
   assert("a,b,".split(",") == ["a", "b", ""])
 }
 
-external fun (this: String) chars(): List<String> {
+external method chars(this: String): List<String> {
   let cs: List<String> = []
 
   let i = 0
@@ -385,7 +385,7 @@ struct Path {
 // Path{ p: "/foo/bar/" }.parent() // Path{ p: "/foo" }
 // Path{ p: "/" }.parent() // Path{ p: "/" }
 // ```
-external fun (this: Path) parent(): Path {
+external method parent(this: Path): Path {
   let p = this.p.strip_suffix("/")
   if p == "" {
     return Path{ p: "/" }
@@ -519,7 +519,7 @@ external fun (this: List<T>) append<T>(value: T): List<T> {
 // ```
 // [10, 11, 12].contains(12) // True
 // ```
-external fun (this: List<T>) contains<T>(item: T): Bool {
+external method contains<T>(this: List<T>, item: T): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 

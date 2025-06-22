@@ -1199,6 +1199,10 @@ fn parse_definition(
         if token.text == "fun" || token.text == "external" && next_token.text == "fun" {
             return parse_function_or_method(tokens, id_gen, diagnostics);
         }
+        if token.text == "method" || token.text == "external" && next_token.text == "method" {
+            return Some(parse_method2(tokens, id_gen, diagnostics));
+        }
+
         if token.text == "test" {
             return Some(parse_test(tokens, id_gen, diagnostics));
         }
@@ -2142,6 +2146,107 @@ fn parse_method(
 
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
     let params = parse_parameters(tokens, id_gen, diagnostics);
+    let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
+
+    let body = parse_block(tokens, id_gen, diagnostics, false);
+    let close_brace_pos = body.close_brace.clone();
+
+    let position = Position::merge_token(&first_token, &close_brace_pos);
+
+    let fun_info = FunInfo {
+        pos: position.clone(),
+        doc_comment,
+        name_sym: Some(name_sym.clone()),
+        item_id: Some(ToplevelItemId(id_gen.next().0)),
+        type_params,
+        params,
+        body,
+        return_hint,
+    };
+    let meth_info = MethodInfo {
+        pos: position.clone(),
+        receiver_hint,
+        receiver_sym,
+        name_sym,
+        kind: MethodKind::UserDefinedMethod(fun_info),
+    };
+
+    ToplevelItem::Method(meth_info, visibility)
+}
+
+fn parse_method2(
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> ToplevelItem {
+    let mut visibility = Visibility::CurrentFile;
+    let mut first_token = None;
+
+    if let Some(token) = tokens.peek() {
+        if token.text == "external" {
+            let token = tokens.pop().unwrap();
+            visibility = Visibility::External(token.position.clone());
+            first_token = Some(token);
+        }
+    }
+
+    let method_token = require_token(tokens, diagnostics, "method");
+    let first_token = first_token.unwrap_or_else(|| method_token.clone());
+
+    let doc_comment = parse_doc_comment(&first_token);
+
+    let name_sym = parse_symbol(tokens, id_gen, diagnostics);
+
+    let type_params = parse_type_params(tokens, id_gen, diagnostics);
+    let mut params = parse_parameters(tokens, id_gen, diagnostics);
+
+    let (receiver_sym, receiver_hint) = if params.params.is_empty() {
+        // Use placeholders
+        let position = name_sym.position.clone();
+        let receiver_sym = placeholder_symbol(position.clone(), id_gen);
+
+        let receiver_type_sym = TypeSymbol {
+            name: TypeName {
+                text: receiver_sym.name.text.clone(),
+            },
+            position: receiver_sym.position.clone(),
+            id: id_gen.next(),
+        };
+        let receiver_type_hint = TypeHint {
+            sym: receiver_type_sym,
+            args: vec![],
+            position: position.clone(),
+        };
+        (receiver_sym, receiver_type_hint)
+    } else {
+        let sym_with_hint = params.params.remove(0);
+
+        let hint = match &sym_with_hint.hint {
+            Some(h) => h.clone(),
+            None => {
+                // If the receiver doesn't have a type hint, we
+                // use a placeholder type.
+                let position = sym_with_hint.symbol.position.clone();
+
+                let receiver_type_sym = placeholder_symbol(position.clone(), id_gen);
+
+                let receiver_type_sym = TypeSymbol {
+                    name: TypeName {
+                        text: receiver_type_sym.name.text.clone(),
+                    },
+                    position: receiver_type_sym.position.clone(),
+                    id: id_gen.next(),
+                };
+                TypeHint {
+                    sym: receiver_type_sym,
+                    args: vec![],
+                    position: position.clone(),
+                }
+            }
+        };
+        (sym_with_hint.symbol.clone(), hint)
+    };
+
     let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
 
     let body = parse_block(tokens, id_gen, diagnostics, false);

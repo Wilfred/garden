@@ -662,25 +662,16 @@ enclosing point and print the result."
     (,(rx
        ;; Keyword
        symbol-start
-       "fun"
+       (or "fun" "method")
        symbol-end
 
        (+ space)
-       ;; Method receiver, if present
-       (? "("
-          (* (not (any ")")))
-          ")"
-          (* space))
+
        ;; Function/method name.
        (group
         symbol-start
         (+ (or (syntax word) (syntax symbol)))
-        symbol-end)
-
-       ;; Generics, if present.
-       (? "<"
-          (* (not (any ">")))
-          ">"))
+        symbol-end))
      (1 font-lock-function-name-face))
 
     (,(rx

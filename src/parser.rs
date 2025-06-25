@@ -2614,6 +2614,7 @@ fn parse_toplevel_item_from_tokens(
 ) -> Option<ToplevelItem> {
     if let Some(token) = tokens.peek() {
         if token.text == "fun"
+            || token.text == "method"
             || token.text == "test"
             || token.text == "enum"
             || token.text == "struct"

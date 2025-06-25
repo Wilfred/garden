@@ -690,13 +690,13 @@ pub(crate) struct MethodInfo {
     /// The type that has this method.
     pub(crate) receiver_hint: TypeHint,
     /// The name of the receiver in the method definition. This is
-    /// typically `self`.
+    /// typically `this`.
     ///
     /// TODO: this only exists for user-defined methods, so it's
     /// clunky to have it for all methods.
     pub(crate) receiver_sym: Symbol,
     /// The name of the method itself, e.g. `len` in
-    /// `fun (this: String) len(): Int {}`.
+    /// `method len(this: String): Int {}`.
     pub(crate) name_sym: Symbol,
     /// User-defined or built-in.
     pub(crate) kind: MethodKind,
@@ -726,8 +726,8 @@ pub(crate) enum ToplevelItem {
     /// ```
     Fun(Symbol, FunInfo, Visibility),
     /// ```garden
-    /// fun (this: MyType) foo() {}
-    /// external fun (this: MyType) baz() {}
+    /// method foo(this: MyType) {}
+    /// external method bar(this: MyType) {}
     /// ```
     Method(MethodInfo, Visibility),
     /// ```garden

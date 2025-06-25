@@ -1,16 +1,16 @@
-external fun (this: String) foo() {
-    this = 123
-    this.index_of("a")
+external method foo(this: String) {
+  this = 123
+  this.index_of("a")
 }
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
-// ---| src/test_files/check/type_error_redefine_this.gdn:2:12
-//   1| external fun (this: String) foo() {
-//   2|     this = 123
-//    |            ^^^
-//   3|     this.index_of("a")
+// ---| src/test_files/check/type_error_redefine_this.gdn:2:10
+//   1| external method foo(this: String) {
+//   2|   this = 123
+//    |          ^^^
+//   3|   this.index_of("a")
 //   4| }
 

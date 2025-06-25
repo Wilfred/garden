@@ -2,7 +2,7 @@ struct Foo {
   first_name: String,
 }
 
-fun (this: Foo) do_stuff(): Int {
+method do_stuff(this: Foo): Int {
   123
 }
 

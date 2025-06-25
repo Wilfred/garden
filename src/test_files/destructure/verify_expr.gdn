@@ -2,7 +2,7 @@
 // verify positions, not infer positions (according to the type
 // checker).
 
-fun (this: Path) my_set_extension(): Path {
+method my_set_extension(this: Path): Path {
   this.file_name()
 //^^^^^^^^^^^^^^^^
 }
@@ -13,7 +13,7 @@ fun (this: Path) my_set_extension(): Path {
 // // verify positions, not infer positions (according to the type
 // // checker).
 // 
-// fun (this: Path) my_set_extension(): Path {
+// method my_set_extension(this: Path): Path {
 //   match this.file_name() {
 //     Some(_) => {}
 //     None => {}

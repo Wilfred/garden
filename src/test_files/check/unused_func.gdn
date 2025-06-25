@@ -40,14 +40,14 @@ test my_test {
 
 fun called_via_method() {}
 
-external fun (this: String) foo(): Unit {
+external method foo(this: String): Unit {
   called_via_method()
   this.used_meth()
 }
 
-fun (this: String) unused_meth(): Unit {}
+method unused_meth(this: String): Unit {}
 
-fun (this: String) used_meth(): Unit {}
+method used_meth(this: String): Unit {}
 
 // args: check
 // expected exit status: 1
@@ -79,12 +79,12 @@ fun (this: String) used_meth(): Unit {}
 //  37| test my_test {
 // 
 // Warning: `unused_meth` is never called.
-// ---| src/test_files/check/unused_func.gdn:48:20
+// ---| src/test_files/check/unused_func.gdn:48:8
 //  46| }
 //  47| 
-//  48| fun (this: String) unused_meth(): Unit {}
-//  49|                    ^^^^^^^^^^^
-//  50| fun (this: String) used_meth(): Unit {}
+//  48| method unused_meth(this: String): Unit {}
+//  49|        ^^^^^^^^^^^
+//  50| method used_meth(this: String): Unit {}
 // 
 // Warning: `unreachable_cycle_1` is never called.
 // ---| src/test_files/check/unused_func.gdn:17:5

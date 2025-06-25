@@ -2,7 +2,7 @@ struct Foo {
   x: Int,
 }
 
-fun (this: Foo) get_x(): Int {
+method get_x(this: Foo): Int {
   this.x
 }
 

@@ -1,10 +1,10 @@
-external fun (this: String) do_stuff(_arg: NoSuchType): Unit {}
+external method do_stuff(this: String, _arg: NoSuchType): Unit {}
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Error: No such type `NoSuchType`.
-// ---| src/test_files/check/missing_type_method_arg.gdn:1:44
-//   1| external fun (this: String) do_stuff(_arg: NoSuchType): Unit {}
-//   2|                                            ^^^^^^^^^^
+// ---| src/test_files/check/missing_type_method_arg.gdn:1:46
+//   1| external method do_stuff(this: String, _arg: NoSuchType): Unit {}
+//   2|                                              ^^^^^^^^^^
 

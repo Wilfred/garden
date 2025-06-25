@@ -1,4 +1,4 @@
-fun (this: MyStruct) do_stuff(): Unit {}
+method do_stuff(this: MyStruct): Unit {}
 
 struct MyStruct {}
 

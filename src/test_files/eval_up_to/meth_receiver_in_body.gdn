@@ -1,10 +1,10 @@
-fun (this: String) foo(x: Int) {
+method foo(this: String, x: Int) {
   this
   //^
 }
 
 {
-    "abc".foo(123)
+  "abc".foo(123)
 }
 
 // args: test-eval-up-to

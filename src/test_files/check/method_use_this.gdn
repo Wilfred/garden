@@ -1,4 +1,4 @@
-external fun (this: String) doStuff(): String {
+external method doStuff(this: String): String {
   this
 }
 

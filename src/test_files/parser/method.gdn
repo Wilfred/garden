@@ -1,4 +1,4 @@
-external fun (this: List<T>) foo<T>() {}
+external method foo<T>(this: List<T>) {}
 
 // args: dump-ast
 // expected stdout:

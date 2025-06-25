@@ -2,7 +2,7 @@ struct WrappedNum {
   value: Int,
 }
 
-fun (this: WrappedNum) increment(): Int {
+method increment(this: WrappedNum): Int {
   this.value + 1
   //    ^
 }

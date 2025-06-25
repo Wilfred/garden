@@ -1,9 +1,9 @@
-fun (this: String) foo(xyz: Int) {
-    //                  ^
+method foo(this: String, xyz: Int) {
+  //                     ^
 }
 
 {
-    "abc".foo(123)
+  "abc".foo(123)
 }
 
 // args: test-eval-up-to

@@ -169,7 +169,7 @@ impl std::fmt::Display for EnclosingSymbol {
         match self {
             EnclosingSymbol::Fun(fun_sym) => write!(f, "fun {}()", fun_sym.name),
             EnclosingSymbol::Method(type_name, meth_sym) => {
-                write!(f, "fun (this: {}) {}()", type_name.text, meth_sym.name)
+                write!(f, "method {}(this: {})()", meth_sym.name, type_name.text)
             }
             EnclosingSymbol::Test(test_sym) => write!(f, "test {}", test_sym.name),
             EnclosingSymbol::Closure => write!(f, "closure"),
@@ -6049,7 +6049,7 @@ mod tests {
         let mut env = Env::new(id_gen, vfs);
 
         let items = parse_items_from_str(
-            "fun (this: String) f() { True }",
+            "method f(this: String) { True }",
             &mut env.vfs,
             &mut env.id_gen,
         );
@@ -6067,7 +6067,7 @@ mod tests {
         let mut env = Env::new(id_gen, vfs);
 
         let items = parse_items_from_str(
-            "fun (this: String) f() { True }",
+            "method f(this: String) { True }",
             &mut env.vfs,
             &mut env.id_gen,
         );

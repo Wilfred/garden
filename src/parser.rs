@@ -1778,7 +1778,7 @@ fn parse_colon_and_hint_opt(
         return Some(type_hint);
     }
 
-    if SYMBOL_RE.is_match(token.text) {
+    if SYMBOL_RE.is_match(token.text) && !RESERVED_WORDS.contains(&token.text) {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
             message: ErrorMessage(vec![

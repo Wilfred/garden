@@ -14,7 +14,7 @@ fun bar() {}
 //         ),
 //         item_id: Some(
 //             ToplevelItemId(
-//                 3,
+//                 1,
 //             ),
 //         ),
 //         type_params: [],
@@ -23,13 +23,7 @@ fun bar() {}
 //             params: [],
 //             close_paren: Position { ... },
 //         },
-//         return_hint: Some(
-//             TypeHint {
-//                 sym: TypeSymbol"__reserved_word_placeholder",
-//                 args: [],
-//                 position: Position { ... },
-//             },
-//         ),
+//         return_hint: None,
 //         body: Block {
 //             open_brace: Position { ... },
 //             exprs: [],
@@ -48,7 +42,7 @@ fun bar() {}
 //         ),
 //         item_id: Some(
 //             ToplevelItemId(
-//                 5,
+//                 3,
 //             ),
 //         ),
 //         type_params: [],
@@ -68,19 +62,6 @@ fun bar() {}
 // )
 
 // expected stderr:
-// Error: Parse error: Expected a `:` before this type hint.
-// ---| src/test_files/parser/incomplete_fun_with_params.gdn:3:1
-//   1| fun foo()
-//   2| 
-//   3| fun bar() {}
-//    | ^^^
-//   4| 
-//   5| // args: dump-ast
-// Error: Parse error: Expected a symbol after this.
-// ---| src/test_files/parser/incomplete_fun_with_params.gdn:1:9
-//   1| fun foo()
-//   2|         ^
-//   3| fun bar() {}
 // Error: Parse error: Expected `{` after this.
 // ---| src/test_files/parser/incomplete_fun_with_params.gdn:1:9
 //   1| fun foo()

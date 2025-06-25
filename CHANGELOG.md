@@ -4,6 +4,23 @@
 **Goal: Offer actions when runtime errors occur.**
 **Goal: Separate line/column in go-to-def input positions.**
 
+### Syntax
+
+Methods are now defined with the `method` keyword rather than the
+`fun` keyword.
+
+```
+// New
+method my_append(this: String, s: String) {
+  this ^ s
+}
+
+// Old
+fun (this: String) my_append(s: String) {
+  this ^ s
+}
+```
+
 ### Standard Library
 
 Added `String::trim()` and `garden::doc_comment()`.

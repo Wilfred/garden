@@ -1200,7 +1200,7 @@ fn parse_definition(
             return parse_function_or_method(tokens, id_gen, diagnostics);
         }
         if token.text == "method" || token.text == "external" && next_token.text == "method" {
-            return Some(parse_method2(tokens, id_gen, diagnostics));
+            return Some(parse_method(tokens, id_gen, diagnostics));
         }
 
         if token.text == "test" {
@@ -2081,112 +2081,10 @@ fn parse_function_or_method(
     let fun_token = require_token(tokens, diagnostics, "fun");
     let first_token = first_token.unwrap_or_else(|| fun_token.clone());
 
-    // We can distinguish between functions and methods based on the
-    // token after the fun keyword.
-    //
-    // ```
-    // fun i_am_a_fun<T>() {}
-    // fun (this: String) i_am_a_method<T>() {}
-    // ```
-    match tokens.peek() {
-        Some(token) => {
-            if token.text == "(" {
-                Some(parse_method(
-                    tokens,
-                    id_gen,
-                    diagnostics,
-                    first_token,
-                    visibility,
-                ))
-            } else {
-                parse_function(tokens, id_gen, diagnostics, first_token, visibility)
-            }
-        }
-        None => {
-            diagnostics.push(ParseError::Incomplete {
-                position: Position::todo(&tokens.vfs_path),
-                message: ErrorMessage(vec![Text(
-                    "Unfinished function or method definition.".to_owned(),
-                )]),
-            });
-            None
-        }
-    }
+    parse_function_(tokens, id_gen, diagnostics, first_token, visibility)
 }
 
 fn parse_method(
-    tokens: &mut TokenStream,
-    id_gen: &mut IdGenerator,
-    diagnostics: &mut Vec<ParseError>,
-    first_token: Token,
-    visibility: Visibility,
-) -> ToplevelItem {
-    let doc_comment = parse_doc_comment(&first_token);
-
-    require_token(tokens, diagnostics, "(");
-    let receiver_param = parse_parameter(tokens, id_gen, diagnostics, true);
-    let receiver_sym = receiver_param.symbol.clone();
-    let receiver_hint = match receiver_param.hint {
-        Some(type_name) => type_name,
-        None => {
-            diagnostics.push(ParseError::Incomplete {
-                position: receiver_param.symbol.position.clone(),
-                message: ErrorMessage(vec![
-                    msgtext!("The "),
-                    msgcode!("this"),
-                    msgtext!(" parameter requires a type. For example "),
-                    msgcode!("this: String"),
-                    msgtext!("."),
-                ]),
-            });
-            TypeHint {
-                sym: TypeSymbol {
-                    name: TypeName {
-                        text: "__MISSING_TYPE".to_owned(),
-                    },
-                    position: receiver_sym.position.clone(),
-                    id: id_gen.next(),
-                },
-                args: vec![],
-                position: receiver_sym.position.clone(),
-            }
-        }
-    };
-    require_token(tokens, diagnostics, ")");
-
-    let name_sym = parse_symbol(tokens, id_gen, diagnostics);
-
-    let type_params = parse_type_params(tokens, id_gen, diagnostics);
-    let params = parse_parameters(tokens, id_gen, diagnostics);
-    let return_hint = parse_colon_and_hint_opt(tokens, id_gen, diagnostics);
-
-    let body = parse_block(tokens, id_gen, diagnostics, false);
-    let close_brace_pos = body.close_brace.clone();
-
-    let position = Position::merge_token(&first_token, &close_brace_pos);
-
-    let fun_info = FunInfo {
-        pos: position.clone(),
-        doc_comment,
-        name_sym: Some(name_sym.clone()),
-        item_id: Some(ToplevelItemId(id_gen.next().0)),
-        type_params,
-        params,
-        body,
-        return_hint,
-    };
-    let meth_info = MethodInfo {
-        pos: position.clone(),
-        receiver_hint,
-        receiver_sym,
-        name_sym,
-        kind: MethodKind::UserDefinedMethod(fun_info),
-    };
-
-    ToplevelItem::Method(meth_info, visibility)
-}
-
-fn parse_method2(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -2287,7 +2185,7 @@ fn parse_method2(
     ToplevelItem::Method(meth_info, visibility)
 }
 
-fn parse_function(
+fn parse_function_(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,

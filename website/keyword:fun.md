@@ -1,6 +1,6 @@
 # `fun` keyword
 
-`fun` defines functions and methods.
+`fun` defines named functions and anonymous functions.
 
 ```
 fun add_one(x: Int): Int {
@@ -13,11 +13,6 @@ test two_add_one {
 ```
 
 ```
-fun (this: Int) increment(): Int {
-  this + 1
-}
-
-test two_increment {
-  assert(2.increment() == 3)
-}
+let f = fun(x: Int): Int { x + 1 }
+assert(f(2) == 3)
 ```

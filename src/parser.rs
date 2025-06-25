@@ -1771,8 +1771,25 @@ fn parse_colon_and_hint_opt(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<TypeHint> {
-    if peeked_symbol_is(tokens, ":") {
+    let token = tokens.peek()?;
+
+    if token.text == ":" {
         let type_hint = parse_colon_and(tokens, id_gen, diagnostics);
+        return Some(type_hint);
+    }
+
+    if SYMBOL_RE.is_match(token.text) {
+        diagnostics.push(ParseError::Invalid {
+            position: token.position.clone(),
+            message: ErrorMessage(vec![
+                msgtext!("Expected a "),
+                msgcode!(":"),
+                msgtext!(" before this type hint."),
+            ]),
+            additional: vec![],
+        });
+
+        let type_hint = parse_type_hint(tokens, id_gen, diagnostics);
         return Some(type_hint);
     }
 

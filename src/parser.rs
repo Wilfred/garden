@@ -1197,7 +1197,7 @@ fn parse_definition(
 ) -> Option<ToplevelItem> {
     if let Some((token, next_token)) = tokens.peek_two() {
         if token.text == "fun" || token.text == "external" && next_token.text == "fun" {
-            return parse_function_or_method(tokens, id_gen, diagnostics);
+            return parse_function(tokens, id_gen, diagnostics);
         }
         if token.text == "method" || token.text == "external" && next_token.text == "method" {
             return Some(parse_method(tokens, id_gen, diagnostics));
@@ -2079,7 +2079,7 @@ fn parse_doc_comment(token: &Token) -> Option<String> {
     None
 }
 
-fn parse_function_or_method(
+fn parse_function(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,

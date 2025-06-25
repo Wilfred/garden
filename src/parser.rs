@@ -1662,6 +1662,7 @@ fn parse_tuple_type_hint(
 
     let mut item_hints = vec![];
     loop {
+        let start_idx = tokens.idx;
         if peeked_symbol_is(tokens, ")") {
             break;
         }
@@ -1687,6 +1688,11 @@ fn parse_tuple_type_hint(
             });
             break;
         }
+
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
     }
 
     let close_paren = require_token(tokens, diagnostics, ")");
@@ -1810,6 +1816,7 @@ fn parse_parameters(
 
     let mut params = vec![];
     loop {
+        let start_idx = tokens.idx;
         if peeked_symbol_is(tokens, ")") {
             break;
         }
@@ -1852,6 +1859,11 @@ fn parse_parameters(
             });
             break;
         }
+
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
     }
 
     let close_paren = require_token(tokens, diagnostics, ")");

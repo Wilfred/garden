@@ -538,7 +538,7 @@ test list_contains {
 // [4, 5, 6].get(1) // Some(5)
 // [4, 5, 6].get(3) // None
 // ```
-external fun (this: List<T>) get<T>(index: Int): Option<T> {
+external method get<T>(this: List<T>, index: Int): Option<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -555,12 +555,12 @@ test list_get {
 // ```
 // [10, 11, 12].len() // 3
 // ```
-external fun (this: List<T>) len<T>(): Int {
+external method len<T>(this: List<T>): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
 // Get the first item in this list, if the list is not empty.
-external fun (this: List<T>) first<T>(): Option<T> {
+external method first<T>(this: List<T>): Option<T> {
   this.get(0)
 }
 
@@ -570,7 +570,7 @@ test first {
 }
 
 // Get the last item in this list, if the list is not empty.
-external fun (this: List<T>) last<T>(): Option<T> {
+external method last<T>(this: List<T>): Option<T> {
   this.get(this.len() - 1)
 }
 
@@ -581,7 +581,7 @@ test last {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-external fun (this: List<T>) filter<T>(f: Fun<(T), Bool>): List<T> {
+external method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
   let result: List<T> = []
 
   for item in this {
@@ -598,7 +598,7 @@ test filter {
 }
 
 // Is this list empty?
-external fun (this: List<T>) is_empty<T>(): Bool {
+external method is_empty<T>(this: List<T>): Bool {
   this.len() == 0
 }
 
@@ -608,7 +608,7 @@ test is_empty {
 }
 
 // Is this list non-empty?
-external fun (this: List<T>) is_non_empty<T>(): Bool {
+external method is_non_empty<T>(this: List<T>): Bool {
   this.len() != 0
 }
 
@@ -623,7 +623,7 @@ test is_non_empty {
 // ```
 // [1, 2].map(fun(x) { x + 1 }) // [2, 3]
 // ```
-external fun (this: List<T>) map<T, U>(f: Fun<(T), U>): List<U> {
+external method map<T, U>(this: List<T>, f: Fun<(T), U>): List<U> {
   let items: List<U> = []
   for item in this {
     items = items.append(f(item))
@@ -645,7 +645,7 @@ test list_map {
 // [10, 11, 12].slice(0, 2) // [10, 11]
 // [10, 11, 12].slice(1, -1) // [11]
 // ```
-external fun (this: List<T>) slice<T>(i: Int, j: Int): List<T> {
+external method slice<T>(this: List<T>, i: Int, j: Int): List<T> {
   if (j < 0) {
     j = this.len() + j
   }
@@ -678,7 +678,7 @@ test list_slice {
 // ```
 // ["a", "b"].enumerate() // [(0, "a"), (1, "b")]
 // ```
-external fun (this: List<T>) enumerate<T>(): List<(Int, T)> {
+external method enumerate<T>(this: List<T>): List<(Int, T)> {
   let items: List<(Int, T)> = []
 
   let i = 0
@@ -703,7 +703,7 @@ enum Option<T> {
 }
 
 /// Return True if this value is `Some`.
-external fun (this: Option<T>) is_some<T>(): Bool {
+external method is_some<T>(this: Option<T>): Bool {
   match this {
     Some(_) => True,
     None => False,
@@ -711,7 +711,7 @@ external fun (this: Option<T>) is_some<T>(): Bool {
 }
 
 /// Return True if this value is `None`.
-external fun (this: Option<T>) is_none<T>(): Bool {
+external method is_none<T>(this: Option<T>): Bool {
   match this {
     Some(_) => False,
     None => True,
@@ -719,7 +719,7 @@ external fun (this: Option<T>) is_none<T>(): Bool {
 }
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
-external fun (this: Option<T>) or_exception<T>(): T {
+external method or_exception<T>(this: Option<T>): T {
   match this {
     Some(v) => v,
     None => error("Called or_exception on a `None` value.")
@@ -736,7 +736,7 @@ test option_or_exception {
 // Some(1).or_value(5) // 1
 // None.or_value(5) // 5
 // ```
-external fun (this: Option<T>) or_value<T>(value: T): T {
+external method or_value<T>(this: Option<T>, value: T): T {
   match this {
     Some(v) => v,
     None => value
@@ -821,7 +821,7 @@ external fun source_directory(): Option<Path> {
 // ```
 // "abc".len() // 3
 // ```
-external fun (this: String) len(): Int {
+external method len(this: String): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -835,7 +835,7 @@ test string_len {
 // ```
 // "a\nb".lines() // ["a", "b"]
 // ```
-external fun (this: String) lines(): List<String> {
+external method lines(this: String): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -853,7 +853,7 @@ test string_lines {
 // "abcdef".substring(1, 3) // "bc"
 // "abc".substring(1, 99) // "bc"
 // ```
-external fun (this: String) substring(from_index: Int, to_index: Int): String {
+external method substring(this: String, from_index: Int, to_index: Int): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -868,7 +868,7 @@ test string_substring {
 // ```
 // "abc".index_of("c") // Some(2)
 // ```
-external fun (this: String) index_of(needle: String): Option<Int> {
+external method index_of(this: String, needle: String): Option<Int> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -892,7 +892,7 @@ test string_index_of {
 //
 // Note that a path may exist without the current user having
 // permission to read it.
-external fun (this: Path) exists(): Bool {
+external method exists(this: Path): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -906,7 +906,7 @@ test path_exists {
 // ```
 // Path{ p: "/tmp/foo.txt" }.read()
 // ```
-external fun (this: Path) read(): Result<String, String> {
+external method read(this: Path): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
 

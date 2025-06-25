@@ -402,7 +402,7 @@ test path_parent {
 }
 
 // Append `component` to this path.
-external fun (this: Path) join(component: String): Path {
+external method join(this: Path, component: String): Path {
   let p = if this.p.ends_with("/") {
     this.p ^ component
   } else {
@@ -422,7 +422,7 @@ test path_join {
 
 // The extension of this path, if this path is a file whose name
 // includes a ".".
-external fun (this: Path) extension(): Option<String> {
+external method extension(this: Path): Option<String> {
   let name = match this.file_name() {
     Some(name) => name
     None => return None
@@ -438,7 +438,7 @@ external fun (this: Path) extension(): Option<String> {
 // Path{ p: "/foo/" }.file_name() // Some("foo")
 // Path{ p: "/" }.file_name() // None
 // ```
-external fun (this: Path) file_name(): Option<String> {
+external method file_name(this: Path): Option<String> {
   if this.p == "/" {
     return None
   }
@@ -459,7 +459,7 @@ test path_file_name {
 // Path{ p: "/foo/bar.txt"}.set_extension("log") // Path{ p: "/foo/bar.log"}
 // Path{ p: "/foo/bar.txt.gz"}.set_extension("log") // Path{ p: "/foo/bar.log"}
 // ```
-external fun (this: Path) set_extension(new_ext: String): Path {
+external method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext
   match this.file_name() {
     Some(file_name) => {
@@ -510,7 +510,7 @@ struct List<T> {
 // ```
 // [10].append(11) // [10, 11]
 // ```
-external fun (this: List<T>) append<T>(value: T): List<T> {
+external method append<T>(this: List<T>, value: T): List<T> {
   __BUILTIN_IMPLEMENTATION
 }
 

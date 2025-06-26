@@ -1684,11 +1684,7 @@ fn parse_tuple_type_hint(
         let hint_pos = hint.position.clone();
         item_hints.push(hint);
 
-        if let Some(token) = tokens.peek() {
-            if token.text == "," {
-                tokens.pop();
-            }
-        } else {
+        let Some(token) = tokens.peek() else {
             diagnostics.push(ParseError::Incomplete {
                 position: hint_pos,
                 message: ErrorMessage(vec![
@@ -1696,10 +1692,28 @@ fn parse_tuple_type_hint(
                     msgcode!(","),
                     msgtext!(" or "),
                     msgcode!(")"),
-                    msgtext!(" here, but got EOF."),
+                    msgtext!(" after this, but got EOF."),
                 ]),
             });
             break;
+        };
+
+        if token.text == "," {
+            tokens.pop();
+        } else if token.text == ")" {
+            break;
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: token.position.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Expected "),
+                    msgcode!(","),
+                    msgtext!(" or "),
+                    msgcode!(")"),
+                    msgtext!(" here."),
+                ]),
+            });
+            tokens.pop();
         }
 
         assert!(

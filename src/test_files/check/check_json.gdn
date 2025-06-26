@@ -1,0 +1,9 @@
+// Parser previously crashed on this input
+method foo(arg: (A: B)) {
+}
+
+// args: check --json
+// expected exit status: 1
+// expected stdout:
+// {"line_number":2,"end_line_number":2,"column":18,"end_column":19,"message":"Expected `,` or `)` here.","severity":"error"}
+

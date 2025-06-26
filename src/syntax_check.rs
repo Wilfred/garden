@@ -69,10 +69,9 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             ParseError::Incomplete {
                 message, position, ..
             } => {
-                // TODO: last line would be better?
                 diagnostics.push(CheckDiagnostic {
                     position: position.clone(),
-                    line_number: 1,
+                    line_number: position.line_number + 1,
                     end_line_number: position.end_line_number + 1,
                     column: position.column,
                     end_column: position.end_column,

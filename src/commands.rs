@@ -952,7 +952,7 @@ fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Resul
 fn command_help(command: Command) -> &'static str {
     match command {
         Command::Abort => "The :abort command stops evaluation of the current expression, bringing you back to the toplevel.\n\nExample usage:\n\n:abort",
-        Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExample:\n\n:doc print",
+        Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExamples:\n\n:doc print\n:doc String::starts_with",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
         Command::File(_) => "The :file command shows the current file where evaluation is occurring. It can also change the file of the toplevel.\n\nExample:\n\n:file\n:file myproject.gdn",
         // TODO: add a more comprehensive example of :forget_local usage.

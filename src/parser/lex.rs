@@ -57,6 +57,10 @@ impl<'a> TokenStream<'a> {
         self.tokens.get(self.idx).cloned()
     }
 
+    pub(crate) fn peek_at(&self, offset: usize) -> Option<Token<'a>> {
+        self.tokens.get(self.idx + offset).cloned()
+    }
+
     pub(crate) fn peek_two(&self) -> Option<(Token<'a>, Token<'a>)> {
         match (self.tokens.get(self.idx), self.tokens.get(self.idx + 1)) {
             (Some(token1), Some(token2)) => Some((token1.clone(), token2.clone())),

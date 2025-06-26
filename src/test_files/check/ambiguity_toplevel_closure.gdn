@@ -1,0 +1,16 @@
+// This is a function definition.
+fun foo(x) { x }
+
+// This is a toplevel expression that is an anonymous function.
+fun(x) { x }
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a definition
+// ---| src/test_files/check/ambiguity_toplevel_closure.gdn:5:1
+//   4| // This is a toplevel expression that is an anonymous function.
+//   5| fun(x) { x }
+//    | ^^^
+//   6|
+

@@ -1196,9 +1196,22 @@ fn parse_definition(
     diagnostics: &mut Vec<ParseError>,
 ) -> Option<ToplevelItem> {
     if let Some((token, next_token)) = tokens.peek_two() {
-        if token.text == "fun" || token.text == "external" && next_token.text == "fun" {
+        // Seeing `fun` then `(` indicates an anonymous function,
+        // otherwise it's a function definition.
+        if token.text == "fun" && next_token.text != "(" {
             return parse_function(tokens, id_gen, diagnostics);
         }
+        // Arguably `external` then `fun` is always a function
+        // definition, but check for `(` for consistency with the
+        // `fun` case.
+        let nextnext_is_paren = match tokens.peek_at(2) {
+            Some(nextnext_token) => nextnext_token.text == "(",
+            None => false,
+        };
+        if token.text == "external" && next_token.text == "fun" && !nextnext_is_paren {
+            return parse_function(tokens, id_gen, diagnostics);
+        }
+
         if token.text == "method" || token.text == "external" && next_token.text == "method" {
             return Some(parse_method(tokens, id_gen, diagnostics));
         }

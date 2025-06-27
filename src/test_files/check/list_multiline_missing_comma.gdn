@@ -1,0 +1,21 @@
+{
+  let x = [
+    1,
+    2
+    3,
+    4
+  ]
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected `,` or `]` after this.
+// ---| src/test_files/check/list_multiline_missing_comma.gdn:4:5
+//   2|   let x = [
+//   3|     1,
+//   4|     2
+//    |     ^
+//   5|     3,
+//   6|     4
+

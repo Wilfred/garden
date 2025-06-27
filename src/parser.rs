@@ -295,7 +295,7 @@ fn parse_list_literal(
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
-    let items = parse_comma_separated_exprs(tokens, id_gen, diagnostics, "]");
+    let items = parse_comma_separated_exprs(&open_bracket, tokens, id_gen, diagnostics, "]");
     let close_bracket = require_token(tokens, diagnostics, "]");
 
     Expression::new(
@@ -859,6 +859,7 @@ fn parse_pattern(
 }
 
 fn parse_comma_separated_exprs(
+    open_token: &Token<'_>,
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -914,6 +915,18 @@ fn parse_comma_separated_exprs(
                     // Next token is on the same line, treat it as
                     // `foo(a b)` with a forgotten comma.
                     continue;
+                } else if open_token.position.line_number != arg_pos.line_number {
+                    // Next token is on another line, but the open
+                    // token was on an earlier line. Treat it as a
+                    // forgotten comma.
+                    //
+                    // ```
+                    // let x = [
+                    //   1 // <-- missing here
+                    //   2
+                    // ]
+                    // ```
+                    continue;
                 } else {
                     // Next token is on another line, treat it as a
                     // forgotten parenthesis `foo(a`.
@@ -955,7 +968,8 @@ fn parse_call_arguments(
     diagnostics: &mut Vec<ParseError>,
 ) -> ParenthesizedArguments {
     let open_paren_token = require_token(tokens, diagnostics, "(");
-    let arguments = parse_comma_separated_exprs(tokens, id_gen, diagnostics, ")");
+    let arguments =
+        parse_comma_separated_exprs(&open_paren_token, tokens, id_gen, diagnostics, ")");
     let close_paren_token = require_token(tokens, diagnostics, ")");
 
     ParenthesizedArguments {

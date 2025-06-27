@@ -898,15 +898,13 @@ fn parse_comma_separated_exprs(
                 });
 
                 diagnostics.push(ParseError::Invalid {
-                    position: token.position.clone(),
+                    position: arg_pos.clone(),
                     message: ErrorMessage(vec![
                         msgtext!("Expected "),
                         msgcode!(","),
                         msgtext!(" or "),
                         msgcode!("{}", terminator),
-                        msgtext!(", but got "),
-                        msgcode!("{}", token.text),
-                        msgtext!("."),
+                        msgtext!(" after this."),
                     ]),
                     additional: vec![],
                 });

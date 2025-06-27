@@ -42,9 +42,9 @@ foo(a b)
 // )
 
 // expected stderr:
-// Error: Parse error: Expected `,` or `)`, but got `b`.
-// ---| src/test_files/parser/missing_punct.gdn:1:7
+// Error: Parse error: Expected `,` or `)` after this.
+// ---| src/test_files/parser/missing_punct.gdn:1:5
 //   1| foo(a b)
-//   2|       ^
+//   2|     ^
 //   3| // args: dump-ast
 

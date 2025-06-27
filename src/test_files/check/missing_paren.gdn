@@ -14,12 +14,12 @@ fun foo() {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `,` or `)`, but got `x`.
-// ---| src/test_files/check/missing_paren.gdn:11:3
+// Error: Expected `,` or `)` after this.
+// ---| src/test_files/check/missing_paren.gdn:9:13
+//   8|   // Forgot closing paren here:
 //   9|   takes_arg(inc(x)
-//  10| 
+//  10|             ^^^^^^
 //  11|   x = 2
-//  12| } ^
 // 
 // Error: Expected `)` after this.
 // ---| src/test_files/check/missing_paren.gdn:9:18

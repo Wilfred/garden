@@ -888,23 +888,44 @@ fn find_item_source(name: &str, env: &Env) -> Result<Option<String>, String> {
 fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> {
     let ns = env.current_namespace();
 
-    if let Some((type_name, method_name)) = name.split_once("::") {
+    if let Some((before_colon, after_colon)) = name.split_once("::") {
         if let Some(type_def_and_methods) = env.types.get(&TypeName {
-            text: type_name.to_owned(),
+            text: before_colon.to_owned(),
         }) {
             if let Some(method_info) = type_def_and_methods.methods.get(&SymbolName {
-                text: method_name.to_owned(),
+                text: after_colon.to_owned(),
             }) {
                 Ok((
-                    format!("Method `{method_name}`"),
+                    format!("Method `{after_colon}`"),
                     format_method_info(method_info, &env.project_root),
                 ))
             } else {
-                Err(format!("No method named `{method_name}` on `{type_name}`."))
+                Err(format!(
+                    "No method named `{after_colon}` on `{before_colon}`."
+                ))
+            }
+        } else if let Some(v) = ns.borrow().values.get(&SymbolName {
+            text: before_colon.to_owned(),
+        }) {
+            let Value_::Namespace(named_ns) = v.as_ref() else {
+                return Err(format!("`{before_colon}` is not a namespace."));
+            };
+            let named_ns = named_ns.borrow();
+
+            let Some(value) = named_ns.values.get(&SymbolName {
+                text: after_colon.to_owned(),
+            }) else {
+                return Err(format!(
+                    "`{before_colon}` does not contain a value named `{after_colon}`."
+                ));
+            };
+
+            match describe_fun(value, &env.project_root) {
+                Some(description) => Ok((format!("Function `{name}`"), Some(description))),
+                None => Err(format!("`{name}` is not a function.")),
             }
         } else {
-            // TODO: distinguish between no type with this name, and the type having no methods.
-            Err(format!("No type named `{type_name}`."))
+            Err(format!("No type named `{before_colon}`."))
         }
     } else if let Some(type_) = env.get_type_def(&TypeName {
         text: name.to_owned(),
@@ -952,7 +973,7 @@ fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Resul
 fn command_help(command: Command) -> &'static str {
     match command {
         Command::Abort => "The :abort command stops evaluation of the current expression, bringing you back to the toplevel.\n\nExample usage:\n\n:abort",
-        Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExamples:\n\n:doc print\n:doc String::starts_with",
+        Command::Doc(_) => "The :doc command displays information about Garden values.\n\nExamples:\n\n:doc print\n:doc String::starts_with\n:doc some_namespace::some_fun",
         Command::Help(_) => "The :help command displays information about interacting with Garden. It can also describe commands.\n\nExample:\n\n:help :doc",
         Command::File(_) => "The :file command shows the current file where evaluation is occurring. It can also change the file of the toplevel.\n\nExample:\n\n:file\n:file myproject.gdn",
         // TODO: add a more comprehensive example of :forget_local usage.

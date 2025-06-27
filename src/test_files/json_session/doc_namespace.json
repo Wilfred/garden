@@ -1,0 +1,41 @@
+{ "method": "run", "input": "import \"__garden.gdn\" as g" }
+{ "method": "run", "input": ":doc g::lex" }
+
+// args: test-json
+// expected stdout:
+// {
+//   "kind": {
+//     "evaluate": {
+//       "warnings": [
+//         {
+//           "message": "`g` is unused.",
+//           "position": {
+//             "start_offset": 25,
+//             "end_offset": 26,
+//             "line_number": 0,
+//             "end_line_number": 0,
+//             "column": 25,
+//             "end_column": 26,
+//             "path": "__user.gdn"
+//           },
+//           "severity": "warning"
+//         }
+//       ],
+//       "value": {
+//         "Ok": "Loaded g in __user.gdn."
+//       },
+//       "stack_frame_name": "__user.gdn"
+//     }
+//   },
+//   "position": null
+// }
+// {
+//   "kind": {
+//     "run_command": {
+//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n// Defined in __garden.gdn:38\nfn lex(src: String): List<(Int, String)> { ... }",
+//       "stack_frame_name": "__user.gdn"
+//     }
+//   },
+//   "position": null
+// }
+

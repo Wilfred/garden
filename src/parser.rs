@@ -296,10 +296,20 @@ fn parse_list_literal(
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
     let items = parse_comma_separated_exprs(&open_bracket, tokens, id_gen, diagnostics, "]");
-    let close_bracket = require_token(tokens, diagnostics, "]");
+
+    let close_bracket_pos = match tokens.peek() {
+        Some(token) if token.text == "]" => {
+            tokens.pop();
+            token.position
+        }
+        _ => match tokens.prev() {
+            Some(token) => token.position,
+            None => Position::todo(&tokens.vfs_path),
+        },
+    };
 
     Expression::new(
-        Position::merge(&open_bracket.position, &close_bracket.position),
+        Position::merge(&open_bracket.position, &close_bracket_pos),
         Expression_::ListLiteral(items),
         id_gen.next(),
     )
@@ -970,12 +980,22 @@ fn parse_call_arguments(
     let open_paren_token = require_token(tokens, diagnostics, "(");
     let arguments =
         parse_comma_separated_exprs(&open_paren_token, tokens, id_gen, diagnostics, ")");
-    let close_paren_token = require_token(tokens, diagnostics, ")");
+
+    let close_paren_pos = match tokens.peek() {
+        Some(token) if token.text == ")" => {
+            tokens.pop();
+            token.position
+        }
+        _ => match tokens.prev() {
+            Some(token) => token.position,
+            None => Position::todo(&tokens.vfs_path),
+        },
+    };
 
     ParenthesizedArguments {
         arguments,
         open_paren: open_paren_token.position,
-        close_paren: close_paren_token.position,
+        close_paren: close_paren_pos,
     }
 }
 

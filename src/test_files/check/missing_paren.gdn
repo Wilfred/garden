@@ -20,11 +20,4 @@ fun foo() {
 //   9|   takes_arg(inc(x)
 //  10|             ^^^^^^
 //  11|   x = 2
-// 
-// Error: Expected `)` after this.
-// ---| src/test_files/check/missing_paren.gdn:9:18
-//   8|   // Forgot closing paren here:
-//   9|   takes_arg(inc(x)
-//  10|                  ^
-//  11|   x = 2
 

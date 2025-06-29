@@ -30,6 +30,27 @@ fun drop_leading_comments(src: String): String {
   "\n".join(lines.slice(first_code_line, lines.len()))
 }
 
+fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Path, base_tmpl_src: String): Unit {
+  let qualified_name = "::".join([ns_name, fun_name])
+
+  match garden::doc_comment(ns, fun_name) {
+    Some(doc_comment) => {
+      let heading = "".join(["# `", qualified_name, "`"])
+      let page_src = render_doc_comment(heading, doc_comment, None)
+
+      let dest_path = out_dir.join("fun:" ^ (qualified_name ^ ".html"))
+      write_website_page(base_tmpl_src, page_src, dest_path)
+    }
+    None => {
+      let parts = [
+        "Tried to generate a page for ",
+        qualified_name,
+        " but it doesn't have a doc comment."]
+      println("".join(parts))
+    }
+  }
+}
+
 // Render `doc_comment` as HTML.
 fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>): String {
   let (intro, rest) = match doc_comment.split_once("\n\n") {
@@ -112,6 +133,18 @@ fun build_site(): Unit {
   for type_name in garden::prelude_types() {
     write_type_page(type_name, out_dir, base_tmpl_src)
   }
+
+  let namespaces = [
+    ("__prelude.gdn", prelude),
+    ("__fs.gdn", fs),
+    ("__garden.gdn", garden),
+  ]
+
+  for (ns_name, ns) in namespaces {
+    for fun_name in garden::namespace_functions(ns) {
+      write_fun_page(ns_name, ns, fun_name, out_dir, base_tmpl_src)
+    }
+  }
 }
 
 // Convert `["a", "b", "c"]` to `"a, b and c"`.
@@ -144,17 +177,17 @@ fun substitute_shorthand(src: String): String {
   let type_links = join_with_commas_and(type_links)
 
   let prelude_funs = garden::namespace_functions(prelude).map(fun(name: String) {
-    "".join(["`", name, "`"])
+    "".join(["[`", name, "`](./fun:__prelude.gdn::", name, ".html)"])
   })
   let prelude_funs = join_with_commas_and(prelude_funs)
 
   let fs_funs = garden::namespace_functions(fs).map(fun(name: String) {
-    "".join(["`", name, "`"])
+    "".join(["[`", name, "`](./fun:__fs.gdn::", name, ".html)"])
   })
   let fs_funs = join_with_commas_and(fs_funs)
 
   let garden_funs = garden::namespace_functions(garden).map(fun(name: String) {
-    "".join(["`", name, "`"])
+    "".join(["[`", name, "`](./fun:__garden.gdn::", name, ".html)"])
   })
   let garden_funs = join_with_commas_and(garden_funs)
 

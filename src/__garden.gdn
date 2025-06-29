@@ -53,7 +53,8 @@ test lex {
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
 }
 
-external fun doc_comment(ns: Namespace, name: String): Option<String> {
+// Get the doc comment for `fun_name` in the namespace `ns`.
+external fun doc_comment(ns: Namespace, fun_name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -64,6 +65,7 @@ test doc_comment {
   }
 }
 
+// Get the doc comment for type `type_name`.
 external fun doc_comment_for_type(type_name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
@@ -94,6 +96,8 @@ test prelude_types {
   assert(prelude_types().first() == Some("Bool"))
 }
 
+// All the reserved words in Garden. These are keywords that cannot be
+// used as variable names.
 external fun keywords(): List<String> {
   // TODO: Add support for constants so this doesn't need to be a function.
   [

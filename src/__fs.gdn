@@ -3,6 +3,7 @@
 // If `path` already exists, its content is replaced with `content`.
 //
 // ```
+// import "__fs.gdn" as fs
 // fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
 // ```
 external fun write_file(content: String, path: Path): Result<Unit, String> {
@@ -17,6 +18,7 @@ test write_file {
 // List the contents of the specified directory.
 //
 // ```
+// import "__fs.gdn" as fs
 // fs::list_directory(Path{ p: "/" })
 // ```
 external fun list_directory(path: Path): Result<List<Path>, String> {
@@ -26,7 +28,8 @@ external fun list_directory(path: Path): Result<List<Path>, String> {
 // Return the path of the current working directory.
 //
 // ```
-// working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
+// import "__fs.gdn" as fs
+// fs::working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
 // ```
 external fun working_directory(): Path {
   __BUILTIN_IMPLEMENTATION
@@ -38,7 +41,8 @@ external fun working_directory(): Path {
 // `check_snippet` arguments.
 //
 // ```
-// set_working_directory(Path{ p: "/tmp" })
+// import "__fs.gdn" as fs
+// fs::set_working_directory(Path{ p: "/tmp" })
 // ```
 external fun set_working_directory(path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION

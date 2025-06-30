@@ -172,18 +172,18 @@ fun render_markdown_garden_code(snippet: Snippet): String {
       let part = line.substring(start_idx, end_idx)
 
       let rendered_part = if tok.starts_with("//") {
-        ("<span class=\"comment\">" ^ escape_angle_brackets(part)) ^ "</span>"
+        "".join(["<span class=\"comment\">", escape_angle_brackets(part), "</span>"])
       } else if tok.starts_with("\"") {
-        ("<span class=\"string\">" ^ escape_angle_brackets(part)) ^ "</span>"
+        "".join(["<span class=\"string\">", escape_angle_brackets(part), "</span>"])
       } else if keywords.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        (((("<a href=\"./keyword:" ^ tok) ^ ".html\"><span class=\"keyword\">") ^ tok) ^ "</span></a>") ^ after_tok
+        "".join(["<a href=\"./keyword:" , tok, ".html\"><span class=\"keyword\">", tok, "</span></a>", after_tok])
       } else if looks_like_type(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         if garden::prelude_types().contains(tok) {
-          (((("<a href=\"./type:" ^ tok) ^ ".html\"><span class=\"type\">") ^ tok) ^ "</span></a>") ^ after_tok
+          "".join(["<a href=\"./type:" , tok, ".html\"><span class=\"type\">", tok, "</span></a>", after_tok])
         } else {
-          (("<span class=\"type\">" ^ tok) ^ "</span>") ^ after_tok
+          "".join(["<span class=\"type\">" , tok, "</span>", after_tok])
         }
       } else {
         escape_angle_brackets(part)

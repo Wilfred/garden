@@ -37,18 +37,18 @@ elements.</p>
 <pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> position = (1, 2)
 <a href="./keyword:let.html"><span class="keyword">let</span></a> (x, y) = position
 
-dbg(x) <span class="comment">// 1</span>
-dbg(y) <span class="comment">// 2</span></code></pre>
+<a href="./fun:__prelude.gdn::dbg.html">dbg</a>(x) <span class="comment">// 1</span>
+<a href="./fun:__prelude.gdn::dbg.html">dbg</a>(y) <span class="comment">// 2</span></code></pre>
 <p>You can also use <code>let</code> to shadow variables, where you introduce a new
 variable that hides the old value.</p>
 <pre><code><a href="./keyword:let.html"><span class="keyword">let</span></a> i = 0
 
 <a href="./keyword:if.html"><span class="keyword">if</span></a> <span class="type">True</span> {
   <a href="./keyword:let.html"><span class="keyword">let</span></a> i = 1
-  dbg(i) <span class="comment">// 1</span>
+  <a href="./fun:__prelude.gdn::dbg.html">dbg</a>(i) <span class="comment">// 1</span>
   <a href="./type:Unit.html"><span class="type">Unit</span></a>
 }
 
-dbg(i) <span class="comment">// 0</span></code></pre></div>
+<a href="./fun:__prelude.gdn::dbg.html">dbg</a>(i) <span class="comment">// 0</span></code></pre></div>
   </body>
 </html>

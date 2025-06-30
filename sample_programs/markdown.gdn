@@ -1,3 +1,4 @@
+import "__prelude.gdn" as prelude
 import "__garden.gdn" as garden
 
 enum MarkdownPart {
@@ -157,6 +158,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
   }
 
   let keywords = garden::keywords()
+  let prelude_funs = garden::namespace_functions(prelude)
   let rendered_lines: List<String> = []
 
   for line in snippet.content.lines() {
@@ -178,6 +180,9 @@ fun render_markdown_garden_code(snippet: Snippet): String {
       } else if keywords.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         "".join(["<a href=\"./keyword:" , tok, ".html\"><span class=\"keyword\">", tok, "</span></a>", after_tok])
+      } else if prelude_funs.contains(tok) {
+        let after_tok = part.substring(tok.len(), part.len())
+        "".join(["<a href=\"./fun:__prelude.gdn::" , tok, ".html\">", tok, "</a>", after_tok])
       } else if looks_like_type(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         if garden::prelude_types().contains(tok) {

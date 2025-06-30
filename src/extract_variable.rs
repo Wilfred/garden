@@ -54,13 +54,11 @@ pub(crate) fn extract_variable(
         return;
     };
 
-    // The innermost block-level expression containing the target
-    // expression.
-    //
-    // This is not the block itself, but the expression wihin the
-    // block that we want to place our new variable before.
+    // The innermost expression that both contains the target expression
+    // and is block level, so we can insert our variable before
+    // this expression.
     let mut enclosing_block_level_expr: Option<Expression> = None;
-    for id in ids_containing_pos.iter().rev() {
+    'outer: for id in ids_containing_pos.iter().rev() {
         let AstId::Expr(expr_syntax_id) = id else {
             continue;
         };
@@ -88,7 +86,7 @@ pub(crate) fn extract_variable(
             Expression_::Match(_, cases) => {
                 for (_, block) in cases {
                     if block_contains_id(block, *expr_id) {
-                        break;
+                        break 'outer;
                     }
                 }
                 enclosing_block_level_expr = Some(expr.clone());

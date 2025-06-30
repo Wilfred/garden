@@ -1,0 +1,26 @@
+fun bar(_) {}
+
+external fun demo() {
+  match Some("foo") {
+    Some(s) => {
+      bar(s ^ "baz")
+      //  ^^^^^^^^^
+    }
+    None => {}
+  }
+}
+
+// args: extract-variable --name extracted_var
+// expected stdout:
+// fun bar(_) {}
+// 
+// external fun demo() {
+//   match Some("foo") {
+//     Some(s) => {
+//       let extracted_var = s ^ "baz"
+//       bar(extracted_var)
+//     }
+//     None => {}
+//   }
+// }
+

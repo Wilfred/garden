@@ -1,6 +1,8 @@
 import "__prelude.gdn" as prelude
 import "__garden.gdn" as garden
 
+import "./log.gdn" as log
+
 enum MarkdownPart {
   Heading(String),
   Paragraph(String),
@@ -149,9 +151,9 @@ fun render_markdown_garden_code(snippet: Snippet): String {
     match garden::check_snippet(snippet.content) {
       Ok(_) => {}
       Err(messages) => {
-        println(snippet.content)
+        log::info(snippet.content)
         for message in messages {
-          println(message)
+          log::info(message)
         }
       }
     }

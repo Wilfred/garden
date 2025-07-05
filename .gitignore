@@ -5,7 +5,6 @@ perf.data*
 flamegraph.svg
 
 .history
-log.gdn
 
 # Emacs related
 .cask

@@ -1,0 +1,5 @@
+// Incomplete
+fun bar() {
+
+// This should be fully parsed.
+fun baz() {}

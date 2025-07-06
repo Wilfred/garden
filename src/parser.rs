@@ -614,8 +614,13 @@ fn parse_simple_expression(
             return parse_list_literal(tokens, id_gen, diagnostics);
         }
 
-        if token.text == "fun" {
-            return parse_lambda(tokens, id_gen, diagnostics);
+        // For lambda, require `fun(`. If we see `fun foo` it's likely
+        // that the user hasn't terminated their previous function and
+        // we've started looking at the next function.
+        if let Some(next_token) = tokens.peek_at(1) {
+            if token.text == "fun" && next_token.text == "(" {
+                return parse_lambda(tokens, id_gen, diagnostics);
+            }
         }
 
         if token.text == "assert" {

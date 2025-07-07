@@ -413,20 +413,50 @@ the user entering a value in the *garden* buffer."
                    (garden--flash-position buf response-position)
                    (unless (or (null response-ok-value) (string= response-ok-value "void"))
                      (message "%s" response-ok-value))
-                   (garden--fontify-value (concat response-ok-value "\n")))
+                   (if response-ok-value
+                       (garden--fontify-value (concat response-ok-value "\n"))
+                     ""))
                   (t
                    (format "Unknown response kind: %S" output)))))
             (goto-char (point-max))
-            (if (garden--prompt-empty-p)
-                (let ((inhibit-read-only t))
-                  (forward-line -1)
-                  (beginning-of-line)
-                  (insert "\n" s)
-                  (goto-char (point-max)))
-              (insert s
-                      (garden--fontify-prompt
-                       (format "\n%s>" garden--top-stack-name))
-                      " "))
+
+            ;; Interesting test cases, alongside their ideal output.
+            ;;
+            ;; (1) Print things then return a value.
+            ;;
+            ;; > fun f() { println("x") println("y") 1 + 2 }
+            ;; > f()
+            ;; x
+            ;; y
+            ;; 3
+            ;; >
+            ;;
+            ;; (2) Empty input.
+            ;;
+            ;; >
+            ;; >
+            ;;
+            ;; (3) Evaluate a snippet directly in source file.
+            ;;
+            ;; printed in source
+            ;; >
+            (cond
+             ;; ((garden--prompt-empty-p)
+             ;;  (let ((inhibit-read-only t))
+             ;;    (forward-line -1)
+             ;;    (beginning-of-line)
+             ;;    (insert "\n" s)))
+             ((string= response-kind "evaluate")
+              ;; Just finished this expression in the REPL, provide new prompt.
+              (insert
+               s
+               (garden--fontify-prompt (format "%s>" garden--top-stack-name))
+               " "))
+             ;; Some other notification from session, e.g. reporting
+             ;; that something was printed.
+             (t
+              (insert s)))
+
             (set-marker (process-mark proc) (point))
 
             (when error-buf

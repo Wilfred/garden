@@ -339,6 +339,7 @@ the user entering a value in the *garden* buffer."
   "The name of the innermost stack frame that we're currently in.")
 
 (defun garden-process-filter (proc output)
+  "Consume JSON session output from inferior Garden process and insert in comint buffer."
   (when garden-log-json
     (garden--log-json-to-buf output))
   (setq output (concat garden--output output))

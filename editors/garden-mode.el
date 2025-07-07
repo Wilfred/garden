@@ -296,7 +296,7 @@ repeated parentheses/brackets on the same line."
 If so, this means we're processing an event that didn't start by
 the user entering a value in the *garden* buffer."
   (string=
-   "> "
+   (format "%s> " garden--top-stack-name)
    (buffer-substring (line-beginning-position)
                      (line-end-position))))
 

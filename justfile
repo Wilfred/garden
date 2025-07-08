@@ -1,9 +1,11 @@
 default:
     @just --list
 
+# Build and run tests on all changes.
 watch:
     REGENERATE=y GDN_TEST=y cargo watch -x b -x t
 
+# Tag, push and publish a new release.
 release:
     #!/bin/bash
 
@@ -16,5 +18,6 @@ release:
     cargo publish
     cargo set-version --bump minor
 
+# Start a webserver serving the latest website build.
 web:
     cd website && python -m http.server

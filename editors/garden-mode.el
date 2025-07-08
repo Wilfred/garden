@@ -440,18 +440,32 @@ the user entering a value in the *garden* buffer."
             ;;
             ;; printed in source
             ;; >
+            ;;
+            ;; (3) Run a command
+            ;;
+            ;; > :abort
+            ;; Aborted
+            ;; >
             (cond
-             ;; ((garden--prompt-empty-p)
-             ;;  (let ((inhibit-read-only t))
-             ;;    (forward-line -1)
-             ;;    (beginning-of-line)
-             ;;    (insert "\n" s)))
-             ((string= response-kind "evaluate")
-              ;; Just finished this expression in the REPL, provide new prompt.
+             ((and
+               (or (string= response-kind "evaluate")
+                   (string= response-kind "run_command"))
+               (not (garden--prompt-empty-p)))
+              ;; Just finished this expression or command in the REPL,
+              ;; provide new prompt.
               (insert
                s
                (garden--fontify-prompt (format "%s>" garden--top-stack-name))
                " "))
+             ((garden--prompt-empty-p)
+              ;; Move back and insert the line before the most recent
+              ;; prompt. Restore point after, so `set-marker' still
+              ;; marks the user input region as after the (now moved)
+              ;; prompt.
+              (save-mark-and-excursion
+                (let ((inhibit-read-only t))
+                  (beginning-of-line)
+                  (insert s))))
              ;; Some other notification from session, e.g. reporting
              ;; that something was printed.
              (t

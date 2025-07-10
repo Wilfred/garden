@@ -60,12 +60,15 @@ fun parse_markdown(src: String): List<MarkdownPart> {
     } else if ((line == "---") || (line == "***")) || (line == "___") {
       if current_section.is_non_empty() {
         parts = parts.append(finish_section(in_bullets, current_section))
+        in_bullets = False
       }
 
       parts = parts.append(ThematicBreak)
     } else if line.starts_with("#") {
       if current_section.is_non_empty() {
         parts = parts.append(finish_section(in_bullets, current_section))
+        in_bullets = False
+
         current_section = []
       }
 
@@ -84,7 +87,9 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       }
 
     } else if line == "" {
-      parts = parts.append(Paragraph("\n".join(current_section)))
+      parts = parts.append(finish_section(in_bullets, current_section))
+      in_bullets = False
+
       current_section = []
     } else {
       current_section = current_section.append(line)
@@ -489,6 +494,13 @@ test render_asterisk {
 <li>foo</li>
 <li>bar</li>
 </ul>")
+}
+
+test render_asterisk_with_content_after {
+  assert(render_markdown("* foo\n\nbar") == "<ul>
+<li>foo</li>
+</ul>
+<p>bar</p>")
 }
 
 test render_thematic_break {

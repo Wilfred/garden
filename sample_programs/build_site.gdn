@@ -98,6 +98,14 @@ fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
   write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"))
 }
 
+fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
+  let blog_post_dir = website_dir.join("blog")
+
+  for md_path in fs::list_directory(blog_post_dir).or_error() {
+    write_markdown_page(base_tmpl_src, md_path)
+  }
+}
+
 // Build the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().parent().join("website")
@@ -107,6 +115,8 @@ fun build_site(): Unit {
 
   let base_tmpl_path = website_dir.join("template.html")
   let base_tmpl_src = base_tmpl_path.read().or_error()
+
+  build_blog(website_dir, base_tmpl_src)
 
   let seen_keyword_pages: List<String> = []
 

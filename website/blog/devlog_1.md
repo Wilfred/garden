@@ -2,7 +2,7 @@
 
 Some languages pass arguments to `main`, such as Java and C.
 
-```
+```java
 public class Demo {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
@@ -10,7 +10,7 @@ public class Demo {
 }
 ```
 
-```
+```c
 #include <stdio.h>
 
 int main(int argc, char **argv) {
@@ -29,8 +29,8 @@ made me realise how little consistency I had.
 
 ```
 fun main(_) {}
-fun main(_: List<Args>) {}
-fun main(_args: List<Args>) {}
+fun main(_: List<String>) {}
+fun main(_args: List<String>) {}
 ```
 
 (3) Most programs don't want to use CLI arguments anyway.

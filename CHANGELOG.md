@@ -30,6 +30,11 @@ Added `String::trim()` and `garden::doc_comment()`.
 `check` now stops if syntax errors occur, as type errors are rarely
 actionable or accurate when syntax errors are present.
 
+### Test Runner
+
+`garden test` now supports a `-n` argument that lets you specify a
+test name substring to use.
+
 # 0.20 (released 1st June 2025)
 **Goal: Namespaces.**
 

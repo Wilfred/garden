@@ -104,9 +104,14 @@ enum CliCommands {
         path: PathBuf,
         arguments: Vec<String>,
     },
-    /// Run all the tests in the Garden program at the paths
-    /// specified.
-    Test { paths: Vec<PathBuf> },
+    /// Run all the tests in the Garden files specified.
+    Test {
+        /// If provided, only run tests whose name contains this
+        /// substring.
+        #[clap(short, long, value_name = "SUBSTRING")]
+        name_contains: Option<String>,
+        paths: Vec<PathBuf>,
+    },
     /// Run the tests associated with the definition at this offset,
     /// but give up if the program exceeds a time limit or attempts
     /// I/O.
@@ -232,7 +237,10 @@ fn main() {
             let src_path = to_abs_path(&override_path.unwrap_or(path));
             syntax_check::check(&src_path, &src, json)
         }
-        CliCommands::Test { paths } => {
+        CliCommands::Test {
+            paths,
+            name_contains,
+        } => {
             let mut paths_and_srcs = vec![];
             for path in paths.into_iter() {
                 let abs_path = to_abs_path(&path);
@@ -240,7 +248,7 @@ fn main() {
                 paths_and_srcs.push((src, abs_path));
             }
 
-            run_tests_in_files(&paths_and_srcs, interrupted)
+            run_tests_in_files(&paths_and_srcs, name_contains.as_ref(), interrupted)
         }
         CliCommands::SandboxedTest { path, offset } => {
             let abs_path = to_abs_path(&path);

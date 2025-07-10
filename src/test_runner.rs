@@ -192,6 +192,7 @@ pub(crate) fn run_sandboxed_tests_in_file(
 
 pub(crate) fn run_tests_in_files(
     srcs_and_paths: &[(String, PathBuf)],
+    name_contains: Option<&String>,
     interrupted: Arc<AtomicBool>,
 ) {
     let session = Session {
@@ -218,7 +219,17 @@ pub(crate) fn run_tests_in_files(
         all_items.extend_from_slice(&items);
     }
 
-    let summary = eval_tests(&all_items, &mut env, &session);
+    let mut test_items: Vec<ToplevelItem> = vec![];
+    let name_contains = name_contains.cloned().unwrap_or_default();
+    for item in &all_items {
+        if let ToplevelItem::Test(ti) = item {
+            if ti.name_sym.name.text.contains(&name_contains) {
+                test_items.push(item.clone());
+            }
+        }
+    }
+
+    let summary = eval_tests(&test_items, &mut env, &session);
 
     let total_tests = summary.tests.len();
     let tests_failed = summary

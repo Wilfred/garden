@@ -292,7 +292,7 @@ pub(crate) fn run_tests_in_files(
             println!("Ran 1 test: it passed.");
         } else if tests_failed == 0 {
             println!(
-                "Ran {} test{}: all tests passed.",
+                "Ran {} test{}: they all passed.",
                 total_tests,
                 if total_tests == 1 { "" } else { "s" },
             );

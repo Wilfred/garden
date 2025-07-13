@@ -3,3 +3,21 @@ fun bar() {
 
 // This should be fully parsed.
 fun baz() {}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected a symbol after this.
+// ---| src/test_files/check/incomplete_fun.gdn:2:11
+//   1| // Incomplete
+//   2| fun bar() {
+//   3|           ^
+//   4| // This should be fully parsed.
+// 
+// Error: Expected `}` after this.
+// ---| src/test_files/check/incomplete_fun.gdn:2:11
+//   1| // Incomplete
+//   2| fun bar() {
+//   3|           ^
+//   4| // This should be fully parsed.
+

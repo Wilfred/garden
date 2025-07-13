@@ -1,3 +1,8 @@
+```metadata
+published: true
+date: 2025-07-13
+```
+
 # Choosing a Syntax
 
 To kick things off, I want to talk about the basic syntax of Garden.

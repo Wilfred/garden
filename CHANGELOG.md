@@ -25,6 +25,9 @@ fun (this: String) my_append(s: String) {
 
 Added `String::trim()` and `garden::doc_comment()`.
 
+Fixed an issue with `__fs::list_directory()` returning an invalid
+list.
+
 ### Checks
 
 `check` now stops if syntax errors occur, as type errors are rarely

@@ -2671,7 +2671,7 @@ fn eval_builtin_call(
 
                     Value::ok(Value::new(Value_::List {
                         items,
-                        elem_type: Type::list(Type::path()),
+                        elem_type: Type::path(),
                     }))
                 }
                 Err(e) => {

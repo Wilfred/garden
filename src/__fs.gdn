@@ -25,6 +25,19 @@ external fun list_directory(path: Path): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Kludge to perform a runtime check that list_directory returns a
+// list of paths.
+fun takes_list_of_paths(_: List<Path>) {}
+
+test list_directory {
+  match list_directory(Path{p: "/"}) {
+    Ok(paths) => {
+      takes_list_of_paths(paths)
+    }
+    Err(_) => {}
+  }
+}
+
 // Return the path of the current working directory.
 //
 // ```

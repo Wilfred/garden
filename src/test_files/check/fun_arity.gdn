@@ -1,13 +1,48 @@
 {
-    string_repr(1, 2, 3)
+  // Too few arguments.
+  range(1)
+
+  // Too few argument, special case when no arguments were provided.
+  range()
+
+  // Too many arguments.
+  string_repr(1, 2, 3)
 }
+
+// Error: `range` expects 2 arguments, but got 0.
+// ---| src/test_files/check/fun_arity.gdn:6:8
+//   5|   // Too few argument, special case when no arguments were provided.
+//   6|   range()
+//   7|        ^^
+//   8|   // Too many arguments.
+//
+// Error: `string_repr` expects 1 argument, but got 3.
+// ---| src/test_files/check/fun_arity.gdn:9:18
+//   8|   // Too many arguments.
+//   9|   string_repr(1, 2, 3)
+//  10| }                ^^^^
 
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: `string_repr` expects 1 argument, but got 3.
-// ---| src/test_files/check/fun_arity.gdn:2:20
+// Error: `range` requires an additional `Int` argument.
+// ---| src/test_files/check/fun_arity.gdn:3:10
 //   1| {
-//   2|     string_repr(1, 2, 3)
-//   3| }                  ^^^^
+//   2|   // Too few arguments.
+//   3|   range(1)
+//   4|          ^
+//   5|   // Too few argument, special case when no arguments were provided.
+// 
+// Error: `range` expects 2 arguments, but got 0.
+// ---| src/test_files/check/fun_arity.gdn:6:8
+//   5|   // Too few argument, special case when no arguments were provided.
+//   6|   range()
+//   7|        ^^
+//   8|   // Too many arguments.
+// 
+// Error: `string_repr` expects 1 argument, but got 3.
+// ---| src/test_files/check/fun_arity.gdn:9:18
+//   8|   // Too many arguments.
+//   9|   string_repr(1, 2, 3)
+//  10| }                ^^^^
 

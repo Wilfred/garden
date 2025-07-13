@@ -555,11 +555,21 @@ impl TypeCheckVisitor<'_> {
             });
         } else if expected_args.len() > paren_args.arguments.len() {
             // Got too few arguments.
+
+            let position = if paren_args.arguments.is_empty() {
+                // Highlight both parens when we need arguments but got none.
+                Position::merge(&paren_args.open_paren, &paren_args.close_paren)
+            } else {
+                // We had a non-zero number of arguments, but not
+                // enough. Just highlight the closing paren.
+                paren_args.close_paren.clone()
+            };
+
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Error,
                 message,
-                position: paren_args.close_paren.clone(),
+                position,
             });
         }
     }

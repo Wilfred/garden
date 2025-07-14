@@ -416,6 +416,9 @@ test path_join {
   let directory = Path{ p: "/foo/bar" }
   assert(directory.join("baz").p == "/foo/bar/baz")
 
+  let relative_directory = Path{ p: "foo/bar" }
+  assert(relative_directory.join("baz").p == "foo/bar/baz")
+
   let root = Path{ p: "/" }
   assert(root.join("baz").p == "/baz")
 }

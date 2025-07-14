@@ -1,7 +1,7 @@
 fun file_name(path: String): String {
-    let parts = path.split("/")
-    //          ^
-    parts.last().or_exception()
+  let parts = path.split("/")
+  //          ^
+  parts.last().or_throw()
 }
 
 // args: show-type

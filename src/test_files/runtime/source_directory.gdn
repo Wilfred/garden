@@ -1,5 +1,5 @@
 {
-  dbg(source_directory().or_exception().file_name())
+  dbg(source_directory().or_throw().file_name())
 }
 
 // args: run

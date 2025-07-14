@@ -1,6 +1,6 @@
 {
     let value = Some("foo")
-    value.or_exception() + 1
+    value.or_throw() + 1
 }
 
 // args: check
@@ -10,6 +10,6 @@
 // ---| src/test_files/check/type_error_option_generic.gdn:3:5
 //   1| {
 //   2|     let value = Some("foo")
-//   3|     value.or_exception() + 1
-//   4| }   ^^^^^^^^^^^^^^^^^^^^
+//   3|     value.or_throw() + 1
+//   4| }   ^^^^^^^^^^^^^^^^
 

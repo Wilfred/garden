@@ -735,15 +735,15 @@ external method is_none<T>(this: Option<T>): Bool {
 }
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
-external method or_exception<T>(this: Option<T>): T {
+external method or_throw<T>(this: Option<T>): T {
   match this {
     Some(v) => v,
-    None => error("Called or_exception on a `None` value.")
+    None => error("Called `or_throw` on a `None` value.")
   }
 }
 
-test option_or_exception {
-  assert(Some(123).or_exception() == 123)
+test option_or_throw {
+  assert(Some(123).or_throw() == 123)
 }
 
 // If this value is `Some(x)`, return `x`, otherwise return `value`.

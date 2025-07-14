@@ -41,7 +41,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
 
       if in_code_block {
         // Just finished the code block.
-        let language = current_section.first().or_exception().strip_prefix("```")
+        let language = current_section.first().or_throw().strip_prefix("```")
         let content = "\n".join(current_section.slice(1, -1))
 
         let snippet = Snippet{

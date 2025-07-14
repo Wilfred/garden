@@ -1,5 +1,5 @@
 external method foo<T>(this: List<T>): String {
-  this.get(1).or_exception()
+  this.get(1).or_throw()
 }
 
 // args: check
@@ -8,6 +8,6 @@ external method foo<T>(this: List<T>): String {
 // Error: Expected `String`, but got `T`.
 // ---| src/test_files/check/type_error_generic_method_receiver.gdn:2:3
 //   1| external method foo<T>(this: List<T>): String {
-//   2|   this.get(1).or_exception()
-//   3| } ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//   2|   this.get(1).or_throw()
+//   3| } ^^^^^^^^^^^^^^^^^^^^^^
 

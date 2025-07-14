@@ -385,20 +385,26 @@ struct Path {
 // Path{ p: "/foo/bar/" }.parent() // Path{ p: "/foo" }
 // Path{ p: "/" }.parent() // Path{ p: "/" }
 // ```
-external method parent(this: Path): Path {
+external method parent(this: Path): Option<Path> {
   let p = this.p.strip_suffix("/")
   if p == "" {
-    return Path{ p: "/" }
+    return None
   }
 
   let parts = p.split("/").slice(0, -1)
-  Path{ p: "/".join(parts) }
+  if parts.is_empty() {
+    return None
+  }
+
+  Some(Path{ p: "/".join(parts) })
 }
 
 test path_parent {
-  assert(Path{ p: "/foo/bar.txt" }.parent() == Path{ p: "/foo" })
-  assert(Path{ p: "/foo/bar/" }.parent() == Path{ p: "/foo" })
-  assert(Path{ p: "/" }.parent() == Path{ p: "/" })
+  assert(Path{ p: "/" }.parent() == None)
+  assert(Path{ p: "foo.txt" }.parent() == None)
+
+  assert(Path{ p: "/foo/bar.txt" }.parent() == Some(Path{ p: "/foo" }))
+  assert(Path{ p: "/foo/bar/" }.parent() == Some(Path{ p: "/foo" }))
 }
 
 // Append `component` to this path.
@@ -466,11 +472,18 @@ external method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext
   match this.file_name() {
     Some(file_name) => {
-      let c = this.parent()
-      match file_name.split_once(".") {
-        Some((base_file_name, _ext)) => c.join(base_file_name ^ new_ext)
-        None => c.join(file_name ^ new_ext)
+      let base = match this.parent() {
+        Some(parent) => parent.p ^ "/"
+        None => ""
       }
+
+      let p = match file_name.split_once(".") {
+        Some((base_file_name, _ext)) => {
+          (base ^ base_file_name) ^ new_ext
+        }
+        None => (base ^ file_name) ^ new_ext
+      }
+      Path{ p: p }
     },
     None => this,
   }

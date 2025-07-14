@@ -28,6 +28,9 @@ Added `String::trim()` and `garden::doc_comment()`.
 Fixed an issue with `__fs::list_directory()` returning an invalid
 list.
 
+`Path::parent()` now return an `Option<Path>` on `/` or unqualified
+file names `foo.txt`.
+
 ### Checks
 
 `check` now stops if syntax errors occur, as type errors are rarely

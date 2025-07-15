@@ -1,15 +1,6 @@
 {
-  let s = Path{ p: "/foo" }.read().or_throw()
+  let s = Path{ p: "/foo" }.read().or_error()
   s.split_once(",")
 }
 
 // args: check
-// expected exit status: 1
-// expected stdout:
-// Error: Tried to call a method that has no fun_info. This means there's a bug in prelude loading.
-// ---| src/test_files/check/method_after_or_error.gdn:2:29
-//   1| {
-//   2|   let s = Path{ p: "/foo" }.read().or_throw()
-//   3|   s.split_once(",")         ^^^^
-//   4| }
-

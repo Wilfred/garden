@@ -1348,6 +1348,8 @@ fn is_builtin_type(struct_info: &StructInfo) -> bool {
     field.sym.name.text == "__BUILTIN_IMPLEMENTATION"
 }
 
+/// Update the built-in method described by `meth_info`, using
+/// `fun_info` for position data.
 fn update_builtin_meth_info(
     meth_info: &MethodInfo,
     fun_info: &FunInfo,
@@ -1369,46 +1371,44 @@ fn update_builtin_meth_info(
         return;
     };
 
-    let Some(curr_meth_info) = type_def_and_methods
+    match type_def_and_methods
         .methods
-        .get_mut(&meth_info.name_sym.name)
-    else {
-        diagnostics.push(Diagnostic {
-            notes: vec![],
-            severity: Severity::Warning,
-            message: ErrorMessage(vec![Text(format!(
-                "Tried to update a built-in stub for a method {} that doesn't exist on {}.",
-                meth_info.name_sym.name, type_name
-            ))]),
-            position: meth_info.name_sym.position.clone(),
-        });
-        return;
-    };
+        .entry(meth_info.name_sym.name.clone())
+    {
+        Entry::Occupied(entry) => {
+            let curr_meth_info = entry.into_mut();
 
-    let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
-        diagnostics.push(Diagnostic {
-            notes: vec![],
-            severity: Severity::Warning,
-            message: ErrorMessage(vec![Text(format!(
-                // TODO: we need a better design principle around
-                // warning phrasing. It should probably always include
-                // an explanation of what will happen (in this case
-                // nothing).
-                "{}::{} is not a built-in method.",
-                type_name, meth_info.name_sym.name
-            ))]),
-            position: meth_info.name_sym.position.clone(),
-        });
-        return;
-    };
+            let MethodKind::BuiltinMethod(kind, _) = &curr_meth_info.kind else {
+                diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    severity: Severity::Warning,
+                    message: ErrorMessage(vec![Text(format!(
+                        // TODO: we need a better design principle around
+                        // warning phrasing. It should probably always include
+                        // an explanation of what will happen (in this case
+                        // nothing).
+                        "{}::{} is not a built-in method.",
+                        type_name, meth_info.name_sym.name
+                    ))]),
+                    position: meth_info.name_sym.position.clone(),
+                });
+                return;
+            };
 
-    // Prefer hints and symbols from __prelude.gdn, as they have
-    // better positions and full type parameters.
-    curr_meth_info.receiver_hint = meth_info.receiver_hint.clone();
-    curr_meth_info.receiver_sym = meth_info.receiver_sym.clone();
-    curr_meth_info.name_sym = meth_info.name_sym.clone();
+            // Prefer hints and symbols from __prelude.gdn, as they have
+            // better positions and full type parameters.
+            curr_meth_info.receiver_hint = meth_info.receiver_hint.clone();
+            curr_meth_info.receiver_sym = meth_info.receiver_sym.clone();
+            curr_meth_info.name_sym = meth_info.name_sym.clone();
 
-    curr_meth_info.kind = MethodKind::BuiltinMethod(*kind, Some(fun_info.clone()));
+            curr_meth_info.kind = MethodKind::BuiltinMethod(*kind, Some(fun_info.clone()));
+        }
+        Entry::Vacant(entry) => {
+            // Loading a stub for a built-in method that we haven't
+            // seen before.
+            entry.insert(meth_info.clone());
+        }
+    }
 }
 
 fn update_builtin_fun_info(

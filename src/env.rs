@@ -773,7 +773,20 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     if let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
         text: "Path".into(),
     }) {
-        path_def_and_methods.methods.extend(path_methods);
+        // Merge the builtin method kinds for Path into the stub
+        // methods defined in the prelude.
+        for (name, meth_info) in path_methods {
+            let MethodKind::BuiltinMethod(builtin_kind, _) = meth_info.kind else {
+                unreachable!()
+            };
+
+            if let Some(existing_meth) = path_def_and_methods.methods.get_mut(&name) {
+                existing_meth.kind =
+                    MethodKind::BuiltinMethod(builtin_kind, existing_meth.fun_info().cloned());
+            } else {
+                path_def_and_methods.methods.insert(name, meth_info);
+            }
+        }
     }
 
     ns

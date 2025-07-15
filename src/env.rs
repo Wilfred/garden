@@ -763,7 +763,12 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     );
 
     let ns = Rc::new(RefCell::new(ns_info));
-    load_toplevel_items(&prelude_items, env, ns.clone());
+    let (diags, _) = load_toplevel_items(&prelude_items, env, ns.clone());
+    assert_eq!(
+        diags.len(),
+        0,
+        "Loading the prelude should produce zero warnings and errors."
+    );
 
     if let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
         text: "Path".into(),

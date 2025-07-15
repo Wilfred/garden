@@ -1282,6 +1282,12 @@ impl TypeCheckVisitor<'_> {
                             .insert(sym.id, method_info.name_sym.position.clone());
 
                         let Some(fun_info) = method_info.fun_info() else {
+                            self.diagnostics.push(Diagnostic {
+                                notes: vec![],
+                                severity: Severity::Error,
+                                message: ErrorMessage(vec![msgtext!("Tried to call a method that has no fun_info. This means there's a bug in prelude loading.")]),
+                                position: sym.position.clone(),
+                            });
                             return Type::error("This method has no fun_info");
                         };
 

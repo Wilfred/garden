@@ -361,7 +361,7 @@ fn handle_eval_up_to_request(
 
 fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
     match e {
-        EvalError::ResumableError(position, e) => {
+        EvalError::Exception(position, e) => {
             let stack =
                 format_error_with_stack(&e, &position, &env.stack.0, &env.vfs, &env.project_root);
 
@@ -743,7 +743,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             position: None,
             id: None,
         },
-        Err(EvalError::ResumableError(position, e)) => Response {
+        Err(EvalError::Exception(position, e)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {

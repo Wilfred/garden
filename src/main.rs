@@ -452,7 +452,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
     if let Err(e) = eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
-            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
+            EvalError::Exception(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
@@ -470,7 +470,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
         ),
         Err(EvalUpToErr::EvalError(e)) => match e {
             EvalError::Interrupted => eprintln!("Interrupted."),
-            EvalError::ResumableError(_, msg) => eprintln!("{}", msg.as_string()),
+            EvalError::Exception(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
             EvalError::ForbiddenInSandbox(_) => {
@@ -628,7 +628,7 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
 
     match eval_toplevel_items(&vfs_path, &items, &mut env, &session) {
         Ok(_) => {}
-        Err(EvalError::ResumableError(position, msg)) => {
+        Err(EvalError::Exception(position, msg)) => {
             eprintln!(
                 "{}",
                 &format_error_with_stack(

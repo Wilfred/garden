@@ -256,8 +256,10 @@ pub(crate) struct Session {
 pub(crate) enum EvalError {
     /// User pressed ctrl-c.
     Interrupted,
-    /// Normal userland error, e.g. `error()` was called.
-    ResumableError(Position, ErrorMessage),
+    /// Normal userland error, e.g. `throw()` was called. This cannot
+    /// be handled in normal code (unlike Result), but may be resumed
+    /// within the IDE (i.e the stack is not unwound).
+    Exception(Position, ErrorMessage),
     /// `assert()` failed.
     AssertionFailed(Position, ErrorMessage),
     /// Ran out of ticks (i.e. program did not terminate in time).
@@ -690,7 +692,7 @@ pub(crate) fn eval_toplevel_items(
     let (mut diagnostics, new_syms) = load_toplevel_items(&defs, env, ns.clone());
     for diagnostic in diagnostics.iter() {
         if matches!(diagnostic.severity, Severity::Error) {
-            return Err(EvalError::ResumableError(
+            return Err(EvalError::Exception(
                 diagnostic.position.clone(),
                 diagnostic.message.clone(),
             ));
@@ -1567,7 +1569,7 @@ fn eval_if(
     } else {
         return Err((
             RestoreValues(vec![condition_value.clone()]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 bool_position.clone(),
                 format_type_error(
                     &TypeName {
@@ -1597,7 +1599,7 @@ fn eval_while_body(
     let Some(b) = condition_value.as_rust_bool() else {
         return Err((
             RestoreValues(vec![condition_value.clone()]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 condition_pos.clone(),
                 format_type_error(
                     &TypeName {
@@ -1664,7 +1666,7 @@ fn eval_for_in(
     let Value_::List { items, .. } = iteree_value.as_ref() else {
         return Err((
             RestoreValues(vec![iteree_value.clone()]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 iteree_pos.clone(),
                 format_type_error(
                     &TypeName {
@@ -1702,7 +1704,7 @@ fn eval_for_in(
                 if items.len() != symbols.len() {
                     return Err((
                         RestoreValues(vec![iteree_current_elem.clone()]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             iteree_pos.clone(),
                             ErrorMessage(vec![Text(format!(
                                 "Expected a tuple with {} items, got a tuple with {} items.",
@@ -1724,7 +1726,7 @@ fn eval_for_in(
             _ => {
                 return Err((
                     RestoreValues(vec![iteree_current_elem.clone()]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         iteree_pos.clone(),
                         ErrorMessage(vec![Text(format!("Incorrect type for variable: {}", "x"))]),
                     ),
@@ -1752,7 +1754,7 @@ fn eval_assign_update(
     let Some(var_value) = get_var(variable, env) else {
         return Err((
             RestoreValues(vec![]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 variable.position.clone(),
                 ErrorMessage(vec![Text(format!(
                     "{} is not currently bound. Try `let {} = something`.",
@@ -1764,7 +1766,7 @@ fn eval_assign_update(
     let Value_::Integer(var_value_num) = var_value.as_ref() else {
         return Err((
             RestoreValues(vec![]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 position.clone(),
                 format_type_error(&TypeName { text: "Int".into() }, &var_value, env),
             ),
@@ -1778,7 +1780,7 @@ fn eval_assign_update(
     let Value_::Integer(rhs_num) = rhs_value.as_ref() else {
         return Err((
             RestoreValues(vec![rhs_value.clone()]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 position.clone(),
                 format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
             ),
@@ -1809,7 +1811,7 @@ fn eval_assign(
     if !env.current_frame_mut().bindings.has(variable.interned_id) {
         return Err((
             RestoreValues(vec![]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 variable.position.clone(),
                 ErrorMessage(vec![Text(format!(
                     "{} is not currently bound. Try `let {} = something`.",
@@ -1857,7 +1859,7 @@ fn eval_let(
             Err(e) => {
                 return Err((
                     RestoreValues(vec![]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         hint.position.clone(),
                         ErrorMessage(vec![msgtext!("Unbound type in hint: "), Code(e)]),
                     ),
@@ -1868,7 +1870,7 @@ fn eval_let(
         if let Err(msg) = check_type(&expr_value, &expected_ty, env) {
             return Err((
                 RestoreValues(vec![expr_value]),
-                EvalError::ResumableError(init_value_pos.clone(), msg),
+                EvalError::Exception(init_value_pos.clone(), msg),
             ));
         };
     }
@@ -1881,7 +1883,7 @@ fn eval_let(
                 if items.len() != symbols.len() {
                     return Err((
                         RestoreValues(vec![expr_value.clone()]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             init_value_pos.clone(),
                             ErrorMessage(vec![Text(format!(
                                 "Expected a tuple with {} items, got a tuple with {} items.",
@@ -1899,7 +1901,7 @@ fn eval_let(
             _ => {
                 return Err((
                     RestoreValues(vec![expr_value]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         init_value_pos.clone(),
                         ErrorMessage(vec![Text(format!("Incorrect type for variable: {}", "x"))]),
                     ),
@@ -1966,7 +1968,7 @@ fn eval_boolean_binop(
         let Some(lhs_bool) = lhs_value.as_rust_bool() else {
             return Err((
                 RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                EvalError::ResumableError(
+                EvalError::Exception(
                     lhs_position.clone(),
                     format_type_error(
                         &TypeName {
@@ -1982,7 +1984,7 @@ fn eval_boolean_binop(
         let Some(rhs_bool) = rhs_value.as_rust_bool() else {
             return Err((
                 RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                EvalError::ResumableError(
+                EvalError::Exception(
                     rhs_position.clone(),
                     format_type_error(
                         &TypeName {
@@ -2052,7 +2054,7 @@ fn eval_integer_binop(
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         lhs_position.clone(),
                         format_type_error(&TypeName { text: "Int".into() }, &lhs_value, env),
                     ),
@@ -2064,7 +2066,7 @@ fn eval_integer_binop(
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         rhs_position.clone(),
                         format_type_error(&TypeName { text: "Int".into() }, &rhs_value, env),
                     ),
@@ -2084,7 +2086,7 @@ fn eval_integer_binop(
                 if rhs_num == 0 {
                     return Err((
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             position.clone(),
                             ErrorMessage(vec![Text(format!(
                                 "Tried to divide {} by zero.",
@@ -2101,7 +2103,7 @@ fn eval_integer_binop(
                 if rhs_num < 0 {
                     return Err((
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             position.clone(),
                             ErrorMessage(vec![Text(format!(
                                 "Cannot raise an integer to a negative power, got {}.^ {}",
@@ -2115,7 +2117,7 @@ fn eval_integer_binop(
                 if rhs_num > u32::MAX as i64 {
                     return Err((
                         RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             position.clone(),
                             ErrorMessage(vec![Text(format!(
                                 "Exponent is too large, got {}.^ {}",
@@ -2131,7 +2133,7 @@ fn eval_integer_binop(
                     None => {
                         return Err((
                             RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
-                            EvalError::ResumableError(
+                            EvalError::Exception(
                                 position.clone(),
                                 ErrorMessage(vec![Text(format!(
                                     "Integer overflow on raising to the power, got {}.^ {}",
@@ -2178,7 +2180,7 @@ fn eval_string_concat(
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         lhs_position.clone(),
                         format_type_error(
                             &TypeName {
@@ -2196,7 +2198,7 @@ fn eval_string_concat(
             _ => {
                 return Err((
                     RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         rhs_position.clone(),
                         format_type_error(
                             &TypeName {
@@ -2248,7 +2250,7 @@ fn check_arity(
 
         return Err((
             RestoreValues(saved_values),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 error_position,
                 ErrorMessage(vec![Text(format!(
                     "Function {} requires {} argument{}, but got {}",
@@ -2321,7 +2323,7 @@ fn eval_builtin_call(
                     let message = ErrorMessage(vec![Text(msg.clone())]);
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(position.clone(), message),
+                        EvalError::Exception(position.clone(), message),
                     ));
                 }
                 _ => {
@@ -2334,7 +2336,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             }
@@ -2382,7 +2384,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             }
@@ -2436,7 +2438,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             }
@@ -2521,7 +2523,7 @@ fn eval_builtin_call(
                             );
                             return Err((
                                 RestoreValues(saved_values),
-                                EvalError::ResumableError(arg_positions[0].clone(), message),
+                                EvalError::Exception(arg_positions[0].clone(), message),
                             ));
                         }
                     }
@@ -2542,7 +2544,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             }
@@ -2591,7 +2593,7 @@ fn eval_builtin_call(
                 );
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(arg_positions[0].clone(), message),
+                    EvalError::Exception(arg_positions[0].clone(), message),
                 ));
             };
 
@@ -2652,7 +2654,7 @@ fn eval_builtin_call(
                     }
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(receiver_pos.clone(), msg),
+                        EvalError::Exception(receiver_pos.clone(), msg),
                     ));
                 }
             };
@@ -2752,7 +2754,7 @@ fn eval_builtin_call(
                     }
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(receiver_pos.clone(), msg),
+                        EvalError::Exception(receiver_pos.clone(), msg),
                     ));
                 }
             };
@@ -2823,7 +2825,7 @@ fn eval_builtin_call(
                     let message = format_type_error("String", &arg_values[0], env);
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -2838,7 +2840,7 @@ fn eval_builtin_call(
                     }
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(receiver_pos.clone(), msg),
+                        EvalError::Exception(receiver_pos.clone(), msg),
                     ));
                 }
             };
@@ -2883,7 +2885,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -2922,7 +2924,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -2985,7 +2987,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -3002,7 +3004,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -3052,7 +3054,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -3108,7 +3110,7 @@ fn eval_builtin_call(
                     );
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(arg_positions[0].clone(), message),
+                        EvalError::Exception(arg_positions[0].clone(), message),
                     ));
                 }
             };
@@ -3268,7 +3270,7 @@ fn eval_call(
                 ))]);
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(caller_expr.position.clone(), message),
+                    EvalError::Exception(caller_expr.position.clone(), message),
                 ));
             }
 
@@ -3455,7 +3457,7 @@ fn eval_call(
             );
             return Err((
                 RestoreValues(saved_values),
-                EvalError::ResumableError(caller_expr.position.clone(), message),
+                EvalError::Exception(caller_expr.position.clone(), message),
             ));
         }
     }
@@ -3532,7 +3534,7 @@ fn eval_assert(
         );
         return Err((
             RestoreValues(vec![receiver_value]),
-            EvalError::ResumableError(recv_expr.position.clone(), message),
+            EvalError::Exception(recv_expr.position.clone(), message),
         ));
     }
 
@@ -3640,7 +3642,7 @@ fn check_param_types(
                 Err(e) => {
                     return Err((
                         RestoreValues(vec![]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[i].clone(),
                             ErrorMessage(vec![msgtext!("Unbound type in hint: "), Code(e)]),
                         ),
@@ -3657,7 +3659,7 @@ fn check_param_types(
 
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(arg_positions[i].clone(), msg),
+                    EvalError::Exception(arg_positions[i].clone(), msg),
                 ));
             }
         }
@@ -3712,7 +3714,7 @@ fn eval_method_call(
 
         return Err((
             RestoreValues(saved_values),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 meth_name.position.clone(),
                 ErrorMessage(vec![Text(format!(
                     "No methods defined on `{}`.",
@@ -3730,7 +3732,7 @@ fn eval_method_call(
 
         return Err((
             RestoreValues(saved_values),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 meth_name.position.clone(),
                 ErrorMessage(vec![Text(format!(
                     "No method named `{}` on `{}`.",
@@ -3897,7 +3899,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             receiver_pos.clone(),
                             format_type_error(
                                 &TypeName {
@@ -3947,7 +3949,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -3994,7 +3996,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4015,7 +4017,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[1].clone(),
                             format_type_error(
                                 &TypeName { text: "Int".into() },
@@ -4054,7 +4056,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4103,7 +4105,7 @@ fn eval_builtin_method_call(
                     }
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(receiver_pos.clone(), msg),
+                        EvalError::Exception(receiver_pos.clone(), msg),
                     ));
                 }
             };
@@ -4148,7 +4150,7 @@ fn eval_builtin_method_call(
                     }
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(receiver_pos.clone(), msg),
+                        EvalError::Exception(receiver_pos.clone(), msg),
                     ));
                 }
             };
@@ -4187,7 +4189,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4211,7 +4213,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4266,7 +4268,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4321,7 +4323,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4358,7 +4360,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
@@ -4382,7 +4384,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[1].clone(),
                             format_type_error(
                                 &TypeName { text: "Int".into() },
@@ -4404,7 +4406,7 @@ fn eval_builtin_method_call(
 
                     return Err((
                         RestoreValues(saved_values),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             arg_positions[2].clone(),
                             format_type_error(
                                 &TypeName { text: "Int".into() },
@@ -4425,7 +4427,7 @@ fn eval_builtin_method_call(
 
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         arg_positions[0].clone(),
                         ErrorMessage(vec![
                             msgtext!("The first argument to "),
@@ -4446,7 +4448,7 @@ fn eval_builtin_method_call(
                 let s_len = s_arg.chars().count();
                 return Err((
                     RestoreValues(saved_values),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         arg_positions[1].clone(),
                         ErrorMessage(vec![
                             msgtext!("The first argument ({}) to ", from_arg),
@@ -4753,7 +4755,7 @@ fn eval_expr(
 
                 return Err((
                     RestoreValues(vec![]),
-                    EvalError::ResumableError(name_sym.position.clone(), ErrorMessage(message)),
+                    EvalError::Exception(name_sym.position.clone(), ErrorMessage(message)),
                 ));
             }
         }
@@ -4946,7 +4948,7 @@ fn eval_expr(
         }
         Expression_::Invalid => {
             return Err((RestoreValues(vec![]),
-                        (EvalError::ResumableError(expr_position,
+                        (EvalError::Exception(expr_position,
                                                    ErrorMessage(vec![msgtext!("Tried to evaluate a syntactically invalid expression. Check your code parses correctly.")])))));
         }
         Expression_::Assert(expr) => {
@@ -5122,16 +5124,13 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 let return_ty = match Type::from_hint(return_hint, &env.types, &type_bindings) {
                     Ok(ty) => ty,
                     Err(e) => {
-                        return Err(EvalError::ResumableError(
-                            err_pos,
-                            ErrorMessage(vec![Text(e)]),
-                        ));
+                        return Err(EvalError::Exception(err_pos, ErrorMessage(vec![Text(e)])));
                     }
                 };
 
                 if let Err(msg) = check_type(&return_value, &return_ty, env) {
                     env.push_value(return_value.clone());
-                    return Err(EvalError::ResumableError(err_pos, msg));
+                    return Err(EvalError::Exception(err_pos, msg));
                 }
             }
 
@@ -5238,7 +5237,7 @@ fn eval_namespace_access(
                     if !ns.external_syms.contains(&symbol.name) {
                         return Err((
                             RestoreValues(vec![recv_value.clone()]),
-                            EvalError::ResumableError(
+                            EvalError::Exception(
                                 symbol.position.clone(),
                                 ErrorMessage(vec![
                                     msgcode!("{}", symbol.name),
@@ -5259,7 +5258,7 @@ fn eval_namespace_access(
                 None => {
                     return Err((
                         RestoreValues(vec![recv_value.clone()]),
-                        EvalError::ResumableError(
+                        EvalError::Exception(
                             symbol.position.clone(),
                             ErrorMessage(vec![
                                 msgtext!("Namespace "),
@@ -5276,7 +5275,7 @@ fn eval_namespace_access(
         _ => {
             return Err((
                 RestoreValues(vec![recv_value.clone()]),
-                EvalError::ResumableError(
+                EvalError::Exception(
                     recv_pos.clone(),
                     format_type_error("namespace", &recv_value, env),
                 ),
@@ -5315,7 +5314,7 @@ fn eval_dot_access(
             if !found {
                 return Err((
                     RestoreValues(vec![recv_value]),
-                    EvalError::ResumableError(
+                    EvalError::Exception(
                         symbol.position.clone(),
                         ErrorMessage(vec![Text(format!(
                             "This struct has no field named `{}`.",
@@ -5328,7 +5327,7 @@ fn eval_dot_access(
         _ => {
             return Err((
                 RestoreValues(vec![recv_value.clone()]),
-                EvalError::ResumableError(
+                EvalError::Exception(
                     recv_pos.clone(),
                     format_type_error("struct", &recv_value, env),
                 ),
@@ -5349,7 +5348,7 @@ fn eval_struct_value(
     let Some(type_info) = env.get_type_def(&type_symbol.name) else {
         return Err((
             RestoreValues(vec![]),
-            EvalError::ResumableError(
+            EvalError::Exception(
                 type_symbol.position.clone(),
                 ErrorMessage(vec![Text(format!(
                     "No type exists named `{}`.",
@@ -5366,7 +5365,7 @@ fn eval_struct_value(
 
         return Err((
             RestoreValues(vec![]),
-            EvalError::ResumableError(type_symbol.position.clone(), message),
+            EvalError::Exception(type_symbol.position.clone(), message),
         ));
     };
 
@@ -5397,7 +5396,7 @@ fn eval_struct_value(
 
             return Err((
                 RestoreValues(vec![]), // TODO
-                EvalError::ResumableError(field_sym.position.clone(), message),
+                EvalError::Exception(field_sym.position.clone(), message),
             ));
         };
 
@@ -5413,7 +5412,7 @@ fn eval_struct_value(
         if let Err(msg) = check_type(&field_value, &expected_ty, env) {
             return Err((
                 RestoreValues(vec![]), // TODO
-                EvalError::ResumableError(
+                EvalError::Exception(
                     field_expr.position.clone(),
                     ErrorMessage(vec![Text(format!(
                         "Incorrect type for field: {}",
@@ -5440,7 +5439,7 @@ fn eval_struct_value(
 
         return Err((
             RestoreValues(vec![]), // TODO
-            EvalError::ResumableError(outer_expr_pos.clone(), message),
+            EvalError::Exception(outer_expr_pos.clone(), message),
         ));
     }
 
@@ -5492,14 +5491,14 @@ fn eval_match_cases(
             Type::from_value(&scrutinee_value),
             scrutinee_value.display(env)
         ))]);
-        return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
+        return Err(EvalError::Exception(scrutinee_pos.clone(), msg));
     };
 
     let Some(_type) = env.get_type_def(value_type_name) else {
         let msg = ErrorMessage(vec![Text(format!(
             "Could not find an enum type named {value_type_name}"
         ))]);
-        return Err(EvalError::ResumableError(scrutinee_pos.clone(), msg));
+        return Err(EvalError::Exception(scrutinee_pos.clone(), msg));
     };
 
     for (pattern, case_expr) in cases {
@@ -5514,7 +5513,7 @@ fn eval_match_cases(
                 msgcode!("{}", pattern.variant_sym.name),
                 msgtext!(" but nothing is defined with that name."),
             ]);
-            return Err(EvalError::ResumableError(
+            return Err(EvalError::Exception(
                 pattern.variant_sym.position.clone(),
                 msg,
             ));
@@ -5537,7 +5536,7 @@ fn eval_match_cases(
                     "Patterns must be enum variants, got `{}`",
                     value.display(env)
                 ))]);
-                return Err(EvalError::ResumableError(
+                return Err(EvalError::Exception(
                     pattern.variant_sym.position.clone(),
                     msg,
                 ));
@@ -5565,7 +5564,7 @@ fn eval_match_cases(
                                     msgcode!("{}", type_representation(payload.as_ref())),
                                     msgtext!("."),
                                 ]);
-                                return Err(EvalError::ResumableError(
+                                return Err(EvalError::Exception(
                                     pattern.variant_sym.position.clone(),
                                     msg,
                                 ));
@@ -5578,7 +5577,7 @@ fn eval_match_cases(
                                 symbols.len(),
                                 items.len(),
                             )]);
-                            return Err(EvalError::ResumableError(
+                            return Err(EvalError::Exception(
                                 pattern.variant_sym.position.clone(),
                                 msg,
                             ));
@@ -5611,7 +5610,7 @@ fn eval_match_cases(
     let msg = ErrorMessage(vec![Text(
         "No cases in this `match` statement were reached.".to_owned(),
     )]);
-    Err(EvalError::ResumableError(scrutinee_pos.clone(), msg))
+    Err(EvalError::Exception(scrutinee_pos.clone(), msg))
 }
 
 /// Evaluate the toplevel expressions provided, and then stop. If we

@@ -100,7 +100,7 @@ fn sandboxed_tests_summary(
                 num_errored += 1;
                 "interrupted".to_owned()
             }
-            Some(EvalError::ResumableError(_, msg)) => {
+            Some(EvalError::Exception(_, msg)) => {
                 num_errored += 1;
                 msg.as_string()
             }
@@ -259,7 +259,7 @@ pub(crate) fn run_tests_in_files(
 
             let (pos, msg) = match err {
                 EvalError::Interrupted => (None, None),
-                EvalError::ResumableError(position, msg) => (Some(position), Some(msg)),
+                EvalError::Exception(position, msg) => (Some(position), Some(msg)),
                 EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
                 EvalError::ReachedTickLimit(position) => (Some(position), None),
                 EvalError::ForbiddenInSandbox(position) => (Some(position), None),

@@ -202,7 +202,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
 
                 is_stopped = false;
             }
-            Err(EvalError::ResumableError(position, msg)) => {
+            Err(EvalError::Exception(position, msg)) => {
                 // TODO: this assumes the bad position occurs in the most recent input,
                 // not e.g. in an earlier function definition.
                 let _ = last_src; // should use this.

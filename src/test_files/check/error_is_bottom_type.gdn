@@ -1,6 +1,6 @@
 {
-    if error("foo") {
-    }
+  if throw("foo") {
+  }
 }
 
 // args: check

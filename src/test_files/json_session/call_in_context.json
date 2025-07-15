@@ -1,4 +1,4 @@
-{ "method": "run", "input": "fun foo() { let x = 1 error(\"oh no\") }" }
+{ "method": "run", "input": "fun foo() { let x = 1 throw(\"oh no\") }" }
 { "method": "run", "input": "foo()" }
 { "method": "run", "input": "dbg(x)" }
 
@@ -60,7 +60,7 @@
 //               "path": "__user.gdn"
 //             },
 //             "message": "Error: oh no",
-//             "stack": "Error: oh no\n---| __user.gdn:1:23\t fun foo()\n  1| fun foo() { let x = 1 error(\"oh no\") }\n   |                       ^^^^^^^^^^^^^^\n---| __user.gdn:1:1\t __toplevel__\n  ?| foo()"
+//             "stack": "Error: oh no\n---| __user.gdn:1:23\t fun foo()\n  1| fun foo() { let x = 1 throw(\"oh no\") }\n   |                       ^^^^^^^^^^^^^^\n---| __user.gdn:1:1\t __toplevel__\n  ?| foo()"
 //           }
 //         ]
 //       },

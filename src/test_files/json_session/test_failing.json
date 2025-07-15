@@ -1,4 +1,4 @@
-{ "method": "run", "input": "test foo { error(\"foo\") }" }
+{ "method": "run", "input": "test foo { throw(\"foo\") }" }
 
 // args: test-json
 // expected stdout:
@@ -19,7 +19,7 @@
 //               "path": "__user.gdn"
 //             },
 //             "message": "Error: foo",
-//             "stack": "Error: foo\n---| __user.gdn:1:12\t test foo\n  1| test foo { error(\"foo\") }\n   |            ^^^^^^^^^^^^"
+//             "stack": "Error: foo\n---| __user.gdn:1:12\t test foo\n  1| test foo { throw(\"foo\") }\n   |            ^^^^^^^^^^^^"
 //           }
 //         ]
 //       },

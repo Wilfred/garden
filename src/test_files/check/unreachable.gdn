@@ -9,7 +9,7 @@ external fun bad2(): Int {
 }
 
 external fun bad3(): Int {
-  error("")
+  throw("")
   2
 }
 
@@ -25,7 +25,7 @@ external fun bad3(): Int {
 // }
 //
 // external fun bad_ignored2(b: Bool): Int {
-//   let num = 1 + error("")
+//   let num = 1 + throw("")
 //   num
 // }
 
@@ -72,11 +72,4 @@ external fun good2(): Int {
 //   7|   return 1
 //   8|   2
 //   9| } ^
-// 
-// Warning: Unreachable code after `error`.
-// ---| src/test_files/check/unreachable.gdn:13:3
-//  11| external fun bad3(): Int {
-//  12|   error("")
-//  13|   2
-//  14| } ^
 

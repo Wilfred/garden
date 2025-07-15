@@ -672,7 +672,7 @@ enclosing point and print the result."
      . font-lock-keyword-face)
 
     (,(regexp-opt
-       '("assert" "error" "print" "println"
+       '("assert" "throw" "print" "println"
          "shell" "string_repr" "todo"
          "source_directory")
        'symbols)

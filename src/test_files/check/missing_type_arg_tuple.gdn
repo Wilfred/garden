@@ -1,5 +1,5 @@
 external fun foo(): (Int, List) {
-    error("")
+  throw("")
 }
 
 // args: check
@@ -8,6 +8,6 @@ external fun foo(): (Int, List) {
 // Error: List takes 1 type argument, but got 0 arguments.
 // ---| src/test_files/check/missing_type_arg_tuple.gdn:1:27
 //   1| external fun foo(): (Int, List) {
-//   2|     error("")             ^^^^
+//   2|   throw("")               ^^^^
 //   3| }
 

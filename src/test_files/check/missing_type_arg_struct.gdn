@@ -1,7 +1,7 @@
 struct MyStruct<T> {}
 
 external fun foo(): MyStruct {
-    error("")
+  throw("")
 }
 
 // args: check
@@ -12,6 +12,6 @@ external fun foo(): MyStruct {
 //   1| struct MyStruct<T> {}
 //   2| 
 //   3| external fun foo(): MyStruct {
-//   4|     error("")       ^^^^^^^^
+//   4|   throw("")         ^^^^^^^^
 //   5| }
 

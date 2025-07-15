@@ -1,13 +1,13 @@
 {
   // We should evaluate the LHS first, so that should be the resulting
   // error.
-  error("lhs") + error("rhs")
+  throw("lhs") + throw("rhs")
 }
 
 // args: run
 // expected stderr:
 // Error: lhs
 // ---| src/test_files/runtime/binop_eval_order.gdn:4:3	 __toplevel__
-//   4|   error("lhs") + error("rhs")
+//   4|   throw("lhs") + throw("rhs")
 //    |   ^^^^^^^^^^^^
 

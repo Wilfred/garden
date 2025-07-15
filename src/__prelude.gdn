@@ -48,19 +48,19 @@ external fun dbg<T>(value: T): T {
   value
 }
 
-// Raise an error.
+// Throw an exception because you haven't written this code yet.
 //
-// You can use this function for code that you haven't implemented
-// yet.
+// This is useful for work-in-progress code, and will trigger a
+// warning so you don't forget to finish the code later.
 external fun todo(): NoValue {
-  error("Not yet implemented")
+  throw("Not yet implemented")
 }
 
 // If this value is `Ok`, unwrap it, otherwise throw an exception.
 external method or_throw<T, E>(this: Result<T, E>): T {
   match this {
     Ok(v) => v
-    Err(e) => error(" ".join(["Called `or_throw()` on an `Err`.", string_repr(e)]))
+    Err(e) => throw(" ".join(["Called `or_throw()` on an `Err`.", string_repr(e)]))
   }
 }
 
@@ -72,7 +72,7 @@ test result_or_throw {
 // impossible to create a value of type `NoValue`.
 //
 // This is useful when you have a function that never returns, such as
-// `error()`.
+// `throw()`.
 //
 // You can also encounter `NoValue` on empty containers. For example,
 // `[]` has type `List<NoValue>` and `None` has type `Option<NoValue>`.
@@ -738,7 +738,7 @@ external method is_none<T>(this: Option<T>): Bool {
 external method or_throw<T>(this: Option<T>): T {
   match this {
     Some(v) => v,
-    None => error("Called `or_throw` on a `None` value.")
+    None => throw("Called `or_throw` on a `None` value.")
   }
 }
 
@@ -779,9 +779,9 @@ struct Int {
 // Stop the program immediately, and report the error message given.
 //
 // ```
-// error("Computer is melting!")
+// throw("Computer is melting!")
 // ```
-external fun error(message: String): NoValue {
+external fun throw(message: String): NoValue {
   __BUILTIN_IMPLEMENTATION
 }
 

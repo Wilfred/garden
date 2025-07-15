@@ -1,6 +1,6 @@
 fun foo() {
-    error("")
-    // ^
+  throw("")
+  // ^
 }
 
 // args: show-type
@@ -8,7 +8,7 @@ fun foo() {
 // Stop the program immediately, and report the error message given.
 // 
 // ```
-// error("Computer is melting!")
+// throw("Computer is melting!")
 // ```
 // Fun<(String), NoValue>
 

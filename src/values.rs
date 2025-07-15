@@ -346,7 +346,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 pub(crate) enum BuiltinFunctionKind {
-    Error,
+    Throw,
     ListDirectory,
     Shell,
     StringRepr,
@@ -372,7 +372,7 @@ pub(crate) enum BuiltinFunctionKind {
 impl BuiltinFunctionKind {
     pub(crate) fn namespace_path(&self) -> PathBuf {
         match self {
-            BuiltinFunctionKind::Error
+            BuiltinFunctionKind::Throw
             | BuiltinFunctionKind::Shell
             | BuiltinFunctionKind::StringRepr
             | BuiltinFunctionKind::Print
@@ -397,7 +397,7 @@ impl BuiltinFunctionKind {
 impl Display for BuiltinFunctionKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = match self {
-            BuiltinFunctionKind::Error => "error",
+            BuiltinFunctionKind::Throw => "throw",
             BuiltinFunctionKind::ListDirectory => "list_directory",
             BuiltinFunctionKind::Shell => "shell",
             BuiltinFunctionKind::StringRepr => "string_repr",

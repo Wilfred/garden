@@ -2299,7 +2299,7 @@ fn eval_builtin_call(
     session: &Session,
 ) -> Result<(), (RestoreValues, EvalError)> {
     match kind {
-        BuiltinFunctionKind::Error => {
+        BuiltinFunctionKind::Throw => {
             check_arity(
                 &SymbolName {
                     text: format!("{}", kind),

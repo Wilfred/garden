@@ -1,5 +1,5 @@
 external fun foo<T>(): T {
-    error("")
+  throw("")
 }
 
 // args: check

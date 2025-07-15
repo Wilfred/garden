@@ -34,6 +34,8 @@ file names `foo.txt`.
 Renamed `Option::or_exception()` to `Option::or_throw()`. Renamed
 `Result::or_error()` to `Result::or_throw()`.
 
+`error()` is now `throw()`.
+
 ### Checks
 
 `check` now stops if syntax errors occur, as type errors are rarely

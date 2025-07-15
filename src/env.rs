@@ -670,13 +670,13 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
 
     let mut path_methods = FxHashMap::default();
 
-    // Users shouldn't be able to see private functions in a
+    // Users shouldn't be able to see private methods in a
     // namespace. Where should this be enforced? When the namespace in
     // constructed during eval?
     //
-    // Private functions still need to be stored somewhere.
+    // Private methods still need to be stored somewhere.
     //
-    // Store a separate list of public functions for access?
+    // Store a separate list of public methods for access?
     // Fundamentally namespace access during evaluation is different
     // from foo::bar() access from another file.
     path_methods.insert(

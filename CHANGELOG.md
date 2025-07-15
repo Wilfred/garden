@@ -31,7 +31,8 @@ list.
 `Path::parent()` now return an `Option<Path>` on `/` or unqualified
 file names `foo.txt`.
 
-Renamed `Option::or_exception()` to `Option::or_throw()`.
+Renamed `Option::or_exception()` to `Option::or_throw()`. Renamed
+`Result::or_error()` to `Result::or_throw()`.
 
 ### Checks
 

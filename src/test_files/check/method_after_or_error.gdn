@@ -1,6 +1,0 @@
-{
-  let s = Path{ p: "/foo" }.read().or_error()
-  s.split_once(",")
-}
-
-// args: check

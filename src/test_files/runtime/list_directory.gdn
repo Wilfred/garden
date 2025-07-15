@@ -1,7 +1,7 @@
 import "__fs.gdn" as fs
 
 {
-  fs::list_directory(Path{ p: "/" }).or_error()
+  fs::list_directory(Path{ p: "/" }).or_throw()
 }
 
 // args: run

@@ -56,16 +56,16 @@ external fun todo(): NoValue {
   error("Not yet implemented")
 }
 
-// If this value is `Ok`, unwrap it, otherwise error.
-external method or_error<T, E>(this: Result<T, E>): T {
+// If this value is `Ok`, unwrap it, otherwise throw an exception.
+external method or_throw<T, E>(this: Result<T, E>): T {
   match this {
     Ok(v) => v
-    Err(e) => error(" ".join(["Called .unwrap() on an Err.", string_repr(e)]))
+    Err(e) => error(" ".join(["Called `or_throw()` on an `Err`.", string_repr(e)]))
   }
 }
 
-test or_error {
-  assert(Ok("foo").or_error() == "foo")
+test result_or_throw {
+  assert(Ok("foo").or_throw() == "foo")
 }
 
 // The absence of a value. This is an enum with no variants, so it is

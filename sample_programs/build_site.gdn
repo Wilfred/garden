@@ -5,7 +5,7 @@ import "./markdown.gdn"
 
 // A list of all the files in `website_dir` that have a .md extension.
 fun markdown_files(website_dir: Path): List<Path> {
-  let dir_files = fs::list_directory(website_dir).or_error()
+  let dir_files = fs::list_directory(website_dir).or_throw()
   dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
 }
 
@@ -93,7 +93,7 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
 }
 
 fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
-  let page_src_md = md_path.read().or_error()
+  let page_src_md = md_path.read().or_throw()
   let page_src = render_markdown(substitute_shorthand(page_src_md))
   write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"))
 }
@@ -101,7 +101,7 @@ fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
 fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
   let blog_post_dir = website_dir.join("blog")
 
-  for md_path in fs::list_directory(blog_post_dir).or_error() {
+  for md_path in fs::list_directory(blog_post_dir).or_throw() {
     write_markdown_page(base_tmpl_src, md_path)
   }
 }
@@ -109,12 +109,12 @@ fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
 // Build the entire garden website.
 fun build_site(): Unit {
   let website_dir = source_dir_path().parent().or_throw().parent().or_throw().join("website")
-  fs::set_working_directory(website_dir).or_error()
+  fs::set_working_directory(website_dir).or_throw()
 
   let out_dir = website_dir
 
   let base_tmpl_path = website_dir.join("template.html")
-  let base_tmpl_src = base_tmpl_path.read().or_error()
+  let base_tmpl_src = base_tmpl_path.read().or_throw()
 
   build_blog(website_dir, base_tmpl_src)
 
@@ -221,7 +221,7 @@ fun write_website_page(base_tmpl_src: String, page_src: String, dest_path: Path)
   }
 
   let src = "".join([header.trim_right(), page_src, footer.trim_left()])
-  fs::write_file(src, dest_path).or_error()
+  fs::write_file(src, dest_path).or_throw()
 }
 
 {

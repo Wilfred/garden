@@ -24,7 +24,7 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
 
     for id in hovered_ids.iter().rev() {
         if let Some(doc_comment) = summary.id_to_doc_comment.get(&id.id()) {
-            println!("{}", doc_comment);
+            println!("{doc_comment}");
             break;
         }
     }
@@ -32,7 +32,7 @@ pub fn show_type(src: &str, path: &Path, offset: usize) {
     for id in hovered_ids.iter().rev() {
         if let Some(ty) = summary.id_to_ty.get(&id.id()) {
             if !ty.is_error() {
-                println!("{}", ty);
+                println!("{ty}");
             }
             break;
         }

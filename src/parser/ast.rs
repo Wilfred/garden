@@ -107,7 +107,7 @@ impl TypeHint {
                 .collect::<Vec<_>>()
                 .join(", ");
 
-            format!("({})", formatted_args)
+            format!("({formatted_args})")
         } else {
             let formatted_args = self
                 .args
@@ -245,7 +245,7 @@ impl Display for BinaryOperatorKind {
             BinaryOperatorKind::Or => "||",
             BinaryOperatorKind::StringConcat => "^",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

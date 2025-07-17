@@ -29,11 +29,11 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     let ids_at_pos = find_item_at(&items, offset, offset);
 
     let Some(AstId::Sym(id)) = ids_at_pos.last() else {
-        eprintln!("No symbol found at offset {}", offset);
+        eprintln!("No symbol found at offset {offset}");
         return;
     };
     let Some(def_pos) = summary.id_to_def_pos.get(id) else {
-        eprintln!("No definition found for id {:?}", id);
+        eprintln!("No definition found for id {id:?}");
         return;
     };
 
@@ -48,7 +48,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     }
 
     let new_src = apply_renames(src, new_name, &visitor.replace_positions);
-    print!("{}", new_src);
+    print!("{new_src}");
 }
 
 struct RenameLocalVisitor {

@@ -100,10 +100,7 @@ fn print_methods(env: &Env, recv_ty: &Type, prefix: &str) {
             // Complete parentheses too if there are zero parameters.
             (format!("{}()", method_name.text), return_hint)
         } else {
-            (
-                method_name.text.clone(),
-                format!("({}){}", params, return_hint),
-            )
+            (method_name.text.clone(), format!("({params}){return_hint}"))
         };
 
         items.push(CompletionItem { name, suffix });

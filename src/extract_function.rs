@@ -76,7 +76,7 @@ pub(crate) fn extract_function(
                 .collect::<Vec<String>>()
                 .join(", ");
 
-            print!("{}({})", name, arguments_src);
+            print!("{name}({arguments_src})");
             print!("{}", &src[expr.position.end_offset..item_pos.end_offset]);
 
             // Items after.
@@ -96,7 +96,7 @@ fn extracted_fun_src(
 ) -> String {
     let return_signature = match return_ty {
         Some(Type::Top | Type::Error(_)) | None => "".to_owned(),
-        Some(ty) => format!(": {}", ty),
+        Some(ty) => format!(": {ty}"),
     };
 
     let params_signature = params

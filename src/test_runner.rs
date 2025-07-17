@@ -155,19 +155,19 @@ fn sandboxed_tests_summary(
 
     let mut parts = vec![];
     if num_passed > 0 {
-        parts.push(format!("{} passed", num_passed));
+        parts.push(format!("{num_passed} passed"));
     }
     if num_failed > 0 {
-        parts.push(format!("{} failed", num_failed));
+        parts.push(format!("{num_failed} failed"));
     }
     if num_errored > 0 {
-        parts.push(format!("{} errored", num_errored));
+        parts.push(format!("{num_errored} errored"));
     }
     if num_timed_out > 0 {
-        parts.push(format!("{} timed out", num_timed_out));
+        parts.push(format!("{num_timed_out} timed out"));
     }
     if num_sandboxed > 0 {
-        parts.push(format!("{} sandboxed", num_sandboxed));
+        parts.push(format!("{num_sandboxed} sandboxed"));
     }
 
     if parts.is_empty() {

@@ -199,7 +199,7 @@ impl Env {
 
             values.insert(
                 SymbolName {
-                    text: format!("{}", fun_kind),
+                    text: format!("{fun_kind}"),
                 },
                 Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
             );
@@ -452,7 +452,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
 
         values.insert(
             SymbolName {
-                text: format!("{}", fun_kind),
+                text: format!("{fun_kind}"),
             },
             Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
         );

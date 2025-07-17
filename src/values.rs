@@ -416,7 +416,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::PreludeTypes => "prelude_types",
             BuiltinFunctionKind::NamespaceFunctions => "namespace_functions",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
 
@@ -424,10 +424,10 @@ impl Value {
     /// Pretty-print `self` in a human friendly way.
     pub(crate) fn display(&self, env: &Env) -> String {
         match self.as_ref() {
-            Value_::Integer(i) => format!("{}", i),
+            Value_::Integer(i) => format!("{i}"),
             Value_::Fun { name_sym, .. } => format!("{}", name_sym.name),
             Value_::Closure(..) => "(closure)".to_owned(),
-            Value_::BuiltinFunction(kind, _, _) => format!("{}", kind),
+            Value_::BuiltinFunction(kind, _, _) => format!("{kind}"),
             Value_::String(s) => escape_string_literal(s),
             Value_::List { items, .. } => {
                 let mut s = String::new();
@@ -475,7 +475,7 @@ impl Value {
                 let type_ = match env.get_type_def(type_name) {
                     Some(type_) => type_,
                     None => {
-                        return format!("{}__OLD_DEFINITION::{}", type_name, variant_idx);
+                        return format!("{type_name}__OLD_DEFINITION::{variant_idx}");
                     }
                 };
 
@@ -487,7 +487,7 @@ impl Value {
                         Some(variant_sym) => {
                             format!("{}", variant_sym.name_sym.name)
                         }
-                        None => format!("{}::__OLD_VARIANT_{}", type_name, variant_idx),
+                        None => format!("{type_name}::__OLD_VARIANT_{variant_idx}"),
                     },
                     TypeDef::Struct(struct_info) => {
                         format!("{}__OLD_DEFINITION", struct_info.name_sym)
@@ -507,10 +507,7 @@ impl Value {
                 let type_ = match env.get_type_def(type_name) {
                     Some(type_) => type_,
                     None => {
-                        return format!(
-                            "{}__OLD_DEFINITION::{} (constructor)",
-                            type_name, variant_idx
-                        );
+                        return format!("{type_name}__OLD_DEFINITION::{variant_idx} (constructor)");
                     }
                 };
 
@@ -523,7 +520,7 @@ impl Value {
                             format!("{} (constructor)", variant_sym.name_sym.name)
                         }
                         None => {
-                            format!("{}::__OLD_VARIANT_{} (constructor)", type_name, variant_idx)
+                            format!("{type_name}::__OLD_VARIANT_{variant_idx} (constructor)")
                         }
                     },
                     TypeDef::Struct(struct_info) => {

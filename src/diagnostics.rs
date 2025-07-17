@@ -206,7 +206,7 @@ fn format_pos_in_fun(
     }
 
     if let Some(enclosing_sym) = enclosing_symbol {
-        let mut signature = format!("\t {}", enclosing_sym);
+        let mut signature = format!("\t {enclosing_sym}");
         if use_color {
             signature = signature.bold().dimmed().to_string();
         }

@@ -102,7 +102,7 @@ impl Display for Command {
             Command::Uptime => ":uptime",
             Command::Version => ":version",
         };
-        write!(f, "{}", name)
+        write!(f, "{name}")
     }
 }
 
@@ -418,7 +418,7 @@ pub(crate) fn run_command<T: Write>(
                                 Some(hint) => format!(": {}", hint.as_src()),
                                 None => "".to_owned(),
                             };
-                            format!("({}){}", params, ret_hint)
+                            format!("({params}){ret_hint}")
                         }
                         None => "()".to_owned(),
                     };
@@ -427,7 +427,7 @@ pub(crate) fn run_command<T: Write>(
                         if !is_first {
                             writeln!(buf)?;
                         }
-                        write!(buf, "{}{}", name, signature)?;
+                        write!(buf, "{name}{signature}")?;
                         is_first = false;
                     }
                 }
@@ -516,7 +516,7 @@ pub(crate) fn run_command<T: Write>(
             }
 
             for name in &matching_defs {
-                writeln!(buf, "function: {}", name)?;
+                writeln!(buf, "function: {name}")?;
             }
             write!(buf, "{} definitions found.", matching_defs.len())?;
 
@@ -525,11 +525,11 @@ pub(crate) fn run_command<T: Write>(
         Command::Source(name) => {
             if let Some(name) = name {
                 match find_item_source(&name, env) {
-                    Ok(Some(src_string)) => write!(buf, "{}", src_string),
+                    Ok(Some(src_string)) => write!(buf, "{src_string}"),
                     Ok(None) => {
                         write!(buf, "Source not available for {name}.")
                     }
-                    Err(msg) => write!(buf, "{}", msg),
+                    Err(msg) => write!(buf, "{msg}"),
                 }
             } else {
                 write!(
@@ -631,8 +631,7 @@ pub(crate) fn run_command<T: Write>(
                 } else {
                     write!(
                         buf,
-                        "No local variable named `{}` is defined in this stack frame.",
-                        name
+                        "No local variable named `{name}` is defined in this stack frame."
                     )?;
                 }
             } else {
@@ -652,11 +651,7 @@ pub(crate) fn run_command<T: Write>(
                 let mut ns = ns.borrow_mut();
 
                 if ns.values.remove(&sym).is_none() {
-                    write!(
-                        buf,
-                        "No function or enum value named `{}` is defined.",
-                        name
-                    )?;
+                    write!(buf, "No function or enum value named `{name}` is defined.")?;
                 }
             } else {
                 write!(buf, ":forget requires a name, e.g. `:forget function_name`")?;
@@ -806,7 +801,7 @@ pub(crate) fn run_command<T: Write>(
                         }
                         Err(e) => {
                             // TODO: Print a proper stack trace.
-                            write!(buf, "Evaluation failed: {:?}", e)?;
+                            write!(buf, "Evaluation failed: {e:?}")?;
                         }
                     }
                 }
@@ -962,11 +957,11 @@ fn format_method_info(method_info: &ast::MethodInfo, project_root: &Path) -> Opt
 
 fn document_item<T: Write>(name: &str, env: &Env, buf: &mut T) -> std::io::Result<()> {
     match find_item(name, env) {
-        Ok((_, Some(doc_comment))) => write!(buf, "{}", doc_comment),
+        Ok((_, Some(doc_comment))) => write!(buf, "{doc_comment}"),
         Ok((item_kind_desc, None)) => {
             write!(buf, "{item_kind_desc} does not have a doc comment.")
         }
-        Err(msg) => write!(buf, "{}", msg),
+        Err(msg) => write!(buf, "{msg}"),
     }
 }
 

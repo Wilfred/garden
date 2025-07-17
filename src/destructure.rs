@@ -50,8 +50,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
 
     let Some(variants) = enum_variants(&env, ty) else {
         eprintln!(
-            "The expression at the selected position has type `{}`, which isn't an `enum`.",
-            ty
+            "The expression at the selected position has type `{ty}`, which isn't an `enum`."
         );
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
@@ -95,7 +94,7 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
                 );
             }
 
-            print!("{}}}", indent_str);
+            print!("{indent_str}}}");
 
             // Items after.
             print!("{}", &src[expr.position.end_offset..]);

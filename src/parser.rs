@@ -1798,7 +1798,7 @@ fn parse_type_hint(
             .map(|h| h.as_src())
             .collect::<Vec<_>>()
             .join(", ");
-        let equivalent_tuple_src = format!("({})", formatted_args);
+        let equivalent_tuple_src = format!("({formatted_args})");
 
         diagnostics.push(ParseError::Invalid {
             position: position.clone(),

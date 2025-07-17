@@ -146,7 +146,7 @@ pub(crate) fn extract_variable(
                 "{}",
                 &src[enclosing_block_level_expr.position.start_offset..expr.position.start_offset]
             );
-            print!("{}", name);
+            print!("{name}");
             print!("{}", &src[expr.position.end_offset..item_pos.end_offset]);
 
             // Items after.

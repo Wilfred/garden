@@ -33,7 +33,7 @@ impl ErrorMessage {
         for message_part in &self.0 {
             match message_part {
                 MessagePart::Text(t) => s.push_str(t),
-                MessagePart::Code(c) => s.push_str(&format!("`{}`", c)),
+                MessagePart::Code(c) => s.push_str(&format!("`{c}`")),
             }
         }
 

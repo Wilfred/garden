@@ -1365,8 +1365,7 @@ fn update_builtin_meth_info(
             notes: vec![],
             severity: Severity::Warning,
             message: ErrorMessage(vec![Text(format!(
-                "Tried to update a built-in stub for a type {} that doesn't exist.",
-                type_name
+                "Tried to update a built-in stub for a type {type_name} that doesn't exist."
             ))]),
             position: meth_info.receiver_hint.sym.position.clone(),
         });
@@ -1757,8 +1756,7 @@ fn eval_assign_update(
             EvalError::Exception(
                 variable.position.clone(),
                 ErrorMessage(vec![Text(format!(
-                    "{} is not currently bound. Try `let {} = something`.",
-                    var_name, var_name
+                    "{var_name} is not currently bound. Try `let {var_name} = something`."
                 ))]),
             ),
         ));
@@ -1814,8 +1812,7 @@ fn eval_assign(
             EvalError::Exception(
                 variable.position.clone(),
                 ErrorMessage(vec![Text(format!(
-                    "{} is not currently bound. Try `let {} = something`.",
-                    var_name, var_name
+                    "{var_name} is not currently bound. Try `let {var_name} = something`."
                 ))]),
             ),
         ));
@@ -2304,7 +2301,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Throw => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2344,7 +2341,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Print => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2356,7 +2353,7 @@ fn eval_builtin_call(
             match arg_values[0].as_ref() {
                 Value_::String(s) => match session.stdout_mode {
                     StdoutMode::WriteDirectly => {
-                        print!("{}", s);
+                        print!("{s}");
                     }
                     StdoutMode::WriteJson => {
                         let response = Response {
@@ -2396,7 +2393,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Println => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2408,12 +2405,12 @@ fn eval_builtin_call(
             match arg_values[0].as_ref() {
                 Value_::String(s) => match session.stdout_mode {
                     StdoutMode::WriteDirectly => {
-                        println!("{}", s);
+                        println!("{s}");
                     }
                     StdoutMode::WriteJson => {
                         let response = Response {
                             kind: ResponseKind::Printed {
-                                s: format!("{}\n", s),
+                                s: format!("{s}\n"),
                             },
                             position: None,
                             id: None,
@@ -2463,7 +2460,7 @@ fn eval_builtin_call(
 
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2498,7 +2495,7 @@ fn eval_builtin_call(
                                     }
                                 }
                                 Err(e) => {
-                                    let s = Value::new(Value_::String(format!("{}", e)));
+                                    let s = Value::new(Value_::String(format!("{e}")));
                                     Value::err(s)
                                 }
                             };
@@ -2552,7 +2549,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::StringRepr => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2568,7 +2565,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::NamespaceFunctions => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2635,7 +2632,7 @@ fn eval_builtin_call(
 
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2689,7 +2686,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::SourceDirectory => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2710,7 +2707,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::ShellArguments => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2735,7 +2732,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::SetWorkingDirectory => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2762,7 +2759,7 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
             let v = match std::env::set_current_dir(path) {
                 Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e)))),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
             };
 
             if expr_value_is_used {
@@ -2772,7 +2769,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::WorkingDirectory => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2804,7 +2801,7 @@ fn eval_builtin_call(
 
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2849,7 +2846,7 @@ fn eval_builtin_call(
 
             let v = match std::fs::write(path, content_s) {
                 Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{}", e)))),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
             };
 
             if expr_value_is_used {
@@ -2859,7 +2856,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::CheckSnippet => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2898,7 +2895,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::Lex => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -2961,7 +2958,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::DocComment => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -3028,7 +3025,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::DocCommentForType => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -3084,7 +3081,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::SourceForType => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -3145,7 +3142,7 @@ fn eval_builtin_call(
         BuiltinFunctionKind::PreludeTypes => {
             check_arity(
                 &SymbolName {
-                    text: format!("{}", kind),
+                    text: format!("{kind}"),
                 },
                 receiver_value,
                 receiver_pos,
@@ -3717,8 +3714,7 @@ fn eval_method_call(
             EvalError::Exception(
                 meth_name.position.clone(),
                 ErrorMessage(vec![Text(format!(
-                    "No methods defined on `{}`.",
-                    receiver_type_name
+                    "No methods defined on `{receiver_type_name}`."
                 ))]),
             ),
         ));
@@ -3838,8 +3834,7 @@ fn unwrap_path(value: &Value, env: &Env) -> Result<String, ErrorMessage> {
     };
     if field_name.text != "p" {
         return Err(ErrorMessage(vec![Text(format!(
-            "Malformed `Path` struct (expected a field named `p`, got `{}`).",
-            field_name,
+            "Malformed `Path` struct (expected a field named `p`, got `{field_name}`).",
         ))]));
     }
 

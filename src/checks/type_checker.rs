@@ -1380,7 +1380,7 @@ impl TypeCheckVisitor<'_> {
                                 // TODO: consider arity and types when
                                 // trying to suggest the best
                                 // alternative.
-                                format!(" Did you mean `{}`?", similar)
+                                format!(" Did you mean `{similar}`?")
                             } else {
                                 "".to_owned()
                             };

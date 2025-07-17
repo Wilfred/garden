@@ -226,7 +226,7 @@ impl Type {
                     args,
                 }),
             },
-            None => Err(format!("No such type: {}", name)),
+            None => Err(format!("No such type: {name}")),
         }
     }
 
@@ -355,7 +355,7 @@ impl Display for Type {
                         "{}<{}>",
                         name_sym.text,
                         args.iter()
-                            .map(|arg| format!("{}", arg))
+                            .map(|arg| format!("{arg}"))
                             .collect::<Vec<_>>()
                             .join(", ")
                     )
@@ -372,11 +372,11 @@ impl Display for Type {
                 ..
             } => {
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
-                write!(f, "Fun<({}), {}>", formatted_args, return_)
+                write!(f, "Fun<({formatted_args}), {return_}>")
             }
             Type::Top => write!(f, "_"),
             Type::TypeParameter(name) => write!(f, "{}", name.text),
-            Type::Error(reason) => write!(f, "__ERROR({})", reason),
+            Type::Error(reason) => write!(f, "__ERROR({reason})"),
         }
     }
 }

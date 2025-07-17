@@ -51,7 +51,7 @@ fn read_expr(
                         }
                         Err(e) => match e {
                             CommandError::Io(e) => {
-                                panic!("Unexpected write error during command output: {:?}", e)
+                                panic!("Unexpected write error during command output: {e:?}")
                             }
                             CommandError::Action(eval_action) => {
                                 return Err(ReadError::NeedsEval(eval_action));
@@ -182,7 +182,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 let test = match env.tests.get(&name) {
                     Some(test) => test.clone(),
                     None => {
-                        println!("No such test: {}", name);
+                        println!("No such test: {name}");
                         continue;
                     }
                 };
@@ -197,7 +197,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
         match eval(&mut env, &session) {
             Ok(result) => {
                 if let Some(display_str) = result.display_unless_unit(&env) {
-                    println!("{}", display_str);
+                    println!("{display_str}");
                 }
 
                 is_stopped = false;
@@ -322,5 +322,5 @@ fn log_src(src: &str) -> std::io::Result<()> {
         .append(true)
         .open("log.gdn")?;
 
-    write!(file, "\n{}", src)
+    write!(file, "\n{src}")
 }

@@ -557,7 +557,7 @@ fn dump_ast(src: &str, path: &Path) {
                 println!("{:#?}", e.0.expr_);
             }
             d => {
-                println!("{:#?}", d);
+                println!("{d:#?}");
             }
         }
     }

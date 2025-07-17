@@ -445,7 +445,7 @@ pub(crate) fn print_as_json(res: &Response, pretty_print_json: bool) {
         serde_json::to_string(&res)
     }
     .unwrap();
-    println!("{}", serialized);
+    println!("{serialized}");
 }
 
 /// Process a request and print the response as JSON on stdout.
@@ -544,7 +544,7 @@ fn handle_run_request(
                     id,
                 },
                 Err(CommandError::Io(e)) => {
-                    panic!("Unexpected write error during command printing: {:?}", e)
+                    panic!("Unexpected write error during command printing: {e:?}")
                 }
                 Err(CommandError::Action(EvalAction::Abort)) => Response {
                     kind: ResponseKind::RunCommand {
@@ -564,7 +564,7 @@ fn handle_run_request(
                         }
                         None => Response {
                             kind: ResponseKind::MalformedRequest {
-                                message: format!("No such test: {}", name),
+                                message: format!("No such test: {name}"),
                             },
                             position: None,
                             id,
@@ -702,7 +702,7 @@ fn handle_run_eval_request(
                     let mut s = last_value.display(env);
 
                     if let Some(doc_comment) = last_value.doc_comment() {
-                        s = format!("{}\n\n{}", s, doc_comment);
+                        s = format!("{s}\n\n{doc_comment}");
                     }
 
                     s

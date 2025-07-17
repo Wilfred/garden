@@ -25,40 +25,16 @@
       </nav>
     </header>
 
-    <div class="container"><p><!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#307d30" />
-    <title>The Garden Programming Language</title></p>
-<p>    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/blocks.min.css" />
-    <link rel="stylesheet" href="/style.css" />
-  </head>
-  <body>
-    <header>
-      <a href="/">Garden 🌻</a>
-      <nav>
-        <a class="block" href="/blog.html">Blog</a>
-        <a class="block" href="/manual.html">Manual</a>
-        <a class="block" href="https://github.com/Wilfred/garden">GitHub</a>
-      </nav>
-    </header></p>
-<p>    <div class="container"><pre><code>published: true
+    <div class="container"><pre><code>published: true
 date: 2025-07-13</code></pre>
 <h1>Choosing a Syntax</h1>
 <p>To kick things off, I want to talk about the basic syntax of Garden.</p>
 <pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> fib(i: <a href="./type:Int.html"><span class="type">Int</span></a>): <a href="./type:Int.html"><span class="type">Int</span></a> {
   <a href="./keyword:if.html"><span class="keyword">if</span></a> i &lt; 2 {
     <a href="./keyword:return.html"><span class="keyword">return</span></a> 1
-  }</p>
-<p>  fib(i - 1) + fib(i - 2)
+  }
+
+  fib(i - 1) + fib(i - 2)
 }</code></pre>
 <p>I'm trying to avoid spending my <a href="https://steveklabnik.com/writing/the-language-strangeness-budget/">strangeness
 budget</a>
@@ -112,12 +88,10 @@ but if we're doing conventional loops anyway, there's not much benefit
 to Garden.</p>
 <p>(2) Method arguments are almost always keyword arguments, and often
 resemble sentences. This is often very readable.</p>
-<pre><code>10 to: 1 by: -1 do: <a href="/code></pre>
+<pre><code>10 to: 1 by: -1 do: [:x | x printNl ]</code></pre>
 <p>It's also explicit that the keywords are part of the API. I've worked
-with languages (particularly Python">:x | x printNl </a> where you rename a parameter and
+with languages (particularly Python) where you rename a parameter and
 accidentally break your call sites, because they're using keyword
 rather than positional arguments.</p></div>
-  </body>
-</html></p></div>
   </body>
 </html>

@@ -100,7 +100,8 @@ fun write_markdown_page(website_dir: Path, base_tmpl_string: String, md_path: Pa
 
 fun blog_posts(website_dir: Path): List<Path> {
   let blog_post_dir = website_dir.join("blog")
-  fs::list_directory(blog_post_dir).or_throw()
+  let dir_files = fs::list_directory(blog_post_dir).or_throw()
+  dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
 }
 
 fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
@@ -210,15 +211,6 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
 
   let blog_links: List<String> = []
   for md_path in blog_posts(website_dir) {
-    match md_path.extension() {
-      Some(ext) => {
-        if ext != "md" {
-          continue
-        }
-      }
-      None => {}
-    }
-
     let html_path = md_path.set_extension("html")
     let file_name = match html_path.file_name() {
       Some(fn) => fn

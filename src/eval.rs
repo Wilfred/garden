@@ -932,7 +932,7 @@ pub(crate) fn eval_up_to(
     let mut res: Result<_, EvalError> = match &item {
         ToplevelItem::Fun(name_sym, fun_info, _) => {
             let ns = env.current_namespace();
-            load_toplevel_items(&[item.clone()], env, ns);
+            load_toplevel_items(std::slice::from_ref(item), env, ns);
 
             let args = match env
                 .prev_call_args
@@ -954,7 +954,7 @@ pub(crate) fn eval_up_to(
         }
         ToplevelItem::Method(method_info, _) => {
             let ns = env.current_namespace();
-            load_toplevel_items(&[item.clone()], env, ns);
+            load_toplevel_items(std::slice::from_ref(item), env, ns);
 
             let type_name = &method_info.receiver_hint.sym.name;
 
@@ -996,7 +996,7 @@ pub(crate) fn eval_up_to(
         ToplevelItem::Expr(_) | ToplevelItem::Block(_) => {
             env.stop_at_expr_id = Some(expr_id);
 
-            let res = eval_toplevel_items(vfs_path, &[item.clone()], env, session);
+            let res = eval_toplevel_items(vfs_path, std::slice::from_ref(item), env, session);
             env.stop_at_expr_id = None;
 
             match res {

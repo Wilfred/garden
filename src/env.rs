@@ -10,7 +10,7 @@ use crate::garden_type::TypeVarEnv;
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{
     BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol,
-    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, TypeSymbol, Visibility,
+    SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, Visibility,
 };
 use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
@@ -124,7 +124,7 @@ pub(crate) struct Env {
 }
 
 impl Env {
-    pub(crate) fn new(mut id_gen: IdGenerator, mut vfs: Vfs) -> Self {
+    pub(crate) fn new(id_gen: IdGenerator, mut vfs: Vfs) -> Self {
         let mut namespaces = FxHashMap::default();
 
         let user_namespace = Rc::new(RefCell::new(NamespaceInfo {
@@ -140,8 +140,6 @@ impl Env {
         let prelude_src = include_str!("__prelude.gdn");
         let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
 
-        let types = built_in_types(&prelude_vfs_path, &mut id_gen);
-
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {
             abs_path: Rc::new(PathBuf::from("__prelude.gdn")),
             values: FxHashMap::default(),
@@ -151,7 +149,7 @@ impl Env {
 
         let mut env = Self {
             tests: FxHashMap::default(),
-            types,
+            types: built_in_types(),
             prelude_namespace: temp_prelude,
             namespaces,
             project_root: std::env::current_dir().unwrap_or(PathBuf::from("/")),
@@ -357,10 +355,7 @@ impl Env {
     }
 }
 
-fn built_in_types(
-    builtins_vfs_path: &VfsPathBuf,
-    id_gen: &mut IdGenerator,
-) -> FxHashMap<TypeName, TypeDefAndMethods> {
+fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
     let mut types = FxHashMap::default();
     // TODO: String literals are duplicated with type_representation.
     types.insert(
@@ -371,203 +366,22 @@ fn built_in_types(
         },
     );
 
-    let mut string_methods = FxHashMap::default();
-    string_methods.insert(
-        SymbolName {
-            text: "index_of".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "String".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "index_of", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringIndexOf, None),
-        },
-    );
-    string_methods.insert(
-        SymbolName {
-            text: "len".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "String".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "len", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLen, None),
-        },
-    );
-    string_methods.insert(
-        SymbolName {
-            text: "lines".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "String".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "lines", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringLines, None),
-        },
-    );
-    string_methods.insert(
-        SymbolName {
-            text: "substring".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "String".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "substring", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::StringSubstring, None),
-        },
-    );
-
     types.insert(
         TypeName {
             text: "String".into(),
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::String, None),
-            methods: string_methods,
+            methods: FxHashMap::default(),
         },
     );
-
-    let mut list_methods = FxHashMap::default();
-    list_methods.insert(
-        SymbolName {
-            text: "append".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "List".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "append", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListAppend, None),
-        },
-    );
-    list_methods.insert(
-        SymbolName {
-            text: "contains".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "List".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "contains", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListContains, None),
-        },
-    );
-    list_methods.insert(
-        SymbolName {
-            text: "len".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "List".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "len", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListLen, None),
-        },
-    );
-    list_methods.insert(
-        SymbolName {
-            text: "get".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(builtins_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(builtins_vfs_path),
-                    name: TypeName {
-                        text: "List".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(builtins_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(builtins_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(builtins_vfs_path), "get", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::ListGet, None),
-        },
-    );
-
     types.insert(
         TypeName {
             text: "List".into(),
         },
         TypeDefAndMethods {
             def: TypeDef::Builtin(BuiltinType::List, None),
-            methods: list_methods,
+            methods: FxHashMap::default(),
         },
     );
     types.insert(
@@ -648,7 +462,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         abs_path: prelude_path,
         external_syms: FxHashSet::default(),
         values,
-        types: built_in_types(prelude_vfs_path, id_gen),
+        types: built_in_types(),
     };
 
     let (prelude_items, errors) = parse_toplevel_items(prelude_vfs_path, prelude_src, id_gen);
@@ -670,17 +484,44 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         "Loading the prelude should produce zero warnings and errors."
     );
 
-    let path_methods = vec![
-        ("exists", BuiltinMethodKind::PathExists),
-        ("read", BuiltinMethodKind::PathRead),
+    let builtin_methods = vec![
+        (
+            "List",
+            vec![
+                ("append", BuiltinMethodKind::ListAppend),
+                ("contains", BuiltinMethodKind::ListContains),
+                ("get", BuiltinMethodKind::ListGet),
+                ("len", BuiltinMethodKind::ListLen),
+            ],
+        ),
+        (
+            "Path",
+            vec![
+                ("exists", BuiltinMethodKind::PathExists),
+                ("read", BuiltinMethodKind::PathRead),
+            ],
+        ),
+        (
+            "String",
+            vec![
+                ("index_of", BuiltinMethodKind::StringIndexOf),
+                ("len", BuiltinMethodKind::StringLen),
+                ("lines", BuiltinMethodKind::StringLines),
+                ("substring", BuiltinMethodKind::StringSubstring),
+            ],
+        ),
     ];
 
-    if let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
-        text: "Path".into(),
-    }) {
-        // Merge the builtin method kinds for Path into the stub
+    for (type_name, methods) in builtin_methods {
+        let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
+            text: type_name.to_owned(),
+        }) else {
+            continue;
+        };
+
+        // Merge the builtin method kinds for this type into the stub
         // methods defined in the prelude.
-        for (name, builtin_kind) in path_methods {
+        for (name, builtin_kind) in methods {
             let name = SymbolName {
                 text: name.to_owned(),
             };

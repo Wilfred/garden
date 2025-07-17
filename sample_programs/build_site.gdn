@@ -225,7 +225,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
       None => continue
     }
 
-    let link = "".join(["* [", file_name, "](", file_name, ")"])
+    let link = "".join(["* [", file_name, "](blog/", file_name, ")"])
     blog_links = blog_links.append(link)
   }
 

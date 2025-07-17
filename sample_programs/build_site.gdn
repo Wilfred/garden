@@ -92,17 +92,20 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
   }
 }
 
-fun write_markdown_page(base_tmpl_string: String, md_path: Path): Unit {
+fun write_markdown_page(website_dir: Path, base_tmpl_string: String, md_path: Path): Unit {
   let page_src_md = md_path.read().or_throw()
-  let page_src = render_markdown(substitute_shorthand(page_src_md))
+  let page_src = render_markdown(substitute_shorthand(website_dir, page_src_md))
   write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"))
 }
 
-fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
+fun blog_posts(website_dir: Path): List<Path> {
   let blog_post_dir = website_dir.join("blog")
+  fs::list_directory(blog_post_dir).or_throw()
+}
 
-  for md_path in fs::list_directory(blog_post_dir).or_throw() {
-    write_markdown_page(base_tmpl_src, md_path)
+fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
+  for md_path in blog_posts(website_dir) {
+    write_markdown_page(website_dir, base_tmpl_src, md_path)
   }
 }
 
@@ -135,7 +138,7 @@ fun build_site(): Unit {
       None => {}
     }
 
-    write_markdown_page(base_tmpl_src, md_path)
+    write_markdown_page(website_dir, base_tmpl_src, md_path)
   }
 
   for keyword in garden::keywords() {
@@ -177,7 +180,7 @@ fun join_with_commas_and(items: List<String>): String {
 }
 
 // Replace all __FOO strings in markdown `src` with runtime values.
-fun substitute_shorthand(src: String): String {
+fun substitute_shorthand(website_dir: Path, src: String): String {
   let keyword_links = garden::keywords().map(fun(keyword: String) {
     "".join(["[`", keyword, "`](./keyword:", keyword, ".html)"])
   })
@@ -205,12 +208,36 @@ fun substitute_shorthand(src: String): String {
   })
   let garden_funs = join_with_commas_and(garden_funs)
 
+  let blog_links: List<String> = []
+  for md_path in blog_posts(website_dir) {
+    match md_path.extension() {
+      Some(ext) => {
+        if ext != "md" {
+          continue
+        }
+      }
+      None => {}
+    }
+
+    let html_path = md_path.set_extension("html")
+    let file_name = match html_path.file_name() {
+      Some(fn) => fn
+      None => continue
+    }
+
+    let link = "".join(["* [", file_name, "](", file_name, ")"])
+    blog_links = blog_links.append(link)
+  }
+
+  let blog_links = "\n".join(blog_links)
+
   src
     .replace("__KEYWORDS", keyword_links)
     .replace("__BUILTIN_TYPES", type_links)
     .replace("__PRELUDE_FUNS", prelude_funs)
     .replace("__FS_FUNS", fs_funs)
     .replace("__GARDEN_FUNS", garden_funs)
+    .replace("__BLOG_LINKS", blog_links)
 }
 
 // Wrap `page_src` in the base template and write to the file `dest_path`.

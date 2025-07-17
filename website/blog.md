@@ -1,3 +1,3 @@
 # Blog
 
-Hello world.
+__BLOG_LINKS

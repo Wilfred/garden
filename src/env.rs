@@ -614,8 +614,6 @@ fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceI
 fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<NamespaceInfo>> {
     let id_gen = &mut env.id_gen;
 
-    let mut path_methods = FxHashMap::default();
-
     // Users shouldn't be able to see private methods in a
     // namespace. Where should this be enforced? When the namespace in
     // constructed during eval?
@@ -625,50 +623,6 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     // Store a separate list of public methods for access?
     // Fundamentally namespace access during evaluation is different
     // from foo::bar() access from another file.
-    path_methods.insert(
-        SymbolName {
-            text: "exists".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(prelude_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(prelude_vfs_path),
-                    name: TypeName {
-                        text: "Path".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(prelude_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(prelude_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(prelude_vfs_path), "exists", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
-        },
-    );
-    path_methods.insert(
-        SymbolName {
-            text: "read".to_owned(),
-        },
-        MethodInfo {
-            pos: Position::todo(prelude_vfs_path),
-            receiver_hint: TypeHint {
-                args: vec![],
-                sym: TypeSymbol {
-                    position: Position::todo(prelude_vfs_path),
-                    name: TypeName {
-                        text: "Path".into(),
-                    },
-                    id: id_gen.next(),
-                },
-                position: Position::todo(prelude_vfs_path),
-            },
-            receiver_sym: Symbol::new(Position::todo(prelude_vfs_path), "__irrelevant", id_gen),
-            name_sym: Symbol::new(Position::todo(prelude_vfs_path), "read", id_gen),
-            kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
-        },
-    );
 
     let prelude_path = Rc::new(PathBuf::from("__prelude.gdn"));
     let prelude_src = include_str!("__prelude.gdn");
@@ -716,21 +670,24 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         "Loading the prelude should produce zero warnings and errors."
     );
 
+    let path_methods = vec![
+        ("exists", BuiltinMethodKind::PathExists),
+        ("read", BuiltinMethodKind::PathRead),
+    ];
+
     if let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
         text: "Path".into(),
     }) {
         // Merge the builtin method kinds for Path into the stub
         // methods defined in the prelude.
-        for (name, meth_info) in path_methods {
-            let MethodKind::BuiltinMethod(builtin_kind, _) = meth_info.kind else {
-                unreachable!()
+        for (name, builtin_kind) in path_methods {
+            let name = SymbolName {
+                text: name.to_owned(),
             };
 
             if let Some(existing_meth) = path_def_and_methods.methods.get_mut(&name) {
                 existing_meth.kind =
                     MethodKind::BuiltinMethod(builtin_kind, existing_meth.fun_info().cloned());
-            } else {
-                path_def_and_methods.methods.insert(name, meth_info);
             }
         }
     }

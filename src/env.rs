@@ -140,60 +140,6 @@ impl Env {
         let prelude_src = include_str!("__prelude.gdn");
         let prelude_vfs_path = vfs.insert(prelude_path.clone(), prelude_src.to_owned());
 
-        let mut path_methods = FxHashMap::default();
-        path_methods.insert(
-            SymbolName {
-                text: "exists".to_owned(),
-            },
-            MethodInfo {
-                pos: Position::todo(&prelude_vfs_path),
-                receiver_hint: TypeHint {
-                    args: vec![],
-                    sym: TypeSymbol {
-                        position: Position::todo(&prelude_vfs_path),
-                        name: TypeName {
-                            text: "Path".into(),
-                        },
-                        id: id_gen.next(),
-                    },
-                    position: Position::todo(&prelude_vfs_path),
-                },
-                receiver_sym: Symbol::new(
-                    Position::todo(&prelude_vfs_path),
-                    "__irrelevant",
-                    &mut id_gen,
-                ),
-                name_sym: Symbol::new(Position::todo(&prelude_vfs_path), "exists", &mut id_gen),
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathExists, None),
-            },
-        );
-        path_methods.insert(
-            SymbolName {
-                text: "read".to_owned(),
-            },
-            MethodInfo {
-                pos: Position::todo(&prelude_vfs_path),
-                receiver_hint: TypeHint {
-                    args: vec![],
-                    sym: TypeSymbol {
-                        position: Position::todo(&prelude_vfs_path),
-                        name: TypeName {
-                            text: "Path".into(),
-                        },
-                        id: id_gen.next(),
-                    },
-                    position: Position::todo(&prelude_vfs_path),
-                },
-                receiver_sym: Symbol::new(
-                    Position::todo(&prelude_vfs_path),
-                    "__irrelevant",
-                    &mut id_gen,
-                ),
-                name_sym: Symbol::new(Position::todo(&prelude_vfs_path), "read", &mut id_gen),
-                kind: MethodKind::BuiltinMethod(BuiltinMethodKind::PathRead, None),
-            },
-        );
-
         let types = built_in_types(&prelude_vfs_path, &mut id_gen);
 
         let temp_prelude = Rc::new(RefCell::new(NamespaceInfo {

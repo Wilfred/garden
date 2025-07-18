@@ -1,7 +1,30 @@
 external fun foo() {
-    let x = 1
-    let _y = x
-    (10, 11)
+  let x = 1
+
+  // Definitely a tuple, because there's whitespace before it.
+  let _y = x
+  (10, 11)
+
+  // Should be parsed as a call, not an if followed by a tuple (5).
+  let z: Int = if True { add_one } else { add_one }(5)
+}
+
+fun add_one(i: Int): Int {
+  i + 1
 }
 
 // args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `z` is unused.
+// ---| src/test_files/check/ambiguity_fun_call_or_tuple.gdn:9:7
+//   8|   // Should be parsed as a call, not an if followed by a tuple (5).
+//   9|   let z: Int = if True { add_one } else { add_one }(5)
+//  10| }     ^
+// 
+// Error: Expected `Int`, but got `Fun<(Int), Int>`.
+// ---| src/test_files/check/ambiguity_fun_call_or_tuple.gdn:9:16
+//   8|   // Should be parsed as a call, not an if followed by a tuple (5).
+//   9|   let z: Int = if True { add_one } else { add_one }(5)
+//  10| }              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+

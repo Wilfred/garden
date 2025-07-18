@@ -1115,7 +1115,7 @@ fn parse_simple_expression_with_trailing(
     expr
 }
 
-fn token_as_binary_op(token: Token<'_>) -> Option<BinaryOperatorKind> {
+fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorKind> {
     match token.text {
         "+" => Some(BinaryOperatorKind::Add),
         "-" => Some(BinaryOperatorKind::Subtract),
@@ -1211,7 +1211,7 @@ fn parse_simple_expression_or_binop(
     let mut expr = parse_simple_expression_with_trailing(tokens, id_gen, diagnostics);
 
     if let Some(token) = tokens.peek() {
-        if let Some(op) = token_as_binary_op(token) {
+        if let Some(op) = token_as_binary_op(&token) {
             tokens.pop();
 
             let rhs_expr = parse_simple_expression_with_trailing(tokens, id_gen, diagnostics);

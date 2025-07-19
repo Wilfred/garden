@@ -1004,22 +1004,155 @@ fn parse_call_arguments(
     }
 }
 
-/// Parse an expression, and handle trailing syntax (function calls,
-/// method calls) if present.
+/// Parse an expression.
 ///
-/// We handle trailing syntax separately from
-/// `parse_simple_expression`, to avoid infinite recursion. This is
-/// essentially left-recursion from a grammar perspective.
-fn parse_simple_expression_with_trailing(
+/// Examples:
+///
+/// ```garden
+/// foo()
+/// let x = y + 1
+/// if a { b } else { c }
+/// while z { foo() }
+/// ```
+fn parse_expression(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let mut expr = parse_simple_expression(tokens, id_gen, diagnostics);
+    let mut expr = parse_expression_no_trailing(tokens, id_gen, diagnostics);
 
     loop {
         let start_idx = tokens.idx;
         match tokens.peek() {
+            Some(token)
+                if token.text == "(" && expr.position.end_offset == token.position.start_offset =>
+            {
+                // Require parentheses to touch when we're parsing a
+                // function call. This allows us to disambiguabe
+                // `foo()` (a call) from `foo ()` (the variable `foo`
+                // followed by a tuple).
+                let arguments = parse_call_arguments(tokens, id_gen, diagnostics);
+
+                expr = Expression::new(
+                    Position::merge(&expr.position, &arguments.close_paren),
+                    Expression_::Call(Rc::new(expr), arguments),
+                    id_gen.next(),
+                );
+            }
+            Some(token) if token.text == "." => {
+                tokens.pop();
+
+                let next_token = tokens.peek();
+
+                // Require the symbol name to touch the dot when we're
+                // parsing a dot access. This is an ambiguity problem
+                // when the user hasn't finished writing the dot
+                // access, but there is later code.
+                if Some(token.position.end_offset)
+                    == next_token.map(|tok| tok.position.start_offset)
+                {
+                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+
+                    if peeked_symbol_is(tokens, "(") {
+                        // TODO: just treat a method call as a call of a dot access.
+                        let arguments = parse_call_arguments(tokens, id_gen, diagnostics);
+
+                        expr = Expression::new(
+                            Position::merge(&expr.position, &arguments.close_paren),
+                            Expression_::MethodCall(Rc::new(expr), variable, arguments),
+                            id_gen.next(),
+                        );
+                    } else {
+                        expr = Expression::new(
+                            Position::merge(&expr.position, &variable.position),
+                            Expression_::DotAccess(Rc::new(expr), variable),
+                            id_gen.next(),
+                        );
+                    }
+                } else {
+                    let variable = placeholder_symbol(token.position, id_gen);
+
+                    expr = Expression::new(
+                        Position::merge(&expr.position, &variable.position),
+                        Expression_::DotAccess(Rc::new(expr), variable),
+                        id_gen.next(),
+                    );
+                }
+            }
+            Some(token) if token.text == "::" => {
+                tokens.pop();
+
+                let next_token = tokens.peek();
+
+                // Require the symbol name to touch the :: when we're
+                // parsing a namespace access. This is an ambiguity problem
+                // when the user hasn't finished writing the dot
+                // access, but there is later code.
+                if Some(token.position.end_offset)
+                    == next_token.map(|tok| tok.position.start_offset)
+                {
+                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+
+                    expr = Expression::new(
+                        Position::merge(&expr.position, &variable.position),
+                        Expression_::NamespaceAccess(Rc::new(expr), variable),
+                        id_gen.next(),
+                    );
+                } else {
+                    let variable = placeholder_symbol(token.position, id_gen);
+
+                    expr = Expression::new(
+                        Position::merge(&expr.position, &variable.position),
+                        Expression_::NamespaceAccess(Rc::new(expr), variable),
+                        id_gen.next(),
+                    );
+                }
+            }
+            Some(token) if token_as_binary_op(&token).is_some() => {
+                // Parse an infix binary operator, such as `foo +
+                // bar`. We currently assume that every operator has
+                // the same precedence and is left-associative, so
+                // `x OP y OP z` is the same as `(x OP y) OP z`
+                tokens.pop();
+
+                let rhs_expr = parse_expression(tokens, id_gen, diagnostics);
+
+                match rhs_expr.expr_ {
+                    Expression_::BinaryOperator(next_lhs, next_op, next_rhs) => {
+                        // Our recursive logic gives us right-associativity,
+                        // i.e. `x OP (y OP z)`, convert to `(x OP y) OP z`.
+
+                        let expr_pos = expr.position.clone();
+
+                        let new_inner = Expression::new(
+                            Position::merge(&expr_pos, &next_lhs.position),
+                            Expression_::BinaryOperator(
+                                Rc::new(expr),
+                                token_as_binary_op(&token).unwrap(),
+                                next_lhs,
+                            ),
+                            id_gen.next(),
+                        );
+
+                        expr = Expression::new(
+                            Position::merge(&expr_pos, &next_rhs.position),
+                            Expression_::BinaryOperator(Rc::new(new_inner), next_op, next_rhs),
+                            id_gen.next(),
+                        );
+                    }
+                    _ => {
+                        expr = Expression::new(
+                            Position::merge(&expr.position, &rhs_expr.position),
+                            Expression_::BinaryOperator(
+                                Rc::new(expr),
+                                token_as_binary_op(&token).unwrap(),
+                                Rc::new(rhs_expr),
+                            ),
+                            id_gen.next(),
+                        );
+                    }
+                }
+            }
             Some(token)
                 if token.text == "(" && expr.position.end_offset == token.position.start_offset =>
             {
@@ -1115,38 +1248,16 @@ fn parse_simple_expression_with_trailing(
     expr
 }
 
-fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorKind> {
-    match token.text {
-        "+" => Some(BinaryOperatorKind::Add),
-        "-" => Some(BinaryOperatorKind::Subtract),
-        "*" => Some(BinaryOperatorKind::Multiply),
-        "/" => Some(BinaryOperatorKind::Divide),
-        "%" => Some(BinaryOperatorKind::Modulo),
-        "**" => Some(BinaryOperatorKind::Exponent),
-        "==" => Some(BinaryOperatorKind::Equal),
-        "!=" => Some(BinaryOperatorKind::NotEqual),
-        "&&" => Some(BinaryOperatorKind::And),
-        "||" => Some(BinaryOperatorKind::Or),
-        "<" => Some(BinaryOperatorKind::LessThan),
-        "<=" => Some(BinaryOperatorKind::LessThanOrEqual),
-        ">" => Some(BinaryOperatorKind::GreaterThan),
-        ">=" => Some(BinaryOperatorKind::GreaterThanOrEqual),
-        "^" => Some(BinaryOperatorKind::StringConcat),
-        _ => None,
-    }
-}
-
-/// Parse an expression.
+/// Parse an expression up to (but excluding) trailing syntax.
 ///
-/// Examples:
+/// This function always consumes at least one token. It allows us to
+/// parse left-recursive syntax.
 ///
-/// ```garden
-/// foo()
-/// let x = y + 1
-/// if a { b } else { c }
-/// while z { foo() }
-/// ```
-fn parse_expression(
+/// For example, consider `foo + bar`. We call
+/// `parse_expression_no_trailing` to consume the `foo`, then
+/// `parse_expression` can make progress looking for a binary
+/// operator.
+fn parse_expression_no_trailing(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
@@ -1189,42 +1300,28 @@ fn parse_expression(
         }
     }
 
-    parse_simple_expression_or_binop(tokens, id_gen, diagnostics)
+    parse_simple_expression(tokens, id_gen, diagnostics)
 }
 
-/// In Garden, an expression can only contain a single binary
-/// operation, so `x + y + z` isn't legal. Users must use parentheses,
-/// e.g. `(x + y) + z`.
-///
-/// This ensures that every subexpression has trailing syntax that we
-/// can use to show intermediate values computed during evaluation.
-///
-/// To ensure binary operations aren't combined, we have a separate
-/// parser function that allows exactly one binary operation. This
-/// also has the nice side effect of not requiring precedence logic in
-/// the parser.
-fn parse_simple_expression_or_binop(
-    tokens: &mut TokenStream,
-    id_gen: &mut IdGenerator,
-    diagnostics: &mut Vec<ParseError>,
-) -> Expression {
-    let mut expr = parse_simple_expression_with_trailing(tokens, id_gen, diagnostics);
-
-    if let Some(token) = tokens.peek() {
-        if let Some(op) = token_as_binary_op(&token) {
-            tokens.pop();
-
-            let rhs_expr = parse_simple_expression_with_trailing(tokens, id_gen, diagnostics);
-
-            expr = Expression::new(
-                Position::merge(&expr.position, &rhs_expr.position),
-                Expression_::BinaryOperator(Rc::new(expr), op, Rc::new(rhs_expr)),
-                id_gen.next(),
-            );
-        }
+fn token_as_binary_op(token: &Token<'_>) -> Option<BinaryOperatorKind> {
+    match token.text {
+        "+" => Some(BinaryOperatorKind::Add),
+        "-" => Some(BinaryOperatorKind::Subtract),
+        "*" => Some(BinaryOperatorKind::Multiply),
+        "/" => Some(BinaryOperatorKind::Divide),
+        "%" => Some(BinaryOperatorKind::Modulo),
+        "**" => Some(BinaryOperatorKind::Exponent),
+        "==" => Some(BinaryOperatorKind::Equal),
+        "!=" => Some(BinaryOperatorKind::NotEqual),
+        "&&" => Some(BinaryOperatorKind::And),
+        "||" => Some(BinaryOperatorKind::Or),
+        "<" => Some(BinaryOperatorKind::LessThan),
+        "<=" => Some(BinaryOperatorKind::LessThanOrEqual),
+        ">" => Some(BinaryOperatorKind::GreaterThan),
+        ">=" => Some(BinaryOperatorKind::GreaterThanOrEqual),
+        "^" => Some(BinaryOperatorKind::StringConcat),
+        _ => None,
     }
-
-    expr
 }
 
 fn parse_definition(

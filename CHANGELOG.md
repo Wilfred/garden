@@ -21,6 +21,18 @@ fun (this: String) my_append(s: String) {
 }
 ```
 
+Expressions may now contains multiple operators, e.g. `2 * 3 + 4` is
+now legal syntax. Note that Garden all operators have the same
+precedence and are left-associative, so `1 + 2 * 3` is the same as
+`(1 + 2) * 3` and produces 9.
+
+Fixed an inconsistency with the parser, where function calls were not
+allowed after keywords. The following is now legal syntax:
+
+```
+if True { println } else { println }("hello world")
+```
+
 ### Standard Library
 
 Added `String::trim()` and `garden::doc_comment()`.

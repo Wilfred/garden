@@ -98,15 +98,29 @@ fun write_markdown_page(website_dir: Path, base_tmpl_string: String, md_path: Pa
   write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"))
 }
 
-fun blog_posts(website_dir: Path): List<Path> {
+struct BlogPost {
+  src: String,
+  path: Path,
+}
+
+fun blog_posts(website_dir: Path): List<BlogPost> {
+  let posts: List<BlogPost> = []
+
   let blog_post_dir = website_dir.join("blog")
-  let dir_files = fs::list_directory(blog_post_dir).or_throw()
-  dir_files.filter(fun(p: Path) { p.extension() == Some("md") })
+  for path in fs::list_directory(blog_post_dir).or_throw() {
+    if path.extension() != Some("md") {
+      continue
+    }
+
+    posts = posts.append(BlogPost{ path: path, src: ""})
+  }
+
+  posts
 }
 
 fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
-  for md_path in blog_posts(website_dir) {
-    write_markdown_page(website_dir, base_tmpl_src, md_path)
+  for post in blog_posts(website_dir) {
+    write_markdown_page(website_dir, base_tmpl_src, post.path)
   }
 }
 
@@ -210,8 +224,8 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   let garden_funs = join_with_commas_and(garden_funs)
 
   let blog_links: List<String> = []
-  for md_path in blog_posts(website_dir) {
-    let html_path = md_path.set_extension("html")
+  for post in blog_posts(website_dir) {
+    let html_path = post.path.set_extension("html")
     let file_name = match html_path.file_name() {
       Some(fn) => fn
       None => continue

@@ -2,6 +2,7 @@ import "__fs.gdn" as fs
 import "__garden.gdn" as garden
 import "__prelude.gdn" as prelude
 import "./markdown.gdn"
+import "./log.gdn" as log
 
 // A list of all the files in `website_dir` that have a .md extension.
 fun markdown_files(website_dir: Path): List<Path> {
@@ -112,7 +113,15 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
       continue
     }
 
-    posts = posts.append(BlogPost{ path: path, src: ""})
+    let src = match path.read() {
+      Ok(src) => src
+      Err(e) => {
+        log::info("Could not read path: " ^ path.p ^ " error: " ^ e)
+        continue
+      }
+    }
+
+    posts = posts.append(BlogPost{ path: path, src: src })
   }
 
   posts
@@ -120,7 +129,8 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
 
 fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
   for post in blog_posts(website_dir) {
-    write_markdown_page(website_dir, base_tmpl_src, post.path)
+    let html = render_markdown(substitute_shorthand(website_dir, post.src))
+    write_website_page(base_tmpl_src, html, post.path.set_extension("html"))
   }
 }
 

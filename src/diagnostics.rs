@@ -81,9 +81,9 @@ pub(crate) fn format_error_with_stack(
                 vfs,
                 Some(&caller_stack_frame.enclosing_name),
                 project_root,
-                false,
-                None,
                 true,
+                None,
+                false,
                 0,
             ));
         }

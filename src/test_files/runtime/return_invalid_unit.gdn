@@ -12,4 +12,5 @@ fun foo(): Int {}
 //    |            ^^^
 // ---| src/test_files/runtime/return_invalid_unit.gdn:4:5	 __toplevel__
 //   4|     foo()
+//    |     ^^^^^
 

@@ -19,4 +19,5 @@ fun foo(): Box<Int> {
 //    |            ^^^^^^^^
 // ---| src/test_files/runtime/struct_invalid_type_param.gdn:10:5	 __toplevel__
 //  10|     foo()
+//    |     ^^^^^
 

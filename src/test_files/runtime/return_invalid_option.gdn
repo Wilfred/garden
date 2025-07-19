@@ -15,4 +15,5 @@ fun foo(): Option<Int> {
 //    |            ^^^^^^^^^^^
 // ---| src/test_files/runtime/return_invalid_option.gdn:6:5	 __toplevel__
 //   6|     foo()
+//    |     ^^^^^
 

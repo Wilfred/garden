@@ -3731,7 +3731,7 @@ fn eval_method_call(
             EvalError::Exception(
                 meth_name.position.clone(),
                 ErrorMessage(vec![
-                    msgtext!("There is no method name "),
+                    msgtext!("There is no method named "),
                     msgcode!("{}", meth_name.name),
                     msgtext!(" on values of type "),
                     msgcode!("{}", receiver_type_name),

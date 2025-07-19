@@ -1,0 +1,12 @@
+{
+  let p = Path{ p: "/" }
+  p.stuff()
+}
+
+// args: run
+// expected stderr:
+// Error: There is no method name `stuff` on values of type `Path`. This value is `Path{ p: "/" }`.
+// ---| src/test_files/runtime/method_missing.gdn:3:5	 __toplevel__
+//   3|   p.stuff()
+//    |     ^^^^^
+

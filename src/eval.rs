@@ -3730,10 +3730,15 @@ fn eval_method_call(
             RestoreValues(saved_values),
             EvalError::Exception(
                 meth_name.position.clone(),
-                ErrorMessage(vec![Text(format!(
-                    "No method named `{}` on `{}`.",
-                    meth_name.name, receiver_type_name
-                ))]),
+                ErrorMessage(vec![
+                    msgtext!("There is no method name "),
+                    msgcode!("{}", meth_name.name),
+                    msgtext!(" on values of type "),
+                    msgcode!("{}", receiver_type_name),
+                    msgtext!(". This value is "),
+                    msgcode!("{}", receiver_value.display(env)),
+                    msgtext!("."),
+                ]),
             ),
         ));
     };

@@ -681,9 +681,14 @@ impl TypeCheckVisitor<'_> {
                         );
                     }
 
+                    let case_value_pos = match case_expr.exprs.last() {
+                        Some(last_expr) => last_expr.position.clone(),
+                        None => Position::merge(&case_expr.open_brace, &case_expr.close_brace),
+                    };
+
                     case_tys.push((
                         self.infer_block(case_expr, type_bindings, expected_return_ty),
-                        Position::merge(&case_expr.open_brace, &case_expr.close_brace),
+                        case_value_pos,
                     ));
 
                     self.bindings.exit_block();

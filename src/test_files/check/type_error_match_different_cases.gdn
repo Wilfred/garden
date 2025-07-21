@@ -8,7 +8,9 @@ enum Foo {
   match One {
     One => [],
     Two => throw(""),
-    Three => "stuff",
+    Three => {
+      "stuff"
+    },
   }
 }
 
@@ -16,10 +18,11 @@ enum Foo {
 // expected exit status: 1
 // expected stdout:
 // Error: `match` cases have different types.
-// ---| src/test_files/check/type_error_match_different_cases.gdn:11:14
-//   9|     One => [],
+// ---| src/test_files/check/type_error_match_different_cases.gdn:12:7
 //  10|     Two => throw(""),
-//  11|     Three => "stuff",
-//  12|   }          ^^^^^^^
-//  13| }
+//  11|     Three => {
+//  12|       "stuff"
+//    |       ^^^^^^^
+//  13|     },
+//  14|   }
 

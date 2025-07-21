@@ -14,6 +14,17 @@ enum Foo {
   }
 }
 
+external fun bar(): Int {
+  match One {
+    One => "wrong",
+    Two => "wrong too",
+    Three => {
+      // not wrong
+      123
+    },
+  }
+}
+
 // args: check
 // expected exit status: 1
 // expected stdout:
@@ -25,4 +36,22 @@ enum Foo {
 //    |       ^^^^^^^
 //  13|     },
 //  14|   }
+// 
+// Error: Expected `Int`, but got `String`.
+// ---| src/test_files/check/type_error_match_different_cases.gdn:19:12
+//  17| external fun bar(): Int {
+//  18|   match One {
+//  19|     One => "wrong",
+//    |            ^^^^^^^
+//  20|     Two => "wrong too",
+//  21|     Three => {
+// 
+// Error: Expected `Int`, but got `String`.
+// ---| src/test_files/check/type_error_match_different_cases.gdn:20:12
+//  18|   match One {
+//  19|     One => "wrong",
+//  20|     Two => "wrong too",
+//    |            ^^^^^^^^^^^
+//  21|     Three => {
+//  22|       // not wrong
 

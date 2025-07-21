@@ -642,6 +642,144 @@ impl TypeCheckVisitor<'_> {
         ty
     }
 
+    fn verify_match(
+        &mut self,
+        expected_ty: &Type,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+        expr_id: SyntaxId,
+        scrutinee: &Expression,
+        cases: &[(Pattern, Block)],
+    ) -> Type {
+        let scrutinee_ty = self.infer_expr(scrutinee, type_bindings, expected_return_ty);
+        let scrutinee_ty_name = scrutinee_ty.type_name();
+
+        if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
+            let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
+            check_match_exhaustive(
+                self.env,
+                &scrutinee.position,
+                scrutinee_ty_name,
+                &patterns,
+                &mut self.diagnostics,
+            );
+        }
+
+        let mut case_tys = vec![];
+
+        for (pattern, case_expr) in cases {
+            self.bindings.enter_block();
+
+            if let Some(payload_dest) = &pattern.payload {
+                let payload_ty = enum_payload_type(self.env, &scrutinee_ty, &pattern.variant_sym);
+                self.set_dest_binding(payload_dest, &pattern.variant_sym.position, payload_ty);
+            }
+
+            let case_value_pos = match case_expr.exprs.last() {
+                Some(last_expr) => last_expr.position.clone(),
+                None => Position::merge(&case_expr.open_brace, &case_expr.close_brace),
+            };
+
+            match expected_ty {
+                Type::Top => {
+                    case_tys.push((
+                        self.infer_block(case_expr, type_bindings, expected_return_ty),
+                        case_value_pos,
+                    ));
+                }
+                _ => {
+                    self.verify_block(expected_ty, case_expr, type_bindings, expected_return_ty);
+                }
+            }
+
+            self.bindings.exit_block();
+
+            // Matching `_` works for any type.
+            if pattern.variant_sym.name.is_underscore() {
+                continue;
+            }
+
+            let Some(value) = self.get_var(&pattern.variant_sym.name) else {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!("No such type "),
+                        msgcode!("{}", pattern.variant_sym.name),
+                        msgtext!("."),
+                    ]),
+                    position: pattern.variant_sym.position.clone(),
+                });
+                continue;
+            };
+
+            let pattern_type_name = match value.as_ref() {
+                Value_::EnumVariant { type_name, .. } => type_name,
+                Value_::EnumConstructor { type_name, .. } => type_name,
+                _ => {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Expected an enum variant here, but got "),
+                            msgcode!("{}", value.display(self.env)),
+                            msgtext!("."),
+                        ]),
+                        position: pattern.variant_sym.position.clone(),
+                    });
+                    continue;
+                }
+            };
+
+            let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
+                continue;
+            };
+            if scrutinee_ty_name.is_no_value() {
+                continue;
+            }
+            if pattern_type_name != scrutinee_ty_name {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!("This match case is for "),
+                        msgcode!("{}", pattern_type_name),
+                        msgtext!(", but you're matching on a "),
+                        msgcode!("{}", scrutinee_ty_name),
+                        msgtext!("."),
+                    ]),
+                    position: pattern.variant_sym.position.clone(),
+                });
+            }
+        }
+
+        let ty = match expected_ty {
+            Type::Top => match unify_all(&case_tys) {
+                Ok(ty) => ty,
+                Err(position) => {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgcode!("match"),
+                            msgtext!(" cases have different types."),
+                        ]),
+                        position,
+                    });
+
+                    Type::error("Cases had incompatible types.")
+                }
+            },
+            _ => {
+                debug_assert_eq!(case_tys.len(), 0);
+                expected_ty.clone()
+            }
+        };
+
+        self.id_to_ty.insert(expr_id, ty.clone());
+        ty
+    }
+
     fn infer_expr_(
         &mut self,
         expr_: &Expression_,
@@ -651,124 +789,14 @@ impl TypeCheckVisitor<'_> {
         expected_return_ty: &Type,
     ) -> Type {
         match expr_ {
-            Expression_::Match(scrutinee, cases) => {
-                let scrutinee_ty = self.infer_expr(scrutinee, type_bindings, expected_return_ty);
-                let scrutinee_ty_name = scrutinee_ty.type_name();
-
-                let mut case_tys = vec![];
-
-                if let Some(scrutinee_ty_name) = &scrutinee_ty_name {
-                    let patterns: Vec<_> = cases.iter().map(|(p, _)| p.clone()).collect();
-                    check_match_exhaustive(
-                        self.env,
-                        &scrutinee.position,
-                        scrutinee_ty_name,
-                        &patterns,
-                        &mut self.diagnostics,
-                    );
-                }
-
-                for (pattern, case_expr) in cases {
-                    self.bindings.enter_block();
-
-                    if let Some(payload_dest) = &pattern.payload {
-                        let payload_ty =
-                            enum_payload_type(self.env, &scrutinee_ty, &pattern.variant_sym);
-                        self.set_dest_binding(
-                            payload_dest,
-                            &pattern.variant_sym.position,
-                            payload_ty,
-                        );
-                    }
-
-                    let case_value_pos = match case_expr.exprs.last() {
-                        Some(last_expr) => last_expr.position.clone(),
-                        None => Position::merge(&case_expr.open_brace, &case_expr.close_brace),
-                    };
-
-                    case_tys.push((
-                        self.infer_block(case_expr, type_bindings, expected_return_ty),
-                        case_value_pos,
-                    ));
-
-                    self.bindings.exit_block();
-
-                    // Matching `_` works for any type.
-                    if pattern.variant_sym.name.is_underscore() {
-                        continue;
-                    }
-
-                    let Some(value) = self.get_var(&pattern.variant_sym.name) else {
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgtext!("No such type "),
-                                msgcode!("{}", pattern.variant_sym.name),
-                                msgtext!("."),
-                            ]),
-                            position: pattern.variant_sym.position.clone(),
-                        });
-                        continue;
-                    };
-
-                    let pattern_type_name = match value.as_ref() {
-                        Value_::EnumVariant { type_name, .. } => type_name,
-                        Value_::EnumConstructor { type_name, .. } => type_name,
-                        _ => {
-                            self.diagnostics.push(Diagnostic {
-                                notes: vec![],
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgtext!("Expected an enum variant here, but got "),
-                                    msgcode!("{}", value.display(self.env)),
-                                    msgtext!("."),
-                                ]),
-                                position: pattern.variant_sym.position.clone(),
-                            });
-                            continue;
-                        }
-                    };
-
-                    let Some(scrutinee_ty_name) = &scrutinee_ty_name else {
-                        continue;
-                    };
-                    if scrutinee_ty_name.is_no_value() {
-                        continue;
-                    }
-                    if pattern_type_name != scrutinee_ty_name {
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgtext!("This match case is for "),
-                                msgcode!("{}", pattern_type_name),
-                                msgtext!(", but you're matching on a "),
-                                msgcode!("{}", scrutinee_ty_name),
-                                msgtext!("."),
-                            ]),
-                            position: pattern.variant_sym.position.clone(),
-                        });
-                    }
-                }
-
-                match unify_all(&case_tys) {
-                    Ok(ty) => ty,
-                    Err(position) => {
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgcode!("match"),
-                                msgtext!(" cases have different types."),
-                            ]),
-                            position,
-                        });
-
-                        Type::error("Cases had incompatible types.")
-                    }
-                }
-            }
+            Expression_::Match(scrutinee, cases) => self.verify_match(
+                &Type::Top,
+                type_bindings,
+                expected_return_ty,
+                expr_id,
+                scrutinee,
+                cases,
+            ),
             Expression_::If(cond_expr, then_block, else_block) => {
                 self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
 
@@ -1851,6 +1879,14 @@ impl TypeCheckVisitor<'_> {
                     name_sym: None,
                 }
             }
+            (Expression_::Match(scrutinee, cases), _) => self.verify_match(
+                expected_ty,
+                type_bindings,
+                expected_return_ty,
+                expr_id,
+                scrutinee,
+                cases,
+            ),
             _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty),
         };
 

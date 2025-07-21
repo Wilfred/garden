@@ -653,6 +653,30 @@ test list_map {
   assert(incremented == [2, 3, 4])
 }
 
+// If `value` is present in this list, return the index of the first
+// instance.
+//
+// ```
+// ["A", "B"].index_of("B") // Some(1)
+// ["A", "B", "B"].index_of("B") // Some(1)
+// ["A", "B"].index_of("C") // None
+// ```
+external method index_of<T>(this: List<T>, value: T): Option<Int> {
+  for (i, v) in this.enumerate() {
+    if v == value {
+      return Some(i)
+    }
+  }
+
+  None
+}
+
+test list_index_of {
+  assert([].index_of(1) == None)
+  assert([10, 11, 12].index_of(11) == Some(1))
+  assert([10, 11, 11, 12].index_of(11) == Some(1))
+}
+
 // Return a new list consisting of the items from index i (inclusive)
 // to index j (exclusive). If `j` is negative, count backwards from
 // the end.

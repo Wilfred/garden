@@ -4,5 +4,5 @@ fun foo(_: List<String>) {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":17064,"end_offset":17070,"line_number":769,"end_line_number":769,"column":7,"end_column":13,"path":"GDN_TEST_ROOT/__prelude.gdn"}
+// {"start_offset":17602,"end_offset":17608,"line_number":793,"end_line_number":793,"column":7,"end_column":13,"path":"GDN_TEST_ROOT/__prelude.gdn"}
 

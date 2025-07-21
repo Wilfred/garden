@@ -35,7 +35,8 @@ if True { println } else { println }("hello world")
 
 ### Standard Library
 
-Added `String::trim()` and `garden::doc_comment()`.
+Added `List::index_of()`, `String::trim()` and
+`garden::doc_comment()`.
 
 Fixed an issue with `__fs::list_directory()` returning an invalid
 list.

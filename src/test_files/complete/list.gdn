@@ -12,6 +12,7 @@ fun foo() {
 // {"name":"filter","suffix":"(Fun<(T), Bool>): List<T>"}
 // {"name":"first()","suffix":": Option<T>"}
 // {"name":"get","suffix":"(Int): Option<T>"}
+// {"name":"index_of","suffix":"(T): Option<Int>"}
 // {"name":"is_empty()","suffix":": Bool"}
 // {"name":"is_non_empty()","suffix":": Bool"}
 // {"name":"last()","suffix":": Option<T>"}

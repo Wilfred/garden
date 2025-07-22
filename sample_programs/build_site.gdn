@@ -105,6 +105,30 @@ struct BlogPost {
   path: Path,
 }
 
+fun split_metadata(src: String): (Option<String>, String) {
+  let metadata_start = "```metadata\n"
+  let metadata_end = "\n```\n"
+
+  if src.starts_with(metadata_start).not() {
+    return (None, src)
+  }
+
+  match src.index_of(metadata_end) {
+    Some(i) => {
+      let before = src.substring(0, i)
+      let after = src.substring(i + metadata_end.len(), src.len())
+      (Some(before.strip_prefix(metadata_start)), after)
+    }
+    None => {
+      (None, src)
+    }
+  }
+}
+
+test split_metadata {
+  assert(split_metadata("```metadata\nfoo\n```\nstuff\n") == (Some("foo"), "stuff\n"))
+}
+
 fun blog_posts(website_dir: Path): List<BlogPost> {
   let posts: List<BlogPost> = []
 
@@ -114,15 +138,25 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
       continue
     }
 
+    let published = False
     let src = match path.read() {
-      Ok(src) => src
+      Ok(src) => {
+        let (metadata, src) = split_metadata(src)
+        for line in metadata.or_value("").lines() {
+          if line == "published: true" {
+            published = True
+          }
+        }
+
+        src
+      }
       Err(e) => {
         log::info("Could not read path: " ^ path.p ^ " error: " ^ e)
         continue
       }
     }
 
-    posts = posts.append(BlogPost{ path: path, src: src, published: True })
+    posts = posts.append(BlogPost{ path: path, src: src, published: published })
   }
 
   posts
@@ -133,7 +167,7 @@ fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
     if post.published.not() {
       continue
     }
-    
+
     let html = render_markdown(substitute_shorthand(website_dir, post.src))
     write_website_page(base_tmpl_src, html, post.path.set_extension("html"))
   }

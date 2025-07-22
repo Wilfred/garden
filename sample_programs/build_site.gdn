@@ -274,6 +274,10 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
 
   let blog_links: List<String> = []
   for post in blog_posts(website_dir) {
+    if post.published.not() {
+      continue
+    }
+
     let html_path = post.path.set_extension("html")
     let file_name = match html_path.file_name() {
       Some(fn) => fn

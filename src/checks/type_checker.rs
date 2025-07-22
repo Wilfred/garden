@@ -612,11 +612,13 @@ impl TypeCheckVisitor<'_> {
         }
 
         if block.exprs.is_empty() && !is_subtype(&ty, expected_ty) {
+            let block_pos = Position::merge(&block.open_brace, &block.close_brace);
+
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Error,
                 message: format_type_mismatch(expected_ty, &ty),
-                position: block.close_brace.clone(),
+                position: block_pos,
             });
         }
 

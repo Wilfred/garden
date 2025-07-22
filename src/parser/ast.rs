@@ -672,6 +672,7 @@ pub(crate) enum BuiltinMethodKind {
     ListLen,
     PathExists,
     PathRead,
+    StringChars,
     StringIndexOf,
     StringLen,
     StringLines,

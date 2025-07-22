@@ -353,20 +353,17 @@ test split {
   assert("a,b,".split(",") == ["a", "b", ""])
 }
 
+// Return this string as a list of individual characters.
+//
+// ```
+// "abcc".chars() == ["a", "b", "c", "c"]
+// ```
 external method chars(this: String): List<String> {
-  let cs: List<String> = []
-
-  let i = 0
-  while i < this.len() {
-    cs = cs.append(this.substring(i, i + 1))
-    i += 1
-  }
-
-  cs
+  __BUILTIN_IMPLEMENTATION
 }
 
 test string_chars {
-  assert("abc".chars() == ["a", "b", "c"])
+  assert("abcc".chars() == ["a", "b", "c", "c"])
 }
 
 // A filesystem path.

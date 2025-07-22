@@ -4166,6 +4166,56 @@ fn eval_builtin_method_call(
                 env.push_value(v);
             }
         }
+        BuiltinMethodKind::StringChars => {
+            check_arity(
+                &SymbolName {
+                    text: "String::chars".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match receiver_value.as_ref() {
+                Value_::String(s) => {
+                    let mut items = vec![];
+                    for (_, c) in s.char_indices() {
+                        items.push(Value::new(Value_::String(format!("{c}"))));
+                    }
+                    let chars_list = Value::new(Value_::List {
+                        items,
+                        elem_type: Type::string(),
+                    });
+
+                    if expr_value_is_used {
+                        env.push_value(chars_list);
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "String".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
         BuiltinMethodKind::StringIndexOf => {
             check_arity(
                 &SymbolName {

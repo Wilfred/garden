@@ -1887,6 +1887,36 @@ impl TypeCheckVisitor<'_> {
                 scrutinee,
                 cases,
             ),
+            (Expression_::If(cond_expr, then_block, else_block), _) => {
+                self.verify_expr(&Type::bool(), cond_expr, type_bindings, expected_return_ty);
+
+                match else_block {
+                    Some(else_block) => {
+                        self.verify_block(
+                            expected_ty,
+                            then_block,
+                            type_bindings,
+                            expected_return_ty,
+                        );
+                        self.verify_block(
+                            expected_ty,
+                            else_block,
+                            type_bindings,
+                            expected_return_ty,
+                        );
+                        expected_ty.clone()
+                    }
+                    None => {
+                        self.verify_block(
+                            &Type::unit(),
+                            then_block,
+                            type_bindings,
+                            expected_return_ty,
+                        );
+                        Type::unit()
+                    }
+                }
+            }
             _ => self.infer_expr_(expr_, pos, expr_id, type_bindings, expected_return_ty),
         };
 

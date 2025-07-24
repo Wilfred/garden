@@ -15,4 +15,11 @@ external fun takes_bools(_: List<Bool>) {}
 //    |                 ^^^^
 //   5|     takes_bools(x)
 //   6| }
+// 
+// Error: Expected `List<Bool>`, but got `List<_>`.
+// ---| src/test_files/check/list_mixed.gdn:5:17
+//   3| {
+//   4|     let x = [1, True]
+//   5|     takes_bools(x)
+//   6| }               ^
 

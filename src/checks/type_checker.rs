@@ -987,7 +987,7 @@ impl TypeCheckVisitor<'_> {
                             )]),
                             position,
                         });
-                        Type::error("List elements have different types")
+                        Type::Top
                     }
                 };
 

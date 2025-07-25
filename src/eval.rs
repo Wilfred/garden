@@ -5715,7 +5715,7 @@ fn eval_match_cases(
                             _ => {
                                 let msg = ErrorMessage(vec![
                                     msgtext!(
-                                        "Expected a tuple of {} items, but got a ",
+                                        "Expected a tuple of {} items, but got ",
                                         symbols.len(),
                                     ),
                                     msgcode!("{}", type_representation(payload.as_ref())),

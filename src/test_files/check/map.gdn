@@ -9,7 +9,7 @@ external fun get_ints_inferred(items: List<String>): List<Int> {
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected a type with a `len` method, but got a `Top`.
+// Error: Expected a type with a `len` method, but got `Top`.
 // ---| src/test_files/check/map.gdn:6:27
 //   5| external fun get_ints_inferred(items: List<String>): List<Int> {
 //   6|     items.map(fun(item) { item.len() })

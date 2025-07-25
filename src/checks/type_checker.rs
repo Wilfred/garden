@@ -1261,7 +1261,7 @@ impl TypeCheckVisitor<'_> {
                             notes: vec![],
                             severity: Severity::Error,
                             message: ErrorMessage(vec![
-                                msgtext!("Expected a function, but got a "),
+                                msgtext!("Expected a function, but got "),
                                 msgcode!("{}", recv_ty),
                                 msgtext!("."),
                             ]),
@@ -1294,7 +1294,7 @@ impl TypeCheckVisitor<'_> {
                         message: ErrorMessage(vec![
                             msgtext!("Expected a type with a "),
                             msgcode!("{}", sym.name),
-                            msgtext!(" method, but got a "),
+                            msgtext!(" method, but got "),
                             msgcode!("{}", receiver_ty),
                             msgtext!("."),
                         ]),

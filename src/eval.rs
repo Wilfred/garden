@@ -4291,6 +4291,113 @@ fn eval_builtin_method_call(
                 env.push_value(value);
             }
         }
+        BuiltinMethodKind::StringJoin => {
+            check_arity(
+                &SymbolName {
+                    text: "String::join".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let Value_::String(receiver_s) = receiver_value.as_ref() else {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::Exception(
+                        arg_positions[0].clone(),
+                        format_type_error(
+                            &TypeName {
+                                text: "String".into(),
+                            },
+                            receiver_value,
+                            env,
+                        ),
+                    ),
+                ));
+            };
+
+            let items = &arg_values[0];
+            let Value_::List { items, elem_type } = items.as_ref() else {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::Exception(
+                        arg_positions[0].clone(),
+                        format_type_error(
+                            &TypeName {
+                                text: "List".into(),
+                            },
+                            receiver_value,
+                            env,
+                        ),
+                    ),
+                ));
+            };
+
+            if !is_subtype(elem_type, &Type::string()) {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::Exception(
+                        arg_positions[0].clone(),
+                        format_type_error("List<String>", &arg_values[0], env),
+                    ),
+                ));
+            }
+
+            let mut joined_str = String::new();
+            for (i, item) in items.iter().enumerate() {
+                let Value_::String(item_s) = item.as_ref() else {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "String".into(),
+                                },
+                                item,
+                                env,
+                            ),
+                        ),
+                    ));
+                };
+
+                if i != 0 {
+                    joined_str.push_str(receiver_s);
+                }
+                joined_str.push_str(item_s);
+            }
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::String(joined_str)));
+            }
+        }
         BuiltinMethodKind::StringLen => {
             check_arity(
                 &SymbolName {

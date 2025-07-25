@@ -176,21 +176,7 @@ test split_once {
 // ":".join(["a", "b", "c"]) // "a:b:c"
 // ```
 external method join(this: String, items: List<String>): String {
-  let first = match items.first() {
-    Some(item) => item
-    None => return ""
-  }
-
-  if items.len() == 1 {
-    return first
-  }
-
-  let res = first
-  for item in items.slice(1, items.len()) {
-    res = (res ^ this) ^ item
-  }
-
-  res
+  __BUILTIN_IMPLEMENTATION
 }
 
 test join {

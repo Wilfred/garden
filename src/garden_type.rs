@@ -50,6 +50,8 @@ pub(crate) enum Type {
     /// Represents a type checker error. The string is the internal
     /// reason we had an error, intended for debugging the type
     /// checker.
+    ///
+    /// This is rendered as `_` when printing types.
     Error(String),
 }
 
@@ -374,7 +376,7 @@ impl Display for Type {
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
                 write!(f, "Fun<({formatted_args}), {return_}>")
             }
-            Type::Top => write!(f, "_"),
+            Type::Top => write!(f, "Top"),
             Type::TypeParameter(name) => write!(f, "{}", name.text),
             Type::Error(reason) => write!(f, "__ERROR({reason})"),
         }

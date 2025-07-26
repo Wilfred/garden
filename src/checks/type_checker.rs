@@ -1881,6 +1881,34 @@ impl TypeCheckVisitor<'_> {
                     name_sym: None,
                 }
             }
+            (
+                Expression_::ListLiteral(items),
+                Type::UserDefined {
+                    kind: TypeDefKind::Struct,
+                    name,
+                    args,
+                },
+            ) if name.text == "List" && args.len() == 1 => {
+                let expected_elem_ty = &args[0];
+
+                // Even if we verify, we should return the more
+                // specific type. E.g. if we're verifying List<Any>
+                // and we infer List<Int>.
+
+                let mut item_tys = vec![];
+                for item in items {
+                    let item_ty = self.verify_expr(
+                        expected_elem_ty,
+                        &item.expr,
+                        type_bindings,
+                        expected_return_ty,
+                    );
+                    item_tys.push((item_ty, item.expr.position.clone()));
+                }
+
+                let elem_ty = unify_all(&item_tys).unwrap_or(Type::error("Could not unify list"));
+                Type::list(elem_ty)
+            }
             (Expression_::Match(scrutinee, cases), _) => self.verify_match(
                 expected_ty,
                 type_bindings,

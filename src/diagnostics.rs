@@ -378,6 +378,14 @@ fn format_margin_num(num: &str, margin_width: usize, use_color: bool) -> String 
     }
 }
 
+fn looks_like_type_name(text: &str) -> bool {
+    let mut chars = text.chars();
+    match chars.next() {
+        Some(first_char) => first_char.is_uppercase() && chars.any(|c| c.is_lowercase()),
+        None => false,
+    }
+}
+
 fn format_src_line(line: &str, use_color: bool) -> String {
     if !use_color {
         return line.to_owned();
@@ -400,6 +408,8 @@ fn format_src_line(line: &str, use_color: bool) -> String {
 
         if RESERVED_WORDS.contains(&token.text) {
             s.push_str(&token.text.bold().to_string());
+        } else if looks_like_type_name(token.text) {
+            s.push_str(&token.text.bright_purple().to_string());
         } else {
             s.push_str(token.text);
         }

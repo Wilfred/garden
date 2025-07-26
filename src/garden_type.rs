@@ -22,9 +22,8 @@ pub(crate) type TypeVarEnv = FxHashMap<TypeName, Option<Type>>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Type {
-    /// The top type, which includes all values. This is rendered as
-    /// `_` when printing types.
-    Top,
+    /// The top type, which includes all values.
+    Any,
     /// Tuples, e.g. `(Int, String)`.
     Tuple(Vec<Type>),
     /// Function type, e.g. `Fun<(Int, String), Unit>`
@@ -271,7 +270,7 @@ impl Type {
         for param in &fun_info.params.params {
             let type_ = match &param.hint {
                 Some(hint) => Self::from_hint(hint, global_tys, &type_bindings)?,
-                None => Type::Top,
+                None => Type::Any,
             };
             param_types.push(type_);
         }
@@ -284,8 +283,8 @@ impl Type {
                 } else {
                     // We don't necessarily know what values are being
                     // passed in to this closure, so conservatively
-                    // use Top.
-                    Type::Top
+                    // use Any.
+                    Type::Any
                 }
             }
         };
@@ -302,7 +301,7 @@ impl Type {
     /// None.
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
-            Type::Top | Type::Error(_) => None,
+            Type::Any | Type::Error(_) => None,
             Type::Tuple(_) => None,
             Type::Fun { .. } => Some(TypeName {
                 text: "Fun".to_owned(),
@@ -320,7 +319,7 @@ impl Type {
     /// user-denotable, return None.
     pub(crate) fn def_sym_pos(&self, env: &Env) -> Option<Position> {
         match self {
-            Type::Top | Type::Error(_) => None,
+            Type::Any | Type::Error(_) => None,
             Type::Tuple(_) => None,
             Type::Fun { .. } => None,
             Type::UserDefined { name, .. } => {
@@ -376,7 +375,7 @@ impl Display for Type {
                 let formatted_args = args.iter().map(|a| format!("{a}")).join(", ");
                 write!(f, "Fun<({formatted_args}), {return_}>")
             }
-            Type::Top => write!(f, "Top"),
+            Type::Any => write!(f, "Any"),
             Type::TypeParameter(name) => write!(f, "{}", name.text),
             Type::Error(reason) => write!(f, "__ERROR({reason})"),
         }
@@ -387,7 +386,7 @@ impl Display for Type {
 /// notation?
 pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
     match (lhs, rhs) {
-        (_, Type::Top) => true,
+        (_, Type::Any) => true,
         (_, _) if lhs.is_no_value() => true,
         (Type::Error(_), _) => {
             // Error is equivalent to NoValue: it's a bottom type that
@@ -476,7 +475,7 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
             true
         }
         (Type::UserDefined { .. }, _) => false,
-        (Type::Top, _) => {
+        (Type::Any, _) => {
             // Top is only a subtype of itself, but we've already
             // matched the case where RHS is Top.
             false

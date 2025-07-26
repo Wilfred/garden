@@ -532,7 +532,7 @@ fn load_toplevel_items_(
                 })
             } else {
                 let runtime_type =
-                    enum_value_runtime_type(env, &enum_info.name_sym.name, variant_idx, &Type::Top)
+                    enum_value_runtime_type(env, &enum_info.name_sym.name, variant_idx, &Type::Any)
                         .unwrap_or(Type::no_value());
 
                 Value::new(Value_::EnumVariant {
@@ -3286,7 +3286,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::default();
             for type_param in &fun_info.type_params {
                 // TODO: compute the value of these type params properly.
-                type_bindings.insert(type_param.name.clone(), Some(Type::Top));
+                type_bindings.insert(type_param.name.clone(), Some(Type::Any));
             }
 
             bindings.push(BlockBindings {
@@ -3349,7 +3349,7 @@ fn eval_call(
             let mut type_bindings = TypeVarEnv::default();
             for param_sym in &fi.type_params {
                 // TODO: calculate the value of type parameters properly.
-                type_bindings.insert(param_sym.name.clone(), Some(Type::Top));
+                type_bindings.insert(param_sym.name.clone(), Some(Type::Any));
             }
 
             check_param_types(
@@ -3785,7 +3785,7 @@ fn eval_method_call(
     let mut type_bindings = TypeVarEnv::default();
     for type_param in &fun_info.type_params {
         // TODO: compute the value of these type params properly.
-        type_bindings.insert(type_param.name.clone(), Some(Type::Top));
+        type_bindings.insert(type_param.name.clone(), Some(Type::Any));
     }
 
     let return_hint = fun_info.return_hint.clone();

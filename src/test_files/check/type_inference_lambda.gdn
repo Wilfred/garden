@@ -9,7 +9,7 @@
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected `Int`, but got `Top`.
+// Error: Expected `Int`, but got `Any`.
 // ---| src/test_files/check/type_inference_lambda.gdn:6:26
 //   4|   // the value it is used with, so we cannot tell that x is an integer
 //   5|   // when checking addition.

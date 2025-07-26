@@ -285,7 +285,7 @@ impl TypeCheckVisitor<'_> {
                     self.save_hint_ty_id(hint, &hint_ty);
                     hint_ty
                 }
-                None => Type::Top,
+                None => Type::Any,
             };
 
             self.set_binding(&param.symbol, param_ty);
@@ -299,7 +299,7 @@ impl TypeCheckVisitor<'_> {
 
                 hint_ty
             }
-            None => Type::Top,
+            None => Type::Any,
         };
 
         self.verify_block(&return_ty, &fun_info.body, &type_bindings, &return_ty);
@@ -348,11 +348,11 @@ impl TypeCheckVisitor<'_> {
 
     fn visit_block(&mut self, block: &Block) {
         // infer_block recurses, so don't recurse in the visitor.
-        self.infer_block(block, &FxHashMap::default(), &Type::Top);
+        self.infer_block(block, &FxHashMap::default(), &Type::Any);
     }
 
     fn visit_toplevel_expr(&mut self, toplevel_expr: &ToplevelExpression) {
-        self.infer_expr(&toplevel_expr.0, &FxHashMap::default(), &Type::Top);
+        self.infer_expr(&toplevel_expr.0, &FxHashMap::default(), &Type::Any);
     }
 
     /// Update `id_to_pos` for this occurrence of an enum variant,
@@ -683,7 +683,7 @@ impl TypeCheckVisitor<'_> {
             };
 
             match expected_ty {
-                Type::Top => {
+                Type::Any => {
                     case_tys.push((
                         self.infer_block(case_expr, type_bindings, expected_return_ty),
                         case_value_pos,
@@ -756,7 +756,7 @@ impl TypeCheckVisitor<'_> {
         }
 
         let ty = match expected_ty {
-            Type::Top => match unify_all(&case_tys) {
+            Type::Any => match unify_all(&case_tys) {
                 Ok(ty) => ty,
                 Err(position) => {
                     self.diagnostics.push(Diagnostic {
@@ -792,7 +792,7 @@ impl TypeCheckVisitor<'_> {
     ) -> Type {
         match expr_ {
             Expression_::Match(scrutinee, cases) => self.verify_match(
-                &Type::Top,
+                &Type::Any,
                 type_bindings,
                 expected_return_ty,
                 expr_id,
@@ -857,7 +857,7 @@ impl TypeCheckVisitor<'_> {
             }
             Expression_::ForIn(dest, expr, body) => {
                 let expr_ty = self.verify_expr(
-                    &Type::list(Type::Top),
+                    &Type::list(Type::Any),
                     expr,
                     type_bindings,
                     expected_return_ty,
@@ -987,7 +987,7 @@ impl TypeCheckVisitor<'_> {
                             )]),
                             position,
                         });
-                        Type::Top
+                        Type::Any
                     }
                 };
 
@@ -1345,7 +1345,7 @@ impl TypeCheckVisitor<'_> {
                             .map(|sym_with_hint| match &sym_with_hint.hint {
                                 Some(hint) => Type::from_hint(hint, &self.env.types, &ty_var_env)
                                     .unwrap_or_err_ty(),
-                                None => Type::Top,
+                                None => Type::Any,
                             })
                             .collect();
 
@@ -1612,7 +1612,7 @@ impl TypeCheckVisitor<'_> {
                             position: recv.position.clone(),
                         });
 
-                        Type::Top
+                        Type::Any
                     }
                 }
 
@@ -1627,7 +1627,7 @@ impl TypeCheckVisitor<'_> {
                         Some(hint) => {
                             Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty()
                         }
-                        None => Type::Top,
+                        None => Type::Any,
                     })
                     .collect::<Vec<_>>();
 
@@ -1635,7 +1635,7 @@ impl TypeCheckVisitor<'_> {
                     Some(hint) => {
                         Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or_err_ty()
                     }
-                    None => Type::Top,
+                    None => Type::Any,
                 };
 
                 let expected_ty = Type::Fun {
@@ -1838,7 +1838,7 @@ impl TypeCheckVisitor<'_> {
                             self.save_hint_ty_id(hint, &hint_ty);
                             hint_ty
                         }
-                        None => expected_params.get(i).cloned().unwrap_or(Type::Top),
+                        None => expected_params.get(i).cloned().unwrap_or(Type::Any),
                     };
 
                     self.set_binding(&param.symbol, param_ty.clone());
@@ -1869,7 +1869,7 @@ impl TypeCheckVisitor<'_> {
                         self.verify_block(&hint_ty, &fun_info.body, type_bindings, &hint_ty);
                         hint_ty
                     }
-                    None => self.infer_block(&fun_info.body, type_bindings, &Type::Top),
+                    None => self.infer_block(&fun_info.body, type_bindings, &Type::Any),
                 };
 
                 self.bindings.exit_block();
@@ -2058,7 +2058,7 @@ fn subst_type_vars_in_fun_info_return_ty(
                 Type::from_hint(return_hint, &env.types, ty_var_env).unwrap_or_err_ty()
             }
         }
-        None => Type::Top,
+        None => Type::Any,
     };
 
     (diagnostics, ret_ty)
@@ -2066,7 +2066,7 @@ fn subst_type_vars_in_fun_info_return_ty(
 
 fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
-        Type::Error(_) | Type::Top => ty.clone(),
+        Type::Error(_) | Type::Any => ty.clone(),
         Type::Tuple(elem_tys) => Type::Tuple(
             elem_tys
                 .iter()
@@ -2283,8 +2283,8 @@ fn unify_all(tys: &[(Type, Position)]) -> Result<Type, Position> {
 /// (Int, String) -> return None
 /// ```
 fn unify(ty_1: &Type, ty_2: &Type) -> Option<Type> {
-    if matches!(ty_1, Type::Top) || matches!(ty_2, Type::Top) {
-        return Some(Type::Top);
+    if matches!(ty_1, Type::Any) || matches!(ty_2, Type::Any) {
+        return Some(Type::Any);
     }
 
     if ty_1.is_no_value() || ty_1.is_error() {

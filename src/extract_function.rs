@@ -95,7 +95,7 @@ fn extracted_fun_src(
     params: &[(SymbolName, Option<Type>)],
 ) -> String {
     let return_signature = match return_ty {
-        Some(Type::Any | Type::Error(_)) | None => "".to_owned(),
+        Some(Type::Any | Type::Error { internal_reason: _ }) | None => "".to_owned(),
         Some(ty) => format!(": {ty}"),
     };
 

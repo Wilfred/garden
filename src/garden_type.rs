@@ -46,12 +46,13 @@ pub(crate) enum Type {
     /// An unsolved type parameter, e.g. `T` in `List<T>`.
     #[allow(clippy::enum_variant_names)]
     TypeParameter(TypeName),
-    /// Represents a type checker error. The string is the internal
-    /// reason we had an error, intended for debugging the type
-    /// checker.
-    ///
-    /// This is rendered as `_` when printing types.
-    Error(String),
+    /// Represents a type checker error. This is rendered as `_` when
+    /// printing types.
+    Error {
+        /// The internal reason we had an error, intended for
+        /// debugging the type checker.
+        internal_reason: String,
+    },
 }
 
 impl Type {
@@ -63,7 +64,7 @@ impl Type {
     }
 
     pub(crate) fn is_error(&self) -> bool {
-        matches!(self, Type::Error(_))
+        matches!(self, Type::Error { .. })
     }
 
     pub(crate) fn is_unit(&self) -> bool {
@@ -75,7 +76,9 @@ impl Type {
     }
 
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
-        Type::Error(msg.as_ref().to_owned())
+        Type::Error {
+            internal_reason: msg.as_ref().to_owned(),
+        }
     }
 
     pub(crate) fn no_value() -> Self {
@@ -197,7 +200,7 @@ impl Type {
                         [input_ty, return_] => {
                             let params = match input_ty {
                                 Type::Tuple(items) => items.clone(),
-                                Type::Error(_) => vec![],
+                                Type::Error { .. } => vec![],
                                 _ => {
                                     return Err("The first argument to Fun<> must be a tuple, e.g. `Fun<(Int, Int), String>`.".to_owned());
                                 }
@@ -301,7 +304,7 @@ impl Type {
     /// None.
     pub(crate) fn type_name(&self) -> Option<TypeName> {
         match self {
-            Type::Any | Type::Error(_) => None,
+            Type::Any | Type::Error { .. } => None,
             Type::Tuple(_) => None,
             Type::Fun { .. } => Some(TypeName {
                 text: "Fun".to_owned(),
@@ -319,7 +322,7 @@ impl Type {
     /// user-denotable, return None.
     pub(crate) fn def_sym_pos(&self, env: &Env) -> Option<Position> {
         match self {
-            Type::Any | Type::Error(_) => None,
+            Type::Any | Type::Error { internal_reason: _ } => None,
             Type::Tuple(_) => None,
             Type::Fun { .. } => None,
             Type::UserDefined { name, .. } => {
@@ -377,7 +380,9 @@ impl Display for Type {
             }
             Type::Any => write!(f, "Any"),
             Type::TypeParameter(name) => write!(f, "{}", name.text),
-            Type::Error(reason) => write!(f, "__ERROR({reason})"),
+            Type::Error {
+                internal_reason: reason,
+            } => write!(f, "__ERROR({reason})"),
         }
     }
 }
@@ -388,12 +393,12 @@ pub(crate) fn is_subtype(lhs: &Type, rhs: &Type) -> bool {
     match (lhs, rhs) {
         (_, Type::Any) => true,
         (_, _) if lhs.is_no_value() => true,
-        (Type::Error(_), _) => {
+        (Type::Error { .. }, _) => {
             // Error is equivalent to NoValue: it's a bottom type that
             // is a subtype of everything.
             true
         }
-        (_, Type::Error(_)) => {
+        (_, Type::Error { .. }) => {
             // Also allow Error to be a supertype of everything,
             // because we've already emitted a type error elsewhere
             // and we don't want duplicate errors.

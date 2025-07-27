@@ -1052,7 +1052,9 @@ impl TypeCheckVisitor<'_> {
                         args: vec![],
                     }
                 } else {
-                    Type::Error("Unbound struct name".to_owned())
+                    Type::Error {
+                        internal_reason: "Unbound struct name".to_owned(),
+                    }
                 }
             }
             Expression_::BinaryOperator(lhs, op, rhs) => match op {
@@ -1153,7 +1155,9 @@ impl TypeCheckVisitor<'_> {
                         Type::from_value(&value)
                     }
                     None => {
-                        let ty = Type::Error("Unbound variable".to_owned());
+                        let ty = Type::Error {
+                            internal_reason: "Unbound variable".to_owned(),
+                        };
                         // Treat this variable as locally bound in the
                         // rest of the scope, to prevent cascading
                         // errors.
@@ -1241,7 +1245,7 @@ impl TypeCheckVisitor<'_> {
 
                         subst_ty_vars(&return_, &ty_var_env)
                     }
-                    Type::Error(_) => {
+                    Type::Error { internal_reason: _ } => {
                         for arg in &paren_args.arguments {
                             // We still want to check arguments as far as possible.
                             self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
@@ -1268,13 +1272,15 @@ impl TypeCheckVisitor<'_> {
                             position: recv.position.clone(),
                         });
 
-                        Type::Error("Calling something that isn't a function".to_owned())
+                        Type::Error {
+                            internal_reason: "Calling something that isn't a function".to_owned(),
+                        }
                     }
                 }
             }
             Expression_::MethodCall(recv, sym, paren_args) => {
                 let receiver_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
-                if matches!(receiver_ty, Type::Error(_)) {
+                if matches!(receiver_ty, Type::Error { .. }) {
                     for arg in &paren_args.arguments {
                         self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                     }
@@ -1750,7 +1756,7 @@ impl TypeCheckVisitor<'_> {
                         self.set_binding(symbol, ty);
                     }
                 }
-                Type::Error(_) => {
+                Type::Error { .. } => {
                     for symbol in symbols {
                         self.set_binding(symbol, ty.clone());
                     }
@@ -2094,7 +2100,7 @@ fn subst_type_vars_in_fun_info_return_ty(
 
 fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
-        Type::Error(_) | Type::Any => ty.clone(),
+        Type::Error { internal_reason: _ } | Type::Any => ty.clone(),
         Type::Tuple(elem_tys) => Type::Tuple(
             elem_tys
                 .iter()

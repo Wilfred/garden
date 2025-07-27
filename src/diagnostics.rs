@@ -386,14 +386,7 @@ fn looks_like_type_name(text: &str) -> bool {
     }
 }
 
-fn format_src_line(line: &str, use_color: bool) -> String {
-    if !use_color {
-        return line.to_owned();
-    }
-
-    // TODO: this naively assumes that there are no multiline string literals
-    // that start on the previous line.
-
+pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
     let vfs_path = VfsPathBuf {
         path: Rc::new(PathBuf::from("irrelevant")),
         id: VfsId(0),
@@ -409,9 +402,17 @@ fn format_src_line(line: &str, use_color: bool) -> String {
         if RESERVED_WORDS.contains(&token.text) {
             s.push_str(&token.text.bold().to_string());
         } else if looks_like_type_name(token.text) {
-            s.push_str(&token.text.bright_purple().to_string());
+            s.push_str(&if make_bold {
+                token.text.bright_purple().bold().to_string()
+            } else {
+                token.text.bright_purple().to_string()
+            });
         } else {
-            s.push_str(token.text);
+            s.push_str(&if make_bold {
+                token.text.bold().to_string()
+            } else {
+                token.text.to_owned()
+            });
         }
 
         offset = token.position.start_offset + token.text.len();
@@ -419,7 +420,22 @@ fn format_src_line(line: &str, use_color: bool) -> String {
 
     // Anything after the last token is whitespace or a comment.
     let after_text = &line[offset..];
-    s.push_str(&after_text.dimmed().to_string());
+    if make_bold {
+        s.push_str(&after_text.bold().to_string());
+    } else {
+        s.push_str(&after_text.dimmed().to_string());
+    }
 
     s
+}
+
+fn format_src_line(line: &str, use_color: bool) -> String {
+    if !use_color {
+        return line.to_owned();
+    }
+
+    // TODO: this naively assumes that there are no multiline string literals
+    // that start on the previous line.
+
+    with_syntax_highlighting(line, false)
 }

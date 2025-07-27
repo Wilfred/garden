@@ -1,4 +1,4 @@
-use owo_colors::OwoColorize as _;
+use crate::diagnostics::with_syntax_highlighting;
 
 #[derive(Debug, Clone)]
 pub(crate) enum MessagePart {
@@ -45,7 +45,7 @@ impl ErrorMessage {
         for message_part in &self.0 {
             match message_part {
                 MessagePart::Text(t) => s.push_str(t),
-                MessagePart::Code(c) => s.push_str(&c.bold().to_string()),
+                MessagePart::Code(c) => s.push_str(&with_syntax_highlighting(c, true)),
             }
         }
 

@@ -1861,39 +1861,40 @@ impl TypeCheckVisitor<'_> {
                     param_tys.push(param_ty);
                 }
 
-                let return_ty = match &fun_info.return_hint {
-                    Some(hint) => {
-                        let hint_ty = Type::from_hint(hint, &self.env.types, type_bindings)
-                            .unwrap_or_err_ty();
-                        self.save_hint_ty_id(hint, &hint_ty);
+                let block_ty = self.verify_block(
+                    expected_return_ty,
+                    &fun_info.body,
+                    type_bindings,
+                    expected_return_ty,
+                );
 
-                        if !is_subtype(&hint_ty, expected_return_ty) {
-                            self.diagnostics.push(Diagnostic {
-                                notes: vec![],
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgtext!("Expected a function with return type "),
-                                    msgcode!("{}", expected_return_ty),
-                                    msgtext!(" but got "),
-                                    msgcode!("{}", hint_ty),
-                                    msgtext!("."),
-                                ]),
-                                position: pos.clone(),
-                            });
-                        }
+                if let Some(hint) = &fun_info.return_hint {
+                    let hint_ty =
+                        Type::from_hint(hint, &self.env.types, type_bindings).unwrap_or(Type::Any);
+                    self.save_hint_ty_id(hint, &hint_ty);
 
-                        self.verify_block(&hint_ty, &fun_info.body, type_bindings, &hint_ty);
-                        hint_ty
+                    if !is_subtype(&block_ty, &hint_ty) {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![],
+                            severity: Severity::Error,
+                            message: ErrorMessage(vec![
+                                msgtext!("Expected a function with return type "),
+                                msgcode!("{}", hint_ty),
+                                msgtext!(" but got "),
+                                msgcode!("{}", block_ty),
+                                msgtext!("."),
+                            ]),
+                            position: pos.clone(),
+                        });
                     }
-                    None => self.infer_block(&fun_info.body, type_bindings, &Type::Any),
-                };
+                }
 
                 self.bindings.exit_block();
 
                 Type::Fun {
                     type_params: vec![],
                     params: param_tys,
-                    return_: Box::new(return_ty),
+                    return_: Box::new(block_ty),
                     name_sym: None,
                 }
             }

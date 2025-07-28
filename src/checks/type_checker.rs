@@ -1833,7 +1833,7 @@ impl TypeCheckVisitor<'_> {
         type_bindings: &TypeVarEnv,
         expected_return_ty: &Type,
     ) -> Type {
-        let ty = match (expr_, expected_ty) {
+        let mut ty = match (expr_, expected_ty) {
             (
                 Expression_::FunLiteral(fun_info),
                 Type::Fun {
@@ -1973,6 +1973,11 @@ impl TypeCheckVisitor<'_> {
                 message: format_type_mismatch(expected_ty, &ty),
                 position: pos.clone(),
             });
+
+            ty = Type::Error {
+                internal_reason: "Type mismatch".to_owned(),
+                inferred_type: Some(Box::new(ty)),
+            };
         }
 
         ty

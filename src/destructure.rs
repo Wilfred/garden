@@ -43,10 +43,18 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
 
-    let Some(ty) = summary.id_to_ty.get(expr_id) else {
+    let Some(mut ty) = summary.id_to_ty.get(expr_id) else {
         eprintln!("Could not find the type of the expression at this position.");
         std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
     };
+
+    if let Type::Error {
+        inferred_type: Some(inferred_type),
+        ..
+    } = ty
+    {
+        ty = inferred_type;
+    }
 
     let Some(variants) = enum_variants(&env, ty) else {
         eprintln!(

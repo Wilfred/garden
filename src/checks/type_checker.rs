@@ -1221,7 +1221,7 @@ impl TypeCheckVisitor<'_> {
 
                         let params = params
                             .iter()
-                            .map(|p| subst_ty_vars(p, &ty_var_env))
+                            .map(|p| substitute_ty_vars(p, &ty_var_env))
                             .collect::<Vec<_>>();
 
                         if params.len() == arg_tys.len() {
@@ -1243,7 +1243,7 @@ impl TypeCheckVisitor<'_> {
                             self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
                         }
 
-                        subst_ty_vars(&return_, &ty_var_env)
+                        substitute_ty_vars(&return_, &ty_var_env)
                     }
                     Type::Error { internal_reason: _ } => {
                         for arg in &paren_args.arguments {
@@ -1377,7 +1377,7 @@ impl TypeCheckVisitor<'_> {
 
                         let params = param_decl_tys
                             .iter()
-                            .map(|p| subst_ty_vars(p, &ty_var_env))
+                            .map(|p| substitute_ty_vars(p, &ty_var_env))
                             .collect::<Vec<_>>();
 
                         for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
@@ -2098,13 +2098,18 @@ fn subst_type_vars_in_fun_info_return_ty(
     (diagnostics, ret_ty)
 }
 
-fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
+/// Substitute type variables in `ty` with the bindings in
+/// `ty_var_env`.
+///
+/// For example, if we originally saw `List<T>` but we know in this
+/// context the value of `T` is `Int`, we want `List<Int>`.
+fn substitute_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
         Type::Error { internal_reason: _ } | Type::Any => ty.clone(),
         Type::Tuple(elem_tys) => Type::Tuple(
             elem_tys
                 .iter()
-                .map(|ty| subst_ty_vars(ty, ty_var_env))
+                .map(|ty| substitute_ty_vars(ty, ty_var_env))
                 .collect(),
         ),
         Type::Fun {
@@ -2115,9 +2120,9 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
         } => {
             let params = params
                 .iter()
-                .map(|p| subst_ty_vars(p, ty_var_env))
+                .map(|p| substitute_ty_vars(p, ty_var_env))
                 .collect();
-            let return_ = subst_ty_vars(return_, ty_var_env);
+            let return_ = substitute_ty_vars(return_, ty_var_env);
 
             Type::Fun {
                 type_params: type_params.clone(),
@@ -2131,7 +2136,7 @@ fn subst_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
             name: name.clone(),
             args: args
                 .iter()
-                .map(|arg| subst_ty_vars(arg, ty_var_env))
+                .map(|arg| substitute_ty_vars(arg, ty_var_env))
                 .collect(),
         },
         Type::TypeParameter(name) => {

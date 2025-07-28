@@ -52,6 +52,15 @@ pub(crate) enum Type {
         /// The internal reason we had an error, intended for
         /// debugging the type checker.
         internal_reason: String,
+        /// If we inferred a type but it didn't match the surrounding
+        /// context, we emit a type error and mark the inferred type
+        /// as Error. This is important for avoiding cascading type
+        /// errors.
+        ///
+        /// However, for IDE features like hover and
+        /// extract function, we want know the originally inferred
+        /// type.
+        inferred_type: Option<Box<Type>>,
     },
 }
 
@@ -78,6 +87,7 @@ impl Type {
     pub(crate) fn error<T: AsRef<str>>(msg: T) -> Self {
         Type::Error {
             internal_reason: msg.as_ref().to_owned(),
+            inferred_type: None,
         }
     }
 
@@ -322,7 +332,11 @@ impl Type {
     /// user-denotable, return None.
     pub(crate) fn def_sym_pos(&self, env: &Env) -> Option<Position> {
         match self {
-            Type::Any | Type::Error { internal_reason: _ } => None,
+            Type::Any => None,
+            Type::Error { inferred_type, .. } => match inferred_type {
+                Some(ty) => ty.def_sym_pos(env),
+                None => None,
+            },
             Type::Tuple(_) => None,
             Type::Fun { .. } => None,
             Type::UserDefined { name, .. } => {
@@ -382,7 +396,11 @@ impl Display for Type {
             Type::TypeParameter(name) => write!(f, "{}", name.text),
             Type::Error {
                 internal_reason: reason,
-            } => write!(f, "__ERROR({reason})"),
+                inferred_type,
+            } => match inferred_type {
+                Some(inferred_type) => write!(f, "__ERROR({inferred_type}, {reason})"),
+                None => write!(f, "__ERROR({reason})"),
+            },
         }
     }
 }

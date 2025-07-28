@@ -1054,6 +1054,7 @@ impl TypeCheckVisitor<'_> {
                 } else {
                     Type::Error {
                         internal_reason: "Unbound struct name".to_owned(),
+                        inferred_type: None,
                     }
                 }
             }
@@ -1157,6 +1158,7 @@ impl TypeCheckVisitor<'_> {
                     None => {
                         let ty = Type::Error {
                             internal_reason: "Unbound variable".to_owned(),
+                            inferred_type: None,
                         };
                         // Treat this variable as locally bound in the
                         // rest of the scope, to prevent cascading
@@ -1245,15 +1247,22 @@ impl TypeCheckVisitor<'_> {
 
                         substitute_ty_vars(&return_, &ty_var_env)
                     }
-                    Type::Error { internal_reason: _ } => {
+                    Type::Error {
+                        internal_reason,
+                        inferred_type: _,
+                    } => {
                         for arg in &paren_args.arguments {
                             // We still want to check arguments as far as possible.
                             self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
                         }
 
-                        // If the receiver is an error, use that error
-                        // type for the return type of this call.
-                        recv_ty.clone()
+                        // If the receiver is an error, propagate the
+                        // reason to aid debugging, but not the
+                        // inferred type (which isn't relevant).
+                        Type::Error {
+                            internal_reason,
+                            inferred_type: None,
+                        }
                     }
                     _ => {
                         for arg in &paren_args.arguments {
@@ -1274,6 +1283,7 @@ impl TypeCheckVisitor<'_> {
 
                         Type::Error {
                             internal_reason: "Calling something that isn't a function".to_owned(),
+                            inferred_type: None,
                         }
                     }
                 }
@@ -2105,7 +2115,7 @@ fn subst_type_vars_in_fun_info_return_ty(
 /// context the value of `T` is `Int`, we want `List<Int>`.
 fn substitute_ty_vars(ty: &Type, ty_var_env: &TypeVarEnv) -> Type {
     match ty {
-        Type::Error { internal_reason: _ } | Type::Any => ty.clone(),
+        Type::Error { .. } | Type::Any => ty.clone(),
         Type::Tuple(elem_tys) => Type::Tuple(
             elem_tys
                 .iter()

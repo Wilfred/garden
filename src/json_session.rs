@@ -170,7 +170,7 @@ fn handle_load_request(
         )
     } else {
         format!(
-            "Loaded {} definitions into {}.",
+            "Loaded {} definitions in {}.",
             new_syms.len(),
             relative_path.display()
         )

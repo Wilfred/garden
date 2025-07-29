@@ -10,7 +10,7 @@ __BUILTIN_TYPES
 
 ## Prelude
 
-These functions are available everywhere.
+These functions are available without importing anything.
 
 __PRELUDE_FUNS
 
@@ -18,21 +18,6 @@ __PRELUDE_FUNS
 
 __FS_FUNS
 
-Example usage:
-
-```
-import "__fs.gdn" as fs
-fs::list_directory(Path{ p: "/" })
-```
-
 ## Garden Reflection Namespace `__garden.gdn`
 
 __GARDEN_FUNS
-
-Example usage:
-
-```
-import "__garden.gdn" as garden
-garden::check_snippet("let x = 1")
-```
-

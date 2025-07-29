@@ -31,7 +31,7 @@ keyboard.
 
 However, I want keywords to be pronouncable, hence `fun` instead of
 `fn`. This is based on the Strange Loop talk [How to teach programming (and other things)?](https://youtu.be/g1ib43q3uXQ?t=2165)
-by Felienne Hermans (creator of Hedy). Felienne talks about the
+by Felienne Hermans (creator of [Hedy](https://hedy.org/)). Felienne talks about the
 advantages of reading code aloud when teaching, and I want to support
 that. I say code aloud when discussing with other programmers too.
 

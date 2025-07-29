@@ -273,23 +273,38 @@ fun split_inline_parts(src: String): List<String> {
         let before_bracket = s.substring(0, idx)
         let after_bracket = s.substring(idx, s.len())
 
-        let terminator = if after_bracket.starts_with("<") { ">" } else { ")" }
-
-        match split_on_terminator(after_bracket, terminator) {
-          Some((part, after_part)) => {
-            parts = parts.append(before_bracket)
-            parts = parts.append(part)
-            s = after_part
+        if after_bracket.starts_with("<") {
+          // This is an HTML tag.
+          match split_on_terminator(after_bracket, ">") {
+            Some((part, after_part)) => {
+              parts = parts.append(before_bracket)
+              parts = parts.append(part)
+              s = after_part
+            }
+            None => {
+              parts = parts.append(s)
+              break
+            }
           }
-          None => {
-            // We saw malformed syntax, e.g. an unfinished link `[foo](bar`.
-            // Treat it as simple text.
-            parts = parts.append(s)
-            break
+        } else {
+          // This is a link or image.
+          match split_markdown_link(after_bracket) {
+            Some((part, after_part)) => {
+              parts = parts.append(before_bracket)
+              parts = parts.append(part)
+              s = after_part
+            }
+            None => {
+              // We saw malformed syntax, e.g. an unfinished link `[foo](bar`.
+              // Treat it as simple text.
+              parts = parts.append(s)
+              break
+            }
           }
         }
       }
       None => {
+        // No more delimiters in `s`.
         parts = parts.append(s)
         break
       }
@@ -310,8 +325,45 @@ fun split_on_terminator(s: String, terminator: String): Option<(String, String)>
   }
 }
 
+// Split a markdown link or image from the start of `s`.
+//
+// ```
+// split_markdown_link("[link text](url) rest") // Some(("[link text](url)", " rest"))
+// ```
+fun split_markdown_link(s: String): Option<(String, String)> {
+  if s.starts_with("[").not() && s.starts_with("![").not() {
+    return None
+  }
+
+  // Find the closing ] of the link text
+  let close_bracket_idx = match s.index_of("](") {
+    Some(i) => i
+    None => return None
+  }
+
+  // Find the matching ) for the URL part
+  match s.substring(close_bracket_idx, s.len()).index_of(")") {
+    Some(url_close_idx) => {
+      let link_end = close_bracket_idx + url_close_idx + 1
+
+      let link_part = s.substring(0, link_end)
+      let remaining = s.substring(link_end, s.len())
+      Some((link_part, remaining))
+    }
+    None => None
+  }
+}
+
 test split_on_terminator {
   assert(split_on_terminator("abc", "b") == Some(("ab", "c")))
+}
+
+test split_markdown_link {
+  assert(split_markdown_link("[foo](bar.html)") == Some(("[foo](bar.html)", "")))
+  assert(split_markdown_link("[foo (bar)](baz.html)") == Some(("[foo (bar)](baz.html)", "")))
+  assert(split_markdown_link("[foo](bar.html) remaining") == Some(("[foo](bar.html)", " remaining")))
+  assert(split_markdown_link("not a link") == None)
+  assert(split_markdown_link("[unclosed") == None)
 }
 
 // If `s` contains any of the items in `chars`, return the index of
@@ -467,6 +519,10 @@ test render_malformed_link {
 
 test render_backtick_in_link {
   assert(render_markdown("[`foo` bar](#)") == "<p><a href=\"#\"><code>foo</code> bar</a></p>")
+}
+
+test render_link_with_parentheses {
+  assert(render_markdown("[foo (bar)](baz.html)") == "<p><a href=\"baz.html\">foo (bar)</a></p>")
 }
 
 test render_triple_backtick {

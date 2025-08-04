@@ -26,7 +26,8 @@
     </header>
 
     <div class="container"><h1>Choosing a Syntax</h1>
-<p>To kick things off, I want to talk about the basic syntax of Garden.</p>
+<p>To kick things off, I want to talk about the basic syntax of
+Garden. Garden has a deliberately conventional syntax.</p>
 <pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> fib(i: <a href="./type:Int.html"><span class="type">Int</span></a>): <a href="./type:Int.html"><span class="type">Int</span></a> {
   <a href="./keyword:if.html"><span class="keyword">if</span></a> i &lt; 2 {
     <a href="./keyword:return.html"><span class="keyword">return</span></a> 1
@@ -36,23 +37,25 @@
 }</code></pre>
 <p>I'm trying to avoid spending my <a href="https://steveklabnik.com/writing/the-language-strangeness-budget/">strangeness
 budget</a>
-on syntax. Garden has a deliberately conventional syntax.</p>
+on syntax.</p>
 <h2>Keywords</h2>
-<p>I want to keep Garden keywords short. This follows <a href="https://buttondown.com/hillelwayne/archive/stroustrups-rule/">Stroustrup's
+<p>I want keywords to be short. This follows <a href="https://buttondown.com/hillelwayne/archive/stroustrups-rule/">Stroustrup's
 Rule</a>,
 which favours short syntax for common operations. There's little
 benefit for <code>function</code> in JavaScript, it's just more typing on the
 keyboard.</p>
 <p>However, I want keywords to be pronouncable, hence <code>fun</code> instead of
-<code>fn</code>. This is based on the Strange Loop talk <a href="https://youtu.be/g1ib43q3uXQ?t=2165">How to teach programming (and other things)?</a>
-by Felienne Hermans (creator of <a href="https://hedy.org/">Hedy</a>). Felienne talks about the
-advantages of reading code aloud when teaching, and I want to support
-that. I say code aloud when discussing with other programmers too.</p>
+<code>fn</code>. This is based on the Strange Loop talk <a href="https://youtu.be/g1ib43q3uXQ?t=2165">How to teach programming
+(and other things)?</a> by Felienne
+Hermans (creator of <a href="https://hedy.org/">Hedy</a>). Felienne talks about
+the advantages of reading code aloud when teaching, and I want to
+support that. I say code aloud sometimes too, especially in
+conversations.</p>
 <h2>Lisp and Nesting</h2>
 <p>Lisp is a big influence on Garden, and I enjoy using s-expression
 syntax. Unfortunately it's outside my strangeness budget. I also think
 the uniformity can make some code patterns harder to read, because
-code with vastly different semantics can appear quite similar.</p>
+code with vastly different semantics can appear quite similar visually.</p>
 <p>Parentheses-focused syntax has some interesting advantages though.</p>
 <p>(1) S-expressions make macro systems easier. You have a natural
 correspondence between surface syntax and the data structures that
@@ -68,9 +71,10 @@ isolation too!</p>
   (let ((buf (garden--active-buffer)))
     (garden--send-run (get-buffer-process buf) string path offset end-offset)))</code></pre>
 <p>I can run <code>(garden--active-buffer)</code> on its own, which is super
-convenient. Unfortunately I can't do this for all expressions, there's
+convenient. Unfortunately I can't do this for all expressions. There's
 no easy way to see the output of <code>(get-buffer-process buf)</code> without
-e.g. setting a breakpoint.</p>
+e.g. setting a breakpoint, because <code>buf</code> is bound outside the function
+call.</p>
 <p>I plan to support this 'evaluate this subexpression' feature in
 Garden's syntax.</p>
 <h2>Smalltalk</h2>
@@ -81,8 +85,8 @@ budget.</p>
 <p>(1) Block syntax works like a closure, but it doesn't support early
 return. Instead, <code>^</code> is early return anywhere inside a method
 definition, even inside blocks.</p>
-<p><code>^</code> and blocks are an elegant way to express control flow primitives,
-but if we're doing conventional loops anyway, there's not much benefit
+<p><code>^</code> and blocks are an elegant way to express control flow primitives.
+However, if we're doing conventional loops anyway, there's not much benefit
 to Garden.</p>
 <p>(2) Method arguments are almost always keyword arguments, and often
 resemble sentences. This is often very readable.</p>
@@ -90,6 +94,27 @@ resemble sentences. This is often very readable.</p>
 <p>It's also explicit that the keywords are part of the API. I've worked
 with languages (particularly Python) where you rename a parameter and
 accidentally break your call sites, because they're using keyword
-rather than positional arguments.</p></div>
+rather than positional arguments.</p>
+<p>Garden currently uses positional arguments, as it was conventional and
+simpler to implement. It's also less verbose, especially when
+experimenting in the REPL.</p>
+<h2>Unconventional Bits</h2>
+<p>I'm happy to break convention where it makes sense for Garden's
+design. For example, methods are not defined inside the method type.</p>
+<pre><code><a href="./keyword:struct.html"><span class="keyword">struct</span></a> <span class="type">Person</span> {
+  name: <a href="./type:String.html"><span class="type">String</span></a>,
+}
+
+<a href="./keyword:method.html"><span class="keyword">method</span></a> greet(this: <span class="type">Person</span>): <a href="./type:String.html"><span class="type">String</span></a> {
+  <span class="string">"Hello " </span>^ this.name ^ <span class="string">"!"</span>
+}</code></pre>
+<p>This aligns with Garden's goals of allowing incremental program
+definition. You don't want to re-evaluate the whole type definition
+when you're just changing a single method.</p>
+<h2>Next Steps</h2>
+<p>Every example in the docs is type checked, so you can always read this
+website to see the exact syntax supported.</p>
+<p>I'm relatively happy with the overall syntax, but the real test will
+be in the tooling I can build around it.</p></div>
   </body>
 </html>

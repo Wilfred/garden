@@ -5,7 +5,8 @@ date: 2025-07-13
 
 # Choosing a Syntax
 
-To kick things off, I want to talk about the basic syntax of Garden.
+To kick things off, I want to talk about the basic syntax of
+Garden. Garden has a deliberately conventional syntax.
 
 ```
 fun fib(i: Int): Int {
@@ -19,28 +20,30 @@ fun fib(i: Int): Int {
 
 I'm trying to avoid spending my [strangeness
 budget](https://steveklabnik.com/writing/the-language-strangeness-budget/)
-on syntax. Garden has a deliberately conventional syntax.
+on syntax.
 
 ## Keywords
 
-I want to keep Garden keywords short. This follows [Stroustrup's
+I want keywords to be short. This follows [Stroustrup's
 Rule](https://buttondown.com/hillelwayne/archive/stroustrups-rule/),
 which favours short syntax for common operations. There's little
 benefit for `function` in JavaScript, it's just more typing on the
 keyboard.
 
 However, I want keywords to be pronouncable, hence `fun` instead of
-`fn`. This is based on the Strange Loop talk [How to teach programming (and other things)?](https://youtu.be/g1ib43q3uXQ?t=2165)
-by Felienne Hermans (creator of [Hedy](https://hedy.org/)). Felienne talks about the
-advantages of reading code aloud when teaching, and I want to support
-that. I say code aloud when discussing with other programmers too.
+`fn`. This is based on the Strange Loop talk [How to teach programming
+(and other things)?](https://youtu.be/g1ib43q3uXQ?t=2165) by Felienne
+Hermans (creator of [Hedy](https://hedy.org/)). Felienne talks about
+the advantages of reading code aloud when teaching, and I want to
+support that. I say code aloud sometimes too, especially in
+conversations.
 
 ## Lisp and Nesting
 
 Lisp is a big influence on Garden, and I enjoy using s-expression
 syntax. Unfortunately it's outside my strangeness budget. I also think
 the uniformity can make some code patterns harder to read, because
-code with vastly different semantics can appear quite similar.
+code with vastly different semantics can appear quite similar visually.
 
 Parentheses-focused syntax has some interesting advantages though.
 
@@ -64,9 +67,10 @@ isolation too!
 ```
 
 I can run `(garden--active-buffer)` on its own, which is super
-convenient. Unfortunately I can't do this for all expressions, there's
+convenient. Unfortunately I can't do this for all expressions. There's
 no easy way to see the output of `(get-buffer-process buf)` without
-e.g. setting a breakpoint.
+e.g. setting a breakpoint, because `buf` is bound outside the function
+call.
 
 I plan to support this 'evaluate this subexpression' feature in
 Garden's syntax.
@@ -83,8 +87,8 @@ Smalltalk syntax also has a few interesting advantages.
 return. Instead, `^` is early return anywhere inside a method
 definition, even inside blocks.
 
-`^` and blocks are an elegant way to express control flow primitives,
-but if we're doing conventional loops anyway, there's not much benefit
+`^` and blocks are an elegant way to express control flow primitives.
+However, if we're doing conventional loops anyway, there's not much benefit
 to Garden.
 
 (2) Method arguments are almost always keyword arguments, and often
@@ -98,3 +102,34 @@ It's also explicit that the keywords are part of the API. I've worked
 with languages (particularly Python) where you rename a parameter and
 accidentally break your call sites, because they're using keyword
 rather than positional arguments.
+
+Garden currently uses positional arguments, as it was conventional and
+simpler to implement. It's also less verbose, especially when
+experimenting in the REPL.
+
+## Unconventional Bits
+
+I'm happy to break convention where it makes sense for Garden's
+design. For example, methods are not defined inside the method type.
+
+```
+struct Person {
+  name: String,
+}
+
+method greet(this: Person): String {
+  "Hello " ^ this.name ^ "!"
+}
+```
+
+This aligns with Garden's goals of allowing incremental program
+definition. You don't want to re-evaluate the whole type definition
+when you're just changing a single method.
+
+## Next Steps
+
+Every example in the docs is type checked, so you can always read this
+website to see the exact syntax supported.
+
+I'm relatively happy with the overall syntax, but the real test will
+be in the tooling I can build around it.

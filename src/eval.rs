@@ -3078,6 +3078,67 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::SourceForFun => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let name = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            text: "String".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let ns = env.current_namespace();
+            let ns = ns.borrow();
+
+            let v = match ns.values.get(&SymbolName { text: name.clone() }) {
+                Some(ns_value) => {
+                    let fun_info = match ns_value.as_ref() {
+                        Value_::Fun { fun_info, .. } => Some(fun_info),
+                        Value_::Closure(_, fun_info, _) => Some(fun_info),
+                        Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
+                        _ => None,
+                    };
+
+                    let src =
+                        fun_info.and_then(|fi| env.vfs.pos_src(&fi.pos).map(|s| s.to_owned()));
+
+                    match src {
+                        Some(s) => Value::some(Value::new(Value_::String(s))),
+                        None => Value::none(),
+                    }
+                }
+                None => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltinFunctionKind::SourceForType => {
             check_arity(
                 &SymbolName {

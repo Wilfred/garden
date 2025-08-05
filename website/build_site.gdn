@@ -60,11 +60,6 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
 
 // Render `doc_comment` as HTML.
 fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>): String {
-  let (intro, rest) = match doc_comment.split_once("\n\n") {
-    Some(tup) => tup,
-    None => (doc_comment, ""),
-  }
-
   let src = match src {
     Some(src) => {
       "```\n" ^ (drop_leading_comments(src) ^ "\n```")
@@ -72,11 +67,7 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
     None => ""
   }
 
-  let md_src = "".join([heading, "\n\n" , intro, "\n\n", src])
-  if rest != "" {
-    md_src = md_src ^ ("\n\n" ^ rest)
-  }
-
+  let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src])
   render_markdown(md_src)
 }
 

@@ -549,7 +549,7 @@ impl Value {
                 let ns = ns.borrow();
 
                 let mut names = ns
-                    .external_syms
+                    .exported_syms
                     .iter()
                     .map(|sym| format!("  ::{}", sym.text))
                     .collect::<Vec<_>>();

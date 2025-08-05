@@ -17,8 +17,9 @@ pub(crate) struct NamespaceInfo {
     /// namespaces that are in scope.
     pub(crate) values: FxHashMap<SymbolName, Value>,
 
-    /// Symbols that are visible outside of this namespace.
-    pub(crate) external_syms: FxHashSet<SymbolName>,
+    /// Symbols that are visible outside of this namespace, i.e. they
+    /// are marked `external`.
+    pub(crate) exported_syms: FxHashSet<SymbolName>,
 
     pub(crate) types: FxHashMap<TypeName, TypeDefAndMethods>,
 }

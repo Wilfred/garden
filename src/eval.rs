@@ -344,13 +344,13 @@ fn load_toplevel_items_(
                     Visibility::External(_) => {
                         namespace
                             .borrow_mut()
-                            .external_syms
+                            .exported_syms
                             .insert(name_symbol.name.clone());
                     }
                     Visibility::CurrentFile => {
                         namespace
                             .borrow_mut()
-                            .external_syms
+                            .exported_syms
                             .remove(&name_symbol.name);
                     }
                 }
@@ -579,7 +579,7 @@ fn insert_imported_namespace(
             // Load all the external items into the current namespace.
             let imported_ns = imported_ns.borrow();
             for (sym, value) in &imported_ns.values {
-                if imported_ns.external_syms.contains(sym) {
+                if imported_ns.exported_syms.contains(sym) {
                     current_ns
                         .borrow_mut()
                         .values
@@ -2598,7 +2598,7 @@ fn eval_builtin_call(
 
             let ns = namespace_info.borrow();
             for sym_name in ns.values.keys() {
-                if ns.external_syms.contains(sym_name) {
+                if ns.exported_syms.contains(sym_name) {
                     fun_names.push(sym_name.text.clone());
                 }
             }
@@ -5391,7 +5391,7 @@ fn eval_namespace_access(
 
             match ns.values.get(&symbol.name) {
                 Some(v) => {
-                    if !ns.external_syms.contains(&symbol.name) {
+                    if !ns.exported_syms.contains(&symbol.name) {
                         return Err((
                             RestoreValues(vec![recv_value.clone()]),
                             EvalError::Exception(

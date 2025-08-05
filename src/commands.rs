@@ -444,7 +444,7 @@ pub(crate) fn run_command<T: Write>(
                 let ns = ns.borrow();
                 write!(buf, "\n{}", path.display())?;
 
-                let mut syms = ns.external_syms.iter().collect::<Vec<_>>();
+                let mut syms = ns.exported_syms.iter().collect::<Vec<_>>();
                 syms.sort_by_key(|s| s.text.to_ascii_lowercase());
 
                 for sym in syms {
@@ -456,7 +456,7 @@ pub(crate) fn run_command<T: Write>(
             let ns = env.prelude_namespace.borrow();
             write!(buf, "{}", ns.abs_path.display())?;
 
-            let mut syms = ns.external_syms.iter().collect::<Vec<_>>();
+            let mut syms = ns.exported_syms.iter().collect::<Vec<_>>();
             syms.sort_by_key(|s| s.text.to_ascii_lowercase());
 
             for sym in syms {

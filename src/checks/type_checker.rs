@@ -1545,7 +1545,7 @@ impl TypeCheckVisitor<'_> {
 
                                     match values.get(&sym.name) {
                                         Some(value) => {
-                                            if !ns.external_syms.contains(&sym.name) {
+                                            if !ns.exported_syms.contains(&sym.name) {
                                                 let mut name_pos = None;
                                                 match value.as_ref() {
                                                     Value_::Fun { fun_info, .. }

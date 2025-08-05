@@ -34,6 +34,14 @@ header > a {
   font-size: 36px;
 }
 
+code {
+  background-color: #00000014;
+}
+
+pre > code {
+  background-color: initial;
+}
+
 pre,
 code {
   font-family: monospace;

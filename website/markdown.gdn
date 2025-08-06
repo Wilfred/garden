@@ -13,6 +13,7 @@ enum MarkdownPart {
 
 struct Snippet {
   labels: List<String>,
+  title: Option<String>,
   content: String,
 }
 
@@ -44,10 +45,19 @@ fun parse_markdown(src: String): List<MarkdownPart> {
         let label = current_section.first().or_throw().strip_prefix("```")
         let labels = label.split(" ")
 
+        let title: Option<String> = None
+        for label in labels {
+          if label.starts_with("title:") {
+            title = Some(label.strip_prefix("title:"))
+            break
+          }
+        }
+
         let content = "\n".join(current_section.slice(1, -1))
 
         let snippet = Snippet{
           labels: labels,
+          title: title,
           content: content,
         }
 

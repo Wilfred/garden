@@ -189,3 +189,15 @@ pre::before {
   width: calc(100% + 6px);
   z-index: -1;
 }
+
+.code-title {
+  color: #ebeee3;
+  background-color: #307d30;
+  padding: 10px;
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  border-left: 2px solid black;
+  border-bottom: 2px solid black;
+  border-bottom-left-radius: 15px;
+}

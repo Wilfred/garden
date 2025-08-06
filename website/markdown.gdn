@@ -12,7 +12,7 @@ enum MarkdownPart {
 }
 
 struct Snippet {
-  language: String,
+  label: String,
   content: String,
 }
 
@@ -41,11 +41,11 @@ fun parse_markdown(src: String): List<MarkdownPart> {
 
       if in_code_block {
         // Just finished the code block.
-        let language = current_section.first().or_throw().strip_prefix("```")
+        let label = current_section.first().or_throw().strip_prefix("```")
         let content = "\n".join(current_section.slice(1, -1))
 
         let snippet = Snippet{
-          language: language,
+          label: label,
           content: content,
         }
 
@@ -144,7 +144,7 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 }
 
 fun render_markdown_code(snippet: Snippet): String {
-  if (snippet.language == "") || (snippet.language.starts_with("garden")) {
+  if (snippet.label == "") || (snippet.label.starts_with("garden")) {
     render_markdown_garden_code(snippet)
   } else {
     ("<pre><code>" ^ escape_angle_brackets(snippet.content)) ^ "</code></pre>"
@@ -152,7 +152,7 @@ fun render_markdown_code(snippet: Snippet): String {
 }
 
 fun render_markdown_garden_code(snippet: Snippet): String {
-  if snippet.language.ends_with("nocheck").not() {
+  if snippet.label.ends_with("nocheck").not() {
     match garden::check_snippet(snippet.content) {
       Ok(_) => {}
       Err(messages) => {

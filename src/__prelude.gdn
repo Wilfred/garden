@@ -310,8 +310,13 @@ test strip_prefix {
 // "a,b".split(",") // ["a", "b"]
 // "ab".split(",") // ["ab"]
 // "a,,b,".split(",") // ["a", "", "b", ""]
+// "".split(",") // []
 // ```
 external method split(this: String, needle: String): List<String> {
+  if this == "" {
+    return []
+  }
+
   let s = this
 
   let parts: List<String> = []
@@ -333,6 +338,7 @@ external method split(this: String, needle: String): List<String> {
 }
 
 test split {
+  assert("".split(",") == [])
   assert("ab".split(",") == ["ab"])
   assert("a,b".split(",") == ["a", "b"])
   assert("a,,b".split(",") == ["a", "", "b"])

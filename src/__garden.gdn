@@ -1,4 +1,5 @@
 // Only used in tests.
+import "__prelude.gdn" as prelude
 import "__fs.gdn" as fs
 
 // Check the syntax of `src`.
@@ -125,13 +126,13 @@ test source_for_type {
 }
 
 // Get the source code for the function definition of `name`.
-external fun source_for_fun(name: String): Option<String> {
+external fun source_for_fun(ns: Namespace, name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
 test source_for_fun {
   // Built-in function.
-  match source_for_fun("source_for_fun") {
+  match source_for_fun(prelude, "throw") {
     Some(source) => {
       assert(source.starts_with("// "))
     }
@@ -141,7 +142,7 @@ test source_for_fun {
   }
 
   // Function implemented in Garden.
-  match source_for_fun("todo") {
+  match source_for_fun(prelude, "todo") {
     Some(source) => {
       assert(source.starts_with("// "))
     }

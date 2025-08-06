@@ -32,7 +32,7 @@
 // {
 //   "kind": {
 //     "run_command": {
-//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n// Defined in __garden.gdn:38\nfn lex(src: String): List<(Int, String)> { ... }",
+//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n// Defined in __garden.gdn:39\nfn lex(src: String): List<(Int, String)> { ... }",
 //       "stack_frame_name": "__user.gdn"
 //     }
 //   },

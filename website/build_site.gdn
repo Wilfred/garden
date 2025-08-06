@@ -42,7 +42,7 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
         "".join(["# `", qualified_name, "`"])
       }
 
-      let src = garden::source_for_fun(fun_name)
+      let src = garden::source_for_fun(ns, fun_name)
       let page_src = render_doc_comment(heading, doc_comment, src)
 
       let dest_path = out_dir.join("fun:" ^ (qualified_name ^ ".html"))

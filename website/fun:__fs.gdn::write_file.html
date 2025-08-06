@@ -29,6 +29,9 @@
 <p>Write <code>content</code> to file <code>path</code>.</p>
 <p>If <code>path</code> already exists, its content is replaced with <code>content</code>.</p>
 <pre><code><a href="./keyword:import.html"><span class="keyword">import</span></a> <span class="string">"__fs.gdn" </span><a href="./keyword:as.html"><span class="keyword">as</span></a> fs
-fs::write_file(<span class="string">"hello world"</span>, <a href="./type:Path.html"><span class="type">Path</span></a>{ p: <span class="string">"/tmp/foo.txt" </span>})</code></pre></div>
+fs::write_file(<span class="string">"hello world"</span>, <a href="./type:Path.html"><span class="type">Path</span></a>{ p: <span class="string">"/tmp/foo.txt" </span>})</code></pre>
+<pre><code><a href="./keyword:external.html"><span class="keyword">external</span></a> <a href="./keyword:fun.html"><span class="keyword">fun</span></a> write_file(content: <a href="./type:String.html"><span class="type">String</span></a>, path: <a href="./type:Path.html"><span class="type">Path</span></a>): <a href="./type:Result.html"><span class="type">Result</span></a>&lt;<a href="./type:Unit.html"><span class="type">Unit</span></a>, <a href="./type:String.html"><span class="type">String</span></a>&gt; {
+  __BUILTIN_IMPLEMENTATION
+}</code></pre></div>
   </body>
 </html>

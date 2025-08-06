@@ -3085,17 +3085,37 @@ fn eval_builtin_call(
                 },
                 receiver_value,
                 receiver_pos,
-                1,
+                2,
                 arg_positions,
                 arg_values,
             )?;
+
+            let Value_::Namespace(namespace_info) = arg_values[0].as_ref() else {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                let message = format_type_error(
+                    &TypeName {
+                        text: "Namespace".into(),
+                    },
+                    &arg_values[0],
+                    env,
+                );
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::Exception(arg_positions[0].clone(), message),
+                ));
+            };
 
             let mut saved_values = vec![receiver_value.clone()];
             for value in arg_values.iter().rev() {
                 saved_values.push(value.clone());
             }
 
-            let name = match arg_values[0].as_ref() {
+            let name = match arg_values[1].as_ref() {
                 Value_::String(s) => s,
                 _ => {
                     let message = format_type_error(
@@ -3112,10 +3132,11 @@ fn eval_builtin_call(
                 }
             };
 
-            let ns = env.current_namespace();
-            let ns = ns.borrow();
-
-            let v = match ns.values.get(&SymbolName { text: name.clone() }) {
+            let namespace_info = namespace_info.borrow();
+            let v = match namespace_info
+                .values
+                .get(&SymbolName { text: name.clone() })
+            {
                 Some(ns_value) => {
                     let fun_info = match ns_value.as_ref() {
                         Value_::Fun { fun_info, .. } => Some(fun_info),

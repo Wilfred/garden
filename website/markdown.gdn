@@ -157,7 +157,7 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 
 fun render_markdown_code(snippet: Snippet): String {
   if snippet.labels.is_empty() || snippet.labels.contains("garden") {
-    render_markdown_garden_code(snippet)
+    "<pre>" ^ render_markdown_garden_code(snippet) ^ "</pre>"
   } else {
     ("<pre><code>" ^ escape_angle_brackets(snippet.content)) ^ "</code></pre>"
   }
@@ -218,7 +218,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
   }
 
   let inner_src = "\n".join(rendered_lines)
-  ("<pre><code>" ^ inner_src) ^ "</code></pre>"
+  "<code>" ^ inner_src ^ "</code>"
 }
 
 fun escape_angle_brackets(s: String): String {

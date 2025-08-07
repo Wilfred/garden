@@ -28,9 +28,9 @@
     <div class="container"><h1>The Garden Programming Language</h1>
 <p>Garden is an experimental programming language focused on interactive
 tooling.</p>
-<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> fib(i: <a href="./type:Int.html"><span class="type">Int</span></a>): <a href="./type:Int.html"><span class="type">Int</span></a> {
-  <a href="./keyword:if.html"><span class="keyword">if</span></a> i &lt; 2 {
-    <a href="./keyword:return.html"><span class="keyword">return</span></a> 1
+<pre><code><a class="keyword" href="./keyword:fun.html">fun</a> fib(i: <a class="type" href="./type:Int.html">Int</a>): <a class="type" href="./type:Int.html">Int</a> {
+  <a class="keyword" href="./keyword:if.html">if</a> i &lt; 2 {
+    <a class="keyword" href="./keyword:return.html">return</a> 1
   }
 
   fib(i - 1) + fib(i - 2)
@@ -50,13 +50,13 @@ experience.</p>
 <p>Most gradual type systems are intended for incremental adoption in a
 dynamically typed language. Garden is new, but requires a typing model that
 works with code of the form:</p>
-<pre><code><a href="./keyword:fun.html"><span class="keyword">fun</span></a> foo(): <a href="./type:String.html"><span class="type">String</span></a> {
-  <a href="./keyword:return.html"><span class="keyword">return</span></a> <span class="string">""</span>
+<pre><code><a class="keyword" href="./keyword:fun.html">fun</a> foo(): <a class="type" href="./type:String.html">String</a> {
+  <a class="keyword" href="./keyword:return.html">return</a> <span class="string">""</span>
 }
 
-<a href="./keyword:fun.html"><span class="keyword">fun</span></a> bar(): <a href="./type:Unit.html"><span class="type">Unit</span></a> {
+<a class="keyword" href="./keyword:fun.html">fun</a> bar(): <a class="type" href="./type:Unit.html">Unit</a> {
   eval(<span class="string">"fun foo(): Int { return 1 }"</span>)
-  <a href="./keyword:let.html"><span class="keyword">let</span></a> x = foo() + 1
+  <a class="keyword" href="./keyword:let.html">let</a> x = foo() + 1
 }</code></pre>
 <h2>Sandboxed Execution</h2>
 <p>Garden supports sandbox execution without third-party libraries. This

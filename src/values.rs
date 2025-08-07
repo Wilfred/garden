@@ -368,6 +368,7 @@ pub(crate) enum BuiltinFunctionKind {
     SourceForType,
     PreludeTypes,
     NamespaceFunctions,
+    MethodsForType,
 }
 
 impl BuiltinFunctionKind {
@@ -391,6 +392,7 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::DocComment
             | BuiltinFunctionKind::DocCommentForType
             | BuiltinFunctionKind::CheckSnippet
+            | BuiltinFunctionKind::MethodsForType
             | BuiltinFunctionKind::NamespaceFunctions => PathBuf::from("__garden.gdn"),
         }
     }
@@ -418,6 +420,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::SourceForType => "source_for_type",
             BuiltinFunctionKind::PreludeTypes => "prelude_types",
             BuiltinFunctionKind::NamespaceFunctions => "namespace_functions",
+            BuiltinFunctionKind::MethodsForType => "methods_for_type",
         };
         write!(f, "{name}")
     }

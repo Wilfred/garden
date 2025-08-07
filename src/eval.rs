@@ -2616,6 +2616,59 @@ fn eval_builtin_call(
                 }));
             }
         }
+        BuiltinFunctionKind::MethodsForType => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let Value_::String(type_name) = arg_values[0].as_ref() else {
+                let mut saved_values = vec![];
+                for value in arg_values.iter().rev() {
+                    saved_values.push(value.clone());
+                }
+                saved_values.push(receiver_value.clone());
+
+                let message = format_type_error(
+                    &TypeName {
+                        text: "String".into(),
+                    },
+                    &arg_values[0],
+                    env,
+                );
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::Exception(arg_positions[0].clone(), message),
+                ));
+            };
+
+            let mut method_names = vec![];
+
+            if let Some(type_def_and_methods) = env.types.get(&TypeName::from(type_name)) {
+                for method_name in type_def_and_methods.methods.keys() {
+                    method_names.push(method_name.text.clone());
+                }
+            }
+
+            method_names.sort();
+            let items = method_names
+                .into_iter()
+                .map(|n| Value::new(Value_::String(n)))
+                .collect::<Vec<_>>();
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                }));
+            }
+        }
         BuiltinFunctionKind::ListDirectory => {
             if env.enforce_sandbox {
                 let mut saved_values = vec![];

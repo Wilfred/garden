@@ -164,3 +164,13 @@ test namespace_functions {
   let items = namespace_functions(fs)
   assert(items.contains("list_directory"))
 }
+
+// Get all the methods defined on a given type.
+external fun methods_for_type(type_name: String): List<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test methods_for_type {
+  let string_methods = methods_for_type("String")
+  assert(string_methods.contains("len"))
+}

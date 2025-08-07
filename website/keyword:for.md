@@ -2,7 +2,7 @@
 
 `for` runs a block code repeatedly, once for each occurrence in a list.
 
-```
+```title:example
 let nums = [1, 2, 3]
 
 for num in nums {
@@ -17,7 +17,7 @@ To stop loop evaluation, or to skip a loop iteration, see
 As with [`let`](./keyword:let.html), you can use destructuring in `for`
 loop headers.
 
-```
+```title:example
 let game_scores = [(123, "Alice"), (45, "Bob")]
 
 for (score, name) in game_scores {

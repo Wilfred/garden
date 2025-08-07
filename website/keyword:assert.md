@@ -3,7 +3,7 @@
 You can use `assert` to perform a runtime check that a value is
 `True`.
 
-```
+```title:example
 assert(1 < 2)
 ```
 
@@ -11,7 +11,7 @@ If the assertion fails, Garden will raise an error.
 
 `assert` is particularly useful when defining a `test`.
 
-```
+```title:example
 fun add_one(i: Int): Int {
   i + 1
 }

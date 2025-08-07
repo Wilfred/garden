@@ -2,7 +2,7 @@
 
 `test` defines a named test.
 
-```
+```title:example
 test arithmetic {
   assert((1 + 2) == 3)
 }

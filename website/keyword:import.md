@@ -2,7 +2,7 @@
 
 You can use `import` to load definitions from another file.
 
-```
+```title:example
 import "./foo.gdn" as f
 
 fun bar() {
@@ -12,7 +12,7 @@ fun bar() {
 
 You can also load all the definitions into the current file.
 
-```
+```title:example
 import "./foo.gdn"
 
 fun bar() {

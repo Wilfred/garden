@@ -2,7 +2,7 @@
 
 `method` defines methods on types.
 
-```
+```title:example
 method increment(this: Int): Int {
   this + 1
 }

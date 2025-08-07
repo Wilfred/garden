@@ -127,13 +127,13 @@ fun render_markdown_header(src: String): String {
   }
 
   if (h_count > 6) || content.starts_with(" ").not() {
-    return "".join(["<p>", src, "</p>"])
+    return "<p>" ^ src ^ "</p>"
   }
 
-  let open_tag = "".join(["<h", string_repr(h_count), ">"])
-  let close_tag = "".join(["</h", string_repr(h_count), ">"])
+  let open_tag = "<h" ^ string_repr(h_count) ^ ">"
+  let close_tag = "</h" ^ string_repr(h_count) ^ ">"
 
-  "".join([open_tag, render_inline(content.trim()), close_tag])
+  open_tag ^ render_inline(content.trim()) ^ close_tag
 }
 
 fun lex_with_ranges(s: String): List<(Int, Int, String)> {
@@ -204,21 +204,21 @@ fun render_markdown_garden_code(snippet: Snippet): String {
       let part = line.substring(start_idx, end_idx)
 
       let rendered_part = if tok.starts_with("//") {
-        "".join(["<span class=\"comment\">", escape_angle_brackets(part), "</span>"])
+        "<span class=\"comment\">" ^ escape_angle_brackets(part) ^ "</span>"
       } else if tok.starts_with("\"") {
-        "".join(["<span class=\"string\">", escape_angle_brackets(part), "</span>"])
+        "<span class=\"string\">" ^ escape_angle_brackets(part) ^ "</span>"
       } else if keywords.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        "".join(["<a class=\"keyword\" href=\"./keyword:" , tok, ".html\">", tok, "</a>", after_tok])
+        "<a class=\"keyword\" href=\"./keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if prelude_funs.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        "".join(["<a href=\"./fun:__prelude.gdn::" , tok, ".html\">", tok, "</a>", after_tok])
+        "<a href=\"./fun:__prelude.gdn::" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if looks_like_type(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         if garden::prelude_types().contains(tok) {
-          "".join(["<a class=\"type\" href=\"./type:" , tok, ".html\">", tok, "</a>", after_tok])
+          "<a class=\"type\" href=\"./type:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
         } else {
-          "".join(["<span class=\"type\">" , tok, "</span>", after_tok])
+          "<span class=\"type\">" ^ tok ^ "</span>" ^ after_tok
         }
       } else {
         escape_angle_brackets(part)
@@ -265,7 +265,7 @@ fun render_inline_no_links(src: String): String {
 
         match after_backtick.split_once("`") {
           Some((between_backticks, after_closing_backtick)) => {
-            parts = parts.append("".join(["<code>", escape_angle_brackets(between_backticks), "</code>"]))
+            parts = parts.append("<code>" ^ escape_angle_brackets(between_backticks) ^ "</code>")
             s = after_closing_backtick
           }
           None => {
@@ -439,7 +439,7 @@ fun render_link(src: String): String {
     Some(i) => {
       let link_text = src.substring(1, i)
       let link_url = src.substring(i + 2, src.len() - 1)
-      "".join(["<a href=\"", link_url, "\">", render_inline_no_links(link_text), "</a>"])
+      "<a href=\"" ^ link_url ^ "\">" ^ render_inline_no_links(link_text) ^ "</a>"
     }
     None => src
   }
@@ -452,23 +452,23 @@ fun render_image(src: String): String {
     Some(i) => {
       let image_descr = src.substring(2, i)
       let image_url = src.substring(i + 2, src.len() - 1)
-      "".join(["<img src=\"", image_url, "\" alt=\"", image_descr, "\" />"])
+      "<img src=\"" ^ image_url ^ "\" alt=\"" ^ image_descr ^ "\" />"
     }
     None => src
   }
 }
 
 fun render_markdown_paragraph(src: String): String {
-  "".join(["<p>", render_inline(src), "</p>"])
+  "<p>" ^ render_inline(src) ^ "</p>"
 }
 
 fun render_markdown_bullets(items: List<String>): String {
   let rendered_items = items.map(fun(item: String) {
     let rendered_item = render_inline(item.strip_prefix("*").trim_left())
-    "".join(["<li>", rendered_item, "</li>"])
+    "<li>" ^ rendered_item ^ "</li>"
   })
 
-  "".join(["<ul>\n", "\n".join(rendered_items), "\n</ul>"])
+  "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"
 }
 
 external fun render_markdown(src: String): String {

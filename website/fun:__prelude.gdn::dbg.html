@@ -30,7 +30,7 @@
 <p>Returns the input, so you can use <code>dbg</code> in larger expressions
 <code>foo(dbg(bar()))</code>.</p>
 <pre><code><a href="./fun:__prelude.gdn::dbg.html">dbg</a>([1, 2])</code></pre>
-<pre><code><a href="./keyword:external.html"><span class="keyword">external</span></a> <a href="./keyword:fun.html"><span class="keyword">fun</span></a> <a href="./fun:__prelude.gdn::dbg.html">dbg</a>&lt;<span class="type">T</span>&gt;(value: <span class="type">T</span>): <span class="type">T</span> {
+<pre><span class="code-title">source</span><code><a href="./keyword:external.html"><span class="keyword">external</span></a> <a href="./keyword:fun.html"><span class="keyword">fun</span></a> <a href="./fun:__prelude.gdn::dbg.html">dbg</a>&lt;<span class="type">T</span>&gt;(value: <span class="type">T</span>): <span class="type">T</span> {
   <a href="./fun:__prelude.gdn::println.html">println</a>(<a href="./fun:__prelude.gdn::string_repr.html">string_repr</a>(value))
   value
 }</code></pre></div>

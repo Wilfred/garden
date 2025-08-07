@@ -62,7 +62,7 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
 fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>): String {
   let src = match src {
     Some(src) => {
-      "```\n" ^ (drop_leading_comments(src) ^ "\n```")
+      "```title:source\n" ^ (drop_leading_comments(src) ^ "\n```")
     }
     None => ""
   }

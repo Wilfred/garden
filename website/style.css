@@ -91,13 +91,13 @@ a {
   text-decoration: none;
   border-bottom: 2px dotted #307d30;
 }
-a:hover {
-  text-decoration: underline;
-  text-decoration-color: inherit;
-}
 
 pre a {
   border-bottom: 0;
+}
+pre a:hover {
+  text-decoration: underline;
+  text-decoration-color: inherit;
 }
 
 h2 {

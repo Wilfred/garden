@@ -54,7 +54,8 @@ test lex {
   assert(lex("a // b") == [(0, "a"), (2, "// b")])
 }
 
-// Get the doc comment for `fun_name` in the namespace `ns`.
+// Get the doc comment for `fun_name` in the namespace `ns`. The
+// string does not include the leading `//` comment.
 external fun doc_comment(ns: Namespace, fun_name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }

@@ -42,14 +42,16 @@ fun parse_markdown(src: String): List<MarkdownPart> {
 
       if in_code_block {
         // Just finished the code block.
-        let label = current_section.first().or_throw().strip_prefix("```")
-        let labels = label.split(" ")
+        let label_str = current_section.first().or_throw().strip_prefix("```")
 
+        let labels: List<String> = []
         let title: Option<String> = None
-        for label in labels {
+
+        for label in label_str.split(" ") {
           if label.starts_with("title:") {
             title = Some(label.strip_prefix("title:"))
-            break
+          } else {
+            labels = labels.append(label)
           }
         }
 
@@ -156,11 +158,20 @@ fun lex_with_ranges(s: String): List<(Int, Int, String)> {
 }
 
 fun render_markdown_code(snippet: Snippet): String {
-  if snippet.labels.is_empty() || snippet.labels.contains("garden") {
-    "<pre>" ^ render_markdown_garden_code(snippet) ^ "</pre>"
+  let inner = if snippet.labels.is_empty() || snippet.labels.contains("garden") {
+    render_markdown_garden_code(snippet)
   } else {
-    ("<pre><code>" ^ escape_angle_brackets(snippet.content)) ^ "</code></pre>"
+    "<code>" ^ escape_angle_brackets(snippet.content) ^ "</code>"
   }
+
+  match snippet.title {
+    Some(title) => {
+      inner = "<span class=\"code-title\">" ^ title ^ "</span>" ^ inner
+    }
+    None => {}
+  }
+
+  "<pre>" ^ inner ^ "</pre>"
 }
 
 fun render_markdown_garden_code(snippet: Snippet): String {

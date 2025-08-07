@@ -71,13 +71,33 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
   render_markdown(md_src)
 }
 
+fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<String>, methods: List<String>): String {
+  let src = match src {
+    Some(src) => {
+      "```title:source\n" ^ (drop_leading_comments(src) ^ "\n```")
+    }
+    None => ""
+  }
+
+  let methods_section = if methods.is_empty() {
+    ""
+  } else {
+    let method_list = methods.map(fun(m: String) { "* `" ^ m ^ "`" })
+    "\n\n## Methods\n\n" ^ "\n".join(method_list)
+  }
+
+  let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src, methods_section])
+  render_markdown(md_src)
+}
+
 // Look up the doc comment for `type_name`, render it to HTML and
 // write it to `out_dir`.
 fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Unit {
   match garden::doc_comment_for_type(type_name) {
     Some(doc_comment) => {
       let heading = "".join(["# `", type_name, "` type"])
-      let page_src = render_doc_comment(heading, doc_comment, garden::source_for_type(type_name))
+      let methods = garden::methods_for_type(type_name)
+      let page_src = render_type_doc_comment(heading, doc_comment, garden::source_for_type(type_name), methods)
 
       let dest_path = out_dir.join("type:" ^ (type_name ^ ".html"))
       write_website_page(base_tmpl_src, page_src, dest_path)

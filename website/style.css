@@ -131,6 +131,7 @@ header a {
 
 .keyword {
   font-weight: bold;
+  color: #d05416;
 }
 
 .comment {

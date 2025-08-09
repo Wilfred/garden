@@ -207,3 +207,8 @@ pre::before {
   border-bottom: 2px solid black;
   border-bottom-left-radius: 15px;
 }
+
+footer {
+  padding-top: 40px;
+  text-align: center;
+}

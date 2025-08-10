@@ -7,6 +7,11 @@ enum Bool {
   False,
 }
 
+// Negate this value.
+//
+// ```
+// True.not() // false
+// ```
 external method not(this: Bool): Bool {
   match this {
     True => False,
@@ -118,6 +123,11 @@ test ends_with {
   assert("abc".ends_with("aabc") == False)
 }
 
+// Replace occurrences of `before` with `after` in this string.
+//
+// ```
+// "abc xabc".replace("abc", "def") // "def xdef"
+// ```
 external method replace(this: String, before: String, after: String): String {
   let parts: List<String> = []
 
@@ -207,6 +217,11 @@ external method contains(this: String, substring: String): Bool {
   False
 }
 
+// Remove whitespace at the beginning of this string.
+//
+// ```
+// " foo ".trim_left() // "foo "
+// ```
 external method trim_left(this: String): String {
   let i = 0
   while i < this.len() {
@@ -228,6 +243,11 @@ test trim_left {
   assert("a ".trim_left() == "a ")
 }
 
+// Remove whitespace at the end of this string.
+//
+// ```
+// " foo ".trim_right() // " foo"
+// ```
 external method trim_right(this: String, ): String {
   let i = this.len() - 1
   while i >= 0 {
@@ -626,7 +646,7 @@ test is_non_empty {
 // results.
 //
 // ```
-// [1, 2].map(fun(x) { x + 1 }) // [2, 3]
+// [1, 2].map(fun(x: Int) { x + 1 }) // [2, 3]
 // ```
 external method map<T, U>(this: List<T>, f: Fun<(T), U>): List<U> {
   let items: List<U> = []

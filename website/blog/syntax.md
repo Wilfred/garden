@@ -1,6 +1,7 @@
 ```metadata
 published: true
 date: 2025-07-13
+title: Choosing a Syntax
 ```
 
 # Choosing a Syntax

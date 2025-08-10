@@ -135,6 +135,8 @@ fun write_markdown_page(website_dir: Path, base_tmpl_string: String, md_path: Pa
 
 struct BlogPost {
   published: Bool,
+  title: Option<String>,
+  date: Option<String>,
   src: String,
   path: Path,
 }
@@ -173,12 +175,18 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
     }
 
     let published = False
+    let title: Option<String> = None
+    let date: Option<String> = None
     let src = match path.read() {
       Ok(src) => {
         let (metadata, src) = split_metadata(src)
         for line in metadata.or_value("").lines() {
           if line == "published: true" {
             published = True
+          } else if line.starts_with("title: ") {
+            title = Some(line.strip_prefix("title: "))
+          } else if line.starts_with("date: ") {
+            date = Some(line.strip_prefix("date: "))
           }
         }
 
@@ -190,7 +198,7 @@ fun blog_posts(website_dir: Path): List<BlogPost> {
       }
     }
 
-    posts = posts.append(BlogPost{ path: path, src: src, published: published })
+    posts = posts.append(BlogPost{ path: path, src: src, published: published, title: title, date: date })
   }
 
   posts
@@ -322,7 +330,17 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
       None => continue
     }
 
-    let link = "".join(["* [", file_name, "](blog/", file_name, ")"])
+    let link_text = match post.title {
+      Some(title) => title
+      None => file_name
+    }
+
+    let link_with_date = match post.date {
+      Some(date) => link_text ^ " (" ^ date ^ ")"
+      None => link_text
+    }
+
+    let link = "* [" ^ link_with_date ^ "](blog/" ^ file_name ^ ")"
     blog_links = blog_links.append(link)
   }
 

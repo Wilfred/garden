@@ -102,7 +102,7 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<St
     ""
   } else {
     let method_list = methods.map(fun(m: String) {
-      "* [`" ^ m ^ "`](./method:" ^ type_name ^ "::" ^ m ^ ".html)"
+      "* [`" ^ m ^ "`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
     })
     "\n\n## Methods\n\n" ^ "\n".join(method_list)
   }

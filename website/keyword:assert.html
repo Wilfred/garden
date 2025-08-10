@@ -27,15 +27,15 @@
     <div class="container"><h1><code>assert</code> keyword</h1>
 <p>You can use <code>assert</code> to perform a runtime check that a value is
 <code>True</code>.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="./keyword:assert.html">assert</a>(1 &lt; 2)</code></pre>
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:assert.html">assert</a>(1 &lt; 2)</code></pre>
 <p>If the assertion fails, Garden will raise an error.</p>
 <p><code>assert</code> is particularly useful when defining a <code>test</code>.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="./keyword:fun.html">fun</a> add_one(i: <a class="type" href="./type:Int.html">Int</a>): <a class="type" href="./type:Int.html">Int</a> {
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:fun.html">fun</a> add_one(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
   i + 1
 }
 
-<a class="keyword" href="./keyword:test.html">test</a> add_one_to_five {
-  <a class="keyword" href="./keyword:assert.html">assert</a>(add_one(5) == 6)
+<a class="keyword" href="/keyword:test.html">test</a> add_one_to_five {
+  <a class="keyword" href="/keyword:assert.html">assert</a>(add_one(5) == 6)
 }</code></pre></div>
 
     <footer>

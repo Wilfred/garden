@@ -27,9 +27,9 @@
     <div class="container"><h1>Choosing a Syntax</h1>
 <p>To kick things off, I want to talk about the basic syntax of
 Garden. Garden has a deliberately conventional syntax.</p>
-<pre><code><a class="keyword" href="./keyword:fun.html">fun</a> fib(i: <a class="type" href="./type:Int.html">Int</a>): <a class="type" href="./type:Int.html">Int</a> {
-  <a class="keyword" href="./keyword:if.html">if</a> i &lt; 2 {
-    <a class="keyword" href="./keyword:return.html">return</a> 1
+<pre><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+  <a class="keyword" href="/keyword:if.html">if</a> i &lt; 2 {
+    <a class="keyword" href="/keyword:return.html">return</a> 1
   }
 
   fib(i - 1) + fib(i - 2)
@@ -100,11 +100,11 @@ experimenting in the REPL.</p>
 <h2>Unconventional Bits</h2>
 <p>I'm happy to break convention where it makes sense for Garden's
 design. For example, methods are not defined inside the method type.</p>
-<pre><code><a class="keyword" href="./keyword:struct.html">struct</a> <span class="type">Person</span> {
-  name: <a class="type" href="./type:String.html">String</a>,
+<pre><code><a class="keyword" href="/keyword:struct.html">struct</a> <span class="type">Person</span> {
+  name: <a class="type" href="/type:String.html">String</a>,
 }
 
-<a class="keyword" href="./keyword:method.html">method</a> greet(this: <span class="type">Person</span>): <a class="type" href="./type:String.html">String</a> {
+<a class="keyword" href="/keyword:method.html">method</a> greet(this: <span class="type">Person</span>): <a class="type" href="/type:String.html">String</a> {
   <span class="string">"Hello " </span>^ this.name ^ <span class="string">"!"</span>
 }</code></pre>
 <p>This aligns with Garden's goals of allowing incremental program

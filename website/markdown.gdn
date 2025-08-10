@@ -209,14 +209,14 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         "<span class=\"string\">" ^ escape_angle_brackets(part) ^ "</span>"
       } else if keywords.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        "<a class=\"keyword\" href=\"./keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+        "<a class=\"keyword\" href=\"/keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if prelude_funs.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        "<a href=\"./fun:__prelude.gdn::" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+        "<a href=\"/fun:__prelude.gdn::" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if looks_like_type(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         if garden::prelude_types().contains(tok) {
-          "<a class=\"type\" href=\"./type:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+          "<a class=\"type\" href=\"/type:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
         } else {
           "<span class=\"type\">" ^ tok ^ "</span>" ^ after_tok
         }

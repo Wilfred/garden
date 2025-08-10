@@ -26,29 +26,29 @@
 
     <div class="container"><h1><code>let</code> keyword</h1>
 <p><code>let</code> introduces a new variable.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="./keyword:let.html">let</a> x = 0
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:let.html">let</a> x = 0
 <span class="comment">// Variables can be reassigned.</span>
 x = 1</code></pre>
 <p>You can add type annotations to <code>let</code>.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="./keyword:let.html">let</a> x: <a class="type" href="./type:List.html">List</a>&lt;<a class="type" href="./type:Int.html">Int</a>&gt; = []</code></pre>
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:let.html">let</a> x: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; = []</code></pre>
 <p>If you have a tuple, you can use <code>let</code> to destructure the tuple
 elements.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="./keyword:let.html">let</a> position = (1, 2)
-<a class="keyword" href="./keyword:let.html">let</a> (x, y) = position
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:let.html">let</a> position = (1, 2)
+<a class="keyword" href="/keyword:let.html">let</a> (x, y) = position
 
-<a href="./fun:__prelude.gdn::dbg.html">dbg</a>(x) <span class="comment">// 1</span>
-<a href="./fun:__prelude.gdn::dbg.html">dbg</a>(y) <span class="comment">// 2</span></code></pre>
+<a href="/fun:__prelude.gdn::dbg.html">dbg</a>(x) <span class="comment">// 1</span>
+<a href="/fun:__prelude.gdn::dbg.html">dbg</a>(y) <span class="comment">// 2</span></code></pre>
 <p>You can also use <code>let</code> to shadow variables, where you introduce a new
 variable that hides the old value.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="./keyword:let.html">let</a> i = 0
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:let.html">let</a> i = 0
 
-<a class="keyword" href="./keyword:if.html">if</a> <span class="type">True</span> {
-  <a class="keyword" href="./keyword:let.html">let</a> i = 1
-  <a href="./fun:__prelude.gdn::dbg.html">dbg</a>(i) <span class="comment">// 1</span>
-  <a class="type" href="./type:Unit.html">Unit</a>
+<a class="keyword" href="/keyword:if.html">if</a> <span class="type">True</span> {
+  <a class="keyword" href="/keyword:let.html">let</a> i = 1
+  <a href="/fun:__prelude.gdn::dbg.html">dbg</a>(i) <span class="comment">// 1</span>
+  <a class="type" href="/type:Unit.html">Unit</a>
 }
 
-<a href="./fun:__prelude.gdn::dbg.html">dbg</a>(i) <span class="comment">// 0</span></code></pre></div>
+<a href="/fun:__prelude.gdn::dbg.html">dbg</a>(i) <span class="comment">// 0</span></code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

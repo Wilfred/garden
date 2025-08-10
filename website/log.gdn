@@ -8,3 +8,14 @@ external fun info(msg: String): Unit {
     println("INFO: " ^ msg)
   }
 }
+
+external fun warn(msg: String): Unit {
+  if msg.contains("\n") {
+    println("WARN: ")
+    for line in msg.lines() {
+      println("  " ^ line)
+    }
+  } else {
+    println("WARN: " ^ msg)
+  }
+}

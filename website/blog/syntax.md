@@ -30,7 +30,7 @@ which favours short syntax for common operations. There's little
 benefit for `function` in JavaScript, it's just more typing on the
 keyboard.
 
-However, I want keywords to be pronouncable, hence `fun` instead of
+However, I want keywords to be pronounceable, hence `fun` instead of
 `fn`. This is based on the Strange Loop talk [How to teach programming
 (and other things)?](https://youtu.be/g1ib43q3uXQ?t=2165) by Felienne
 Hermans (creator of [Hedy](https://hedy.org/)). Felienne talks about
@@ -89,7 +89,7 @@ definition, even inside blocks.
 
 `^` and blocks are an elegant way to express control flow primitives.
 However, if we're doing conventional loops anyway, there's not much benefit
-to Garden.
+for Garden.
 
 (2) Method arguments are almost always keyword arguments, and often
 resemble sentences. This is often very readable.
@@ -110,7 +110,8 @@ experimenting in the REPL.
 ## Unconventional Bits
 
 I'm happy to break convention where it makes sense for Garden's
-design. For example, methods are not defined inside the method type.
+design. For example, methods are not defined nested inside the
+relevant type.
 
 ```
 struct Person {

@@ -43,7 +43,7 @@ Rule</a>,
 which favours short syntax for common operations. There's little
 benefit for <code>function</code> in JavaScript, it's just more typing on the
 keyboard.</p>
-<p>However, I want keywords to be pronouncable, hence <code>fun</code> instead of
+<p>However, I want keywords to be pronounceable, hence <code>fun</code> instead of
 <code>fn</code>. This is based on the Strange Loop talk <a href="https://youtu.be/g1ib43q3uXQ?t=2165">How to teach programming
 (and other things)?</a> by Felienne
 Hermans (creator of <a href="https://hedy.org/">Hedy</a>). Felienne talks about
@@ -86,7 +86,7 @@ return. Instead, <code>^</code> is early return anywhere inside a method
 definition, even inside blocks.</p>
 <p><code>^</code> and blocks are an elegant way to express control flow primitives.
 However, if we're doing conventional loops anyway, there's not much benefit
-to Garden.</p>
+for Garden.</p>
 <p>(2) Method arguments are almost always keyword arguments, and often
 resemble sentences. This is often very readable.</p>
 <pre><code>10 to: 1 by: -1 do: [:x | x printNl ]</code></pre>
@@ -99,7 +99,8 @@ simpler to implement. It's also less verbose, especially when
 experimenting in the REPL.</p>
 <h2>Unconventional Bits</h2>
 <p>I'm happy to break convention where it makes sense for Garden's
-design. For example, methods are not defined inside the method type.</p>
+design. For example, methods are not defined nested inside the
+relevant type.</p>
 <pre><code><a class="keyword" href="/keyword:struct.html">struct</a> <span class="type">Person</span> {
   name: <a class="type" href="/type:String.html">String</a>,
 }

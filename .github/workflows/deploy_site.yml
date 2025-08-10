@@ -13,7 +13,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.79.0
 
       - name: Run website build script
-        run: cargo run -- run sample_programs/build_site.gdn
+        run: cargo run -- run website/build_site.gdn
 
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@v4.4.3

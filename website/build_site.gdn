@@ -58,6 +58,29 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
   }
 }
 
+fun write_method_page(type_name: String, method_name: String, out_dir: Path, base_tmpl_src: String): Unit {
+  let qualified_name = "".join([type_name, "::", method_name])
+
+  match garden::doc_comment_for_method(type_name, method_name) {
+    Some(doc_comment) => {
+      let heading = "".join(["# `", qualified_name, "`"])
+
+      // Methods don't have source code we can display, so pass None
+      let page_src = render_doc_comment(heading, doc_comment, None)
+
+      let dest_path = out_dir.join("method:" ^ (qualified_name ^ ".html"))
+      write_website_page(base_tmpl_src, page_src, dest_path)
+    }
+    None => {
+      let parts = [
+        "Tried to generate a page for method ",
+        qualified_name,
+        " but it doesn't have a doc comment."]
+      println("".join(parts))
+    }
+  }
+}
+
 // Render `doc_comment` as HTML.
 fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>): String {
   let src = match src {
@@ -71,7 +94,7 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
   render_markdown(md_src)
 }
 
-fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<String>, methods: List<String>): String {
+fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<String>, methods: List<String>, type_name: String): String {
   let src = match src {
     Some(src) => {
       "```title:source\n" ^ (drop_leading_comments(src) ^ "\n```")
@@ -82,7 +105,9 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<St
   let methods_section = if methods.is_empty() {
     ""
   } else {
-    let method_list = methods.map(fun(m: String) { "* `" ^ m ^ "`" })
+    let method_list = methods.map(fun(m: String) {
+      "* [`" ^ m ^ "`](./method:" ^ type_name ^ "::" ^ m ^ ".html)"
+    })
     "\n\n## Methods\n\n" ^ "\n".join(method_list)
   }
 
@@ -97,7 +122,7 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
     Some(doc_comment) => {
       let heading = "".join(["# `", type_name, "` type"])
       let methods = garden::methods_for_type(type_name)
-      let page_src = render_type_doc_comment(heading, doc_comment, garden::source_for_type(type_name), methods)
+      let page_src = render_type_doc_comment(heading, doc_comment, garden::source_for_type(type_name), methods, type_name)
 
       let dest_path = out_dir.join("type:" ^ (type_name ^ ".html"))
       write_website_page(base_tmpl_src, page_src, dest_path)
@@ -226,6 +251,10 @@ fun build_site(): Unit {
 
   for type_name in garden::prelude_types() {
     write_type_page(type_name, out_dir, base_tmpl_src)
+
+    for method_name in garden::methods_for_type(type_name) {
+      write_method_page(type_name, method_name, out_dir, base_tmpl_src)
+    }
   }
 
   let namespaces = [

@@ -24,18 +24,12 @@
       </nav>
     </header>
 
-    <div class="container"><h1><code>Bool</code> type</h1>
-<p>Basic types.
-The boolean type. This type represents when something is true or
-false, such as predicates.</p>
-<pre><span class="code-title">source</span><code><a class="keyword" href="./keyword:enum.html">enum</a> <a class="type" href="./type:Bool.html">Bool</a> {
-  <span class="type">True</span>,
-  <span class="type">False</span>,
-}</code></pre>
-<h2>Methods</h2>
-<ul>
-<li><a href="./method:Bool::not.html"><code>not</code></a></li>
-</ul></div>
+    <div class="container"><h1><code>List::slice</code></h1>
+<p>Return a new list consisting of the items from index i (inclusive)
+to index j (exclusive). If <code>j</code> is negative, count backwards from
+the end.</p>
+<pre><code>[10, 11, 12].slice(0, 2) <span class="comment">// [10, 11]</span>
+[10, 11, 12].slice(1, -1) <span class="comment">// [11]</span></code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

@@ -24,18 +24,12 @@
       </nav>
     </header>
 
-    <div class="container"><h1><code>Bool</code> type</h1>
-<p>Basic types.
-The boolean type. This type represents when something is true or
-false, such as predicates.</p>
-<pre><span class="code-title">source</span><code><a class="keyword" href="./keyword:enum.html">enum</a> <a class="type" href="./type:Bool.html">Bool</a> {
-  <span class="type">True</span>,
-  <span class="type">False</span>,
-}</code></pre>
-<h2>Methods</h2>
-<ul>
-<li><a href="./method:Bool::not.html"><code>not</code></a></li>
-</ul></div>
+    <div class="container"><h1><code>List::get</code></h1>
+<p>Get the item in the list at the index specified.</p>
+<p>Returns <code>None</code> if the index is less than 0 or if the index is greater
+than <code>length - 1</code>.</p>
+<pre><code>[4, 5, 6].get(1) <span class="comment">// Some(5)</span>
+[4, 5, 6].get(3) <span class="comment">// None</span></code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

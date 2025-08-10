@@ -2515,7 +2515,7 @@ fn parse_symbol(
     let prev_token = tokens.prev();
     let variable_token = require_a_token(tokens, diagnostics, "variable name");
 
-    let prev_token_pos = match prev_token {
+    let prev_token_pos = match &prev_token {
         Some(t) => t.position.clone(),
         None => variable_token.position.clone(),
     };
@@ -2532,12 +2532,42 @@ fn parse_symbol(
 
     for reserved in RESERVED_WORDS {
         if variable_token.text == *reserved {
-            diagnostics.push(ParseError::Invalid {
-                position: prev_token_pos,
-                message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
-                additional: vec![],
-            });
-            tokens.unpop();
+            // Check if the keyword is on the same line as the previous token
+            let same_line = match &prev_token {
+                Some(prev) => prev.position.end_line_number == variable_token.position.line_number,
+                None => false,
+            };
+
+            if same_line {
+                // Keyword where we expected a name. e.g. `let fun =
+                // 1`. Complain about the usage of a keyword, and consume the
+                // token.
+                diagnostics.push(ParseError::Invalid {
+                    position: variable_token.position.clone(),
+                    message: ErrorMessage(vec![
+                        msgcode!("{}", reserved),
+                        msgtext!(" is a keyword and cannot be used as a variable name."),
+                    ]),
+                    additional: vec![],
+                });
+            } else {
+                // We expected a name, but we just saw a keyword on a later
+                // line. It's probably an incomplete line, e.g.
+                //
+                // ```
+                // let
+                // if x {}
+                // ```
+                //
+                // In this case, emit an error on the previous token, and don't
+                // consume this token (the `if` in this case).
+                diagnostics.push(ParseError::Invalid {
+                    position: prev_token_pos,
+                    message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
+                    additional: vec![],
+                });
+                tokens.unpop();
+            }
             return reserved_word_placeholder(variable_token.position, id_gen);
         }
     }

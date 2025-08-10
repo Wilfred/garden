@@ -1,0 +1,13 @@
+{
+  for fun in funs {}
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: `fun` is a keyword and cannot be used as a variable name.
+// ---| src/test_files/parser/keyword_as_name.gdn:2:7
+//   1| {
+//   2|   for fun in funs {}
+//   3| }     ^^^
+

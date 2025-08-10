@@ -364,6 +364,7 @@ pub(crate) enum BuiltinFunctionKind {
     Lex,
     DocComment,
     DocCommentForType,
+    DocCommentForMethod,
     SourceForFun,
     SourceForType,
     PreludeTypes,
@@ -391,6 +392,7 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::Lex
             | BuiltinFunctionKind::DocComment
             | BuiltinFunctionKind::DocCommentForType
+            | BuiltinFunctionKind::DocCommentForMethod
             | BuiltinFunctionKind::CheckSnippet
             | BuiltinFunctionKind::MethodsForType
             | BuiltinFunctionKind::NamespaceFunctions => PathBuf::from("__garden.gdn"),
@@ -416,6 +418,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::Lex => "lex",
             BuiltinFunctionKind::DocComment => "doc_comment",
             BuiltinFunctionKind::DocCommentForType => "doc_comment_for_type",
+            BuiltinFunctionKind::DocCommentForMethod => "doc_comment_for_method",
             BuiltinFunctionKind::SourceForFun => "source_for_fun",
             BuiltinFunctionKind::SourceForType => "source_for_type",
             BuiltinFunctionKind::PreludeTypes => "prelude_types",

@@ -84,6 +84,18 @@ test doc_comment_for_type {
   }
 }
 
+// Get the doc comment for the method `method_name` on `type_name`.
+external fun doc_comment_for_method(type_name: String, method_name: String): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test doc_comment_for_method {
+  match doc_comment_for_method("List", "len") {
+    Some(_) => {}
+    None => { assert(False) }
+  }
+}
+
 // A list of all the type names in the prelude, `String`, `Option` and
 // so on. The list is sorted alphabetically.
 external fun prelude_types(): List<String> {

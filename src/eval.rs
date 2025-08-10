@@ -3131,6 +3131,80 @@ fn eval_builtin_call(
                 env.push_value(v);
             }
         }
+        BuiltinFunctionKind::DocCommentForMethod => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let type_name = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            text: "String".into(),
+                        },
+                        &arg_values[0],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(arg_positions[0].clone(), message),
+                    ));
+                }
+            };
+
+            let method_name = match arg_values[1].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let message = format_type_error(
+                        &TypeName {
+                            text: "String".into(),
+                        },
+                        &arg_values[1],
+                        env,
+                    );
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(arg_positions[1].clone(), message),
+                    ));
+                }
+            };
+
+            let v = match env.types.get(&TypeName::from(type_name)) {
+                Some(type_def_and_methods) => {
+                    match type_def_and_methods
+                        .methods
+                        .get(&SymbolName::from(method_name.as_str()))
+                    {
+                        Some(method_info) => match method_info.fun_info() {
+                            Some(fun_info) => match &fun_info.doc_comment {
+                                Some(s) => Value::some(Value::new(Value_::String(s.clone()))),
+                                None => Value::none(),
+                            },
+                            None => Value::none(),
+                        },
+                        None => Value::none(),
+                    }
+                }
+                None => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(v);
+            }
+        }
         BuiltinFunctionKind::SourceForFun => {
             check_arity(
                 &SymbolName {

@@ -1,7 +1,7 @@
 /* Heavily inspired by https://github.com/thesephist/codeframe,
       which is under a MIT license. */
 body {
-  max-width: 900px;
+  max-width: 800px;
   margin: 24px auto 52px auto;
   font-size: 18px;
   background-color: #ebeee3;

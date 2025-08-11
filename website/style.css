@@ -220,3 +220,19 @@ footer {
 video {
   max-width: 100%;
 }
+
+/* List styling: bullets outside margin, so content aligns with left
+   margin. */
+ul {
+  list-style-position: outside;
+  padding-left: 0;
+}
+
+ul li {
+  margin-bottom: 1em;
+}
+
+/* Nested lists should still be indented. */
+ul ul {
+  margin-left: 1em;
+}

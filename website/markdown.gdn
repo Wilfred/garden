@@ -246,6 +246,10 @@ fun render_inline(src: String): String {
       parts = parts.append(render_image(piece))
     } else if piece.starts_with("<") {
       parts = parts.append(piece)
+    } else if piece.starts_with("**") && piece.ends_with("**") {
+      parts = parts.append(render_strong(piece))
+    } else if piece.starts_with("*") && piece.ends_with("*") {
+      parts = parts.append(render_emphasis(piece))
     } else {
       parts = parts.append(render_inline_backticks(piece))
     }
@@ -291,7 +295,7 @@ fun split_inline_parts(src: String): List<String> {
 
   let s = src
   while True {
-    match first_idx(s, ["[", "![", "<"]) {
+    match first_idx(s, ["[", "![", "<", "*"]) {
       Some(idx) => {
         let before_bracket = s.substring(0, idx)
         let after_bracket = s.substring(idx, s.len())
@@ -309,7 +313,7 @@ fun split_inline_parts(src: String): List<String> {
               break
             }
           }
-        } else {
+        } else if after_bracket.starts_with("[") || after_bracket.starts_with("!") {
           // This is a link or image.
           match split_markdown_link(after_bracket) {
             Some((part, after_part)) => {
@@ -320,6 +324,36 @@ fun split_inline_parts(src: String): List<String> {
             None => {
               // We saw malformed syntax, e.g. an unfinished link `[foo](bar`.
               // Treat it as simple text.
+              parts = parts.append(s)
+              break
+            }
+          }
+        } else if after_bracket.starts_with("**") {
+          // A **strong** substring. For simplicity, we assume this
+          // does not nest with links. This doesn't match the
+          // commonmark spec, but it covers the common cases.
+          match split_on_terminator(after_bracket.substring(2, after_bracket.len()), "**") {
+            Some((part, after_part)) => {
+              parts = parts.append(before_bracket)
+              parts = parts.append("**" ^ part)
+              s = after_part
+            }
+            None => {
+              parts = parts.append(s)
+              break
+            }
+          }
+        } else if after_bracket.starts_with("*") {
+          // An *emphasis* substring. As with **strong**, this is
+          // simplistic implementation that doesn't cover all cases in
+          // the commonmark spec.
+          match split_on_terminator(after_bracket.substring(1, after_bracket.len()), "*") {
+            Some((part, after_part)) => {
+              parts = parts.append(before_bracket)
+              parts = parts.append("*" ^ part)
+              s = after_part
+            }
+            None => {
               parts = parts.append(s)
               break
             }
@@ -458,6 +492,16 @@ fun render_image(src: String): String {
   }
 }
 
+fun render_strong(src: String): String {
+  let inner = src.strip_prefix("**").strip_suffix("**")
+  "<strong>" ^ inner ^ "</strong>"
+}
+
+fun render_emphasis(src: String): String {
+  let inner = src.strip_prefix("*").strip_suffix("*")
+  "<em>" ^ inner ^ "</em>"
+}
+
 fun render_markdown_paragraph(src: String): String {
   "<p>" ^ render_inline(src) ^ "</p>"
 }
@@ -568,18 +612,26 @@ test render_triple_backtick_comment {
   assert(render_markdown("```garden nocheck\nfoo // bar\n```") == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
 }
 
-test render_asterisk {
+test render_asterisk_bullet {
   assert(render_markdown("* foo\n* bar") == "<ul>
 <li>foo</li>
 <li>bar</li>
 </ul>")
 }
 
-test render_asterisk_with_content_after {
+test render_asterisk_bullet_with_content_after {
   assert(render_markdown("* foo\n\nbar") == "<ul>
 <li>foo</li>
 </ul>
 <p>bar</p>")
+}
+
+test render_asterisk_emphasis {
+  assert(render_markdown("*foo*") == "<p><em>foo</em></p>")
+}
+
+test render_asterisk_strong {
+  assert(render_markdown("**foo**") == "<p><strong>foo</strong></p>")
 }
 
 test render_thematic_break {

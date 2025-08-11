@@ -561,7 +561,7 @@ test render_triple_backtick_blank_line {
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```garden nocheck\nfun foo\n```") == "<pre><code><a href=\"./keyword:fun.html\"><span class=\"keyword\">fun</span></a> foo</code></pre>")
+  assert(render_markdown("```garden nocheck\nfun foo\n```") == "<pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre>")
 }
 
 test render_triple_backtick_comment {

@@ -389,11 +389,11 @@ test split_markdown_link {
   assert(split_markdown_link("[unclosed") == None)
 }
 
-// If `s` contains any of the items in `chars`, return the index of
-// the first match.
-fun first_idx(s: String, chars: List<String>): Option<Int> {
+// If `s` contains any of the items in `substrings`, return the index
+// of the first match.
+fun first_idx(s: String, substrings: List<String>): Option<Int> {
   let indices: List<Int> = []
-  for char in chars {
+  for char in substrings {
     match s.index_of(char) {
       Some(idx) => {
         indices = indices.append(idx)

@@ -210,7 +210,12 @@ fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
       continue
     }
 
-    let html = render_markdown(substitute_shorthand(website_dir, post.src))
+    let src = match post.title {
+      Some(title) => "# " ^ title ^ "\n\n" ^ post.src
+      None => post.src
+    }
+
+    let html = render_markdown(substitute_shorthand(website_dir, src))
     write_website_page(base_tmpl_src, html, post.path.set_extension("html"))
   }
 }

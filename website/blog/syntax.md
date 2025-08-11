@@ -4,8 +4,6 @@ date: 2025-07-13
 title: Choosing a Syntax
 ```
 
-# Choosing a Syntax
-
 To kick things off, I want to talk about the basic syntax of
 Garden. Garden has a deliberately conventional syntax.
 

@@ -247,14 +247,14 @@ fun render_inline(src: String): String {
     } else if piece.starts_with("<") {
       parts = parts.append(piece)
     } else {
-      parts = parts.append(render_inline_no_links(piece))
+      parts = parts.append(render_inline_backticks(piece))
     }
   }
 
   "".join(parts)
 }
 
-fun render_inline_no_links(src: String): String {
+fun render_inline_backticks(src: String): String {
   let parts: List<String> = []
 
   let s = src
@@ -439,7 +439,7 @@ fun render_link(src: String): String {
     Some(i) => {
       let link_text = src.substring(1, i)
       let link_url = src.substring(i + 2, src.len() - 1)
-      "<a href=\"" ^ link_url ^ "\">" ^ render_inline_no_links(link_text) ^ "</a>"
+      "<a href=\"" ^ link_url ^ "\">" ^ render_inline_backticks(link_text) ^ "</a>"
     }
     None => src
   }

@@ -35,10 +35,14 @@ header > a {
 }
 
 code {
-  background-color: #00000014;
+  border-radius: 5px;
+  border: 1px solid #bcbec0;
+  padding: 2px;
 }
 
 pre > code {
+  border: initial;
+  padding: initial;
   background-color: initial;
 }
 

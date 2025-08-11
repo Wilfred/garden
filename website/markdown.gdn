@@ -87,7 +87,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       }
 
       parts = parts.append(Heading(line))
-    } else if line.starts_with("*") {
+    } else if line.starts_with("* ") {
       if in_bullets {
         current_section = current_section.append(line)
       } else {

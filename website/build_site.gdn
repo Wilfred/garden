@@ -210,9 +210,20 @@ fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
       continue
     }
 
-    let src = match post.title {
-      Some(title) => "# " ^ title ^ "\n\n" ^ post.src
-      None => post.src
+    let src = post.src
+
+    match post.date {
+      Some(date) => {
+        src = "*" ^ date ^ "*\n\n" ^ src
+      }
+      None => {}
+    }
+
+    match post.title {
+      Some(title) => {
+        src = "# " ^ title ^ "\n" ^ src
+      }
+      None => {}
     }
 
     let html = render_markdown(substitute_shorthand(website_dir, src))

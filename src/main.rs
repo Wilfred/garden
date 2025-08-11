@@ -704,4 +704,24 @@ mod tests {
         cmd.arg("check").arg("src/__prelude.gdn");
         cmd.assert().success();
     }
+
+    #[test]
+    fn test_site_builder_check() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("check").arg("website/build_site.gdn");
+        cmd.assert().success();
+    }
+
+    #[test]
+    fn test_site_builder_unit_tests() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("test")
+            .arg("website/build_site.gdn")
+            .arg("website/markdown.gdn");
+        cmd.assert().success();
+    }
 }

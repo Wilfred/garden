@@ -5,5 +5,5 @@ fun foo(): Int {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":17996,"end_offset":17999,"line_number":807,"end_line_number":807,"column":7,"end_column":10,"path":"GDN_TEST_ROOT/__prelude.gdn"}
+// {"start_offset":17938,"end_offset":17941,"line_number":799,"end_line_number":799,"column":7,"end_column":10,"path":"GDN_TEST_ROOT/__prelude.gdn"}
 

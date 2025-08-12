@@ -89,11 +89,7 @@ enum NoValue {}
 
 // Does this string start with `s`?
 external method starts_with(this: String, s: String): Bool {
-  if s.len() > this.len() {
-    return False
-  }
-
-  this.substring(0, s.len()) == s
+  __BUILTIN_IMPLEMENTATION
 }
 
 test starts_with {
@@ -107,11 +103,7 @@ test starts_with {
 
 // Does this string end with `s`?
 external method ends_with(this: String, s: String): Bool {
-  if s.len() > this.len() {
-    return False
-  }
-
-  this.substring(this.len() - s.len(), this.len()) == s
+  __BUILTIN_IMPLEMENTATION
 }
 
 test ends_with {

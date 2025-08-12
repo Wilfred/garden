@@ -677,6 +677,8 @@ pub(crate) enum BuiltinMethodKind {
     StringJoin,
     StringLen,
     StringLines,
+    StringStartsWith,
+    StringEndsWith,
     StringSubstring,
 }
 

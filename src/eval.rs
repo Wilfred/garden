@@ -4500,6 +4500,138 @@ fn eval_builtin_method_call(
                 env.push_value(value);
             }
         }
+        BuiltinMethodKind::StringStartsWith => {
+            check_arity(
+                &SymbolName {
+                    text: "String::starts_with".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let receiver_s = match receiver_value.as_ref() {
+                Value_::String(s) => s.clone(),
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "String".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            };
+            let arg_s = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "String".into(),
+                                },
+                                &arg_values[0],
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            };
+
+            let value = Value::bool(receiver_s.starts_with(arg_s));
+            if expr_value_is_used {
+                env.push_value(value);
+            }
+        }
+        BuiltinMethodKind::StringEndsWith => {
+            check_arity(
+                &SymbolName {
+                    text: "String::ends_with".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let receiver_s = match receiver_value.as_ref() {
+                Value_::String(s) => s.clone(),
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "String".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            };
+            let arg_s = match arg_values[0].as_ref() {
+                Value_::String(s) => s,
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "String".into(),
+                                },
+                                &arg_values[0],
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            };
+
+            let value = Value::bool(receiver_s.ends_with(arg_s));
+            if expr_value_is_used {
+                env.push_value(value);
+            }
+        }
         BuiltinMethodKind::StringJoin => {
             check_arity(
                 &SymbolName {
@@ -4703,6 +4835,7 @@ fn eval_builtin_method_call(
                 }
             }
         }
+
         BuiltinMethodKind::StringSubstring => {
             check_arity(
                 &SymbolName {

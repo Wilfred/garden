@@ -2218,9 +2218,27 @@ fn parse_block(
 }
 
 fn join_comments(comments: &[(Position, &str)]) -> String {
-    let mut comment_texts = comments
+    let mut following_line = None;
+    let mut contiguous_comments = vec![];
+
+    // Accumulate comments starting from the comment closest to this
+    // definition. Stop if we see any blank lines.
+    for (pos, comment) in comments.iter().rev() {
+        if let Some(following_line) = following_line {
+            if pos.line_number + 1 != following_line {
+                break;
+            }
+        }
+
+        contiguous_comments.push(comment);
+        following_line = Some(pos.line_number);
+    }
+
+    contiguous_comments.reverse();
+
+    let mut comment_texts = contiguous_comments
         .iter()
-        .map(|(_, comment)| {
+        .map(|comment| {
             let comment_text = comment.strip_prefix("//").unwrap_or(comment);
             comment_text.strip_prefix(" ").unwrap_or(comment_text)
         })

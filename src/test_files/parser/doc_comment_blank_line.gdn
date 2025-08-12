@@ -1,0 +1,38 @@
+// This is an unrelated comment.
+
+// This is a doc comment.
+fun foo() {}
+
+// args: dump-ast
+// expected stdout:
+// Fun(
+//     Symbol"foo",
+//     FunInfo {
+//         pos: Position { ... },
+//         doc_comment: Some(
+//             "This is a doc comment.",
+//         ),
+//         name_sym: Some(
+//             Symbol"foo",
+//         ),
+//         item_id: Some(
+//             ToplevelItemId(
+//                 1,
+//             ),
+//         ),
+//         type_params: [],
+//         params: ParenthesizedParameters {
+//             open_paren: Position { ... },
+//             params: [],
+//             close_paren: Position { ... },
+//         },
+//         return_hint: None,
+//         body: Block {
+//             open_brace: Position { ... },
+//             exprs: [],
+//             close_brace: Position { ... },
+//         },
+//     },
+//     CurrentFile,
+// )
+

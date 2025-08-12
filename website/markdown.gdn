@@ -176,6 +176,7 @@ fun render_markdown_code(snippet: Snippet): String {
 
 fun render_markdown_garden_code(snippet: Snippet): String {
   if snippet.labels.contains("nocheck").not() {
+    // Check that the snippet type checks.
     match garden::check_snippet(snippet.content) {
       Ok(_) => {}
       Err(messages) => {
@@ -183,6 +184,24 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         for message in messages {
           log::info(message)
         }
+      }
+    }
+
+    // Check that the expected values comments type check too.
+    for line in snippet.content.lines() {
+      match line.split_once("//->") {
+        Some((_before, after)) => {
+          match garden::check_snippet(after) {
+            Ok(_) => {}
+            Err(messages) => {
+              log::info(after)
+              for message in messages {
+                log::info(message)
+              }
+            }
+          }
+        }
+        None => {}
       }
     }
   }

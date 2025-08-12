@@ -174,32 +174,27 @@ fun render_markdown_code(snippet: Snippet): String {
   "<pre>" ^ inner ^ "</pre>"
 }
 
-fun render_markdown_garden_code(snippet: Snippet): String {
-  if snippet.labels.contains("nocheck").not() {
-    // Check that the snippet type checks.
-    match garden::check_snippet(snippet.content) {
-      Ok(_) => {}
-      Err(messages) => {
-        log::info(snippet.content)
-        for message in messages {
-          log::info(message)
-        }
+fun check_source(src: String): Unit {
+  match garden::check_snippet(src) {
+    Ok(_) => {}
+    Err(messages) => {
+      log::warn("Found an error when checking: " ^ src)
+      for message in messages {
+        log::info("  " ^ message)
       }
     }
+  }
+}
+
+fun render_markdown_garden_code(snippet: Snippet): String {
+  if snippet.labels.contains("nocheck").not() {
+    check_source(snippet.content)
 
     // Check that the expected values comments type check too.
     for line in snippet.content.lines() {
       match line.split_once("//->") {
         Some((_before, after)) => {
-          match garden::check_snippet(after) {
-            Ok(_) => {}
-            Err(messages) => {
-              log::info(after)
-              for message in messages {
-                log::info(message)
-              }
-            }
-          }
+          check_source(after)
         }
         None => {}
       }

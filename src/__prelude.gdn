@@ -10,7 +10,7 @@ enum Bool {
 // Negate this value.
 //
 // ```
-// True.not() // false
+// True.not() // False
 // ```
 external method not(this: Bool): Bool {
   match this {

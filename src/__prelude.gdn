@@ -10,7 +10,7 @@ enum Bool {
 // Negate this value.
 //
 // ```
-// True.not() // False
+// True.not() //-> False
 // ```
 external method not(this: Bool): Bool {
   match this {
@@ -126,7 +126,7 @@ test ends_with {
 // Replace occurrences of `before` with `after` in this string.
 //
 // ```
-// "abc xabc".replace("abc", "def") // "def xdef"
+// "abc xabc".replace("abc", "def") //-> "def xdef"
 // ```
 external method replace(this: String, before: String, after: String): String {
   let parts: List<String> = []
@@ -158,7 +158,7 @@ test string_replace {
 // the text before and after `needle`.
 //
 // ```
-// "abcd".split_once("b") // Some(["a", "cd"])
+// "abcd".split_once("b") //-> Some(["a", "cd"])
 // ```
 external method split_once(this: String, needle: String): Option<(String, String)> {
   match this.index_of(needle) {
@@ -183,7 +183,7 @@ test split_once {
 // Join `items` (a list of strings) with this string as a separator.
 //
 // ```
-// ":".join(["a", "b", "c"]) // "a:b:c"
+// ":".join(["a", "b", "c"]) //-> "a:b:c"
 // ```
 external method join(this: String, items: List<String>): String {
   __BUILTIN_IMPLEMENTATION
@@ -220,7 +220,7 @@ external method contains(this: String, substring: String): Bool {
 // Remove whitespace at the beginning of this string.
 //
 // ```
-// " foo ".trim_left() // "foo "
+// " foo ".trim_left() //-> "foo "
 // ```
 external method trim_left(this: String): String {
   let i = 0
@@ -246,7 +246,7 @@ test trim_left {
 // Remove whitespace at the end of this string.
 //
 // ```
-// " foo ".trim_right() // " foo"
+// " foo ".trim_right() //-> " foo"
 // ```
 external method trim_right(this: String, ): String {
   let i = this.len() - 1
@@ -286,8 +286,8 @@ test trim {
 // does not end with the suffix, return the string unchanged.
 //
 // ```
-// "foo".strip_suffix("o") // "fo"
-// "bar".strip_suffix("o") // "bar"
+// "foo".strip_suffix("o") //-> "fo"
+// "bar".strip_suffix("o") //-> "bar"
 // ```
 external method strip_suffix(this: String, suffix: String): String {
   if this.ends_with(suffix) {
@@ -306,9 +306,9 @@ test strip_suffix {
 // does not start with the prefix, return the string unchanged.
 //
 // ```
-// "foo".strip_prefix("f") // "oo"
-// "bar".strip_prefix("f") // "bar"
-// "ffoo".strip_prefix("f") // "foo"
+// "foo".strip_prefix("f") //-> "oo"
+// "bar".strip_prefix("f") //-> "bar"
+// "ffoo".strip_prefix("f") //-> "foo"
 // ```
 external method strip_prefix(this: String, prefix: String): String {
   if this.starts_with(prefix) {
@@ -327,10 +327,10 @@ test strip_prefix {
 // Split this string on occurrences of `needle`.
 //
 // ```
-// "a,b".split(",") // ["a", "b"]
-// "ab".split(",") // ["ab"]
-// "a,,b,".split(",") // ["a", "", "b", ""]
-// "".split(",") // []
+// "a,b".split(",") //-> ["a", "b"]
+// "ab".split(",") //-> ["ab"]
+// "a,,b,".split(",") //-> ["a", "", "b", ""]
+// "".split(",") //-> []
 // ```
 external method split(this: String, needle: String): List<String> {
   if this == "" {
@@ -390,9 +390,9 @@ struct Path {
 // returned as-is.
 //
 // ```
-// Path{ p: "/foo/bar.txt" }.parent() // Path{ p: "/foo" }
-// Path{ p: "/foo/bar/" }.parent() // Path{ p: "/foo" }
-// Path{ p: "/" }.parent() // Path{ p: "/" }
+// Path{ p: "/foo/bar.txt" }.parent() //-> Path{ p: "/foo" }
+// Path{ p: "/foo/bar/" }.parent() //-> Path{ p: "/foo" }
+// Path{ p: "/" }.parent() //-> Path{ p: "/" }
 // ```
 external method parent(this: Path): Option<Path> {
   let p = this.p.strip_suffix("/")
@@ -452,9 +452,9 @@ external method extension(this: Path): Option<String> {
 // The last component of this path.
 //
 // ```
-// Path{ p: "/foo/bar.txt" }.file_name() // Some("bar.txt")
-// Path{ p: "/foo/" }.file_name() // Some("foo")
-// Path{ p: "/" }.file_name() // None
+// Path{ p: "/foo/bar.txt" }.file_name() //-> Some("bar.txt")
+// Path{ p: "/foo/" }.file_name() //-> Some("foo")
+// Path{ p: "/" }.file_name() //-> None
 // ```
 external method file_name(this: Path): Option<String> {
   if this.p == "/" {
@@ -473,9 +473,9 @@ test path_file_name {
 // Set the extension of the filename to `new_ext`.
 //
 // ```
-// Path{ p: "/foo/bar"}.set_extension("log") // Path{ p: "/foo/bar.log"}
-// Path{ p: "/foo/bar.txt"}.set_extension("log") // Path{ p: "/foo/bar.log"}
-// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") // Path{ p: "/foo/bar.log"}
+// Path{ p: "/foo/bar"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+// Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
+// Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
 // ```
 external method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext
@@ -507,7 +507,7 @@ test path_set_extension {
 // Return a list from `i` (inclusive) to `j` (exclusive).
 //
 // ```
-// range(1, 5) // [1, 2, 3, 4]
+// range(1, 5) //-> [1, 2, 3, 4]
 // ```
 external fun range(i: Int, j: Int): List<Int> {
   let items: List<Int> = []
@@ -533,7 +533,7 @@ struct List<T> {
 // Return a new list with the value added to the end.
 //
 // ```
-// [10].append(11) // [10, 11]
+// [10].append(11) //-> [10, 11]
 // ```
 external method append<T>(this: List<T>, value: T): List<T> {
   __BUILTIN_IMPLEMENTATION
@@ -542,7 +542,7 @@ external method append<T>(this: List<T>, value: T): List<T> {
 // Does this list contain `item`?
 //
 // ```
-// [10, 11, 12].contains(12) // True
+// [10, 11, 12].contains(12) //-> True
 // ```
 external method contains<T>(this: List<T>, item: T): Bool {
   __BUILTIN_IMPLEMENTATION
@@ -560,8 +560,8 @@ test list_contains {
 // than `length - 1`.
 //
 // ```
-// [4, 5, 6].get(1) // Some(5)
-// [4, 5, 6].get(3) // None
+// [4, 5, 6].get(1) //-> Some(5)
+// [4, 5, 6].get(3) //-> None
 // ```
 external method get<T>(this: List<T>, index: Int): Option<T> {
   __BUILTIN_IMPLEMENTATION
@@ -578,7 +578,7 @@ test list_get {
 // Return the length of the list.
 //
 // ```
-// [10, 11, 12].len() // 3
+// [10, 11, 12].len() //-> 3
 // ```
 external method len<T>(this: List<T>): Int {
   __BUILTIN_IMPLEMENTATION
@@ -646,7 +646,7 @@ test is_non_empty {
 // results.
 //
 // ```
-// [1, 2].map(fun(x: Int) { x + 1 }) // [2, 3]
+// [1, 2].map(fun(x: Int) { x + 1 }) //-> [2, 3]
 // ```
 external method map<T, U>(this: List<T>, f: Fun<(T), U>): List<U> {
   let items: List<U> = []
@@ -666,9 +666,9 @@ test list_map {
 // instance.
 //
 // ```
-// ["A", "B"].index_of("B") // Some(1)
-// ["A", "B", "B"].index_of("B") // Some(1)
-// ["A", "B"].index_of("C") // None
+// ["A", "B"].index_of("B") //-> Some(1)
+// ["A", "B", "B"].index_of("B") //-> Some(1)
+// ["A", "B"].index_of("C") //-> None
 // ```
 external method index_of<T>(this: List<T>, value: T): Option<Int> {
   for (i, v) in this.enumerate() {
@@ -691,8 +691,8 @@ test list_index_of {
 // the end.
 //
 // ```
-// [10, 11, 12].slice(0, 2) // [10, 11]
-// [10, 11, 12].slice(1, -1) // [11]
+// [10, 11, 12].slice(0, 2) //-> [10, 11]
+// [10, 11, 12].slice(1, -1) //-> [11]
 // ```
 external method slice<T>(this: List<T>, i: Int, j: Int): List<T> {
   if (j < 0) {
@@ -725,7 +725,7 @@ test list_slice {
 // index of the position of each value.
 //
 // ```
-// ["a", "b"].enumerate() // [(0, "a"), (1, "b")]
+// ["a", "b"].enumerate() //-> [(0, "a"), (1, "b")]
 // ```
 external method enumerate<T>(this: List<T>): List<(Int, T)> {
   let items: List<(Int, T)> = []
@@ -782,8 +782,8 @@ test option_or_throw {
 // If this value is `Some(x)`, return `x`, otherwise return `value`.
 //
 // ```
-// Some(1).or_value(5) // 1
-// None.or_value(5) // 5
+// Some(1).or_value(5) //-> 1
+// None.or_value(5) //-> 5
 // ```
 external method or_value<T>(this: Option<T>, value: T): T {
   match this {
@@ -849,7 +849,7 @@ external fun shell(command: String, args: List<String>): Result<String, String> 
 // Return the pretty-printed string representation of this value.
 //
 // ```
-// string_repr(123) // "123"
+// string_repr(123) //-> "123"
 // ```
 external fun string_repr<T>(value: T): String {
   __BUILTIN_IMPLEMENTATION
@@ -859,7 +859,7 @@ external fun string_repr<T>(value: T): String {
 // file. Returns None when run directly in a CLI or JSON session.
 //
 // ```
-// source_directory() // Some(Path{ p: "/home/yourname/awesome_garden_project" })
+// source_directory() //-> Some(Path{ p: "/home/yourname/awesome_garden_project" })
 // ```
 external fun source_directory(): Option<Path> {
   __BUILTIN_IMPLEMENTATION
@@ -868,7 +868,7 @@ external fun source_directory(): Option<Path> {
 // Return the number of characters (codepoints) in the string.
 //
 // ```
-// "abc".len() // 3
+// "abc".len() //-> 3
 // ```
 external method len(this: String): Int {
   __BUILTIN_IMPLEMENTATION
@@ -882,7 +882,7 @@ test string_len {
 // Split this string into a list of lines.
 //
 // ```
-// "a\nb".lines() // ["a", "b"]
+// "a\nb".lines() //-> ["a", "b"]
 // ```
 external method lines(this: String): List<String> {
   __BUILTIN_IMPLEMENTATION
@@ -899,8 +899,8 @@ test string_lines {
 // specified. Indexes are specified in character offsets, not bytes.
 //
 // ```
-// "abcdef".substring(1, 3) // "bc"
-// "abc".substring(1, 99) // "bc"
+// "abcdef".substring(1, 3) //-> "bc"
+// "abc".substring(1, 99) //-> "bc"
 // ```
 external method substring(this: String, from_index: Int, to_index: Int): String {
   __BUILTIN_IMPLEMENTATION
@@ -915,7 +915,7 @@ test string_substring {
 // character offsets, not bytes.
 //
 // ```
-// "abc".index_of("c") // Some(2)
+// "abc".index_of("c") //-> Some(2)
 // ```
 external method index_of(this: String, needle: String): Option<Int> {
   __BUILTIN_IMPLEMENTATION
@@ -935,8 +935,8 @@ test string_index_of {
 // Return True if this path exists.
 //
 // ```
-// Path{ p: "/" }.exists() // True
-// Path{ p: "/no_such_file" }.exists() // False
+// Path{ p: "/" }.exists() //-> True
+// Path{ p: "/no_such_file" }.exists() //-> False
 // ```
 //
 // Note that a path may exist without the current user having

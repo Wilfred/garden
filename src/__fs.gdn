@@ -42,7 +42,7 @@ test list_directory {
 //
 // ```
 // import "__fs.gdn" as fs
-// fs::working_directory() // Path{ p: "/home/yourname/awesome_garden_project" }
+// fs::working_directory() //-> Path{ p: "/home/yourname/awesome_garden_project" }
 // ```
 external fun working_directory(): Path {
   __BUILTIN_IMPLEMENTATION

@@ -29,9 +29,9 @@
 directory. For files, this is the containing directory.</p>
 <p>This always returns a <code>Path</code>, so the root directory (i.e. <code>/</code>) is
 returned as-is.</p>
-<pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt" </span>}.parent() <span class="comment">// Path{ p: "/foo" }</span>
-<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar/" </span>}.parent() <span class="comment">// Path{ p: "/foo" }</span>
-<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/" </span>}.parent() <span class="comment">// Path{ p: "/" }</span></code></pre></div>
+<pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/" }</span></code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

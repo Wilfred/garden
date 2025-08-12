@@ -88,6 +88,11 @@ enum NoValue {}
 // String methods.
 
 // Does this string start with `s`?
+//
+// ```
+// "foobar".starts_with("foo") //-> True
+// "foobar".starts_with("abc") //-> False
+// ```
 external method starts_with(this: String, s: String): Bool {
   __BUILTIN_IMPLEMENTATION
 }
@@ -102,6 +107,11 @@ test starts_with {
 }
 
 // Does this string end with `s`?
+//
+// ```
+// "foobar".ends_with("bar") //-> True
+// "foobar".ends_with("abc") //-> False
+// ```
 external method ends_with(this: String, s: String): Bool {
   __BUILTIN_IMPLEMENTATION
 }

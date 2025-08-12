@@ -40,6 +40,13 @@ code {
   padding: 2px;
 }
 
+a > code:hover {
+  border-color: #307d30;
+}
+a:has(> code) {
+  border-bottom: 0;
+}
+
 pre > code {
   border: initial;
   padding: initial;

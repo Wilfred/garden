@@ -1001,7 +1001,7 @@ impl TypeCheckVisitor<'_> {
                 Type::Tuple(item_tys)
             }
             Expression_::StructLiteral(name_sym, fields) => {
-                let field_tys: Vec<_> = fields
+                let field_tys: Vec<(&Symbol, Position, Type)> = fields
                     .iter()
                     .map(|(sym, expr)| {
                         let ty = self.infer_expr(expr, type_bindings, expected_return_ty);
@@ -1018,17 +1018,21 @@ impl TypeCheckVisitor<'_> {
                         ty_var_env.insert(type_param.name.clone(), None);
                     }
 
-                    let mut sym_to_expected_ty = FxHashMap::default();
+                    let mut sym_to_expected_ty: FxHashMap<SymbolName, (Position, Type)> =
+                        FxHashMap::default();
                     for field in &struct_info.fields {
                         let ty = Type::from_hint(&field.hint, &self.env.types, &ty_var_env)
                             .unwrap_or_err_ty();
-                        sym_to_expected_ty.insert(field.sym.name.clone(), ty);
+                        sym_to_expected_ty
+                            .insert(field.sym.name.clone(), (field.sym.position.clone(), ty));
                     }
 
                     for (sym, expr_pos, ty) in field_tys {
-                        let Some(field_ty) = sym_to_expected_ty.get(&sym.name) else {
+                        let Some((field_pos, field_ty)) = sym_to_expected_ty.get(&sym.name) else {
                             continue;
                         };
+
+                        self.id_to_def_pos.insert(sym.id, field_pos.clone());
 
                         if !is_subtype(&ty, field_ty) {
                             self.diagnostics.push(Diagnostic {

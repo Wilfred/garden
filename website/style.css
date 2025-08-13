@@ -228,11 +228,8 @@ video {
   max-width: 100%;
 }
 
-/* List styling: bullets outside margin, so content aligns with left
-   margin. */
 ul {
-  list-style-position: outside;
-  padding-left: 0;
+  padding-left: 20px;
 }
 
 ul li {

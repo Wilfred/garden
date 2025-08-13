@@ -1,0 +1,13 @@
+struct Person {
+  name: String
+}
+
+fun demo(p: Person) {
+  p.name
+  // ^
+}
+
+// args: definition-position
+// expected stdout:
+// {"start_offset":18,"end_offset":22,"line_number":1,"end_line_number":1,"column":2,"end_column":6,"path":"GDN_TEST_ROOT/src/test_files/go_to_def/struct_field.gdn"}
+

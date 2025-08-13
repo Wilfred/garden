@@ -1466,6 +1466,9 @@ impl TypeCheckVisitor<'_> {
                         if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(name) {
                             for field in &struct_info.fields {
                                 if field.sym.name == field_sym.name {
+                                    self.id_to_def_pos
+                                        .insert(field_sym.id, field.sym.position.clone());
+
                                     let field_ty = Type::from_hint(
                                         &field.hint,
                                         &self.env.types,

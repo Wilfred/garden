@@ -196,11 +196,13 @@ pub(crate) trait Visitor {
             Expression_::StringLiteral(_) => {
                 // TODO: custom method for this variant
             }
-            Expression_::DotAccess(recv, _) => {
+            Expression_::DotAccess(recv, field_sym) => {
                 // TODO: custom method for this variant
+                self.visit_symbol(field_sym);
                 self.visit_expr(recv);
             }
-            Expression_::NamespaceAccess(recv, _) => {
+            Expression_::NamespaceAccess(recv, sym) => {
+                self.visit_symbol(sym);
                 self.visit_expr(recv);
             }
             Expression_::Assert(expr) => {

@@ -36,8 +36,8 @@ pub(crate) fn block_contains_id(block: &Block, id: SyntaxId) -> bool {
     visitor.expr.is_some()
 }
 
-/// Stores a vec of all the expressions whose expression includes
-/// both `offset` and `end_offset`.
+/// Stores a vec of all the expressions and symbols whose position
+/// includes both `offset` and `end_offset`.
 #[derive(Debug, Default, Clone)]
 struct IdFinder {
     offset: usize,

@@ -223,7 +223,8 @@ pub(crate) trait Visitor {
         field_exprs: &[(Symbol, Rc<Expression>)],
     ) {
         self.visit_type_symbol(type_symbol);
-        for (_, expr) in field_exprs {
+        for (sym, expr) in field_exprs {
+            self.visit_symbol(sym);
             self.visit_expr(expr);
         }
     }

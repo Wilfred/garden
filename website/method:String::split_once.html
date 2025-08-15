@@ -27,7 +27,18 @@
     <div class="container"><h1><code>String::split_once</code></h1>
 <p>Split this string on the first occurrence of <code>needle</code>, and return
 the text before and after <code>needle</code>.</p>
-<pre><code><span class="string">"abcd"</span>.split_once(<span class="string">"b"</span>) <span class="comment">//-&gt; Some(["a", "cd"])</span></code></pre></div>
+<pre><code><span class="string">"abcd"</span>.split_once(<span class="string">"b"</span>) <span class="comment">//-&gt; Some(["a", "cd"])</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> split_once(this: <a class="type" href="/type:String.html">String</a>, needle: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;(<a class="type" href="/type:String.html">String</a>, <a class="type" href="/type:String.html">String</a>)&gt; {
+  <a class="keyword" href="/keyword:match.html">match</a> this.index_of(needle) {
+    <span class="type">None</span> =&gt; <span class="type">None</span>
+    <span class="type">Some</span>(i) =&gt; {
+      <span class="type">Some</span>((
+        this.substring(0, i),
+        this.substring(i + needle.len(), this.len()),
+      ))
+    }
+  }
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

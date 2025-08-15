@@ -29,7 +29,16 @@
 instance.</p>
 <pre><code>[<span class="string">"A"</span>, <span class="string">"B"</span>].index_of(<span class="string">"B"</span>) <span class="comment">//-&gt; Some(1)</span>
 [<span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"B"</span>].index_of(<span class="string">"B"</span>) <span class="comment">//-&gt; Some(1)</span>
-[<span class="string">"A"</span>, <span class="string">"B"</span>].index_of(<span class="string">"C"</span>) <span class="comment">//-&gt; None</span></code></pre></div>
+[<span class="string">"A"</span>, <span class="string">"B"</span>].index_of(<span class="string">"C"</span>) <span class="comment">//-&gt; None</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> index_of&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, value: <span class="type">T</span>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; {
+  <a class="keyword" href="/keyword:for.html">for</a> (i, v) <a class="keyword" href="/keyword:in.html">in</a> this.enumerate() {
+    <a class="keyword" href="/keyword:if.html">if</a> v == value {
+      <a class="keyword" href="/keyword:return.html">return</a> <span class="type">Some</span>(i)
+    }
+  }
+
+  <span class="type">None</span>
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

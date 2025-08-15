@@ -25,7 +25,13 @@
     </header>
 
     <div class="container"><h1><code>Option::is_none</code></h1>
-<p>/ Return True if this value is <code>None</code>.</p></div>
+<p>/ Return True if this value is <code>None</code>.</p>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> is_none&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Option.html">Option</a>&lt;<span class="type">T</span>&gt;): <a class="type" href="/type:Bool.html">Bool</a> {
+  <a class="keyword" href="/keyword:match.html">match</a> this {
+    <span class="type">Some</span>(_) =&gt; <span class="type">False</span>,
+    <span class="type">None</span> =&gt; <span class="type">True</span>,
+  }
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

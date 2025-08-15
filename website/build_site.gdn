@@ -65,8 +65,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
     Some(doc_comment) => {
       let heading = "# `" ^ qualified_name ^ "`"
 
-      // Methods don't have source code we can display, so pass None
-      let page_src = render_doc_comment(heading, doc_comment, None)
+      let page_src = render_doc_comment(heading, doc_comment, garden::source_for_method(type_name, method_name))
 
       let dest_path = out_dir.join("method:" ^ (qualified_name ^ ".html"))
       write_website_page(base_tmpl_src, page_src, dest_path)

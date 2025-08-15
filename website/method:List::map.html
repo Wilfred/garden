@@ -27,7 +27,15 @@
     <div class="container"><h1><code>List::map</code></h1>
 <p>Call <code>f</code> on every item in this list, and return a list of the
 results.</p>
-<pre><code>[1, 2].map(<a class="keyword" href="/keyword:fun.html">fun</a>(x: <a class="type" href="/type:Int.html">Int</a>) { x + 1 }) <span class="comment">//-&gt; [2, 3]</span></code></pre></div>
+<pre><code>[1, 2].map(<a class="keyword" href="/keyword:fun.html">fun</a>(x: <a class="type" href="/type:Int.html">Int</a>) { x + 1 }) <span class="comment">//-&gt; [2, 3]</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> map&lt;<span class="type">T</span>, <span class="type">U</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, f: <a class="type" href="/type:Fun.html">Fun</a>&lt;(<span class="type">T</span>), <span class="type">U</span>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">U</span>&gt; {
+  <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">U</span>&gt; = []
+  <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> this {
+    items = items.append(f(item))
+  }
+
+  items
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

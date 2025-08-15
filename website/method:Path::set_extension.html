@@ -28,7 +28,27 @@
 <p>Set the extension of the filename to <code>new_ext</code>.</p>
 <pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
-<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt.gz"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span></code></pre></div>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt.gz"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> set_extension(this: <a class="type" href="/type:Path.html">Path</a>, new_ext: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Path.html">Path</a> {
+  <a class="keyword" href="/keyword:let.html">let</a> new_ext = <span class="string">"." </span>^ new_ext
+  <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
+    <span class="type">Some</span>(file_name) =&gt; {
+      <a class="keyword" href="/keyword:let.html">let</a> base = <a class="keyword" href="/keyword:match.html">match</a> this.parent() {
+        <span class="type">Some</span>(parent) =&gt; parent.p ^ <span class="string">"/"</span>
+        <span class="type">None</span> =&gt; <span class="string">""</span>
+      }
+
+      <a class="keyword" href="/keyword:let.html">let</a> p = <a class="keyword" href="/keyword:match.html">match</a> file_name.split_once(<span class="string">"."</span>) {
+        <span class="type">Some</span>((base_file_name, _ext)) =&gt; {
+          (base ^ base_file_name) ^ new_ext
+        }
+        <span class="type">None</span> =&gt; (base ^ file_name) ^ new_ext
+      }
+      <a class="type" href="/type:Path.html">Path</a>{ p: p }
+    },
+    <span class="type">None</span> =&gt; this,
+  }
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

@@ -26,7 +26,20 @@
 
     <div class="container"><h1><code>String::trim_left</code></h1>
 <p>Remove whitespace at the beginning of this string.</p>
-<pre><code><span class="string">" foo "</span>.trim_left() <span class="comment">//-&gt; "foo "</span></code></pre></div>
+<pre><code><span class="string">" foo "</span>.trim_left() <span class="comment">//-&gt; "foo "</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> trim_left(this: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
+  <a class="keyword" href="/keyword:let.html">let</a> i = 0
+  <a class="keyword" href="/keyword:while.html">while</a> i &lt; this.len() {
+    <a class="keyword" href="/keyword:let.html">let</a> char = this.substring(i, i + 1)
+    <a class="keyword" href="/keyword:if.html">if</a> char != <span class="string">" " </span>{
+      <a class="keyword" href="/keyword:break.html">break</a>
+    }
+
+    i += 1
+  }
+
+  this.substring(i, this.len())
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

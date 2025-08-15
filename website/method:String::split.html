@@ -29,7 +29,31 @@
 <pre><code><span class="string">"a,b"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["a", "b"]</span>
 <span class="string">"ab"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["ab"]</span>
 <span class="string">"a,,b,"</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; ["a", "", "b", ""]</span>
-<span class="string">""</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; []</span></code></pre></div>
+<span class="string">""</span>.split(<span class="string">","</span>) <span class="comment">//-&gt; []</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> split(this: <a class="type" href="/type:String.html">String</a>, needle: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+  <a class="keyword" href="/keyword:if.html">if</a> this == <span class="string">"" </span>{
+    <a class="keyword" href="/keyword:return.html">return</a> []
+  }
+
+  <a class="keyword" href="/keyword:let.html">let</a> s = this
+
+  <a class="keyword" href="/keyword:let.html">let</a> parts: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; = []
+  <a class="keyword" href="/keyword:while.html">while</a> <span class="type">True</span> {
+    <a class="keyword" href="/keyword:match.html">match</a> s.index_of(needle) {
+      <span class="type">Some</span>(i) =&gt; {
+        parts = parts.append(s.substring(0, i))
+        s = s.substring(i + needle.len(), s.len())
+      }
+      <span class="type">None</span> =&gt; {
+        parts = parts.append(s)
+        <a class="keyword" href="/keyword:break.html">break</a>
+      }
+    }
+
+  }
+
+  parts
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

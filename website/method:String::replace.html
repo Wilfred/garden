@@ -26,7 +26,27 @@
 
     <div class="container"><h1><code>String::replace</code></h1>
 <p>Replace occurrences of <code>before</code> with <code>after</code> in this string.</p>
-<pre><code><span class="string">"abc xabc"</span>.replace(<span class="string">"abc"</span>, <span class="string">"def"</span>) <span class="comment">//-&gt; "def xdef"</span></code></pre></div>
+<pre><code><span class="string">"abc xabc"</span>.replace(<span class="string">"abc"</span>, <span class="string">"def"</span>) <span class="comment">//-&gt; "def xdef"</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> replace(this: <a class="type" href="/type:String.html">String</a>, before: <a class="type" href="/type:String.html">String</a>, after: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
+  <a class="keyword" href="/keyword:let.html">let</a> parts: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; = []
+
+  <a class="keyword" href="/keyword:let.html">let</a> s = this
+  <a class="keyword" href="/keyword:while.html">while</a> <span class="type">True</span> {
+    <a class="keyword" href="/keyword:match.html">match</a> s.index_of(before) {
+      <span class="type">Some</span>(i) =&gt; {
+        parts = parts.append(s.substring(0, i))
+        parts = parts.append(after)
+        s = s.substring(i + before.len(), s.len())
+      }
+      <span class="type">None</span> =&gt; {
+        parts = parts.append(s)
+        <a class="keyword" href="/keyword:break.html">break</a>
+      }
+    }
+  }
+
+  <span class="string">""</span>.join(parts)
+}</code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

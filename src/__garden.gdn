@@ -165,6 +165,22 @@ test source_for_fun {
   }
 }
 
+// Get the source code for the function definition of `name`.
+external fun source_for_method(type_name: String, method_name): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test source_for_method {
+  match source_for_method("String", "len") {
+    Some(source) => {
+      assert(source.starts_with("// "))
+    }
+    None => {
+      assert(False)
+    }
+  }
+}
+
 // All the `external` functions in `ns`.
 external fun namespace_functions(ns: Namespace): List<String> {
   // This is deliberately not a method on Namespace, so code

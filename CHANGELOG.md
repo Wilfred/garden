@@ -38,7 +38,8 @@ if True { println } else { println }("hello world")
 ### Standard Library
 
 Added `List::index_of()`, `String::trim()`, `garden::source_for_fun`,
-`garden::doc_comment()`, `garden::doc_comment_for_method()`, and `garden::methods_for_type()`.
+`garden::source_for_method()`, `garden::doc_comment()`,
+`garden::doc_comment_for_method()`, and `garden::methods_for_type()`.
 
 Fixed an issue with `__fs::list_directory()` returning an invalid
 list.

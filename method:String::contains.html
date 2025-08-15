@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>String::contains</code></h1>
+<p>Does this string contain <code>substring</code>?</p>
+<pre><code><span class="string">"abcd"</span>.contains(<span class="string">"bc"</span>) <span class="comment">//-&gt; True</span>
+<span class="string">"abcd"</span>.contains(<span class="string">"x"</span>) <span class="comment">//-&gt; False</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> contains(this: <a class="type" href="/type:String.html">String</a>, substring: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Bool.html">Bool</a> {
+  <a class="keyword" href="/keyword:if.html">if</a> substring.len() &gt; this.len() {
+    <a class="keyword" href="/keyword:return.html">return</a> <span class="type">False</span>
+  }
+
+  <a class="keyword" href="/keyword:let.html">let</a> i = 0
+  <a class="keyword" href="/keyword:while.html">while</a> i &lt;= (this.len() - substring.len()) {
+    <a class="keyword" href="/keyword:let.html">let</a> section = this.substring(i, i + substring.len())
+    <a class="keyword" href="/keyword:if.html">if</a> section == substring {
+      <a class="keyword" href="/keyword:return.html">return</a> <span class="type">True</span>
+    }
+
+    i += 1
+  }
+
+  <span class="type">False</span>
+}</code></pre></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

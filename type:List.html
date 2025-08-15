@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>List</code> type</h1>
+<p>An immutable sequence of values. For example, <code>[1, 2, 3]</code> is a
+<code>List&lt;Int&gt;</code>.</p>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:struct.html">struct</a> <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
+  __BUILTIN_IMPLEMENTATION: <a class="type" href="/type:NoValue.html">NoValue</a>,
+}</code></pre>
+<h2>Methods</h2>
+<ul>
+<li><a href="/method:List::append.html"><code>append</code></a></li>
+<li><a href="/method:List::contains.html"><code>contains</code></a></li>
+<li><a href="/method:List::enumerate.html"><code>enumerate</code></a></li>
+<li><a href="/method:List::filter.html"><code>filter</code></a></li>
+<li><a href="/method:List::first.html"><code>first</code></a></li>
+<li><a href="/method:List::get.html"><code>get</code></a></li>
+<li><a href="/method:List::index_of.html"><code>index_of</code></a></li>
+<li><a href="/method:List::is_empty.html"><code>is_empty</code></a></li>
+<li><a href="/method:List::is_non_empty.html"><code>is_non_empty</code></a></li>
+<li><a href="/method:List::last.html"><code>last</code></a></li>
+<li><a href="/method:List::len.html"><code>len</code></a></li>
+<li><a href="/method:List::map.html"><code>map</code></a></li>
+<li><a href="/method:List::slice.html"><code>slice</code></a></li>
+</ul></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

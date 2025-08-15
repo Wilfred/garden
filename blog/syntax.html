@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1>Choosing a Syntax</h1>
+<p><em>2025-07-13</em></p>
+<p>To kick things off, I want to talk about the basic syntax of
+Garden. Garden has a deliberately conventional syntax.</p>
+<pre><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+  <a class="keyword" href="/keyword:if.html">if</a> i &lt; 2 {
+    <a class="keyword" href="/keyword:return.html">return</a> 1
+  }
+
+  fib(i - 1) + fib(i - 2)
+}</code></pre>
+<p>I'm trying to avoid spending my <a href="https://steveklabnik.com/writing/the-language-strangeness-budget/">strangeness
+budget</a>
+on syntax.</p>
+<h2>Keywords</h2>
+<p>I want keywords to be short. This follows <a href="https://buttondown.com/hillelwayne/archive/stroustrups-rule/">Stroustrup's
+Rule</a>,
+which favours short syntax for common operations. There's little
+benefit for <code>function</code> in JavaScript, it's just more typing on the
+keyboard.</p>
+<p>However, I want keywords to be pronounceable, hence <code>fun</code> instead of
+<code>fn</code>. This is based on the Strange Loop talk <a href="https://youtu.be/g1ib43q3uXQ?t=2165">How to teach programming
+(and other things)?</a> by Felienne
+Hermans (creator of <a href="https://hedy.org/">Hedy</a>). Felienne talks about
+the advantages of reading code aloud when teaching, and I want to
+support that. I say code aloud sometimes too, especially in
+conversations.</p>
+<h2>Lisp and Nesting</h2>
+<p>Lisp is a big influence on Garden, and I enjoy using s-expression
+syntax. Unfortunately it's outside my strangeness budget. I also think
+the uniformity can make some code patterns harder to read, because
+code with vastly different semantics can appear quite similar visually.</p>
+<p>Parentheses-focused syntax has some interesting advantages though.</p>
+<p>(1) S-expressions make macro systems easier. You have a natural
+correspondence between surface syntax and the data structures that
+macros see. Macros aren't a priority in Garden as they make developer
+tooling harder, and tooling is my primary focus.</p>
+<p>(2) An expression-oriented language with a simple nested syntax makes
+it really easy to evaluate snippets. You can evaluate both definitions
+and expressions in the interactive interpreter ("REPL").</p>
+<p>You often see subexpressions that you can evaluate in
+isolation too!</p>
+<pre><code>(defun garden-send-input (string &optional path offset end-offset)
+  "Send STRING to the current garden session for evaluation."
+  (let ((buf (garden--active-buffer)))
+    (garden--send-run (get-buffer-process buf) string path offset end-offset)))</code></pre>
+<p>I can run <code>(garden--active-buffer)</code> on its own, which is super
+convenient. Unfortunately I can't do this for all expressions. There's
+no easy way to see the output of <code>(get-buffer-process buf)</code> without
+e.g. setting a breakpoint, because <code>buf</code> is bound outside the function
+call.</p>
+<p>I plan to support this 'evaluate this subexpression' feature in
+Garden's syntax.</p>
+<h2>Smalltalk</h2>
+<p>Smalltalk is another big influence on Garden. The Smalltalk syntax is
+small, but it's not widely known. It would be costly to my strangeness
+budget.</p>
+<p>Smalltalk syntax also has a few interesting advantages.</p>
+<p>(1) Block syntax works like a closure, but it doesn't support early
+return. Instead, <code>^</code> is early return anywhere inside a method
+definition, even inside blocks.</p>
+<p><code>^</code> and blocks are an elegant way to express control flow primitives.
+However, if we're doing conventional loops anyway, there's not much benefit
+for Garden.</p>
+<p>(2) Method arguments are almost always keyword arguments, and often
+resemble sentences. This is often very readable.</p>
+<pre><code>10 to: 1 by: -1 do: [:x | x printNl ]</code></pre>
+<p>It's also explicit that the keywords are part of the API. I've worked
+with languages (particularly Python) where you rename a parameter and
+accidentally break your call sites, because they're using keyword
+rather than positional arguments.</p>
+<p>Garden currently uses positional arguments, as it was conventional and
+simpler to implement. It's also less verbose, especially when
+experimenting in the REPL.</p>
+<h2>Unconventional Bits</h2>
+<p>I'm happy to break convention where it makes sense for Garden's
+design. For example, methods are not defined nested inside the
+relevant type.</p>
+<pre><code><a class="keyword" href="/keyword:struct.html">struct</a> <span class="type">Person</span> {
+  name: <a class="type" href="/type:String.html">String</a>,
+}
+
+<a class="keyword" href="/keyword:method.html">method</a> greet(this: <span class="type">Person</span>): <a class="type" href="/type:String.html">String</a> {
+  <span class="string">"Hello " </span>^ this.name ^ <span class="string">"!"</span>
+}</code></pre>
+<p>This aligns with Garden's goals of allowing incremental program
+definition. You don't want to re-evaluate the whole type definition
+when you're just changing a single method.</p>
+<h2>Next Steps</h2>
+<p>Every example in the docs is type checked, so you can always read this
+website to see the exact syntax supported.</p>
+<p>I'm relatively happy with the overall syntax, but the real test will
+be in the tooling I can build around it.</p></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

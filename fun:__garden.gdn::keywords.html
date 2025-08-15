@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>The Garden Programming Language</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>__garden.gdn::keywords</code></h1>
+<p>All the reserved words in Garden. These are keywords that cannot be
+used as variable names.</p>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:fun.html">fun</a> keywords(): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+  <span class="comment">// TODO: Add support for constants so this doesn't need to be a function.</span>
+  [
+    <span class="string">"let"</span>, <span class="string">"fun"</span>, <span class="string">"enum"</span>, <span class="string">"struct"</span>, <span class="string">"external"</span>, <span class="string">"internal"</span>,
+    <span class="string">"import"</span>, <span class="string">"if"</span>, <span class="string">"else"</span>, <span class="string">"while"</span>, <span class="string">"return"</span>, <span class="string">"test"</span>,
+    <span class="string">"match"</span>, <span class="string">"break"</span>, <span class="string">"continue"</span>, <span class="string">"for"</span>, <span class="string">"in"</span>, <span class="string">"assert"</span>,
+    <span class="string">"as"</span>, <span class="string">"method"</span>,
+  ]
+}</code></pre></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

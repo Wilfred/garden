@@ -198,6 +198,11 @@ test join {
 }
 
 // Does this string contain `substring`?
+//
+// ```
+// "abcd".contains("bc") //-> True
+// "abcd".contains("x") //-> False
+// ```
 external method contains(this: String, substring: String): Bool {
   if substring.len() > this.len() {
     return False

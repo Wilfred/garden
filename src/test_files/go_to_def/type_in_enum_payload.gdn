@@ -5,5 +5,5 @@ enum Foo {
 
 // args: definition-position
 // expected stdout:
-// {"start_offset":17912,"end_offset":17918,"line_number":801,"end_line_number":801,"column":7,"end_column":13,"path":"GDN_TEST_ROOT/__prelude.gdn"}
+// {"start_offset":17999,"end_offset":18005,"line_number":806,"end_line_number":806,"column":7,"end_column":13,"path":"GDN_TEST_ROOT/__prelude.gdn"}
 

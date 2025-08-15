@@ -664,6 +664,9 @@ pub(crate) struct ImportInfo {
     pub(crate) id: SyntaxId,
 }
 
+/// All the methods implemented as primitives rather than Garden code.
+///
+/// See also `BuiltinFunctionKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum BuiltinMethodKind {
     ListAppend,

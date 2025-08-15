@@ -203,9 +203,6 @@ external method contains(this: String, substring: String): Bool {
     return False
   }
 
-  // TODO: better parse error if this last parenthesis is missing.
-  // dbg(string_length(haystack) - string_length(substring))
-
   let i = 0
   while i <= (this.len() - substring.len()) {
     let section = this.substring(i, i + substring.len())

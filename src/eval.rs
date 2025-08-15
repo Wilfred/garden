@@ -2172,42 +2172,18 @@ fn eval_string_concat(
             .pop_value()
             .expect("Popped an empty value stack for LHS of `^`.");
 
-        let lhs_str = match lhs_value.as_ref() {
-            Value_::String(s) => s,
-            _ => {
-                return Err((
-                    RestoreValues(vec![lhs_value.clone(), rhs_value]),
-                    EvalError::Exception(
-                        lhs_position.clone(),
-                        format_type_error(
-                            &TypeName {
-                                text: "String".into(),
-                            },
-                            &lhs_value,
-                            env,
-                        ),
-                    ),
-                ));
-            }
-        };
-        let rhs_str = match rhs_value.as_ref() {
-            Value_::String(s) => s,
-            _ => {
-                return Err((
-                    RestoreValues(vec![lhs_value, rhs_value.clone()]),
-                    EvalError::Exception(
-                        rhs_position.clone(),
-                        format_type_error(
-                            &TypeName {
-                                text: "String".into(),
-                            },
-                            &rhs_value,
-                            env,
-                        ),
-                    ),
-                ));
-            }
-        };
+        let lhs_str = check_string(
+            &lhs_value,
+            lhs_position,
+            vec![lhs_value.clone(), rhs_value.clone()],
+            env,
+        )?;
+        let rhs_str = check_string(
+            &rhs_value,
+            rhs_position,
+            vec![lhs_value.clone(), rhs_value.clone()],
+            env,
+        )?;
 
         let mut out_str = String::with_capacity(lhs_str.len() + rhs_str.len());
         out_str.push_str(lhs_str);
@@ -2274,6 +2250,32 @@ fn check_type(value: &Value, expected: &Type, env: &Env) -> Result<(), ErrorMess
     }
 }
 
+/// If `value` is a string, return its content, otherwise return a
+/// type error.
+fn check_string<'a>(
+    value: &'a Value,
+    pos: &Position,
+    saved_values: Vec<Value>,
+    env: &Env,
+) -> Result<&'a String, (RestoreValues, EvalError)> {
+    match value.as_ref() {
+        Value_::String(s) => Ok(s),
+        _ => {
+            let message = format_type_error(
+                &TypeName {
+                    text: "String".into(),
+                },
+                value,
+                env,
+            );
+            Err((
+                RestoreValues(saved_values),
+                EvalError::Exception(pos.clone(), message),
+            ))
+        }
+    }
+}
+
 fn as_int_str_tuple(i: i64, s: &str) -> Value {
     let items = vec![
         Value::new(Value_::Integer(i)),
@@ -2315,28 +2317,12 @@ fn eval_builtin_call(
                 saved_values.push(value.clone());
             }
 
-            match arg_values[0].as_ref() {
-                Value_::String(msg) => {
-                    let message = ErrorMessage(vec![Text(msg.clone())]);
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(position.clone(), message),
-                    ));
-                }
-                _ => {
-                    let message = format_type_error(
-                        &TypeName {
-                            text: "String".into(),
-                        },
-                        &arg_values[0],
-                        env,
-                    );
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(arg_positions[0].clone(), message),
-                    ));
-                }
-            }
+            let msg = check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
+            let message = ErrorMessage(vec![Text(msg.clone())]);
+            return Err((
+                RestoreValues(saved_values),
+                EvalError::Exception(position.clone(), message),
+            ));
         }
         BuiltinFunctionKind::Print => {
             check_arity(
@@ -2350,40 +2336,26 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            match arg_values[0].as_ref() {
-                Value_::String(s) => match session.stdout_mode {
-                    StdoutMode::WriteDirectly => {
-                        print!("{s}");
-                    }
-                    StdoutMode::WriteJson => {
-                        let response = Response {
-                            kind: ResponseKind::Printed { s: s.clone() },
-                            position: None,
-                            id: None,
-                        };
-                        print_as_json(&response, session.pretty_print_json);
-                    }
-                    StdoutMode::DoNotWrite => {}
-                },
-                _ => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
 
-                    let message = format_type_error(
-                        &TypeName {
-                            text: "String".into(),
-                        },
-                        &arg_values[0],
-                        env,
-                    );
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(arg_positions[0].clone(), message),
-                    ));
+            let s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            match session.stdout_mode {
+                StdoutMode::WriteDirectly => {
+                    print!("{s}");
                 }
+                StdoutMode::WriteJson => {
+                    let response = Response {
+                        kind: ResponseKind::Printed { s: s.clone() },
+                        position: None,
+                        id: None,
+                    };
+                    print_as_json(&response, session.pretty_print_json);
+                }
+                StdoutMode::DoNotWrite => {}
             }
 
             if expr_value_is_used {
@@ -2962,22 +2934,7 @@ fn eval_builtin_call(
                 saved_values.push(value.clone());
             }
 
-            let src = match arg_values[0].as_ref() {
-                Value_::String(s) => s,
-                _ => {
-                    let message = format_type_error(
-                        &TypeName {
-                            text: "String".into(),
-                        },
-                        &arg_values[0],
-                        env,
-                    );
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(arg_positions[0].clone(), message),
-                    ));
-                }
-            };
+            let src = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
 
             let path = Rc::new(PathBuf::from("__snippet"));
             let vfs_path = env.vfs.insert(path.clone(), src.clone());

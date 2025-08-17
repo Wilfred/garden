@@ -4404,33 +4404,15 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match receiver_value.as_ref() {
-                Value_::String(s) => {
-                    if expr_value_is_used {
-                        env.push_value(Value::new(Value_::Integer(s.chars().count() as i64)));
-                    }
-                }
-                _ => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
 
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(
-                            arg_positions[0].clone(),
-                            format_type_error(
-                                &TypeName {
-                                    text: "String".into(),
-                                },
-                                receiver_value,
-                                env,
-                            ),
-                        ),
-                    ));
-                }
+            let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::Integer(s.chars().count() as i64)));
             }
         }
         BuiltinMethodKind::StringLines => {
@@ -4445,47 +4427,29 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            match receiver_value.as_ref() {
-                Value_::String(s) => {
-                    let lines = s
-                        .lines()
-                        .map(|line| Value::new(Value_::String(line.to_owned())))
-                        .collect::<Vec<_>>();
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
 
-                    let elem_type = if lines.is_empty() {
-                        Type::no_value()
-                    } else {
-                        Type::string()
-                    };
+            let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
+            let lines = s
+                .lines()
+                .map(|line| Value::new(Value_::String(line.to_owned())))
+                .collect::<Vec<_>>();
 
-                    if expr_value_is_used {
-                        env.push_value(Value::new(Value_::List {
-                            items: lines,
-                            elem_type,
-                        }));
-                    }
-                }
-                _ => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
+            let elem_type = if lines.is_empty() {
+                Type::no_value()
+            } else {
+                Type::string()
+            };
 
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(
-                            arg_positions[0].clone(),
-                            format_type_error(
-                                &TypeName {
-                                    text: "String".into(),
-                                },
-                                receiver_value,
-                                env,
-                            ),
-                        ),
-                    ));
-                }
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::List {
+                    items: lines,
+                    elem_type,
+                }));
             }
         }
 
@@ -4501,30 +4465,13 @@ fn eval_builtin_method_call(
                 arg_values,
             )?;
 
-            let s_arg = match receiver_value.as_ref() {
-                Value_::String(s) => s,
-                _ => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
 
-                    return Err((
-                        RestoreValues(saved_values),
-                        EvalError::Exception(
-                            arg_positions[0].clone(),
-                            format_type_error(
-                                &TypeName {
-                                    text: "String".into(),
-                                },
-                                receiver_value,
-                                env,
-                            ),
-                        ),
-                    ));
-                }
-            };
+            let s_arg = check_string(receiver_value, receiver_pos, saved_values.clone(), env)?;
             let from_arg = match arg_values[0].as_ref() {
                 Value_::Integer(i) => i,
                 _ => {

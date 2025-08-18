@@ -1,10 +1,16 @@
 /* Heavily inspired by https://github.com/thesephist/codeframe,
-      which is under a MIT license. */
+   which is under a MIT license. */
+
+:root {
+  --green-primary: #307d30;
+  --cream: #ebeee3;
+}
+
 body {
   max-width: 800px;
   margin: 24px auto 52px auto;
   font-size: 18px;
-  background-color: #ebeee3;
+  background-color: var(--cream);
   font-family: "Lora", serif;
   font-optical-sizing: auto;
   font-weight: 400;
@@ -30,7 +36,7 @@ header > a {
   font-family: "Protest Riot", sans-serif;
   font-weight: 400;
   padding-left: 16px;
-  color: #ebeee3;
+  color: var(--cream);
   font-size: 36px;
 }
 
@@ -41,7 +47,7 @@ code {
 }
 
 a > code:hover {
-  border-color: #307d30;
+  border-color: var(--green-primary);
 }
 a:has(> code) {
   border-bottom: 0;
@@ -83,19 +89,19 @@ header {
   align-items: center;
   flex-shrink: 0;
   padding: 4px;
-  background: #307d30;
+  background: var(--green-primary);
   border-bottom: 4px solid rgba(0, 0, 0, 0.1);
 }
 
 .block,
 .block::before {
-  background-color: #ebeee3;
+  background-color: var(--cream);
 }
 
 a {
-  color: #307d30;
+  color: var(--green-primary);
   text-decoration: none;
-  border-bottom: 2px dotted #307d30;
+  border-bottom: 2px dotted var(--green-primary);
 }
 
 pre a {
@@ -190,7 +196,7 @@ pre::after {
 
 pre::before {
   content: "";
-  background: #ebeee3;
+  background: var(--cream);
   border: 3px solid var(--block-text-color);
   border-radius: 3px;
   box-sizing: border-box;
@@ -203,8 +209,8 @@ pre::before {
 }
 
 .code-title {
-  color: #ebeee3;
-  background-color: #307d30;
+  color: var(--cream);
+  background-color: var(--green-primary);
   padding: 10px;
   position: absolute;
   right: -1px;

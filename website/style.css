@@ -92,11 +92,6 @@ header {
   background-color: #ebeee3;
 }
 
-.block.accent,
-.block.accent::before {
-  background: #66ae24;
-}
-
 a {
   color: #307d30;
   text-decoration: none;

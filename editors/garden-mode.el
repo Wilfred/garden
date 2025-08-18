@@ -22,8 +22,7 @@
 (require 'xref)
 (require 'flycheck)
 
-(defvar garden-executable
-  "/home/wilfred/projects/garden/target/debug/garden")
+(defvar garden-executable "garden")
 
 ;; TODO: support evaluating snippets in comments, much like
 ;;

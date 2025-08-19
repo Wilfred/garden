@@ -172,6 +172,7 @@ repeated parentheses/brackets on the same line."
   (let ((buf (current-buffer)))
     (garden--async-command
      "sandboxed-test"
+     (point)
      (lambda (result)
        (let* ((summary (json-parse-string result :object-type 'hash-table :null-object nil))
               (test-details (gethash "tests" summary (make-hash-table))))
@@ -811,6 +812,7 @@ If called with a prefix, stop the previous session."
       (let ((prefix-start-pos (match-beginning 1)))
         (garden--async-command
          "complete"
+         (point)
          (lambda (s) (setq done t) (setq result s)))
         (while (not done)
           (sit-for 0.1))
@@ -873,15 +875,15 @@ and return its path."
         (setq result (buffer-string))))
     result))
 
-(defun garden--async-command (command-name callback &optional extra-args)
-  "Run CLI command COMMAND-NAME with the position of point, and call CALLBACK with
+(defun garden--async-command (command-name pos callback &optional extra-args)
+  "Run CLI command COMMAND-NAME with position POS, and call CALLBACK with
 the result."
   (let* ((tmp-file-of-src (garden--buf-as-tmp-file))
          (output-buffer (generate-new-buffer (format "*garden-%s-async*" command-name)))
          (command (append (list garden-executable
                                 command-name
                                 tmp-file-of-src
-                                (format "%s" (1- (point))))
+                                (format "%s" (1- pos)))
                           extra-args)))
     (with-current-buffer (get-buffer-create "*garden-async*")
       (goto-char (point-max))
@@ -918,6 +920,7 @@ the result."
   "Show information for the symbol at point."
   (garden--async-command
    "show-type"
+   (point)
    (lambda (result)
      ;; TODO: Only highlight the last line, not the doc comment.
      (funcall callback (garden--syntax-highlight result)))))
@@ -942,6 +945,7 @@ the result."
   (xref-push-marker-stack)
   (garden--async-command
    "definition-position"
+   (point)
    #'garden--go-to-position
    (list "--override-path" (buffer-file-name))))
 
@@ -959,6 +963,7 @@ the result."
         (start-pos (point)))
     (garden--async-command
      "rename"
+     start-pos
      (lambda (src)
        (with-current-buffer buf
          (delete-region (point-min) (point-max))
@@ -976,6 +981,7 @@ the result."
     (deactivate-mark)
     (garden--async-command
      "extract-function"
+     start
      (lambda (src)
        (with-current-buffer buf
          (delete-region (point-min) (point-max))
@@ -994,6 +1000,7 @@ the result."
     (deactivate-mark)
     (garden--async-command
      "extract-variable"
+     start
      (lambda (src)
        (with-current-buffer buf
          (delete-region (point-min) (point-max))
@@ -1015,6 +1022,7 @@ the result."
       (deactivate-mark))
     (garden--async-command
      "destructure"
+     start
      (lambda (src)
        (with-current-buffer buf
          (delete-region (point-min) (point-max))

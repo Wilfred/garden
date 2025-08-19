@@ -17,6 +17,11 @@ pub(crate) struct Position {
     pub(crate) start_offset: usize,
     /// The end of this position, relative to the start of the
     /// file. Measured in bytes.
+    ///
+    /// This is an include-exclusive range. For example, a file
+    /// consisting of `abc` is a single symbol with start offset 0,
+    /// end offset 3, and a width of 3. However, the individual
+    /// letters are at offsets 0, 1 and 2.
     pub(crate) end_offset: usize,
     // TODO: Use LineNumber instead, finding a way to serialize it.
     pub(crate) line_number: usize,

@@ -1,0 +1,7 @@
+fun foo(): Option<Int> {
+  None
+}
+
+fun bar() {
+  foo()
+}

@@ -112,4 +112,17 @@ impl Position {
     pub(crate) fn contains_offset(&self, offset: usize) -> bool {
         self.start_offset <= offset && offset < self.end_offset
     }
+
+    /// Does this position contain `offset`, if we treat it as an
+    /// inclusive range?
+    ///
+    /// This is useful when dealing with ranges. It's nice to think of
+    /// a symbol `abc` as being in the range 0-3, but it has
+    /// characters at lines 0, 1 and 2.
+    ///
+    /// This helper allows us to deal with that scenario by checking
+    /// the offset (generally the end offset)
+    pub(crate) fn contains_offset_inclusive(&self, offset: usize) -> bool {
+        self.start_offset <= offset && offset <= self.end_offset
+    }
 }

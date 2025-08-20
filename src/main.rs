@@ -724,4 +724,16 @@ mod tests {
             .arg("website/markdown.gdn");
         cmd.assert().success();
     }
+
+    #[test]
+    fn test_destructure_range() {
+        let path = assert_cmd::cargo::cargo_bin("garden");
+        let mut cmd = Command::new(path);
+
+        cmd.arg("destructure")
+            .arg("src/unit_test_files/destructure.gdn")
+            .arg("49")
+            .arg("54");
+        cmd.assert().success();
+    }
 }

@@ -49,9 +49,7 @@ impl Visitor for IdFinder {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         if let ToplevelItem::Import(info) = &item {
             let item_pos = item.position();
-            if item_pos.contains_offset(self.offset)
-                && item_pos.contains_offset_inclusive(self.end_offset)
-            {
+            if item_pos.contains_region(self.offset, self.end_offset) {
                 self.found_ids.push(AstId::Import(info.id));
             }
         }
@@ -61,7 +59,7 @@ impl Visitor for IdFinder {
 
     fn visit_expr(&mut self, expr: &Expression) {
         let pos = &expr.position;
-        if !(pos.contains_offset(self.offset) && pos.contains_offset_inclusive(self.end_offset)) {
+        if !(pos.contains_region(self.offset, self.end_offset)) {
             return;
         }
 
@@ -70,18 +68,18 @@ impl Visitor for IdFinder {
     }
 
     fn visit_symbol(&mut self, symbol: &Symbol) {
-        if symbol.position.contains_offset(self.offset)
-            && symbol.position.contains_offset_inclusive(self.end_offset)
+        if symbol
+            .position
+            .contains_region(self.offset, self.end_offset)
         {
             self.found_ids.push(AstId::Sym(symbol.id));
         }
     }
 
     fn visit_type_symbol(&mut self, type_symbol: &TypeSymbol) {
-        if type_symbol.position.contains_offset(self.offset)
-            && type_symbol
-                .position
-                .contains_offset_inclusive(self.end_offset)
+        if type_symbol
+            .position
+            .contains_region(self.offset, self.end_offset)
         {
             self.found_ids.push(AstId::TypeSym(type_symbol.id));
         }

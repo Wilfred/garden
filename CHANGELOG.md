@@ -35,6 +35,8 @@ allowed after keywords. The following is now legal syntax:
 if True { println } else { println }("hello world")
 ```
 
+`public` and `shared` are now reserved words.
+
 ### Standard Library
 
 Added `List::index_of()`, `String::trim()`, `garden::source_for_fun`,

@@ -2425,6 +2425,11 @@ fn parse_function_(
 pub(crate) const RESERVED_WORDS: &[&str] = &[
     "let", "fun", "enum", "struct", "internal", "external", "import", "if", "else", "while",
     "return", "test", "match", "break", "continue", "for", "in", "assert", "as", "method",
+    // TODO: change from external/internal to public/shared.
+    //
+    // The problem with 'external' is that it implies the implementation is
+    // external to the current file, which isn't true.
+    "public", "shared",
 ];
 
 pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {

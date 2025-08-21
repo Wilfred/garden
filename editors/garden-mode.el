@@ -593,7 +593,13 @@ enclosing point and print the result."
   (interactive)
   (let* ((buf (garden--active-buffer))
          ;; Zero-based offset.
-         (offset (1- (point)))
+         (raw-offset (1- (point)))
+         ;; Generally we want the the expression before point, but if
+         ;; there's nothing before point, take the position after
+         ;; point.
+         (offset (if (looking-back (rx whitespace) 1)
+                     raw-offset
+                   (1- raw-offset)))
          (args `((method . "eval_up_to")
                  (id . ,(garden--id))
                  (path . ,(buffer-file-name))

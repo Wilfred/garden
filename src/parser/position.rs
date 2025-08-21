@@ -115,6 +115,17 @@ impl Position {
 
     pub(crate) fn contains_region(&self, start_offset: usize, end_offset: usize) -> bool {
         debug_assert!(start_offset <= end_offset);
-        self.start_offset <= start_offset && end_offset <= self.end_offset
+
+        // If we have a empty range, we want to look for an exclusive
+        // range, to avoid AST search logic finding expressions which
+        // finish before this offset (end_offset is exclusive).
+        //
+        // If we have a non-empty range, just look for positions that
+        // match this range.
+        if start_offset == end_offset {
+            self.contains_offset(start_offset)
+        } else {
+            self.start_offset <= start_offset && end_offset <= self.end_offset
+        }
     }
 }

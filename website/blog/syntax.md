@@ -1,11 +1,19 @@
 ```metadata
 published: true
-date: 2025-07-13
+date: 2025-08-21
 title: Choosing a Syntax
 ```
 
-To kick things off, I want to talk about the basic syntax of
-Garden. Garden has a deliberately conventional syntax.
+Traditionally, a language announcement starts with a grandiose plan to
+build something that everyone will use.
+
+This isn't that.
+
+Garden is a small programming language focused on tooling. It's a
+playground for my ideas.
+
+Instead of grand declarations, let's talk about something unavoidable:
+basic syntax.
 
 ```
 fun fib(i: Int): Int {
@@ -17,17 +25,32 @@ fun fib(i: Int): Int {
 }
 ```
 
-I'm trying to avoid spending my [strangeness
-budget](https://steveklabnik.com/writing/the-language-strangeness-budget/)
-on syntax.
+## Choosing Punctuation
 
-## Keywords
+Garden is a curly-brace language. I don't want to spend my
+[strangeness
+budget](https://steveklabnik.com/writing/the-language-strangeness-budget/)
+on syntax, so it's deliberately conventional.
+
+```
+let i = 10
+while i > 0 {
+  println(string_repr(i))
+  i -= 1
+}
+println("Blast off!")
+```
+
+Hopefully this code snippet is pretty readable to programmers from a
+range of backgrounds.
+
+## Choosing Keywords
 
 I want keywords to be short. This follows [Stroustrup's
 Rule](https://buttondown.com/hillelwayne/archive/stroustrups-rule/),
-which favours short syntax for common operations. There's little
-benefit for `function` in JavaScript, it's just more typing on the
-keyboard.
+which favours short syntax for common operations. There's no real
+advantage to writing `function` in JavaScript, it's just more typing
+on the keyboard.
 
 However, I want keywords to be pronounceable, hence `fun` instead of
 `fn`. This is based on the Strange Loop talk [How to teach programming
@@ -37,80 +60,24 @@ the advantages of reading code aloud when teaching, and I want to
 support that. I say code aloud sometimes too, especially in
 conversations.
 
-## Lisp and Nesting
-
-Lisp is a big influence on Garden, and I enjoy using s-expression
-syntax. Unfortunately it's outside my strangeness budget. I also think
-the uniformity can make some code patterns harder to read, because
-code with vastly different semantics can appear quite similar visually.
-
-Parentheses-focused syntax has some interesting advantages though.
-
-(1) S-expressions make macro systems easier. You have a natural
-correspondence between surface syntax and the data structures that
-macros see. Macros aren't a priority in Garden as they make developer
-tooling harder, and tooling is my primary focus.
-
-(2) An expression-oriented language with a simple nested syntax makes
-it really easy to evaluate snippets. You can evaluate both definitions
-and expressions in the interactive interpreter ("REPL").
-
-You often see subexpressions that you can evaluate in
-isolation too!
-
-```lisp
-(defun garden-send-input (string &optional path offset end-offset)
-  "Send STRING to the current garden session for evaluation."
-  (let ((buf (garden--active-buffer)))
-    (garden--send-run (get-buffer-process buf) string path offset end-offset)))
+```
+fun say_hello(): Unit {
+  println("Hello, World!")
+}
 ```
 
-I can run `(garden--active-buffer)` on its own, which is super
-convenient. Unfortunately I can't do this for all expressions. There's
-no easy way to see the output of `(get-buffer-process buf)` without
-e.g. setting a breakpoint, because `buf` is bound outside the function
-call.
+## Breaking Convention
 
-I plan to support this 'evaluate this subexpression' feature in
-Garden's syntax.
+Garden is focusing on tooling, so tooling features take precedence
+over traditional syntax.
 
-## Smalltalk
+One of those features is incremental program definition. Garden
+supports redefining individual methods (like Lisp or Smalltalk), which
+doesn't suit a traditional class definition. Nesting all your methods
+inside one big class definition doesn't make sense.
 
-Smalltalk is another big influence on Garden. The Smalltalk syntax is
-small, but it's not widely known. It would be costly to my strangeness
-budget.
-
-Smalltalk syntax also has a few interesting advantages.
-
-(1) Block syntax works like a closure, but it doesn't support early
-return. Instead, `^` is early return anywhere inside a method
-definition, even inside blocks.
-
-`^` and blocks are an elegant way to express control flow primitives.
-However, if we're doing conventional loops anyway, there's not much benefit
-for Garden.
-
-(2) Method arguments are almost always keyword arguments, and often
-resemble sentences. This is often very readable.
-
-```smalltalk
-10 to: 1 by: -1 do: [:x | x printNl ]
-```
-
-It's also explicit that the keywords are part of the API. I've worked
-with languages (particularly Python) where you rename a parameter and
-accidentally break your call sites, because they're using keyword
-rather than positional arguments.
-
-Garden currently uses positional arguments, as it was conventional and
-simpler to implement. It's also less verbose, especially when
-experimenting in the REPL.
-
-## Unconventional Bits
-
-I'm happy to break convention where it makes sense for Garden's
-design. For example, methods are not defined nested inside the
-relevant type.
+Instead, methods are defined at the same indentation level as
+functions, similar to Go.
 
 ```
 struct Person {
@@ -120,16 +87,17 @@ struct Person {
 method greet(this: Person): String {
   "Hello " ^ this.name ^ "!"
 }
-```
 
-This aligns with Garden's goals of allowing incremental program
-definition. You don't want to re-evaluate the whole type definition
-when you're just changing a single method.
+fun demo(): Unit {
+  let p = Person{ name: "Wilfred" }
+  println(p.greet())
+}
+```
 
 ## Next Steps
 
-Every example in the docs is type checked, so you can always read this
-website to see the exact syntax supported.
+With the basics out of the way, we can start talking about more
+interesting things next time.
 
-I'm relatively happy with the overall syntax, but the real test will
-be in the tooling I can build around it.
+In the meantime, please explore the website and let me know if you
+have any initial feedback.

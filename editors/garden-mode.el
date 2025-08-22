@@ -680,7 +680,7 @@ enclosing point and print the result."
     (,(regexp-opt
        '("assert" "throw" "print" "println"
          "shell" "string_repr" "todo"
-         "source_directory")
+         "source_directory" "get_env")
        'symbols)
      . font-lock-builtin-face)
 

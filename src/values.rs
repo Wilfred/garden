@@ -371,6 +371,7 @@ pub(crate) enum BuiltinFunctionKind {
     PreludeTypes,
     NamespaceFunctions,
     MethodsForType,
+    GetEnv,
 }
 
 impl BuiltinFunctionKind {
@@ -382,7 +383,8 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::Print
             | BuiltinFunctionKind::Println
             | BuiltinFunctionKind::SourceDirectory
-            | BuiltinFunctionKind::ShellArguments => PathBuf::from("__prelude.gdn"),
+            | BuiltinFunctionKind::ShellArguments
+            | BuiltinFunctionKind::GetEnv => PathBuf::from("__prelude.gdn"),
             BuiltinFunctionKind::WriteFile
             | BuiltinFunctionKind::ListDirectory
             | BuiltinFunctionKind::WorkingDirectory
@@ -427,6 +429,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::PreludeTypes => "prelude_types",
             BuiltinFunctionKind::NamespaceFunctions => "namespace_functions",
             BuiltinFunctionKind::MethodsForType => "methods_for_type",
+            BuiltinFunctionKind::GetEnv => "get_env",
         };
         write!(f, "{name}")
     }

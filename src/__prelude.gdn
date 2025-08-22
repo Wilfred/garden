@@ -975,6 +975,27 @@ external fun shell_arguments(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Get the value of an environment variable.
+//
+// Returns `Some(value)` if the environment variable is set, or `None`
+// if it is not set.
+//
+// ```
+// get_env("HOME") //-> Some("/home/user")
+// get_env("NO_SUCH_VAR") //-> None
+// ```
+external fun get_env(name: String): Option<String> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test get_env {
+  let path = get_env("PATH")
+  assert(path.is_some())
+
+  let nonexistent = get_env("THIS_VARIABLE_SHOULD_NOT_EXIST_12345")
+  assert(nonexistent.is_none())
+}
+
 // A collection of functions and types from importing a file.
 struct Namespace {
   __BUILTIN_IMPLEMENTATION: NoValue,

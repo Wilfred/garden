@@ -2712,6 +2712,35 @@ fn eval_builtin_call(
                 }));
             }
         }
+        BuiltinFunctionKind::GetEnv => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let env_var_name = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+
+            let value = match std::env::var(env_var_name) {
+                Ok(val) => Value::some(Value::new(Value_::String(val))),
+                Err(_) => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(value);
+            }
+        }
         BuiltinFunctionKind::SetWorkingDirectory => {
             check_arity(
                 &SymbolName {

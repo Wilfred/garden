@@ -1,6 +1,6 @@
 ```metadata
 published: true
-date: 2025-08-21
+date: 2025-08-23
 title: Choosing a Syntax
 ```
 
@@ -99,5 +99,5 @@ fun demo(): Unit {
 With the basics out of the way, we can start talking about more
 interesting things next time.
 
-In the meantime, please explore the website and let me know if you
+In the meantime, please explore the website and [let me know](https://www.wilfred.me.uk/contact/) if you
 have any initial feedback.

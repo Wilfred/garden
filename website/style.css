@@ -18,7 +18,7 @@ body {
 }
 
 p {
-  font-family: "Lora";
+  font-family: "Lora", serif;
 }
 
 h1,
@@ -209,15 +209,14 @@ pre::before {
 }
 
 .code-title {
-  color: var(--cream);
-  background-color: var(--green-primary);
   padding: 10px;
   position: absolute;
   right: -1px;
   top: -1px;
-  border-left: 2px solid black;
-  border-bottom: 2px solid black;
-  border-bottom-left-radius: 15px;
+
+  font-family: "Lora", serif;
+  font-weight: initial;
+  text-transform: capitalize;
 }
 
 footer {

@@ -1939,7 +1939,7 @@ fn parse_colon_and_hint_opt(
         return Some(type_hint);
     }
 
-    if SYMBOL_RE.is_match(token.text) && !RESERVED_WORDS.contains(&token.text) {
+    if SYMBOL_RE.is_match(token.text) && !KEYWORDS.contains(&token.text) {
         diagnostics.push(ParseError::Invalid {
             position: token.position.clone(),
             message: ErrorMessage(vec![
@@ -2391,7 +2391,7 @@ fn parse_function_(
     let doc_comment = parse_doc_comment(&first_token);
 
     let name_sym = parse_symbol(tokens, id_gen, diagnostics);
-    if is_reserved_word_placeholder(&name_sym) {
+    if is_keyword_placeholder(&name_sym) {
         // The next name is a keyword, it's probably the beginning of
         // a whole new definition. Give up on this definition having
         // only consumed our own keyword.
@@ -2422,7 +2422,7 @@ fn parse_function_(
     ))
 }
 
-pub(crate) const RESERVED_WORDS: &[&str] = &[
+pub(crate) const KEYWORDS: &[&str] = &[
     "let", "fun", "enum", "struct", "internal", "external", "import", "if", "else", "while",
     "return", "test", "match", "break", "continue", "for", "in", "assert", "as", "method",
     // TODO: change from external/internal to public/shared.
@@ -2444,9 +2444,9 @@ pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -
     }
 }
 
-fn reserved_word_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
+fn keyword_placeholder(position: Position, id_gen: &mut IdGenerator) -> Symbol {
     let name = SymbolName {
-        text: "__reserved_word_placeholder".to_owned(),
+        text: "__keyword_placeholder".to_owned(),
     };
     Symbol {
         interned_id: id_gen.intern_symbol(&name),
@@ -2456,8 +2456,8 @@ fn reserved_word_placeholder(position: Position, id_gen: &mut IdGenerator) -> Sy
     }
 }
 
-fn is_reserved_word_placeholder(symbol: &Symbol) -> bool {
-    symbol.name.text == "__reserved_word_placeholder"
+fn is_keyword_placeholder(symbol: &Symbol) -> bool {
+    symbol.name.text == "__keyword_placeholder"
 }
 
 fn parse_let_destination(
@@ -2553,8 +2553,8 @@ fn parse_symbol(
         return placeholder_symbol(variable_token.position, id_gen);
     }
 
-    for reserved in RESERVED_WORDS {
-        if variable_token.text == *reserved {
+    for keyword in KEYWORDS {
+        if variable_token.text == *keyword {
             // Check if the keyword is on the same line as the previous token
             let same_line = match &prev_token {
                 Some(prev) => prev.position.end_line_number == variable_token.position.line_number,
@@ -2568,7 +2568,7 @@ fn parse_symbol(
                 diagnostics.push(ParseError::Invalid {
                     position: variable_token.position.clone(),
                     message: ErrorMessage(vec![
-                        msgcode!("{}", reserved),
+                        msgcode!("{}", keyword),
                         msgtext!(" is a keyword and cannot be used as a variable name."),
                     ]),
                     additional: vec![],
@@ -2591,7 +2591,7 @@ fn parse_symbol(
                 });
                 tokens.unpop();
             }
-            return reserved_word_placeholder(variable_token.position, id_gen);
+            return keyword_placeholder(variable_token.position, id_gen);
         }
     }
 

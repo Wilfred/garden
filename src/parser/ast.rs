@@ -80,7 +80,7 @@ impl Display for TypeSymbol {
 impl TypeSymbol {
     pub(crate) fn is_placeholder(&self) -> bool {
         // TODO: Prevent users from writing this symbol in userland code.
-        self.name.text == "__placeholder" || self.name.text == "__reserved_word_placeholder"
+        self.name.text == "__placeholder" || self.name.text == "__keyword_placeholder"
     }
 }
 
@@ -137,8 +137,8 @@ impl SymbolName {
     }
 
     pub(crate) fn is_placeholder(&self) -> bool {
-        // TODO: Prevent users from writing this symbol in userland code.
-        self.text == "__placeholder" || self.text == "__reserved_word_placeholder"
+        // TODO: Prevent users from writing these symbols in userland code.
+        self.text == "__placeholder" || self.text == "__keyword_placeholder"
     }
 }
 

@@ -15,7 +15,7 @@ use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::lex::lex;
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_project_relative, Vfs, VfsId};
-use crate::parser::RESERVED_WORDS;
+use crate::parser::KEYWORDS;
 use crate::VfsPathBuf;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
@@ -399,7 +399,7 @@ pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
         let before_text = &line[offset..token.position.start_offset];
         s.push_str(before_text);
 
-        if RESERVED_WORDS.contains(&token.text) {
+        if KEYWORDS.contains(&token.text) {
             s.push_str(&token.text.bold().to_string());
         } else if looks_like_type_name(token.text) {
             s.push_str(&if make_bold {

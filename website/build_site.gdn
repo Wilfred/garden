@@ -46,7 +46,7 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
       let page_src = render_doc_comment(heading, doc_comment, src)
 
       let dest_path = out_dir.join("fun:" ^ (qualified_name ^ ".html"))
-      write_website_page(base_tmpl_src, page_src, dest_path)
+      write_website_page(base_tmpl_src, page_src, dest_path, Some(fun_name))
     }
     None => {
       let parts = [
@@ -68,7 +68,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
       let page_src = render_doc_comment(heading, doc_comment, garden::source_for_method(type_name, method_name))
 
       let dest_path = out_dir.join("method:" ^ (qualified_name ^ ".html"))
-      write_website_page(base_tmpl_src, page_src, dest_path)
+      write_website_page(base_tmpl_src, page_src, dest_path, Some(qualified_name))
     }
     None => {
       log::warn("Tried to generate a page for method " ^ qualified_name ^ " but it doesn't have a doc comment.")
@@ -120,16 +120,21 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
       let page_src = render_type_doc_comment(heading, doc_comment, garden::source_for_type(type_name), methods, type_name)
 
       let dest_path = out_dir.join("type:" ^ (type_name ^ ".html"))
-      write_website_page(base_tmpl_src, page_src, dest_path)
+      write_website_page(base_tmpl_src, page_src, dest_path, Some(type_name))
     }
     None => {}
   }
 }
 
-fun write_markdown_page(website_dir: Path, base_tmpl_string: String, md_path: Path): Unit {
+fun write_markdown_page(
+  website_dir: Path,
+  base_tmpl_string: String,
+  md_path: Path,
+  title: Option<String>
+): Unit {
   let page_src_md = md_path.read().or_throw()
   let page_src = render_markdown(substitute_shorthand(website_dir, page_src_md))
-  write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"))
+  write_website_page(base_tmpl_string, page_src, md_path.set_extension("html"), title)
 }
 
 struct BlogPost {
@@ -226,7 +231,7 @@ fun build_blog(website_dir: Path, base_tmpl_src: String): Unit {
     }
 
     let html = render_markdown(substitute_shorthand(website_dir, src))
-    write_website_page(base_tmpl_src, html, post.path.set_extension("html"))
+    write_website_page(base_tmpl_src, html, post.path.set_extension("html"), post.title)
   }
 }
 
@@ -250,16 +255,19 @@ fun build_site(): Unit {
       None => continue,
     }
 
+    let title: Option<String> = None
     match file_name.split_once(":") {
       Some((before, after)) => {
         if before == "keyword" {
-          seen_keyword_pages = seen_keyword_pages.append(after.strip_suffix(".md"))
+          let keyword = after.strip_suffix(".md")
+          seen_keyword_pages = seen_keyword_pages.append(keyword)
+          title = Some(keyword)
         }
       }
       None => {}
     }
 
-    write_markdown_page(website_dir, base_tmpl_src, md_path)
+    write_markdown_page(website_dir, base_tmpl_src, md_path, title)
   }
 
   for keyword in garden::keywords() {
@@ -371,8 +379,20 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
 }
 
 // Wrap `page_src` in the base template and write to the file `dest_path`.
-fun write_website_page(base_tmpl_src: String, page_src: String, dest_path: Path): Unit {
-  let (header, footer) = match base_tmpl_src.split_once("MAIN_CONTENT") {
+fun write_website_page(
+  base_tmpl_src: String,
+  page_src: String,
+  dest_path: Path,
+  title: Option<String>
+): Unit {
+  let title = match title {
+    Some(s) => s ^ " - Garden"
+    None => "Garden"
+  }
+  
+  let base_tmpl_src = base_tmpl_src.replace("__TITLE", title)
+  
+  let (header, footer) = match base_tmpl_src.split_once("__MAIN_CONTENT") {
     Some(s) => s,
     None => ("", "")
   }

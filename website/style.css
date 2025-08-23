@@ -6,6 +6,11 @@
   --cream: #ebeee3;
 }
 
+::selection {
+  background-color: var(--green-primary);
+  color: var(--cream);
+}
+
 body {
   max-width: 800px;
   margin: 24px auto 52px auto;

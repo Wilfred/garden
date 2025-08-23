@@ -4241,6 +4241,31 @@ fn eval_builtin_method_call(
                 env.push_value(v);
             }
         }
+        BuiltinMethodKind::StringAsInt => {
+            check_arity(
+                &SymbolName {
+                    text: "String::as_int".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            saved_values.push(receiver_value.clone());
+
+            let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
+            let value = match s.parse::<i64>() {
+                Ok(parsed_int) => Value::some(Value::new(Value_::Integer(parsed_int))),
+                Err(_) => Value::none(),
+            };
+
+            if expr_value_is_used {
+                env.push_value(value);
+            }
+        }
         BuiltinMethodKind::StringChars => {
             check_arity(
                 &SymbolName {

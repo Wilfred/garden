@@ -936,6 +936,27 @@ test string_index_of {
   assert("☃c".index_of("c") == Some(1))
 }
 
+// Parse this string as an integer, returning Some if successful.
+//
+// ```
+// "123".as_int() //-> Some(123)
+// "abc".as_int() //-> None
+// ```
+external method as_int(this: String): Option<Int> {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test string_as_int {
+  assert("123".as_int() == Some(123))
+  assert("0".as_int() == Some(0))
+  assert("-42".as_int() == Some(-42))
+
+  assert("abc".as_int() == None)
+  assert("12.5".as_int() == None)
+  assert("".as_int() == None)
+  assert(" 123 ".as_int() == None)
+}
+
 // Return True if this path exists.
 //
 // ```

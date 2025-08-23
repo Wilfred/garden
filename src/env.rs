@@ -504,6 +504,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         (
             "String",
             vec![
+                ("as_int", BuiltinMethodKind::StringAsInt),
                 ("chars", BuiltinMethodKind::StringChars),
                 ("ends_with", BuiltinMethodKind::StringEndsWith),
                 ("index_of", BuiltinMethodKind::StringIndexOf),

@@ -39,8 +39,8 @@ if True { println } else { println }("hello world")
 
 ### Standard Library
 
-Added `List::index_of()`, `String::trim()`, `get_env()`,
-`garden::source_for_fun`, `garden::source_for_method()`,
+Added `List::index_of()`, `String::as_int()`, `String::trim()`,
+`get_env()`, `garden::source_for_fun`, `garden::source_for_method()`,
 `garden::doc_comment()`, `garden::doc_comment_for_method()`, and
 `garden::methods_for_type()`.
 

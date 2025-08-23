@@ -1,8 +1,10 @@
-**Goal: Playground.**
-**Goal: Offer actions when runtime errors occur.**
-**Goal: Separate line/column in go-to-def input positions.**
 
-# 0.21 (unreleased)
+# 0.22 (unreleased)
+**Goal: Playground.**
+**Goal: Use multiple positions in error messages.**
+**Goal: Offer actions when runtime errors occur.**
+
+# 0.21 (released 23 August 2025)
 **Goal: Blog.**
 **Goal: Comprehensive docs on website.**
 

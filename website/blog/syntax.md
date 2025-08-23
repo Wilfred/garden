@@ -1,7 +1,7 @@
 ```metadata
 published: true
 date: 2025-08-23
-title: Choosing a Syntax
+title: Devlog 1: Choosing The Syntax
 ```
 
 Traditionally, a language announcement starts with a grandiose plan to

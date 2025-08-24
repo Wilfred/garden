@@ -23,7 +23,7 @@ external struct Bar {}
 // Struct(
 //     StructInfo {
 //         pos: Position { ... },
-//         visibility: External(
+//         visibility: Public(
 //             Position { ... },
 //         ),
 //         doc_comment: Some(

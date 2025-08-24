@@ -23,7 +23,7 @@ external enum Bar {}
 // Enum(
 //     EnumInfo {
 //         pos: Position { ... },
-//         visibility: External(
+//         visibility: Public(
 //             Position { ... },
 //         ),
 //         doc_comment: Some(

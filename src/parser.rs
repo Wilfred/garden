@@ -1342,21 +1342,30 @@ fn parse_definition(
             Some(nextnext_token) => nextnext_token.text == "(",
             None => false,
         };
-        if token.text == "external" && next_token.text == "fun" && !nextnext_is_paren {
+        if (token.text == "external" || token.text == "public")
+            && next_token.text == "fun"
+            && !nextnext_is_paren
+        {
             return parse_function(tokens, id_gen, diagnostics);
         }
 
-        if token.text == "method" || token.text == "external" && next_token.text == "method" {
+        if token.text == "method"
+            || (token.text == "external" || token.text == "public") && next_token.text == "method"
+        {
             return Some(parse_method(tokens, id_gen, diagnostics));
         }
 
         if token.text == "test" {
             return Some(parse_test(tokens, id_gen, diagnostics));
         }
-        if token.text == "enum" || token.text == "external" && next_token.text == "enum" {
+        if token.text == "enum"
+            || (token.text == "external" || token.text == "public") && next_token.text == "enum"
+        {
             return Some(parse_enum(tokens, id_gen, diagnostics));
         }
-        if token.text == "struct" || token.text == "external" && next_token.text == "struct" {
+        if token.text == "struct"
+            || (token.text == "external" || token.text == "public") && next_token.text == "struct"
+        {
             return Some(parse_struct(tokens, id_gen, diagnostics));
         }
         if token.text == "import" {
@@ -1472,9 +1481,9 @@ fn parse_enum(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" {
+        if token.text == "external" || token.text == "public" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::External(token.position.clone());
+            visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -1516,9 +1525,9 @@ fn parse_struct(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" {
+        if token.text == "external" || token.text == "public" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::External(token.position.clone());
+            visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -2267,9 +2276,9 @@ fn parse_function(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" {
+        if token.text == "external" || token.text == "public" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::External(token.position.clone());
+            visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -2289,9 +2298,9 @@ fn parse_method(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" {
+        if token.text == "external" || token.text == "public" {
             let token = tokens.pop().unwrap();
-            visibility = Visibility::External(token.position.clone());
+            visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
         }
     }
@@ -2748,6 +2757,7 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "enum"
             || token.text == "struct"
             || token.text == "external"
+            || token.text == "public"
             || token.text == "import"
         {
             return parse_definition(tokens, id_gen, diagnostics);

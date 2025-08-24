@@ -51,7 +51,7 @@ external fun foo: Option<Int> {
 //             close_brace: Position { ... },
 //         },
 //     },
-//     External(
+//     Public(
 //         Position { ... },
 //     ),
 // )

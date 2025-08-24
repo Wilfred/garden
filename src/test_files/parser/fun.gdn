@@ -36,7 +36,7 @@ external fun foo<T>(): Unit {}
 //             close_brace: Position { ... },
 //         },
 //     },
-//     External(
+//     Public(
 //         Position { ... },
 //     ),
 // )

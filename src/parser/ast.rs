@@ -573,7 +573,7 @@ pub(crate) struct Block {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Visibility {
-    External(Position),
+    Public(Position),
     CurrentFile,
 }
 

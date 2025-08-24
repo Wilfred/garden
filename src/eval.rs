@@ -341,7 +341,7 @@ fn load_toplevel_items_(
                 }
 
                 match visibility {
-                    Visibility::External(_) => {
+                    Visibility::Public(_) => {
                         namespace
                             .borrow_mut()
                             .exported_syms

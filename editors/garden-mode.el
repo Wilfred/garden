@@ -670,7 +670,7 @@ enclosing point and print the result."
 (defconst garden-mode-font-lock-keywords
   `((,(regexp-opt
        '("let" "fun" "enum" "struct"
-         "import" "internal" "external"
+         "import" "internal" "external" "public" "shared"
          "if" "else" "while" "return" "test" "match"
          "break" "continue" "for" "in" "assert"
          "as" "method")

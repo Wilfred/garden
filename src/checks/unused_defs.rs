@@ -40,7 +40,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
             continue;
         };
 
-        if matches!(visibility, Visibility::External(_)) {
+        if matches!(visibility, Visibility::Public(_)) {
             already_covered_ids.insert(item_id);
             continue;
         }
@@ -66,7 +66,7 @@ pub(crate) fn check_unused_defs(items: &[ToplevelItem], summary: &TCSummary) -> 
     for item in items {
         match &item {
             ToplevelItem::Fun(symbol, fun_info, visibility) => {
-                if matches!(visibility, Visibility::External(_)) {
+                if matches!(visibility, Visibility::Public(_)) {
                     continue;
                 }
 

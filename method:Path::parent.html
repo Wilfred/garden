@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Path::parent - Garden</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>Path::parent</code></h1>
+<p>Get the parent for this path. For directories, this is the parent
+directory. For files, this is the containing directory.</p>
+<p>This always returns a <code>Path</code>, so the root directory (i.e. <code>/</code>) is
+returned as-is.</p>
+<pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/" }</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> parent(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:Path.html">Path</a>&gt; {
+  <a class="keyword" href="/keyword:let.html">let</a> p = this.p.strip_suffix(<span class="string">"/"</span>)
+  <a class="keyword" href="/keyword:if.html">if</a> p == <span class="string">"" </span>{
+    <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
+  }
+
+  <a class="keyword" href="/keyword:let.html">let</a> parts = p.split(<span class="string">"/"</span>).slice(0, -1)
+  <a class="keyword" href="/keyword:if.html">if</a> parts.is_empty() {
+    <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
+  }
+
+  <span class="type">Some</span>(<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/"</span>.join(parts) })
+}</code></pre></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

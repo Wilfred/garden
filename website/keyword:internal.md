@@ -1,1 +1,1 @@
-<script type="text/javascript">window.location.replace('./keyword:external.html')</script>
+<script type="text/javascript">window.location.replace('./keyword:public.html')</script>

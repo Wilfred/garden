@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>public - Garden</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>public</code> keyword</h1>
+<p>You can use <code>public</code> to declare the visibility of your functions and
+methods.</p>
+<p>If a function or method does not have <code>public</code>, it can only be used in
+the current file where it is defined.</p>
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:fun.html">fun</a> visible_in_the_current_file() {}</code></pre>
+<p>If you use <code>public</code>, you are declaring a function that can be used
+anywhere.</p>
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> visible_everywhere() {}</code></pre>
+<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./other_file.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> other_file
+
+other_file::visible_everywhere()</code></pre>
+<p>The keywords <code>shared</code>, <code>internal</code> and <code>external</code> are currently
+reserved for additional visibility levels.</p></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

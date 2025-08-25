@@ -2,6 +2,10 @@
 
 You can use `import` to load definitions from another file.
 
+```title:foo.gdn
+public fun defined_in_foo() {}
+```
+
 ```title:example
 import "./foo.gdn" as f
 

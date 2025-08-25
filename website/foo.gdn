@@ -1,1 +1,1 @@
-external fun defined_in_foo() {}
+public fun defined_in_foo() {}

@@ -372,6 +372,7 @@ pub(crate) enum BuiltinFunctionKind {
     NamespaceFunctions,
     MethodsForType,
     GetEnv,
+    Keywords,
 }
 
 impl BuiltinFunctionKind {
@@ -399,7 +400,8 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::DocCommentForMethod
             | BuiltinFunctionKind::CheckSnippet
             | BuiltinFunctionKind::MethodsForType
-            | BuiltinFunctionKind::NamespaceFunctions => PathBuf::from("__garden.gdn"),
+            | BuiltinFunctionKind::NamespaceFunctions
+            | BuiltinFunctionKind::Keywords => PathBuf::from("__garden.gdn"),
         }
     }
 }
@@ -430,6 +432,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::NamespaceFunctions => "namespace_functions",
             BuiltinFunctionKind::MethodsForType => "methods_for_type",
             BuiltinFunctionKind::GetEnv => "get_env",
+            BuiltinFunctionKind::Keywords => "keywords",
         };
         write!(f, "{name}")
     }

@@ -2741,6 +2741,33 @@ fn eval_builtin_call(
                 env.push_value(value);
             }
         }
+        BuiltinFunctionKind::Keywords => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+            if expr_value_is_used {
+                let mut keywords = crate::parser::KEYWORDS
+                    .iter()
+                    .map(|k| k.to_string())
+                    .collect::<Vec<_>>();
+                keywords.sort();
+                let items = keywords
+                    .into_iter()
+                    .map(|k| Value::new(Value_::String(k)))
+                    .collect::<Vec<_>>();
+                env.push_value(Value::new(Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                }));
+            }
+        }
         BuiltinFunctionKind::SetWorkingDirectory => {
             check_arity(
                 &SymbolName {

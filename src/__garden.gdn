@@ -113,13 +113,11 @@ test prelude_types {
 // All the reserved words in Garden. These are keywords that cannot be
 // used as variable names.
 public fun keywords(): List<String> {
-  // TODO: Add support for constants so this doesn't need to be a function.
-  [
-    "let", "fun", "enum", "struct", "external", "internal",
-    "import", "if", "else", "while", "return", "test",
-    "match", "break", "continue", "for", "in", "assert",
-    "as", "method", "public", "shared",
-  ]
+  __BUILTIN_IMPLEMENTATION
+}
+
+test keywords {
+  assert(keywords().contains("if"))
 }
 
 // Get the source code for the type definition of `name`.

@@ -1,6 +1,6 @@
 fun bar(_) {}
 
-external fun demo() {
+public fun demo() {
   match Some("foo") {
     Some(s) => {
       bar(s ^ "baz")
@@ -14,7 +14,7 @@ external fun demo() {
 // expected stdout:
 // fun bar(_) {}
 // 
-// external fun demo() {
+// public fun demo() {
 //   match Some("foo") {
 //     Some(s) => {
 //       let extracted_var = s ^ "baz"

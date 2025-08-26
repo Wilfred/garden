@@ -1,4 +1,4 @@
-external fun foo(f: Fun<Int, Int>): Int {
+public fun foo(f: Fun<Int, Int>): Int {
     f(1)
 }
 
@@ -6,8 +6,8 @@ external fun foo(f: Fun<Int, Int>): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a tuple here, e.g. `Fun<(Int, Int), String>` but got `Int`.
-// ---| src/test_files/check/malformed_function_parameter.gdn:1:25
-//   1| external fun foo(f: Fun<Int, Int>): Int {
-//   2|     f(1)                ^^^
+// ---| src/test_files/check/malformed_function_parameter.gdn:1:23
+//   1| public fun foo(f: Fun<Int, Int>): Int {
+//   2|     f(1)              ^^^
 //   3| }
 

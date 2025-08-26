@@ -1,4 +1,4 @@
-external fun demo() {
+public fun demo() {
   // Extracted variable init value should not have parentheses.
   // Nor should the use site of the variable.
   let _y = print("x" ^ ("y" ^ "z"))
@@ -7,7 +7,7 @@ external fun demo() {
 
 // args: extract-variable --name extracted_var
 // expected stdout:
-// external fun demo() {
+// public fun demo() {
 //   // Extracted variable init value should not have parentheses.
 //   // Nor should the use site of the variable.
 //   let extracted_var = "y" ^ "z"

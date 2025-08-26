@@ -4,7 +4,7 @@ struct Foo {}
 
 // Hello
 // World
-external struct Bar {}
+public struct Bar {}
 
 // args: dump-ast
 // expected stdout:

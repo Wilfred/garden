@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
     break
 
     while True {
@@ -16,7 +16,7 @@ external fun foo() {
 // expected stdout:
 // Error: `break` can only be used inside `for` or `while` loops.
 // ---| src/test_files/check/break_without_loop.gdn:2:5
-//   1| external fun foo() {
+//   1| public fun foo() {
 //   2|     break
 //   3|     ^^^^^
 //   4|     while True {

@@ -1,4 +1,4 @@
-external fun subst_method_return_tys<T>() {
+public fun subst_method_return_tys<T>() {
   let items: List<(Int, T)> = []
 
   let t: (Int, T) = (0, todo())

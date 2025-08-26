@@ -1,4 +1,4 @@
-external fun info(msg: String): Unit {
+public fun info(msg: String): Unit {
   if msg.contains("\n") {
     println("INFO: ")
     for line in msg.lines() {
@@ -9,7 +9,7 @@ external fun info(msg: String): Unit {
   }
 }
 
-external fun warn(msg: String): Unit {
+public fun warn(msg: String): Unit {
   if msg.contains("\n") {
     println("WARN: ")
     for line in msg.lines() {

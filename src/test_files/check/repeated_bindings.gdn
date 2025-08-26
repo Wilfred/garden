@@ -1,11 +1,11 @@
-external fun foo(x: Int, x: Int) {
+public fun foo(x: Int, x: Int) {
     let (y, y) = (1, 2)
 
     let _f = fun(z, z) {}
 }
 
 // We allow repetition with _.
-external fun bar(_: Int, _: Int, _: String) {
+public fun bar(_: Int, _: Int, _: String) {
     let (_, _) = (1, 2)
 
     let _f = fun(_, _) {}
@@ -15,13 +15,14 @@ external fun bar(_: Int, _: Int, _: String) {
 // expected exit status: 1
 // expected stdout:
 // Error: Duplicate parameter `x`.
-// ---| src/test_files/check/repeated_bindings.gdn:1:26
-//   1| external fun foo(x: Int, x: Int) {
-//   2|     let (y, y) = (1, 2)  ^
+// ---| src/test_files/check/repeated_bindings.gdn:1:24
+//   1| public fun foo(x: Int, x: Int) {
+//    |                        ^
+//   2|     let (y, y) = (1, 2)
 // 
 // Error: Duplicate variable  `y` in destructuring `let`.
 // ---| src/test_files/check/repeated_bindings.gdn:2:13
-//   1| external fun foo(x: Int, x: Int) {
+//   1| public fun foo(x: Int, x: Int) {
 //   2|     let (y, y) = (1, 2)
 //   3|             ^
 //   4|     let _f = fun(z, z) {}

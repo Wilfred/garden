@@ -1,6 +1,6 @@
 fun foo(_: String) {}
 
-external fun bar() {
+public fun bar() {
   // Cursor position is often rendered between characters in IDEs. Try
   // the previous character if the character after the cursor doesn't
   // have a symbol.

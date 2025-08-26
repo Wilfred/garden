@@ -4,7 +4,7 @@ fun foo() {}
 
 // Hello
 // World
-external fun bar() {}
+public fun bar() {}
 
 // args: dump-ast
 // expected stdout:

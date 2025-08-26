@@ -14,7 +14,7 @@ enum Foo {
   }
 }
 
-external fun bar(): Int {
+public fun bar(): Int {
   match One {
     One => "wrong",
     Two => "wrong too",
@@ -39,7 +39,7 @@ external fun bar(): Int {
 // 
 // Error: Expected `Int`, but got `String`.
 // ---| src/test_files/check/type_error_match_different_cases.gdn:19:12
-//  17| external fun bar(): Int {
+//  17| public fun bar(): Int {
 //  18|   match One {
 //  19|     One => "wrong",
 //    |            ^^^^^^^

@@ -1,4 +1,4 @@
-external fun foo(): Int {
+public fun foo(): Int {
     1 +
 }
 
@@ -7,7 +7,7 @@ external fun foo(): Int {
 // expected stdout:
 // Error: Expected an expression after this.
 // ---| src/test_files/check/bad_syntax.gdn:2:7
-//   1| external fun foo(): Int {
+//   1| public fun foo(): Int {
 //   2|     1 +
 //   3| }     ^
 

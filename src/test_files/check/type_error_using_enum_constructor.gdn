@@ -1,4 +1,4 @@
-external fun foo(): Int {
+public fun foo(): Int {
     Some
 }
 
@@ -7,7 +7,7 @@ external fun foo(): Int {
 // expected stdout:
 // Error: Expected `Int`, but got `Fun<(T), Option<T>>`.
 // ---| src/test_files/check/type_error_using_enum_constructor.gdn:2:5
-//   1| external fun foo(): Int {
+//   1| public fun foo(): Int {
 //   2|     Some
 //   3| }   ^^^^
 

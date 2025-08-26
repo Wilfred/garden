@@ -1,20 +1,20 @@
-external fun bad1(): Int {
+public fun bad1(): Int {
   while True {}
   1
 }
 
-external fun bad2(): Int {
+public fun bad2(): Int {
   return 1
   2
 }
 
-external fun bad3(): Int {
+public fun bad3(): Int {
   throw("")
   2
 }
 
 // More sophisticated analysis is possible, but keeping the implementation simple for now.
-// external fun bad_ignored(b: Bool): Int {
+// public fun bad_ignored(b: Bool): Int {
 //   if b {
 //     return 1
 //   } else {
@@ -24,7 +24,7 @@ external fun bad3(): Int {
 //   3
 // }
 //
-// external fun bad_ignored2(b: Bool): Int {
+// public fun bad_ignored2(b: Bool): Int {
 //   let num = 1 + throw("")
 //   num
 // }
@@ -32,7 +32,7 @@ external fun bad3(): Int {
 // We don't want to complain about code after todo(), even though it's
 // unreachable. We're already linting for todo() calls, and it's not
 // useful to show more squiggles on WIP code.
-external fun good(): Int {
+public fun good(): Int {
   todo()
   let x = 1
   x + 1
@@ -42,7 +42,7 @@ fun get_bool(): Bool {
   False
 }
 
-external fun good2(): Int {
+public fun good2(): Int {
   while get_bool() {}
   1
 }
@@ -53,7 +53,7 @@ external fun good2(): Int {
 // Warning: Unfinished code.
 // ---| src/test_files/check/unreachable.gdn:36:3
 //  34| // useful to show more squiggles on WIP code.
-//  35| external fun good(): Int {
+//  35| public fun good(): Int {
 //  36|   todo()
 //    |   ^^^^^^
 //  37|   let x = 1
@@ -61,14 +61,14 @@ external fun good2(): Int {
 // 
 // Warning: Unreachable code after `while` loop which never terminates.
 // ---| src/test_files/check/unreachable.gdn:3:3
-//   1| external fun bad1(): Int {
+//   1| public fun bad1(): Int {
 //   2|   while True {}
 //   3|   1
 //   4| } ^
 // 
 // Warning: Unreachable code after `return`.
 // ---| src/test_files/check/unreachable.gdn:8:3
-//   6| external fun bad2(): Int {
+//   6| public fun bad2(): Int {
 //   7|   return 1
 //   8|   2
 //   9| } ^

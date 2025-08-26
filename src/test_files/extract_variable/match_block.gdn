@@ -1,4 +1,4 @@
-external fun demo() {
+public fun demo() {
   match Some("foo") {
     Some(s) => {
       let _ = s ^ "baz"
@@ -10,7 +10,7 @@ external fun demo() {
 
 // args: extract-variable --name extracted_var
 // expected stdout:
-// external fun demo() {
+// public fun demo() {
 //   match Some("foo") {
 //     Some(s) => {
 //       let extracted_var = s ^ "baz"

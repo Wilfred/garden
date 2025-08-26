@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
   let x = todo()
   x += 1
 
@@ -11,7 +11,7 @@ external fun foo() {
 // expected stdout:
 // Warning: Unfinished code.
 // ---| src/test_files/check/assign_update_error_type.gdn:2:11
-//   1| external fun foo() {
+//   1| public fun foo() {
 //   2|   let x = todo()
 //   3|   x += 1  ^^^^^^
 // 

@@ -2,7 +2,7 @@ struct Foo {
   x: Int,
 }
 
-external fun bar(): Unit {
+public fun bar(): Unit {
   let _f = Foo{ x: "abc" }
 }
 
@@ -11,7 +11,7 @@ external fun bar(): Unit {
 // expected stdout:
 // Error: Expected `Int` for this field but got `String`.
 // ---| src/test_files/check/struct_field_wrong_type.gdn:6:20
-//   5| external fun bar(): Unit {
+//   5| public fun bar(): Unit {
 //   6|   let _f = Foo{ x: "abc" }
 //   7| }                  ^^^^^
 

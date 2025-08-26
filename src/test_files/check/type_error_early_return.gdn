@@ -1,4 +1,4 @@
-external fun takes_int(b: Bool): Int {
+public fun takes_int(b: Bool): Int {
     if b {
         return "foo"
     }
@@ -11,7 +11,7 @@ external fun takes_int(b: Bool): Int {
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
 // ---| src/test_files/check/type_error_early_return.gdn:3:16
-//   1| external fun takes_int(b: Bool): Int {
+//   1| public fun takes_int(b: Bool): Int {
 //   2|     if b {
 //   3|         return "foo"
 //   4|     }          ^^^^^

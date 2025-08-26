@@ -1,8 +1,8 @@
-external fun get_tuple(): (Int, String) {
+public fun get_tuple(): (Int, String) {
     (1, "abc")
 }
 
-external fun destructure() {
+public fun destructure() {
     // good destructure, bad usage
     let (x, y) = get_tuple()
     let _ = x + y

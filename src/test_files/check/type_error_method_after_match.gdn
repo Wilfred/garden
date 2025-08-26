@@ -1,4 +1,4 @@
-external fun foo(x: Option<Int>) {
+public fun foo(x: Option<Int>) {
     let i = match x {
         Some(v) => v,
         None => 0,

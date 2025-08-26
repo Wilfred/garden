@@ -1,4 +1,4 @@
-external fun foo(x) {
+public fun foo(x) {
     x
 }
 

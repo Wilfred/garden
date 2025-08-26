@@ -6,7 +6,7 @@
 // import "__fs.gdn" as fs
 // fs::write_file("hello world", Path{ p: "/tmp/foo.txt" })
 // ```
-external fun write_file(content: String, path: Path): Result<Unit, String> {
+public fun write_file(content: String, path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -21,7 +21,7 @@ test write_file {
 // import "__fs.gdn" as fs
 // fs::list_directory(Path{ p: "/" })
 // ```
-external fun list_directory(path: Path): Result<List<Path>, String> {
+public fun list_directory(path: Path): Result<List<Path>, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -44,7 +44,7 @@ test list_directory {
 // import "__fs.gdn" as fs
 // fs::working_directory() //-> Path{ p: "/home/yourname/awesome_garden_project" }
 // ```
-external fun working_directory(): Path {
+public fun working_directory(): Path {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -57,6 +57,6 @@ external fun working_directory(): Path {
 // import "__fs.gdn" as fs
 // fs::set_working_directory(Path{ p: "/tmp" })
 // ```
-external fun set_working_directory(path: Path): Result<Unit, String> {
+public fun set_working_directory(path: Path): Result<Unit, String> {
   __BUILTIN_IMPLEMENTATION
 }

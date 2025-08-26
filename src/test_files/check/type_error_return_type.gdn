@@ -1,4 +1,4 @@
-external fun bad(): Bool {
+public fun bad(): Bool {
     let _f = fun(): Int { True }
     
     "abc"
@@ -9,7 +9,7 @@ external fun bad(): Bool {
 // expected stdout:
 // Error: Expected `Int`, but got `Bool`.
 // ---| src/test_files/check/type_error_return_type.gdn:2:27
-//   1| external fun bad(): Bool {
+//   1| public fun bad(): Bool {
 //   2|     let _f = fun(): Int { True }
 //   3|                           ^^^^
 //   4|     "abc"

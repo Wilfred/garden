@@ -557,7 +557,7 @@ fn load_toplevel_items_(
 }
 
 /// Insert `imported_ns` into `current_ns`, either as a single value
-/// or as all the external symbols as values.
+/// or as all the public symbols as values.
 fn insert_imported_namespace(
     namespace_sym: Option<&Symbol>,
     current_ns: Rc<RefCell<NamespaceInfo>>,
@@ -576,7 +576,7 @@ fn insert_imported_namespace(
         None => {
             let mut syms = vec![];
 
-            // Load all the external items into the current namespace.
+            // Load all the public items into the current namespace.
             let imported_ns = imported_ns.borrow();
             for (sym, value) in &imported_ns.values {
                 if imported_ns.exported_syms.contains(sym) {

@@ -1,4 +1,4 @@
-external fun foo(): Unit {
+public fun foo(): Unit {
     let i = 0
     i = 2
 }

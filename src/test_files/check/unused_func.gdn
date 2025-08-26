@@ -8,7 +8,7 @@ fun not_called() {
 
 fun called() {}
 
-external fun foo() {
+public fun foo() {
   called()
 }
 
@@ -40,7 +40,7 @@ test my_test {
 
 fun called_via_method() {}
 
-external method foo(this: String): Unit {
+public method foo(this: String): Unit {
   called_via_method()
   this.used_meth()
 }

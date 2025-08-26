@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
   match Some(1) {
     Some(_) => {}
     None => {}

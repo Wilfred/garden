@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
     let v = no_such_func()
     // should not emit an equality warning
     if v == "" {
@@ -11,7 +11,7 @@ external fun foo() {
 // expected stdout:
 // Error: Unbound symbol: `no_such_func`
 // ---| src/test_files/check/equality_on_error_type.gdn:2:13
-//   1| external fun foo() {
+//   1| public fun foo() {
 //   2|     let v = no_such_func()
 //    |             ^^^^^^^^^^^^
 //   3|     // should not emit an equality warning

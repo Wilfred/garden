@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
   let x = no_such_fun()
   // Calling methods on an error type is fine.
   x.len()
@@ -15,7 +15,7 @@ external fun foo() {
 // expected stdout:
 // Error: Unbound symbol: `no_such_fun`
 // ---| src/test_files/check/cascading_errors.gdn:2:11
-//   1| external fun foo() {
+//   1| public fun foo() {
 //   2|   let x = no_such_fun()
 //    |           ^^^^^^^^^^^
 //   3|   // Calling methods on an error type is fine.

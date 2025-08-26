@@ -1,4 +1,4 @@
-external fun foo(i: Option<Int>) {
+public fun foo(i: Option<Int>) {
     match i {
         Some(_) => {
             if True 

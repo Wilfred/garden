@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
     let x = 0
     x += 1 // OK
 

@@ -12,7 +12,7 @@ enum Bool {
 // ```
 // True.not() //-> False
 // ```
-external method not(this: Bool): Bool {
+public method not(this: Bool): Bool {
   match this {
     True => False,
     False => True,
@@ -48,7 +48,7 @@ enum Result<T, E> {
 // ```
 // dbg([1, 2])
 // ```
-external fun dbg<T>(value: T): T {
+public fun dbg<T>(value: T): T {
   println(string_repr(value))
   value
 }
@@ -57,12 +57,12 @@ external fun dbg<T>(value: T): T {
 //
 // This is useful for work-in-progress code, and will trigger a
 // warning so you don't forget to finish the code later.
-external fun todo(): NoValue {
+public fun todo(): NoValue {
   throw("Not yet implemented")
 }
 
 // If this value is `Ok`, unwrap it, otherwise throw an exception.
-external method or_throw<T, E>(this: Result<T, E>): T {
+public method or_throw<T, E>(this: Result<T, E>): T {
   match this {
     Ok(v) => v
     Err(e) => throw(" ".join(["Called `or_throw()` on an `Err`.", string_repr(e)]))
@@ -93,7 +93,7 @@ enum NoValue {}
 // "foobar".starts_with("foo") //-> True
 // "foobar".starts_with("abc") //-> False
 // ```
-external method starts_with(this: String, s: String): Bool {
+public method starts_with(this: String, s: String): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -112,7 +112,7 @@ test starts_with {
 // "foobar".ends_with("bar") //-> True
 // "foobar".ends_with("abc") //-> False
 // ```
-external method ends_with(this: String, s: String): Bool {
+public method ends_with(this: String, s: String): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -130,7 +130,7 @@ test ends_with {
 // ```
 // "abc xabc".replace("abc", "def") //-> "def xdef"
 // ```
-external method replace(this: String, before: String, after: String): String {
+public method replace(this: String, before: String, after: String): String {
   let parts: List<String> = []
 
   let s = this
@@ -162,7 +162,7 @@ test string_replace {
 // ```
 // "abcd".split_once("b") //-> Some(["a", "cd"])
 // ```
-external method split_once(this: String, needle: String): Option<(String, String)> {
+public method split_once(this: String, needle: String): Option<(String, String)> {
   match this.index_of(needle) {
     None => None
     Some(i) => {
@@ -187,7 +187,7 @@ test split_once {
 // ```
 // ":".join(["a", "b", "c"]) //-> "a:b:c"
 // ```
-external method join(this: String, items: List<String>): String {
+public method join(this: String, items: List<String>): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -203,7 +203,7 @@ test join {
 // "abcd".contains("bc") //-> True
 // "abcd".contains("x") //-> False
 // ```
-external method contains(this: String, substring: String): Bool {
+public method contains(this: String, substring: String): Bool {
   if substring.len() > this.len() {
     return False
   }
@@ -226,7 +226,7 @@ external method contains(this: String, substring: String): Bool {
 // ```
 // " foo ".trim_left() //-> "foo "
 // ```
-external method trim_left(this: String): String {
+public method trim_left(this: String): String {
   let i = 0
   while i < this.len() {
     let char = this.substring(i, i + 1)
@@ -252,7 +252,7 @@ test trim_left {
 // ```
 // " foo ".trim_right() //-> " foo"
 // ```
-external method trim_right(this: String, ): String {
+public method trim_right(this: String, ): String {
   let i = this.len() - 1
   while i >= 0 {
     let char = this.substring(i, i + 1)
@@ -274,7 +274,7 @@ test trim_right {
 }
 
 // Remove whitespace from both the start and end of this string.
-external method trim(this: String, ): String {
+public method trim(this: String, ): String {
   this.trim_left().trim_right()
 }
 
@@ -293,7 +293,7 @@ test trim {
 // "foo".strip_suffix("o") //-> "fo"
 // "bar".strip_suffix("o") //-> "bar"
 // ```
-external method strip_suffix(this: String, suffix: String): String {
+public method strip_suffix(this: String, suffix: String): String {
   if this.ends_with(suffix) {
     return this.substring(0, this.len() - suffix.len())
   }
@@ -314,7 +314,7 @@ test strip_suffix {
 // "bar".strip_prefix("f") //-> "bar"
 // "ffoo".strip_prefix("f") //-> "foo"
 // ```
-external method strip_prefix(this: String, prefix: String): String {
+public method strip_prefix(this: String, prefix: String): String {
   if this.starts_with(prefix) {
     // return this.substring(prefix.len(), this.len(), 1)
     return this.substring(prefix.len(), this.len())
@@ -336,7 +336,7 @@ test strip_prefix {
 // "a,,b,".split(",") //-> ["a", "", "b", ""]
 // "".split(",") //-> []
 // ```
-external method split(this: String, needle: String): List<String> {
+public method split(this: String, needle: String): List<String> {
   if this == "" {
     return []
   }
@@ -374,7 +374,7 @@ test split {
 // ```
 // "abcc".chars() == ["a", "b", "c", "c"]
 // ```
-external method chars(this: String): List<String> {
+public method chars(this: String): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -398,7 +398,7 @@ struct Path {
 // Path{ p: "/foo/bar/" }.parent() //-> Path{ p: "/foo" }
 // Path{ p: "/" }.parent() //-> Path{ p: "/" }
 // ```
-external method parent(this: Path): Option<Path> {
+public method parent(this: Path): Option<Path> {
   let p = this.p.strip_suffix("/")
   if p == "" {
     return None
@@ -421,7 +421,7 @@ test path_parent {
 }
 
 // Append `component` to this path.
-external method join(this: Path, component: String): Path {
+public method join(this: Path, component: String): Path {
   let p = if this.p.ends_with("/") {
     this.p ^ component
   } else {
@@ -444,7 +444,7 @@ test path_join {
 
 // The extension of this path, if this path is a file whose name
 // includes a ".".
-external method extension(this: Path): Option<String> {
+public method extension(this: Path): Option<String> {
   let name = match this.file_name() {
     Some(name) => name
     None => return None
@@ -460,7 +460,7 @@ external method extension(this: Path): Option<String> {
 // Path{ p: "/foo/" }.file_name() //-> Some("foo")
 // Path{ p: "/" }.file_name() //-> None
 // ```
-external method file_name(this: Path): Option<String> {
+public method file_name(this: Path): Option<String> {
   if this.p == "/" {
     return None
   }
@@ -481,7 +481,7 @@ test path_file_name {
 // Path{ p: "/foo/bar.txt"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
 // Path{ p: "/foo/bar.txt.gz"}.set_extension("log") //-> Path{ p: "/foo/bar.log"}
 // ```
-external method set_extension(this: Path, new_ext: String): Path {
+public method set_extension(this: Path, new_ext: String): Path {
   let new_ext = "." ^ new_ext
   match this.file_name() {
     Some(file_name) => {
@@ -513,7 +513,7 @@ test path_set_extension {
 // ```
 // range(1, 5) //-> [1, 2, 3, 4]
 // ```
-external fun range(i: Int, j: Int): List<Int> {
+public fun range(i: Int, j: Int): List<Int> {
   let items: List<Int> = []
   while i < j {
     items = items.append(i)
@@ -539,7 +539,7 @@ struct List<T> {
 // ```
 // [10].append(11) //-> [10, 11]
 // ```
-external method append<T>(this: List<T>, value: T): List<T> {
+public method append<T>(this: List<T>, value: T): List<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -548,7 +548,7 @@ external method append<T>(this: List<T>, value: T): List<T> {
 // ```
 // [10, 11, 12].contains(12) //-> True
 // ```
-external method contains<T>(this: List<T>, item: T): Bool {
+public method contains<T>(this: List<T>, item: T): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -567,7 +567,7 @@ test list_contains {
 // [4, 5, 6].get(1) //-> Some(5)
 // [4, 5, 6].get(3) //-> None
 // ```
-external method get<T>(this: List<T>, index: Int): Option<T> {
+public method get<T>(this: List<T>, index: Int): Option<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -584,12 +584,12 @@ test list_get {
 // ```
 // [10, 11, 12].len() //-> 3
 // ```
-external method len<T>(this: List<T>): Int {
+public method len<T>(this: List<T>): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
 // Get the first item in this list, if the list is not empty.
-external method first<T>(this: List<T>): Option<T> {
+public method first<T>(this: List<T>): Option<T> {
   this.get(0)
 }
 
@@ -599,7 +599,7 @@ test first {
 }
 
 // Get the last item in this list, if the list is not empty.
-external method last<T>(this: List<T>): Option<T> {
+public method last<T>(this: List<T>): Option<T> {
   this.get(this.len() - 1)
 }
 
@@ -610,7 +610,7 @@ test last {
 
 // Return a copy of this list with the items where `f(item)` returns
 // True.
-external method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
+public method filter<T>(this: List<T>, f: Fun<(T), Bool>): List<T> {
   let result: List<T> = []
 
   for item in this {
@@ -627,7 +627,7 @@ test filter {
 }
 
 // Is this list empty?
-external method is_empty<T>(this: List<T>): Bool {
+public method is_empty<T>(this: List<T>): Bool {
   this.len() == 0
 }
 
@@ -637,7 +637,7 @@ test is_empty {
 }
 
 // Is this list non-empty?
-external method is_non_empty<T>(this: List<T>): Bool {
+public method is_non_empty<T>(this: List<T>): Bool {
   this.len() != 0
 }
 
@@ -652,7 +652,7 @@ test is_non_empty {
 // ```
 // [1, 2].map(fun(x: Int) { x + 1 }) //-> [2, 3]
 // ```
-external method map<T, U>(this: List<T>, f: Fun<(T), U>): List<U> {
+public method map<T, U>(this: List<T>, f: Fun<(T), U>): List<U> {
   let items: List<U> = []
   for item in this {
     items = items.append(f(item))
@@ -674,7 +674,7 @@ test list_map {
 // ["A", "B", "B"].index_of("B") //-> Some(1)
 // ["A", "B"].index_of("C") //-> None
 // ```
-external method index_of<T>(this: List<T>, value: T): Option<Int> {
+public method index_of<T>(this: List<T>, value: T): Option<Int> {
   for (i, v) in this.enumerate() {
     if v == value {
       return Some(i)
@@ -698,7 +698,7 @@ test list_index_of {
 // [10, 11, 12].slice(0, 2) //-> [10, 11]
 // [10, 11, 12].slice(1, -1) //-> [11]
 // ```
-external method slice<T>(this: List<T>, i: Int, j: Int): List<T> {
+public method slice<T>(this: List<T>, i: Int, j: Int): List<T> {
   if (j < 0) {
     j = this.len() + j
   }
@@ -731,7 +731,7 @@ test list_slice {
 // ```
 // ["a", "b"].enumerate() //-> [(0, "a"), (1, "b")]
 // ```
-external method enumerate<T>(this: List<T>): List<(Int, T)> {
+public method enumerate<T>(this: List<T>): List<(Int, T)> {
   let items: List<(Int, T)> = []
 
   let i = 0
@@ -756,7 +756,7 @@ enum Option<T> {
 }
 
 /// Return True if this value is `Some`.
-external method is_some<T>(this: Option<T>): Bool {
+public method is_some<T>(this: Option<T>): Bool {
   match this {
     Some(_) => True,
     None => False,
@@ -764,7 +764,7 @@ external method is_some<T>(this: Option<T>): Bool {
 }
 
 /// Return True if this value is `None`.
-external method is_none<T>(this: Option<T>): Bool {
+public method is_none<T>(this: Option<T>): Bool {
   match this {
     Some(_) => False,
     None => True,
@@ -772,7 +772,7 @@ external method is_none<T>(this: Option<T>): Bool {
 }
 
 // If this value is `Some(value)`, unwrap it, otherwise throw an exception.
-external method or_throw<T>(this: Option<T>): T {
+public method or_throw<T>(this: Option<T>): T {
   match this {
     Some(v) => v,
     None => throw("Called `or_throw` on a `None` value.")
@@ -789,7 +789,7 @@ test option_or_throw {
 // Some(1).or_value(5) //-> 1
 // None.or_value(5) //-> 5
 // ```
-external method or_value<T>(this: Option<T>, value: T): T {
+public method or_value<T>(this: Option<T>, value: T): T {
   match this {
     Some(v) => v,
     None => value
@@ -818,7 +818,7 @@ struct Int {
 // ```
 // throw("Computer is melting!")
 // ```
-external fun throw(message: String): NoValue {
+public fun throw(message: String): NoValue {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -827,7 +827,7 @@ external fun throw(message: String): NoValue {
 // ```
 // print("hello world\n")
 // ```
-external fun print(_: String): Unit {
+public fun print(_: String): Unit {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -836,7 +836,7 @@ external fun print(_: String): Unit {
 // ```
 // println("hello world")
 // ```
-external fun println(_: String): Unit {
+public fun println(_: String): Unit {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -846,7 +846,7 @@ external fun println(_: String): Unit {
 // ```
 // shell("ls", ["-l", "/"])
 // ```
-external fun shell(command: String, args: List<String>): Result<String, String> {
+public fun shell(command: String, args: List<String>): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -855,7 +855,7 @@ external fun shell(command: String, args: List<String>): Result<String, String> 
 // ```
 // string_repr(123) //-> "123"
 // ```
-external fun string_repr<T>(value: T): String {
+public fun string_repr<T>(value: T): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -865,7 +865,7 @@ external fun string_repr<T>(value: T): String {
 // ```
 // source_directory() //-> Some(Path{ p: "/home/yourname/awesome_garden_project" })
 // ```
-external fun source_directory(): Option<Path> {
+public fun source_directory(): Option<Path> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -874,7 +874,7 @@ external fun source_directory(): Option<Path> {
 // ```
 // "abc".len() //-> 3
 // ```
-external method len(this: String): Int {
+public method len(this: String): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -888,7 +888,7 @@ test string_len {
 // ```
 // "a\nb".lines() //-> ["a", "b"]
 // ```
-external method lines(this: String): List<String> {
+public method lines(this: String): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -906,7 +906,7 @@ test string_lines {
 // "abcdef".substring(1, 3) //-> "bc"
 // "abc".substring(1, 99) //-> "bc"
 // ```
-external method substring(this: String, from_index: Int, to_index: Int): String {
+public method substring(this: String, from_index: Int, to_index: Int): String {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -921,7 +921,7 @@ test string_substring {
 // ```
 // "abc".index_of("c") //-> Some(2)
 // ```
-external method index_of(this: String, needle: String): Option<Int> {
+public method index_of(this: String, needle: String): Option<Int> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -942,7 +942,7 @@ test string_index_of {
 // "123".as_int() //-> Some(123)
 // "abc".as_int() //-> None
 // ```
-external method as_int(this: String): Option<Int> {
+public method as_int(this: String): Option<Int> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -966,7 +966,7 @@ test string_as_int {
 //
 // Note that a path may exist without the current user having
 // permission to read it.
-external method exists(this: Path): Bool {
+public method exists(this: Path): Bool {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -980,7 +980,7 @@ test path_exists {
 // ```
 // Path{ p: "/tmp/foo.txt" }.read()
 // ```
-external method read(this: Path): Result<String, String> {
+public method read(this: Path): Result<String, String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -992,7 +992,7 @@ test path_read {
 //
 // For example, if the shell command was `garden run my_program.gdn
 // --foo`, then this function will return `["--foo"]`.
-external fun shell_arguments(): List<String> {
+public fun shell_arguments(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }
 
@@ -1005,7 +1005,7 @@ external fun shell_arguments(): List<String> {
 // get_env("HOME") //-> Some("/home/user")
 // get_env("NO_SUCH_VAR") //-> None
 // ```
-external fun get_env(name: String): Option<String> {
+public fun get_env(name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION
 }
 

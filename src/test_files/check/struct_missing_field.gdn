@@ -2,7 +2,7 @@ struct Foo {
     x: Int,
 }
 
-external fun bar(): Unit {
+public fun bar(): Unit {
     let _f = Foo{}
 }
 
@@ -11,7 +11,7 @@ external fun bar(): Unit {
 // expected stdout:
 // Error: This struct literal is missing the field `x`.
 // ---| src/test_files/check/struct_missing_field.gdn:6:14
-//   5| external fun bar(): Unit {
+//   5| public fun bar(): Unit {
 //   6|     let _f = Foo{}
 //   7| }            ^^^
 

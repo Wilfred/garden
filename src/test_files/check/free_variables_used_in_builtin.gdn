@@ -1,4 +1,4 @@
-external fun foo(x: Int) {
+public fun foo(x: Int) {
     // We should not complain about unused variables in built-in signatures.
     __BUILTIN_IMPLEMENTATION
 }
@@ -7,9 +7,9 @@ external fun foo(x: Int) {
 // expected exit status: 1
 // expected stdout:
 // Warning: Tried to update a built-in stub for a function `foo` that doesn't exist.
-// ---| src/test_files/check/free_variables_used_in_builtin.gdn:1:14
-//   1| external fun foo(x: Int) {
-//    |              ^^^
+// ---| src/test_files/check/free_variables_used_in_builtin.gdn:1:12
+//   1| public fun foo(x: Int) {
+//    |            ^^^
 //   2|     // We should not complain about unused variables in built-in signatures.
 //   3|     __BUILTIN_IMPLEMENTATION
 

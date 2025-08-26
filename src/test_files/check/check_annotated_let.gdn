@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
   let _: Fun<(Int), Int> = fun(x) { x + 1 }
 }
 

@@ -7,13 +7,13 @@ import "./has_bad_syntax.gdn"
 // expected stdout:
 // Error: Expected `=` after this.
 // ---| src/test_files/check/has_bad_syntax.gdn:2:7
-//   1| external fun bar() {
+//   1| public fun bar() {
 //   2|   let x
 //   3| }     ^
 // 
 // Error: Expected an expression after this.
 // ---| src/test_files/check/has_bad_syntax.gdn:2:7
-//   1| external fun bar() {
+//   1| public fun bar() {
 //   2|   let x
 //   3| }     ^
 

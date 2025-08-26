@@ -1,4 +1,4 @@
-external fun foo(): Unit {
+public fun foo(): Unit {
   // We solve this ambiguity by requiring braces to touch for struct
   // literals.
   while SomeStruct{} {}

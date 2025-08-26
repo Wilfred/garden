@@ -730,12 +730,12 @@ pub(crate) struct ToplevelItemId(pub(crate) usize);
 pub(crate) enum ToplevelItem {
     /// ```garden
     /// fun foo() {}
-    /// external fun bar() {}
+    /// public fun bar() {}
     /// ```
     Fun(Symbol, FunInfo, Visibility),
     /// ```garden
     /// method foo(this: MyType) {}
-    /// external method bar(this: MyType) {}
+    /// public method bar(this: MyType) {}
     /// ```
     Method(MethodInfo, Visibility),
     /// ```garden

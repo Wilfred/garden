@@ -1,4 +1,4 @@
-external fun f(x) {
+public fun f(x) {
     match x {
         Some(y) => { y + 1 }
         None => { 42 }

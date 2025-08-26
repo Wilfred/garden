@@ -9,6 +9,6 @@ fun one(x) {
 
 fun call_g() { two("a string") }
 
-external fun foo() {
+public fun foo() {
     one("not bool")
 }

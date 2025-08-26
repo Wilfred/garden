@@ -1,4 +1,4 @@
-external fun foo(): Int {
+public fun foo(): Int {
   bar() + 1
 }
 

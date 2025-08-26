@@ -1,4 +1,4 @@
-external fun foo(x: Int) {
+public fun foo(x: Int) {
   let x = x + 1
   dbg(x)
 }

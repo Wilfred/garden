@@ -1,11 +1,11 @@
-external fun takes_bools(_: List<Bool>) {}
+public fun takes_bools(_: List<Bool>) {}
 
 {
     let x = [1, True]
     takes_bools(x)
 }
 
-external fun returns_bools(): List<Bool> {
+public fun returns_bools(): List<Bool> {
   [1, True]
 }
 
@@ -29,7 +29,7 @@ external fun returns_bools(): List<Bool> {
 // 
 // Error: Expected `Bool`, but got `Int`.
 // ---| src/test_files/check/list_mixed.gdn:9:4
-//   8| external fun returns_bools(): List<Bool> {
+//   8| public fun returns_bools(): List<Bool> {
 //   9|   [1, True]
 //  10| }  ^
 

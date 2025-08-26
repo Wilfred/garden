@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
     let x = 1
     // TODO: why does this produce duplicate errors?
     x + 1 = 2

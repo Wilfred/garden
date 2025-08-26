@@ -1,4 +1,4 @@
-external method foo<T>(this: List<T>) {}
+public method foo<T>(this: List<T>) {}
 
 // args: dump-ast
 // expected stdout:

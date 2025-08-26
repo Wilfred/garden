@@ -1,4 +1,4 @@
-external fun foo(): Fun<(Int), Int> {
+public fun foo(): Fun<(Int), Int> {
   fun(x) { x + 1 }
 }
 

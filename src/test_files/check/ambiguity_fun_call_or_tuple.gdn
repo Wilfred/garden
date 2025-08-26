@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
   let x = 1
 
   // Definitely a tuple, because there's whitespace before it.

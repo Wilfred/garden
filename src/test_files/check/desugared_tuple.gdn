@@ -1,8 +1,8 @@
-external fun foo(): Tuple {
+public fun foo(): Tuple {
   throw("")
 }
 
-external fun bar(): Tuple<Int> {
+public fun bar(): Tuple<Int> {
   throw("")
 }
 
@@ -10,16 +10,16 @@ external fun bar(): Tuple<Int> {
 // expected exit status: 1
 // expected stdout:
 // Error: `Tuple` cannot be used a type hint. Use `()` instead.
-// ---| src/test_files/check/desugared_tuple.gdn:1:21
-//   1| external fun foo(): Tuple {
-//   2|   throw("")         ^^^^^
+// ---| src/test_files/check/desugared_tuple.gdn:1:19
+//   1| public fun foo(): Tuple {
+//   2|   throw("")       ^^^^^
 //   3| }
 // 
 // Error: `Tuple` cannot be used a type hint. Use `(Int)` instead.
-// ---| src/test_files/check/desugared_tuple.gdn:5:21
+// ---| src/test_files/check/desugared_tuple.gdn:5:19
 //   3| }
 //   4| 
-//   5| external fun bar(): Tuple<Int> {
-//   6|   throw("")         ^^^^^^^^^^
+//   5| public fun bar(): Tuple<Int> {
+//   6|   throw("")       ^^^^^^^^^^
 //   7| }
 

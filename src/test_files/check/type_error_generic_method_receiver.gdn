@@ -1,4 +1,4 @@
-external method foo<T>(this: List<T>): String {
+public method foo<T>(this: List<T>): String {
   this.get(1).or_throw()
 }
 
@@ -7,7 +7,7 @@ external method foo<T>(this: List<T>): String {
 // expected stdout:
 // Error: Expected `String`, but got `T`.
 // ---| src/test_files/check/type_error_generic_method_receiver.gdn:2:3
-//   1| external method foo<T>(this: List<T>): String {
+//   1| public method foo<T>(this: List<T>): String {
 //   2|   this.get(1).or_throw()
 //   3| } ^^^^^^^^^^^^^^^^^^^^^^
 

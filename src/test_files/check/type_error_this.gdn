@@ -1,4 +1,4 @@
-external method bad(this: String): Bool {
+public method bad(this: String): Bool {
   this.no_such_meth()
 }
 
@@ -7,7 +7,7 @@ external method bad(this: String): Bool {
 // expected stdout:
 // Error: `String` has no method `no_such_meth`.
 // ---| src/test_files/check/type_error_this.gdn:2:8
-//   1| external method bad(this: String): Bool {
+//   1| public method bad(this: String): Bool {
 //   2|   this.no_such_meth()
 //   3| }      ^^^^^^^^^^^^
 

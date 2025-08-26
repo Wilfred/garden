@@ -1,4 +1,4 @@
-external method foo(this: String) {
+public method foo(this: String) {
   this = 123
   this.index_of("a")
 }
@@ -8,7 +8,7 @@ external method foo(this: String) {
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
 // ---| src/test_files/check/type_error_redefine_this.gdn:2:10
-//   1| external method foo(this: String) {
+//   1| public method foo(this: String) {
 //   2|   this = 123
 //    |          ^^^
 //   3|   this.index_of("a")

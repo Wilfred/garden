@@ -4,7 +4,7 @@ enum Foo {}
 
 // Hello
 // World
-external enum Bar {}
+public enum Bar {}
 
 // args: dump-ast
 // expected stdout:

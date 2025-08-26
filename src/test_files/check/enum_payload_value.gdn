@@ -10,7 +10,7 @@ enum MarkdownPart {
 
 struct Snippet {}
 
-external fun demo() {
+public fun demo() {
   // Good, deliberately testing recursive types.
   Cons(Cons(Nil))
 

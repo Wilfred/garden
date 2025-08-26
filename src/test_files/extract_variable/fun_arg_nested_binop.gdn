@@ -1,11 +1,11 @@
-external fun demo() {
+public fun demo() {
   let _y = print("x" ^ ("y" ^ "z"))
   //             ^^^^^^^^^^^^^^^^^
 }
 
 // args: extract-variable --name extracted_var
 // expected stdout:
-// external fun demo() {
+// public fun demo() {
 //   let extracted_var = "x" ^ ("y" ^ "z")
 //   let _y = print(extracted_var)
 // }

@@ -1,4 +1,4 @@
-external fun foo(): Unit {
+public fun foo(): Unit {
     NoSuchType{ x: 1 + 2 }
 }
 
@@ -7,7 +7,7 @@ external fun foo(): Unit {
 // expected stdout:
 // Error: No such type `NoSuchType`.
 // ---| src/test_files/check/struct_no_such_type.gdn:2:5
-//   1| external fun foo(): Unit {
+//   1| public fun foo(): Unit {
 //   2|     NoSuchType{ x: 1 + 2 }
 //   3| }   ^^^^^^^^^^
 

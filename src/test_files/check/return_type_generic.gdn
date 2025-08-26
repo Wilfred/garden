@@ -1,4 +1,4 @@
-external fun foo<T>(): T {
+public fun foo<T>(): T {
   throw("")
 }
 

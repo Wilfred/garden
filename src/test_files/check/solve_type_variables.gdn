@@ -1,8 +1,8 @@
-external method foo<T>(this: String, _: List<T>, value: T): T {
+public method foo<T>(this: String, _: List<T>, value: T): T {
   value
 }
 
-external fun bar<T>(_: List<T>, value: T): T {
+public fun bar<T>(_: List<T>, value: T): T {
   value
 }
 

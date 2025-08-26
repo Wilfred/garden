@@ -1,11 +1,11 @@
-external fun foo(s: String, i: Int) {
+public fun foo(s: String, i: Int) {
     // Always False.
     if s == i {
         print("hello world")
     }
 }
 
-external fun bar(s: Option<String>, i: Option<Int>) {
+public fun bar(s: Option<String>, i: Option<Int>) {
     // Only True when both values are None.
     if s == i {
         print("hello world")
@@ -17,7 +17,7 @@ external fun bar(s: Option<String>, i: Option<Int>) {
 // expected stdout:
 // Warning: You should compare values of the same type, but got `String` and `Int`.
 // ---| src/test_files/check/equality_on_different_type.gdn:3:8
-//   1| external fun foo(s: String, i: Int) {
+//   1| public fun foo(s: String, i: Int) {
 //   2|     // Always False.
 //   3|     if s == i {
 //    |        ^^^^^^
@@ -26,7 +26,7 @@ external fun bar(s: Option<String>, i: Option<Int>) {
 // 
 // Warning: You should compare values of the same type, but got `Option<String>` and `Option<Int>`.
 // ---| src/test_files/check/equality_on_different_type.gdn:10:8
-//   8| external fun bar(s: Option<String>, i: Option<Int>) {
+//   8| public fun bar(s: Option<String>, i: Option<Int>) {
 //   9|     // Only True when both values are None.
 //  10|     if s == i {
 //    |        ^^^^^^

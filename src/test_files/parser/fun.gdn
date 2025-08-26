@@ -1,4 +1,4 @@
-external fun foo<T>(): Unit {}
+public fun foo<T>(): Unit {}
 
 // args: dump-ast
 // expected stdout:

@@ -529,7 +529,7 @@ fun render_markdown_bullets(items: List<String>): String {
   "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"
 }
 
-external fun render_markdown(src: String): String {
+public fun render_markdown(src: String): String {
   let html_parts: List<String> = []
 
   for part in parse_markdown(src) {

@@ -1,8 +1,8 @@
-external fun foo(): Unit {
+public fun foo(): Unit {
     let _ = 1
 }
 
-external fun bar(): Unit {
+public fun bar(): Unit {
     foo()
 }
 

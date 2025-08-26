@@ -1,4 +1,4 @@
-external fun map_over_strings(value) {
+public fun map_over_strings(value) {
     value.foo()
 }
 
@@ -7,7 +7,7 @@ external fun map_over_strings(value) {
 // expected stdout:
 // Error: Expected a type with a `foo` method, but got `Any`.
 // ---| src/test_files/check/method_on_top.gdn:2:5
-//   1| external fun map_over_strings(value) {
+//   1| public fun map_over_strings(value) {
 //   2|     value.foo()
 //   3| }   ^^^^^
 

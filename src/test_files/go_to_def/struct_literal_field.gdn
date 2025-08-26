@@ -2,7 +2,7 @@ struct Person {
   name: String
 }
 
-external fun demo() {
+public fun demo() {
   Person{ name: "Wilfred" }
   //        ^
 }

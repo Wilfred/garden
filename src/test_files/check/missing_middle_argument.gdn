@@ -1,6 +1,6 @@
 fun foo(_: Int, _: Path, _: String) {}
 
-external fun bar() {
+public fun bar() {
   foo(1, "stuff")
 }
 
@@ -9,7 +9,7 @@ external fun bar() {
 // expected stdout:
 // Error: `foo` requires an additional `Path` argument here.
 // ---| src/test_files/check/missing_middle_argument.gdn:4:8
-//   3| external fun bar() {
+//   3| public fun bar() {
 //   4|   foo(1, "stuff")
 //   5| }      ^
 

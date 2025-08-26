@@ -1,4 +1,4 @@
-external fun takes_int(_v: Int) {}
+public fun takes_int(_v: Int) {}
 
 {
     takes_int("foo")

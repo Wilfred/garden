@@ -1,4 +1,4 @@
-external fun foo() {
+public fun foo() {
   // These should be errors.
   x = 1
   y += 2
@@ -13,7 +13,7 @@ external fun foo() {
 // expected stdout:
 // Error: No such variable `x`. If you want to define a new local variable, write `let x =`.
 // ---| src/test_files/check/unbound_var.gdn:3:3
-//   1| external fun foo() {
+//   1| public fun foo() {
 //   2|   // These should be errors.
 //   3|   x = 1
 //    |   ^

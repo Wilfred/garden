@@ -1,4 +1,4 @@
-external fun returns_fun(): Fun<(Int), String> {
+public fun returns_fun(): Fun<(Int), String> {
   // We should only complain about the lambda body, not the whole
   // lambda.
   fun(x) { x + 1 }

@@ -1,36 +1,36 @@
-external method good<T>(this: List<T>) {}
+public method good<T>(this: List<T>) {}
 
 // We shouldn't allow this, because it's unclear whether `[].bad()`
 // dispatches to this method or not.
-external method bad(this: List<Int>) {}
+public method bad(this: List<Int>) {}
 
-external method also_bad<T>(this: Result<T, T>) {}
+public method also_bad<T>(this: Result<T, T>) {}
 
-external method very_bad<T>(this: T) {}
+public method very_bad<T>(this: T) {}
 
 // args: check
 // expected exit status: 1
 // expected stdout:
 // Error: Methods must be generic in all their type parameters, for example `List<T>` rather than `List<Int>`.
-// ---| src/test_files/check/type_error_method_specialised_type.gdn:5:32
+// ---| src/test_files/check/type_error_method_specialised_type.gdn:5:30
 //   3| // We shouldn't allow this, because it's unclear whether `[].bad()`
 //   4| // dispatches to this method or not.
-//   5| external method bad(this: List<Int>) {}
-//   6|                                ^^^
-//   7| external method also_bad<T>(this: Result<T, T>) {}
+//   5| public method bad(this: List<Int>) {}
+//   6|                              ^^^
+//   7| public method also_bad<T>(this: Result<T, T>) {}
 // 
 // Error: Methods cannot repeat generic type parameters.
-// ---| src/test_files/check/type_error_method_specialised_type.gdn:7:45
-//   5| external method bad(this: List<Int>) {}
+// ---| src/test_files/check/type_error_method_specialised_type.gdn:7:43
+//   5| public method bad(this: List<Int>) {}
 //   6| 
-//   7| external method also_bad<T>(this: Result<T, T>) {}
-//   8|                                             ^
-//   9| external method very_bad<T>(this: T) {}
+//   7| public method also_bad<T>(this: Result<T, T>) {}
+//   8|                                           ^
+//   9| public method very_bad<T>(this: T) {}
 // 
 // Error: Methods must be defined on specific types, such as `List`, not generic types.
-// ---| src/test_files/check/type_error_method_specialised_type.gdn:9:35
-//   7| external method also_bad<T>(this: Result<T, T>) {}
+// ---| src/test_files/check/type_error_method_specialised_type.gdn:9:33
+//   7| public method also_bad<T>(this: Result<T, T>) {}
 //   8| 
-//   9| external method very_bad<T>(this: T) {}
-//  10|                                   ^
+//   9| public method very_bad<T>(this: T) {}
+//  10|                                 ^
 

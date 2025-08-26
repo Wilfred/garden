@@ -1,4 +1,4 @@
-external fun fib(i: Int): Int {
+public fun fib(i: Int): Int {
     if i == 0 {
         return 1
     }

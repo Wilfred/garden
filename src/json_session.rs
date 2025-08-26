@@ -223,14 +223,14 @@ fn as_error_response(errors: Vec<ParseError>, vfs: &Vfs, project_root: &Path) ->
             ParseError::Invalid {
                 position,
                 message,
-                additional: _,
+                additional,
             } => {
                 let stack = Some(format_diagnostic(
                     &message,
                     &position,
                     project_root,
                     Severity::Error,
-                    &[],
+                    &additional,
                     vfs,
                 ));
 
@@ -283,14 +283,14 @@ fn handle_eval_up_to_request(
             ParseError::Invalid {
                 position,
                 message,
-                additional: _,
+                additional,
             } => {
                 let stack = Some(format_diagnostic(
                     &message,
                     &position,
                     &env.project_root,
                     Severity::Error,
-                    &[],
+                    &additional,
                     &env.vfs,
                 ));
                 return Response {

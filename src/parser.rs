@@ -23,12 +23,13 @@ use crate::{msgcode, msgtext};
 // <https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html>
 
 #[derive(Debug)]
-#[allow(dead_code)] // additional isn't used yet.
 pub(crate) enum ParseError {
     Invalid {
         position: Position,
         message: ErrorMessage,
-        additional: Vec<(Position, String)>,
+        /// Extra information that's relevant to why we have an error in the
+        /// primary position.
+        additional: Vec<(ErrorMessage, Position)>,
     },
     Incomplete {
         message: ErrorMessage,

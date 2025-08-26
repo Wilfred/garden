@@ -48,7 +48,9 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
     for e in errors.into_iter() {
         match e {
             ParseError::Invalid {
-                position, message, ..
+                position,
+                message,
+                additional,
             } => {
                 // Expose line numbers as 1-indexed.
                 diagnostics.push(CheckDiagnostic {
@@ -63,7 +65,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                         message.as_string()
                     },
                     severity: Severity::Error,
-                    notes: vec![],
+                    notes: additional,
                 });
             }
             ParseError::Incomplete {

@@ -1342,30 +1342,21 @@ fn parse_definition(
             Some(nextnext_token) => nextnext_token.text == "(",
             None => false,
         };
-        if (token.text == "external" || token.text == "public")
-            && next_token.text == "fun"
-            && !nextnext_is_paren
-        {
+        if token.text == "public" && next_token.text == "fun" && !nextnext_is_paren {
             return parse_function(tokens, id_gen, diagnostics);
         }
 
-        if token.text == "method"
-            || (token.text == "external" || token.text == "public") && next_token.text == "method"
-        {
+        if token.text == "method" || token.text == "public" && next_token.text == "method" {
             return Some(parse_method(tokens, id_gen, diagnostics));
         }
 
         if token.text == "test" {
             return Some(parse_test(tokens, id_gen, diagnostics));
         }
-        if token.text == "enum"
-            || (token.text == "external" || token.text == "public") && next_token.text == "enum"
-        {
+        if token.text == "enum" || token.text == "public" && next_token.text == "enum" {
             return Some(parse_enum(tokens, id_gen, diagnostics));
         }
-        if token.text == "struct"
-            || (token.text == "external" || token.text == "public") && next_token.text == "struct"
-        {
+        if token.text == "struct" || token.text == "public" && next_token.text == "struct" {
             return Some(parse_struct(tokens, id_gen, diagnostics));
         }
         if token.text == "import" {
@@ -1481,7 +1472,7 @@ fn parse_enum(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" || token.text == "public" {
+        if token.text == "public" {
             let token = tokens.pop().unwrap();
             visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
@@ -1525,7 +1516,7 @@ fn parse_struct(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" || token.text == "public" {
+        if token.text == "public" {
             let token = tokens.pop().unwrap();
             visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
@@ -2276,7 +2267,7 @@ fn parse_function(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" || token.text == "public" {
+        if token.text == "public" {
             let token = tokens.pop().unwrap();
             visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
@@ -2298,7 +2289,7 @@ fn parse_method(
     let mut first_token = None;
 
     if let Some(token) = tokens.peek() {
-        if token.text == "external" || token.text == "public" {
+        if token.text == "public" {
             let token = tokens.pop().unwrap();
             visibility = Visibility::Public(token.position.clone());
             first_token = Some(token);
@@ -2432,13 +2423,8 @@ fn parse_function_(
 }
 
 pub(crate) const KEYWORDS: &[&str] = &[
-    "let", "fun", "enum", "struct", "internal", "external", "import", "if", "else", "while",
-    "return", "test", "match", "break", "continue", "for", "in", "assert", "as", "method",
-    // TODO: change from external/internal to public/shared.
-    //
-    // The problem with 'external' is that it implies the implementation is
-    // external to the current file, which isn't true.
-    "public", "shared",
+    "let", "fun", "enum", "struct", "import", "if", "else", "while", "return", "test", "match",
+    "break", "continue", "for", "in", "assert", "as", "method", "public", "shared",
 ];
 
 pub(crate) fn placeholder_symbol(position: Position, id_gen: &mut IdGenerator) -> Symbol {
@@ -2756,7 +2742,6 @@ fn parse_toplevel_item_from_tokens(
             || token.text == "test"
             || token.text == "enum"
             || token.text == "struct"
-            || token.text == "external"
             || token.text == "public"
             || token.text == "import"
         {

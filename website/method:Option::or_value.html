@@ -28,7 +28,7 @@
 <p>If this value is <code>Some(x)</code>, return <code>x</code>, otherwise return <code>value</code>.</p>
 <pre><code><span class="type">Some</span>(1).or_value(5) <span class="comment">//-&gt; 1</span>
 <span class="type">None</span>.or_value(5) <span class="comment">//-&gt; 5</span></code></pre>
-<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> or_value&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Option.html">Option</a>&lt;<span class="type">T</span>&gt;, value: <span class="type">T</span>): <span class="type">T</span> {
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> or_value&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Option.html">Option</a>&lt;<span class="type">T</span>&gt;, value: <span class="type">T</span>): <span class="type">T</span> {
   <a class="keyword" href="/keyword:match.html">match</a> this {
     <span class="type">Some</span>(v) =&gt; v,
     <span class="type">None</span> =&gt; value

@@ -32,7 +32,7 @@ returned as-is.</p>
 <pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/" }</span></code></pre>
-<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:external.html">external</a> <a class="keyword" href="/keyword:method.html">method</a> parent(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:Path.html">Path</a>&gt; {
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> parent(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:Path.html">Path</a>&gt; {
   <a class="keyword" href="/keyword:let.html">let</a> p = this.p.strip_suffix(<span class="string">"/"</span>)
   <a class="keyword" href="/keyword:if.html">if</a> p == <span class="string">"" </span>{
     <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>

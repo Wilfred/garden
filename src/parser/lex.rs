@@ -265,7 +265,7 @@ pub(crate) fn lex_between<'a>(
                     message: ErrorMessage(vec![msgtext!("Unclosed string literal.")]),
                     // TODO: include previous string position, which
                     // was probably not closed correctly.
-                    additional: vec![],
+                    notes: vec![],
                 });
 
                 tokens.push(Token {
@@ -325,7 +325,7 @@ pub(crate) fn lex_between<'a>(
                     msgtext!("Unrecognized syntax "),
                     msgcode!("{}", &s[0..1]),
                 ]),
-                additional: vec![],
+                notes: vec![],
             });
 
             offset += 1;

@@ -50,7 +50,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
             ParseError::Invalid {
                 position,
                 message,
-                additional,
+                notes,
             } => {
                 // Expose line numbers as 1-indexed.
                 diagnostics.push(CheckDiagnostic {
@@ -65,7 +65,7 @@ pub(crate) fn check(path: &Path, src: &str, json: bool) {
                         message.as_string()
                     },
                     severity: Severity::Error,
-                    notes: additional,
+                    notes,
                 });
             }
             ParseError::Incomplete {

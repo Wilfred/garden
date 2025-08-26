@@ -531,7 +531,7 @@ fn dump_ast(src: &str, path: &Path) {
             ParseError::Invalid {
                 position,
                 message: e,
-                additional,
+                notes,
             } => {
                 eprintln!(
                     "{}",
@@ -540,7 +540,7 @@ fn dump_ast(src: &str, path: &Path) {
                         &position,
                         &project_root,
                         Severity::Error,
-                        &additional,
+                        &notes,
                         &vfs,
                     )
                 );
@@ -579,7 +579,7 @@ fn parse_toplevel_items_or_die(
                 ParseError::Invalid {
                     position,
                     message: e,
-                    additional,
+                    notes,
                 } => eprintln!(
                     "{}",
                     &format_diagnostic(
@@ -587,7 +587,7 @@ fn parse_toplevel_items_or_die(
                         &position,
                         &project_root,
                         Severity::Error,
-                        &additional,
+                        &notes,
                         vfs,
                     )
                 ),

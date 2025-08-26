@@ -29,7 +29,7 @@ pub(crate) enum ParseError {
         message: ErrorMessage,
         /// Extra information that's relevant to why we have an error in the
         /// primary position.
-        additional: Vec<(ErrorMessage, Position)>,
+        notes: Vec<(ErrorMessage, Position)>,
     },
     Incomplete {
         message: ErrorMessage,
@@ -116,7 +116,7 @@ fn check_required_token<'a>(
                         msgcode!("{}", expected),
                         msgtext!(" after this."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 ok = false;
 
@@ -176,7 +176,7 @@ fn parse_integer(
                 msgcode!("123"),
                 msgtext!("."),
             ]),
-            additional: vec![],
+            notes: vec![],
         });
 
         // Choose an arbitrary value that's hopefully unlikely to
@@ -247,7 +247,7 @@ fn parse_tuple_literal_or_parentheses(
                         msgcode!(")"),
                         msgtext!("."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
 
                 break;
@@ -368,7 +368,7 @@ fn parse_assert(
                 msgcode!("assert(x == 42)"),
                 msgtext!("."),
             ]),
-            additional: vec![],
+            notes: vec![],
         });
 
         return Expression::new(position, Expression_::Invalid, id_gen.next());
@@ -581,7 +581,7 @@ fn unescape_string(token: &Token<'_>) -> (Vec<ParseError>, String) {
                             msgcode!("\\t"),
                             msgtext!(" are supported."),
                         ]),
-                        additional: vec![],
+                        notes: vec![],
                     });
 
                     // Treat \z as \\z.
@@ -669,7 +669,7 @@ fn parse_simple_expression(
         diagnostics.push(ParseError::Invalid {
             position: error_position,
             message: ErrorMessage(vec![msgtext!("Expected an expression after this.")]),
-            additional: vec![],
+            notes: vec![],
         });
 
         return Expression::new(token.position, Expression_::Invalid, id_gen.next());
@@ -923,7 +923,7 @@ fn parse_comma_separated_exprs(
                         msgcode!("{}", terminator),
                         msgtext!(" after this."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
 
                 // Attempt to recover a reasonable AST.
@@ -1368,7 +1368,7 @@ fn parse_definition(
         diagnostics.push(ParseError::Invalid {
             position: token.position,
             message: ErrorMessage(vec![Text("Expected a definition".to_owned())]),
-            additional: vec![],
+            notes: vec![],
         });
         return None;
     }
@@ -1416,7 +1416,7 @@ fn parse_enum_body(
                         msgcode!("{}", token.text),
                         msgtext!("."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 break;
             }
@@ -1578,7 +1578,7 @@ fn parse_test(
                     msgcode!("test foo {{}}"),
                     msgtext!("."),
                 ]),
-                additional: vec![],
+                notes: vec![],
             });
         }
     }
@@ -1712,7 +1712,7 @@ fn parse_type_arguments(
                         msgcode!("{}", token.text),
                         msgtext!("."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 break token.position;
             }
@@ -1775,7 +1775,7 @@ fn parse_type_params(
                         msgcode!("{}", token.text),
                         msgtext!("."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 break;
             }
@@ -1906,7 +1906,7 @@ fn parse_type_hint(
                 msgcode!("{}", equivalent_tuple_src),
                 msgtext!(" instead."),
             ]),
-            additional: vec![],
+            notes: vec![],
         });
     }
 
@@ -1948,7 +1948,7 @@ fn parse_colon_and_hint_opt(
                 msgcode!(":"),
                 msgtext!(" before this type hint."),
             ]),
-            additional: vec![],
+            notes: vec![],
         });
 
         let type_hint = parse_type_hint(tokens, id_gen, diagnostics);
@@ -2021,7 +2021,7 @@ fn parse_parameters(
                         msgcode!("{}", token.text),
                         msgtext!("."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 break;
             }
@@ -2064,7 +2064,7 @@ fn parse_parameters(
                     msgtext!("."),
                 ]),
                 // TODO: report the position of the previous parameter too.
-                additional: vec![],
+                notes: vec![],
             });
         } else {
             seen.insert(param_name.clone());
@@ -2128,7 +2128,7 @@ fn parse_struct_fields(
                         msgcode!("{}", token.text),
                         msgtext!("."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 break;
             }
@@ -2513,7 +2513,7 @@ fn parse_let_destination(
                         msgtext!("."),
                     ]),
                     // TODO: report the position of the previous occurrence too.
-                    additional: vec![],
+                    notes: vec![],
                 });
             } else {
                 seen.insert(name.clone());
@@ -2543,7 +2543,7 @@ fn parse_symbol(
         diagnostics.push(ParseError::Invalid {
             position: prev_token_pos,
             message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
-            additional: vec![],
+            notes: vec![],
         });
         tokens.unpop();
         return placeholder_symbol(variable_token.position, id_gen);
@@ -2567,7 +2567,7 @@ fn parse_symbol(
                         msgcode!("{}", keyword),
                         msgtext!(" is a keyword and cannot be used as a variable name."),
                     ]),
-                    additional: vec![],
+                    notes: vec![],
                 });
             } else {
                 // We expected a name, but we just saw a keyword on a later
@@ -2583,7 +2583,7 @@ fn parse_symbol(
                 diagnostics.push(ParseError::Invalid {
                     position: prev_token_pos,
                     message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
-                    additional: vec![],
+                    notes: vec![],
                 });
                 tokens.unpop();
             }
@@ -2670,7 +2670,7 @@ fn parse_assign_update(
                     msgcode!("{}", op_token.text),
                     msgtext!("."),
                 ]),
-                additional: vec![],
+                notes: vec![],
             });
             AssignUpdateKind::Add
         }

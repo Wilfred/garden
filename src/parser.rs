@@ -15,6 +15,7 @@ use ast::*;
 use diagnostics::ErrorMessage;
 use diagnostics::MessagePart::*;
 use lex::{lex, lex_between, Token, TokenStream, INTEGER_RE, SYMBOL_RE};
+use rustc_hash::FxHashMap;
 use vfs::VfsPathBuf;
 
 use crate::{msgcode, msgtext};
@@ -2048,14 +2049,15 @@ fn parse_parameters(
     let close_paren = require_token(tokens, diagnostics, ")");
 
     // Emit error if there are duplicate parameters.
-    let mut seen = HashSet::new();
+    let mut seen: FxHashMap<&String, &Position> = FxHashMap::default();
+
     for param in &params {
         if param.symbol.name.is_underscore() {
             continue;
         }
 
         let param_name = &param.symbol.name.text;
-        if seen.contains(param_name) {
+        if let Some(prev_pos) = seen.get(&param_name) {
             diagnostics.push(ParseError::Invalid {
                 position: param.symbol.position.clone(),
                 message: ErrorMessage(vec![
@@ -2063,11 +2065,13 @@ fn parse_parameters(
                     msgcode!("{}", param_name),
                     msgtext!("."),
                 ]),
-                // TODO: report the position of the previous parameter too.
-                notes: vec![],
+                notes: vec![(
+                    ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
+                    (*prev_pos).clone(),
+                )],
             });
         } else {
-            seen.insert(param_name.clone());
+            seen.insert(param_name, &param.symbol.position);
         }
     }
 
@@ -2495,14 +2499,14 @@ fn parse_let_destination(
             );
         }
 
-        let mut seen = HashSet::new();
+        let mut seen: FxHashMap<&String, &Position> = FxHashMap::default();
         for symbol in &symbols {
             if symbol.name.is_underscore() {
                 continue;
             }
 
             let name = &symbol.name.text;
-            if seen.contains(name) {
+            if let Some(prev_pos) = seen.get(&name) {
                 diagnostics.push(ParseError::Invalid {
                     position: symbol.position.clone(),
                     message: ErrorMessage(vec![
@@ -2512,11 +2516,13 @@ fn parse_let_destination(
                         msgcode!("let"),
                         msgtext!("."),
                     ]),
-                    // TODO: report the position of the previous occurrence too.
-                    notes: vec![],
+                    notes: vec![(
+                        ErrorMessage(vec![msgtext!("The previous occurrence is here.")]),
+                        (*prev_pos).clone(),
+                    )],
                 });
             } else {
-                seen.insert(name.clone());
+                seen.insert(name, &symbol.position);
             }
         }
 

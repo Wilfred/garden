@@ -4281,6 +4281,9 @@ fn eval_builtin_method_call(
             )?;
 
             let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
             saved_values.push(receiver_value.clone());
 
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Path::set_extension - Garden</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="/">Garden 🌻</a>
+      <nav>
+        <a class="block" href="/blog.html">Blog</a>
+        <a class="block" href="/manual.html">Manual</a>
+      </nav>
+    </header>
+
+    <div class="container"><h1><code>Path::set_extension</code></h1>
+<p>Set the extension of the filename to <code>new_ext</code>.</p>
+<pre><code><a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span>
+<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar.txt.gz"</span>}.set_extension(<span class="string">"log"</span>) <span class="comment">//-&gt; Path{ p: "/foo/bar.log"}</span></code></pre>
+<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set_extension(this: <a class="type" href="/type:Path.html">Path</a>, new_ext: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Path.html">Path</a> {
+  <a class="keyword" href="/keyword:let.html">let</a> new_ext = <span class="string">"." </span>^ new_ext
+  <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
+    <span class="type">Some</span>(file_name) =&gt; {
+      <a class="keyword" href="/keyword:let.html">let</a> base = <a class="keyword" href="/keyword:match.html">match</a> this.parent() {
+        <span class="type">Some</span>(parent) =&gt; parent.p ^ <span class="string">"/"</span>
+        <span class="type">None</span> =&gt; <span class="string">""</span>
+      }
+
+      <a class="keyword" href="/keyword:let.html">let</a> p = <a class="keyword" href="/keyword:match.html">match</a> file_name.split_once(<span class="string">"."</span>) {
+        <span class="type">Some</span>((base_file_name, _ext)) =&gt; {
+          (base ^ base_file_name) ^ new_ext
+        }
+        <span class="type">None</span> =&gt; (base ^ file_name) ^ new_ext
+      }
+      <a class="type" href="/type:Path.html">Path</a>{ p: p }
+    },
+    <span class="type">None</span> =&gt; this,
+  }
+}</code></pre></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

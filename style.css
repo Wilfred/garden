@@ -1,0 +1,242 @@
+/* Heavily inspired by https://github.com/thesephist/codeframe,
+   which is under a MIT license. */
+
+:root {
+  --green-primary: #307d30;
+  --cream: #ebeee3;
+}
+
+::selection {
+  background-color: var(--green-primary);
+  color: var(--cream);
+}
+
+body {
+  max-width: 800px;
+  margin: 24px auto 52px auto;
+  font-size: 18px;
+  background-color: var(--cream);
+  font-family: "Lora", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+h1,
+h2,
+h3,
+h4,
+h6,
+h6 {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+
+header > a {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
+  padding-left: 16px;
+  color: var(--cream);
+  font-size: 36px;
+}
+
+code {
+  border-radius: 5px;
+  border: 1px solid #bcbec0;
+  padding: 2px;
+}
+
+a > code:hover {
+  border-color: var(--green-primary);
+}
+a:has(> code) {
+  border-bottom: 0;
+}
+
+pre > code {
+  border: initial;
+  padding: initial;
+  background-color: initial;
+}
+
+pre,
+code {
+  font-family: monospace;
+}
+
+pre {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+pre.block:hover {
+  transform: none;
+}
+pre.block {
+  cursor: initial;
+  padding: 8px;
+}
+
+.container {
+  margin-top: 86px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 4px;
+  background: var(--green-primary);
+  border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+}
+
+.block,
+.block::before {
+  background-color: var(--cream);
+}
+
+a {
+  color: var(--green-primary);
+  text-decoration: none;
+  border-bottom: 2px dotted var(--green-primary);
+}
+
+pre a {
+  border-bottom: 0;
+}
+pre a:hover {
+  text-decoration: underline;
+  text-decoration-color: inherit;
+}
+
+h2 {
+  margin-top: 48px;
+  margin-bottom: 12px;
+}
+
+pre {
+  /* Fix excessively small fonts on mobile.
+
+  https://stackoverflow.com/a/75839939/
+  https://horstmann.com/unblog/2023-03-25/index.html
+  */
+  white-space: pre-wrap;
+}
+
+nav {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 1;
+  overflow-x: auto;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+header a {
+  text-decoration: none;
+}
+
+.keyword {
+  font-weight: bold;
+  color: #d05416;
+}
+
+.comment {
+  color: gray;
+}
+.string {
+  color: #91170a;
+}
+.type {
+  color: #57269c;
+}
+
+/* Style pre like .block, but don't animate and don't modify the
+   pointer. */
+pre {
+  font-weight: 700;
+
+  border: 3px solid black;
+  border-radius: 3px;
+  padding: 12px 8px;
+  margin: 8px 6px 20px 6px;
+
+  position: relative;
+  top: -2px;
+  left: -2px;
+
+  z-index: 1;
+}
+
+pre::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  background: var(--block-shadow-color);
+  border: 3px solid var(--block-text-color);
+  border-radius: 3px;
+  height: calc(100% + 6px);
+  width: calc(100% + 6px);
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 0;
+  z-index: -2;
+}
+
+pre::before {
+  content: "";
+  background: var(--cream);
+  border: 3px solid var(--block-text-color);
+  border-radius: 3px;
+  box-sizing: border-box;
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  height: calc(100% + 6px);
+  width: calc(100% + 6px);
+  z-index: -1;
+}
+
+.code-title {
+  padding: 10px;
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+
+  font-family: "Lora", serif;
+  font-weight: initial;
+  text-transform: capitalize;
+}
+
+footer {
+  padding-top: 40px;
+  text-align: center;
+}
+
+video {
+  max-width: 100%;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+ul li {
+  margin-bottom: 1em;
+}
+
+/* Nested lists should still be indented. */
+ul ul {
+  margin-left: 1em;
+}

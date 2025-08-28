@@ -5,7 +5,6 @@ pub(crate) mod position;
 pub(crate) mod vfs;
 pub(crate) mod visitor;
 
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use ast::{FieldInfo, StructInfo};

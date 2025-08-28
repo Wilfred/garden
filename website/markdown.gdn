@@ -6,7 +6,7 @@ import "./log.gdn" as log
 enum MarkdownPart {
   Heading(String),
   Paragraph(String),
-  Code(Snippet),
+  CodeBlock(Snippet),
   Bullets(List<String>),
   ThematicBreak,
 }
@@ -63,7 +63,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
           content: content,
         }
 
-        parts = parts.append(Code(snippet))
+        parts = parts.append(CodeBlock(snippet))
         current_section = []
         in_code_block = False
       } else {
@@ -540,7 +540,7 @@ public fun render_markdown(src: String): String {
       Paragraph(paragraph) => {
         html_parts = html_parts.append(render_markdown_paragraph(paragraph))
       }
-      Code(code) => {
+      CodeBlock(code) => {
         html_parts = html_parts.append(render_markdown_code(code))
       }
       Bullets(items) => {

@@ -23,7 +23,7 @@ Fixed a crash when evaluating empty blocks.
 **Goal: Blog.**
 **Goal: Comprehensive docs on website.**
 
-### Syntax
+## Syntax
 
 Methods are now defined with the `method` keyword rather than the
 `fun` keyword.
@@ -54,7 +54,7 @@ if True { println } else { println }("hello world")
 
 `public` and `shared` are now reserved words.
 
-### Standard Library
+## Standard Library
 
 Added `List::index_of()`, `String::as_int()`, `String::trim()`,
 `get_env()`, `garden::source_for_fun`, `garden::source_for_method()`,
@@ -74,12 +74,12 @@ Renamed `Option::or_exception()` to `Option::or_throw()`. Renamed
 
 `error()` is now `throw()`.
 
-### Checks
+## Checks
 
 `check` now stops if syntax errors occur, as type errors are rarely
 actionable or accurate when syntax errors are present.
 
-### Test Runner
+## Test Runner
 
 `garden test` now supports a `-n` argument that lets you specify a
 test name substring to use.
@@ -87,16 +87,16 @@ test name substring to use.
 # 0.20 (released 1st June 2025)
 **Goal: Namespaces.**
 
-### Diagnostics
+## Diagnostics
 
 Error and warning printing now uses a new formatter, showing context
 and syntax highlighting the source code.
 
-### Checks
+## Checks
 
 `import "x.gdn" as y` now warns if `y` is unused.
 
-### Standard Library
+## Standard Library
 
 `write_file()` is now `__fs::write_file()`, `list_directory()` is now
 `__fs::list_directory()`, `working_directory()` is now
@@ -124,11 +124,11 @@ Added `Path::set_extension()`.
 
 Added `__garden::namespace_functions`.
 
-### Syntax
+## Syntax
 
 `as` is now a reserved word.
 
-### Commands
+## Commands
 
 Added a `:globals` command to view all values in the current
 namespace.
@@ -139,7 +139,7 @@ frame is in.
 Added a `:forget_calls` command to discard saved values from previous
 function and method calls.
 
-### CLI
+## CLI
 
 `garden test` can now take multiple file arguments.
 

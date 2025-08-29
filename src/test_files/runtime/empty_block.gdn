@@ -1,0 +1,8 @@
+// We should still evaluate empty blocks to Unit. This is wrapped in a
+// for loop to ensure that we push and pop the correct number of
+// values (previously this crashed the interpreter).
+for _ in [1, 2, 3] {
+  let foo = if True {} else {}
+}
+
+// args: run

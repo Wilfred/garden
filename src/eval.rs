@@ -5355,6 +5355,8 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
         stack_frame.bindings.add_new(&sym, expr);
     }
 
+    // Evaluate all the items in this block, but mark the values as
+    // unused for all expressions except the last one.
     for expr in block.exprs.iter().rev() {
         let mut expr = expr.as_ref().clone();
 
@@ -5363,6 +5365,11 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
         }
 
         env.push_expr_to_eval(ExpressionState::NotEvaluated, Rc::new(expr));
+    }
+
+    // If this is an empty block, it should evaluate to Unit.
+    if expr_value_is_used && block.exprs.is_empty() {
+        env.push_value(Value::unit());
     }
 }
 

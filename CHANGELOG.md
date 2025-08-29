@@ -1,4 +1,3 @@
-
 # 0.22 (unreleased)
 **Goal: Playground.**
 **Goal: Use multiple positions in error messages.**
@@ -15,6 +14,10 @@ public fun foo() {}
 // Old
 external fun foo() {}
 ```
+
+## Runtime
+
+Fixed a crash when evaluating empty blocks.
 
 # 0.21 (released 23 August 2025)
 **Goal: Blog.**

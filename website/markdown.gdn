@@ -32,11 +32,8 @@ fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPar
 // For example:
 //
 // label1 label2 foo:"label three"
-//
-// Return a list of all the labels, and split out the title if
-// present.
-fun parse_labels(src: String): (Option<String>, List<String>) {
-  let parts: List<String> = []
+fun parse_labels(src: String): List<String> {
+  let labels: List<String> = []
 
   let s = src
   while s != "" {
@@ -47,7 +44,7 @@ fun parse_labels(src: String): (Option<String>, List<String>) {
         s = s.substring(i + 1, s.len())
       }
       None => {
-        parts = parts.append(s)
+        labels = labels.append(s)
         break
       }
     }
@@ -62,13 +59,18 @@ fun parse_labels(src: String): (Option<String>, List<String>) {
       }
     }
 
-    parts = parts.append(word)
+    labels = labels.append(word)
   }
   
+  labels
+}
+
+fun parse_labels_and_title(src: String): (Option<String>, List<String>) {
+  let all_labels = parse_labels(src)
+
   let labels: List<String> = []
   let title: Option<String> = None
-
-  for label in parts {
+  for label in all_labels {
     if label.starts_with("title:") {
       title = Some(label.strip_prefix("title:").strip_prefix("\"").strip_suffix("\""))
     } else {
@@ -97,7 +99,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       if in_code_block {
         // Just finished the code block.
         let label_str = current_section.first().or_throw().strip_prefix("```")
-        let (title, labels) = parse_labels(label_str)
+        let (title, labels) = parse_labels_and_title(label_str)
 
         let content = "\n".join(current_section.slice(1, -1))
 

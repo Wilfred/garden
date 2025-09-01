@@ -25,6 +25,60 @@ fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPar
   }
 }
 
+// Parse the text after the ``` on markdown blocks.
+//
+// These labels are generally space-separated, but may contain double quotes.
+//
+// For example:
+//
+// label1 label2 foo:"label three"
+//
+// Return a list of all the labels, and split out the title if
+// present.
+fun parse_labels(src: String): (Option<String>, List<String>) {
+  let parts: List<String> = []
+
+  let s = src
+  while s != "" {
+    let word = ""
+    match s.index_of(" ") {
+      Some(i) => {
+        word = s.substring(0, i)
+        s = s.substring(i + 1, s.len())
+      }
+      None => {
+        parts = parts.append(s)
+        break
+      }
+    }
+
+    if word.contains("\"") {
+      match s.index_of("\"") {
+        Some(i) => {
+          word = word ^ s.substring(0, i + 1)
+          s = s.substring(i + 1, s.len())
+        }
+        None => {}
+      }
+    }
+
+    parts = parts.append(word)
+  }
+  
+  let labels: List<String> = []
+  let title: Option<String> = None
+
+  for label in parts {
+    if label.starts_with("title:") {
+      title = Some(label.strip_prefix("title:").strip_prefix("\"").strip_suffix("\""))
+    } else {
+      labels = labels.append(label)
+    }
+  }
+
+  (title, labels)
+}
+
 fun parse_markdown(src: String): List<MarkdownPart> {
   let parts: List<MarkdownPart> = []
   let current_section: List<String> = []
@@ -43,17 +97,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
       if in_code_block {
         // Just finished the code block.
         let label_str = current_section.first().or_throw().strip_prefix("```")
-
-        let labels: List<String> = []
-        let title: Option<String> = None
-
-        for label in label_str.split(" ") {
-          if label.starts_with("title:") {
-            title = Some(label.strip_prefix("title:"))
-          } else {
-            labels = labels.append(label)
-          }
-        }
+        let (title, labels) = parse_labels(label_str)
 
         let content = "\n".join(current_section.slice(1, -1))
 

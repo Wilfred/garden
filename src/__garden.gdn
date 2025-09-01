@@ -110,8 +110,7 @@ test prelude_types {
   assert(prelude_types().first() == Some("Bool"))
 }
 
-// All the reserved words in Garden. These are keywords that cannot be
-// used as variable names.
+// All the keywords in Garden. Variables cannot use these as names.
 public fun keywords(): List<String> {
   __BUILTIN_IMPLEMENTATION
 }

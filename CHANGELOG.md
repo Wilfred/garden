@@ -52,7 +52,7 @@ allowed after keywords. The following is now legal syntax:
 if True { println } else { println }("hello world")
 ```
 
-`public` and `shared` are now reserved words.
+`public` and `shared` are now keywords.
 
 ## Standard Library
 
@@ -126,7 +126,7 @@ Added `__garden::namespace_functions`.
 
 ## Syntax
 
-`as` is now a reserved word.
+`as` is now a keyword.
 
 ## Commands
 
@@ -158,7 +158,7 @@ Added `^` to concatenate strings.
 Added `**` to raise a number to a power.
 
 `assert` is now syntax rather than a built-in function. The symbol
-`assert` is now a reserved word.
+`assert` is now a keyword.
 
 Destructuring is now supported in loop headers and `match` cases, so the following is
 now legal:
@@ -175,7 +175,7 @@ match Some((1, 2)) {
 ```
 
 Functions and types visible in other files now use the `external`
-keyword, rather than `export`. `internal` is now a reserved word too.
+keyword, rather than `export`. `internal` is now a keyword too.
 
 ## Standard Library
 
@@ -371,7 +371,7 @@ Fixing bugs with the GitHub actions for uploading releases to crates.io.
 
 ## Syntax
 
-Added `break;` inside loops. `continue` is now a reserved word.
+Added `break;` inside loops. `continue` is now a keyword.
 
 `let x = y;` now evaluates to `Unit` rather than `y`.
 
@@ -521,7 +521,7 @@ The function `lines()` has been replaced with `String::lines`.
 ### Booleans
 
 `Bool` is now an enum defined in the prelude. `true` and `false` are
-no longer reserved words, and boolean values are now `True` and `False`.
+no longer keywords, and boolean values are now `True` and `False`.
 
 # 0.8 (released 30th October 2023)
 **Goal: Red and yellow squiggles.**

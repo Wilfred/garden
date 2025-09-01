@@ -350,7 +350,15 @@ fn main() {
             });
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
-            rename::rename(&src, &src_path, offset, &new_name)
+            match rename::rename(&src, &src_path, offset, &new_name) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
         }
         CliCommands::ExtractVariable {
             path,

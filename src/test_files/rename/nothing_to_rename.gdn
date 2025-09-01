@@ -1,0 +1,9 @@
+fun foo() {
+  "abcdefgh"
+  // ^
+}
+
+// args: rename --new-name new_foo
+// expected exit status: 10
+// expected stderr: No symbol found at offset 17
+

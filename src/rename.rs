@@ -14,7 +14,12 @@ use crate::pos_to_id::find_item_at;
 
 /// Rename the symbol at `offset` to `new_name`, both the definition
 /// and use sites, then print the new source code.
-pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
+pub(crate) fn rename(
+    src: &str,
+    path: &Path,
+    offset: usize,
+    new_name: &str,
+) -> Result<String, String> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -29,12 +34,10 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     let ids_at_pos = find_item_at(&items, offset, offset);
 
     let Some(AstId::Sym(id)) = ids_at_pos.last() else {
-        eprintln!("No symbol found at offset {offset}");
-        return;
+        return Err(format!("No symbol found at offset {offset}"));
     };
     let Some(def_pos) = summary.id_to_def_pos.get(id) else {
-        eprintln!("No definition found for id {id:?}");
-        return;
+        return Err(format!("No definition found for id {id:?}"));
     };
 
     let mut visitor = RenameLocalVisitor {
@@ -48,7 +51,7 @@ pub(crate) fn rename(src: &str, path: &Path, offset: usize, new_name: &str) {
     }
 
     let new_src = apply_renames(src, new_name, &visitor.replace_positions);
-    print!("{new_src}");
+    Ok(new_src)
 }
 
 struct RenameLocalVisitor {

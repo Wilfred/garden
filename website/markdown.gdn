@@ -52,7 +52,7 @@ fun parse_labels(src: String): List<String> {
     if word.contains("\"") {
       match s.index_of("\"") {
         Some(i) => {
-          word = word ^ s.substring(0, i + 1)
+          word = word ^ " " ^ s.substring(0, i + 1)
           s = s.substring(i + 1, s.len())
         }
         None => {}

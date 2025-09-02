@@ -19,6 +19,10 @@ external fun foo() {}
 
 Fixed a crash when evaluating empty blocks.
 
+## Check
+
+`garden check` now warns on unused type variables.
+
 # 0.21 (released 23 August 2025)
 **Goal: Blog.**
 **Goal: Comprehensive docs on website.**

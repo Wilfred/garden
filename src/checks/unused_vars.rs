@@ -2,8 +2,8 @@ use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parser::ast::{
-    Block, Expression, Expression_, FunInfo, ImportInfo, LetDestination, Pattern, Symbol,
-    SymbolName, ToplevelItem,
+    Block, Expression, Expression_, FunInfo, ImportInfo, LetDestination, MethodInfo, Pattern,
+    Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -33,7 +33,17 @@ struct UnusedVariableVisitor {
     /// `import "x.gdn" as foo`.
     file_bindings: FxHashMap<SymbolName, UseState>,
 
+    /// Unused variables (e.g. locals, parameters).
     unused: Vec<(SymbolName, Position)>,
+
+    method_this_type_hint: Option<TypeHint>,
+
+    /// All type variables in the current definition, and whether
+    /// they're used.
+    type_vars: Vec<FxHashMap<TypeName, UseState>>,
+
+    /// Unused type parameters.
+    unused_type_vars: Vec<(TypeName, Position)>,
 }
 
 impl UnusedVariableVisitor {
@@ -42,6 +52,9 @@ impl UnusedVariableVisitor {
             bound_scopes: vec![FxHashMap::default()],
             file_bindings: FxHashMap::default(),
             unused: vec![],
+            method_this_type_hint: None,
+            type_vars: vec![],
+            unused_type_vars: vec![],
         }
     }
 
@@ -63,6 +76,18 @@ impl UnusedVariableVisitor {
             let UseState::NotUsed(position) = use_state else {
                 continue;
             };
+            diagnostics.push(Diagnostic {
+                notes: vec![],
+                severity: Severity::Warning,
+                message: ErrorMessage(vec![
+                    Code(format!("{name}")),
+                    Text(" is unused.".to_owned()),
+                ]),
+                position: position.clone(),
+            });
+        }
+
+        for (name, position) in &self.unused_type_vars {
             diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,
@@ -227,15 +252,69 @@ impl Visitor for UnusedVariableVisitor {
         );
     }
 
+    fn visit_method_info(&mut self, method_info: &MethodInfo) {
+        self.method_this_type_hint = Some(method_info.receiver_hint.clone());
+        self.visit_method_info_default(method_info);
+        self.method_this_type_hint = None;
+    }
+
     fn visit_fun_info(&mut self, fun_info: &FunInfo) {
+        let mut type_vars_in_scope = FxHashMap::default();
+        for type_param in &fun_info.type_params {
+            type_vars_in_scope.insert(
+                type_param.name.clone(),
+                UseState::NotUsed(type_param.position.clone()),
+            );
+        }
+
+        // Given a method definition `method foo(this: List<T>)` we
+        // want `T` to be marked as used.
+        //
+        // We ignore the cases where the type arguments are more
+        // complex hints, as method definitions are required to be
+        // completely generic. `method foo(this: List<(Foo, Bar)>)`
+        // isn't supported, for example.
+        if let Some(this_type_hint) = &self.method_this_type_hint {
+            if type_vars_in_scope.contains_key(&this_type_hint.sym.name) {
+                type_vars_in_scope.insert(this_type_hint.sym.name.clone(), UseState::Used);
+            }
+
+            for type_arg in &this_type_hint.args {
+                if type_vars_in_scope.contains_key(&type_arg.sym.name) {
+                    type_vars_in_scope.insert(type_arg.sym.name.clone(), UseState::Used);
+                }
+            }
+        }
+
+        self.type_vars.push(type_vars_in_scope);
+
+        if let Some(ret_hint) = &fun_info.return_hint {
+            self.visit_type_hint(ret_hint);
+        }
+
         self.push_scope();
         for param in &fun_info.params.params {
             self.add_binding(&param.symbol);
+
+            if let Some(param_hint) = &param.hint {
+                self.visit_type_hint(param_hint);
+            }
         }
 
         self.visit_block(&fun_info.body);
 
         self.pop_scope();
+
+        let type_scope = self.type_vars.pop().unwrap();
+        for (name, use_state) in type_scope {
+            if name.text.starts_with("_") {
+                continue;
+            }
+
+            if let UseState::NotUsed(position) = use_state {
+                self.unused_type_vars.push((name, position));
+            }
+        }
     }
 
     fn visit_expr_variable(&mut self, var: &Symbol) {
@@ -298,5 +377,14 @@ impl Visitor for UnusedVariableVisitor {
         }
 
         self.pop_scope();
+    }
+
+    fn visit_type_symbol(&mut self, type_sym: &TypeSymbol) {
+        for type_scope in self.type_vars.iter_mut().rev() {
+            if type_scope.contains_key(&type_sym.name) {
+                type_scope.insert(type_sym.name.clone(), UseState::Used);
+                return;
+            }
+        }
     }
 }

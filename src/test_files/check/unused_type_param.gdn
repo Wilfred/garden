@@ -1,0 +1,13 @@
+public method w_is_unused<T, U, V, W, _X>(this: List<T>, _x: U, _y: Int) {
+  let _v: V = throw("abc")
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `W` is unused.
+// ---| src/test_files/check/unused_type_param.gdn:1:36
+//   1| public method w_is_unused<T, U, V, W, _X>(this: List<T>, _x: U, _y: Int) {
+//   2|   let _v: V = throw("abc")         ^
+//   3| }
+

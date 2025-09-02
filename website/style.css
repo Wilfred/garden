@@ -4,6 +4,7 @@
 :root {
   --green-primary: #307d30;
   --cream: #ebeee3;
+  --shadow-color: #44444457;
 }
 
 ::selection {
@@ -75,6 +76,11 @@ pre.block:hover {
 pre.block {
   cursor: initial;
   padding: 8px;
+}
+
+.block::after {
+  /* TODO: Override --block-shadow-color variable instead. */
+  background: var(--shadow-color);
 }
 
 .container {
@@ -182,7 +188,7 @@ pre::after {
   content: "";
   display: block;
   box-sizing: border-box;
-  background: var(--block-shadow-color);
+  background: var(--shadow-color);
   border: 3px solid var(--block-text-color);
   border-radius: 3px;
   height: calc(100% + 6px);

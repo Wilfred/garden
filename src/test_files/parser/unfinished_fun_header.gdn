@@ -104,20 +104,7 @@ f{
 //    |  ^
 //   2|     let xx = 99
 //   3|     let yy = xx + 1
-// Error: Parse error: Expected `:` after this.
-// ---| src/test_files/parser/unfinished_fun_header.gdn:1:2
-//   1| f{
-//    |  ^
-//   2|     let xx = 99
-//   3|     let yy = xx + 1
 // Error: Parse error: Expected a symbol after this.
-// ---| src/test_files/parser/unfinished_fun_header.gdn:2:14
-//   1| f{
-//   2|     let xx = 99
-//    |              ^^
-//   3|     let yy = xx + 1
-//   4|     yy + 10
-// Error: Parse error: Expected `:` after this.
 // ---| src/test_files/parser/unfinished_fun_header.gdn:2:14
 //   1| f{
 //   2|     let xx = 99

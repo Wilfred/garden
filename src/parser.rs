@@ -704,8 +704,19 @@ fn parse_struct_literal_fields(
         }
 
         let start_idx = tokens.idx;
+
         let sym = parse_symbol(tokens, id_gen, diagnostics);
-        require_token(tokens, diagnostics, ":");
+
+        if sym.is_placeholder() {
+            // If the field name is missing, don't also complain about
+            // an absent colon.
+            if peeked_symbol_is(tokens, ":") {
+                tokens.pop();
+            }
+        } else {
+            require_token(tokens, diagnostics, ":");
+        }
+
         let expr = parse_expression(tokens, id_gen, diagnostics);
 
         if tokens.idx == start_idx {

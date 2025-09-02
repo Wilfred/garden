@@ -199,7 +199,7 @@ fn parse_variable(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol(tokens, id_gen, diagnostics);
+    let variable = parse_symbol(tokens, id_gen, diagnostics, None);
 
     Expression::new(
         variable.position.clone(),
@@ -705,7 +705,7 @@ fn parse_struct_literal_fields(
 
         let start_idx = tokens.idx;
 
-        let sym = parse_symbol(tokens, id_gen, diagnostics);
+        let sym = parse_symbol(tokens, id_gen, diagnostics, Some("field name"));
 
         if sym.is_placeholder() {
             // If the field name is missing, don't also complain about
@@ -873,7 +873,7 @@ fn parse_pattern(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Pattern {
-    let variant_sym = parse_symbol(tokens, id_gen, diagnostics);
+    let variant_sym = parse_symbol(tokens, id_gen, diagnostics, Some("variant name"));
 
     let payload = if peeked_symbol_is(tokens, "(") {
         require_token(tokens, diagnostics, "(");
@@ -1068,7 +1068,7 @@ fn parse_expression(
                 if Some(token.position.end_offset)
                     == next_token.map(|tok| tok.position.start_offset)
                 {
-                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+                    let variable = parse_symbol(tokens, id_gen, diagnostics, Some("method name"));
 
                     if peeked_symbol_is(tokens, "(") {
                         // TODO: just treat a method call as a call of a dot access.
@@ -1108,7 +1108,7 @@ fn parse_expression(
                 if Some(token.position.end_offset)
                     == next_token.map(|tok| tok.position.start_offset)
                 {
-                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+                    let variable = parse_symbol(tokens, id_gen, diagnostics, None);
 
                     expr = Expression::new(
                         Position::merge(&expr.position, &variable.position),
@@ -1197,7 +1197,7 @@ fn parse_expression(
                 if Some(token.position.end_offset)
                     == next_token.map(|tok| tok.position.start_offset)
                 {
-                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+                    let variable = parse_symbol(tokens, id_gen, diagnostics, None);
 
                     if peeked_symbol_is(tokens, "(") {
                         // TODO: just treat a method call as a call of a dot access.
@@ -1237,7 +1237,7 @@ fn parse_expression(
                 if Some(token.position.end_offset)
                     == next_token.map(|tok| tok.position.start_offset)
                 {
-                    let variable = parse_symbol(tokens, id_gen, diagnostics);
+                    let variable = parse_symbol(tokens, id_gen, diagnostics, None);
 
                     expr = Expression::new(
                         Position::merge(&expr.position, &variable.position),
@@ -1465,7 +1465,7 @@ fn parse_variant(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> VariantInfo {
-    let name_symbol = parse_symbol(tokens, id_gen, diagnostics);
+    let name_symbol = parse_symbol(tokens, id_gen, diagnostics, Some("variant name"));
 
     let mut payload_hint = None;
     if peeked_symbol_is(tokens, "(") {
@@ -1577,7 +1577,7 @@ fn parse_test(
     let test_token = require_token(tokens, diagnostics, "test");
     let doc_comment = parse_doc_comment(&test_token);
 
-    let name = parse_symbol(tokens, id_gen, diagnostics);
+    let name = parse_symbol(tokens, id_gen, diagnostics, Some("test name"));
 
     if let Some(token) = tokens.peek() {
         if token.text == "(" {
@@ -1659,7 +1659,7 @@ fn parse_import(
     if peeked_symbol_is(tokens, "as") {
         tokens.pop();
 
-        namespace_sym = Some(parse_symbol(tokens, id_gen, diagnostics));
+        namespace_sym = Some(parse_symbol(tokens, id_gen, diagnostics, None));
     }
 
     let import_info = ImportInfo {
@@ -1678,7 +1678,7 @@ fn parse_type_symbol(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> TypeSymbol {
-    let name = parse_symbol(tokens, id_gen, diagnostics);
+    let name = parse_symbol(tokens, id_gen, diagnostics, Some("type name"));
     TypeSymbol {
         name: TypeName {
             text: name.name.text,
@@ -1980,7 +1980,7 @@ fn parse_parameter(
     diagnostics: &mut Vec<ParseError>,
     require_type_hint: bool,
 ) -> SymbolWithHint {
-    let param = parse_symbol(tokens, id_gen, diagnostics);
+    let param = parse_symbol(tokens, id_gen, diagnostics, Some("parameter name"));
 
     let hint = if require_type_hint {
         Some(parse_colon_and(tokens, id_gen, diagnostics))
@@ -2110,7 +2110,7 @@ fn parse_struct_fields(
 
         if let Some(token) = tokens.peek() {
             let doc_comment = parse_doc_comment(&token);
-            let sym = parse_symbol(tokens, id_gen, diagnostics);
+            let sym = parse_symbol(tokens, id_gen, diagnostics, Some("struct name"));
             let hint = parse_colon_and(tokens, id_gen, diagnostics);
 
             fields.push(FieldInfo {
@@ -2321,7 +2321,7 @@ fn parse_method(
 
     let doc_comment = parse_doc_comment(&first_token);
 
-    let name_sym = parse_symbol(tokens, id_gen, diagnostics);
+    let name_sym = parse_symbol(tokens, id_gen, diagnostics, Some("method name"));
 
     let type_params = parse_type_params(tokens, id_gen, diagnostics);
     let mut params = parse_parameters(tokens, id_gen, diagnostics);
@@ -2410,7 +2410,7 @@ fn parse_function_(
 ) -> Option<ToplevelItem> {
     let doc_comment = parse_doc_comment(&first_token);
 
-    let name_sym = parse_symbol(tokens, id_gen, diagnostics);
+    let name_sym = parse_symbol(tokens, id_gen, diagnostics, Some("function name"));
     if is_keyword_placeholder(&name_sym) {
         // The next name is a keyword, it's probably the beginning of
         // a whole new definition. Give up on this definition having
@@ -2492,7 +2492,7 @@ fn parse_let_destination(
 
             let start_idx = tokens.idx;
 
-            let symbol = parse_symbol(tokens, id_gen, diagnostics);
+            let symbol = parse_symbol(tokens, id_gen, diagnostics, None);
             if symbol.is_placeholder() {
                 // If we saw a comma, the user has written e.g. `let
                 // (, y)` and we can sensibly parse most of
@@ -2543,7 +2543,7 @@ fn parse_let_destination(
 
         LetDestination::Destructure(symbols)
     } else {
-        LetDestination::Symbol(parse_symbol(tokens, id_gen, diagnostics))
+        LetDestination::Symbol(parse_symbol(tokens, id_gen, diagnostics, None))
     }
 }
 
@@ -2551,6 +2551,7 @@ fn parse_symbol(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
+    description: Option<&str>,
 ) -> Symbol {
     let prev_token = tokens.prev();
     let variable_token = require_a_token(tokens, diagnostics, "variable name");
@@ -2561,9 +2562,11 @@ fn parse_symbol(
     };
 
     if !SYMBOL_RE.is_match(variable_token.text) {
+        let description = description.unwrap_or("symbol");
+
         diagnostics.push(ParseError::Invalid {
             position: prev_token_pos,
-            message: ErrorMessage(vec![msgtext!("Expected a symbol after this.")]),
+            message: ErrorMessage(vec![msgtext!("Expected a {description} after this.")]),
             notes: vec![],
         });
         tokens.unpop();
@@ -2648,7 +2651,7 @@ fn parse_assign(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol(tokens, id_gen, diagnostics);
+    let variable = parse_symbol(tokens, id_gen, diagnostics, None);
 
     if !peeked_symbol_is(tokens, "=") {
         // Don't proceed if we don't have an equals sign at all. This
@@ -2672,7 +2675,7 @@ fn parse_assign_update(
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
-    let variable = parse_symbol(tokens, id_gen, diagnostics);
+    let variable = parse_symbol(tokens, id_gen, diagnostics, None);
 
     let op_token = require_a_token(tokens, diagnostics, "`+=` or `-=`");
 

@@ -24,7 +24,7 @@ struct { x: Int }
 // )
 
 // expected stderr:
-// Error: Parse error: Expected a symbol after this.
+// Error: Parse error: Expected a type name after this.
 // ---| src/test_files/parser/struct_missing_name.gdn:1:1
 //   1| struct { x: Int }
 //    | ^^^^^^

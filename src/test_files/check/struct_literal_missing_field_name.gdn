@@ -3,7 +3,7 @@ let p = Person{ title: "Mr", "Hughes" }
 // args: check
 // expected exit status: 1
 // expected stdout:
-// Error: Expected a symbol after this.
+// Error: Expected a field name after this.
 // ---| src/test_files/check/struct_literal_missing_field_name.gdn:1:28
 //   1| let p = Person{ title: "Mr", "Hughes" }
 //   2|                            ^

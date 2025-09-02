@@ -28,7 +28,7 @@
 <p>Does this string contain <code>substring</code>?</p>
 <pre><code><span class="string">"abcd"</span>.contains(<span class="string">"bc"</span>) <span class="comment">//-&gt; True</span>
 <span class="string">"abcd"</span>.contains(<span class="string">"x"</span>) <span class="comment">//-&gt; False</span></code></pre>
-<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> contains(this: <a class="type" href="/type:String.html">String</a>, substring: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Bool.html">Bool</a> {
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> contains(this: <a class="type" href="/type:String.html">String</a>, substring: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Bool.html">Bool</a> {
   <a class="keyword" href="/keyword:if.html">if</a> substring.len() &gt; this.len() {
     <a class="keyword" href="/keyword:return.html">return</a> <span class="type">False</span>
   }

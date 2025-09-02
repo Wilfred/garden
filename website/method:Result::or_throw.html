@@ -26,7 +26,7 @@
 
     <div class="container"><h1><code>Result::or_throw</code></h1>
 <p>If this value is <code>Ok</code>, unwrap it, otherwise throw an exception.</p>
-<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> or_throw&lt;<span class="type">T</span>, <span class="type">E</span>&gt;(this: <a class="type" href="/type:Result.html">Result</a>&lt;<span class="type">T</span>, <span class="type">E</span>&gt;): <span class="type">T</span> {
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> or_throw&lt;<span class="type">T</span>, <span class="type">E</span>&gt;(this: <a class="type" href="/type:Result.html">Result</a>&lt;<span class="type">T</span>, <span class="type">E</span>&gt;): <span class="type">T</span> {
   <a class="keyword" href="/keyword:match.html">match</a> this {
     <span class="type">Ok</span>(v) =&gt; v
     <span class="type">Err</span>(e) =&gt; <a href="/fun:__prelude.gdn::throw.html">throw</a>(<span class="string">" "</span>.join([<span class="string">"Called `or_throw()` on an `Err`."</span>, <a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(e)]))

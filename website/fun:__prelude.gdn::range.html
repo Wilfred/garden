@@ -27,7 +27,7 @@
     <div class="container"><h1><code>range</code></h1>
 <p>Return a list from <code>i</code> (inclusive) to <code>j</code> (exclusive).</p>
 <pre><code><a href="/fun:__prelude.gdn::range.html">range</a>(1, 5) <span class="comment">//-&gt; [1, 2, 3, 4]</span></code></pre>
-<pre><span class="code-title">source</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::range.html">range</a>(i: <a class="type" href="/type:Int.html">Int</a>, j: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; {
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::range.html">range</a>(i: <a class="type" href="/type:Int.html">Int</a>, j: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; {
   <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Int.html">Int</a>&gt; = []
   <a class="keyword" href="/keyword:while.html">while</a> i &lt; j {
     items = items.append(i)

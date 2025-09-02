@@ -408,6 +408,8 @@ pub(crate) enum Expression_ {
     /// foo::bar
     /// ```
     NamespaceAccess(Rc<Expression>, Symbol),
+    /// Anonymous function (lambda) literal.
+    ///
     /// ```garden
     /// fun(x, y) { x + y }
     /// ```

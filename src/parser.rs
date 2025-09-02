@@ -87,6 +87,8 @@ fn require_a_token<'a>(
     }
 }
 
+/// Pop a token, require it to be `expected`, and return a boolean of
+/// whether we succeeded.
 fn required_token_ok(
     tokens: &mut TokenStream<'_>,
     diagnostics: &mut Vec<ParseError>,
@@ -96,6 +98,8 @@ fn required_token_ok(
     ok
 }
 
+/// Pop a token, require it to be `expected`, and return both the
+/// token and a boolean of whether we succeeded.
 fn check_required_token<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,
@@ -148,6 +152,7 @@ fn check_required_token<'a>(
     }
 }
 
+/// Pop a token and require that it matches `expected`.
 fn require_token<'a>(
     tokens: &mut TokenStream<'a>,
     diagnostics: &mut Vec<ParseError>,

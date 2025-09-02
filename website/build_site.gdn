@@ -45,7 +45,7 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
       let src = garden::source_for_fun(ns, fun_name)
       let page_src = render_doc_comment(heading, doc_comment, src)
 
-      let dest_path = out_dir.join("fun:" ^ (qualified_name ^ ".html"))
+      let dest_path = out_dir.join("fun:" ^ qualified_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(fun_name))
     }
     None => {
@@ -67,7 +67,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
 
       let page_src = render_doc_comment(heading, doc_comment, garden::source_for_method(type_name, method_name))
 
-      let dest_path = out_dir.join("method:" ^ (qualified_name ^ ".html"))
+      let dest_path = out_dir.join("method:" ^ qualified_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(qualified_name))
     }
     None => {
@@ -119,7 +119,7 @@ fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Un
       let methods = garden::methods_for_type(type_name)
       let page_src = render_type_doc_comment(heading, doc_comment, garden::source_for_type(type_name), methods, type_name)
 
-      let dest_path = out_dir.join("type:" ^ (type_name ^ ".html"))
+      let dest_path = out_dir.join("type:" ^ type_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(type_name))
     }
     None => {}

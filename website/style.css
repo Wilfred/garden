@@ -22,6 +22,10 @@ body {
   font-weight: 400;
 }
 
+p {
+  line-height: 30px;
+}
+
 h1,
 h2,
 h3,

@@ -706,6 +706,7 @@ enclosing point and print the result."
     (,(rx
        (seq
         symbol-start
+        (? "_")
         (any upper)
         symbol-end))
      . font-lock-type-face)

@@ -2,7 +2,7 @@
 
 `let` introduces a new variable.
 
-```title:example
+```title:"Example 1"
 let x = 0
 // Variables can be reassigned.
 x = 1
@@ -10,14 +10,14 @@ x = 1
 
 You can add type annotations to `let`.
 
-```title:example
+```title:"Example 2"
 let x: List<Int> = []
 ```
 
 If you have a tuple, you can use `let` to destructure the tuple
 elements.
 
-```title:example
+```title:"Example 3"
 let position = (1, 2)
 let (x, y) = position
 
@@ -28,7 +28,7 @@ dbg(y) // 2
 You can also use `let` to shadow variables, where you introduce a new
 variable that hides the old value.
 
-```title:example
+```title:"Example 4"
 let i = 0
 
 if True {

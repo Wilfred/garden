@@ -2,7 +2,7 @@
 
 `if` evaluates a conditional.
 
-```title:example
+```title:"Example 1"
 let b = True
 
 if b {
@@ -14,7 +14,7 @@ if b {
 
 `if` is an expression in Garden, so it can be used like a ternary.
 
-```title:example
+```title:"Example 2"
 let food = "chocolate"
 
 let description = if food == "chocolate" {
@@ -26,7 +26,7 @@ let description = if food == "chocolate" {
 
 `else` is optional.
 
-```title:example
+```title:"Example 3"
 let b = True
 
 if b {

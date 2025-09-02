@@ -29,11 +29,11 @@
 methods.</p>
 <p>If a function or method does not have <code>public</code>, it can only be used in
 the current file where it is defined.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:fun.html">fun</a> visible_in_the_current_file() {}</code></pre>
+<pre><span class="code-title">Example 1</span><code><a class="keyword" href="/keyword:fun.html">fun</a> visible_in_the_current_file() {}</code></pre>
 <p>If you use <code>public</code>, you are declaring a function that can be used
 anywhere.</p>
-<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> visible_everywhere() {}</code></pre>
-<pre><span class="code-title">example</span><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./other_file.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> other_file
+<pre><span class="code-title">File: other_file.gdn</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> visible_everywhere() {}</code></pre>
+<pre><span class="code-title">Example 2</span><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"./other_file.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> other_file
 
 other_file::visible_everywhere()</code></pre>
 <p>The keywords <code>shared</code>, <code>internal</code> and <code>external</code> are currently

@@ -3,7 +3,7 @@
 `for` runs a block code repeatedly, while an expression evaluates to
 `True`.
 
-```title:example
+```title:Example
 let nums = [1, 2, 3]
 
 let i = 0

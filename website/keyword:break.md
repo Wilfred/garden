@@ -2,7 +2,7 @@
 
 `break` stops evaluation of a loop.
 
-```title:example
+```title:"Example 1"
 let flavors = ["Chocolate", "Strawberry", "Mint", "Vanilla"]
 
 for flavor in flavors {
@@ -20,7 +20,7 @@ for flavor in flavors {
 `continue` stops evaluation of the current loop iteration, and
 immediately starts the next iteration.
 
-```title:example
+```title:"Example 2"
 let flavors = ["Chocolate", "Strawberry", "Mint", "Vanilla"]
 
 for flavor in flavors {

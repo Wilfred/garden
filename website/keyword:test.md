@@ -2,7 +2,7 @@
 
 `test` defines a named test.
 
-```title:example
+```title:Example
 test arithmetic {
   assert((1 + 2) == 3)
 }
@@ -11,6 +11,6 @@ test arithmetic {
 To run all the tests in a file, run the `garden` interpreter with the
 `test` command.
 
-```text
+```text title:"Running tests"
 $ garden test my_file.gdn
 ```

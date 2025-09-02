@@ -2,7 +2,7 @@
 
 `match` evaluates code depending on a value of an enum.
 
-```title:example
+```title:"Example 1"
 fun say_hello(name: Option<String>) {
   match name {
     Some(n) => println("Hello " ^ n)
@@ -16,7 +16,7 @@ say_hello(Some("Wilfred")) // Hello Wilfred
 
 If you want to ignore some cases, use `_`.
 
-```title:example
+```title:"Example 2"
 enum Flavor {
   Chocolate,
   Strawberry,
@@ -36,7 +36,7 @@ fun describe_flavor(f: Flavor) {
 
 `match` also supports destructuring of tuples.
 
-```title:example
+```title:"Example 3"
 fun describe_email(address: String) {
   match address.split_once("@") {
     Some((_, domain)) => {

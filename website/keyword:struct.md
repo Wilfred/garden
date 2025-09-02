@@ -2,7 +2,7 @@
 
 `struct` defines a type made up of fields. Structs are immutable.
 
-```title:example
+```title:Example
 struct User {
   email: String,
   admin: Bool,

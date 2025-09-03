@@ -382,7 +382,15 @@ fn main() {
             };
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
-            extract_variable::extract_variable(&src, &src_path, offset, end_offset, &name);
+            match extract_variable::extract_variable(&src, &src_path, offset, end_offset, &name) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
         }
         CliCommands::ExtractFunction {
             path,
@@ -406,7 +414,15 @@ fn main() {
             };
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
-            extract_function::extract_function(&src, &src_path, offset, end_offset, &name);
+            match extract_function::extract_function(&src, &src_path, offset, end_offset, &name) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
         }
         CliCommands::Destructure {
             path,
@@ -429,7 +445,15 @@ fn main() {
             };
 
             let src_path = to_abs_path(&override_path.unwrap_or(path));
-            destructure::destructure(&src, &src_path, offset, end_offset);
+            match destructure::destructure(&src, &src_path, offset, end_offset) {
+                Ok(new_src) => {
+                    print!("{new_src}");
+                }
+                Err(msg) => {
+                    eprintln!("{msg}");
+                    std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+                }
+            }
         }
     }
 }

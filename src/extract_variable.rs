@@ -14,7 +14,7 @@ pub(crate) fn extract_variable(
     offset: usize,
     end_offset: usize,
     name: &str,
-) {
+) -> Result<String, String> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -50,8 +50,7 @@ pub(crate) fn extract_variable(
     }
 
     let Some(expr_id) = expr_id else {
-        eprintln!("No expression found at this selected position.");
-        return;
+        return Err("No expression found at this selected position.".to_owned());
     };
 
     // The innermost expression that both contains the target expression
@@ -112,8 +111,7 @@ pub(crate) fn extract_variable(
     }
 
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
-        eprintln!("No expression found for the ID at the selected position.");
-        return;
+        return Err("No expression found for the ID at the selected position.".to_owned());
     };
     let var_init_expr = match expr.expr_ {
         Expression_::Parentheses(_, inner_expr, _) => inner_expr,
@@ -121,38 +119,41 @@ pub(crate) fn extract_variable(
     };
 
     let Some(enclosing_block_level_expr) = enclosing_block_level_expr else {
-        eprintln!("No enclosing block-level expression found for the selected position.");
-        return;
+        return Err(
+            "No enclosing block-level expression found for the selected position.".to_owned(),
+        );
     };
+
+    let mut result = String::new();
 
     for item in items {
         let item_pos = item.position();
         if item_pos.contains_offset(offset) {
             // All the items before this one.
-            print!("{}", &src[..item_pos.start_offset]);
+            result.push_str(&src[..item_pos.start_offset]);
 
-            print!(
-                "{}",
-                &src[item_pos.start_offset..enclosing_block_level_expr.position.start_offset]
+            result.push_str(
+                &src[item_pos.start_offset..enclosing_block_level_expr.position.start_offset],
             );
-            print!(
+            result.push_str(&format!(
                 "let {} = {}\n{}",
                 name,
                 &src[var_init_expr.position.start_offset..var_init_expr.position.end_offset],
                 " ".repeat(enclosing_block_level_expr.position.column)
-            );
+            ));
 
-            print!(
-                "{}",
-                &src[enclosing_block_level_expr.position.start_offset..expr.position.start_offset]
+            result.push_str(
+                &src[enclosing_block_level_expr.position.start_offset..expr.position.start_offset],
             );
-            print!("{name}");
-            print!("{}", &src[expr.position.end_offset..item_pos.end_offset]);
+            result.push_str(name);
+            result.push_str(&src[expr.position.end_offset..item_pos.end_offset]);
 
             // Items after.
-            print!("{}", &src[item_pos.end_offset..]);
+            result.push_str(&src[item_pos.end_offset..]);
 
             break;
         }
     }
+
+    Ok(result)
 }

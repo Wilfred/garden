@@ -23,6 +23,12 @@ Fixed a crash when evaluating empty blocks.
 
 `garden check` now warns on unused type variables.
 
+## IDE Operations
+
+Destructure, extract variable, extract function and rename now return
+a non-zero exit code if they weren't able to perform the requested
+operation.
+
 # 0.21 (released 23 August 2025)
 **Goal: Blog.**
 **Goal: Comprehensive docs on website.**

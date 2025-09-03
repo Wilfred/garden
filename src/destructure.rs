@@ -11,9 +11,13 @@ use crate::parser::parse_toplevel_items;
 use crate::parser::vfs::Vfs;
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::TypeDef;
-use crate::BAD_CLI_REQUEST_EXIT_CODE;
 
-pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usize) {
+pub(crate) fn destructure(
+    src: &str,
+    path: &Path,
+    offset: usize,
+    end_offset: usize,
+) -> Result<String, String> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -35,17 +39,14 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     }
 
     let Some(expr_id) = expr_id else {
-        eprintln!("No expression found at this selected position.");
-        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+        return Err("No expression found at this selected position.".to_owned());
     };
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
-        eprintln!("No expression found for the ID at this position.");
-        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+        return Err("No expression found for the ID at this position.".to_owned());
     };
 
     let Some(mut ty) = summary.id_to_ty.get(expr_id) else {
-        eprintln!("Could not find the type of the expression at this position.");
-        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+        return Err("Could not find the type of the expression at this position.".to_owned());
     };
 
     if let Type::Error {
@@ -57,10 +58,9 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     }
 
     let Some(variants) = enum_variants(&env, ty) else {
-        eprintln!(
+        return Err(format!(
             "The expression at the selected position has type `{ty}`, which isn't an `enum`."
-        );
-        std::process::exit(BAD_CLI_REQUEST_EXIT_CODE);
+        ));
     };
 
     let line_positions = LinePositions::from(src);
@@ -72,26 +72,25 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
     let indent = line.len() - line.trim_start().len();
     let indent_str = " ".repeat(indent);
 
+    let mut result = String::new();
+
     for item in items {
         let item_pos = item.position();
         if item_pos.contains_offset(offset) {
             // All the items before this one.
-            print!("{}", &src[..item_pos.start_offset]);
+            result.push_str(&src[..item_pos.start_offset]);
 
             // The item, with the expression replaced by a call.
-            print!(
-                "{}",
-                &src[item_pos.start_offset..expr.position.start_offset]
-            );
+            result.push_str(&src[item_pos.start_offset..expr.position.start_offset]);
 
-            println!(
-                "match {} {{",
+            result.push_str(&format!(
+                "match {} {{\n",
                 &src[expr.position.start_offset..expr.position.end_offset]
-            );
+            ));
 
             for variant in variants {
-                println!(
-                    "{}  {}{} => {{}}",
+                result.push_str(&format!(
+                    "{}  {}{} => {{}}\n",
                     indent_str,
                     &variant.name_sym.name,
                     if variant.payload_hint.is_some() {
@@ -99,17 +98,19 @@ pub(crate) fn destructure(src: &str, path: &Path, offset: usize, end_offset: usi
                     } else {
                         ""
                     }
-                );
+                ));
             }
 
-            print!("{indent_str}}}");
+            result.push_str(&format!("{indent_str}}}"));
 
             // Items after.
-            print!("{}", &src[expr.position.end_offset..]);
+            result.push_str(&src[expr.position.end_offset..]);
 
             break;
         }
     }
+
+    Ok(result)
 }
 
 /// If `ty` is an enum type, return its variants.

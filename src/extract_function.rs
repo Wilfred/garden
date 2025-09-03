@@ -21,7 +21,7 @@ pub(crate) fn extract_function(
     offset: usize,
     end_offset: usize,
     name: &str,
-) {
+) -> Result<String, String> {
     let mut id_gen = IdGenerator::default();
     let (vfs, vfs_path) = Vfs::singleton(path.to_owned(), src.to_owned());
 
@@ -44,31 +44,28 @@ pub(crate) fn extract_function(
     }
 
     let Some(expr_id) = expr_id else {
-        eprintln!("No expression found at this selected position.");
-        return;
+        return Err("No expression found at this selected position.".to_owned());
     };
     let Some(expr) = find_expr_of_id(&items, *expr_id) else {
-        eprintln!("No expression found for the ID at the selected position.");
-        return;
+        return Err("No expression found for the ID at the selected position.".to_owned());
     };
     let params = locals_outside_expr(ns, &summary.id_to_ty, &expr);
+
+    let mut result = String::new();
 
     for item in items {
         let item_pos = item.position();
         if item_pos.contains_offset(offset) {
             // All the items before this one.
-            print!("{}", &src[..item_pos.start_offset]);
+            result.push_str(&src[..item_pos.start_offset]);
 
-            println!(
-                "{}",
+            result.push_str(&format!(
+                "{}\n",
                 extracted_fun_src(src, name, summary.id_to_ty.get(expr_id), &expr, &params)
-            );
+            ));
 
             // The item, with the expression replaced by a call.
-            print!(
-                "{}",
-                &src[item_pos.start_offset..expr.position.start_offset]
-            );
+            result.push_str(&src[item_pos.start_offset..expr.position.start_offset]);
 
             let arguments_src = params
                 .iter()
@@ -76,15 +73,17 @@ pub(crate) fn extract_function(
                 .collect::<Vec<String>>()
                 .join(", ");
 
-            print!("{name}({arguments_src})");
-            print!("{}", &src[expr.position.end_offset..item_pos.end_offset]);
+            result.push_str(&format!("{name}({arguments_src})"));
+            result.push_str(&src[expr.position.end_offset..item_pos.end_offset]);
 
             // Items after.
-            print!("{}", &src[item_pos.end_offset..]);
+            result.push_str(&src[item_pos.end_offset..]);
 
             break;
         }
     }
+
+    Ok(result)
 }
 
 fn extracted_fun_src(

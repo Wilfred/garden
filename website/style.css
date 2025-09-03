@@ -219,10 +219,14 @@ pre::before {
 }
 
 .code-title {
-  padding: 10px;
+  padding: 4px 8px;
   position: absolute;
-  right: -1px;
-  bottom: -1px;
+  top: -12px;
+  right: 12px;
+
+  background: var(--cream);
+  border: 3px solid black;
+  border-radius: 3px;
 
   font-family: "Lora", serif;
   font-weight: initial;

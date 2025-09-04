@@ -13,6 +13,8 @@ test two_add_one {
 ```
 
 ```title:"Anonymous Function"
-let f = fun(x: Int): Int { x + 1 }
+let f = fun(x: Int): Int { 
+  x + 1 
+}
 assert(f(2) == 3)
 ```

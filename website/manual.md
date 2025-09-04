@@ -22,6 +22,6 @@ __PRELUDE_FUNS
 
 __FS_FUNS
 
-## Garden Reflection Namespace `__garden.gdn`
+## Reflection Namespace `__reflect.gdn`
 
-__GARDEN_FUNS
+__REFLECT_FUNS

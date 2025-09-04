@@ -1,5 +1,5 @@
 import "__prelude.gdn" as prelude
-import "__garden.gdn" as garden
+import "__reflect.gdn" as reflect
 
 import "./log.gdn" as log
 
@@ -185,7 +185,7 @@ fun render_markdown_header(src: String): String {
 fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   let items: List<(Int, Int, String)> = []
 
-  let lexemes = garden::lex(s)
+  let lexemes = reflect::lex(s)
 
   for (i, idx_and_tok) in lexemes.enumerate() {
     let (start_idx, tok) = idx_and_tok
@@ -221,7 +221,7 @@ fun render_markdown_code(snippet: Snippet): String {
 }
 
 fun check_source(src: String): Unit {
-  match garden::check_snippet(src) {
+  match reflect::check_snippet(src) {
     Ok(_) => {}
     Err(messages) => {
       log::warn("Found an error when checking: " ^ src)
@@ -247,8 +247,8 @@ fun render_markdown_garden_code(snippet: Snippet): String {
     }
   }
 
-  let keywords = garden::keywords()
-  let prelude_funs = garden::namespace_functions(prelude)
+  let keywords = reflect::keywords()
+  let prelude_funs = reflect::namespace_functions(prelude)
   let rendered_lines: List<String> = []
 
   for line in snippet.content.lines() {
@@ -275,7 +275,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         "<a href=\"/fun:__prelude.gdn::" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if looks_like_type(tok) {
         let after_tok = part.substring(tok.len(), part.len())
-        if garden::prelude_types().contains(tok) {
+        if reflect::prelude_types().contains(tok) {
           "<a class=\"type\" href=\"/type:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
         } else {
           "<span class=\"type\">" ^ tok ^ "</span>" ^ after_tok

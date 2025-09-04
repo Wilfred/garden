@@ -19,6 +19,10 @@ external fun foo() {}
 
 Fixed a crash when evaluating empty blocks.
 
+## Standard Library
+
+`__garden.gdn` is now `__reflect.gdn`.
+
 ## Check
 
 `garden check` now warns on unused type variables.

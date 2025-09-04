@@ -598,8 +598,8 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
         return Ok(include_str!("__prelude.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__fs.gdn") {
         return Ok(include_str!("__fs.gdn").to_owned());
-    } else if import_info.path == PathBuf::from("__garden.gdn") {
-        return Ok(include_str!("__garden.gdn").to_owned());
+    } else if import_info.path == PathBuf::from("__reflect.gdn") {
+        return Ok(include_str!("__reflect.gdn").to_owned());
     }
 
     let src_bytes = match std::fs::read(abs_path) {

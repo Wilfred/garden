@@ -1,5 +1,5 @@
-{ "method": "run", "input": "import \"__garden.gdn\" as g" }
-{ "method": "run", "input": ":doc g::lex" }
+{ "method": "run", "input": "import \"__reflect.gdn\" as r" }
+{ "method": "run", "input": ":doc r::lex" }
 
 // args: test-json
 // expected stdout:
@@ -8,21 +8,21 @@
 //     "evaluate": {
 //       "warnings": [
 //         {
-//           "message": "`g` is unused.",
+//           "message": "`r` is unused.",
 //           "position": {
-//             "start_offset": 25,
-//             "end_offset": 26,
+//             "start_offset": 26,
+//             "end_offset": 27,
 //             "line_number": 0,
 //             "end_line_number": 0,
-//             "column": 25,
-//             "end_column": 26,
+//             "column": 26,
+//             "end_column": 27,
 //             "path": "__user.gdn"
 //           },
 //           "severity": "warning"
 //         }
 //       ],
 //       "value": {
-//         "Ok": "Loaded g in __user.gdn."
+//         "Ok": "Loaded r in __user.gdn."
 //       },
 //       "stack_frame_name": "__user.gdn"
 //     }
@@ -32,7 +32,7 @@
 // {
 //   "kind": {
 //     "run_command": {
-//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n// Defined in __garden.gdn:39\nfn lex(src: String): List<(Int, String)> { ... }",
+//       "message": "Split `src` into individual lexed tokens, along with their offsets\nin the original string.\n\n// Defined in __reflect.gdn:39\nfn lex(src: String): List<(Int, String)> { ... }",
 //       "stack_frame_name": "__user.gdn"
 //     }
 //   },

@@ -1,7 +1,7 @@
-import "__garden.gdn" as garden
+import "__reflect.gdn" as reflect
 
 {
-  dbg(garden::check_snippet("True"))
+  dbg(reflect::check_snippet("True"))
 }
 
 // args: run

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#307d30" />
-    <title>prelude_types - Garden</title>
+    <title>namespace_functions - Garden</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,10 +25,11 @@
       </nav>
     </header>
 
-    <div class="container"><h1><code>__garden.gdn::prelude_types</code></h1>
-<p>A list of all the type names in the prelude, <code>String</code>, <code>Option</code> and
-so on. The list is sorted alphabetically.</p>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> prelude_types(): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+    <div class="container"><h1><code>__reflect.gdn::namespace_functions</code></h1>
+<p>All the <code>external</code> functions in <code>ns</code>.</p>
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> namespace_functions(ns: <a class="type" href="/type:Namespace.html">Namespace</a>): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+  <span class="comment">// This is deliberately not a method on Namespace, so code</span>
+  <span class="comment">// completion isn't confusing.</span>
   __BUILTIN_IMPLEMENTATION
 }</code></pre></div>
 

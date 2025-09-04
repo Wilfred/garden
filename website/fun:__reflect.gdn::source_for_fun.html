@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#307d30" />
-    <title>doc_comment - Garden</title>
+    <title>source_for_fun - Garden</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,10 +25,9 @@
       </nav>
     </header>
 
-    <div class="container"><h1><code>__garden.gdn::doc_comment</code></h1>
-<p>Get the doc comment for <code>fun_name</code> in the namespace <code>ns</code>. The
-string does not include the leading <code>//</code> comment.</p>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> doc_comment(ns: <a class="type" href="/type:Namespace.html">Namespace</a>, fun_name: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+    <div class="container"><h1><code>__reflect.gdn::source_for_fun</code></h1>
+<p>Get the source code for the function definition of <code>name</code>.</p>
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> source_for_fun(ns: <a class="type" href="/type:Namespace.html">Namespace</a>, name: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
   __BUILTIN_IMPLEMENTATION
 }</code></pre></div>
 

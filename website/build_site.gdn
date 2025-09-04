@@ -1,5 +1,5 @@
 import "__fs.gdn" as fs
-import "__garden.gdn" as garden
+import "__reflect.gdn" as reflect
 import "__prelude.gdn" as prelude
 import "./markdown.gdn"
 import "./log.gdn" as log
@@ -34,7 +34,7 @@ fun drop_leading_comments(src: String): String {
 fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Path, base_tmpl_src: String): Unit {
   let qualified_name = "::".join([ns_name, fun_name])
 
-  match garden::doc_comment(ns, fun_name) {
+  match reflect::doc_comment(ns, fun_name) {
     Some(doc_comment) => {
       let heading = if ns_name == "__prelude.gdn" {
         "".join(["# `", fun_name, "`"])
@@ -42,7 +42,7 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
         "".join(["# `", qualified_name, "`"])
       }
 
-      let src = garden::source_for_fun(ns, fun_name)
+      let src = reflect::source_for_fun(ns, fun_name)
       let page_src = render_doc_comment(heading, doc_comment, src)
 
       let dest_path = out_dir.join("fun:" ^ qualified_name ^ ".html")
@@ -61,11 +61,11 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
 fun write_method_page(type_name: String, method_name: String, out_dir: Path, base_tmpl_src: String): Unit {
   let qualified_name = type_name ^ "::" ^ method_name
 
-  match garden::doc_comment_for_method(type_name, method_name) {
+  match reflect::doc_comment_for_method(type_name, method_name) {
     Some(doc_comment) => {
       let heading = "# `" ^ qualified_name ^ "`"
 
-      let page_src = render_doc_comment(heading, doc_comment, garden::source_for_method(type_name, method_name))
+      let page_src = render_doc_comment(heading, doc_comment, reflect::source_for_method(type_name, method_name))
 
       let dest_path = out_dir.join("method:" ^ qualified_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(qualified_name))
@@ -113,11 +113,11 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<St
 // Look up the doc comment for `type_name`, render it to HTML and
 // write it to `out_dir`.
 fun write_type_page(type_name: String, out_dir: Path, base_tmpl_src: String): Unit {
-  match garden::doc_comment_for_type(type_name) {
+  match reflect::doc_comment_for_type(type_name) {
     Some(doc_comment) => {
       let heading = "".join(["# `", type_name, "` type"])
-      let methods = garden::methods_for_type(type_name)
-      let page_src = render_type_doc_comment(heading, doc_comment, garden::source_for_type(type_name), methods, type_name)
+      let methods = reflect::methods_for_type(type_name)
+      let page_src = render_type_doc_comment(heading, doc_comment, reflect::source_for_type(type_name), methods, type_name)
 
       let dest_path = out_dir.join("type:" ^ type_name ^ ".html")
       write_website_page(base_tmpl_src, page_src, dest_path, Some(type_name))
@@ -270,16 +270,16 @@ fun build_site(): Unit {
     write_markdown_page(website_dir, base_tmpl_src, md_path, title)
   }
 
-  for keyword in garden::keywords() {
+  for keyword in reflect::keywords() {
     if seen_keyword_pages.contains(keyword).not() {
       println("Expected a page documenting: " ^ keyword)
     }
   }
 
-  for type_name in garden::prelude_types() {
+  for type_name in reflect::prelude_types() {
     write_type_page(type_name, out_dir, base_tmpl_src)
 
-    for method_name in garden::methods_for_type(type_name) {
+    for method_name in reflect::methods_for_type(type_name) {
       write_method_page(type_name, method_name, out_dir, base_tmpl_src)
     }
   }
@@ -287,11 +287,11 @@ fun build_site(): Unit {
   let namespaces = [
     ("__prelude.gdn", prelude),
     ("__fs.gdn", fs),
-    ("__garden.gdn", garden),
+    ("__reflect.gdn", reflect),
   ]
 
   for (ns_name, ns) in namespaces {
-    for fun_name in garden::namespace_functions(ns) {
+    for fun_name in reflect::namespace_functions(ns) {
       write_fun_page(ns_name, ns, fun_name, out_dir, base_tmpl_src)
     }
   }
@@ -314,32 +314,32 @@ fun join_with_commas_and(items: List<String>): String {
 
 // Replace all __FOO strings in markdown `src` with runtime values.
 fun substitute_shorthand(website_dir: Path, src: String): String {
-  let keyword_links = garden::keywords().map(fun(keyword: String) {
+  let keyword_links = reflect::keywords().map(fun(keyword: String) {
     "".join(["[`", keyword, "`](./keyword:", keyword, ".html)"])
   })
 
   let keyword_links = join_with_commas_and(keyword_links)
 
-  let type_links = garden::prelude_types().map(fun(name: String) {
+  let type_links = reflect::prelude_types().map(fun(name: String) {
     "".join(["[`", name, "`](./type:", name, ".html)"])
   })
 
   let type_links = join_with_commas_and(type_links)
 
-  let prelude_funs = garden::namespace_functions(prelude).map(fun(name: String) {
+  let prelude_funs = reflect::namespace_functions(prelude).map(fun(name: String) {
     "".join(["[`", name, "`](./fun:__prelude.gdn::", name, ".html)"])
   })
   let prelude_funs = join_with_commas_and(prelude_funs)
 
-  let fs_funs = garden::namespace_functions(fs).map(fun(name: String) {
+  let fs_funs = reflect::namespace_functions(fs).map(fun(name: String) {
     "".join(["[`", name, "`](./fun:__fs.gdn::", name, ".html)"])
   })
   let fs_funs = join_with_commas_and(fs_funs)
 
-  let garden_funs = garden::namespace_functions(garden).map(fun(name: String) {
-    "".join(["[`", name, "`](./fun:__garden.gdn::", name, ".html)"])
+  let reflect_funs = reflect::namespace_functions(reflect).map(fun(name: String) {
+    "".join(["[`", name, "`](./fun:__reflect.gdn::", name, ".html)"])
   })
-  let garden_funs = join_with_commas_and(garden_funs)
+  let reflect_funs = join_with_commas_and(reflect_funs)
 
   let blog_links: List<String> = []
   for post in blog_posts(website_dir) {
@@ -374,7 +374,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
     .replace("__BUILTIN_TYPES", type_links)
     .replace("__PRELUDE_FUNS", prelude_funs)
     .replace("__FS_FUNS", fs_funs)
-    .replace("__GARDEN_FUNS", garden_funs)
+    .replace("__REFLECT_FUNS", reflect_funs)
     .replace("__BLOG_LINKS", blog_links)
 }
 

@@ -724,7 +724,7 @@ mod tests {
         cmd.arg("test")
             .arg("src/__prelude.gdn")
             .arg("src/__fs.gdn")
-            .arg("src/__garden.gdn");
+            .arg("src/__reflect.gdn");
         cmd.assert().success();
     }
 

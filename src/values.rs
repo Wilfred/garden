@@ -401,7 +401,7 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::CheckSnippet
             | BuiltinFunctionKind::MethodsForType
             | BuiltinFunctionKind::NamespaceFunctions
-            | BuiltinFunctionKind::Keywords => PathBuf::from("__garden.gdn"),
+            | BuiltinFunctionKind::Keywords => PathBuf::from("__reflect.gdn"),
         }
     }
 }

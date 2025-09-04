@@ -235,7 +235,11 @@ impl Env {
         }
     }
 
-    pub(crate) fn add_method(&mut self, method_info: &MethodInfo, load_stubs: bool) {
+    /// Load `method_info` in the current environment.
+    ///
+    /// If the type associated with `method_info` isn't currently
+    /// defined, create a stub type if `vivify_types` is true.
+    pub(crate) fn add_method(&mut self, method_info: &MethodInfo, vivify_types: bool) {
         let type_name = method_info.receiver_hint.sym.name.clone();
         match self.types.get_mut(&type_name) {
             Some(type_and_methods) => {
@@ -244,7 +248,7 @@ impl Env {
                     .insert(method_info.name_sym.name.clone(), method_info.clone());
             }
             None => {
-                if !load_stubs {
+                if !vivify_types {
                     return;
                 }
 

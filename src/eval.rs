@@ -306,7 +306,7 @@ fn load_toplevel_items_(
     env: &mut Env,
     paths_seen: &mut FxHashSet<PathBuf>,
     namespace: Rc<RefCell<NamespaceInfo>>,
-    load_stubs: bool,
+    vivify_types: bool,
 ) -> (Vec<Diagnostic>, Vec<SymbolName>) {
     let mut diagnostics: Vec<Diagnostic> = vec![];
     let mut new_syms: Vec<SymbolName> = vec![];
@@ -362,7 +362,7 @@ fn load_toplevel_items_(
                     if is_builtin_stub(fun_info) {
                         update_builtin_meth_info(meth_info, fun_info, env, &mut diagnostics);
                     } else {
-                        env.add_method(meth_info, load_stubs);
+                        env.add_method(meth_info, vivify_types);
                     }
                 }
 
@@ -499,7 +499,7 @@ fn load_toplevel_items_(
                     env,
                     paths_seen,
                     destination_ns.clone(),
-                    load_stubs,
+                    vivify_types,
                 );
 
                 let imported_syms = insert_imported_namespace(

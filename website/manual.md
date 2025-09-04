@@ -4,6 +4,10 @@
 
 __KEYWORDS
 
+## Operators
+
+[`+`](./operator:+.html)
+
 ## Built-in Types
 
 __BUILTIN_TYPES

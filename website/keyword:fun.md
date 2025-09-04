@@ -12,6 +12,18 @@ test two_add_one {
 }
 ```
 
+Type annotations are optional. A function without type annotations is
+assumed to take any type as an argument, and may return any type.
+
+```garden title:"No Types Declared" nocheck
+fun add_one(x) {
+  x + 1
+}
+```
+
+You can also use `fun` to declare anonymous functions, sometimes
+called lambdas.
+
 ```title:"Anonymous Function"
 let f = fun(x: Int): Int { 
   x + 1 

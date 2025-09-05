@@ -1,0 +1,45 @@
+// This should have an error.
+import "no_such.gdn" as ns
+import "__fs.gdn" as fs
+
+// This should be fine, even though the previous import didn't work.
+fs::list_directory(Path{ p: "/"})
+
+// This should not have an error, we have already errored on the
+// import.
+ns::stuff()
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: No such file `no_such.gdn`.
+// ---| src/test_files/check/missing_import_error_cascade.gdn:2:8
+//   1| // This should have an error.
+//   2| import "no_such.gdn" as ns
+//    |        ^^^^^^^^^^^^^
+//   3| import "__fs.gdn" as fs
+// 
+// Error: Unbound symbol: `ns`
+// ---| src/test_files/check/missing_import_error_cascade.gdn:10:1
+//   8| // This should not have an error, we have already errored on the
+//   9| // import.
+//  10| ns::stuff()
+//    | ^^
+//  11| 
+// 
+// Warning: Cannot statically determine the namespace here.
+// ---| src/test_files/check/missing_import_error_cascade.gdn:10:1
+//   8| // This should not have an error, we have already errored on the
+//   9| // import.
+//  10| ns::stuff()
+//    | ^^
+//  11| 
+// 
+// Error: Expected a function, but got `Any`.
+// ---| src/test_files/check/missing_import_error_cascade.gdn:10:1
+//   8| // This should not have an error, we have already errored on the
+//   9| // import.
+//  10| ns::stuff()
+//    | ^^^^^^^^^
+//  11|
+

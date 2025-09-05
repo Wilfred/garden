@@ -1397,65 +1397,62 @@ impl TypeCheckVisitor<'_> {
             return value_ty.clone();
         }
 
-        match self.get_var(&sym.name) {
-            Some(value) => {
-                let fun_info = match value.as_ref() {
-                    Value_::Fun { fun_info, .. } => Some(fun_info),
-                    Value_::Closure(_, fun_info, _) => Some(fun_info),
-                    Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
-                    _ => None,
-                };
-                if let Some(fun_info) = fun_info {
-                    if let Some(def_id) = fun_info.item_id {
-                        self.callees
-                            .entry(self.current_item)
-                            .or_default()
-                            .insert(def_id);
-                    }
+        let Some(value) = self.get_var(&sym.name) else {
+            let ty = Type::Error {
+                internal_reason: "Unbound variable".to_owned(),
+                inferred_type: None,
+            };
+            // Treat this variable as locally bound in the
+            // rest of the scope, to prevent cascading
+            // errors.
+            self.set_binding(sym, ty.clone());
 
-                    if let Some(fun_sym) = &fun_info.name_sym {
-                        self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
-                    }
-
-                    if let Some(doc_comment) = &fun_info.doc_comment {
-                        self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
-                    }
-                }
-
-                if matches!(
-                    value.as_ref(),
-                    Value_::EnumVariant { .. } | Value_::EnumConstructor { .. }
-                ) {
-                    self.save_enum_variant_id(sym, value.clone());
-                }
-
-                Type::from_value(&value)
+            if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!("Unbound symbol: "),
+                        msgcode!("{}", sym.name),
+                    ]),
+                    position: sym.position.clone(),
+                });
             }
-            None => {
-                let ty = Type::Error {
-                    internal_reason: "Unbound variable".to_owned(),
-                    inferred_type: None,
-                };
-                // Treat this variable as locally bound in the
-                // rest of the scope, to prevent cascading
-                // errors.
-                self.set_binding(sym, ty.clone());
 
-                if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
-                    self.diagnostics.push(Diagnostic {
-                        notes: vec![],
-                        severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Unbound symbol: "),
-                            msgcode!("{}", sym.name),
-                        ]),
-                        position: sym.position.clone(),
-                    });
-                }
+            return ty;
+        };
 
-                ty
+        let fun_info = match value.as_ref() {
+            Value_::Fun { fun_info, .. } => Some(fun_info),
+            Value_::Closure(_, fun_info, _) => Some(fun_info),
+            Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
+            _ => None,
+        };
+        if let Some(fun_info) = fun_info {
+            if let Some(def_id) = fun_info.item_id {
+                self.callees
+                    .entry(self.current_item)
+                    .or_default()
+                    .insert(def_id);
+            }
+
+            if let Some(fun_sym) = &fun_info.name_sym {
+                self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
+            }
+
+            if let Some(doc_comment) = &fun_info.doc_comment {
+                self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
             }
         }
+
+        if matches!(
+            value.as_ref(),
+            Value_::EnumVariant { .. } | Value_::EnumConstructor { .. }
+        ) {
+            self.save_enum_variant_id(sym, value.clone());
+        }
+
+        Type::from_value(&value)
     }
 
     fn infer_binary_op(

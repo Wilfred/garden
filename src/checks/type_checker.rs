@@ -962,425 +962,15 @@ impl TypeCheckVisitor<'_> {
             Expression_::BinaryOperator(lhs, op, rhs) => {
                 self.infer_binary_op(pos, lhs, op, rhs, type_bindings, expected_return_ty)
             }
-            Expression_::Variable(sym) => {
-                if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
-                    self.id_to_def_pos.insert(sym.id, position.clone());
-                    self.id_to_ty.insert(sym.id, value_ty.clone());
-                    self.id_to_ty.insert(expr_id, value_ty.clone());
-                    return value_ty.clone();
-                }
-
-                match self.get_var(&sym.name) {
-                    Some(value) => {
-                        let fun_info = match value.as_ref() {
-                            Value_::Fun { fun_info, .. } => Some(fun_info),
-                            Value_::Closure(_, fun_info, _) => Some(fun_info),
-                            Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
-                            _ => None,
-                        };
-                        if let Some(fun_info) = fun_info {
-                            if let Some(def_id) = fun_info.item_id {
-                                self.callees
-                                    .entry(self.current_item)
-                                    .or_default()
-                                    .insert(def_id);
-                            }
-
-                            if let Some(fun_sym) = &fun_info.name_sym {
-                                self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
-                            }
-
-                            if let Some(doc_comment) = &fun_info.doc_comment {
-                                self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
-                            }
-                        }
-
-                        if matches!(
-                            value.as_ref(),
-                            Value_::EnumVariant { .. } | Value_::EnumConstructor { .. }
-                        ) {
-                            self.save_enum_variant_id(sym, value.clone());
-                        }
-
-                        Type::from_value(&value)
-                    }
-                    None => {
-                        let ty = Type::Error {
-                            internal_reason: "Unbound variable".to_owned(),
-                            inferred_type: None,
-                        };
-                        // Treat this variable as locally bound in the
-                        // rest of the scope, to prevent cascading
-                        // errors.
-                        self.set_binding(sym, ty.clone());
-
-                        if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
-                            self.diagnostics.push(Diagnostic {
-                                notes: vec![],
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgtext!("Unbound symbol: "),
-                                    msgcode!("{}", sym.name),
-                                ]),
-                                position: sym.position.clone(),
-                            });
-                        }
-
-                        ty
-                    }
-                }
-            }
+            Expression_::Variable(sym) => self.infer_var(expr_id, sym),
             Expression_::Call(recv, paren_args) => {
-                if let Expression_::Variable(s) = &recv.expr_ {
-                    if s.name.text == "todo"
-                        && self.bindings.get(&SymbolName::from("todo")).is_none()
-                    {
-                        self.diagnostics.push(Diagnostic {
-                            message: ErrorMessage(vec![Text("Unfinished code.".to_owned())]),
-                            position: pos.clone(),
-                            notes: vec![],
-                            severity: Severity::Warning,
-                        });
-                    }
-                }
-
-                let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
-
-                match recv_ty {
-                    Type::Fun {
-                        type_params,
-                        params,
-                        return_,
-                        name_sym,
-                    } => {
-                        let mut ty_var_env = TypeVarEnv::default();
-                        for type_param in type_params {
-                            ty_var_env.insert(type_param.clone(), None);
-                        }
-
-                        let mut arg_tys = vec![];
-                        for arg in &paren_args.arguments {
-                            let arg_ty =
-                                self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-
-                            arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
-                        }
-
-                        for (param_ty, (arg_ty, _, _)) in params.iter().zip(arg_tys.iter()) {
-                            unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
-                        }
-
-                        let params = params
-                            .iter()
-                            .map(|p| substitute_ty_vars(p, &ty_var_env))
-                            .collect::<Vec<_>>();
-
-                        if params.len() == arg_tys.len() {
-                            // Only check argument types if we have the right number of
-                            // arguments. Otherwise, it's likely that the types are valid,
-                            // but there were missing previous arguments.
-                            for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
-                                if !is_subtype(arg_ty, param_ty) {
-                                    self.diagnostics.push(Diagnostic {
-                                        notes: vec![],
-                                        severity: Severity::Error,
-                                        message: format_type_mismatch(param_ty, arg_ty),
-                                        position: arg_pos.clone(),
-                                    });
-                                }
-                            }
-                        } else {
-                            let name = name_sym.map(|sym| sym.name.text.clone());
-                            self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
-                        }
-
-                        substitute_ty_vars(&return_, &ty_var_env)
-                    }
-                    Type::Error {
-                        internal_reason,
-                        inferred_type: _,
-                    } => {
-                        for arg in &paren_args.arguments {
-                            // We still want to check arguments as far as possible.
-                            self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                        }
-
-                        // If the receiver is an error, propagate the
-                        // reason to aid debugging, but not the
-                        // inferred type (which isn't relevant).
-                        Type::Error {
-                            internal_reason,
-                            inferred_type: None,
-                        }
-                    }
-                    _ => {
-                        for arg in &paren_args.arguments {
-                            // We still want to check arguments as far as possible.
-                            self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                        }
-
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgtext!("Expected a function, but got "),
-                                msgcode!("{}", recv_ty),
-                                msgtext!("."),
-                            ]),
-                            position: recv.position.clone(),
-                        });
-
-                        Type::Error {
-                            internal_reason: "Calling something that isn't a function".to_owned(),
-                            inferred_type: None,
-                        }
-                    }
-                }
+                self.infer_call(pos, recv, paren_args, type_bindings, expected_return_ty)
             }
             Expression_::MethodCall(recv, sym, paren_args) => {
-                let receiver_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
-                if matches!(receiver_ty, Type::Error { .. }) {
-                    for arg in &paren_args.arguments {
-                        self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                    }
-
-                    // Allow calling methods on error types, to avoid cascading errors.
-                    return Type::error("Called method on an error type");
-                }
-
-                let Some(receiver_ty_name) = receiver_ty.type_name() else {
-                    for arg in &paren_args.arguments {
-                        self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                    }
-
-                    self.diagnostics.push(Diagnostic {
-                        notes: vec![],
-                        severity: Severity::Error,
-                        message: ErrorMessage(vec![
-                            msgtext!("Expected a type with a "),
-                            msgcode!("{}", sym.name),
-                            msgtext!(" method, but got "),
-                            msgcode!("{}", receiver_ty),
-                            msgtext!("."),
-                        ]),
-                        position: recv.position.clone(),
-                    });
-                    return Type::error("No type name for this method receiver");
-                };
-
-                let methods = self
-                    .env
-                    .types
-                    .get(&receiver_ty_name)
-                    .cloned()
-                    .map(|tdm| tdm.methods)
-                    .unwrap_or_default();
-
-                match methods.get(&sym.name) {
-                    Some(method_info) => {
-                        self.id_to_def_pos
-                            .insert(sym.id, method_info.name_sym.position.clone());
-
-                        let Some(fun_info) = method_info.fun_info() else {
-                            self.diagnostics.push(Diagnostic {
-                                notes: vec![],
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![msgtext!("Tried to call a method that has no fun_info. This means there's a bug in prelude loading.")]),
-                                position: sym.position.clone(),
-                            });
-                            return Type::error("This method has no fun_info");
-                        };
-
-                        if let Some(def_id) = fun_info.item_id {
-                            self.callees
-                                .entry(self.current_item)
-                                .or_default()
-                                .insert(def_id);
-                        }
-
-                        let mut ty_var_env = TypeVarEnv::default();
-                        for type_param in &fun_info.type_params {
-                            ty_var_env.insert(type_param.name.clone(), None);
-                        }
-
-                        let param_decl_tys: Vec<Type> = fun_info
-                            .params
-                            .params
-                            .iter()
-                            .map(|sym_with_hint| match &sym_with_hint.hint {
-                                Some(hint) => Type::from_hint(hint, &self.env.types, &ty_var_env)
-                                    .unwrap_or_err_ty(),
-                                None => Type::Any,
-                            })
-                            .collect();
-
-                        let recv_decl_ty = Type::from_hint(
-                            &method_info.receiver_hint,
-                            &self.env.types,
-                            &ty_var_env,
-                        )
-                        .unwrap_or_err_ty();
-                        unify_and_solve_ty(&recv_decl_ty, &receiver_ty, &mut ty_var_env);
-
-                        let mut arg_tys = vec![];
-                        for arg in &paren_args.arguments {
-                            let arg_ty =
-                                self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                            arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
-                        }
-
-                        for (param_ty, (arg_ty, _, _)) in param_decl_tys.iter().zip(arg_tys.iter())
-                        {
-                            unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
-                        }
-
-                        let params = param_decl_tys
-                            .iter()
-                            .map(|p| substitute_ty_vars(p, &ty_var_env))
-                            .collect::<Vec<_>>();
-
-                        for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
-                            if !is_subtype(arg_ty, param_ty) {
-                                self.diagnostics.push(Diagnostic {
-                                    notes: vec![],
-                                    severity: Severity::Error,
-                                    message: format_type_mismatch(param_ty, arg_ty),
-                                    position: arg_pos.clone(),
-                                });
-                            }
-                        }
-
-                        if fun_info.params.params.len() != paren_args.arguments.len() {
-                            let name = format!("{}::{}", receiver_ty_name, sym.name);
-                            self.arity_diagnostics(Some(&name), &params, &arg_tys, paren_args);
-                        }
-
-                        let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
-                            self.env,
-                            method_info,
-                            &recv.position,
-                            &receiver_ty,
-                            &arg_tys,
-                            &mut ty_var_env,
-                        );
-                        self.diagnostics.extend(more_diagnostics);
-
-                        ret_ty
-                    }
-                    None => {
-                        // No method exists with that name on this type.
-
-                        for arg in &paren_args.arguments {
-                            self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
-                        }
-
-                        let available_methods = methods.keys().collect::<Vec<_>>();
-                        let suggest =
-                            if let Some(similar) = most_similar(&available_methods, &sym.name) {
-                                // TODO: consider arity and types when
-                                // trying to suggest the best
-                                // alternative.
-                                format!(" Did you mean `{similar}`?")
-                            } else {
-                                "".to_owned()
-                            };
-
-                        self.diagnostics.push(Diagnostic {
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgcode!("{}", receiver_ty_name),
-                                msgtext!(" has no method "),
-                                msgcode!("{}", sym.name),
-                                msgtext!(".{}", suggest),
-                            ]),
-                            position: sym.position.clone(),
-                            notes: vec![],
-                        });
-                        Type::error("No such method on this type")
-                    }
-                }
+                self.infer_method_call(recv, sym, paren_args, type_bindings, expected_return_ty)
             }
             Expression_::DotAccess(recv, field_sym) => {
-                let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
-                let Some(recv_ty_name) = recv_ty.type_name() else {
-                    return Type::error("No type name found for this receiver");
-                };
-
-                match recv_ty {
-                    Type::UserDefined {
-                        kind: TypeDefKind::Struct,
-                        ref name,
-                        ..
-                    } => {
-                        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(name) {
-                            for field in &struct_info.fields {
-                                if field.sym.name == field_sym.name {
-                                    self.id_to_def_pos
-                                        .insert(field_sym.id, field.sym.position.clone());
-
-                                    let field_ty = Type::from_hint(
-                                        &field.hint,
-                                        &self.env.types,
-                                        type_bindings,
-                                    )
-                                    .unwrap_or_err_ty();
-                                    return field_ty;
-                                }
-                            }
-
-                            let notes = match recv_ty.def_sym_pos(self.env) {
-                                Some(pos) => vec![(
-                                    ErrorMessage(vec![
-                                        msgcode!("{}", recv_ty_name),
-                                        msgtext!(" is defined here."),
-                                    ]),
-                                    pos,
-                                )],
-                                None => vec![],
-                            };
-
-                            self.diagnostics.push(Diagnostic {
-                                notes,
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgtext!("Struct "),
-                                    msgcode!("{}", recv_ty_name),
-                                    msgtext!(" has no field "),
-                                    msgcode!("{}", field_sym.name),
-                                    msgtext!("."),
-                                ]),
-                                position: field_sym.position.clone(),
-                            });
-
-                            Type::error("No struct field with this name")
-                        } else {
-                            self.diagnostics.push(Diagnostic {
-                                notes: vec![],
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgcode!("{}", recv_ty_name),
-                                    msgtext!(" is not a struct."),
-                                ]),
-                                position: field_sym.position.clone(),
-                            });
-
-                            Type::error("No type with this name or type is not a struct")
-                        }
-                    }
-                    _ => {
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgcode!("{}", recv_ty_name),
-                                msgtext!(" is not a struct."),
-                            ]),
-                            position: field_sym.position.clone(),
-                        });
-
-                        Type::error("This type is not a user-defined type")
-                    }
-                }
+                self.infer_dot_access(recv, field_sym, type_bindings, expected_return_ty)
             }
             Expression_::NamespaceAccess(recv, sym) => {
                 self.infer_namespace_access(recv, sym, type_bindings, expected_return_ty)
@@ -1431,6 +1021,439 @@ impl TypeCheckVisitor<'_> {
                 // We've already emitted a parse error, so use the
                 // bottom type to prevent later type errors.
                 Type::no_value()
+            }
+        }
+    }
+
+    fn infer_dot_access(
+        &mut self,
+        recv: &Rc<Expression>,
+        field_sym: &Symbol,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
+        let Some(recv_ty_name) = recv_ty.type_name() else {
+            return Type::error("No type name found for this receiver");
+        };
+
+        match recv_ty {
+            Type::UserDefined {
+                kind: TypeDefKind::Struct,
+                ref name,
+                ..
+            } => {
+                if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(name) {
+                    for field in &struct_info.fields {
+                        if field.sym.name == field_sym.name {
+                            self.id_to_def_pos
+                                .insert(field_sym.id, field.sym.position.clone());
+
+                            let field_ty =
+                                Type::from_hint(&field.hint, &self.env.types, type_bindings)
+                                    .unwrap_or_err_ty();
+                            return field_ty;
+                        }
+                    }
+
+                    let notes = match recv_ty.def_sym_pos(self.env) {
+                        Some(pos) => vec![(
+                            ErrorMessage(vec![
+                                msgcode!("{}", recv_ty_name),
+                                msgtext!(" is defined here."),
+                            ]),
+                            pos,
+                        )],
+                        None => vec![],
+                    };
+
+                    self.diagnostics.push(Diagnostic {
+                        notes,
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Struct "),
+                            msgcode!("{}", recv_ty_name),
+                            msgtext!(" has no field "),
+                            msgcode!("{}", field_sym.name),
+                            msgtext!("."),
+                        ]),
+                        position: field_sym.position.clone(),
+                    });
+
+                    Type::error("No struct field with this name")
+                } else {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgcode!("{}", recv_ty_name),
+                            msgtext!(" is not a struct."),
+                        ]),
+                        position: field_sym.position.clone(),
+                    });
+
+                    Type::error("No type with this name or type is not a struct")
+                }
+            }
+            _ => {
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgcode!("{}", recv_ty_name),
+                        msgtext!(" is not a struct."),
+                    ]),
+                    position: field_sym.position.clone(),
+                });
+
+                Type::error("This type is not a user-defined type")
+            }
+        }
+    }
+
+    fn infer_method_call(
+        &mut self,
+        recv: &Rc<Expression>,
+        sym: &Symbol,
+        paren_args: &ParenthesizedArguments,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        let receiver_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
+        if matches!(receiver_ty, Type::Error { .. }) {
+            for arg in &paren_args.arguments {
+                self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+            }
+
+            // Allow calling methods on error types, to avoid cascading errors.
+            return Type::error("Called method on an error type");
+        }
+
+        let Some(receiver_ty_name) = receiver_ty.type_name() else {
+            for arg in &paren_args.arguments {
+                self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+            }
+
+            self.diagnostics.push(Diagnostic {
+                notes: vec![],
+                severity: Severity::Error,
+                message: ErrorMessage(vec![
+                    msgtext!("Expected a type with a "),
+                    msgcode!("{}", sym.name),
+                    msgtext!(" method, but got "),
+                    msgcode!("{}", receiver_ty),
+                    msgtext!("."),
+                ]),
+                position: recv.position.clone(),
+            });
+            return Type::error("No type name for this method receiver");
+        };
+
+        let methods = self
+            .env
+            .types
+            .get(&receiver_ty_name)
+            .cloned()
+            .map(|tdm| tdm.methods)
+            .unwrap_or_default();
+
+        match methods.get(&sym.name) {
+            Some(method_info) => {
+                self.id_to_def_pos
+                    .insert(sym.id, method_info.name_sym.position.clone());
+
+                let Some(fun_info) = method_info.fun_info() else {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![msgtext!("Tried to call a method that has no fun_info. This means there's a bug in prelude loading.")]),
+                        position: sym.position.clone(),
+                    });
+                    return Type::error("This method has no fun_info");
+                };
+
+                if let Some(def_id) = fun_info.item_id {
+                    self.callees
+                        .entry(self.current_item)
+                        .or_default()
+                        .insert(def_id);
+                }
+
+                let mut ty_var_env = TypeVarEnv::default();
+                for type_param in &fun_info.type_params {
+                    ty_var_env.insert(type_param.name.clone(), None);
+                }
+
+                let param_decl_tys: Vec<Type> = fun_info
+                    .params
+                    .params
+                    .iter()
+                    .map(|sym_with_hint| match &sym_with_hint.hint {
+                        Some(hint) => {
+                            Type::from_hint(hint, &self.env.types, &ty_var_env).unwrap_or_err_ty()
+                        }
+                        None => Type::Any,
+                    })
+                    .collect();
+
+                let recv_decl_ty =
+                    Type::from_hint(&method_info.receiver_hint, &self.env.types, &ty_var_env)
+                        .unwrap_or_err_ty();
+                unify_and_solve_ty(&recv_decl_ty, &receiver_ty, &mut ty_var_env);
+
+                let mut arg_tys = vec![];
+                for arg in &paren_args.arguments {
+                    let arg_ty = self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                    arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
+                }
+
+                for (param_ty, (arg_ty, _, _)) in param_decl_tys.iter().zip(arg_tys.iter()) {
+                    unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                }
+
+                let params = param_decl_tys
+                    .iter()
+                    .map(|p| substitute_ty_vars(p, &ty_var_env))
+                    .collect::<Vec<_>>();
+
+                for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
+                    if !is_subtype(arg_ty, param_ty) {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![],
+                            severity: Severity::Error,
+                            message: format_type_mismatch(param_ty, arg_ty),
+                            position: arg_pos.clone(),
+                        });
+                    }
+                }
+
+                if fun_info.params.params.len() != paren_args.arguments.len() {
+                    let name = format!("{}::{}", receiver_ty_name, sym.name);
+                    self.arity_diagnostics(Some(&name), &params, &arg_tys, paren_args);
+                }
+
+                let (more_diagnostics, ret_ty) = subst_type_vars_in_meth_return_ty(
+                    self.env,
+                    method_info,
+                    &recv.position,
+                    &receiver_ty,
+                    &arg_tys,
+                    &mut ty_var_env,
+                );
+                self.diagnostics.extend(more_diagnostics);
+
+                ret_ty
+            }
+            None => {
+                // No method exists with that name on this type.
+
+                for arg in &paren_args.arguments {
+                    self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                }
+
+                let available_methods = methods.keys().collect::<Vec<_>>();
+                let suggest = if let Some(similar) = most_similar(&available_methods, &sym.name) {
+                    // TODO: consider arity and types when
+                    // trying to suggest the best
+                    // alternative.
+                    format!(" Did you mean `{similar}`?")
+                } else {
+                    "".to_owned()
+                };
+
+                self.diagnostics.push(Diagnostic {
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgcode!("{}", receiver_ty_name),
+                        msgtext!(" has no method "),
+                        msgcode!("{}", sym.name),
+                        msgtext!(".{}", suggest),
+                    ]),
+                    position: sym.position.clone(),
+                    notes: vec![],
+                });
+                Type::error("No such method on this type")
+            }
+        }
+    }
+
+    fn infer_call(
+        &mut self,
+        pos: &Position,
+        recv: &Expression,
+        paren_args: &ParenthesizedArguments,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        if let Expression_::Variable(s) = &recv.expr_ {
+            if s.name.text == "todo" && self.bindings.get(&SymbolName::from("todo")).is_none() {
+                self.diagnostics.push(Diagnostic {
+                    message: ErrorMessage(vec![Text("Unfinished code.".to_owned())]),
+                    position: pos.clone(),
+                    notes: vec![],
+                    severity: Severity::Warning,
+                });
+            }
+        }
+
+        let recv_ty = self.infer_expr(recv, type_bindings, expected_return_ty);
+
+        match recv_ty {
+            Type::Fun {
+                type_params,
+                params,
+                return_,
+                name_sym,
+            } => {
+                let mut ty_var_env = TypeVarEnv::default();
+                for type_param in type_params {
+                    ty_var_env.insert(type_param.clone(), None);
+                }
+
+                let mut arg_tys = vec![];
+                for arg in &paren_args.arguments {
+                    let arg_ty = self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+
+                    arg_tys.push((arg_ty, arg.expr.position.clone(), arg.comma.clone()));
+                }
+
+                for (param_ty, (arg_ty, _, _)) in params.iter().zip(arg_tys.iter()) {
+                    unify_and_solve_ty(param_ty, arg_ty, &mut ty_var_env);
+                }
+
+                let params = params
+                    .iter()
+                    .map(|p| substitute_ty_vars(p, &ty_var_env))
+                    .collect::<Vec<_>>();
+
+                if params.len() == arg_tys.len() {
+                    // Only check argument types if we have the right number of
+                    // arguments. Otherwise, it's likely that the types are valid,
+                    // but there were missing previous arguments.
+                    for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {
+                        if !is_subtype(arg_ty, param_ty) {
+                            self.diagnostics.push(Diagnostic {
+                                notes: vec![],
+                                severity: Severity::Error,
+                                message: format_type_mismatch(param_ty, arg_ty),
+                                position: arg_pos.clone(),
+                            });
+                        }
+                    }
+                } else {
+                    let name = name_sym.map(|sym| sym.name.text.clone());
+                    self.arity_diagnostics(name.as_ref(), &params, &arg_tys, paren_args);
+                }
+
+                substitute_ty_vars(&return_, &ty_var_env)
+            }
+            Type::Error {
+                internal_reason,
+                inferred_type: _,
+            } => {
+                for arg in &paren_args.arguments {
+                    // We still want to check arguments as far as possible.
+                    self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                }
+
+                // If the receiver is an error, propagate the
+                // reason to aid debugging, but not the
+                // inferred type (which isn't relevant).
+                Type::Error {
+                    internal_reason,
+                    inferred_type: None,
+                }
+            }
+            _ => {
+                for arg in &paren_args.arguments {
+                    // We still want to check arguments as far as possible.
+                    self.infer_expr(&arg.expr, type_bindings, expected_return_ty);
+                }
+
+                self.diagnostics.push(Diagnostic {
+                    notes: vec![],
+                    severity: Severity::Error,
+                    message: ErrorMessage(vec![
+                        msgtext!("Expected a function, but got "),
+                        msgcode!("{}", recv_ty),
+                        msgtext!("."),
+                    ]),
+                    position: recv.position.clone(),
+                });
+
+                Type::Error {
+                    internal_reason: "Calling something that isn't a function".to_owned(),
+                    inferred_type: None,
+                }
+            }
+        }
+    }
+
+    fn infer_var(&mut self, expr_id: SyntaxId, sym: &Symbol) -> Type {
+        if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
+            self.id_to_def_pos.insert(sym.id, position.clone());
+            self.id_to_ty.insert(sym.id, value_ty.clone());
+            self.id_to_ty.insert(expr_id, value_ty.clone());
+            return value_ty.clone();
+        }
+
+        match self.get_var(&sym.name) {
+            Some(value) => {
+                let fun_info = match value.as_ref() {
+                    Value_::Fun { fun_info, .. } => Some(fun_info),
+                    Value_::Closure(_, fun_info, _) => Some(fun_info),
+                    Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
+                    _ => None,
+                };
+                if let Some(fun_info) = fun_info {
+                    if let Some(def_id) = fun_info.item_id {
+                        self.callees
+                            .entry(self.current_item)
+                            .or_default()
+                            .insert(def_id);
+                    }
+
+                    if let Some(fun_sym) = &fun_info.name_sym {
+                        self.id_to_def_pos.insert(sym.id, fun_sym.position.clone());
+                    }
+
+                    if let Some(doc_comment) = &fun_info.doc_comment {
+                        self.id_to_doc_comment.insert(sym.id, doc_comment.clone());
+                    }
+                }
+
+                if matches!(
+                    value.as_ref(),
+                    Value_::EnumVariant { .. } | Value_::EnumConstructor { .. }
+                ) {
+                    self.save_enum_variant_id(sym, value.clone());
+                }
+
+                Type::from_value(&value)
+            }
+            None => {
+                let ty = Type::Error {
+                    internal_reason: "Unbound variable".to_owned(),
+                    inferred_type: None,
+                };
+                // Treat this variable as locally bound in the
+                // rest of the scope, to prevent cascading
+                // errors.
+                self.set_binding(sym, ty.clone());
+
+                if sym.name.text != "__BUILTIN_IMPLEMENTATION" {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Unbound symbol: "),
+                            msgcode!("{}", sym.name),
+                        ]),
+                        position: sym.position.clone(),
+                    });
+                }
+
+                ty
             }
         }
     }

@@ -1650,98 +1650,104 @@ impl TypeCheckVisitor<'_> {
     ) -> Type {
         self.verify_expr(&Type::namespace(), recv, type_bindings, expected_return_ty);
 
-        match &recv.expr_ {
-            Expression_::Variable(recv_symbol)
-                if self.bindings.get(&recv_symbol.name).is_none() =>
-            {
-                match self.get_var(&recv_symbol.name) {
-                    Some(value) => match value.as_ref() {
-                        Value_::Namespace(ns) => {
-                            let ns = ns.borrow();
-                            let values = &ns.values;
+        let Expression_::Variable(recv_symbol) = &recv.expr_ else {
+            self.diagnostics.push(Diagnostic {
+                notes: vec![],
+                severity: Severity::Warning,
+                message: ErrorMessage(vec![msgtext!(
+                    "Cannot statically determine the namespace here."
+                )]),
+                position: recv.position.clone(),
+            });
 
-                            match values.get(&sym.name) {
-                                Some(value) => {
-                                    if !ns.exported_syms.contains(&sym.name) {
-                                        let mut name_pos = None;
-                                        match value.as_ref() {
-                                            Value_::Fun { fun_info, .. }
-                                            | Value_::BuiltinFunction(_, Some(fun_info), _) => {
-                                                if let Some(name_sym) = &fun_info.name_sym {
-                                                    name_pos = Some(name_sym.position.clone());
-                                                }
-                                            }
-                                            _ => {}
+            return Type::Any;
+        };
+
+        if self.bindings.get(&recv_symbol.name).is_some() {
+            self.diagnostics.push(Diagnostic {
+                notes: vec![],
+                severity: Severity::Warning,
+                message: ErrorMessage(vec![msgtext!(
+                    "Cannot statically determine the namespace here."
+                )]),
+                position: recv.position.clone(),
+            });
+
+            return Type::Any;
+        }
+
+        match self.get_var(&recv_symbol.name) {
+            Some(value) => match value.as_ref() {
+                Value_::Namespace(ns) => {
+                    let ns = ns.borrow();
+                    let values = &ns.values;
+
+                    match values.get(&sym.name) {
+                        Some(value) => {
+                            if !ns.exported_syms.contains(&sym.name) {
+                                let mut name_pos = None;
+                                match value.as_ref() {
+                                    Value_::Fun { fun_info, .. }
+                                    | Value_::BuiltinFunction(_, Some(fun_info), _) => {
+                                        if let Some(name_sym) = &fun_info.name_sym {
+                                            name_pos = Some(name_sym.position.clone());
                                         }
-
-                                        let notes = match name_pos {
-                                            Some(name_pos) => {
-                                                vec![(
-                                                    ErrorMessage(vec![
-                                                        msgcode!("{}", sym.name),
-                                                        msgtext!(" is defined here."),
-                                                    ]),
-                                                    name_pos,
-                                                )]
-                                            }
-                                            None => vec![],
-                                        };
-
-                                        self.diagnostics.push(Diagnostic {
-                                                    notes,
-                                                    severity: Severity::Error,
-                                                    message: ErrorMessage(vec![
-                                                        msgcode!("{}", sym.name),
-                                                        msgtext!(" is not marked as "),
-                                                        msgcode!("external"),
-                                                        msgtext!(" so it cannot be used outside the file that contains it."),
-                                                    ]),
-                                                    position: sym.position.clone(),
-                                                });
                                     }
-
-                                    Type::from_value(value)
+                                    _ => {}
                                 }
-                                None => {
-                                    // TODO: suggest similar names here.
-                                    self.diagnostics.push(Diagnostic {
-                                        notes: vec![],
-                                        severity: Severity::Error,
-                                        message: ErrorMessage(vec![
-                                            msgcode!(
-                                                "{}",
-                                                self.env
-                                                    .relative_to_project(&ns.abs_path)
-                                                    .display()
-                                            ),
-                                            msgtext!(" does not contain an item named "),
-                                            msgcode!("{}", sym.name),
-                                            msgtext!("."),
-                                        ]),
-                                        position: sym.position.clone(),
-                                    });
 
-                                    Type::error("No such symbol in this namespace")
-                                }
+                                let notes = match name_pos {
+                                    Some(name_pos) => {
+                                        vec![(
+                                            ErrorMessage(vec![
+                                                msgcode!("{}", sym.name),
+                                                msgtext!(" is defined here."),
+                                            ]),
+                                            name_pos,
+                                        )]
+                                    }
+                                    None => vec![],
+                                };
+
+                                self.diagnostics.push(Diagnostic {
+                                    notes,
+                                    severity: Severity::Error,
+                                    message: ErrorMessage(vec![
+                                        msgcode!("{}", sym.name),
+                                        msgtext!(" is not marked as "),
+                                        msgcode!("external"),
+                                        msgtext!(" so it cannot be used outside the file that contains it."),
+                                    ]),
+                                    position: sym.position.clone(),
+                                });
                             }
-                        }
-                        _ => Type::error("Expected a namespace for namespace receiver"),
-                    },
-                    None => Type::error("Unbound symbol (expected a namespace)"),
-                }
-            }
-            _ => {
-                self.diagnostics.push(Diagnostic {
-                    notes: vec![],
-                    severity: Severity::Warning,
-                    message: ErrorMessage(vec![msgtext!(
-                        "Cannot statically determine the namespace here."
-                    )]),
-                    position: recv.position.clone(),
-                });
 
-                Type::Any
-            }
+                            Type::from_value(value)
+                        }
+                        None => {
+                            // TODO: suggest similar names here.
+                            self.diagnostics.push(Diagnostic {
+                                notes: vec![],
+                                severity: Severity::Error,
+                                message: ErrorMessage(vec![
+                                    msgcode!(
+                                        "{}",
+                                        self.env.relative_to_project(&ns.abs_path).display()
+                                    ),
+                                    msgtext!(" does not contain an item named "),
+                                    msgcode!("{}", sym.name),
+                                    msgtext!("."),
+                                ]),
+                                position: sym.position.clone(),
+                            });
+
+                            Type::error("No such symbol in this namespace")
+                        }
+                    }
+                }
+                _ => Type::error("Expected a namespace for namespace receiver"),
+            },
+            None => Type::error("Unbound symbol (expected a namespace)"),
         }
     }
 

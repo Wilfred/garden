@@ -957,122 +957,11 @@ impl TypeCheckVisitor<'_> {
                 Type::Tuple(item_tys)
             }
             Expression_::StructLiteral(name_sym, fields) => {
-                let field_tys: Vec<(&Symbol, Position, Type)> = fields
-                    .iter()
-                    .map(|(sym, expr)| {
-                        let ty = self.infer_expr(expr, type_bindings, expected_return_ty);
-                        (sym, expr.position.clone(), ty)
-                    })
-                    .collect();
-
-                if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym.name) {
-                    self.id_to_def_pos
-                        .insert(name_sym.id, struct_info.name_sym.position.clone());
-
-                    let mut ty_var_env = TypeVarEnv::default();
-                    for type_param in &struct_info.type_params {
-                        ty_var_env.insert(type_param.name.clone(), None);
-                    }
-
-                    let mut sym_to_expected_ty: FxHashMap<SymbolName, (Position, Type)> =
-                        FxHashMap::default();
-                    for field in &struct_info.fields {
-                        let ty = Type::from_hint(&field.hint, &self.env.types, &ty_var_env)
-                            .unwrap_or_err_ty();
-                        sym_to_expected_ty
-                            .insert(field.sym.name.clone(), (field.sym.position.clone(), ty));
-                    }
-
-                    for (sym, expr_pos, ty) in field_tys {
-                        let Some((field_pos, field_ty)) = sym_to_expected_ty.get(&sym.name) else {
-                            continue;
-                        };
-
-                        self.id_to_def_pos.insert(sym.id, field_pos.clone());
-
-                        if !is_subtype(&ty, field_ty) {
-                            self.diagnostics.push(Diagnostic {
-                                notes: vec![],
-                                severity: Severity::Error,
-                                message: ErrorMessage(vec![
-                                    msgtext!("Expected "),
-                                    msgcode!("{}", field_ty),
-                                    msgtext!(" for this field but got "),
-                                    msgcode!("{}", ty),
-                                    msgtext!("."),
-                                ]),
-                                position: expr_pos,
-                            });
-                        }
-                    }
-
-                    Type::UserDefined {
-                        kind: TypeDefKind::Struct,
-                        name: name_sym.name.clone(),
-                        args: vec![],
-                    }
-                } else {
-                    Type::Error {
-                        internal_reason: "Unbound struct name".to_owned(),
-                        inferred_type: None,
-                    }
-                }
+                self.infer_struct_literal(name_sym, fields, type_bindings, expected_return_ty)
             }
-            Expression_::BinaryOperator(lhs, op, rhs) => match op {
-                BinaryOperatorKind::Add
-                | BinaryOperatorKind::Subtract
-                | BinaryOperatorKind::Multiply
-                | BinaryOperatorKind::Divide
-                | BinaryOperatorKind::Modulo
-                | BinaryOperatorKind::Exponent => {
-                    self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
-                    self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
-
-                    Type::int()
-                }
-                BinaryOperatorKind::LessThan
-                | BinaryOperatorKind::LessThanOrEqual
-                | BinaryOperatorKind::GreaterThan
-                | BinaryOperatorKind::GreaterThanOrEqual => {
-                    self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
-                    self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
-
-                    Type::bool()
-                }
-                BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
-                    let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
-                    let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
-
-                    if !is_subtype(&lhs_ty, &rhs_ty) && !is_subtype(&rhs_ty, &lhs_ty) {
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Warning,
-                            message: ErrorMessage(vec![
-                                msgtext!("You should compare values of the same type, but got "),
-                                msgcode!("{}", lhs_ty),
-                                msgtext!(" and "),
-                                msgcode!("{}", rhs_ty),
-                                msgtext!("."),
-                            ]),
-                            position: pos.clone(),
-                        });
-                    }
-
-                    Type::bool()
-                }
-                BinaryOperatorKind::And | BinaryOperatorKind::Or => {
-                    self.verify_expr(&Type::bool(), lhs, type_bindings, expected_return_ty);
-                    self.verify_expr(&Type::bool(), rhs, type_bindings, expected_return_ty);
-
-                    Type::bool()
-                }
-                BinaryOperatorKind::StringConcat => {
-                    self.verify_expr(&Type::string(), lhs, type_bindings, expected_return_ty);
-                    self.verify_expr(&Type::string(), rhs, type_bindings, expected_return_ty);
-
-                    Type::string()
-                }
-            },
+            Expression_::BinaryOperator(lhs, op, rhs) => {
+                self.infer_binary_op(pos, lhs, op, rhs, type_bindings, expected_return_ty)
+            }
             Expression_::Variable(sym) => {
                 if let Some((value_ty, position)) = self.bindings.get(&sym.name) {
                     self.id_to_def_pos.insert(sym.id, position.clone());
@@ -1542,6 +1431,140 @@ impl TypeCheckVisitor<'_> {
                 // We've already emitted a parse error, so use the
                 // bottom type to prevent later type errors.
                 Type::no_value()
+            }
+        }
+    }
+
+    fn infer_binary_op(
+        &mut self,
+        pos: &Position,
+        lhs: &Expression,
+        op: &BinaryOperatorKind,
+        rhs: &Expression,
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        match op {
+            BinaryOperatorKind::Add
+            | BinaryOperatorKind::Subtract
+            | BinaryOperatorKind::Multiply
+            | BinaryOperatorKind::Divide
+            | BinaryOperatorKind::Modulo
+            | BinaryOperatorKind::Exponent => {
+                self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+                self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+
+                Type::int()
+            }
+            BinaryOperatorKind::LessThan
+            | BinaryOperatorKind::LessThanOrEqual
+            | BinaryOperatorKind::GreaterThan
+            | BinaryOperatorKind::GreaterThanOrEqual => {
+                self.verify_expr(&Type::int(), lhs, type_bindings, expected_return_ty);
+                self.verify_expr(&Type::int(), rhs, type_bindings, expected_return_ty);
+
+                Type::bool()
+            }
+            BinaryOperatorKind::Equal | BinaryOperatorKind::NotEqual => {
+                let lhs_ty = self.infer_expr(lhs, type_bindings, expected_return_ty);
+                let rhs_ty = self.infer_expr(rhs, type_bindings, expected_return_ty);
+
+                if !is_subtype(&lhs_ty, &rhs_ty) && !is_subtype(&rhs_ty, &lhs_ty) {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Warning,
+                        message: ErrorMessage(vec![
+                            msgtext!("You should compare values of the same type, but got "),
+                            msgcode!("{}", lhs_ty),
+                            msgtext!(" and "),
+                            msgcode!("{}", rhs_ty),
+                            msgtext!("."),
+                        ]),
+                        position: pos.clone(),
+                    });
+                }
+
+                Type::bool()
+            }
+            BinaryOperatorKind::And | BinaryOperatorKind::Or => {
+                self.verify_expr(&Type::bool(), lhs, type_bindings, expected_return_ty);
+                self.verify_expr(&Type::bool(), rhs, type_bindings, expected_return_ty);
+
+                Type::bool()
+            }
+            BinaryOperatorKind::StringConcat => {
+                self.verify_expr(&Type::string(), lhs, type_bindings, expected_return_ty);
+                self.verify_expr(&Type::string(), rhs, type_bindings, expected_return_ty);
+
+                Type::string()
+            }
+        }
+    }
+
+    fn infer_struct_literal(
+        &mut self,
+        name_sym: &crate::parser::ast::TypeSymbol,
+        fields: &[(Symbol, Rc<Expression>)],
+        type_bindings: &TypeVarEnv,
+        expected_return_ty: &Type,
+    ) -> Type {
+        let field_tys: Vec<(&Symbol, Position, Type)> = fields
+            .iter()
+            .map(|(sym, expr)| {
+                let ty = self.infer_expr(expr, type_bindings, expected_return_ty);
+                (sym, expr.position.clone(), ty)
+            })
+            .collect();
+
+        if let Some(TypeDef::Struct(struct_info)) = self.env.get_type_def(&name_sym.name) {
+            self.id_to_def_pos
+                .insert(name_sym.id, struct_info.name_sym.position.clone());
+
+            let mut ty_var_env = TypeVarEnv::default();
+            for type_param in &struct_info.type_params {
+                ty_var_env.insert(type_param.name.clone(), None);
+            }
+
+            let mut sym_to_expected_ty: FxHashMap<SymbolName, (Position, Type)> =
+                FxHashMap::default();
+            for field in &struct_info.fields {
+                let ty =
+                    Type::from_hint(&field.hint, &self.env.types, &ty_var_env).unwrap_or_err_ty();
+                sym_to_expected_ty.insert(field.sym.name.clone(), (field.sym.position.clone(), ty));
+            }
+
+            for (sym, expr_pos, ty) in field_tys {
+                let Some((field_pos, field_ty)) = sym_to_expected_ty.get(&sym.name) else {
+                    continue;
+                };
+
+                self.id_to_def_pos.insert(sym.id, field_pos.clone());
+
+                if !is_subtype(&ty, field_ty) {
+                    self.diagnostics.push(Diagnostic {
+                        notes: vec![],
+                        severity: Severity::Error,
+                        message: ErrorMessage(vec![
+                            msgtext!("Expected "),
+                            msgcode!("{}", field_ty),
+                            msgtext!(" for this field but got "),
+                            msgcode!("{}", ty),
+                            msgtext!("."),
+                        ]),
+                        position: expr_pos,
+                    });
+                }
+            }
+
+            Type::UserDefined {
+                kind: TypeDefKind::Struct,
+                name: name_sym.name.clone(),
+                args: vec![],
+            }
+        } else {
+            Type::Error {
+                internal_reason: "Unbound struct name".to_owned(),
+                inferred_type: None,
             }
         }
     }

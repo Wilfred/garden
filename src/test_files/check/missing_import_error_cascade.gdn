@@ -25,21 +25,5 @@ ns::stuff()
 //   9| // import.
 //  10| ns::stuff()
 //    | ^^
-//  11| 
-// 
-// Warning: Cannot statically determine the namespace here.
-// ---| src/test_files/check/missing_import_error_cascade.gdn:10:1
-//   8| // This should not have an error, we have already errored on the
-//   9| // import.
-//  10| ns::stuff()
-//    | ^^
-//  11| 
-// 
-// Error: Expected a function, but got `Any`.
-// ---| src/test_files/check/missing_import_error_cascade.gdn:10:1
-//   8| // This should not have an error, we have already errored on the
-//   9| // import.
-//  10| ns::stuff()
-//    | ^^^^^^^^^
 //  11|
 

@@ -1663,7 +1663,11 @@ impl TypeCheckVisitor<'_> {
             return Type::Any;
         };
 
-        if self.bindings.get(&recv_symbol.name).is_some() {
+        if let Some((ty, _)) = self.bindings.get(&recv_symbol.name) {
+            if ty.is_error() {
+                return Type::error("Accessing namespace on error value");
+            }
+
             self.diagnostics.push(Diagnostic {
                 notes: vec![],
                 severity: Severity::Warning,

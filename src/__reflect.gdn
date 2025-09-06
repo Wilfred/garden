@@ -119,6 +119,12 @@ test keywords {
   assert(keywords().contains("if"))
 }
 
+// All the operators in Garden.
+public fun operators(): List<String> {
+  // TODO: finish
+  ["+"]
+}
+
 // Get the source code for the type definition of `name`.
 public fun source_for_type(name: String): Option<String> {
   __BUILTIN_IMPLEMENTATION

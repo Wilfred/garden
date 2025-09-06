@@ -23,6 +23,8 @@ Fixed a crash when evaluating empty blocks.
 
 `__garden.gdn` is now `__reflect.gdn`.
 
+Added `__reflect::operators`.
+
 ## Check
 
 `garden check` now warns on unused type variables.

@@ -1,6 +1,6 @@
 # `+` Operator
 
-`+` adds two integers.
+`+` adds two integers together.
 
 ```
 1 + 2 //-> 3

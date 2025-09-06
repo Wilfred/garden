@@ -248,6 +248,7 @@ fun build_site(): Unit {
   build_blog(website_dir, base_tmpl_src)
 
   let seen_keyword_pages: List<String> = []
+  let seen_operator_pages: List<String> = []
 
   for md_path in markdown_files(website_dir) {
     let file_name = match md_path.file_name() {
@@ -262,6 +263,10 @@ fun build_site(): Unit {
           let keyword = after.strip_suffix(".md")
           seen_keyword_pages = seen_keyword_pages.append(keyword)
           title = Some(keyword)
+        } else if before == "operator" {
+          let keyword = after.strip_suffix(".md")
+          seen_operator_pages = seen_operator_pages.append(keyword)
+          title = Some(keyword)
         }
       }
       None => {}
@@ -272,7 +277,13 @@ fun build_site(): Unit {
 
   for keyword in reflect::keywords() {
     if seen_keyword_pages.contains(keyword).not() {
-      println("Expected a page documenting: " ^ keyword)
+      println("Expected a page documenting keyword: " ^ keyword)
+    }
+  }
+
+  for operator in reflect::operators() {
+    if seen_operator_pages.contains(operator).not() {
+      println("Expected a page documenting operator: " ^ operator)
     }
   }
 

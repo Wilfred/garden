@@ -37,10 +37,17 @@ h6 {
   margin-bottom: 0;
 }
 
-header > a {
-  padding-left: 16px;
+header > a,
+header .title-container > a {
+  padding-left: 10px;
   color: var(--cream);
   font-size: 36px;
+}
+
+.title-container {
+  width: 100%;
+  max-width: 800px;
+  padding-top: 10px;
 }
 
 code {
@@ -96,7 +103,7 @@ header {
 
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   flex-shrink: 0;
   padding: 4px;
@@ -142,6 +149,7 @@ nav {
   flex-direction: row;
   flex-shrink: 1;
   overflow-x: auto;
+  float: right;
 }
 
 header {

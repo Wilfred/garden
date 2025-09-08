@@ -6,7 +6,7 @@ __KEYWORDS
 
 ## Operators
 
-[`+`](./operator:+.html)
+__OPERATORS
 
 ## Built-in Types
 

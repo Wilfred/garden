@@ -331,6 +331,12 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
 
   let keyword_links = join_with_commas_and(keyword_links)
 
+  let operator_links = reflect::operators().map(fun(operator: String) {
+    "".join(["[`", operator, "`](./operator:", operator, ".html)"])
+  })
+
+  let operator_links = join_with_commas_and(operator_links)
+
   let type_links = reflect::prelude_types().map(fun(name: String) {
     "".join(["[`", name, "`](./type:", name, ".html)"])
   })
@@ -382,6 +388,7 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
 
   src
     .replace("__KEYWORDS", keyword_links)
+    .replace("__OPERATORS", operator_links)
     .replace("__BUILTIN_TYPES", type_links)
     .replace("__PRELUDE_FUNS", prelude_funs)
     .replace("__FS_FUNS", fs_funs)

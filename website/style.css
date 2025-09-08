@@ -121,11 +121,15 @@ a {
   text-decoration: none;
   border-bottom: 2px dotted var(--green-primary);
 }
+a:hover {
+  border-bottom: 2px solid var(--green-primary);
+}
 
 pre a {
   border-bottom: 0;
 }
 pre a:hover {
+  border-bottom: 0;
   text-decoration: underline;
   text-decoration-color: inherit;
 }

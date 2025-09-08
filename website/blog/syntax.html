@@ -36,7 +36,7 @@ build something that everyone will use.</p>
 playground for my ideas.</p>
 <p>Instead of grand declarations, let's talk about something unavoidable:
 basic syntax.</p>
-<pre><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
+<pre><span class="code-title">Function</span><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
   <a class="keyword" href="/keyword:if.html">if</a> i &lt; 2 {
     <a class="keyword" href="/keyword:return.html">return</a> 1
   }
@@ -48,7 +48,7 @@ basic syntax.</p>
 <a href="https://steveklabnik.com/writing/the-language-strangeness-budget/">strangeness
 budget</a>
 on syntax, so it's deliberately conventional.</p>
-<pre><code><a class="keyword" href="/keyword:let.html">let</a> i = 10
+<pre><span class="code-title">Conventional Loops</span><code><a class="keyword" href="/keyword:let.html">let</a> i = 10
 <a class="keyword" href="/keyword:while.html">while</a> i &gt; 0 {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(i))
   i -= 1
@@ -69,7 +69,7 @@ Hermans (creator of <a href="https://hedy.org/">Hedy</a>). Felienne talks about
 the advantages of reading code aloud when teaching, and I want to
 support that. I say code aloud sometimes too, especially in
 conversations.</p>
-<pre><code><a class="keyword" href="/keyword:fun.html">fun</a> say_hello(): <a class="type" href="/type:Unit.html">Unit</a> {
+<pre><span class="code-title">Keywords</span><code><a class="keyword" href="/keyword:fun.html">fun</a> say_hello(): <a class="type" href="/type:Unit.html">Unit</a> {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<span class="string">"Hello, World!"</span>)
 }</code></pre>
 <h2>Breaking Convention</h2>
@@ -81,7 +81,7 @@ doesn't suit a traditional class definition. Nesting all your methods
 inside one big class definition doesn't make sense.</p>
 <p>Instead, methods are defined at the same indentation level as
 functions, similar to Go.</p>
-<pre><code><a class="keyword" href="/keyword:struct.html">struct</a> <span class="type">Person</span> {
+<pre><span class="code-title">Methods</span><code><a class="keyword" href="/keyword:struct.html">struct</a> <span class="type">Person</span> {
   name: <a class="type" href="/type:String.html">String</a>,
 }
 

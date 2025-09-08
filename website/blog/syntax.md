@@ -15,7 +15,7 @@ playground for my ideas.
 Instead of grand declarations, let's talk about something unavoidable:
 basic syntax.
 
-```
+```title:Function
 fun fib(i: Int): Int {
   if i < 2 {
     return 1
@@ -32,7 +32,7 @@ Garden is a curly-brace language. I don't want to spend my
 budget](https://steveklabnik.com/writing/the-language-strangeness-budget/)
 on syntax, so it's deliberately conventional.
 
-```
+```title:"Conventional Loops"
 let i = 10
 while i > 0 {
   println(string_repr(i))
@@ -60,7 +60,7 @@ the advantages of reading code aloud when teaching, and I want to
 support that. I say code aloud sometimes too, especially in
 conversations.
 
-```
+```title:Keywords
 fun say_hello(): Unit {
   println("Hello, World!")
 }
@@ -79,7 +79,7 @@ inside one big class definition doesn't make sense.
 Instead, methods are defined at the same indentation level as
 functions, similar to Go.
 
-```
+```title:Methods
 struct Person {
   name: String,
 }

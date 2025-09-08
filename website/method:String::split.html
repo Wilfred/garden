@@ -45,7 +45,7 @@
     <a class="keyword" href="/keyword:match.html">match</a> s.index_of(needle) {
       <span class="type">Some</span>(i) =&gt; {
         parts = parts.append(s.substring(0, i))
-        s = s.substring(i + needle.len(), s.len())
+        s = s.substring(i <a class="operator" href="/operator:+.html">+</a> needle.len(), s.len())
       }
       <span class="type">None</span> =&gt; {
         parts = parts.append(s)

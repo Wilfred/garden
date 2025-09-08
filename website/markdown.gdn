@@ -248,6 +248,7 @@ fun render_markdown_garden_code(snippet: Snippet): String {
   }
 
   let keywords = reflect::keywords()
+  let operators = reflect::operators()
   let prelude_funs = reflect::namespace_functions(prelude)
   let rendered_lines: List<String> = []
 
@@ -270,6 +271,9 @@ fun render_markdown_garden_code(snippet: Snippet): String {
       } else if keywords.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         "<a class=\"keyword\" href=\"/keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+      } else if operators.contains(tok) {
+        let after_tok = part.substring(tok.len(), part.len())
+        "<a class=\"operator\" href=\"/operator:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if prelude_funs.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         "<a href=\"/fun:__prelude.gdn::" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok

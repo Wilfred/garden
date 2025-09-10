@@ -32,7 +32,7 @@
 <pre><span class="code-title">Example 1</span><code><a class="keyword" href="/keyword:let.html">let</a> flavors = [<span class="string">"Chocolate"</span>, <span class="string">"Strawberry"</span>, <span class="string">"Mint"</span>, <span class="string">"Vanilla"</span>]
 
 <a class="keyword" href="/keyword:for.html">for</a> flavor <a class="keyword" href="/keyword:in.html">in</a> flavors {
-  <a class="keyword" href="/keyword:if.html">if</a> flavor == <span class="string">"Mint" </span>{
+  <a class="keyword" href="/keyword:if.html">if</a> flavor <a class="operator" href="/operator:==.html">==</a> <span class="string">"Mint" </span>{
     <a class="keyword" href="/keyword:break.html">break</a>
   }
   <a href="/fun:__prelude.gdn::println.html">println</a>(flavor ^ <span class="string">" ice cream is yummy."</span>)
@@ -45,7 +45,7 @@ immediately starts the next iteration.</p>
 <pre><span class="code-title">Example 2</span><code><a class="keyword" href="/keyword:let.html">let</a> flavors = [<span class="string">"Chocolate"</span>, <span class="string">"Strawberry"</span>, <span class="string">"Mint"</span>, <span class="string">"Vanilla"</span>]
 
 <a class="keyword" href="/keyword:for.html">for</a> flavor <a class="keyword" href="/keyword:in.html">in</a> flavors {
-  <a class="keyword" href="/keyword:if.html">if</a> flavor == <span class="string">"Mint" </span>{
+  <a class="keyword" href="/keyword:if.html">if</a> flavor <a class="operator" href="/operator:==.html">==</a> <span class="string">"Mint" </span>{
     <a class="keyword" href="/keyword:continue.html">continue</a> <span class="comment">// Yuck.</span>
   }
   <a href="/fun:__prelude.gdn::println.html">println</a>(flavor ^ <span class="string">" ice cream is yummy."</span>)

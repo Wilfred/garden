@@ -53,7 +53,7 @@ fun write_fun_page(ns_name: String, ns: Namespace, fun_name: String, out_dir: Pa
         "Tried to generate a page for ",
         qualified_name,
         " but it doesn't have a doc comment."]
-      println("".join(parts))
+      log::warn("".join(parts))
     }
   }
 }
@@ -277,13 +277,13 @@ fun build_site(): Unit {
 
   for keyword in reflect::keywords() {
     if seen_keyword_pages.contains(keyword).not() {
-      println("Expected a page documenting keyword: " ^ keyword)
+      log::warn("Expected a page documenting keyword: " ^ keyword)
     }
   }
 
   for operator in reflect::operators() {
     if seen_operator_pages.contains(operator).not() {
-      println("Expected a page documenting operator: " ^ operator)
+      log::warn("Expected a page documenting operator: " ^ operator)
     }
   }
 

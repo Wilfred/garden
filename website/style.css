@@ -24,6 +24,8 @@ body {
 
 p {
   line-height: 30px;
+  margin-top: 0;
+  margin-bottom: 26px;
 }
 
 h1,
@@ -139,7 +141,7 @@ pre a:hover {
 }
 
 h2 {
-  margin-top: 48px;
+  margin-top: 20px;
   margin-bottom: 12px;
 }
 

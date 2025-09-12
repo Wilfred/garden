@@ -125,6 +125,10 @@ a:hover {
   border-bottom: 2px solid var(--green-primary);
 }
 
+a:has(> code):hover {
+  border-bottom: 0;
+}
+
 pre a {
   border-bottom: 0;
 }

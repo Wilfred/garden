@@ -398,7 +398,7 @@ the user entering a value in the *garden* buffer."
                          (push (garden--fontify-error (concat err-msg "\n")) messages)))
                      (s-join "\n" messages)))
                   ((string= response-kind "ready")
-                   (garden--propertize-read-only (concat response-value "\n")))
+                   (garden--propertize-read-only (concat response-value "\n\n")))
                   ((string= response-kind "printed")
                    (message "%s" response-value)
                    (garden--propertize-read-only response-value))
@@ -449,10 +449,11 @@ the user entering a value in the *garden* buffer."
             (cond
              ((and
                (or (string= response-kind "evaluate")
-                   (string= response-kind "run_command"))
+                   (string= response-kind "run_command")
+                   (string= response-kind "ready"))
                (not (garden--prompt-empty-p)))
               ;; Just finished this expression or command in the REPL,
-              ;; provide new prompt.
+              ;; provide a new prompt.
               (insert
                s
                (garden--fontify-prompt (format "%s>" garden--top-stack-name))

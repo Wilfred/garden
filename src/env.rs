@@ -485,7 +485,8 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     assert_eq!(
         diags.len(),
         0,
-        "Loading the prelude should produce zero warnings and errors."
+        "Loading the prelude should not produce diagnostics, but got: {}",
+        diags[0].message.as_string(),
     );
 
     let builtin_methods = vec![

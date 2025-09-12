@@ -523,7 +523,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     ];
 
     for (type_name, methods) in builtin_methods {
-        let Some(path_def_and_methods) = env.types.get_mut(&TypeName {
+        let Some(type_def_and_methods) = env.types.get_mut(&TypeName {
             text: type_name.to_owned(),
         }) else {
             continue;
@@ -536,7 +536,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
                 text: name.to_owned(),
             };
 
-            if let Some(existing_meth) = path_def_and_methods.methods.get_mut(&name) {
+            if let Some(existing_meth) = type_def_and_methods.methods.get_mut(&name) {
                 existing_meth.kind =
                     MethodKind::BuiltinMethod(builtin_kind, existing_meth.fun_info().cloned());
             }

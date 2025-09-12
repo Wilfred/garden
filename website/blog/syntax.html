@@ -48,7 +48,7 @@ basic syntax.</p>
 <a href="https://steveklabnik.com/writing/the-language-strangeness-budget/">strangeness
 budget</a>
 on syntax, so it's deliberately conventional.</p>
-<pre><span class="code-title">Conventional Loops</span><code><a class="keyword" href="/keyword:let.html">let</a> i = 10
+<pre><span class="code-title">Conventional Loops</span><code><a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> 10
 <a class="keyword" href="/keyword:while.html">while</a> i &gt; 0 {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(i))
   i <a class="operator" href="/operator:-=.html">-=</a> 1
@@ -90,7 +90,7 @@ functions, similar to Go.</p>
 }
 
 <a class="keyword" href="/keyword:fun.html">fun</a> demo(): <a class="type" href="/type:Unit.html">Unit</a> {
-  <a class="keyword" href="/keyword:let.html">let</a> p = <span class="type">Person</span>{ name: <span class="string">"Wilfred" </span>}
+  <a class="keyword" href="/keyword:let.html">let</a> p <a class="operator" href="/operator:=.html">=</a> <span class="type">Person</span>{ name: <span class="string">"Wilfred" </span>}
   <a href="/fun:__prelude.gdn::println.html">println</a>(p.greet())
 }</code></pre>
 <h2>Next Steps</h2>

@@ -36,12 +36,12 @@ returned as-is.</p>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/foo/bar/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/foo" }</span>
 <a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/" </span>}.parent() <span class="comment">//-&gt; Path{ p: "/" }</span></code></pre>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> parent(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:Path.html">Path</a>&gt; {
-  <a class="keyword" href="/keyword:let.html">let</a> p = this.p.strip_suffix(<span class="string">"/"</span>)
+  <a class="keyword" href="/keyword:let.html">let</a> p <a class="operator" href="/operator:=.html">=</a> this.p.strip_suffix(<span class="string">"/"</span>)
   <a class="keyword" href="/keyword:if.html">if</a> p <a class="operator" href="/operator:==.html">==</a> <span class="string">"" </span>{
     <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
   }
 
-  <a class="keyword" href="/keyword:let.html">let</a> parts = p.split(<span class="string">"/"</span>).slice(0, -1)
+  <a class="keyword" href="/keyword:let.html">let</a> parts <a class="operator" href="/operator:=.html">=</a> p.split(<span class="string">"/"</span>).slice(0, -1)
   <a class="keyword" href="/keyword:if.html">if</a> parts.is_empty() {
     <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
   }

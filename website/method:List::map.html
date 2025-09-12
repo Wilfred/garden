@@ -32,9 +32,9 @@
 results.</p>
 <pre><span class="code-title">Examples</span><code>[1, 2].map(<a class="keyword" href="/keyword:fun.html">fun</a>(x: <a class="type" href="/type:Int.html">Int</a>) { x <a class="operator" href="/operator:+.html">+</a> 1 }) <span class="comment">//-&gt; [2, 3]</span></code></pre>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> map&lt;<span class="type">T</span>, <span class="type">U</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, f: <a class="type" href="/type:Fun.html">Fun</a>&lt;(<span class="type">T</span>), <span class="type">U</span>&gt;): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">U</span>&gt; {
-  <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">U</span>&gt; = []
+  <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">U</span>&gt; <a class="operator" href="/operator:=.html">=</a> []
   <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> this {
-    items = items.append(f(item))
+    items <a class="operator" href="/operator:=.html">=</a> items.append(f(item))
   }
 
   items

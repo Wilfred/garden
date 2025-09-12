@@ -35,15 +35,15 @@ the end.</p>
 [10, 11, 12].slice(1, -1) <span class="comment">//-&gt; [11]</span></code></pre>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> slice&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt;, i: <a class="type" href="/type:Int.html">Int</a>, j: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; {
   <a class="keyword" href="/keyword:if.html">if</a> (j &lt; 0) {
-    j = this.len() <a class="operator" href="/operator:+.html">+</a> j
+    j <a class="operator" href="/operator:=.html">=</a> this.len() <a class="operator" href="/operator:+.html">+</a> j
   }
 
-  <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; = []
+  <a class="keyword" href="/keyword:let.html">let</a> items: <a class="type" href="/type:List.html">List</a>&lt;<span class="type">T</span>&gt; <a class="operator" href="/operator:=.html">=</a> []
 
-  <a class="keyword" href="/keyword:let.html">let</a> index = 0
+  <a class="keyword" href="/keyword:let.html">let</a> index <a class="operator" href="/operator:=.html">=</a> 0
   <a class="keyword" href="/keyword:for.html">for</a> item <a class="keyword" href="/keyword:in.html">in</a> this {
     <a class="keyword" href="/keyword:if.html">if</a> (index &gt;= i) && (index &lt; j) {
-      items = items.append(item)
+      items <a class="operator" href="/operator:=.html">=</a> items.append(item)
     }
 
     index <a class="operator" href="/operator:+=.html">+=</a> 1

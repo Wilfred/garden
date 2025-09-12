@@ -31,7 +31,7 @@
 <p>The extension of this path, if this path is a file whose name
 includes a ".".</p>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> extension(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
-  <a class="keyword" href="/keyword:let.html">let</a> name = <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
+  <a class="keyword" href="/keyword:let.html">let</a> name <a class="operator" href="/operator:=.html">=</a> <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
     <span class="type">Some</span>(name) =&gt; name
     <span class="type">None</span> =&gt; <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
   }

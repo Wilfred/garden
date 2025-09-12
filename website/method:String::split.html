@@ -38,17 +38,17 @@
     <a class="keyword" href="/keyword:return.html">return</a> []
   }
 
-  <a class="keyword" href="/keyword:let.html">let</a> s = this
+  <a class="keyword" href="/keyword:let.html">let</a> s <a class="operator" href="/operator:=.html">=</a> this
 
-  <a class="keyword" href="/keyword:let.html">let</a> parts: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; = []
+  <a class="keyword" href="/keyword:let.html">let</a> parts: <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; <a class="operator" href="/operator:=.html">=</a> []
   <a class="keyword" href="/keyword:while.html">while</a> <span class="type">True</span> {
     <a class="keyword" href="/keyword:match.html">match</a> s.index_of(needle) {
       <span class="type">Some</span>(i) =&gt; {
-        parts = parts.append(s.substring(0, i))
-        s = s.substring(i <a class="operator" href="/operator:+.html">+</a> needle.len(), s.len())
+        parts <a class="operator" href="/operator:=.html">=</a> parts.append(s.substring(0, i))
+        s <a class="operator" href="/operator:=.html">=</a> s.substring(i <a class="operator" href="/operator:+.html">+</a> needle.len(), s.len())
       }
       <span class="type">None</span> =&gt; {
-        parts = parts.append(s)
+        parts <a class="operator" href="/operator:=.html">=</a> parts.append(s)
         <a class="keyword" href="/keyword:break.html">break</a>
       }
     }

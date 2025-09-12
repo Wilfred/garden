@@ -93,7 +93,7 @@ pre.block {
 }
 
 .container {
-  margin-top: 86px;
+  margin-top: 100px;
   margin-left: 10px;
   margin-right: 10px;
 }
@@ -166,7 +166,7 @@ header {
   left: 0;
   right: 0;
   z-index: 100;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
 }
 
 header a {

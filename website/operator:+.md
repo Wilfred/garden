@@ -1,4 +1,4 @@
-# `+` Operator
+# `+` and `+=` Operators
 
 `+` adds two integers together.
 

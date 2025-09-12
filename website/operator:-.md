@@ -1,4 +1,4 @@
-# `-` Operator
+# `-` and `-=` Operators
 
 `-` subtracts the second integer from the first.
 

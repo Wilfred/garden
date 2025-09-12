@@ -390,6 +390,15 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
     );
     types.insert(
         TypeName {
+            text: "HashMap".into(),
+        },
+        TypeDefAndMethods {
+            def: TypeDef::Builtin(BuiltinType::HashMap, None),
+            methods: FxHashMap::default(),
+        },
+    );
+    types.insert(
+        TypeName {
             text: "Tuple".into(),
         },
         TypeDefAndMethods {

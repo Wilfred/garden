@@ -207,6 +207,7 @@ fn describe_type(type_: &TypeDef) -> String {
                 BuiltinType::String => "String",
                 BuiltinType::Fun => "Fun",
                 BuiltinType::List => "List",
+                BuiltinType::HashMap => "HashMap",
                 BuiltinType::Tuple => "Tuple",
                 BuiltinType::Namespace => "Namespace",
             };

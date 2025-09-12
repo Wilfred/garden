@@ -108,6 +108,7 @@ impl Visitor for HintVisitor<'_> {
                             BuiltinType::Namespace => Some(0),
                             BuiltinType::Fun => Some(2),
                             BuiltinType::List => Some(1),
+                            BuiltinType::HashMap => Some(1),
                             BuiltinType::Tuple => None,
                         };
 

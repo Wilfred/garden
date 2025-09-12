@@ -215,6 +215,14 @@ impl Type {
 
                         Ok(Type::list(elem_type))
                     }
+                    BuiltinType::HashMap => {
+                        let elem_type = match args.first() {
+                            Some(type_) => type_.clone(),
+                            None => Self::error("Missing type argument to HashMap<>"),
+                        };
+
+                        Ok(Type::hash_map(elem_type))
+                    }
                     BuiltinType::Tuple => Ok(Type::Tuple(args)),
                     BuiltinType::Fun => match &args[..] {
                         [input_ty, return_] => {

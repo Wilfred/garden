@@ -557,6 +557,7 @@ pub(crate) fn run_command<T: Write>(
                     Value_::String(_) => false,
                     Value_::List { .. } => false,
                     Value_::Tuple { .. } => false,
+                    Value_::HashMap { .. } => false,
                     Value_::EnumVariant { .. } => false,
                     Value_::EnumConstructor { .. } => false,
                     Value_::Struct { .. } => false,

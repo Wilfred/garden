@@ -171,6 +171,16 @@ impl Type {
         }
     }
 
+    pub(crate) fn hash_map(ty: Type) -> Self {
+        Self::UserDefined {
+            kind: TypeDefKind::Struct,
+            name: TypeName {
+                text: "HashMap".to_owned(),
+            },
+            args: vec![ty],
+        }
+    }
+
     pub(crate) fn from_hint(
         hint: &TypeHint,
         global_tys: &FxHashMap<TypeName, TypeDefAndMethods>,
@@ -254,6 +264,7 @@ impl Type {
             Value_::String(_) => Type::string(),
             Value_::List { elem_type, .. } => Type::list(elem_type.clone()),
             Value_::Tuple { item_types, .. } => Type::Tuple(item_types.clone()),
+            Value_::HashMap { elem_type, .. } => Type::hash_map(elem_type.clone()),
             Value_::EnumVariant { runtime_type, .. } => runtime_type.clone(),
             Value_::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
             Value_::Struct { runtime_type, .. } => runtime_type.clone(),

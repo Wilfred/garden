@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::path::PathBuf;
 use std::rc::Rc;
 
+use rustc_hash::FxHashMap;
 use strum_macros::EnumIter;
 
 use crate::env::Env;
@@ -64,6 +65,11 @@ pub(crate) enum Value_ {
     Tuple {
         items: Vec<Value>,
         item_types: Vec<Type>,
+    },
+    /// A hash map with string keys.
+    HashMap {
+        items: FxHashMap<String, Value>,
+        elem_type: Type,
     },
     /// A value in a user-defined enum, such as `True` or `Some(123)`.
     EnumVariant {
@@ -334,6 +340,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::String(_) => "String",
             Value_::List { .. } => "List",
             Value_::Tuple { .. } => "Tuple",
+            Value_::HashMap { .. } => "HashMap",
             Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
                 &type_name.text
             }
@@ -481,6 +488,24 @@ impl Value {
                 }
 
                 s.push(')');
+
+                s
+            }
+            Value_::HashMap { items, .. } => {
+                let mut s = String::new();
+
+                s.push('{');
+
+                for (i, (key, value)) in items.iter().enumerate() {
+                    if i != 0 {
+                        s.push_str(", ");
+                    }
+
+                    s.push_str(&format!("{}: ", escape_string_literal(key)));
+                    s.push_str(&value.display(env));
+                }
+
+                s.push('}');
 
                 s
             }

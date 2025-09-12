@@ -34,7 +34,7 @@ does not end with the suffix, return the string unchanged.</p>
 <span class="string">"bar"</span>.strip_suffix(<span class="string">"o"</span>) <span class="comment">//-&gt; "bar"</span></code></pre>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> strip_suffix(this: <a class="type" href="/type:String.html">String</a>, suffix: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:String.html">String</a> {
   <a class="keyword" href="/keyword:if.html">if</a> this.ends_with(suffix) {
-    <a class="keyword" href="/keyword:return.html">return</a> this.substring(0, this.len() - suffix.len())
+    <a class="keyword" href="/keyword:return.html">return</a> this.substring(0, this.len() <a class="operator" href="/operator:-.html">-</a> suffix.len())
   }
 
   this

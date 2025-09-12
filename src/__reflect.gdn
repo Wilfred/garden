@@ -122,7 +122,7 @@ test keywords {
 // All the operators in Garden.
 public fun operators(): List<String> {
   // TODO: finish
-  ["+", "+=", "=="]
+  ["+", "+=", "-", "-=", "=="]
 }
 
 // Get the source code for the type definition of `name`.

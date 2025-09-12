@@ -31,7 +31,7 @@
 <p>Get the value of an environment variable.</p>
 <p>Returns <code>Some(value)</code> if the environment variable is set, or <code>None</code>
 if it is not set.</p>
-<pre><code><a href="/fun:__prelude.gdn::get_env.html">get_env</a>(<span class="string">"HOME"</span>) <span class="comment">//-&gt; Some("/home/user")</span>
+<pre><span class="code-title">Examples</span><code><a href="/fun:__prelude.gdn::get_env.html">get_env</a>(<span class="string">"HOME"</span>) <span class="comment">//-&gt; Some("/home/user")</span>
 <a href="/fun:__prelude.gdn::get_env.html">get_env</a>(<span class="string">"NO_SUCH_VAR"</span>) <span class="comment">//-&gt; None</span></code></pre>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> <a href="/fun:__prelude.gdn::get_env.html">get_env</a>(name: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
   __BUILTIN_IMPLEMENTATION

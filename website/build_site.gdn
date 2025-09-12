@@ -85,6 +85,8 @@ fun render_doc_comment(heading: String, doc_comment: String, src: Option<String>
     None => ""
   }
 
+  doc_comment = doc_comment.replace("\n\n```\n", "\n\n```title:Examples\n")
+
   let md_src = "".join([heading, "\n\n" , doc_comment, "\n\n", src])
   render_markdown(md_src)
 }

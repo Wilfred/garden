@@ -29,7 +29,7 @@
 
     <div class="container"><h1><code>__fs.gdn::list_directory</code></h1>
 <p>List the contents of the specified directory.</p>
-<pre><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"__fs.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> fs
+<pre><span class="code-title">Examples</span><code><a class="keyword" href="/keyword:import.html">import</a> <span class="string">"__fs.gdn" </span><a class="keyword" href="/keyword:as.html">as</a> fs
 fs::list_directory(<a class="type" href="/type:Path.html">Path</a>{ p: <span class="string">"/" </span>})</code></pre>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> list_directory(path: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Result.html">Result</a>&lt;<a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:Path.html">Path</a>&gt;, <a class="type" href="/type:String.html">String</a>&gt; {
   __BUILTIN_IMPLEMENTATION

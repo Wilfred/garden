@@ -181,14 +181,14 @@ header a {
 }
 
 .operator {
-  color: brown;
+  color: #880;
 }
 
 .comment {
   color: gray;
 }
 .string {
-  color: #91170a;
+  color: #910a0a;
 }
 .type {
   color: #57269c;

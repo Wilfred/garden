@@ -31,9 +31,9 @@
 <p>Append <code>component</code> to this path.</p>
 <pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> join(this: <a class="type" href="/type:Path.html">Path</a>, component: <a class="type" href="/type:String.html">String</a>): <a class="type" href="/type:Path.html">Path</a> {
   <a class="keyword" href="/keyword:let.html">let</a> p <a class="operator" href="/operator:=.html">=</a> <a class="keyword" href="/keyword:if.html">if</a> this.p.ends_with(<span class="string">"/"</span>) {
-    this.p ^ component
+    this.p <a class="operator" href="/operator:^.html">^</a> component
   } <a class="keyword" href="/keyword:else.html">else</a> {
-    (this.p ^ <span class="string">"/"</span>) ^ component
+    (this.p <a class="operator" href="/operator:^.html">^</a> <span class="string">"/"</span>) <a class="operator" href="/operator:^.html">^</a> component
   }
 
   <a class="type" href="/type:Path.html">Path</a>{ p: p }

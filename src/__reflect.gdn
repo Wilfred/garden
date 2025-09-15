@@ -121,8 +121,8 @@ test keywords {
 
 // All the operators in Garden.
 public fun operators(): List<String> {
-//  ["+", "+=", "-", "-=", "*", "/", "%", ">", "<", "==", "!=", "="]
-  ["+", "+=", "-", "-=", "*", "==", "!=", "="]
+  // Missing: ["/", "%", ">", "<",]
+  ["+", "+=", "-", "-=", "*", "==", "!=", "=", "^"]
 }
 
 // Get the source code for the type definition of `name`.

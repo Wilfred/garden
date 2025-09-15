@@ -455,8 +455,8 @@ fn load_toplevel_items_(
                 if paths_seen.contains(&abs_path) {
                     // Already loaded this file, so we have a cyclic
                     // import. We don't need to load the namespace
-                    // again, but we do need to still add the values
-                    // to the current namespace.
+                    // again, but we do need to add the values to the
+                    // current namespace.
                     let imported_ns = env.get_namespace(&abs_path).unwrap();
                     insert_imported_namespace(
                         import_info.namespace_sym.as_ref(),

@@ -2,24 +2,22 @@
 
 You can use `import` to load definitions from another file.
 
-```title:"File: foo.gdn"
-public fun defined_in_foo() {}
+```title:"File: greetings.gdn"
+public fun say_hello() {
+  println("Hello!")
+}
 ```
 
 ```title:"Example 1"
-import "./foo.gdn" as f
+import "./greetings.gdn" as g
 
-fun bar() {
-  f::defined_in_foo()
-}
+g::say_hello()
 ```
 
 You can also load all the definitions into the current file.
 
 ```title:"Example 2"
-import "./foo.gdn"
+import "./greetings.gdn"
 
-fun bar() {
-  defined_in_foo()
-}
+say_hello()
 ```

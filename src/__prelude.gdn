@@ -125,7 +125,7 @@ test ends_with {
   assert("abc".ends_with("aabc") == False)
 }
 
-// Replace occurrences of `before` with `after` in this string.
+// Replace all occurrences of `before` with `after` in this string.
 //
 // ```
 // "abc xabc".replace("abc", "def") //-> "def xdef"

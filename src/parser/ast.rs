@@ -660,7 +660,15 @@ pub(crate) struct ImportInfo {
     /// The position of the string literal within
     /// `import "./foo.gdn"`.
     pub(crate) path_pos: Position,
-    /// The `bar` in `import "./foo.gdn" as bar`.
+    /// The symbol that this imported namespace will be bound to.
+    ///
+    /// ```
+    /// // namespace_sym is `foo` here.
+    /// import "./foo.gdn" as foo
+    ///
+    /// // namespace_sym is None here.
+    /// import "./bar.gdn"
+    /// ```
     pub(crate) namespace_sym: Option<Symbol>,
 
     pub(crate) id: SyntaxId,

@@ -1734,21 +1734,29 @@ impl TypeCheckVisitor<'_> {
                         Type::from_value(value)
                     }
                     None => {
-                        // TODO: suggest similar names here.
-                        self.diagnostics.push(Diagnostic {
-                            notes: vec![],
-                            severity: Severity::Error,
-                            message: ErrorMessage(vec![
-                                msgcode!(
-                                    "{}",
-                                    self.env.relative_to_project(&ns.abs_path).display()
-                                ),
-                                msgtext!(" does not contain an item named "),
-                                msgcode!("{}", sym.name),
-                                msgtext!("."),
-                            ]),
-                            position: sym.position.clone(),
-                        });
+                        if !values.contains_key(&SymbolName {
+                            text: "__PLACEHOLDER_NAMESPACE".to_owned(),
+                        }) {
+                            // If this is only a placeholder because the
+                            // imported file didn't exist, avoid cascading
+                            // errors.
+
+                            // TODO: suggest similar names here.
+                            self.diagnostics.push(Diagnostic {
+                                notes: vec![],
+                                severity: Severity::Error,
+                                message: ErrorMessage(vec![
+                                    msgcode!(
+                                        "{}",
+                                        self.env.relative_to_project(&ns.abs_path).display()
+                                    ),
+                                    msgtext!(" does not contain an item named "),
+                                    msgcode!("{}", sym.name),
+                                    msgtext!("."),
+                                ]),
+                                position: sym.position.clone(),
+                            });
+                        }
 
                         Type::error("No such symbol in this namespace")
                     }

@@ -18,12 +18,4 @@ ns::stuff()
 //   2| import "no_such.gdn" as ns
 //    |        ^^^^^^^^^^^^^
 //   3| import "__fs.gdn" as fs
-// 
-// Error: Unbound symbol: `ns`
-// ---| src/test_files/check/missing_import_error_cascade.gdn:10:1
-//   8| // This should not have an error, we have already errored on the
-//   9| // import.
-//  10| ns::stuff()
-//    | ^^
-//  11|
 

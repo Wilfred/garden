@@ -472,6 +472,17 @@ fn load_toplevel_items_(
                     Ok(src) => src,
                     Err(diagnostic) => {
                         diagnostics.push(diagnostic);
+
+                        // We couldn't read the file that we want to
+                        // import. Insert a stub namespace so we can give more
+                        // precise typechecker errors for usage of this
+                        // namespace.
+                        insert_placeholder_namespace(
+                            abs_path.clone(),
+                            import_info.namespace_sym.as_ref(),
+                            namespace.clone(),
+                        );
+
                         continue;
                     }
                 };
@@ -556,8 +567,40 @@ fn load_toplevel_items_(
     (diagnostics, new_syms)
 }
 
+fn insert_placeholder_namespace(
+    abs_path: PathBuf,
+    namespace_sym: Option<&Symbol>,
+    current_ns: Rc<RefCell<NamespaceInfo>>,
+) {
+    let Some(namespace_sym) = namespace_sym else {
+        return;
+    };
+
+    let mut values = FxHashMap::default();
+    values.insert(
+        SymbolName {
+            text: "__PLACEHOLDER_NAMESPACE".to_owned(),
+        },
+        Value::unit(),
+    );
+
+    let ns_info = NamespaceInfo {
+        abs_path: Rc::new(abs_path),
+        values,
+        exported_syms: FxHashSet::default(),
+        types: FxHashMap::default(),
+    };
+    let v = Value::new(Value_::Namespace(Rc::new(RefCell::new(ns_info))));
+
+    current_ns
+        .borrow_mut()
+        .values
+        .insert(namespace_sym.name.clone(), v);
+}
+
 /// Insert `imported_ns` into `current_ns`, either as a single value
-/// or as all the public symbols as values.
+/// or as all the public symbols as values. Return a vec of all the
+/// imported symbols.
 fn insert_imported_namespace(
     namespace_sym: Option<&Symbol>,
     current_ns: Rc<RefCell<NamespaceInfo>>,

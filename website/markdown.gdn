@@ -272,8 +272,14 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         let after_tok = part.substring(tok.len(), part.len())
         "<a class=\"keyword\" href=\"/keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if operators.contains(tok) {
-        let after_tok = part.substring(tok.len(), part.len())
-        "<a class=\"operator\" href=\"/operator:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+        if end_idx - start_idx - tok.len() >= 2 {
+          // Require an operator to have at two characters around it.
+          let after_tok = part.substring(tok.len(), part.len())
+          "<a class=\"operator\" href=\"/operator:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+        } else {
+          // An operator with no whitespace around it. Assume it's a type argument.
+          part
+        }
       } else if prelude_funs.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
         "<a href=\"/fun:__prelude.gdn::" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok

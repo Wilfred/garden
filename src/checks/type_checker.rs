@@ -1706,6 +1706,10 @@ impl TypeCheckVisitor<'_> {
 
                 match values.get(&sym.name) {
                     Some(value) => {
+                        if let Some(fun_info) = value.fun_info() {
+                            self.id_to_def_pos.insert(sym.id, fun_info.pos.clone());
+                        }
+
                         if !ns_info.exported_syms.contains(&sym.name) {
                             let mut name_pos = None;
                             match value.as_ref() {

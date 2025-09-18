@@ -26,15 +26,19 @@ impl Value {
         Self(Rc::new(v))
     }
 
-    /// If this value is a function, return its doc comment.
-    pub(crate) fn doc_comment(&self) -> Option<String> {
-        let fun_info = match self.as_ref() {
+    /// If this value is a function, return its info.
+    pub(crate) fn fun_info(&self) -> Option<&FunInfo> {
+        match self.as_ref() {
             Value_::Fun { fun_info, .. } => Some(fun_info),
             Value_::Closure(_, fun_info, _) => Some(fun_info),
             Value_::BuiltinFunction(_, fun_info, _) => fun_info.as_ref(),
             _ => None,
-        }?;
+        }
+    }
 
+    /// If this value is a function, return its doc comment.
+    pub(crate) fn doc_comment(&self) -> Option<String> {
+        let fun_info = self.fun_info()?;
         fun_info.doc_comment.clone()
     }
 }

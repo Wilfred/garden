@@ -562,7 +562,7 @@ pub(crate) fn run_command<T: Write>(
                     Value_::EnumVariant { .. } => false,
                     Value_::EnumConstructor { .. } => false,
                     Value_::Struct { .. } => false,
-                    Value_::Namespace(_) => false,
+                    Value_::Namespace { .. } => false,
                 };
 
                 if is_fun {
@@ -904,12 +904,15 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         } else if let Some(v) = ns.borrow().values.get(&SymbolName {
             text: before_colon.to_owned(),
         }) {
-            let Value_::Namespace(named_ns) = v.as_ref() else {
+            let Value_::Namespace {
+                ns_info: named_ns_info,
+            } = v.as_ref()
+            else {
                 return Err(format!("`{before_colon}` is not a namespace."));
             };
-            let named_ns = named_ns.borrow();
+            let named_ns_info = named_ns_info.borrow();
 
-            let Some(value) = named_ns.values.get(&SymbolName {
+            let Some(value) = named_ns_info.values.get(&SymbolName {
                 text: after_colon.to_owned(),
             }) else {
                 return Err(format!(

@@ -1685,13 +1685,13 @@ impl TypeCheckVisitor<'_> {
         };
 
         match value.as_ref() {
-            Value_::Namespace(ns) => {
-                let ns = ns.borrow();
-                let values = &ns.values;
+            Value_::Namespace { ns_info } => {
+                let ns_info = ns_info.borrow();
+                let values = &ns_info.values;
 
                 match values.get(&sym.name) {
                     Some(value) => {
-                        if !ns.exported_syms.contains(&sym.name) {
+                        if !ns_info.exported_syms.contains(&sym.name) {
                             let mut name_pos = None;
                             match value.as_ref() {
                                 Value_::Fun { fun_info, .. }
@@ -1748,7 +1748,7 @@ impl TypeCheckVisitor<'_> {
                                 message: ErrorMessage(vec![
                                     msgcode!(
                                         "{}",
-                                        self.env.relative_to_project(&ns.abs_path).display()
+                                        self.env.relative_to_project(&ns_info.abs_path).display()
                                     ),
                                     msgtext!(" does not contain an item named "),
                                     msgcode!("{}", sym.name),

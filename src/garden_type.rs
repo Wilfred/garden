@@ -276,7 +276,7 @@ impl Type {
             Value_::EnumVariant { runtime_type, .. } => runtime_type.clone(),
             Value_::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
             Value_::Struct { runtime_type, .. } => runtime_type.clone(),
-            Value_::Namespace(_) => Type::namespace(),
+            Value_::Namespace { .. } => Type::namespace(),
         }
     }
 

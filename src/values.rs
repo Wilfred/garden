@@ -92,7 +92,9 @@ pub(crate) enum Value_ {
         fields: Vec<(SymbolName, Value)>,
         runtime_type: Type,
     },
-    Namespace(Rc<RefCell<NamespaceInfo>>),
+    Namespace {
+        ns_info: Rc<RefCell<NamespaceInfo>>,
+    },
 }
 
 impl PartialEq for Value_ {
@@ -345,7 +347,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
                 &type_name.text
             }
             Value_::Struct { type_name, .. } => &type_name.text,
-            Value_::Namespace(_) => "Namespace",
+            Value_::Namespace { .. } => "Namespace",
         }
         .to_owned(),
     }
@@ -588,10 +590,10 @@ impl Value {
 
                 s
             }
-            Value_::Namespace(ns) => {
-                let ns = ns.borrow();
+            Value_::Namespace { ns_info } => {
+                let ns_info = ns_info.borrow();
 
-                let mut names = ns
+                let mut names = ns_info
                     .exported_syms
                     .iter()
                     .map(|sym| format!("  ::{}", sym.text))
@@ -602,7 +604,7 @@ impl Value {
 
                 format!(
                     "namespace:{}{}{}",
-                    to_project_relative(&ns.abs_path, &env.project_root).display(),
+                    to_project_relative(&ns_info.abs_path, &env.project_root).display(),
                     if names_str.is_empty() { "" } else { "\n" },
                     names_str
                 )

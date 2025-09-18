@@ -590,7 +590,9 @@ fn insert_placeholder_namespace(
         exported_syms: FxHashSet::default(),
         types: FxHashMap::default(),
     };
-    let v = Value::new(Value_::Namespace(Rc::new(RefCell::new(ns_info))));
+    let v = Value::new(Value_::Namespace {
+        ns_info: Rc::new(RefCell::new(ns_info)),
+    });
 
     current_ns
         .borrow_mut()
@@ -608,7 +610,9 @@ fn insert_imported_namespace(
 ) -> Vec<SymbolName> {
     match namespace_sym {
         Some(namespace_sym) => {
-            let v = Value::new(Value_::Namespace(imported_ns));
+            let v = Value::new(Value_::Namespace {
+                ns_info: imported_ns,
+            });
             current_ns
                 .borrow_mut()
                 .values
@@ -2559,7 +2563,10 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let Value_::Namespace(namespace_info) = arg_values[0].as_ref() else {
+            let Value_::Namespace {
+                ns_info: namespace_info,
+            } = arg_values[0].as_ref()
+            else {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
                     saved_values.push(value.clone());
@@ -3016,7 +3023,7 @@ fn eval_builtin_call(
             }
 
             let namespace = match arg_values[0].as_ref() {
-                Value_::Namespace(ns) => ns,
+                Value_::Namespace { ns_info } => ns_info,
                 _ => {
                     let message = format_type_error(
                         &TypeName {
@@ -3147,7 +3154,7 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let Value_::Namespace(namespace_info) = arg_values[0].as_ref() else {
+            let Value_::Namespace { ns_info } = arg_values[0].as_ref() else {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
                     saved_values.push(value.clone());
@@ -3174,7 +3181,7 @@ fn eval_builtin_call(
 
             let name = check_string(&arg_values[1], &arg_positions[1], saved_values, env)?;
 
-            let namespace_info = namespace_info.borrow();
+            let namespace_info = ns_info.borrow();
             let v = match namespace_info
                 .values
                 .get(&SymbolName { text: name.clone() })
@@ -5462,12 +5469,12 @@ fn eval_namespace_access(
         .expect("Popped an empty value when evaluating namespace access");
 
     match recv_value.as_ref() {
-        Value_::Namespace(ns) => {
-            let ns = ns.borrow();
+        Value_::Namespace { ns_info } => {
+            let ns_info = ns_info.borrow();
 
-            match ns.values.get(&symbol.name) {
+            match ns_info.values.get(&symbol.name) {
                 Some(v) => {
-                    if !ns.exported_syms.contains(&symbol.name) {
+                    if !ns_info.exported_syms.contains(&symbol.name) {
                         return Err((
                             RestoreValues(vec![recv_value.clone()]),
                             EvalError::Exception(
@@ -5477,7 +5484,10 @@ fn eval_namespace_access(
                                     msgtext!(" is not marked as "),
                                     msgcode!("external"),
                                     msgtext!(" in "),
-                                    msgcode!("{}", env.relative_to_project(&ns.abs_path).display()),
+                                    msgcode!(
+                                        "{}",
+                                        env.relative_to_project(&ns_info.abs_path).display()
+                                    ),
                                     msgtext!(". "),
                                 ]),
                             ),
@@ -5495,7 +5505,10 @@ fn eval_namespace_access(
                             symbol.position.clone(),
                             ErrorMessage(vec![
                                 msgtext!("Namespace "),
-                                msgcode!("{}", env.relative_to_project(&ns.abs_path).display()),
+                                msgcode!(
+                                    "{}",
+                                    env.relative_to_project(&ns_info.abs_path).display()
+                                ),
                                 msgtext!(" does not contain a function named "),
                                 msgcode!("{}", symbol.name),
                                 msgtext!(". "),

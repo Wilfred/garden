@@ -29,6 +29,8 @@
 #![allow(clippy::large_enum_variant)]
 // TODO: fix this.
 #![allow(clippy::map_entry)]
+// PLs are complicated, it can be helpful to have docs.
+#![warn(missing_docs)]
 
 mod caret_finder;
 mod checks;

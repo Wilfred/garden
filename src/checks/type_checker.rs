@@ -1663,7 +1663,16 @@ impl TypeCheckVisitor<'_> {
             return Type::Any;
         };
 
-        if let Some((ty, _)) = self.bindings.get(&recv_symbol.name) {
+        if let Some((ty, binding_pos)) = self.bindings.get(&recv_symbol.name) {
+            // The namespace receiver symbol is locally bound, e.g.
+            //
+            // ```
+            // let x = some_ns
+            // x::foo()
+            // ```
+            self.id_to_def_pos
+                .insert(recv_symbol.id, binding_pos.clone());
+
             if ty.is_error() {
                 return Type::error("Accessing namespace on error value");
             }
@@ -1685,7 +1694,13 @@ impl TypeCheckVisitor<'_> {
         };
 
         match value.as_ref() {
-            Value_::Namespace { ns_info, .. } => {
+            Value_::Namespace {
+                ns_info,
+                imported_name_sym,
+            } => {
+                self.id_to_def_pos
+                    .insert(recv_symbol.id, imported_name_sym.position.clone());
+
                 let ns_info = ns_info.borrow();
                 let values = &ns_info.values;
 

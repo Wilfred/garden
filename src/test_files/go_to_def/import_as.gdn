@@ -1,0 +1,9 @@
+import "__reflect.gdn" as reflect
+
+reflect::lex("abc")
+// ^
+
+// args: definition-position
+// expected stdout:
+// {"start_offset":26,"end_offset":33,"line_number":0,"end_line_number":0,"column":26,"end_column":33,"path":"GDN_TEST_ROOT/src/test_files/go_to_def/import_as.gdn"}
+

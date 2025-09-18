@@ -1685,7 +1685,7 @@ impl TypeCheckVisitor<'_> {
         };
 
         match value.as_ref() {
-            Value_::Namespace { ns_info } => {
+            Value_::Namespace { ns_info, .. } => {
                 let ns_info = ns_info.borrow();
                 let values = &ns_info.values;
 

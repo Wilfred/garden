@@ -906,6 +906,7 @@ fn find_item(name: &str, env: &Env) -> Result<(String, Option<String>), String> 
         }) {
             let Value_::Namespace {
                 ns_info: named_ns_info,
+                ..
             } = v.as_ref()
             else {
                 return Err(format!("`{before_colon}` is not a namespace."));

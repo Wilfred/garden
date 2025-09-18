@@ -57,10 +57,7 @@ pub(crate) enum Value_ {
     /// A string value.
     String(String),
     /// A list value, along with the type of its elements.
-    List {
-        items: Vec<Value>,
-        elem_type: Type,
-    },
+    List { items: Vec<Value>, elem_type: Type },
     /// A tuple value, along with type of each item.
     Tuple {
         items: Vec<Value>,
@@ -92,8 +89,14 @@ pub(crate) enum Value_ {
         fields: Vec<(SymbolName, Value)>,
         runtime_type: Type,
     },
+    /// When we import a namespace with `import "./foo.gdn" as f`,
+    /// this is the value that is stored in `f`.
     Namespace {
+        /// The imported namespace.
         ns_info: Rc<RefCell<NamespaceInfo>>,
+        /// The name that this namespace value has in the current
+        /// scope (`f` in the above example).
+        imported_name_sym: Symbol,
     },
 }
 
@@ -590,7 +593,7 @@ impl Value {
 
                 s
             }
-            Value_::Namespace { ns_info } => {
+            Value_::Namespace { ns_info, .. } => {
                 let ns_info = ns_info.borrow();
 
                 let mut names = ns_info

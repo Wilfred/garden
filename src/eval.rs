@@ -592,6 +592,7 @@ fn insert_placeholder_namespace(
     };
     let v = Value::new(Value_::Namespace {
         ns_info: Rc::new(RefCell::new(ns_info)),
+        imported_name_sym: namespace_sym.clone(),
     });
 
     current_ns
@@ -612,6 +613,7 @@ fn insert_imported_namespace(
         Some(namespace_sym) => {
             let v = Value::new(Value_::Namespace {
                 ns_info: imported_ns,
+                imported_name_sym: namespace_sym.clone(),
             });
             current_ns
                 .borrow_mut()
@@ -2565,6 +2567,7 @@ fn eval_builtin_call(
 
             let Value_::Namespace {
                 ns_info: namespace_info,
+                ..
             } = arg_values[0].as_ref()
             else {
                 let mut saved_values = vec![];
@@ -3023,7 +3026,7 @@ fn eval_builtin_call(
             }
 
             let namespace = match arg_values[0].as_ref() {
-                Value_::Namespace { ns_info } => ns_info,
+                Value_::Namespace { ns_info, .. } => ns_info,
                 _ => {
                     let message = format_type_error(
                         &TypeName {
@@ -3154,7 +3157,7 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let Value_::Namespace { ns_info } = arg_values[0].as_ref() else {
+            let Value_::Namespace { ns_info, .. } = arg_values[0].as_ref() else {
                 let mut saved_values = vec![];
                 for value in arg_values.iter().rev() {
                     saved_values.push(value.clone());
@@ -5469,7 +5472,7 @@ fn eval_namespace_access(
         .expect("Popped an empty value when evaluating namespace access");
 
     match recv_value.as_ref() {
-        Value_::Namespace { ns_info } => {
+        Value_::Namespace { ns_info, .. } => {
             let ns_info = ns_info.borrow();
 
             match ns_info.values.get(&symbol.name) {

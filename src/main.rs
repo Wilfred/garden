@@ -1,3 +1,5 @@
+//! Main entry point for the Garden binary.
+
 // This tends to trigger on larger tuples of simple types, and naming
 // them would probably be worse for readability.
 #![allow(clippy::type_complexity)]

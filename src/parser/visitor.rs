@@ -157,6 +157,9 @@ pub(crate) trait Visitor {
                     self.visit_expr(&expr.expr);
                 }
             }
+            Expression_::HashMapLiteral(_) => {
+                todo!()
+            }
             Expression_::TupleLiteral(exprs) => {
                 for expr in exprs {
                     self.visit_expr(expr);

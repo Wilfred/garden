@@ -4918,6 +4918,9 @@ fn eval_expr(
                 }
             }
         }
+        Expression_::HashMapLiteral(_) => {
+            todo!()
+        }
         Expression_::TupleLiteral(items) => {
             if expr_state.done_children() {
                 let mut items_values: Vec<Value> = Vec::with_capacity(items.len());

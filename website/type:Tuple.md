@@ -1,8 +1,8 @@
-<!-- Tuple is a type defined internally and doesn't have a stub,
-because it has a variable number of type arguments.
+<!-- Tuple is a type defined internally and doesn't have a stub, -->
+<!-- because it has a variable number of type arguments. -->
 
-Instead, write a markdown file with the same naming convention as the
-other type files. -->
+<!-- Instead, write a markdown file with the same naming convention as -->
+<!-- the other type files. -->
 
 # `Tuple` type
 

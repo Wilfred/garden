@@ -346,7 +346,7 @@ fun render_inline_backticks(src: String): String {
   while True {
     match s.split_once("`") {
       Some((before_backtick, after_backtick)) => {
-        parts = parts.append(before_backtick)
+        parts = parts.append(escape_angle_brackets(before_backtick))
 
         match after_backtick.split_once("`") {
           Some((between_backticks, after_closing_backtick)) => {
@@ -354,13 +354,13 @@ fun render_inline_backticks(src: String): String {
             s = after_closing_backtick
           }
           None => {
-            parts = parts.append(s)
+            parts = parts.append(escape_angle_brackets(s))
             break
           }
         }
       }
       None => {
-        parts = parts.append(s)
+        parts = parts.append(escape_angle_brackets(s))
         break
       }
     }
@@ -641,6 +641,10 @@ test render_markdown_paragraph {
   assert(render_markdown("foo bar") == "<p>foo bar</p>")
 }
 
+test render_markdown_paragraph_escape_angle_brackets {
+  assert(render_markdown("foo bar<") == "<p>foo bar&lt;</p>")
+}
+
 test render_markdown_paragraph_after_heading {
   assert(render_markdown("# foo\n\nbar") == "<h1>foo</h1>\n<p>bar</p>")
 }
@@ -649,7 +653,7 @@ test render_backtick {
   assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
 }
 
-test render_backtick_escaped {
+test render_backtick_escape_angle_brackets {
   assert(render_markdown("`foo<`") == "<p><code>foo&lt;</code></p>")
 }
 

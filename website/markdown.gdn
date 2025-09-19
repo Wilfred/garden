@@ -725,6 +725,14 @@ test render_thematic_break {
   assert(render_markdown("___") == "<hr />")
 }
 
+test render_html {
+  assert(render_markdown("<script></script>") == "<p><script></script></p>")
+}
+
+test render_html_comment {
+  assert(render_markdown("<!-- foo -->") == "<p><!-- foo --></p>")
+}
+
 test render_image {
   assert(render_markdown("![foo](/url)") == "<p><img src=\"/url\" alt=\"foo\" /></p>")
 }

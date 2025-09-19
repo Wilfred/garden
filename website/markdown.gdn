@@ -331,8 +331,10 @@ fun render_inline(src: String): String {
       parts = parts.append(render_strong(piece))
     } else if piece.starts_with("*") && piece.ends_with("*") {
       parts = parts.append(render_emphasis(piece))
+    } else if piece.starts_with("`") {
+      parts = parts.append(render_inline_code(piece))
     } else {
-      parts = parts.append(render_inline_backticks(piece))
+      parts = parts.append(escape_angle_brackets(piece))
     }
   }
 
@@ -370,18 +372,31 @@ fun render_inline_backticks(src: String): String {
 }
 
 // Split `src` into a list of strings, where each string is either a
-// link, image, HTML or a piece of plain text.
+// link, image, HTML, inline code or a piece of plain text.
 fun split_inline_parts(src: String): List<String> {
   let parts: List<String> = []
 
   let s = src
   while True {
-    match first_idx(s, ["[", "![", "<", "*"]) {
+    match first_idx(s, ["[", "![", "<", "*", "`"]) {
       Some(idx) => {
         let before_bracket = s.substring(0, idx)
         let after_bracket = s.substring(idx, s.len())
 
-        if after_bracket.starts_with("<") {
+        if after_bracket.starts_with("`") {
+          // `inline code` syntax.
+          match split_on_terminator(after_bracket.substring(1, after_bracket.len()), "`") {
+            Some((part, after_part)) => {
+              parts = parts.append(before_bracket)
+              parts = parts.append("`" ^ part)
+              s = after_part
+            }
+            None => {
+              parts = parts.append(s)
+              break
+            }
+          }
+        } else if after_bracket.starts_with("<") {
           // This is an HTML tag.
           match split_on_terminator(after_bracket, ">") {
             Some((part, after_part)) => {
@@ -573,6 +588,11 @@ fun render_image(src: String): String {
   }
 }
 
+fun render_inline_code(src: String): String {
+  let inner = src.strip_prefix("`").strip_suffix("`")
+  "<code>" ^ escape_angle_brackets(inner) ^ "</code>"
+}
+
 fun render_strong(src: String): String {
   let inner = src.strip_prefix("**").strip_suffix("**")
   "<strong>" ^ inner ^ "</strong>"
@@ -655,6 +675,10 @@ test render_backtick {
 
 test render_backtick_escape_angle_brackets {
   assert(render_markdown("`foo<`") == "<p><code>foo&lt;</code></p>")
+}
+
+test render_backtick_angle_brackets {
+  assert(render_markdown("`List<T>`") == "<p><code>List&lt;T&gt;</code></p>")
 }
 
 test render_backtick_in_heading {

@@ -295,13 +295,42 @@ fn parse_tuple_literal_or_parentheses(
     )
 }
 
-fn parse_list_literal(
+fn parse_list_or_hash_map_literal(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
-    let items = parse_comma_separated_exprs(&open_bracket, tokens, id_gen, diagnostics, "]");
+    let Some(next) = tokens.peek() else {
+        return Expression::new(
+            open_bracket.position.clone(),
+            Expression_::Invalid,
+            id_gen.next(),
+        );
+    };
+
+    // Empty hashmap, of the form `[=>]`.
+    if next.text == "=>" {
+        tokens.pop();
+        let close_bracket = require_token(tokens, diagnostics, "]");
+
+        return Expression::new(
+            Position::merge(&open_bracket.position, &close_bracket.position),
+            Expression_::HashMapLiteral(vec![]),
+            id_gen.next(),
+        );
+    }
+
+    parse_list_literal(&open_bracket, tokens, id_gen, diagnostics)
+}
+
+fn parse_list_literal(
+    open_bracket: &Token,
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let items = parse_comma_separated_exprs(open_bracket, tokens, id_gen, diagnostics, "]");
 
     let close_bracket_pos = match tokens.peek() {
         Some(token) if token.text == "]" => {
@@ -617,7 +646,7 @@ fn parse_simple_expression(
         }
 
         if token.text == "[" {
-            return parse_list_literal(tokens, id_gen, diagnostics);
+            return parse_list_or_hash_map_literal(tokens, id_gen, diagnostics);
         }
 
         // For lambda, require `fun(`. If we see `fun foo` it's likely

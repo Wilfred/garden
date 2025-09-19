@@ -1,0 +1,11 @@
+fun main() {
+  let count = get_env("COUNT").or_throw().as_int().or_throw()
+  
+  println("start")
+  
+  for _ in range(0, count) {}
+  
+  println("finish")
+}
+
+main()

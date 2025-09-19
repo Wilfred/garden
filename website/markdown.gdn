@@ -595,12 +595,12 @@ fun render_inline_code(src: String): String {
 
 fun render_strong(src: String): String {
   let inner = src.strip_prefix("**").strip_suffix("**")
-  "<strong>" ^ inner ^ "</strong>"
+  "<strong>" ^ escape_angle_brackets(inner) ^ "</strong>"
 }
 
 fun render_emphasis(src: String): String {
   let inner = src.strip_prefix("*").strip_suffix("*")
-  "<em>" ^ inner ^ "</em>"
+  "<em>" ^ escape_angle_brackets(inner) ^ "</em>"
 }
 
 fun render_markdown_paragraph(src: String): String {
@@ -679,6 +679,10 @@ test render_backtick_escape_angle_brackets {
 
 test render_backtick_angle_brackets {
   assert(render_markdown("`List<T>`") == "<p><code>List&lt;T&gt;</code></p>")
+}
+
+test render_strong_escape_angle_brackets {
+  assert(render_markdown("*foo<*") == "<p><em>foo&lt;</em></p>")
 }
 
 test render_backtick_in_heading {

@@ -1,0 +1,3 @@
+public fun say_hello() {
+  println("Hello!")
+}

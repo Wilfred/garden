@@ -1,0 +1,21 @@
+public fun info(msg: String): Unit {
+  if msg.contains("\n") {
+    println("INFO: ")
+    for line in msg.lines() {
+      println("  " ^ line)
+    }
+  } else {
+    println("INFO: " ^ msg)
+  }
+}
+
+public fun warn(msg: String): Unit {
+  if msg.contains("\n") {
+    println("WARN: ")
+    for line in msg.lines() {
+      println("  " ^ line)
+    }
+  } else {
+    println("WARN: " ^ msg)
+  }
+}

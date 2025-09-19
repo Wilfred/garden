@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Path::extension - Garden</title>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>Path::extension</code></h1>
+<p>The extension of this path, if this path is a file whose name
+includes a ".".</p>
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> extension(this: <a class="type" href="/type:Path.html">Path</a>): <a class="type" href="/type:Option.html">Option</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
+  <a class="keyword" href="/keyword:let.html">let</a> name <a class="operator" href="/operator:=.html">=</a> <a class="keyword" href="/keyword:match.html">match</a> this.file_name() {
+    <span class="type">Some</span>(name) =&gt; name
+    <span class="type">None</span> =&gt; <a class="keyword" href="/keyword:return.html">return</a> <span class="type">None</span>
+  }
+
+  name.split(<span class="string">"."</span>).last()
+}</code></pre></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

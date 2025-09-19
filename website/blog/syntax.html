@@ -37,7 +37,7 @@ playground for my ideas.</p>
 <p>Instead of grand declarations, let's talk about something unavoidable:
 basic syntax.</p>
 <pre><span class="code-title">Function</span><code><a class="keyword" href="/keyword:fun.html">fun</a> fib(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
-  <a class="keyword" href="/keyword:if.html">if</a> i &lt; 2 {
+  <a class="keyword" href="/keyword:if.html">if</a> i <a class="operator" href="/operator:<.html">&lt;</a> 2 {
     <a class="keyword" href="/keyword:return.html">return</a> 1
   }
 
@@ -49,7 +49,7 @@ basic syntax.</p>
 budget</a>
 on syntax, so it's deliberately conventional.</p>
 <pre><span class="code-title">Conventional Loops</span><code><a class="keyword" href="/keyword:let.html">let</a> i <a class="operator" href="/operator:=.html">=</a> 10
-<a class="keyword" href="/keyword:while.html">while</a> i &gt; 0 {
+<a class="keyword" href="/keyword:while.html">while</a> i <a class="operator" href="/operator:>.html">&gt;</a> 0 {
   <a href="/fun:__prelude.gdn::println.html">println</a>(<a href="/fun:__prelude.gdn::string_repr.html">string_repr</a>(i))
   i <a class="operator" href="/operator:-=.html">-=</a> 1
 }

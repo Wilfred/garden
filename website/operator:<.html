@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#307d30" />
-    <title>assert - Garden</title>
+    <title>< - Garden</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,19 +27,15 @@
       </div>
     </header>
 
-    <div class="container"><h1><code>assert</code> keyword</h1>
-<p>You can use <code>assert</code> to perform a runtime check that a value is
-<code>True</code>.</p>
-<pre><span class="code-title">Example 1</span><code><a class="keyword" href="/keyword:assert.html">assert</a>(1 <a class="operator" href="/operator:<.html">&lt;</a> 2)</code></pre>
-<p>If the assertion fails, Garden will raise an error.</p>
-<p><code>assert</code> is particularly useful when defining a <code>test</code>.</p>
-<pre><span class="code-title">Example 2</span><code><a class="keyword" href="/keyword:fun.html">fun</a> add_one(i: <a class="type" href="/type:Int.html">Int</a>): <a class="type" href="/type:Int.html">Int</a> {
-  i <a class="operator" href="/operator:+.html">+</a> 1
-}
-
-<a class="keyword" href="/keyword:test.html">test</a> add_one_to_five {
-  <a class="keyword" href="/keyword:assert.html">assert</a>(add_one(5) <a class="operator" href="/operator:==.html">==</a> 6)
-}</code></pre></div>
+    <div class="container"><h1>`<` and `>` Operators</h1>
+<p><code>&lt;</code> evaluates to <code>True</code> if the first integer is less than the second.</p>
+<pre><code>1 <a class="operator" href="/operator:<.html">&lt;</a> 2 <span class="comment">//-&gt; True</span>
+10 <a class="operator" href="/operator:<.html">&lt;</a> 10 <span class="comment">//-&gt; False</span>
+100 <a class="operator" href="/operator:<.html">&lt;</a> 99 <span class="comment">//-&gt; False</span></code></pre>
+<p><code>&gt;</code> evaluates to <code>True</code> if the first integer is greater than the second.</p>
+<pre><code>2 <a class="operator" href="/operator:>.html">&gt;</a> 1 <span class="comment">//-&gt; True</span>
+10 <a class="operator" href="/operator:>.html">&gt;</a> 10 <span class="comment">//-&gt; False</span>
+99 <a class="operator" href="/operator:>.html">&gt;</a> 100 <span class="comment">//-&gt; False</span></code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

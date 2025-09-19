@@ -61,7 +61,7 @@ fun parse_labels(src: String): List<String> {
 
     labels = labels.append(word)
   }
-  
+
   labels
 }
 
@@ -182,6 +182,8 @@ fun render_markdown_header(src: String): String {
   open_tag ^ render_inline(content.trim()) ^ close_tag
 }
 
+// We want to find " < ", which requires trailing whitespace on the
+// previous lexeme as well as the < lexeme.
 fun lex_with_ranges(s: String): List<(Int, Int, String)> {
   let items: List<(Int, Int, String)> = []
 
@@ -255,8 +257,10 @@ fun render_markdown_garden_code(snippet: Snippet): String {
   for line in snippet.content.lines() {
     let rendered_line_parts: List<String> = []
 
+    let prev_had_trailing_ws = False
     for (i, tup) in lex_with_ranges(line).enumerate() {
       let (start_idx, end_idx, tok) = tup
+      let has_trailing_ws = start_idx + tok.len() < end_idx
 
       if i == 0 {
         rendered_line_parts = rendered_line_parts.append(line.substring(0, start_idx))
@@ -272,13 +276,17 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         let after_tok = part.substring(tok.len(), part.len())
         "<a class=\"keyword\" href=\"/keyword:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
       } else if operators.contains(tok) {
-        if end_idx - start_idx - tok.len() >= 2 {
-          // Require an operator to have at two characters around it.
+        if prev_had_trailing_ws && has_trailing_ws {
+          // We want to distinguish `List<Int>`, where there isn't an
+          // operator, from `1 < 2` where there is an operator.
+          //
+          // This is an imperfect heuristic because we're only using
+          // the lexer. It would be better to expose the full parser
+          // to userland Garden code.
           let after_tok = part.substring(tok.len(), part.len())
-          "<a class=\"operator\" href=\"/operator:" ^ tok ^ ".html\">" ^ tok ^ "</a>" ^ after_tok
+          "<a class=\"operator\" href=\"/operator:" ^ tok ^ ".html\">" ^ escape_angle_brackets(tok) ^ "</a>" ^ after_tok
         } else {
-          // An operator with no whitespace around it. Assume it's a type argument.
-          part
+          escape_angle_brackets(part)
         }
       } else if prelude_funs.contains(tok) {
         let after_tok = part.substring(tok.len(), part.len())
@@ -294,7 +302,10 @@ fun render_markdown_garden_code(snippet: Snippet): String {
         escape_angle_brackets(part)
       }
       rendered_line_parts = rendered_line_parts.append(rendered_part)
+
+      prev_had_trailing_ws = has_trailing_ws
     }
+
     rendered_lines = rendered_lines.append("".join(rendered_line_parts))
   }
 

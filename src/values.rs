@@ -505,7 +505,10 @@ impl Value {
                 let mut s = String::new();
                 s.push_str("Dict[");
 
-                for (i, (key, value)) in items.iter().enumerate() {
+                let mut keys_and_values = items.iter().collect::<Vec<_>>();
+                keys_and_values.sort_by_key(|(k, _v)| *k);
+
+                for (i, (key, value)) in keys_and_values.iter().enumerate() {
                     if i != 0 {
                         s.push_str(", ");
                     }

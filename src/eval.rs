@@ -4035,7 +4035,8 @@ fn eval_builtin_method_call(
             }
             saved_values.push(receiver_value.clone());
 
-            let expected_key = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            let expected_key =
+                check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
 
             match receiver_value.as_ref() {
                 Value_::Dict { items, .. } => {
@@ -4083,7 +4084,8 @@ fn eval_builtin_method_call(
             }
             saved_values.push(receiver_value.clone());
 
-            let key_to_insert = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            let key_to_insert =
+                check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
             let value_to_insert = &arg_values[1];
 
             match receiver_value.as_ref() {

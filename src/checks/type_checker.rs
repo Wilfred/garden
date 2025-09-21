@@ -954,10 +954,27 @@ impl TypeCheckVisitor<'_> {
                 for (key_expr, _, value_expr) in items {
                     self.verify_expr(&Type::string(), key_expr, type_bindings, expected_return_ty);
 
-                    value_tys.push(self.infer_expr(value_expr, type_bindings, expected_return_ty));
+                    let inferred_value_ty =
+                        self.infer_expr(value_expr, type_bindings, expected_return_ty);
+                    value_tys.push((inferred_value_ty, value_expr.position.clone()));
                 }
 
-                Type::dict(Type::no_value())
+                let value_ty = match unify_all(&value_tys) {
+                    Ok(ty) => ty,
+                    Err(position) => {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![],
+                            severity: Severity::Error,
+                            message: ErrorMessage(vec![Text(
+                                "Dict values have different types.".to_owned(),
+                            )]),
+                            position,
+                        });
+                        Type::Any
+                    }
+                };
+
+                Type::dict(value_ty)
             }
             Expression_::TupleLiteral(items) => {
                 let item_tys: Vec<_> = items

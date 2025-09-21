@@ -1,0 +1,13 @@
+let d = Dict["x" => 1]
+
+dbg(d.get("x"))
+dbg(d.get("y"))
+
+// d = d.set("y", 42)
+// dbg(d.get("y"))
+
+// args: run
+// expected stdout:
+// Some(1)
+// None
+

@@ -499,6 +499,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
     );
 
     let builtin_methods = vec![
+        ("Dict", vec![("get", BuiltinMethodKind::DictGet)]),
         (
             "List",
             vec![

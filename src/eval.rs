@@ -4017,6 +4017,60 @@ fn eval_builtin_method_call(
     expr_value_is_used: bool,
 ) -> Result<(), (RestoreValues, EvalError)> {
     match kind {
+        BuiltinMethodKind::DictGet => {
+            check_arity(
+                &SymbolName {
+                    text: "Dict::get".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let expected_key = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+
+            match receiver_value.as_ref() {
+                Value_::Dict { items, .. } => {
+                    let value = match items.get(expected_key) {
+                        Some(found_value) => Value::some(found_value.clone()),
+                        None => Value::none(),
+                    };
+
+                    if expr_value_is_used {
+                        env.push_value(value);
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "List".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
         BuiltinMethodKind::ListAppend => {
             check_arity(
                 &SymbolName {
@@ -4173,7 +4227,8 @@ fn eval_builtin_method_call(
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(
-                            arg_positions[1].clone(),
+                            //
+                            arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName { text: "Int".into() },
                                 &arg_values[0],

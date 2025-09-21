@@ -70,7 +70,8 @@ pub(crate) enum Value_ {
     /// A dictionary, a hash map with string keys.
     Dict {
         items: FxHashMap<String, Value>,
-        elem_type: Type,
+        /// The type of the values in this dict, e.g. Int in `Dict["x" => 1]`.
+        value_type: Type,
     },
     /// A value in a user-defined enum, such as `True` or `Some(123)`.
     EnumVariant {

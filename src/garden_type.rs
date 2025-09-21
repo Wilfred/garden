@@ -272,7 +272,7 @@ impl Type {
             Value_::String(_) => Type::string(),
             Value_::List { elem_type, .. } => Type::list(elem_type.clone()),
             Value_::Tuple { item_types, .. } => Type::Tuple(item_types.clone()),
-            Value_::Dict { elem_type, .. } => Type::dict(elem_type.clone()),
+            Value_::Dict { value_type, .. } => Type::dict(value_type.clone()),
             Value_::EnumVariant { runtime_type, .. } => runtime_type.clone(),
             Value_::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
             Value_::Struct { runtime_type, .. } => runtime_type.clone(),

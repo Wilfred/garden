@@ -1,0 +1,5 @@
+dbg(Dict["a" => "hello", "b" ^ "c" => "world"])
+
+// args: run
+// expected stdout: Dict["a" => "hello", "bc" => "world"]
+

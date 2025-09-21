@@ -5,6 +5,12 @@
 
 ## Syntax
 
+Added a Dict type, a key-value store with string keys.
+
+```
+let prices = Dict["apple" => 2, "banana" => 1]
+```
+
 Visibility is now set with `public` instead of `external`.
 
 ```

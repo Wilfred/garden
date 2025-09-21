@@ -4918,8 +4918,50 @@ fn eval_expr(
                 }
             }
         }
-        Expression_::DictLiteral(_items) => {
-            todo!()
+        Expression_::DictLiteral(item_exprs) => {
+            if expr_state.done_children() {
+                let mut items: FxHashMap<String, Value> = FxHashMap::default();
+                let mut value_type = Type::no_value();
+
+                for (key_expr, _arrow, _v) in item_exprs {
+                    // The evaluated value of key-value pair.
+                    let value_value = env
+                        .pop_value()
+                        .expect("Value stack should have sufficient items for the dict literal");
+
+                    // TODO: check that all elements are of a compatible type.
+                    // Dict[1 => 1, 2 => ""] should be a runtime error.
+                    value_type = Type::from_value(&value_value);
+
+                    let key_value = env
+                        .pop_value()
+                        .expect("Value stack should have sufficient items for the dict literal");
+
+                    let key_str = check_string(
+                        &key_value,
+                        &key_expr.position,
+                        // TODO: set saved_values properly here.
+                        vec![],
+                        env,
+                    )?;
+
+                    items.insert(key_str.clone(), value_value);
+                }
+
+                if expr_value_is_used {
+                    env.push_value(Value::new(Value_::Dict { items, value_type }));
+                }
+            } else {
+                env.push_expr_to_eval(
+                    ExpressionState::EvaluatedAllSubexpressions,
+                    outer_expr.clone(),
+                );
+
+                for (key_expr, _, value_expr) in item_exprs.iter() {
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, value_expr.clone());
+                    env.push_expr_to_eval(ExpressionState::NotEvaluated, key_expr.clone());
+                }
+            }
         }
         Expression_::TupleLiteral(items) => {
             if expr_state.done_children() {

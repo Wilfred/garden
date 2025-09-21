@@ -503,20 +503,21 @@ impl Value {
             }
             Value_::Dict { items, .. } => {
                 let mut s = String::new();
-
-                s.push('{');
+                s.push_str("Dict[");
 
                 for (i, (key, value)) in items.iter().enumerate() {
                     if i != 0 {
                         s.push_str(", ");
                     }
 
-                    s.push_str(&format!("{}: ", escape_string_literal(key)));
-                    s.push_str(&value.display(env));
+                    s.push_str(&format!(
+                        "{} => {}",
+                        escape_string_literal(key),
+                        value.display(env)
+                    ));
                 }
 
-                s.push('}');
-
+                s.push(']');
                 s
             }
             Value_::EnumVariant {

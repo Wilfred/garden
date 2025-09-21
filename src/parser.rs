@@ -295,42 +295,63 @@ fn parse_tuple_literal_or_parentheses(
     )
 }
 
-fn parse_list_or_hash_map_literal(
+fn parse_dict_literal(
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Expression {
+    let dict_token = require_token(tokens, diagnostics, "Dict");
+    let _open_bracket = require_token(tokens, diagnostics, "[");
+
+    let items = parse_dict_literal_items(tokens, id_gen, diagnostics);
+
+    let close_bracket = require_token(tokens, diagnostics, "]");
+
+    return Expression::new(
+        Position::merge(&dict_token.position, &close_bracket.position),
+        Expression_::DictLiteral(items),
+        id_gen.next(),
+    );
+}
+
+fn parse_dict_literal_items(
+    tokens: &mut TokenStream,
+    id_gen: &mut IdGenerator,
+    diagnostics: &mut Vec<ParseError>,
+) -> Vec<(Expression, Position, Expression)> {
+    let mut items: Vec<(Expression, Position, Expression)> = vec![];
+    loop {
+        if peeked_symbol_is(tokens, "]") {
+            break;
+        }
+
+        let start_idx = tokens.idx;
+        let key_expr = parse_expression(tokens, id_gen, diagnostics);
+
+        if key_expr.expr_.is_invalid_or_placeholder() {
+            break;
+        }
+
+        let arrow = require_token(tokens, diagnostics, "=>");
+        let value_expr = parse_expression(tokens, id_gen, diagnostics);
+        items.push((key_expr, arrow.position, value_expr));
+
+        assert!(
+            tokens.idx > start_idx,
+            "The parser should always make forward progress."
+        );
+    }
+
+    items
+}
+
+fn parse_list_literal(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
 ) -> Expression {
     let open_bracket = require_token(tokens, diagnostics, "[");
-    let Some(next) = tokens.peek() else {
-        return Expression::new(
-            open_bracket.position.clone(),
-            Expression_::Invalid,
-            id_gen.next(),
-        );
-    };
-
-    // Empty hashmap, of the form `[=>]`.
-    if next.text == "=>" {
-        tokens.pop();
-        let close_bracket = require_token(tokens, diagnostics, "]");
-
-        return Expression::new(
-            Position::merge(&open_bracket.position, &close_bracket.position),
-            Expression_::DictLiteral(vec![]),
-            id_gen.next(),
-        );
-    }
-
-    parse_list_literal(&open_bracket, tokens, id_gen, diagnostics)
-}
-
-fn parse_list_literal(
-    open_bracket: &Token,
-    tokens: &mut TokenStream,
-    id_gen: &mut IdGenerator,
-    diagnostics: &mut Vec<ParseError>,
-) -> Expression {
-    let items = parse_comma_separated_exprs(open_bracket, tokens, id_gen, diagnostics, "]");
+    let items = parse_comma_separated_exprs(&open_bracket, tokens, id_gen, diagnostics, "]");
 
     let close_bracket_pos = match tokens.peek() {
         Some(token) if token.text == "]" => {
@@ -646,7 +667,11 @@ fn parse_simple_expression(
         }
 
         if token.text == "[" {
-            return parse_list_or_hash_map_literal(tokens, id_gen, diagnostics);
+            return parse_list_literal(tokens, id_gen, diagnostics);
+        }
+
+        if token.text == "Dict" {
+            return parse_dict_literal(tokens, id_gen, diagnostics);
         }
 
         // For lambda, require `fun(`. If we see `fun foo` it's likely

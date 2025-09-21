@@ -372,7 +372,7 @@ pub(crate) enum Expression_ {
     /// ```garden
     /// Dict[x => 1, y ^ z => 2]
     /// ```
-    DictLiteral(Vec<(ExpressionWithComma, Expression)>),
+    DictLiteral(Vec<(Expression, Position, Expression)>),
     /// ```garden
     /// ()
     /// (x,)

@@ -4049,12 +4049,6 @@ fn eval_builtin_method_call(
                     }
                 }
                 _ => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(
@@ -4106,12 +4100,6 @@ fn eval_builtin_method_call(
                     }
                 }
                 _ => {
-                    let mut saved_values = vec![];
-                    for value in arg_values.iter().rev() {
-                        saved_values.push(value.clone());
-                    }
-                    saved_values.push(receiver_value.clone());
-
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(

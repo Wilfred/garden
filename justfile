@@ -3,7 +3,10 @@ default:
 
 # Build and run tests on all changes.
 watch:
-    REGENERATE=y GDN_TEST=y cargo watch -x b -x t
+    # Only watch for changes between runs. This avoids us re-running
+    # simply because the expected output of a test file was
+    # regenerated.
+    REGENERATE=y GDN_TEST=y cargo watch -x b -x t --watch-when-idle
 
 # Tag, push and publish a new release.
 release:

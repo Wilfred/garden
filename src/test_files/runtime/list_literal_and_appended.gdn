@@ -1,7 +1,7 @@
 {
     let literal = [1]
 
-    let changed = []
+    let changed: List<Int> = []
     changed = changed.append(1)
 
     // Literal [1] should equal a [1] list built at runtime.

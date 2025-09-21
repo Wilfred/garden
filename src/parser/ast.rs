@@ -684,6 +684,7 @@ pub(crate) struct ImportInfo {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum BuiltinMethodKind {
     DictGet,
+    DictSet,
     ListAppend,
     ListContains,
     ListGet,

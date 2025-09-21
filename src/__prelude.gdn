@@ -1033,6 +1033,6 @@ public method get<T>(this: Dict<T>, key: String): Option<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
-// public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
-//   __BUILTIN_IMPLEMENTATION
-// }
+public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
+  __BUILTIN_IMPLEMENTATION
+}

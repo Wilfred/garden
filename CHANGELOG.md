@@ -29,9 +29,9 @@ Fixed a crash when evaluating empty blocks.
 
 `__garden.gdn` is now `__reflect.gdn`.
 
-Added `Dict::get()`.
+Added `Dict::get()` and `Dict::set()`.
 
-Added `__reflect::operators`.
+Added `__reflect::operators()`.
 
 ## Check
 

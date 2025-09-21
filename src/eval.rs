@@ -4071,6 +4071,63 @@ fn eval_builtin_method_call(
                 }
             }
         }
+        BuiltinMethodKind::DictSet => {
+            check_arity(
+                &SymbolName {
+                    text: "Dict::set".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                2,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+            saved_values.push(receiver_value.clone());
+
+            let key_to_insert = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
+            let value_to_insert = &arg_values[1];
+
+            match receiver_value.as_ref() {
+                Value_::Dict { items, .. } => {
+                    let mut items = items.clone();
+                    items.insert(key_to_insert.clone(), value_to_insert.clone());
+
+                    if expr_value_is_used {
+                        // TODO: check that the new value has the same
+                        // type as the existing dict values.
+                        let value_type = Type::from_value(&arg_values[0]);
+
+                        env.push_value(Value::new(Value_::Dict { items, value_type }));
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "Dict".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
         BuiltinMethodKind::ListAppend => {
             check_arity(
                 &SymbolName {

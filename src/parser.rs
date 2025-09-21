@@ -318,8 +318,8 @@ fn parse_dict_literal_items(
     tokens: &mut TokenStream,
     id_gen: &mut IdGenerator,
     diagnostics: &mut Vec<ParseError>,
-) -> Vec<(Expression, Position, Expression)> {
-    let mut items: Vec<(Expression, Position, Expression)> = vec![];
+) -> Vec<(Rc<Expression>, Position, Rc<Expression>)> {
+    let mut items = vec![];
     loop {
         if peeked_symbol_is(tokens, "]") {
             break;
@@ -335,7 +335,7 @@ fn parse_dict_literal_items(
         let arrow = require_token(tokens, diagnostics, "=>");
         let value_expr = parse_expression(tokens, id_gen, diagnostics);
         let value_expr_pos = value_expr.position.clone();
-        items.push((key_expr, arrow.position, value_expr));
+        items.push((Rc::new(key_expr), arrow.position, Rc::new(value_expr)));
 
         assert!(
             tokens.idx > start_idx,

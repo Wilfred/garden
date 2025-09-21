@@ -503,6 +503,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
             "Dict",
             vec![
                 ("get", BuiltinMethodKind::DictGet),
+                ("items", BuiltinMethodKind::DictItems),
                 ("set", BuiltinMethodKind::DictSet),
             ],
         ),

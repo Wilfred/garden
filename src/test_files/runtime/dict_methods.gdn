@@ -9,10 +9,13 @@ dbg(d.get("y"))
 d = d.set("y", 43)
 dbg(d.get("y"))
 
+dbg(d.items())
+
 // args: run
 // expected stdout:
 // Some(1)
 // None
 // Some(42)
 // Some(43)
+// [("x", 1), ("y", 43)]
 

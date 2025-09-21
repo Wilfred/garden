@@ -1060,3 +1060,14 @@ public method get<T>(this: Dict<T>, key: String): Option<T> {
 public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
   __BUILTIN_IMPLEMENTATION
 }
+
+// Return a list of all the items in this dict. Items are returned in
+// alphabetical order.
+//
+// ```
+// let scores = Dict["Mario" => 10, "Luigi" => 8]
+// scores.items() //-> [("Luigi", 8), ("Mario", 10)]
+// ```
+public method items<T>(this: Dict<T>): List<(String, T)> {
+  __BUILTIN_IMPLEMENTATION
+}

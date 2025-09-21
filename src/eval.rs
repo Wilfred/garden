@@ -4066,6 +4066,69 @@ fn eval_builtin_method_call(
                 }
             }
         }
+        BuiltinMethodKind::DictItems => {
+            check_arity(
+                &SymbolName {
+                    text: "Dict::items".to_owned(),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            match receiver_value.as_ref() {
+                Value_::Dict { items, value_type } => {
+                    let mut list_items_rust = vec![];
+                    for (item_key, item_value) in items.iter() {
+                        list_items_rust.push((item_key.clone(), item_value.clone()));
+                    }
+
+                    list_items_rust.sort_by_key(|(k, _v)| k.clone());
+
+                    let mut list_items = vec![];
+                    for (item_key, item_value) in list_items_rust.iter() {
+                        let key_str = Value::new(Value_::String(item_key.clone()));
+                        let tuple_items = vec![key_str, item_value.clone()];
+
+                        let tuple = Value::new(Value_::Tuple {
+                            items: tuple_items,
+                            item_types: vec![Type::string(), value_type.clone()],
+                        });
+                        list_items.push(tuple);
+                    }
+
+                    if expr_value_is_used {
+                        env.push_value(Value::new(Value_::List {
+                            items: list_items,
+                            elem_type: Type::Tuple(vec![Type::string(), value_type.clone()]),
+                        }));
+                    }
+                }
+                _ => {
+                    let mut saved_values = vec![];
+                    for value in arg_values.iter().rev() {
+                        saved_values.push(value.clone());
+                    }
+                    saved_values.push(receiver_value.clone());
+
+                    return Err((
+                        RestoreValues(saved_values),
+                        EvalError::Exception(
+                            arg_positions[0].clone(),
+                            format_type_error(
+                                &TypeName {
+                                    text: "Dict".into(),
+                                },
+                                receiver_value,
+                                env,
+                            ),
+                        ),
+                    ));
+                }
+            }
+        }
         BuiltinMethodKind::DictSet => {
             check_arity(
                 &SymbolName {

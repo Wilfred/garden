@@ -67,8 +67,8 @@ pub(crate) enum Value_ {
         items: Vec<Value>,
         item_types: Vec<Type>,
     },
-    /// A hash map with string keys.
-    HashMap {
+    /// A dictionary, a hash map with string keys.
+    Dict {
         items: FxHashMap<String, Value>,
         elem_type: Type,
     },
@@ -349,7 +349,7 @@ pub(crate) fn type_representation(value: &Value) -> TypeName {
             Value_::String(_) => "String",
             Value_::List { .. } => "List",
             Value_::Tuple { .. } => "Tuple",
-            Value_::HashMap { .. } => "HashMap",
+            Value_::Dict { .. } => "Dict",
             Value_::EnumVariant { type_name, .. } | Value_::EnumConstructor { type_name, .. } => {
                 &type_name.text
             }
@@ -500,7 +500,7 @@ impl Value {
 
                 s
             }
-            Value_::HashMap { items, .. } => {
+            Value_::Dict { items, .. } => {
                 let mut s = String::new();
 
                 s.push('{');

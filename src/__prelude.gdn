@@ -1024,10 +1024,8 @@ struct Namespace {
 
 // An immutable key-value data structure. Keys must be strings.
 //
-// For example, `["x" => 1, "y" => 2]` is a `HashMap<Int>`.
-//
-// To avoid confusion with lists, an empty hashmap is written `[=>]`.
-struct HashMap<T> {
+// For example, `Dict["x" => 1, "y" ^ "z" => 2]` is a `Dict<Int>`.
+struct Dict<T> {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }
 

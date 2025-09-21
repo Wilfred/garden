@@ -390,10 +390,10 @@ fn built_in_types() -> FxHashMap<TypeName, TypeDefAndMethods> {
     );
     types.insert(
         TypeName {
-            text: "HashMap".into(),
+            text: "Dict".into(),
         },
         TypeDefAndMethods {
-            def: TypeDef::Builtin(BuiltinType::HashMap, None),
+            def: TypeDef::Builtin(BuiltinType::Dict, None),
             methods: FxHashMap::default(),
         },
     );

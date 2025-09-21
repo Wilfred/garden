@@ -171,11 +171,11 @@ impl Type {
         }
     }
 
-    pub(crate) fn hash_map(ty: Type) -> Self {
+    pub(crate) fn dict(ty: Type) -> Self {
         Self::UserDefined {
             kind: TypeDefKind::Struct,
             name: TypeName {
-                text: "HashMap".to_owned(),
+                text: "Dict".to_owned(),
             },
             args: vec![ty],
         }
@@ -215,13 +215,13 @@ impl Type {
 
                         Ok(Type::list(elem_type))
                     }
-                    BuiltinType::HashMap => {
+                    BuiltinType::Dict => {
                         let elem_type = match args.first() {
                             Some(type_) => type_.clone(),
-                            None => Self::error("Missing type argument to HashMap<>"),
+                            None => Self::error("Missing type argument to Dict<>"),
                         };
 
-                        Ok(Type::hash_map(elem_type))
+                        Ok(Type::dict(elem_type))
                     }
                     BuiltinType::Tuple => Ok(Type::Tuple(args)),
                     BuiltinType::Fun => match &args[..] {
@@ -272,7 +272,7 @@ impl Type {
             Value_::String(_) => Type::string(),
             Value_::List { elem_type, .. } => Type::list(elem_type.clone()),
             Value_::Tuple { item_types, .. } => Type::Tuple(item_types.clone()),
-            Value_::HashMap { elem_type, .. } => Type::hash_map(elem_type.clone()),
+            Value_::Dict { elem_type, .. } => Type::dict(elem_type.clone()),
             Value_::EnumVariant { runtime_type, .. } => runtime_type.clone(),
             Value_::EnumConstructor { runtime_type, .. } => runtime_type.clone(),
             Value_::Struct { runtime_type, .. } => runtime_type.clone(),

@@ -16,7 +16,7 @@ pub(crate) enum BuiltinType {
     String,
     Namespace,
     List,
-    HashMap,
+    Dict,
 
     Fun,
     Tuple,
@@ -67,7 +67,7 @@ impl TypeDef {
                     position: Position::todo(&dummy_vfs_path),
                     id: SyntaxId(0),
                 }],
-                BuiltinType::HashMap => vec![TypeSymbol {
+                BuiltinType::Dict => vec![TypeSymbol {
                     name: "T".into(),
                     position: Position::todo(&dummy_vfs_path),
                     id: SyntaxId(0),

@@ -949,9 +949,9 @@ impl TypeCheckVisitor<'_> {
 
                 Type::list(elem_ty)
             }
-            Expression_::HashMapLiteral(pairs) => {
+            Expression_::DictLiteral(pairs) => {
                 //
-                Type::hash_map(Type::no_value())
+                Type::dict(Type::no_value())
             }
             Expression_::TupleLiteral(items) => {
                 let item_tys: Vec<_> = items

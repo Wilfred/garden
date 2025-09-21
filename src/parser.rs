@@ -316,7 +316,7 @@ fn parse_list_or_hash_map_literal(
 
         return Expression::new(
             Position::merge(&open_bracket.position, &close_bracket.position),
-            Expression_::HashMapLiteral(vec![]),
+            Expression_::DictLiteral(vec![]),
             id_gen.next(),
         );
     }

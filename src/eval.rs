@@ -4918,7 +4918,7 @@ fn eval_expr(
                 }
             }
         }
-        Expression_::HashMapLiteral(_items) => {
+        Expression_::DictLiteral(_items) => {
             todo!()
         }
         Expression_::TupleLiteral(items) => {

@@ -4055,7 +4055,7 @@ fn eval_builtin_method_call(
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName {
-                                    text: "List".into(),
+                                    text: "Dict".into(),
                                 },
                                 receiver_value,
                                 env,

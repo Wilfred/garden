@@ -5,10 +5,10 @@ fun foo() {
 
 // args: show-type
 // expected stdout:
+// Fun<(String), NoValue>
 // Stop the program immediately, and report the error message given.
 // 
 // ```
 // throw("Computer is melting!")
 // ```
-// Fun<(String), NoValue>
 

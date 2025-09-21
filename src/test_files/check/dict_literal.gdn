@@ -1,0 +1,36 @@
+// Good.
+Dict[]
+
+// Bad: undefined key.
+Dict[no_such => 1]
+
+// Bad: undefined value.
+Dict["foo" => no_such2]
+
+// Bad: key isn't a string.
+Dict[1 => 2]
+
+// Good: all values the same type.
+Dict["x" => 1, "y" => 2]
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Error: Expected an expression after this.
+// ---| src/test_files/check/dict_literal.gdn:14:13
+//  13| // Good: all values the same type.
+//  14| Dict["x" => 1, "y" => 2]
+//  15|             ^
+// 
+// Error: Expected `]` after this.
+// ---| src/test_files/check/dict_literal.gdn:14:13
+//  13| // Good: all values the same type.
+//  14| Dict["x" => 1, "y" => 2]
+//  15|             ^
+// 
+// Error: Expected an expression after this.
+// ---| src/test_files/check/dict_literal.gdn:14:13
+//  13| // Good: all values the same type.
+//  14| Dict["x" => 1, "y" => 2]
+//  15|             ^
+

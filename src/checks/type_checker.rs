@@ -949,8 +949,14 @@ impl TypeCheckVisitor<'_> {
 
                 Type::list(elem_ty)
             }
-            Expression_::DictLiteral(pairs) => {
-                //
+            Expression_::DictLiteral(items) => {
+                let mut value_tys = vec![];
+                for (key_expr, _, value_expr) in items {
+                    self.verify_expr(&Type::string(), key_expr, type_bindings, expected_return_ty);
+
+                    value_tys.push(self.infer_expr(value_expr, type_bindings, expected_return_ty));
+                }
+
                 Type::dict(Type::no_value())
             }
             Expression_::TupleLiteral(items) => {

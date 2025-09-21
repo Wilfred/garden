@@ -3311,7 +3311,7 @@ fn eval_builtin_call(
                 .borrow()
                 .types
                 .keys()
-                .map(|k| (k.text.clone()))
+                .map(|k| k.text.clone())
                 .collect::<Vec<_>>();
             names.sort();
 

@@ -1025,6 +1025,14 @@ struct Namespace {
 // An immutable key-value data structure. Keys must be strings.
 //
 // For example, `Dict["x" => 1, "y" ^ "z" => 2]` is a `Dict<Int>`.
+//
+// Dict items are evaluated in order, and the last value wins if there
+// are duplicates.
+//
+// ```
+// Dict["a" => "hello", "a" => "world"]
+// //-> Dict["a" => "world"]
+// ```
 struct Dict<T> {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }

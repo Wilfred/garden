@@ -33,6 +33,9 @@
 #![allow(clippy::map_entry)]
 // PLs are complicated, it can be helpful to have docs.
 #![warn(missing_docs)]
+// This seems to give false positives and suggest changes that don't
+// compile.
+#![allow(clippy::cmp_owned)]
 
 mod caret_finder;
 mod checks;

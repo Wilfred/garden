@@ -307,11 +307,11 @@ fn parse_dict_literal(
 
     let close_bracket = require_token(tokens, diagnostics, "]");
 
-    return Expression::new(
+    Expression::new(
         Position::merge(&dict_token.position, &close_bracket.position),
         Expression_::DictLiteral(items),
         id_gen.next(),
-    );
+    )
 }
 
 fn parse_dict_literal_items(
@@ -334,12 +334,45 @@ fn parse_dict_literal_items(
 
         let arrow = require_token(tokens, diagnostics, "=>");
         let value_expr = parse_expression(tokens, id_gen, diagnostics);
+        let value_expr_pos = value_expr.position.clone();
         items.push((key_expr, arrow.position, value_expr));
 
         assert!(
             tokens.idx > start_idx,
             "The parser should always make forward progress."
         );
+
+        if let Some(token) = tokens.peek() {
+            if token.text == "," {
+                tokens.pop();
+            } else if token.text != "]" {
+                diagnostics.push(ParseError::Invalid {
+                    position: value_expr_pos.clone(),
+                    message: ErrorMessage(vec![
+                        msgtext!("Expected "),
+                        msgcode!(","),
+                        msgtext!(" or "),
+                        msgcode!("]"),
+                        msgtext!(" after this."),
+                    ]),
+                    notes: vec![],
+                });
+
+                continue;
+            }
+        } else {
+            diagnostics.push(ParseError::Incomplete {
+                position: value_expr_pos.clone(),
+                message: ErrorMessage(vec![
+                    msgtext!("Expected "),
+                    msgcode!(","),
+                    msgtext!(" or "),
+                    msgcode!("]"),
+                    msgtext!(", but got EOF."),
+                ]),
+            });
+            break;
+        }
     }
 
     items

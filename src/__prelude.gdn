@@ -1037,10 +1037,26 @@ struct Dict<T> {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
+// Look up `key` in this dict.
+//
+// ```
+// let scores = Dict["Mario" => 10, "Luigi" => 8]
+// scores.get("Mario") //-> Some(10)
+// scores.get("Bowser") //-> None
+// ```
 public method get<T>(this: Dict<T>, key: String): Option<T> {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Return a new dict with `key` associated with `value`.
+//
+// ```
+// let scores = Dict["Mario" => 10]
+// scores.set("Mario", 11) //-> Dict["Mario" => 11]
+// 
+// scores.set("Luigi", 8)
+// //-> Dict["Mario" => 10, "Luigi" => 8]
+// ```
 public method set<T>(this: Dict<T>, key: String, Value: T): Dict<T> {
   __BUILTIN_IMPLEMENTATION
 }

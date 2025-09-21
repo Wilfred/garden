@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#307d30" />
+    <title>Dict::set - Garden</title>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Protest+Riot&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/blocks.min.css" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title-container">
+        <a href="/">Garden 🌻</a>
+        <nav>
+          <a class="block" href="/blog.html">Blog</a>
+          <a class="block" href="/manual.html">Manual</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="container"><h1><code>Dict::set</code></h1>
+<p>Return a new dict with <code>key</code> associated with <code>value</code>.</p>
+<pre><span class="code-title">Examples</span><code><a class="keyword" href="/keyword:let.html">let</a> scores <a class="operator" href="/operator:=.html">=</a> <a class="type" href="/type:Dict.html">Dict</a>[<span class="string">"Mario" </span>=&gt; 10]
+scores.set(<span class="string">"Mario"</span>, 11) <span class="comment">//-&gt; Dict["Mario" =&gt; 11]</span>
+
+scores.set(<span class="string">"Luigi"</span>, 8)
+<span class="comment">//-&gt; Dict["Mario" =&gt; 10, "Luigi" =&gt; 8]</span></code></pre>
+<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:method.html">method</a> set&lt;<span class="type">T</span>&gt;(this: <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt;, key: <a class="type" href="/type:String.html">String</a>, <span class="type">Value</span>: <span class="type">T</span>): <a class="type" href="/type:Dict.html">Dict</a>&lt;<span class="type">T</span>&gt; {
+  __BUILTIN_IMPLEMENTATION
+}</code></pre></div>
+
+    <footer>
+      Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.
+    </footer>
+  </body>
+</html>

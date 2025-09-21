@@ -4227,7 +4227,6 @@ fn eval_builtin_method_call(
                     return Err((
                         RestoreValues(saved_values),
                         EvalError::Exception(
-                            //
                             arg_positions[0].clone(),
                             format_type_error(
                                 &TypeName { text: "Int".into() },

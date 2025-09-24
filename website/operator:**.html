@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#307d30" />
-    <title>operators - Garden</title>
+    <title>** - Garden</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,12 +27,12 @@
       </div>
     </header>
 
-    <div class="container"><h1><code>__reflect.gdn::operators</code></h1>
-<p>All the operators in Garden.</p>
-<pre><span class="code-title">Source Code</span><code><a class="keyword" href="/keyword:public.html">public</a> <a class="keyword" href="/keyword:fun.html">fun</a> operators(): <a class="type" href="/type:List.html">List</a>&lt;<a class="type" href="/type:String.html">String</a>&gt; {
-  <span class="comment">// Missing: ["/", "%"]</span>
-  [<span class="string">"+"</span>, <span class="string">"+="</span>, <span class="string">"-"</span>, <span class="string">"-="</span>, <span class="string">"*"</span>, <span class="string">"**"</span>, <span class="string">"=="</span>, <span class="string">"!="</span>, <span class="string">"="</span>, <span class="string">"^"</span>, <span class="string">"&gt;"</span>, <span class="string">"&lt;"</span>]
-}</code></pre></div>
+    <div class="container"><h1><code>**</code> Operator</h1>
+<p><code>**</code> calculates the first integer to the power of the second.</p>
+<pre><code>2 <a class="operator" href="/operator:**.html">**</a> 3 <span class="comment">//-&gt; 8</span>
+5 <a class="operator" href="/operator:**.html">**</a> 0 <span class="comment">//-&gt; 1</span></code></pre>
+<p><code>**</code> will throw an exception if the second argument is negative.</p>
+<pre><code>2 <a class="operator" href="/operator:**.html">**</a> -1 <span class="comment">// (throws)</span></code></pre></div>
 
     <footer>
       Source on <a href="https://github.com/Wilfred/garden">GitHub</a>.

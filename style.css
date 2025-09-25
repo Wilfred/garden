@@ -1,0 +1,248 @@
+/* Heavily inspired by https://github.com/thesephist/codeframe,
+   which is under a MIT license. */
+
+:root {
+  --green-primary: #307d30;
+  --cream: #ebeee3;
+  --shadow-color: #44444457;
+}
+
+::selection {
+  background-color: var(--green-primary);
+  color: var(--cream);
+}
+
+body {
+  max-width: 800px;
+  margin: 24px auto 52px auto;
+  font-size: 18px;
+  background-color: var(--cream);
+  font-family: "Lora", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+p {
+  line-height: 30px;
+  margin-top: 0;
+  margin-bottom: 26px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h6,
+h6 {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
+  margin-bottom: 0;
+}
+
+header > a,
+header .title-container > a {
+  padding-left: 10px;
+  color: var(--cream);
+  font-size: 36px;
+}
+
+.title-container {
+  width: 100%;
+  max-width: 800px;
+  padding-top: 10px;
+}
+
+code {
+  border-radius: 5px;
+  border: 1px solid #bcbec0;
+  padding: 2px;
+}
+
+a > code:hover {
+  border-color: var(--green-primary);
+}
+a:has(> code) {
+  border-bottom: 0;
+}
+
+pre > code {
+  border: initial;
+  padding: initial;
+  background-color: initial;
+}
+
+pre,
+code {
+  font-family: monospace;
+}
+
+pre {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+pre.block:hover {
+  transform: none;
+}
+pre.block {
+  cursor: initial;
+  padding: 8px;
+}
+
+.block::after {
+  /* TODO: Override --block-shadow-color variable instead. */
+  background: var(--shadow-color);
+}
+
+.container {
+  margin-top: 100px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+header {
+  font-family: "Protest Riot", sans-serif;
+  font-weight: 400;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 4px;
+  background: var(--green-primary);
+  border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+}
+
+.block,
+.block::before {
+  background-color: var(--cream);
+}
+
+a {
+  color: var(--green-primary);
+  text-decoration: none;
+  border-bottom: 2px dotted var(--green-primary);
+}
+a:hover {
+  border-bottom: 2px solid var(--green-primary);
+}
+
+a:has(> code):hover {
+  border-bottom: 0;
+}
+
+pre a {
+  border-bottom: 0;
+}
+pre a:hover {
+  border-bottom: 0;
+  text-decoration: underline;
+  text-decoration-color: inherit;
+}
+
+h2 {
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+pre {
+  /* Fix excessively small fonts on mobile.
+
+  https://stackoverflow.com/a/75839939/
+  https://horstmann.com/unblog/2023-03-25/index.html
+  */
+  white-space: pre-wrap;
+}
+
+nav {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 1;
+  overflow-x: auto;
+  float: right;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+}
+
+header a {
+  text-decoration: none;
+}
+
+.keyword {
+  font-weight: bold;
+  color: #d05416;
+}
+
+.operator {
+  color: #880;
+}
+
+.comment {
+  color: gray;
+}
+.string {
+  color: #910a0a;
+}
+.type {
+  color: #57269c;
+}
+
+/* Style pre like .block, but don't animate and don't modify the
+   pointer. */
+pre {
+  font-weight: 700;
+
+  border: 3px solid #00000038;
+  border-radius: 5px;
+  padding: 12px 8px;
+  margin: 30px 0px 20px 0px;
+
+  position: relative;
+  top: -2px;
+  left: -2px;
+
+  z-index: 1;
+}
+
+.code-title {
+  padding: 4px 8px;
+  position: absolute;
+  top: -24px;
+  right: 12px;
+
+  background: var(--cream);
+  border: 3px solid #00000038;
+  border-radius: 5px;
+
+  font-family: "Lora", serif;
+  font-weight: initial;
+}
+
+footer {
+  padding-top: 40px;
+  text-align: center;
+}
+
+video {
+  max-width: 100%;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+ul li {
+  margin-bottom: 1em;
+}
+
+/* Nested lists should still be indented. */
+ul ul {
+  margin-left: 1em;
+}

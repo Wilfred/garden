@@ -1,3 +1,53 @@
+/* Lora font. License:
+
+   Copyright 2011 The Lora Project Authors
+   (https://github.com/cyrealtype/Lora-Cyrillic), with Reserved Font
+   Name "Lora".
+*/
+@font-face {
+  font-display: swap;
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 400;
+  src: url("fonts/lora-v37-latin-regular.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Lora";
+  font-style: italic;
+  font-weight: 400;
+  src: url("fonts/lora-v37-latin-italic.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Lora";
+  font-style: normal;
+  font-weight: 700;
+  src: url("fonts/lora-v37-latin-700.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+@font-face {
+  font-display: swap;
+  font-family: "Lora";
+  font-style: italic;
+  font-weight: 700;
+  src: url("fonts/lora-v37-latin-700italic.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* Protest Riot font. License:
+
+   Copyright 2020 The Protest Project Authors (https://github.com/octaviopardo/Protest)
+*/
+@font-face {
+  font-display: swap;
+  font-family: "Protest Riot";
+  font-style: normal;
+  font-weight: 400;
+  src: url("fonts/protest-riot-v2-latin-regular.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
 /* Heavily inspired by https://github.com/thesephist/codeframe,
    which is under a MIT license. */
 

@@ -190,6 +190,10 @@ pre a:hover {
   text-decoration-color: inherit;
 }
 
+h1 {
+  margin-bottom: 10px;
+}
+
 h2 {
   margin-top: 20px;
   margin-bottom: 12px;

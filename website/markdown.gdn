@@ -15,6 +15,7 @@ struct Snippet {
   labels: List<String>,
   title: Option<String>,
   content: String,
+  file: Option<Path>,
 }
 
 fun finish_section(in_bullets: Bool, current_section: List<String>): MarkdownPart {
@@ -81,7 +82,7 @@ fun parse_labels_and_title(src: String): (Option<String>, List<String>) {
   (title, labels)
 }
 
-fun parse_markdown(src: String): List<MarkdownPart> {
+fun parse_markdown(src: String, file: Option<Path>): List<MarkdownPart> {
   let parts: List<MarkdownPart> = []
   let current_section: List<String> = []
 
@@ -107,6 +108,7 @@ fun parse_markdown(src: String): List<MarkdownPart> {
           labels: labels,
           title: title,
           content: content,
+          file: file,
         }
 
         parts = parts.append(CodeBlock(snippet))
@@ -222,11 +224,16 @@ fun render_markdown_code(snippet: Snippet): String {
   "<pre>" ^ inner ^ "</pre>"
 }
 
-fun check_source(src: String): Unit {
+fun check_source(src: String, path: Option<Path>): Unit {
   match reflect::check_snippet(src) {
     Ok(_) => {}
     Err(messages) => {
-      log::warn("Found an error when checking: " ^ src)
+      let path_desc = match path {
+        Some(p) => p.p ^ ": "
+        None => ""
+      }
+      
+      log::warn(path_desc ^ "Found an error when checking: " ^ src)
       for message in messages {
         log::info("  " ^ message)
       }
@@ -236,13 +243,13 @@ fun check_source(src: String): Unit {
 
 fun render_markdown_garden_code(snippet: Snippet): String {
   if snippet.labels.contains("nocheck").not() {
-    check_source(snippet.content)
+    check_source(snippet.content, snippet.file)
 
     // Check that the expected values comments type check too.
     for line in snippet.content.lines() {
       match line.split_once("//->") {
         Some((_before, after)) => {
-          check_source(after)
+          check_source(after, snippet.file)
         }
         None => {}
       }
@@ -616,10 +623,10 @@ fun render_markdown_bullets(items: List<String>): String {
   "<ul>\n" ^ "\n".join(rendered_items) ^ "\n</ul>"
 }
 
-public fun render_markdown(src: String): String {
+public fun render_markdown(src: String, file: Option<Path>): String {
   let html_parts: List<String> = []
 
-  for part in parse_markdown(src) {
+  for part in parse_markdown(src, file) {
     match part {
       Heading(heading) => {
         html_parts = html_parts.append(render_markdown_header(heading))
@@ -643,126 +650,126 @@ public fun render_markdown(src: String): String {
 }
 
 test render_markdown_paragraph_newlines {
-  assert(render_markdown("foo\nbar") == "<p>foo\nbar</p>")
+  assert(render_markdown("foo\nbar", None) == "<p>foo\nbar</p>")
 }
 
 test render_headers {
-  assert(render_markdown("# foo") == "<h1>foo</h1>")
-  assert(render_markdown("#  foo ") == "<h1>foo</h1>")
+  assert(render_markdown("# foo", None) == "<h1>foo</h1>")
+  assert(render_markdown("#  foo ", None) == "<h1>foo</h1>")
 
-  assert(render_markdown("## foo") == "<h2>foo</h2>")
-  assert(render_markdown("###### foo") == "<h6>foo</h6>")
+  assert(render_markdown("## foo", None) == "<h2>foo</h2>")
+  assert(render_markdown("###### foo", None) == "<h6>foo</h6>")
 
-  assert(render_markdown("#foo") == "<p>#foo</p>")
-  assert(render_markdown("####### foo") == "<p>####### foo</p>")
+  assert(render_markdown("#foo", None) == "<p>#foo</p>")
+  assert(render_markdown("####### foo", None) == "<p>####### foo</p>")
 }
 
 test render_markdown_paragraph {
-  assert(render_markdown("foo bar") == "<p>foo bar</p>")
+  assert(render_markdown("foo bar", None) == "<p>foo bar</p>")
 }
 
 test render_markdown_paragraph_escape_angle_brackets {
-  assert(render_markdown("foo bar<") == "<p>foo bar&lt;</p>")
+  assert(render_markdown("foo bar<", None) == "<p>foo bar&lt;</p>")
 }
 
 test render_markdown_paragraph_after_heading {
-  assert(render_markdown("# foo\n\nbar") == "<h1>foo</h1>\n<p>bar</p>")
+  assert(render_markdown("# foo\n\nbar", None) == "<h1>foo</h1>\n<p>bar</p>")
 }
 
 test render_backtick {
-  assert(render_markdown("`foo`") == "<p><code>foo</code></p>")
+  assert(render_markdown("`foo`", None) == "<p><code>foo</code></p>")
 }
 
 test render_backtick_escape_angle_brackets {
-  assert(render_markdown("`foo<`") == "<p><code>foo&lt;</code></p>")
+  assert(render_markdown("`foo<`", None) == "<p><code>foo&lt;</code></p>")
 }
 
 test render_backtick_angle_brackets {
-  assert(render_markdown("`List<T>`") == "<p><code>List&lt;T&gt;</code></p>")
+  assert(render_markdown("`List<T>`", None) == "<p><code>List&lt;T&gt;</code></p>")
 }
 
 test render_strong_escape_angle_brackets {
-  assert(render_markdown("*foo<*") == "<p><em>foo&lt;</em></p>")
+  assert(render_markdown("*foo<*", None) == "<p><em>foo&lt;</em></p>")
 }
 
 test render_backtick_in_heading {
-  assert(render_markdown("# `foo`") == "<h1><code>foo</code></h1>")
+  assert(render_markdown("# `foo`", None) == "<h1><code>foo</code></h1>")
 }
 
 test render_link {
-  assert(render_markdown("[foo](example.com)") == "<p><a href=\"example.com\">foo</a></p>")
+  assert(render_markdown("[foo](example.com)", None) == "<p><a href=\"example.com\">foo</a></p>")
 }
 
 test render_malformed_link {
-  assert(render_markdown("foo ) [ bar") == "<p>foo ) [ bar</p>")
+  assert(render_markdown("foo ) [ bar", None) == "<p>foo ) [ bar</p>")
 }
 
 test render_backtick_in_link {
-  assert(render_markdown("[`foo` bar](#)") == "<p><a href=\"#\"><code>foo</code> bar</a></p>")
+  assert(render_markdown("[`foo` bar](#)", None) == "<p><a href=\"#\"><code>foo</code> bar</a></p>")
 }
 
 test render_link_with_parentheses {
-  assert(render_markdown("[foo (bar)](baz.html)") == "<p><a href=\"baz.html\">foo (bar)</a></p>")
+  assert(render_markdown("[foo (bar)](baz.html)", None) == "<p><a href=\"baz.html\">foo (bar)</a></p>")
 }
 
 test render_triple_backtick {
-  assert(render_markdown("```nocheck\nfoo\nbar\n```") == "<pre><code>foo\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\nbar\n```", None) == "<pre><code>foo\nbar</code></pre>")
 }
 
 test render_triple_backtick_escape_html {
-  assert(render_markdown("```nocheck\nfoo <bar>\n```") == "<pre><code>foo &lt;bar&gt;</code></pre>")
+  assert(render_markdown("```nocheck\nfoo <bar>\n```", None) == "<pre><code>foo &lt;bar&gt;</code></pre>")
 }
 
 test render_triple_backtick_blank_line {
-  assert(render_markdown("```nocheck\nfoo\n\nbar\n```") == "<pre><code>foo\n\nbar</code></pre>")
+  assert(render_markdown("```nocheck\nfoo\n\nbar\n```", None) == "<pre><code>foo\n\nbar</code></pre>")
 }
 
 test render_triple_backtick_keyword {
-  assert(render_markdown("```garden nocheck\nfun foo\n```") == "<pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre>")
+  assert(render_markdown("```garden nocheck\nfun foo\n```", None) == "<pre><code><a class=\"keyword\" href=\"/keyword:fun.html\">fun</a> foo</code></pre>")
 }
 
 test render_triple_backtick_comment {
-  assert(render_markdown("```garden nocheck\nfoo // bar\n```") == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
+  assert(render_markdown("```garden nocheck\nfoo // bar\n```", None) == "<pre><code>foo <span class=\"comment\">// bar</span></code></pre>")
 }
 
 test render_asterisk_bullet {
-  assert(render_markdown("* foo\n* bar") == "<ul>
+  assert(render_markdown("* foo\n* bar", None) == "<ul>
 <li>foo</li>
 <li>bar</li>
 </ul>")
 }
 
 test render_asterisk_bullet_with_content_after {
-  assert(render_markdown("* foo\n\nbar") == "<ul>
+  assert(render_markdown("* foo\n\nbar", None) == "<ul>
 <li>foo</li>
 </ul>
 <p>bar</p>")
 }
 
 test render_asterisk_emphasis {
-  assert(render_markdown("*foo*") == "<p><em>foo</em></p>")
+  assert(render_markdown("*foo*", None) == "<p><em>foo</em></p>")
 }
 
 test render_asterisk_strong {
-  assert(render_markdown("**foo**") == "<p><strong>foo</strong></p>")
+  assert(render_markdown("**foo**", None) == "<p><strong>foo</strong></p>")
 }
 
 test render_thematic_break {
-  assert(render_markdown("***") == "<hr />")
-  assert(render_markdown("---") == "<hr />")
-  assert(render_markdown("___") == "<hr />")
+  assert(render_markdown("***", None) == "<hr />")
+  assert(render_markdown("---", None) == "<hr />")
+  assert(render_markdown("___", None) == "<hr />")
 }
 
 test render_html {
-  assert(render_markdown("<script></script>") == "<p><script></script></p>")
+  assert(render_markdown("<script></script>", None) == "<p><script></script></p>")
 }
 
 test render_html_comment {
-  assert(render_markdown("<!-- foo -->") == "<p><!-- foo --></p>")
+  assert(render_markdown("<!-- foo -->", None) == "<p><!-- foo --></p>")
 }
 
 test render_image {
-  assert(render_markdown("![foo](/url)") == "<p><img src=\"/url\" alt=\"foo\" /></p>")
+  assert(render_markdown("![foo](/url)", None) == "<p><img src=\"/url\" alt=\"foo\" /></p>")
 }
 
 fun looks_like_type(name: String): Bool {

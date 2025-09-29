@@ -321,9 +321,9 @@ fn format_pos_in_fun(
                 let carets = "^".repeat((span.end_col - span.start_col) as usize);
                 if use_color {
                     res.push_str(&if is_error {
-                        carets.red().to_string()
+                        carets.bold().red().to_string()
                     } else {
-                        carets.yellow().to_string()
+                        carets.bold().yellow().to_string()
                     });
                 } else {
                     res.push_str(&carets);

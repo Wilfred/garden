@@ -14,8 +14,14 @@ use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 use crate::parser::vfs::to_project_relative;
 use crate::types::TypeDef;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq)]
 pub(crate) struct Value(pub(crate) Rc<Value_>);
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
 
 impl Value {
     pub(crate) fn as_ref(&self) -> &Value_ {

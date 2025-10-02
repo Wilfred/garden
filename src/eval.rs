@@ -332,11 +332,14 @@ fn load_toplevel_items_(
                             .unwrap_or_err_ty();
                     namespace.borrow_mut().values.insert(
                         name_symbol.name.clone(),
-                        Value::new(Value_::Fun {
-                            name_sym: name_symbol.clone(),
-                            fun_info: fun_info.clone(),
-                            runtime_type,
-                        }),
+                        Value::new(
+                            Value_::Fun {
+                                name_sym: name_symbol.clone(),
+                                fun_info: fun_info.clone(),
+                                runtime_type,
+                            },
+                            env,
+                        ),
                     );
                 }
 
@@ -462,6 +465,7 @@ fn load_toplevel_items_(
                         import_info.namespace_sym.as_ref(),
                         namespace.clone(),
                         imported_ns,
+                        env,
                     );
 
                     continue;
@@ -481,6 +485,7 @@ fn load_toplevel_items_(
                             abs_path.clone(),
                             import_info.namespace_sym.as_ref(),
                             namespace.clone(),
+                            env,
                         );
 
                         continue;
@@ -517,6 +522,7 @@ fn load_toplevel_items_(
                     import_info.namespace_sym.as_ref(),
                     namespace.clone(),
                     destination_ns,
+                    env,
                 );
 
                 diagnostics.extend(import_diagnostics);
@@ -536,22 +542,28 @@ fn load_toplevel_items_(
                     enum_info,
                     variant_sym.payload_hint.as_ref().unwrap(),
                 );
-                Value::new(Value_::EnumConstructor {
-                    type_name: enum_info.name_sym.name.clone(),
-                    variant_idx,
-                    runtime_type,
-                })
+                Value::new(
+                    Value_::EnumConstructor {
+                        type_name: enum_info.name_sym.name.clone(),
+                        variant_idx,
+                        runtime_type,
+                    },
+                    env,
+                )
             } else {
                 let runtime_type =
                     enum_value_runtime_type(env, &enum_info.name_sym.name, variant_idx, &Type::Any)
                         .unwrap_or(Type::no_value());
 
-                Value::new(Value_::EnumVariant {
-                    type_name: enum_info.name_sym.name.clone(),
-                    runtime_type,
-                    variant_idx,
-                    payload: None,
-                })
+                Value::new(
+                    Value_::EnumVariant {
+                        type_name: enum_info.name_sym.name.clone(),
+                        runtime_type,
+                        variant_idx,
+                        payload: None,
+                    },
+                    env,
+                )
             };
 
             // TODO: warn if we're clobbering a name from a
@@ -571,6 +583,7 @@ fn insert_placeholder_namespace(
     abs_path: PathBuf,
     namespace_sym: Option<&Symbol>,
     current_ns: Rc<RefCell<NamespaceInfo>>,
+    env: &Env,
 ) {
     let Some(namespace_sym) = namespace_sym else {
         return;
@@ -581,7 +594,7 @@ fn insert_placeholder_namespace(
         SymbolName {
             text: "__PLACEHOLDER_NAMESPACE".to_owned(),
         },
-        Value::unit(),
+        Value::unit(env),
     );
 
     let ns_info = NamespaceInfo {
@@ -590,10 +603,13 @@ fn insert_placeholder_namespace(
         exported_syms: FxHashSet::default(),
         types: FxHashMap::default(),
     };
-    let v = Value::new(Value_::Namespace {
-        ns_info: Rc::new(RefCell::new(ns_info)),
-        imported_name_sym: namespace_sym.clone(),
-    });
+    let v = Value::new(
+        Value_::Namespace {
+            ns_info: Rc::new(RefCell::new(ns_info)),
+            imported_name_sym: namespace_sym.clone(),
+        },
+        env,
+    );
 
     current_ns
         .borrow_mut()
@@ -608,13 +624,17 @@ fn insert_imported_namespace(
     namespace_sym: Option<&Symbol>,
     current_ns: Rc<RefCell<NamespaceInfo>>,
     imported_ns: Rc<RefCell<NamespaceInfo>>,
+    env: &Env,
 ) -> Vec<SymbolName> {
     match namespace_sym {
         Some(namespace_sym) => {
-            let v = Value::new(Value_::Namespace {
-                ns_info: imported_ns,
-                imported_name_sym: namespace_sym.clone(),
-            });
+            let v = Value::new(
+                Value_::Namespace {
+                    ns_info: imported_ns,
+                    imported_name_sym: namespace_sym.clone(),
+                },
+                env,
+            );
             current_ns
                 .borrow_mut()
                 .values
@@ -1206,9 +1226,10 @@ pub(crate) fn eval_toplevel_call(
     // TODO: return an Err() rather than kludging a runtime string and letting
     // eval_env() return a type error.
     let recv_value = ns.borrow().values.get(name).cloned().unwrap_or_else(|| {
-        Value::new(Value_::String(
-            "ERROR: Tried to call a function that isn't defined".to_owned(),
-        ))
+        Value::new(
+            Value_::String("ERROR: Tried to call a function that isn't defined".to_owned()),
+            env,
+        )
     });
     env.push_value(recv_value);
 
@@ -1334,7 +1355,7 @@ pub(crate) fn push_test_stackframe(test: &TestInfo, env: &mut Env) {
         type_bindings: FxHashMap::default(),
         bindings_next_block: vec![],
         exprs_to_eval,
-        evalled_values: vec![Value::unit()],
+        evalled_values: vec![Value::unit(env)],
         caller_uses_value: true,
     };
     env.stack.0.push(stack_frame);
@@ -1491,11 +1512,14 @@ fn update_builtin_fun_info(
         // the environment, so we can still type check call sites.
         ns.values.insert(
             symbol.name.clone(),
-            Value::new(Value_::Fun {
-                name_sym: symbol.clone(),
-                fun_info: fun_info.clone(),
-                runtime_type,
-            }),
+            Value::new(
+                Value_::Fun {
+                    name_sym: symbol.clone(),
+                    fun_info: fun_info.clone(),
+                    runtime_type,
+                },
+                env,
+            ),
         );
 
         return;
@@ -1520,11 +1544,10 @@ fn update_builtin_fun_info(
 
     ns.values.insert(
         symbol.name.clone(),
-        Value::new(Value_::BuiltinFunction(
-            *kind,
-            Some(fun_info.clone()),
-            Some(runtime_type),
-        )),
+        Value::new(
+            Value_::BuiltinFunction(*kind, Some(fun_info.clone()), Some(runtime_type)),
+            env,
+        ),
     );
 }
 
@@ -1610,7 +1633,7 @@ fn eval_if(
                 env.current_frame_mut().bindings.push_block();
 
                 if expr_value_is_used {
-                    env.push_value(Value::unit());
+                    env.push_value(Value::unit(env));
                 }
             }
         }
@@ -1735,7 +1758,7 @@ fn eval_for_in(
     // re-evaluate the iteree expression though.
     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
-    env.push_value(Value::new(Value_::Integer(iteree_idx + 1)));
+    env.push_value(Value::new(Value_::Integer(iteree_idx + 1), env));
     env.push_value(iteree_value.clone());
 
     let mut bindings: Vec<(Symbol, Value)> = vec![];
@@ -1838,12 +1861,14 @@ fn eval_assign_update(
         AssignUpdateKind::Add => *var_value_num + *rhs_num,
         AssignUpdateKind::Subtract => *var_value_num - *rhs_num,
     };
+    let new_value = Value::new(Value_::Integer(new_value_num), env);
+
     env.current_frame_mut()
         .bindings
-        .set_existing(variable, Value::new(Value_::Integer(new_value_num)));
+        .set_existing(variable, new_value);
 
     if expr_value_is_used {
-        env.push_value(Value::unit());
+        env.push_value(Value::unit(env));
     }
 
     Ok(())
@@ -1879,7 +1904,7 @@ fn eval_assign(
         .set_existing(variable, expr_value);
 
     if expr_value_is_used {
-        env.push_value(Value::unit());
+        env.push_value(Value::unit(env));
     }
 
     Ok(())
@@ -1966,7 +1991,7 @@ fn eval_let(
     // }
     // ```
     if expr_value_is_used {
-        env.push_value(Value::unit());
+        env.push_value(Value::unit(env));
     }
 
     Ok(())
@@ -2046,10 +2071,10 @@ fn eval_boolean_binop(
         if expr_value_is_used {
             match op {
                 BinaryOperatorKind::And => {
-                    env.push_value(Value::bool(lhs_bool && rhs_bool));
+                    env.push_value(Value::bool(lhs_bool && rhs_bool, env));
                 }
                 BinaryOperatorKind::Or => {
-                    env.push_value(Value::bool(lhs_bool || rhs_bool));
+                    env.push_value(Value::bool(lhs_bool || rhs_bool, env));
                 }
                 _ => unreachable!(),
             }
@@ -2069,10 +2094,10 @@ fn eval_equality_binop(env: &mut Env, expr_value_is_used: bool, op: BinaryOperat
     if expr_value_is_used {
         match op {
             BinaryOperatorKind::Equal => {
-                env.push_value(Value::bool(lhs_value == rhs_value));
+                env.push_value(Value::bool(lhs_value == rhs_value, env));
             }
             BinaryOperatorKind::NotEqual => {
-                env.push_value(Value::bool(lhs_value != rhs_value));
+                env.push_value(Value::bool(lhs_value != rhs_value, env));
             }
             _ => unreachable!(),
         }
@@ -2121,12 +2146,14 @@ fn eval_integer_binop(
         };
 
         let value = match op {
-            BinaryOperatorKind::Add => Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num))),
+            BinaryOperatorKind::Add => {
+                Value::new(Value_::Integer(lhs_num.wrapping_add(rhs_num)), env)
+            }
             BinaryOperatorKind::Subtract => {
-                Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num)))
+                Value::new(Value_::Integer(lhs_num.wrapping_sub(rhs_num)), env)
             }
             BinaryOperatorKind::Multiply => {
-                Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num)))
+                Value::new(Value_::Integer(lhs_num.wrapping_mul(rhs_num)), env)
             }
             BinaryOperatorKind::Divide => {
                 if rhs_num == 0 {
@@ -2142,9 +2169,9 @@ fn eval_integer_binop(
                     ));
                 }
 
-                Value::new(Value_::Integer(lhs_num / rhs_num))
+                Value::new(Value_::Integer(lhs_num / rhs_num), env)
             }
-            BinaryOperatorKind::Modulo => Value::new(Value_::Integer(lhs_num % rhs_num)),
+            BinaryOperatorKind::Modulo => Value::new(Value_::Integer(lhs_num % rhs_num), env),
             BinaryOperatorKind::Exponent => {
                 if rhs_num < 0 {
                     return Err((
@@ -2175,7 +2202,7 @@ fn eval_integer_binop(
                 }
 
                 match lhs_num.checked_pow(rhs_num as u32) {
-                    Some(num) => Value::new(Value_::Integer(num)),
+                    Some(num) => Value::new(Value_::Integer(num), env),
                     None => {
                         return Err((
                             RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
@@ -2191,10 +2218,10 @@ fn eval_integer_binop(
                     }
                 }
             }
-            BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num),
-            BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num),
-            BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num),
-            BinaryOperatorKind::GreaterThanOrEqual => Value::bool(lhs_num >= rhs_num),
+            BinaryOperatorKind::LessThan => Value::bool(lhs_num < rhs_num, env),
+            BinaryOperatorKind::GreaterThan => Value::bool(lhs_num > rhs_num, env),
+            BinaryOperatorKind::LessThanOrEqual => Value::bool(lhs_num <= rhs_num, env),
+            BinaryOperatorKind::GreaterThanOrEqual => Value::bool(lhs_num >= rhs_num, env),
             _ => {
                 unreachable!()
             }
@@ -2238,7 +2265,7 @@ fn eval_string_concat(
         out_str.push_str(lhs_str);
         out_str.push_str(rhs_str);
 
-        let value = Value::new(Value_::String(out_str));
+        let value = Value::new(Value_::String(out_str), env);
 
         if expr_value_is_used {
             env.push_value(value);
@@ -2325,16 +2352,19 @@ fn check_string<'a>(
     }
 }
 
-fn as_int_str_tuple(i: i64, s: &str) -> Value {
+fn as_int_str_tuple(i: i64, s: &str, env: &Env) -> Value {
     let items = vec![
-        Value::new(Value_::Integer(i)),
-        Value::new(Value_::String(s.to_owned())),
+        Value::new(Value_::Integer(i), env),
+        Value::new(Value_::String(s.to_owned()), env),
     ];
 
-    Value::new(Value_::Tuple {
-        items,
-        item_types: vec![Type::int(), Type::string()],
-    })
+    Value::new(
+        Value_::Tuple {
+            items,
+            item_types: vec![Type::int(), Type::string()],
+        },
+        env,
+    )
 }
 
 fn eval_builtin_call(
@@ -2408,7 +2438,7 @@ fn eval_builtin_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::unit());
+                env.push_value(Value::unit(env));
             }
         }
         BuiltinFunctionKind::Println => {
@@ -2448,7 +2478,7 @@ fn eval_builtin_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::unit());
+                env.push_value(Value::unit(env));
             }
         }
         BuiltinFunctionKind::Shell => {
@@ -2501,14 +2531,14 @@ fn eval_builtin_call(
                                 .unwrap();
 
                             if output.status.success() {
-                                Value::ok(Value::new(Value_::String(s)))
+                                Value::ok(Value::new(Value_::String(s), env), env)
                             } else {
-                                Value::err(Value::new(Value_::String(s)))
+                                Value::err(Value::new(Value_::String(s), env), env)
                             }
                         }
                         Err(e) => {
-                            let s = Value::new(Value_::String(format!("{e}")));
-                            Value::err(s)
+                            let s = Value::new(Value_::String(format!("{e}")), env);
+                            Value::err(s, env)
                         }
                     };
 
@@ -2550,7 +2580,7 @@ fn eval_builtin_call(
             )?;
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(arg_values[0].display(env))));
+                env.push_value(Value::new(Value_::String(arg_values[0].display(env)), env));
             }
         }
         BuiltinFunctionKind::NamespaceFunctions => {
@@ -2601,14 +2631,17 @@ fn eval_builtin_call(
             fun_names.sort();
             let items = fun_names
                 .into_iter()
-                .map(|n| Value::new(Value_::String(n)))
+                .map(|n| Value::new(Value_::String(n), env))
                 .collect::<Vec<_>>();
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::List {
-                    items,
-                    elem_type: Type::string(),
-                }));
+                env.push_value(Value::new(
+                    Value_::List {
+                        items,
+                        elem_type: Type::string(),
+                    },
+                    env,
+                ));
             }
         }
         BuiltinFunctionKind::MethodsForType => {
@@ -2642,14 +2675,17 @@ fn eval_builtin_call(
             method_names.sort();
             let items = method_names
                 .into_iter()
-                .map(|n| Value::new(Value_::String(n)))
+                .map(|n| Value::new(Value_::String(n), env))
                 .collect::<Vec<_>>();
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::List {
-                    items,
-                    elem_type: Type::string(),
-                }));
+                env.push_value(Value::new(
+                    Value_::List {
+                        items,
+                        elem_type: Type::string(),
+                    },
+                    env,
+                ));
             }
         }
         BuiltinFunctionKind::ListDirectory => {
@@ -2700,18 +2736,24 @@ fn eval_builtin_call(
                     for entry in dir_iter {
                         // TODO: don't silently discard errors.
                         if let Ok(entry) = entry {
-                            items.push(Value::path(entry.path().display().to_string()));
+                            items.push(Value::path(entry.path().display().to_string(), env));
                         }
                     }
 
-                    Value::ok(Value::new(Value_::List {
-                        items,
-                        elem_type: Type::path(),
-                    }))
+                    Value::ok(
+                        Value::new(
+                            Value_::List {
+                                items,
+                                elem_type: Type::path(),
+                            },
+                            env,
+                        ),
+                        env,
+                    )
                 }
                 Err(e) => {
-                    let s = Value::new(Value_::String(format!("{e} {path_s}")));
-                    Value::err(s)
+                    let s = Value::new(Value_::String(format!("{e} {path_s}")), env);
+                    Value::err(s, env)
                 }
             };
 
@@ -2732,8 +2774,8 @@ fn eval_builtin_call(
             )?;
 
             let v = match std::fs::canonicalize(position.path.as_ref()) {
-                Ok(abspath) => Value::some(Value::path(abspath.display().to_string())),
-                Err(_) => Value::none(),
+                Ok(abspath) => Value::some(Value::path(abspath.display().to_string(), env), env),
+                Err(_) => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -2756,13 +2798,16 @@ fn eval_builtin_call(
                 let items = env
                     .cli_args
                     .iter()
-                    .map(|arg| Value::new(Value_::String(arg.clone())))
+                    .map(|arg| Value::new(Value_::String(arg.clone()), env))
                     .collect::<Vec<_>>();
 
-                env.push_value(Value::new(Value_::List {
-                    items,
-                    elem_type: Type::string(),
-                }));
+                env.push_value(Value::new(
+                    Value_::List {
+                        items,
+                        elem_type: Type::string(),
+                    },
+                    env,
+                ));
             }
         }
         BuiltinFunctionKind::GetEnv => {
@@ -2786,8 +2831,8 @@ fn eval_builtin_call(
             let env_var_name = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
 
             let value = match std::env::var(env_var_name) {
-                Ok(val) => Value::some(Value::new(Value_::String(val))),
-                Err(_) => Value::none(),
+                Ok(val) => Value::some(Value::new(Value_::String(val), env), env),
+                Err(_) => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -2813,12 +2858,15 @@ fn eval_builtin_call(
                 keywords.sort();
                 let items = keywords
                     .into_iter()
-                    .map(|k| Value::new(Value_::String(k)))
+                    .map(|k| Value::new(Value_::String(k), env))
                     .collect::<Vec<_>>();
-                env.push_value(Value::new(Value_::List {
-                    items,
-                    elem_type: Type::string(),
-                }));
+                env.push_value(Value::new(
+                    Value_::List {
+                        items,
+                        elem_type: Type::string(),
+                    },
+                    env,
+                ));
             }
         }
         BuiltinFunctionKind::SetWorkingDirectory => {
@@ -2850,8 +2898,8 @@ fn eval_builtin_call(
 
             let path = PathBuf::from(path_s);
             let v = match std::env::set_current_dir(path) {
-                Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
+                Ok(()) => Value::ok(Value::unit(env), env),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")), env), env),
             };
 
             if expr_value_is_used {
@@ -2874,7 +2922,7 @@ fn eval_builtin_call(
             let path = std::env::current_dir().unwrap_or_default();
 
             if expr_value_is_used {
-                env.push_value(Value::path(path.display().to_string()));
+                env.push_value(Value::path(path.display().to_string(), env));
             }
         }
         BuiltinFunctionKind::WriteFile => {
@@ -2928,8 +2976,8 @@ fn eval_builtin_call(
             let path = PathBuf::from(path_s);
 
             let v = match std::fs::write(path, content_s) {
-                Ok(()) => Value::ok(Value::unit()),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")))),
+                Ok(()) => Value::ok(Value::unit(env), env),
+                Err(e) => Value::err(Value::new(Value_::String(format!("{e}")), env), env),
             };
 
             if expr_value_is_used {
@@ -2987,17 +3035,18 @@ fn eval_builtin_call(
             let mut items = vec![];
             while let Some(token) = token_stream.pop() {
                 for (pos, comment_str) in &token.preceding_comments {
-                    items.push(as_int_str_tuple(pos.start_offset as i64, comment_str));
+                    items.push(as_int_str_tuple(pos.start_offset as i64, comment_str, env));
                 }
 
                 items.push(as_int_str_tuple(
                     token.position.start_offset as i64,
                     token.text,
+                    env,
                 ));
             }
 
             for (pos, comment_str) in &token_stream.trailing_comments {
-                items.push(as_int_str_tuple(pos.start_offset as i64, comment_str));
+                items.push(as_int_str_tuple(pos.start_offset as i64, comment_str, env));
             }
 
             let v = Value_::List {
@@ -3005,7 +3054,7 @@ fn eval_builtin_call(
                 elem_type: Type::Tuple(vec![Type::int(), Type::string()]),
             };
             if expr_value_is_used {
-                env.push_value(Value::new(v));
+                env.push_value(Value::new(v, env));
             }
         }
         BuiltinFunctionKind::DocComment => {
@@ -3046,11 +3095,12 @@ fn eval_builtin_call(
 
             let ns = namespace.borrow();
 
-            let mut ret_value = Value::none();
+            let mut ret_value = Value::none(env);
             for (name, value) in &ns.values {
                 if name.text == *target_name {
                     if let Some(doc_comment_text) = value.doc_comment() {
-                        ret_value = Value::some(Value::new(Value_::String(doc_comment_text)));
+                        ret_value =
+                            Value::some(Value::new(Value_::String(doc_comment_text), env), env);
                     }
                     break;
                 }
@@ -3090,11 +3140,11 @@ fn eval_builtin_call(
                     };
 
                     match doc_comment {
-                        Some(s) => Value::some(Value::new(Value_::String(s))),
-                        None => Value::none(),
+                        Some(s) => Value::some(Value::new(Value_::String(s), env), env),
+                        None => Value::none(env),
                     }
                 }
-                None => Value::none(),
+                None => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -3130,15 +3180,17 @@ fn eval_builtin_call(
                     {
                         Some(method_info) => match method_info.fun_info() {
                             Some(fun_info) => match &fun_info.doc_comment {
-                                Some(s) => Value::some(Value::new(Value_::String(s.clone()))),
-                                None => Value::none(),
+                                Some(s) => {
+                                    Value::some(Value::new(Value_::String(s.clone()), env), env)
+                                }
+                                None => Value::none(env),
                             },
-                            None => Value::none(),
+                            None => Value::none(env),
                         },
-                        None => Value::none(),
+                        None => Value::none(env),
                     }
                 }
-                None => Value::none(),
+                None => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -3201,11 +3253,11 @@ fn eval_builtin_call(
                         fun_info.and_then(|fi| env.vfs.pos_src(&fi.pos).map(|s| s.to_owned()));
 
                     match src {
-                        Some(s) => Value::some(Value::new(Value_::String(s))),
-                        None => Value::none(),
+                        Some(s) => Value::some(Value::new(Value_::String(s), env), env),
+                        None => Value::none(env),
                     }
                 }
-                None => Value::none(),
+                None => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -3233,13 +3285,13 @@ fn eval_builtin_call(
                 check_string(&arg_values[0], &arg_positions[0], saved_values.clone(), env)?;
             let method_name = check_string(&arg_values[1], &arg_positions[1], saved_values, env)?;
 
-            let mut v = Value::none();
+            let mut v = Value::none(env);
             if let Some(ty) = env.types.get(&TypeName::from(type_name)) {
                 if let Some(meth_info) = ty.methods.get(&SymbolName {
                     text: method_name.to_owned(),
                 }) {
                     if let Some(src) = env.vfs.pos_src(&meth_info.pos) {
-                        v = Value::some(Value::new(Value_::String(src.to_owned())));
+                        v = Value::some(Value::new(Value_::String(src.to_owned()), env), env);
                     }
                 }
             }
@@ -3283,11 +3335,11 @@ fn eval_builtin_call(
                     };
 
                     match src {
-                        Some(s) => Value::some(Value::new(Value_::String(s))),
-                        None => Value::none(),
+                        Some(s) => Value::some(Value::new(Value_::String(s), env), env),
+                        None => Value::none(env),
                     }
                 }
-                None => Value::none(),
+                None => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -3317,13 +3369,16 @@ fn eval_builtin_call(
 
             let items = names
                 .into_iter()
-                .map(|n| Value::new(Value_::String(n)))
+                .map(|n| Value::new(Value_::String(n), env))
                 .collect::<Vec<_>>();
 
-            let v = Value::new(Value_::List {
-                items,
-                elem_type: Type::string(),
-            });
+            let v = Value::new(
+                Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                },
+                env,
+            );
 
             if expr_value_is_used {
                 env.push_value(v);
@@ -3348,7 +3403,7 @@ fn check_snippet(src: &str, env: &Env) -> Value {
 
     let mut error_messages = vec![];
     for err in syntax_errors {
-        error_messages.push(Value::new(Value_::String(err.message().as_string())));
+        error_messages.push(Value::new(Value_::String(err.message().as_string()), env));
     }
 
     for Diagnostic {
@@ -3358,18 +3413,24 @@ fn check_snippet(src: &str, env: &Env) -> Value {
         match severity {
             Severity::Warning => {}
             Severity::Error => {
-                error_messages.push(Value::new(Value_::String(message.as_string())));
+                error_messages.push(Value::new(Value_::String(message.as_string()), env));
             }
         }
     }
 
     if error_messages.is_empty() {
-        Value::ok(Value::unit())
+        Value::ok(Value::unit(env), env)
     } else {
-        Value::err(Value::new(Value_::List {
-            items: error_messages,
-            elem_type: Type::string(),
-        }))
+        Value::err(
+            Value::new(
+                Value_::List {
+                    items: error_messages,
+                    elem_type: Type::string(),
+                },
+                env,
+            ),
+            env,
+        )
     }
 }
 
@@ -3461,7 +3522,7 @@ fn eval_call(
                 type_bindings,
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![Value::unit()],
+                evalled_values: vec![Value::unit(env)],
                 return_hint: fun_info.return_hint.clone(),
                 enclosing_name: EnclosingSymbol::Closure,
                 caller_uses_value: expr_value_is_used,
@@ -3541,7 +3602,7 @@ fn eval_call(
                 type_bindings,
                 bindings_next_block: vec![],
                 exprs_to_eval: fun_subexprs,
-                evalled_values: vec![Value::unit()],
+                evalled_values: vec![Value::unit(env)],
                 caller_uses_value: expr_value_is_used,
             }));
         }
@@ -3580,14 +3641,17 @@ fn eval_call(
             )
             .unwrap_or(Type::no_value());
 
-            let value = Value::new(Value_::EnumVariant {
-                type_name: type_name.clone(),
-                variant_idx: *variant_idx,
-                // TODO: check type of arg_values[0] is compatible
-                // with the declared type of the variant.
-                payload: Some(Box::new(arg_values[0].clone())),
-                runtime_type,
-            });
+            let value = Value::new(
+                Value_::EnumVariant {
+                    type_name: type_name.clone(),
+                    variant_idx: *variant_idx,
+                    // TODO: check type of arg_values[0] is compatible
+                    // with the declared type of the variant.
+                    payload: Some(Box::new(arg_values[0].clone())),
+                    runtime_type,
+                },
+                env,
+            );
 
             if expr_value_is_used {
                 env.push_value(value);
@@ -3691,7 +3755,7 @@ fn eval_assert(
     }
 
     if expr_value_is_used {
-        env.push_value(Value::unit());
+        env.push_value(Value::unit(env));
     }
 
     Ok(())
@@ -3958,7 +4022,7 @@ fn eval_method_call(
         type_bindings,
         bindings_next_block: vec![],
         exprs_to_eval: method_subexprs,
-        evalled_values: vec![Value::unit()],
+        evalled_values: vec![Value::unit(env)],
         caller_uses_value: expr_value_is_used,
     }))
 }
@@ -4041,8 +4105,8 @@ fn eval_builtin_method_call(
             match receiver_value.as_ref() {
                 Value_::Dict { items, .. } => {
                     let value = match items.get(expected_key) {
-                        Some(found_value) => Value::some(found_value.clone()),
-                        None => Value::none(),
+                        Some(found_value) => Value::some(found_value.clone(), env),
+                        None => Value::none(env),
                     };
 
                     if expr_value_is_used {
@@ -4089,21 +4153,27 @@ fn eval_builtin_method_call(
 
                     let mut list_items = vec![];
                     for (item_key, item_value) in list_items_rust.iter() {
-                        let key_str = Value::new(Value_::String(item_key.clone()));
+                        let key_str = Value::new(Value_::String(item_key.clone()), env);
                         let tuple_items = vec![key_str, item_value.clone()];
 
-                        let tuple = Value::new(Value_::Tuple {
-                            items: tuple_items,
-                            item_types: vec![Type::string(), value_type.clone()],
-                        });
+                        let tuple = Value::new(
+                            Value_::Tuple {
+                                items: tuple_items,
+                                item_types: vec![Type::string(), value_type.clone()],
+                            },
+                            env,
+                        );
                         list_items.push(tuple);
                     }
 
                     if expr_value_is_used {
-                        env.push_value(Value::new(Value_::List {
-                            items: list_items,
-                            elem_type: Type::Tuple(vec![Type::string(), value_type.clone()]),
-                        }));
+                        env.push_value(Value::new(
+                            Value_::List {
+                                items: list_items,
+                                elem_type: Type::Tuple(vec![Type::string(), value_type.clone()]),
+                            },
+                            env,
+                        ));
                     }
                 }
                 _ => {
@@ -4161,7 +4231,7 @@ fn eval_builtin_method_call(
                         // type as the existing dict values.
                         let value_type = Type::from_value(&arg_values[0]);
 
-                        env.push_value(Value::new(Value_::Dict { items, value_type }));
+                        env.push_value(Value::new(Value_::Dict { items, value_type }, env));
                     }
                 }
                 _ => {
@@ -4203,10 +4273,13 @@ fn eval_builtin_method_call(
 
                         // TODO: check that the new value has the same
                         // type as the existing list items.
-                        env.push_value(Value::new(Value_::List {
-                            items: new_items,
-                            elem_type,
-                        }));
+                        env.push_value(Value::new(
+                            Value_::List {
+                                items: new_items,
+                                elem_type,
+                            },
+                            env,
+                        ));
                     }
                 }
                 _ => {
@@ -4256,7 +4329,7 @@ fn eval_builtin_method_call(
                     }
 
                     if expr_value_is_used {
-                        env.push_value(Value::bool(present));
+                        env.push_value(Value::bool(present, env));
                     }
                 }
                 _ => {
@@ -4297,9 +4370,9 @@ fn eval_builtin_method_call(
             match (receiver_value.as_ref(), arg_values[0].as_ref()) {
                 (Value_::List { items, .. }, Value_::Integer(i)) => {
                     let v = if *i >= items.len() as i64 || *i < 0 {
-                        Value::none()
+                        Value::none(env)
                     } else {
-                        Value::some(items[*i as usize].clone())
+                        Value::some(items[*i as usize].clone(), env)
                     };
 
                     if expr_value_is_used {
@@ -4363,7 +4436,7 @@ fn eval_builtin_method_call(
             match receiver_value.as_ref() {
                 Value_::List { items, .. } => {
                     if expr_value_is_used {
-                        env.push_value(Value::new(Value_::Integer(items.len() as i64)));
+                        env.push_value(Value::new(Value_::Integer(items.len() as i64), env));
                     }
                 }
                 _ => {
@@ -4431,7 +4504,7 @@ fn eval_builtin_method_call(
 
             if expr_value_is_used {
                 let path = PathBuf::from(path_s);
-                env.push_value(Value::bool(path.exists()));
+                env.push_value(Value::bool(path.exists(), env));
             }
         }
         BuiltinMethodKind::PathRead => {
@@ -4477,8 +4550,11 @@ fn eval_builtin_method_call(
             let path = PathBuf::from(path_s.clone());
 
             let v = match std::fs::read_to_string(path) {
-                Ok(s) => Value::ok(Value::new(Value_::String(s))),
-                Err(e) => Value::err(Value::new(Value_::String(format!("{e} {path_s}")))),
+                Ok(s) => Value::ok(Value::new(Value_::String(s), env), env),
+                Err(e) => Value::err(
+                    Value::new(Value_::String(format!("{e} {path_s}")), env),
+                    env,
+                ),
             };
 
             if expr_value_is_used {
@@ -4505,8 +4581,8 @@ fn eval_builtin_method_call(
 
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             let value = match s.parse::<i64>() {
-                Ok(parsed_int) => Value::some(Value::new(Value_::Integer(parsed_int))),
-                Err(_) => Value::none(),
+                Ok(parsed_int) => Value::some(Value::new(Value_::Integer(parsed_int), env), env),
+                Err(_) => Value::none(env),
             };
 
             if expr_value_is_used {
@@ -4534,12 +4610,15 @@ fn eval_builtin_method_call(
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             let mut items = vec![];
             for (_, c) in s.char_indices() {
-                items.push(Value::new(Value_::String(format!("{c}"))));
+                items.push(Value::new(Value_::String(format!("{c}")), env));
             }
-            let chars_list = Value::new(Value_::List {
-                items,
-                elem_type: Type::string(),
-            });
+            let chars_list = Value::new(
+                Value_::List {
+                    items,
+                    elem_type: Type::string(),
+                },
+                env,
+            );
 
             if expr_value_is_used {
                 env.push_value(chars_list);
@@ -4566,11 +4645,11 @@ fn eval_builtin_method_call(
             let receiver_s = check_string(receiver_value, receiver_pos, saved_values.clone(), env)?;
             let arg_s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
 
-            let mut value = Value::none();
+            let mut value = Value::none(env);
             if let Some(needle_byte_offset) = receiver_s.find(arg_s) {
                 for (i, (byte_offset, _)) in receiver_s.char_indices().enumerate() {
                     if byte_offset == needle_byte_offset {
-                        value = Value::some(Value::new(Value_::Integer(i as i64)));
+                        value = Value::some(Value::new(Value_::Integer(i as i64), env), env);
                         break;
                     }
                 }
@@ -4601,7 +4680,7 @@ fn eval_builtin_method_call(
             let receiver_s = check_string(receiver_value, receiver_pos, saved_values.clone(), env)?;
             let arg_s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
 
-            let value = Value::bool(receiver_s.starts_with(arg_s));
+            let value = Value::bool(receiver_s.starts_with(arg_s), env);
             if expr_value_is_used {
                 env.push_value(value);
             }
@@ -4627,7 +4706,7 @@ fn eval_builtin_method_call(
             let receiver_s = check_string(receiver_value, receiver_pos, saved_values.clone(), env)?;
             let arg_s = check_string(&arg_values[0], &arg_positions[0], saved_values, env)?;
 
-            let value = Value::bool(receiver_s.ends_with(arg_s));
+            let value = Value::bool(receiver_s.ends_with(arg_s), env);
             if expr_value_is_used {
                 env.push_value(value);
             }
@@ -4690,7 +4769,7 @@ fn eval_builtin_method_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(joined_str)));
+                env.push_value(Value::new(Value_::String(joined_str), env));
             }
         }
         BuiltinMethodKind::StringLen => {
@@ -4713,7 +4792,7 @@ fn eval_builtin_method_call(
 
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::Integer(s.chars().count() as i64)));
+                env.push_value(Value::new(Value_::Integer(s.chars().count() as i64), env));
             }
         }
         BuiltinMethodKind::StringLines => {
@@ -4737,7 +4816,7 @@ fn eval_builtin_method_call(
             let s = check_string(receiver_value, receiver_pos, saved_values, env)?;
             let lines = s
                 .lines()
-                .map(|line| Value::new(Value_::String(line.to_owned())))
+                .map(|line| Value::new(Value_::String(line.to_owned()), env))
                 .collect::<Vec<_>>();
 
             let elem_type = if lines.is_empty() {
@@ -4747,10 +4826,13 @@ fn eval_builtin_method_call(
             };
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::List {
-                    items: lines,
-                    elem_type,
-                }));
+                env.push_value(Value::new(
+                    Value_::List {
+                        items: lines,
+                        elem_type,
+                    },
+                    env,
+                ));
             }
         }
 
@@ -4865,13 +4947,16 @@ fn eval_builtin_method_call(
             }
 
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(
-                    s_arg
-                        .chars()
-                        .skip(*from_arg as usize)
-                        .take((to_arg - from_arg) as usize)
-                        .collect(),
-                )));
+                env.push_value(Value::new(
+                    Value_::String(
+                        s_arg
+                            .chars()
+                            .skip(*from_arg as usize)
+                            .take((to_arg - from_arg) as usize)
+                            .collect(),
+                    ),
+                    env,
+                ));
             }
         }
     }
@@ -4955,7 +5040,7 @@ fn eval_expr(
 
                     // Done condition and body, nothing left to do.
                     if expr_value_is_used {
-                        env.push_value(Value::unit());
+                        env.push_value(Value::unit(env));
                     }
                 }
             }
@@ -4964,7 +5049,7 @@ fn eval_expr(
             match expr_state {
                 ExpressionState::NotEvaluated => {
                     // The initial value of the loop index.
-                    env.push_value(Value::new(Value_::Integer(0)));
+                    env.push_value(Value::new(Value_::Integer(0), env));
 
                     env.push_expr_to_eval(ExpressionState::PartiallyEvaluated, outer_expr.clone());
 
@@ -4981,7 +5066,7 @@ fn eval_expr(
 
                     // We've finished this `for` loop.
                     if expr_value_is_used {
-                        env.push_value(Value::unit());
+                        env.push_value(Value::unit(env));
                     }
                 }
             }
@@ -5001,7 +5086,7 @@ fn eval_expr(
                     env.push_expr_to_eval(ExpressionState::NotEvaluated, expr.clone());
                 } else {
                     // `return` is the same as `return Unit`.
-                    env.push_value(Value::unit());
+                    env.push_value(Value::unit(env));
                 }
             }
         }
@@ -5041,13 +5126,13 @@ fn eval_expr(
         Expression_::IntLiteral(i) => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::Integer(*i)));
+                env.push_value(Value::new(Value_::Integer(*i), env));
             }
         }
         Expression_::StringLiteral(s) => {
             *expr_state = ExpressionState::EvaluatedAllSubexpressions;
             if expr_value_is_used {
-                env.push_value(Value::new(Value_::String(s.clone())));
+                env.push_value(Value::new(Value_::String(s.clone()), env));
             }
         }
         Expression_::ListLiteral(items) => {
@@ -5066,10 +5151,13 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_value(Value::new(Value_::List {
-                        items: list_values,
-                        elem_type: element_type,
-                    }));
+                    env.push_value(Value::new(
+                        Value_::List {
+                            items: list_values,
+                            elem_type: element_type,
+                        },
+                        env,
+                    ));
                 }
             } else {
                 env.push_expr_to_eval(
@@ -5113,7 +5201,7 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_value(Value::new(Value_::Dict { items, value_type }));
+                    env.push_value(Value::new(Value_::Dict { items, value_type }, env));
                 }
             } else {
                 env.push_expr_to_eval(
@@ -5142,10 +5230,13 @@ fn eval_expr(
                 }
 
                 if expr_value_is_used {
-                    env.push_value(Value::new(Value_::Tuple {
-                        items: items_values,
-                        item_types,
-                    }));
+                    env.push_value(Value::new(
+                        Value_::Tuple {
+                            items: items_values,
+                            item_types,
+                        },
+                        env,
+                    ));
                 }
             } else {
                 env.push_expr_to_eval(
@@ -5292,11 +5383,10 @@ fn eval_expr(
                     Type::from_fun_info(fun_info, &env.types, &env.stack.type_bindings())
                         .unwrap_or_err_ty();
 
-                env.push_value(Value::new(Value_::Closure(
-                    bindings,
-                    fun_info.clone(),
-                    runtime_type,
-                )));
+                env.push_value(Value::new(
+                    Value_::Closure(bindings, fun_info.clone(), runtime_type),
+                    env,
+                ));
             }
         }
         Expression_::Call(receiver, paren_args) => match expr_state {
@@ -5472,7 +5562,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
         // We expect to evaluate a non-zero number of expressions, so
         // we have values pushed to the value stack. This isn't true
         // when running :resume at the toplevel, so return early.
-        return Ok(Value::unit());
+        return Ok(Value::unit(env));
     }
 
     loop {
@@ -5535,9 +5625,12 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                         value
                     } else {
                         // TODO: this should probably be an Err() case.
-                        Value::new(Value_::String(
-                            "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
-                        ))
+                        Value::new(
+                            Value_::String(
+                                "__ERROR: no expressions evaluated. This is a bug.".to_owned(),
+                            ),
+                            env,
+                        )
                     };
 
                     return Ok(v);
@@ -5549,7 +5642,7 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                 if matches!(outer_expr.expr_, Expression_::ForIn(_, _, _))
                     && matches!(expr_state, ExpressionState::PartiallyEvaluated)
                 {
-                    return Ok(Value::unit());
+                    return Ok(Value::unit(env));
                 }
             }
         } else {
@@ -5631,7 +5724,7 @@ fn eval_block(env: &mut Env, expr_value_is_used: bool, block: &Block) {
 
     // If this is an empty block, it should evaluate to Unit.
     if expr_value_is_used && block.exprs.is_empty() {
-        env.push_value(Value::unit());
+        env.push_value(Value::unit(env));
     }
 }
 
@@ -5652,7 +5745,7 @@ fn eval_break(env: &mut Env, expr_value_is_used: bool) {
 
     // Loops always evaluate to unit.
     if expr_value_is_used {
-        env.push_value(Value::unit());
+        env.push_value(Value::unit(env));
     }
 }
 
@@ -5917,11 +6010,14 @@ fn eval_struct_value(
     };
 
     if expr_value_is_used {
-        env.push_value(Value::new(Value_::Struct {
-            type_name: type_symbol.name,
-            fields,
-            runtime_type,
-        }));
+        env.push_value(Value::new(
+            Value_::Struct {
+                type_name: type_symbol.name,
+                fields,
+                runtime_type,
+            },
+            env,
+        ));
     }
 
     Ok(())
@@ -6122,7 +6218,7 @@ pub(crate) fn eval_exprs(
     session: &Session,
 ) -> Result<Value, EvalError> {
     if exprs.is_empty() {
-        return Ok(Value::unit());
+        return Ok(Value::unit(env));
     }
 
     let mut exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)> = vec![];
@@ -6218,7 +6314,7 @@ mod tests {
         let id_gen = IdGenerator::default();
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(false));
+        assert_eq!(value, Value::bool(false, &env));
     }
 
     #[test]
@@ -6242,7 +6338,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(false));
+        assert_eq!(value, Value::bool(false, &env));
     }
 
     #[test]
@@ -6253,7 +6349,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(3)));
+        assert_eq!(value, Value::new(Value_::Integer(3), &env));
     }
 
     #[test]
@@ -6264,7 +6360,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(true));
+        assert_eq!(value, Value::bool(true, &env));
     }
 
     #[test]
@@ -6275,7 +6371,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(false));
+        assert_eq!(value, Value::bool(false, &env));
     }
 
     #[test]
@@ -6288,13 +6384,16 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::new(Value_::List {
-                items: vec![
-                    Value::new(Value_::Integer(3)),
-                    Value::new(Value_::Integer(12))
-                ],
-                elem_type: Type::int()
-            })
+            Value::new(
+                Value_::List {
+                    items: vec![
+                        Value::new(Value_::Integer(3), &env),
+                        Value::new(Value_::Integer(12), &env)
+                    ],
+                    elem_type: Type::int()
+                },
+                &env
+            )
         );
     }
 
@@ -6306,7 +6405,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Integer(2), &env));
     }
 
     #[test]
@@ -6317,7 +6416,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(true));
+        assert_eq!(value, Value::bool(true, &env));
     }
 
     #[test]
@@ -6332,7 +6431,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Integer(1), &env));
     }
 
     #[test]
@@ -6351,7 +6450,7 @@ mod tests {
         let vfs = Vfs::default();
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&[], &mut env).unwrap();
-        assert_eq!(value, Value::unit());
+        assert_eq!(value, Value::unit(&env));
     }
 
     #[test]
@@ -6364,14 +6463,17 @@ mod tests {
         let value = eval_exprs(&exprs, &mut env).unwrap();
         assert_eq!(
             value,
-            Value::new(Value_::List {
-                items: vec![
-                    Value::new(Value_::Integer(1)),
-                    Value::new(Value_::Integer(2)),
-                    Value::new(Value_::Integer(3))
-                ],
-                elem_type: Type::int()
-            })
+            Value::new(
+                Value_::List {
+                    items: vec![
+                        Value::new(Value_::Integer(1), &env),
+                        Value::new(Value_::Integer(2), &env),
+                        Value::new(Value_::Integer(3), &env)
+                    ],
+                    elem_type: Type::int()
+                },
+                &env
+            )
         );
     }
 
@@ -6383,7 +6485,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Integer(2), &env));
     }
 
     #[test]
@@ -6394,7 +6496,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(3)));
+        assert_eq!(value, Value::new(Value_::Integer(3), &env));
     }
 
     #[test]
@@ -6405,7 +6507,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::String("bc".into())));
+        assert_eq!(value, Value::new(Value_::String("bc".into()), &env));
     }
 
     #[test]
@@ -6419,7 +6521,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(true));
+        assert_eq!(value, Value::bool(true, &env));
     }
 
     #[test]
@@ -6433,7 +6535,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(123)", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(123)));
+        assert_eq!(value, Value::new(Value_::Integer(123), &env));
     }
 
     #[test]
@@ -6447,7 +6549,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f(1, 2)", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Integer(2), &env));
     }
 
     #[test]
@@ -6465,7 +6567,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Integer(1), &env));
     }
 
     #[test]
@@ -6496,7 +6598,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("let y = f() y()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Integer(1), &env));
     }
 
     #[test]
@@ -6514,7 +6616,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("\"\".f()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::bool(true));
+        assert_eq!(value, Value::bool(true, &env));
     }
 
     #[test]
@@ -6543,7 +6645,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::unit());
+        assert_eq!(value, Value::unit(&env));
     }
 
     #[test]
@@ -6571,7 +6673,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("let i = 0 id(i) i", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(0)));
+        assert_eq!(value, Value::new(Value_::Integer(0), &env));
     }
 
     #[test]
@@ -6585,7 +6687,7 @@ mod tests {
 
         let exprs = parse_exprs_from_str("f()", &mut env.vfs, &mut env.id_gen);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(1)));
+        assert_eq!(value, Value::new(Value_::Integer(1), &env));
     }
 
     #[test]
@@ -6699,7 +6801,7 @@ mod tests {
 
         let mut env = Env::new(id_gen, vfs);
         let value = eval_exprs(&exprs, &mut env).unwrap();
-        assert_eq!(value, Value::new(Value_::Integer(2)));
+        assert_eq!(value, Value::new(Value_::Integer(2), &env));
     }
 
     #[test]

@@ -31,7 +31,7 @@ impl Stack {
             bindings: Bindings::default(),
             bindings_next_block: vec![],
             exprs_to_eval: vec![],
-            evalled_values: vec![Value::unit()],
+            evalled_values: vec![],
             return_hint: None,
             enclosing_name: EnclosingSymbol::Toplevel,
             type_bindings: FxHashMap::default(),
@@ -166,6 +166,8 @@ impl Env {
             cli_args: vec![],
         };
 
+        env.push_value(Value::unit(&env));
+
         let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);
         insert_prelude(user_namespace.clone(), prelude_namespace.clone());
 
@@ -201,7 +203,7 @@ impl Env {
                 SymbolName {
                     text: format!("{fun_kind}"),
                 },
-                Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
+                Value::new(Value_::BuiltinFunction(fun_kind, None, None), self),
             );
         }
 
@@ -439,8 +441,6 @@ fn insert_prelude(ns: Rc<RefCell<NamespaceInfo>>, prelude: Rc<RefCell<NamespaceI
 
 // TODO: this shouldn't take an Env, we're in the process of constructing it.
 fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<NamespaceInfo>> {
-    let id_gen = &mut env.id_gen;
-
     // Users shouldn't be able to see private methods in a
     // namespace. Where should this be enforced? When the namespace in
     // constructed during eval?
@@ -467,7 +467,7 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
             SymbolName {
                 text: format!("{fun_kind}"),
             },
-            Value::new(Value_::BuiltinFunction(fun_kind, None, None)),
+            Value::new(Value_::BuiltinFunction(fun_kind, None, None), env),
         );
     }
 
@@ -478,7 +478,8 @@ fn fresh_prelude(env: &mut Env, prelude_vfs_path: &VfsPathBuf) -> Rc<RefCell<Nam
         types: built_in_types(),
     };
 
-    let (prelude_items, errors) = parse_toplevel_items(prelude_vfs_path, prelude_src, id_gen);
+    let (prelude_items, errors) =
+        parse_toplevel_items(prelude_vfs_path, prelude_src, &mut env.id_gen);
     assert!(
         errors.is_empty(),
         "Prelude should be syntactically legal: {}",

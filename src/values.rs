@@ -22,7 +22,7 @@ impl Value {
         self.0.as_ref()
     }
 
-    pub(crate) fn new(v: Value_) -> Self {
+    pub(crate) fn new(v: Value_, _: &Env) -> Self {
         Self(Rc::new(v))
     }
 
@@ -208,30 +208,36 @@ impl Eq for Value_ {}
 
 impl Value {
     /// A helper for creating a unit value.
-    pub(crate) fn unit() -> Self {
+    pub(crate) fn unit(e: &Env) -> Self {
         // We can assume that Unit is always defined because it's in the
         // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Unit".to_owned(),
+        Self::new(
+            Value_::EnumVariant {
+                type_name: TypeName {
+                    text: "Unit".to_owned(),
+                },
+                runtime_type: Type::unit(),
+                variant_idx: 0,
+                payload: None,
             },
-            runtime_type: Type::unit(),
-            variant_idx: 0,
-            payload: None,
-        })
+            e,
+        )
     }
 
-    pub(crate) fn bool(b: bool) -> Self {
+    pub(crate) fn bool(b: bool, e: &Env) -> Self {
         // We can assume that Bool is always defined because it's in the
         // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Bool".to_owned(),
+        Self::new(
+            Value_::EnumVariant {
+                type_name: TypeName {
+                    text: "Bool".to_owned(),
+                },
+                runtime_type: Type::bool(),
+                variant_idx: if b { 0 } else { 1 },
+                payload: None,
             },
-            runtime_type: Type::bool(),
-            variant_idx: if b { 0 } else { 1 },
-            payload: None,
-        })
+            e,
+        )
     }
 
     pub(crate) fn as_rust_bool(&self) -> Option<bool> {
@@ -245,96 +251,111 @@ impl Value {
         }
     }
 
-    pub(crate) fn some(v: Value) -> Self {
+    pub(crate) fn some(v: Value, e: &Env) -> Self {
         let value_type = Type::from_value(&v);
 
         // We can assume that Option is always defined because it's in the
         // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Option".to_owned(),
-            },
-            variant_idx: 0,
-            payload: Some(Box::new(v)),
-            runtime_type: Type::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: TypeName {
+        Self::new(
+            Value_::EnumVariant {
+                type_name: TypeName {
                     text: "Option".to_owned(),
                 },
-                args: vec![value_type],
+                variant_idx: 0,
+                payload: Some(Box::new(v)),
+                runtime_type: Type::UserDefined {
+                    kind: TypeDefKind::Enum,
+                    name: TypeName {
+                        text: "Option".to_owned(),
+                    },
+                    args: vec![value_type],
+                },
             },
-        })
+            e,
+        )
     }
 
-    pub(crate) fn none() -> Self {
+    pub(crate) fn none(e: &Env) -> Self {
         // We can assume that Option is always defined because it's in the
         // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Option".to_owned(),
-            },
-            variant_idx: 1,
-            payload: None,
-            runtime_type: Type::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: TypeName {
+        Self::new(
+            Value_::EnumVariant {
+                type_name: TypeName {
                     text: "Option".to_owned(),
                 },
-                args: vec![Type::no_value()],
+                variant_idx: 1,
+                payload: None,
+                runtime_type: Type::UserDefined {
+                    kind: TypeDefKind::Enum,
+                    name: TypeName {
+                        text: "Option".to_owned(),
+                    },
+                    args: vec![Type::no_value()],
+                },
             },
-        })
+            e,
+        )
     }
 
-    pub(crate) fn ok(v: Value) -> Self {
+    pub(crate) fn ok(v: Value, e: &Env) -> Self {
         let value_type = Type::from_value(&v);
 
         // We can assume that Result is always defined because it's in the
         // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Result".to_owned(),
-            },
-            variant_idx: 0,
-            payload: Some(Box::new(v)),
-            runtime_type: Type::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: TypeName {
+        Self::new(
+            Value_::EnumVariant {
+                type_name: TypeName {
                     text: "Result".to_owned(),
                 },
-                args: vec![value_type, Type::no_value()],
+                variant_idx: 0,
+                payload: Some(Box::new(v)),
+                runtime_type: Type::UserDefined {
+                    kind: TypeDefKind::Enum,
+                    name: TypeName {
+                        text: "Result".to_owned(),
+                    },
+                    args: vec![value_type, Type::no_value()],
+                },
             },
-        })
+            e,
+        )
     }
 
-    pub(crate) fn err(v: Value) -> Self {
+    pub(crate) fn err(v: Value, e: &Env) -> Self {
         let value_type = Type::from_value(&v);
 
         // We can assume that Result is always defined because it's in the
         // prelude.
-        Self::new(Value_::EnumVariant {
-            type_name: TypeName {
-                text: "Result".to_owned(),
-            },
-            runtime_type: Type::UserDefined {
-                kind: TypeDefKind::Enum,
-                name: TypeName {
+        Self::new(
+            Value_::EnumVariant {
+                type_name: TypeName {
                     text: "Result".to_owned(),
                 },
-                args: vec![Type::no_value(), value_type],
+                runtime_type: Type::UserDefined {
+                    kind: TypeDefKind::Enum,
+                    name: TypeName {
+                        text: "Result".to_owned(),
+                    },
+                    args: vec![Type::no_value(), value_type],
+                },
+                variant_idx: 1,
+                payload: Some(Box::new(v)),
             },
-            variant_idx: 1,
-            payload: Some(Box::new(v)),
-        })
+            e,
+        )
     }
 
-    pub(crate) fn path(inner: String) -> Self {
-        Self::new(Value_::Struct {
-            type_name: TypeName {
-                text: "Path".to_owned(),
+    pub(crate) fn path(inner: String, e: &Env) -> Self {
+        Self::new(
+            Value_::Struct {
+                type_name: TypeName {
+                    text: "Path".to_owned(),
+                },
+                fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner), e))],
+                runtime_type: Type::path(),
             },
-            fields: vec![(SymbolName::from("p"), Value::new(Value_::String(inner)))],
-            runtime_type: Type::path(),
-        })
+            e,
+        )
     }
 }
 
@@ -669,7 +690,7 @@ mod tests {
         let vfs = Vfs::default();
         let env = Env::new(id_gen, vfs);
 
-        let value = Value::new(Value_::String("foo \\ \" \n bar".into()));
+        let value = Value::new(Value_::String("foo \\ \" \n bar".into()), &env);
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }
 }

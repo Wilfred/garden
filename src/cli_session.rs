@@ -21,7 +21,7 @@ use crate::prompt::prompt_symbol;
 use crate::Vfs;
 
 use owo_colors::OwoColorize;
-use rustyline::Editor;
+use rustyline::DefaultEditor;
 
 enum ReadError {
     NeedsEval(EvalAction),
@@ -33,13 +33,13 @@ enum ReadError {
 fn read_expr(
     env: &mut Env,
     session: &mut Session,
-    rl: &mut Editor<()>,
+    rl: &mut DefaultEditor,
     is_stopped: bool,
 ) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
         match rl.readline(&prompt_symbol(is_stopped)) {
             Ok(input) => {
-                rl.add_history_entry(input.as_str());
+                let _ = rl.add_history_entry(input.as_str());
                 let _ = rl.save_history(".history");
 
                 match Command::from_string(&input) {
@@ -250,8 +250,8 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     }
 }
 
-fn new_editor() -> Editor<()> {
-    let mut rl: Editor<()> = Editor::new().unwrap();
+fn new_editor() -> DefaultEditor {
+    let mut rl = DefaultEditor::new().unwrap();
     // TODO: put this in the home directory rather than the current directory.
     let _ = rl.load_history(".history");
     rl
@@ -274,7 +274,7 @@ fn print_repl_header() {
 /// error.
 fn read_multiline_syntax(
     first_line: &str,
-    rl: &mut Editor<()>,
+    rl: &mut DefaultEditor,
     vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {

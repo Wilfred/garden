@@ -25,7 +25,7 @@ line-numbers = "0.4.0"
 ordered-float = "3.7.0"
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
 regex = "1.7.1"
-rustyline = "10.1.1"
+rustyline = "17.0.1"
 serde = { version = "1.0.104", features = ["derive", "rc"] }
 serde_json = "1.0.48"
 strsim = "0.10.0"

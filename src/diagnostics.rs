@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::env::StackFrame;
 use crate::eval::EnclosingSymbol;
 use crate::parser::diagnostics::ErrorMessage;
-use crate::parser::lex::lex;
+use crate::parser::lex::{lex, STRING_RE};
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_project_relative, Vfs, VfsId};
 use crate::parser::KEYWORDS;
@@ -404,6 +404,8 @@ pub(crate) fn with_syntax_highlighting(line: &str, make_bold: bool) -> String {
 
         if KEYWORDS.contains(&token.text) {
             s.push_str(&token.text.bold().to_string());
+        } else if STRING_RE.is_match(token.text) {
+            s.push_str(&token.text.bright_blue().to_string());
         } else if looks_like_type_name(token.text) {
             s.push_str(&if make_bold {
                 token.text.bright_purple().bold().to_string()

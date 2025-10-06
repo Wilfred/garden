@@ -173,6 +173,9 @@ fn format_note_severity(use_color: bool) -> String {
     }
 }
 
+/// Return a string of the source code around this position, with a
+/// left margin of line numbers, and an underline of the relevant
+/// portion.
 fn format_pos_in_fun(
     position: &Position,
     vfs: &Vfs,

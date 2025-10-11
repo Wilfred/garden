@@ -21,7 +21,7 @@ A type checker that allows type or function redefinition.
 
 ## First Class Sandboxes
 
-Lighweight sandboxing (in the style of OpenBSD pledge).
+Lightweight sandboxing (in the style of OpenBSD pledge).
 
 ## Interactive Experience
 

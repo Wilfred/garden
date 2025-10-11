@@ -33,6 +33,10 @@ Added `Dict::get()`, `Dict::set()` and `Dict::items()`.
 
 Added `__reflect::operators()`.
 
+## Build
+
+Garden now requires Rust 1.85+ to build.
+
 ## Check
 
 `garden check` now warns on unused type variables.

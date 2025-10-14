@@ -14,10 +14,10 @@ public fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `no_such_fun`
-// ---| src/test_files/check/cascading_errors.gdn:2:11
-//   1| public fun foo() {
-//   2|   let x = no_such_fun()
-//    |           ^^^^^^^^^^^
-//   3|   // Calling methods on an error type is fine.
-//   4|   x.len()
+// --| src/test_files/check/cascading_errors.gdn:2:11
+//  1| public fun foo() {
+//  2|   let x = no_such_fun()
+//   |           ^^^^^^^^^^^
+//  3|   // Calling methods on an error type is fine.
+//  4|   x.len()
 

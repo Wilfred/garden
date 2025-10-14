@@ -6,9 +6,9 @@ public fun foo() {}
 // expected exit status: 1
 // expected stdout:
 // Warning: The function `foo` is already defined in this file.
-// ---| src/test_files/check/duplicate_function.gdn:3:12
-//   1| public fun foo() {}
-//   2| 
-//   3| public fun foo() {}
-//   4|            ^^^
+// -| src/test_files/check/duplicate_function.gdn:3:12
+// 1| public fun foo() {}
+// 2| 
+// 3| public fun foo() {}
+// 4|            ^^^
 

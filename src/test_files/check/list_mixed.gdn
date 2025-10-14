@@ -13,23 +13,23 @@ public fun returns_bools(): List<Bool> {
 // expected exit status: 1
 // expected stdout:
 // Error: List elements have different types.
-// ---| src/test_files/check/list_mixed.gdn:4:17
-//   3| {
-//   4|     let x = [1, True]
-//    |                 ^^^^
-//   5|     takes_bools(x)
-//   6| }
+// --| src/test_files/check/list_mixed.gdn:4:17
+//  3| {
+//  4|     let x = [1, True]
+//   |                 ^^^^
+//  5|     takes_bools(x)
+//  6| }
 // 
 // Error: Expected `List<Bool>`, but got `List<Any>`.
-// ---| src/test_files/check/list_mixed.gdn:5:17
-//   3| {
-//   4|     let x = [1, True]
-//   5|     takes_bools(x)
-//   6| }               ^
+// --| src/test_files/check/list_mixed.gdn:5:17
+//  3| {
+//  4|     let x = [1, True]
+//  5|     takes_bools(x)
+//  6| }               ^
 // 
 // Error: Expected `Bool`, but got `Int`.
-// ---| src/test_files/check/list_mixed.gdn:9:4
-//   8| public fun returns_bools(): List<Bool> {
-//   9|   [1, True]
-//  10| }  ^
+// --| src/test_files/check/list_mixed.gdn:9:4
+//  8| public fun returns_bools(): List<Bool> {
+//  9|   [1, True]
+// 10| }  ^
 

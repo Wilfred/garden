@@ -58,8 +58,8 @@ public fun foo: Option<Int> {
 
 // expected stderr:
 // Error: Parse error: Expected `(` after this.
-// ---| src/test_files/parser/unfinished_params.gdn:1:12
-//   1| public fun foo: Option<Int> {
-//   2|   None     ^^^
-//   3| }
+// --| src/test_files/parser/unfinished_params.gdn:1:12
+//  1| public fun foo: Option<Int> {
+//  2|   None     ^^^
+//  3| }
 

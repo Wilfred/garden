@@ -24,26 +24,26 @@ public fun stuff(): String {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Bool`, but got `Int`.
-// ---| src/test_files/check/type_error_if.gdn:2:6
-//   1| {
-//   2|   if 1 {
-//    |      ^
-//   3|     string_repr(1234)
-//   4|   } else {
+// --| src/test_files/check/type_error_if.gdn:2:6
+//  1| {
+//  2|   if 1 {
+//   |      ^
+//  3|     string_repr(1234)
+//  4|   } else {
 // 
 // Error: `if` and `else` have incompatible types: `String` and `Int`.
-// ---| src/test_files/check/type_error_if.gdn:9:5
-//   8|   if True {
-//   9|     "foo"
-//    |     ^^^^^
-//  10|   } else {
-//  11|     123
+// --| src/test_files/check/type_error_if.gdn:9:5
+//  8|   if True {
+//  9|     "foo"
+//   |     ^^^^^
+// 10|   } else {
+// 11|     123
 // 
 // Error: Expected `String`, but got `Int`.
-// ---| src/test_files/check/type_error_if.gdn:19:5
-//  17|     "foo"
-//  18|   } else {
-//  19|     123
-//  20|   } ^^^
-//  21| }
+// --| src/test_files/check/type_error_if.gdn:19:5
+// 17|     "foo"
+// 18|   } else {
+// 19|     123
+// 20|   } ^^^
+// 21| }
 

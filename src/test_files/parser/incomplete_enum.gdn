@@ -45,8 +45,8 @@ fun bar() {}
 
 // expected stderr:
 // Error: Parse error: Expected `{` after this.
-// ---| src/test_files/parser/incomplete_enum.gdn:1:6
-//   1| enum Foo
-//   2|      ^^^
-//   3| fun bar() {}
+// --| src/test_files/parser/incomplete_enum.gdn:1:6
+//  1| enum Foo
+//  2|      ^^^
+//  3| fun bar() {}
 

@@ -7,9 +7,9 @@ public fun foo() {
 // expected exit status: 1
 // expected stdout:
 // Error: `String` has no method `no_such_meth`.
-// ---| src/test_files/check/type_error_return.gdn:3:14
-//   1| public fun foo() {
-//   2|     let s = ""
-//   3|     return s.no_such_meth()
-//   4| }            ^^^^^^^^^^^^
+// -| src/test_files/check/type_error_return.gdn:3:14
+// 1| public fun foo() {
+// 2|     let s = ""
+// 3|     return s.no_such_meth()
+// 4| }            ^^^^^^^^^^^^
 

@@ -53,54 +53,54 @@ method used_meth(this: String): Unit {}
 // expected exit status: 1
 // expected stdout:
 // Warning: `not_called` is never called.
-// ---| src/test_files/check/unused_func.gdn:5:5
-//   3| fun called_from_uncalled() {}
-//   4| 
-//   5| fun not_called() {
-//    |     ^^^^^^^^^^
-//   6|   called_from_uncalled()
-//   7| }
+// --| src/test_files/check/unused_func.gdn:5:5
+//  3| fun called_from_uncalled() {}
+//  4| 
+//  5| fun not_called() {
+//   |     ^^^^^^^^^^
+//  6|   called_from_uncalled()
+//  7| }
 // 
 // Warning: `unreachable_cycle` is never called.
-// ---| src/test_files/check/unused_func.gdn:25:5
-//  23| }
-//  24| 
-//  25| fun unreachable_cycle() {
-//    |     ^^^^^^^^^^^^^^^^^
-//  26|   unreachable_cycle()
-//  27| }
+// --| src/test_files/check/unused_func.gdn:25:5
+// 23| }
+// 24| 
+// 25| fun unreachable_cycle() {
+//   |     ^^^^^^^^^^^^^^^^^
+// 26|   unreachable_cycle()
+// 27| }
 // 
 // Warning: `called_via_test` is never called.
-// ---| src/test_files/check/unused_func.gdn:35:5
-//  33| }
-//  34| 
-//  35| fun called_via_test() {}
-//  36|     ^^^^^^^^^^^^^^^
-//  37| test my_test {
+// --| src/test_files/check/unused_func.gdn:35:5
+// 33| }
+// 34| 
+// 35| fun called_via_test() {}
+// 36|     ^^^^^^^^^^^^^^^
+// 37| test my_test {
 // 
 // Warning: `unused_meth` is never called.
-// ---| src/test_files/check/unused_func.gdn:48:8
-//  46| }
-//  47| 
-//  48| method unused_meth(this: String): Unit {}
-//  49|        ^^^^^^^^^^^
-//  50| method used_meth(this: String): Unit {}
+// --| src/test_files/check/unused_func.gdn:48:8
+// 46| }
+// 47| 
+// 48| method unused_meth(this: String): Unit {}
+// 49|        ^^^^^^^^^^^
+// 50| method used_meth(this: String): Unit {}
 // 
 // Warning: `unreachable_cycle_1` is never called.
-// ---| src/test_files/check/unused_func.gdn:17:5
-//  15| // We do want to warn here, we have non-zero callers but they're not
-//  16| // reachable from an externaled function.
-//  17| fun unreachable_cycle_1() {
-//    |     ^^^^^^^^^^^^^^^^^^^
-//  18|   unreachable_cycle_2()
-//  19| }
+// --| src/test_files/check/unused_func.gdn:17:5
+// 15| // We do want to warn here, we have non-zero callers but they're not
+// 16| // reachable from an externaled function.
+// 17| fun unreachable_cycle_1() {
+//   |     ^^^^^^^^^^^^^^^^^^^
+// 18|   unreachable_cycle_2()
+// 19| }
 // 
 // Warning: `unreachable_cycle_2` is never called.
-// ---| src/test_files/check/unused_func.gdn:21:5
-//  19| }
-//  20| 
-//  21| fun unreachable_cycle_2() {
-//    |     ^^^^^^^^^^^^^^^^^^^
-//  22|   unreachable_cycle_1()
-//  23| }
+// --| src/test_files/check/unused_func.gdn:21:5
+// 19| }
+// 20| 
+// 21| fun unreachable_cycle_2() {
+//   |     ^^^^^^^^^^^^^^^^^^^
+// 22|   unreachable_cycle_1()
+// 23| }
 

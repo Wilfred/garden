@@ -45,8 +45,8 @@ fun bar() {}
 
 // expected stderr:
 // Error: Parse error: Expected `{` after this.
-// ---| src/test_files/parser/incomplete_struct.gdn:1:8
-//   1| struct Foo
-//   2|        ^^^
-//   3| fun bar() {}
+// --| src/test_files/parser/incomplete_struct.gdn:1:8
+//  1| struct Foo
+//  2|        ^^^
+//  3| fun bar() {}
 

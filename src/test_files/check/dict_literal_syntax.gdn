@@ -12,16 +12,16 @@ Dict["x" => 1, "y" => ]
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `,` or `]` after this.
-// ---| src/test_files/check/dict_literal_syntax.gdn:7:13
-//   6| // Bad: forgotten comma.
-//   7| Dict["x" => 1 "y" => nono]
-//   8|             ^
-//   9| Dict["x" => 1, "y" => ]
+// --| src/test_files/check/dict_literal_syntax.gdn:7:13
+//  6| // Bad: forgotten comma.
+//  7| Dict["x" => 1 "y" => nono]
+//  8|             ^
+//  9| Dict["x" => 1, "y" => ]
 // 
 // Error: Expected an expression after this.
-// ---| src/test_files/check/dict_literal_syntax.gdn:9:20
-//   7| Dict["x" => 1 "y" => nono]
-//   8| 
-//   9| Dict["x" => 1, "y" => ]
-//  10|                    ^^
+// --| src/test_files/check/dict_literal_syntax.gdn:9:20
+//  7| Dict["x" => 1 "y" => nono]
+//  8| 
+//  9| Dict["x" => 1, "y" => ]
+// 10|                    ^^
 

@@ -192,11 +192,17 @@ fn format_pos_in_fun(
 
     let pos_path = to_project_relative(&position.path, project_root);
 
-    let margin_width = 4;
+    let src = match vfs.file_src(&position.vfs_path) {
+        Some(src) => src,
+        None => "",
+    };
+
+    let s_lines: Vec<_> = src.lines().collect();
+    let margin_width = format!("{}", s_lines.len()).len();
 
     let formatted_pos = format!(
         "{}| {}:{}:{}",
-        "-".repeat(margin_width - 1),
+        "-".repeat(margin_width),
         pos_path.display(),
         position.line_number + 1,
         position.column + 1
@@ -221,12 +227,6 @@ fn format_pos_in_fun(
     let offset = position.start_offset;
     let end_offset = position.end_offset;
 
-    let src = match vfs.file_src(&position.vfs_path) {
-        Some(src) => src,
-        None => "",
-    };
-
-    let s_lines: Vec<_> = src.lines().collect();
     if s_lines.is_empty() {
         // Nothing to do.
     } else if offset >= src.len() || end_offset >= src.len() {
@@ -372,7 +372,7 @@ fn format_pos_in_fun(
 }
 
 fn format_margin_num(num: &str, margin_width: usize, use_color: bool) -> String {
-    let s = format!("{:>width$}| ", num, width = margin_width - 1);
+    let s = format!("{:>width$}| ", num, width = margin_width);
 
     if use_color {
         s.dimmed().to_string()

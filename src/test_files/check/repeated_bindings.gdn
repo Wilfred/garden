@@ -15,36 +15,36 @@ public fun bar(_: Int, _: Int, _: String) {
 // expected exit status: 1
 // expected stdout:
 // Error: Duplicate parameter `x`.
-// ---| src/test_files/check/repeated_bindings.gdn:1:24
-//   1| public fun foo(x: Int, x: Int) {
-//    |                        ^
-//   2|     let (y, y) = (1, 2)
-// ---| src/test_files/check/repeated_bindings.gdn:1:16
-//   1| public fun foo(x: Int, x: Int) {
-//    |                ^ Note: The previous occurrence is here.
-//   2|     let (y, y) = (1, 2)
+// --| src/test_files/check/repeated_bindings.gdn:1:24
+//  1| public fun foo(x: Int, x: Int) {
+//   |                        ^
+//  2|     let (y, y) = (1, 2)
+// --| src/test_files/check/repeated_bindings.gdn:1:16
+//  1| public fun foo(x: Int, x: Int) {
+//   |                ^ Note: The previous occurrence is here.
+//  2|     let (y, y) = (1, 2)
 // 
 // Error: Duplicate variable  `y` in destructuring `let`.
-// ---| src/test_files/check/repeated_bindings.gdn:2:13
-//   1| public fun foo(x: Int, x: Int) {
-//   2|     let (y, y) = (1, 2)
-//   3|             ^
-//   4|     let _f = fun(z, z) {}
-// ---| src/test_files/check/repeated_bindings.gdn:2:10
-//   1| public fun foo(x: Int, x: Int) {
-//   2|     let (y, y) = (1, 2)
-//   3|          ^ Note: The previous occurrence is here.
-//   4|     let _f = fun(z, z) {}
+// --| src/test_files/check/repeated_bindings.gdn:2:13
+//  1| public fun foo(x: Int, x: Int) {
+//  2|     let (y, y) = (1, 2)
+//  3|             ^
+//  4|     let _f = fun(z, z) {}
+// --| src/test_files/check/repeated_bindings.gdn:2:10
+//  1| public fun foo(x: Int, x: Int) {
+//  2|     let (y, y) = (1, 2)
+//  3|          ^ Note: The previous occurrence is here.
+//  4|     let _f = fun(z, z) {}
 // 
 // Error: Duplicate parameter `z`.
-// ---| src/test_files/check/repeated_bindings.gdn:4:21
-//   2|     let (y, y) = (1, 2)
-//   3| 
-//   4|     let _f = fun(z, z) {}
-//   5| }                   ^
-// ---| src/test_files/check/repeated_bindings.gdn:4:18
-//   2|     let (y, y) = (1, 2)
-//   3| 
-//   4|     let _f = fun(z, z) {}
-//   5| }                ^ Note: The previous occurrence is here.
+// --| src/test_files/check/repeated_bindings.gdn:4:21
+//  2|     let (y, y) = (1, 2)
+//  3| 
+//  4|     let _f = fun(z, z) {}
+//  5| }                   ^
+// --| src/test_files/check/repeated_bindings.gdn:4:18
+//  2|     let (y, y) = (1, 2)
+//  3| 
+//  4|     let _f = fun(z, z) {}
+//  5| }                ^ Note: The previous occurrence is here.
 

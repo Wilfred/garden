@@ -29,29 +29,29 @@ public fun bar(): Int {
 // expected exit status: 1
 // expected stdout:
 // Error: `match` cases have different types.
-// ---| src/test_files/check/type_error_match_different_cases.gdn:12:7
-//  10|     Two => throw(""),
-//  11|     Three => {
-//  12|       "stuff"
-//    |       ^^^^^^^
-//  13|     },
-//  14|   }
+// --| src/test_files/check/type_error_match_different_cases.gdn:12:7
+// 10|     Two => throw(""),
+// 11|     Three => {
+// 12|       "stuff"
+//   |       ^^^^^^^
+// 13|     },
+// 14|   }
 // 
 // Error: Expected `Int`, but got `String`.
-// ---| src/test_files/check/type_error_match_different_cases.gdn:19:12
-//  17| public fun bar(): Int {
-//  18|   match One {
-//  19|     One => "wrong",
-//    |            ^^^^^^^
-//  20|     Two => "wrong too",
-//  21|     Three => {
+// --| src/test_files/check/type_error_match_different_cases.gdn:19:12
+// 17| public fun bar(): Int {
+// 18|   match One {
+// 19|     One => "wrong",
+//   |            ^^^^^^^
+// 20|     Two => "wrong too",
+// 21|     Three => {
 // 
 // Error: Expected `Int`, but got `String`.
-// ---| src/test_files/check/type_error_match_different_cases.gdn:20:12
-//  18|   match One {
-//  19|     One => "wrong",
-//  20|     Two => "wrong too",
-//    |            ^^^^^^^^^^^
-//  21|     Three => {
-//  22|       // not wrong
+// --| src/test_files/check/type_error_match_different_cases.gdn:20:12
+// 18|   match One {
+// 19|     One => "wrong",
+// 20|     Two => "wrong too",
+//   |            ^^^^^^^^^^^
+// 21|     Three => {
+// 22|       // not wrong
 

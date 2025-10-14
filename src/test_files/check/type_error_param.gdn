@@ -6,8 +6,8 @@ public fun foo(s: String) {
 // expected exit status: 1
 // expected stdout:
 // Error: `String` has no method `no_such_meth`.
-// ---| src/test_files/check/type_error_param.gdn:2:7
-//   1| public fun foo(s: String) {
-//   2|     s.no_such_meth()
-//   3| }     ^^^^^^^^^^^^
+// -| src/test_files/check/type_error_param.gdn:2:7
+// 1| public fun foo(s: String) {
+// 2|     s.no_such_meth()
+// 3| }     ^^^^^^^^^^^^
 

@@ -4,7 +4,7 @@ import "__fs.gdn" as fs
 // expected exit status: 1
 // expected stdout:
 // Warning: `fs` is unused.
-// ---| src/test_files/check/unused_import.gdn:1:22
-//   1| import "__fs.gdn" as fs
-//   2|                      ^^
+// -| src/test_files/check/unused_import.gdn:1:22
+// 1| import "__fs.gdn" as fs
+// 2|                      ^^
 

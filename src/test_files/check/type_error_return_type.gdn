@@ -8,16 +8,16 @@ public fun bad(): Bool {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `Bool`.
-// ---| src/test_files/check/type_error_return_type.gdn:2:27
-//   1| public fun bad(): Bool {
-//   2|     let _f = fun(): Int { True }
-//   3|                           ^^^^
-//   4|     "abc"
+// -| src/test_files/check/type_error_return_type.gdn:2:27
+// 1| public fun bad(): Bool {
+// 2|     let _f = fun(): Int { True }
+// 3|                           ^^^^
+// 4|     "abc"
 // 
 // Error: Expected `Bool`, but got `String`.
-// ---| src/test_files/check/type_error_return_type.gdn:4:5
-//   2|     let _f = fun(): Int { True }
-//   3|     
-//   4|     "abc"
-//   5| }   ^^^^^
+// -| src/test_files/check/type_error_return_type.gdn:4:5
+// 2|     let _f = fun(): Int { True }
+// 3|     
+// 4|     "abc"
+// 5| }   ^^^^^
 

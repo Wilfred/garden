@@ -19,9 +19,9 @@ public fun foo(items: List<Int>) {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a tuple, but got `Int`.
-// ---| src/test_files/check/for_in.gdn:13:17
-//  12|   // Bad
-//  13|   for (x, y) in items {
-//  14|     x + y       ^^^^^
-//  15|   }
+// --| src/test_files/check/for_in.gdn:13:17
+// 12|   // Bad
+// 13|   for (x, y) in items {
+// 14|     x + y       ^^^^^
+// 15|   }
 

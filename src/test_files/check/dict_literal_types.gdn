@@ -21,29 +21,29 @@ Dict["x" => 1, "y" => ""]
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `no_such`
-// ---| src/test_files/check/dict_literal_types.gdn:5:6
-//   4| // Bad: undefined key.
-//   5| Dict[no_such => 1]
-//   6|      ^^^^^^^
-//   7| // Bad: undefined value.
+// --| src/test_files/check/dict_literal_types.gdn:5:6
+//  4| // Bad: undefined key.
+//  5| Dict[no_such => 1]
+//  6|      ^^^^^^^
+//  7| // Bad: undefined value.
 // 
 // Error: Unbound symbol: `no_such2`
-// ---| src/test_files/check/dict_literal_types.gdn:8:15
-//   7| // Bad: undefined value.
-//   8| Dict["foo" => no_such2]
-//   9|               ^^^^^^^^
-//  10| // Bad: key isn't a string.
+// --| src/test_files/check/dict_literal_types.gdn:8:15
+//  7| // Bad: undefined value.
+//  8| Dict["foo" => no_such2]
+//  9|               ^^^^^^^^
+// 10| // Bad: key isn't a string.
 // 
 // Error: Expected `String`, but got `Int`.
-// ---| src/test_files/check/dict_literal_types.gdn:11:6
-//  10| // Bad: key isn't a string.
-//  11| Dict[1 => 2]
-//  12|      ^
-//  13| // Good: all values the same type.
+// --| src/test_files/check/dict_literal_types.gdn:11:6
+// 10| // Bad: key isn't a string.
+// 11| Dict[1 => 2]
+// 12|      ^
+// 13| // Good: all values the same type.
 // 
 // Error: Dict values have different types.
-// ---| src/test_files/check/dict_literal_types.gdn:18:23
-//  17| // Bad: mixed value types.
-//  18| Dict["x" => 1, "y" => ""]
-//  19|                       ^^
+// --| src/test_files/check/dict_literal_types.gdn:18:23
+// 17| // Bad: mixed value types.
+// 18| Dict["x" => 1, "y" => ""]
+// 19|                       ^^
 

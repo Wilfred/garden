@@ -10,8 +10,8 @@ public fun get_ints_inferred(items: List<String>): List<Int> {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a type with a `len` method, but got `Any`.
-// ---| src/test_files/check/map.gdn:6:27
-//   5| public fun get_ints_inferred(items: List<String>): List<Int> {
-//   6|     items.map(fun(item) { item.len() })
-//   7| }                         ^^^^
+// -| src/test_files/check/map.gdn:6:27
+// 5| public fun get_ints_inferred(items: List<String>): List<Int> {
+// 6|     items.map(fun(item) { item.len() })
+// 7| }                         ^^^^
 

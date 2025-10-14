@@ -6,8 +6,8 @@ public fun foo(): Option {
 // expected exit status: 1
 // expected stdout:
 // Error: Option takes 1 type argument, but got 0 arguments.
-// ---| src/test_files/check/missing_type_arg.gdn:1:19
-//   1| public fun foo(): Option {
-//   2|     None          ^^^^^^
-//   3| }
+// -| src/test_files/check/missing_type_arg.gdn:1:19
+// 1| public fun foo(): Option {
+// 2|     None          ^^^^^^
+// 3| }
 

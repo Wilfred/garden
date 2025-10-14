@@ -7,9 +7,9 @@ enum Foo<T> {
 // expected exit status: 1
 // expected stdout:
 // Error: Generic type arguments cannot take parameters.
-// ---| src/test_files/check/generic_taking_arguments.gdn:3:11
-//   1| enum Foo<T> {
-//   2|     One,
-//   3|     Two(T<Int>),
-//   4| }         ^^^
+// -| src/test_files/check/generic_taking_arguments.gdn:3:11
+// 1| enum Foo<T> {
+// 2|     One,
+// 3|     Two(T<Int>),
+// 4| }         ^^^
 

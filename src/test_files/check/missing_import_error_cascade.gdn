@@ -13,9 +13,9 @@ ns::stuff()
 // expected exit status: 1
 // expected stdout:
 // Error: No such file `no_such.gdn`.
-// ---| src/test_files/check/missing_import_error_cascade.gdn:2:8
-//   1| // This should have an error.
-//   2| import "no_such.gdn" as ns
-//    |        ^^^^^^^^^^^^^
-//   3| import "__fs.gdn" as fs
+// --| src/test_files/check/missing_import_error_cascade.gdn:2:8
+//  1| // This should have an error.
+//  2| import "no_such.gdn" as ns
+//   |        ^^^^^^^^^^^^^
+//  3| import "__fs.gdn" as fs
 

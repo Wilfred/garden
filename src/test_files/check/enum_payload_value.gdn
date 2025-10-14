@@ -25,9 +25,9 @@ public fun demo() {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Snippet`, but got `String`.
-// ---| src/test_files/check/enum_payload_value.gdn:18:8
-//  17|   // Bad, we should still check types from forward references.
-//  18|   Code("")
-//  19|        ^^
-//  20|   // TODO: what if we have a cyclice reference to a type in another
+// --| src/test_files/check/enum_payload_value.gdn:18:8
+// 17|   // Bad, we should still check types from forward references.
+// 18|   Code("")
+// 19|        ^^
+// 20|   // TODO: what if we have a cyclice reference to a type in another
 

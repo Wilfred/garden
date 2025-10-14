@@ -6,9 +6,9 @@ public method foo(this: String) {}
 // expected exit status: 1
 // expected stdout:
 // Warning: The method `String::foo` is already defined in this file.
-// ---| src/test_files/check/duplicate_method.gdn:3:15
-//   1| public method foo(this: String) {}
-//   2| 
-//   3| public method foo(this: String) {}
-//   4|               ^^^
+// -| src/test_files/check/duplicate_method.gdn:3:15
+// 1| public method foo(this: String) {}
+// 2| 
+// 3| public method foo(this: String) {}
+// 4|               ^^^
 

@@ -7,10 +7,10 @@ public method foo(this: String) {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `String`, but got `Int`.
-// ---| src/test_files/check/type_error_redefine_this.gdn:2:10
-//   1| public method foo(this: String) {
-//   2|   this = 123
-//    |          ^^^
-//   3|   this.index_of("a")
-//   4| }
+// -| src/test_files/check/type_error_redefine_this.gdn:2:10
+// 1| public method foo(this: String) {
+// 2|   this = 123
+//  |          ^^^
+// 3|   this.index_of("a")
+// 4| }
 

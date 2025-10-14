@@ -6,8 +6,8 @@
 // expected exit status: 1
 // expected stdout:
 // Error: `assert` requires an expression, for example `assert(x == 42)`.
-// ---| src/test_files/check/incomplete_assert.gdn:2:9
-//   1| {
-//   2|   assert()
-//   3| }       ^^
+// -| src/test_files/check/incomplete_assert.gdn:2:9
+// 1| {
+// 2|   assert()
+// 3| }       ^^
 

@@ -7,7 +7,7 @@ struct Foo {}
 // args: run
 // expected stderr:
 // Error: `Foo` does not have a field named `x`.
-// ---| src/test_files/runtime/struct_extra_field.gdn:4:10	 __toplevel__
-//   4|     Foo{ x: 1 }
-//    |          ^
+// --| src/test_files/runtime/struct_extra_field.gdn:4:10	 __toplevel__
+//  4|     Foo{ x: 1 }
+//   |          ^
 

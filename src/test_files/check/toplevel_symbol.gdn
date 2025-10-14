@@ -4,8 +4,8 @@ foo
 // expected exit status: 1
 // expected stdout:
 // Error: Unbound symbol: `foo`
-// ---| src/test_files/check/toplevel_symbol.gdn:1:1
-//   1| foo
-//    | ^^^
-//   2|
+// -| src/test_files/check/toplevel_symbol.gdn:1:1
+// 1| foo
+//  | ^^^
+// 2|
 

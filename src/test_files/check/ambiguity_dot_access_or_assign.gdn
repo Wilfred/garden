@@ -12,11 +12,11 @@ public fun foo(): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: `String` is not a struct.
-// ---| src/test_files/check/ambiguity_dot_access_or_assign.gdn:7:6
-//   5|     // We expect an error here because it's parsed as `s.invalid`, and
-//   6|     // String values don't have fields.
-//   7|     s.
-//    |      ^
-//   8|     i = 2
-//   9| }
+// --| src/test_files/check/ambiguity_dot_access_or_assign.gdn:7:6
+//  5|     // We expect an error here because it's parsed as `s.invalid`, and
+//  6|     // String values don't have fields.
+//  7|     s.
+//   |      ^
+//  8|     i = 2
+//  9| }
 

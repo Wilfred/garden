@@ -4,7 +4,7 @@ let p = Person{ title: "Mr", "Hughes" }
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a field name after this.
-// ---| src/test_files/check/struct_literal_missing_field_name.gdn:1:28
-//   1| let p = Person{ title: "Mr", "Hughes" }
-//   2|                            ^
+// -| src/test_files/check/struct_literal_missing_field_name.gdn:1:28
+// 1| let p = Person{ title: "Mr", "Hughes" }
+// 2|                            ^
 

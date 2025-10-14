@@ -10,8 +10,8 @@ public fun bar(): Unit {
 // expected exit status: 1
 // expected stdout:
 // Error: This struct literal is missing the field `x`.
-// ---| src/test_files/check/struct_missing_field.gdn:6:14
-//   5| public fun bar(): Unit {
-//   6|     let _f = Foo{}
-//   7| }            ^^^
+// -| src/test_files/check/struct_missing_field.gdn:6:14
+// 5| public fun bar(): Unit {
+// 6|     let _f = Foo{}
+// 7| }            ^^^
 

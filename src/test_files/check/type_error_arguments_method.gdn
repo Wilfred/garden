@@ -7,16 +7,16 @@
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// ---| src/test_files/check/type_error_arguments_method.gdn:3:17
-//   1| {
-//   2|     let s = ""
-//   3|     s.substring("", "")
-//   4| }               ^^
+// -| src/test_files/check/type_error_arguments_method.gdn:3:17
+// 1| {
+// 2|     let s = ""
+// 3|     s.substring("", "")
+// 4| }               ^^
 // 
 // Error: Expected `Int`, but got `String`.
-// ---| src/test_files/check/type_error_arguments_method.gdn:3:21
-//   1| {
-//   2|     let s = ""
-//   3|     s.substring("", "")
-//   4| }                   ^^
+// -| src/test_files/check/type_error_arguments_method.gdn:3:21
+// 1| {
+// 2|     let s = ""
+// 3|     s.substring("", "")
+// 4| }                   ^^
 

@@ -6,8 +6,8 @@ test foo {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `Int`, but got `String`.
-// ---| src/test_files/check/type_error_in_test.gdn:2:9
-//   1| test foo {
-//   2|     1 + "bar"
-//   3| }       ^^^^^
+// -| src/test_files/check/type_error_in_test.gdn:2:9
+// 1| test foo {
+// 2|     1 + "bar"
+// 3| }       ^^^^^
 

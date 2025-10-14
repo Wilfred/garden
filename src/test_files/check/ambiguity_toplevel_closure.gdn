@@ -8,9 +8,9 @@ fun(x) { x }
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a definition
-// ---| src/test_files/check/ambiguity_toplevel_closure.gdn:5:1
-//   4| // This is a toplevel expression that is an anonymous function.
-//   5| fun(x) { x }
-//    | ^^^
-//   6|
+// -| src/test_files/check/ambiguity_toplevel_closure.gdn:5:1
+// 4| // This is a toplevel expression that is an anonymous function.
+// 5| fun(x) { x }
+//  | ^^^
+// 6|
 

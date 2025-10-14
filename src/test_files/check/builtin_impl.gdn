@@ -10,9 +10,9 @@ public fun bar() {
 // expected exit status: 1
 // expected stdout:
 // Warning: Tried to update a built-in stub for a function `foo` that doesn't exist.
-// ---| src/test_files/check/builtin_impl.gdn:1:12
-//   1| public fun foo(_: String): NoValue {
-//    |            ^^^
-//   2|   __BUILTIN_IMPLEMENTATION
-//   3| }
+// -| src/test_files/check/builtin_impl.gdn:1:12
+// 1| public fun foo(_: String): NoValue {
+//  |            ^^^
+// 2|   __BUILTIN_IMPLEMENTATION
+// 3| }
 

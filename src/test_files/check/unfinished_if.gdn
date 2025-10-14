@@ -11,10 +11,10 @@ public fun foo(i: Option<Int>) {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected `{` after this.
-// ---| src/test_files/check/unfinished_if.gdn:4:16
-//   2|     match i {
-//   3|         Some(_) => {
-//   4|             if True 
-//   5|         }      ^^^^
-//   6|         None => {}
+// -| src/test_files/check/unfinished_if.gdn:4:16
+// 2|     match i {
+// 3|         Some(_) => {
+// 4|             if True 
+// 5|         }      ^^^^
+// 6|         None => {}
 

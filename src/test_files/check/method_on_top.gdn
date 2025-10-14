@@ -6,8 +6,8 @@ public fun map_over_strings(value) {
 // expected exit status: 1
 // expected stdout:
 // Error: Expected a type with a `foo` method, but got `Any`.
-// ---| src/test_files/check/method_on_top.gdn:2:5
-//   1| public fun map_over_strings(value) {
-//   2|     value.foo()
-//   3| }   ^^^^^
+// -| src/test_files/check/method_on_top.gdn:2:5
+// 1| public fun map_over_strings(value) {
+// 2|     value.foo()
+// 3| }   ^^^^^
 

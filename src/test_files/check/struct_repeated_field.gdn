@@ -10,8 +10,8 @@ public fun bar(): Unit {
 // expected exit status: 1
 // expected stdout:
 // Warning: Duplicate field `x` in struct literal.
-// ---| src/test_files/check/struct_repeated_field.gdn:6:29
-//   5| public fun bar(): Unit {
-//   6|     let _f = Foo{ x: 1 + 2, x: 42 }
-//   7| }                           ^
+// -| src/test_files/check/struct_repeated_field.gdn:6:29
+// 5| public fun bar(): Unit {
+// 6|     let _f = Foo{ x: 1 + 2, x: 42 }
+// 7| }                           ^
 

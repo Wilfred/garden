@@ -6,8 +6,8 @@ public fun foo(): Option<NoSuchType> {
 // expected exit status: 1
 // expected stdout:
 // Error: No such type `NoSuchType`.
-// ---| src/test_files/check/unbound_type_in_type_param.gdn:1:26
-//   1| public fun foo(): Option<NoSuchType> {
-//   2|     None                 ^^^^^^^^^^
-//   3| }
+// -| src/test_files/check/unbound_type_in_type_param.gdn:1:26
+// 1| public fun foo(): Option<NoSuchType> {
+// 2|     None                 ^^^^^^^^^^
+// 3| }
 

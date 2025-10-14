@@ -250,15 +250,25 @@ pub(crate) fn lex_between<'a>(
 
                 offset += string_match.end();
             } else {
-                // String literal without a closing doublequote.
+                // String literal without a closing
+                // doublequote. Consume up to the end of the line.
+                //
+                // This is particularly important when syntax
+                // highlighting partially written code, such as REPL
+                // snippets.
+                let text_content = match text.split_once("\n") {
+                    Some((before, _after)) => before,
+                    None => text,
+                };
+
                 errors.push(ParseError::Invalid {
                     position: Position {
                         start_offset: offset,
-                        end_offset: offset + 1,
+                        end_offset: offset + text_content.len(),
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        end_column: column + 1,
+                        end_column: column + text_content.len(),
                         path: vfs_path.path.clone(),
                         vfs_path: vfs_path.clone(),
                     },
@@ -271,19 +281,19 @@ pub(crate) fn lex_between<'a>(
                 tokens.push(Token {
                     position: Position {
                         start_offset: offset,
-                        end_offset: offset + 1,
+                        end_offset: offset + text_content.len(),
                         line_number: line_number.as_usize(),
                         end_line_number: line_number.as_usize(),
                         column,
-                        end_column: column + 1,
+                        end_column: column + text_content.len(),
                         path: vfs_path.path.clone(),
                         vfs_path: vfs_path.clone(),
                     },
-                    text: &text[..1],
+                    text: text_content,
                     preceding_comments,
                 });
 
-                offset += 1;
+                offset += text_content.len();
             }
 
             preceding_comments = vec![];

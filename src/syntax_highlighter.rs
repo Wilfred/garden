@@ -59,7 +59,7 @@ impl Highlighter for GardenHighlighter {
                     result.push_str(&line[last_offset..comment_pos.start_offset]);
                 }
                 let comment_str = &line[comment_pos.start_offset..comment_pos.end_offset];
-                result.push_str(&comment_str.cyan().to_string());
+                result.push_str(&comment_str.dimmed().to_string());
                 last_offset = comment_pos.end_offset;
             }
 
@@ -90,7 +90,7 @@ impl Highlighter for GardenHighlighter {
                 result.push_str(&line[last_offset..comment_pos.start_offset]);
             }
             let comment_str = &line[comment_pos.start_offset..comment_pos.end_offset];
-            result.push_str(&comment_str.cyan().to_string());
+            result.push_str(&comment_str.dimmed().to_string());
             last_offset = comment_pos.end_offset;
         }
 

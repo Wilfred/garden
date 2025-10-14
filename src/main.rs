@@ -59,6 +59,7 @@ mod pos_to_id;
 mod prompt;
 mod rename;
 mod syntax_check;
+mod syntax_highlighter;
 mod test_runner;
 mod types;
 mod values;

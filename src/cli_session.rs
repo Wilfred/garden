@@ -18,10 +18,12 @@ use crate::eval::{
 use crate::parser::ast::{IdGenerator, ToplevelItem};
 use crate::parser::{parse_toplevel_items, ParseError};
 use crate::prompt::prompt_symbol;
+use crate::syntax_highlighter::GardenHighlighter;
 use crate::Vfs;
 
 use owo_colors::OwoColorize;
-use rustyline::DefaultEditor;
+use rustyline::history::DefaultHistory;
+use rustyline::Editor;
 
 enum ReadError {
     NeedsEval(EvalAction),
@@ -33,7 +35,7 @@ enum ReadError {
 fn read_expr(
     env: &mut Env,
     session: &mut Session,
-    rl: &mut DefaultEditor,
+    rl: &mut Editor<GardenHighlighter, DefaultHistory>,
     is_stopped: bool,
 ) -> Result<(String, Vec<ToplevelItem>), ReadError> {
     loop {
@@ -250,8 +252,9 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
     }
 }
 
-fn new_editor() -> DefaultEditor {
-    let mut rl = DefaultEditor::new().unwrap();
+fn new_editor() -> Editor<GardenHighlighter, DefaultHistory> {
+    let mut rl = Editor::new().unwrap();
+    rl.set_helper(Some(GardenHighlighter::new()));
     // TODO: put this in the home directory rather than the current directory.
     let _ = rl.load_history(".history");
     rl
@@ -274,7 +277,7 @@ fn print_repl_header() {
 /// error.
 fn read_multiline_syntax(
     first_line: &str,
-    rl: &mut DefaultEditor,
+    rl: &mut Editor<GardenHighlighter, DefaultHistory>,
     vfs: &mut Vfs,
     id_gen: &mut IdGenerator,
 ) -> Result<(String, Vec<ToplevelItem>), ParseError> {

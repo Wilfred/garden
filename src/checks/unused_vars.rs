@@ -28,7 +28,7 @@ enum UseState {
 struct UnusedVariableVisitor {
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
-    bound_scopes: Vec<FxHashMap<SymbolName, UseState>>,
+    bound_scopes: Vec<FxHashMap<SymbolName, (SymbolName, UseState)>>,
     /// Symbols that are bound in the current file, such as `foo` in
     /// `import "x.gdn" as foo`.
     file_bindings: FxHashMap<SymbolName, UseState>,
@@ -127,7 +127,7 @@ impl UnusedVariableVisitor {
                 let keys = scope.keys().cloned().collect::<Vec<_>>();
 
                 for name in keys {
-                    scope.insert(name.clone(), UseState::Used);
+                    scope.insert(name.clone(), (name.clone(), UseState::Used));
                 }
             }
             return;
@@ -135,7 +135,7 @@ impl UnusedVariableVisitor {
 
         for scope in self.bound_scopes.iter_mut().rev() {
             if scope.contains_key(name) {
-                scope.insert(name.clone(), UseState::Used);
+                scope.insert(name.clone(), (name.clone(), UseState::Used));
                 return;
             }
         }
@@ -150,7 +150,10 @@ impl UnusedVariableVisitor {
             .expect("Should always be non-empty");
         scope.insert(
             symbol.name.clone(),
-            UseState::NotUsed(symbol.position.clone()),
+            (
+                symbol.name.clone(),
+                UseState::NotUsed(symbol.position.clone()),
+            ),
         );
     }
 
@@ -171,7 +174,7 @@ impl UnusedVariableVisitor {
                 continue;
             }
 
-            if let UseState::NotUsed(position) = use_state {
+            if let (_, UseState::NotUsed(position)) = use_state {
                 self.unused.push((name, position));
             }
         }

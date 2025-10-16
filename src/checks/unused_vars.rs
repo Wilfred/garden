@@ -2,8 +2,8 @@ use rustc_hash::FxHashMap;
 
 use crate::diagnostics::{Diagnostic, Severity};
 use crate::parser::ast::{
-    Block, Expression, Expression_, FunInfo, ImportInfo, LetDestination, MethodInfo, Pattern,
-    Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, TypeSymbol,
+    Block, Expression, Expression_, FunInfo, ImportInfo, InternedSymbolId, LetDestination,
+    MethodInfo, Pattern, Symbol, SymbolName, ToplevelItem, TypeHint, TypeName, TypeSymbol,
 };
 use crate::parser::diagnostics::ErrorMessage;
 use crate::parser::diagnostics::MessagePart::*;
@@ -28,7 +28,7 @@ enum UseState {
 struct UnusedVariableVisitor {
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
-    bound_scopes: Vec<FxHashMap<SymbolName, (SymbolName, UseState)>>,
+    bound_scopes: Vec<FxHashMap<InternedSymbolId, (SymbolName, UseState)>>,
     /// Symbols that are bound in the current file, such as `foo` in
     /// `import "x.gdn" as foo`.
     file_bindings: FxHashMap<SymbolName, UseState>,
@@ -105,13 +105,13 @@ impl UnusedVariableVisitor {
 
     /// Is `name` locally bound in the syntactic context we're currently
     /// checking?
-    fn is_locally_bound(&self, name: &SymbolName) -> bool {
-        if name.text == "__BUILTIN_IMPLEMENTATION" {
+    fn is_locally_bound(&self, sym: &Symbol) -> bool {
+        if sym.name.text == "__BUILTIN_IMPLEMENTATION" {
             return true;
         }
 
         for scope in &self.bound_scopes {
-            if scope.contains_key(name) {
+            if scope.contains_key(&sym.interned_id) {
                 return true;
             }
         }
@@ -120,27 +120,27 @@ impl UnusedVariableVisitor {
     }
 
     /// Mark `name`, a local variable, as used in `self.bound_scopes`.
-    fn mark_used(&mut self, name: &SymbolName) {
-        if name.text == "__BUILTIN_IMPLEMENTATION" {
+    fn mark_used(&mut self, sym: &Symbol) {
+        if sym.name.text == "__BUILTIN_IMPLEMENTATION" {
             // Mark everything as used, because this is just a stub.
             for scope in self.bound_scopes.iter_mut() {
                 let keys = scope.keys().cloned().collect::<Vec<_>>();
 
-                for name in keys {
-                    scope.insert(name.clone(), (name.clone(), UseState::Used));
+                for id in keys {
+                    scope.insert(id, (sym.name.clone(), UseState::Used));
                 }
             }
             return;
         }
 
         for scope in self.bound_scopes.iter_mut().rev() {
-            if scope.contains_key(name) {
-                scope.insert(name.clone(), (name.clone(), UseState::Used));
+            if scope.contains_key(&sym.interned_id) {
+                scope.insert(sym.interned_id, (sym.name.clone(), UseState::Used));
                 return;
             }
         }
 
-        panic!("Tried to mark an unbound variable {name} as used.")
+        panic!("Tried to mark an unbound variable {} as used.", sym.name)
     }
 
     fn add_binding(&mut self, symbol: &Symbol) {
@@ -149,7 +149,7 @@ impl UnusedVariableVisitor {
             .last_mut()
             .expect("Should always be non-empty");
         scope.insert(
-            symbol.name.clone(),
+            symbol.interned_id,
             (
                 symbol.name.clone(),
                 UseState::NotUsed(symbol.position.clone()),
@@ -167,14 +167,14 @@ impl UnusedVariableVisitor {
             .pop()
             .expect("Tried to pop an empty scope stack.");
 
-        for (name, use_state) in scope.into_iter() {
+        for (_id, (name, use_state)) in scope.into_iter() {
             // TODO: Use the actual receiver symbol name rather than
             // hardcoding `self` here.
             if name.to_string().starts_with('_') || name.to_string() == "self" {
                 continue;
             }
 
-            if let (_, UseState::NotUsed(position)) = use_state {
+            if let UseState::NotUsed(position) = use_state {
                 self.unused.push((name, position));
             }
         }
@@ -186,8 +186,8 @@ impl UnusedVariableVisitor {
             return;
         }
 
-        if self.is_locally_bound(&var.name) {
-            self.mark_used(&var.name);
+        if self.is_locally_bound(var) {
+            self.mark_used(var);
         }
     }
 }
@@ -206,7 +206,7 @@ impl Visitor for UnusedVariableVisitor {
             // Always treat the method receiver as used, because we
             // can't avoid defining this parameter even when we don't
             // use it.
-            self.mark_used(&method_info.receiver_sym.name);
+            self.mark_used(&method_info.receiver_sym);
         }
 
         self.visit_toplevel_item_default(item);
@@ -219,11 +219,11 @@ impl Visitor for UnusedVariableVisitor {
             if let Expression_::Let(dest, _, _) = &toplevel_expr.0.expr_ {
                 match dest {
                     LetDestination::Symbol(symbol) => {
-                        self.mark_used(&symbol.name);
+                        self.mark_used(symbol);
                     }
                     LetDestination::Destructure(symbols) => {
                         for symbol in symbols {
-                            self.mark_used(&symbol.name);
+                            self.mark_used(symbol);
                         }
                     }
                 }

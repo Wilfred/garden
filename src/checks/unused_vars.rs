@@ -28,7 +28,15 @@ enum UseState {
 struct UnusedVariableVisitor {
     /// For each scope, the variables defined, the definition
     /// positions, and whether they have been used afterwards.
-    bound_scopes: Vec<FxHashMap<InternedSymbolId, (SymbolName, UseState)>>,
+    ///
+    /// Note that a variable may occur multiple times in the same
+    /// scope, e.g.
+    ///
+    /// ```
+    /// let x = 1
+    /// let x = x + 1
+    /// ```
+    bound_scopes: Vec<Vec<(InternedSymbolId, SymbolName, UseState)>>,
     /// Symbols that are bound in the current file, such as `foo` in
     /// `import "x.gdn" as foo`.
     file_bindings: FxHashMap<SymbolName, UseState>,
@@ -49,7 +57,7 @@ struct UnusedVariableVisitor {
 impl UnusedVariableVisitor {
     fn new() -> UnusedVariableVisitor {
         UnusedVariableVisitor {
-            bound_scopes: vec![FxHashMap::default()],
+            bound_scopes: vec![vec![]],
             file_bindings: FxHashMap::default(),
             unused: vec![],
             method_this_type_hint: None,
@@ -111,7 +119,7 @@ impl UnusedVariableVisitor {
         }
 
         for scope in &self.bound_scopes {
-            if scope.contains_key(&sym.interned_id) {
+            if scope.iter().any(|(id, _, _)| *id == sym.interned_id) {
                 return true;
             }
         }
@@ -124,18 +132,20 @@ impl UnusedVariableVisitor {
         if sym.name.text == "__BUILTIN_IMPLEMENTATION" {
             // Mark everything as used, because this is just a stub.
             for scope in self.bound_scopes.iter_mut() {
-                let keys = scope.keys().cloned().collect::<Vec<_>>();
-
-                for id in keys {
-                    scope.insert(id, (sym.name.clone(), UseState::Used));
+                for (_, _, state) in scope.iter_mut() {
+                    *state = UseState::Used;
                 }
             }
             return;
         }
 
         for scope in self.bound_scopes.iter_mut().rev() {
-            if scope.contains_key(&sym.interned_id) {
-                scope.insert(sym.interned_id, (sym.name.clone(), UseState::Used));
+            if let Some((_, _, state)) = scope
+                .iter_mut()
+                .rev()
+                .find(|(id, _, _)| *id == sym.interned_id)
+            {
+                *state = UseState::Used;
                 return;
             }
         }
@@ -148,17 +158,15 @@ impl UnusedVariableVisitor {
             .bound_scopes
             .last_mut()
             .expect("Should always be non-empty");
-        scope.insert(
+        scope.push((
             symbol.interned_id,
-            (
-                symbol.name.clone(),
-                UseState::NotUsed(symbol.position.clone()),
-            ),
-        );
+            symbol.name.clone(),
+            UseState::NotUsed(symbol.position.clone()),
+        ));
     }
 
     fn push_scope(&mut self) {
-        self.bound_scopes.push(FxHashMap::default());
+        self.bound_scopes.push(vec![]);
     }
 
     fn pop_scope(&mut self) {
@@ -167,7 +175,7 @@ impl UnusedVariableVisitor {
             .pop()
             .expect("Tried to pop an empty scope stack.");
 
-        for (_id, (name, use_state)) in scope.into_iter() {
+        for (_id, name, use_state) in scope.into_iter() {
             // TODO: Use the actual receiver symbol name rather than
             // hardcoding `self` here.
             if name.to_string().starts_with('_') || name.to_string() == "self" {

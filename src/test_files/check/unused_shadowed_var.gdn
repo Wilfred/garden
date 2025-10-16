@@ -1,0 +1,29 @@
+public fun f(): Int {
+  // should warn
+  let xy = 0
+
+  // should also warn
+  let x = 1
+  
+  let x = 1
+  x + 2
+}
+
+// args: check
+// expected exit status: 1
+// expected stdout:
+// Warning: `xy` is unused.
+// --| src/test_files/check/unused_shadowed_var.gdn:3:7
+//  1| public fun f(): Int {
+//  2|   // should warn
+//  3|   let xy = 0
+//  4|       ^^
+//  5|   // should also warn
+// 
+// Warning: `x` is unused.
+// --| src/test_files/check/unused_shadowed_var.gdn:6:7
+//  5|   // should also warn
+//  6|   let x = 1
+//  7|       ^
+//  8|   let x = 1
+

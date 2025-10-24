@@ -1,6 +1,5 @@
 # 0.22 (unreleased)
 **Goal: Playground.**
-**Goal: Use multiple positions in error messages.**
 **Goal: Offer actions when runtime errors occur.**
 
 ## Syntax
@@ -119,6 +118,8 @@ test name substring to use.
 
 Error and warning printing now uses a new formatter, showing context
 and syntax highlighting the source code.
+
+Diagnostics can now show multiple relevant positions.
 
 ## Checks
 

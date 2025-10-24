@@ -1247,7 +1247,7 @@ impl TypeCheckVisitor<'_> {
 
                 let params = param_decl_tys
                     .iter()
-                    .map(|p| substitute_ty_vars(p, &ty_var_env))
+                    .map(|param_decl_ty| substitute_ty_vars(param_decl_ty, &ty_var_env))
                     .collect::<Vec<_>>();
 
                 for (param_ty, (arg_ty, arg_pos, _)) in params.iter().zip(&arg_tys) {

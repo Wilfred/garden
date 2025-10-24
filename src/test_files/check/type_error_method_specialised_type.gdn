@@ -26,6 +26,12 @@ public method very_bad<T>(this: T) {}
 //  7| public method also_bad<T>(this: Result<T, T>) {}
 //  8|                                           ^
 //  9| public method very_bad<T>(this: T) {}
+// --| src/test_files/check/type_error_method_specialised_type.gdn:7:40
+//  5| public method bad(this: List<Int>) {}
+//  6| 
+//  7| public method also_bad<T>(this: Result<T, T>) {}
+//  8|                                        ^ Note: First occurrence here.
+//  9| public method very_bad<T>(this: T) {}
 // 
 // Error: Methods must be defined on specific types, such as `List`, not generic types.
 // --| src/test_files/check/type_error_method_specialised_type.gdn:9:33

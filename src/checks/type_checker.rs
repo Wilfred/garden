@@ -208,20 +208,27 @@ impl TypeCheckVisitor<'_> {
             });
         }
 
-        let mut generic_args_seen = HashSet::new();
+        let mut generic_args_seen: FxHashMap<TypeName, Position> = FxHashMap::default();
         for type_arg in &type_hint.args {
             if type_bindings.contains_key(&type_arg.sym.name) {
-                if generic_args_seen.contains(&type_arg.sym.name) {
-                    self.diagnostics.push(Diagnostic {
-                        notes: vec![],
-                        severity: Severity::Error,
-                        message: ErrorMessage(vec![Text(
-                            "Methods cannot repeat generic type parameters.".to_owned(),
-                        )]),
-                        position: type_arg.position.clone(),
-                    });
-                } else {
-                    generic_args_seen.insert(type_arg.sym.name.clone());
+                match generic_args_seen.get(&type_arg.sym.name) {
+                    Some(seen_pos) => {
+                        self.diagnostics.push(Diagnostic {
+                            notes: vec![(
+                                ErrorMessage(vec![msgtext!("First occurrence here.")]),
+                                seen_pos.clone(),
+                            )],
+                            severity: Severity::Error,
+                            message: ErrorMessage(vec![msgtext!(
+                                "Methods cannot repeat generic type parameters."
+                            )]),
+                            position: type_arg.position.clone(),
+                        });
+                    }
+                    None => {
+                        generic_args_seen
+                            .insert(type_arg.sym.name.clone(), type_arg.position.clone());
+                    }
                 }
             } else {
                 self.diagnostics.push(Diagnostic {

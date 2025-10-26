@@ -6,6 +6,9 @@ use std::rc::Rc;
 use rustc_hash::FxHashMap;
 use strum_macros::EnumIter;
 
+use gc_arena::lock::RefLock;
+use gc_arena::{static_collect, Arena, Collect, Gc, Mutation, Rootable};
+
 use crate::env::Env;
 use crate::eval::BlockBindings;
 use crate::garden_type::{Type, TypeDefKind};
@@ -655,6 +658,38 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
     res.push('"');
     res
 }
+
+#[derive(Collect)]
+// For safety, we agree to not implement `Drop`. We could also use
+// `#[collect(unsafe_drop)]` or `#[collect(require_static)]` (if our type were
+// 'static) here instead.
+#[collect(no_drop)]
+enum NewValue<'gc> {
+    /// An integer value.
+    Integer(i64),
+    /// A list value, along with the type of its elements.
+    List {
+        items: Vec<NewValuePtr<'gc>>,
+        elem_type: Type,
+    },
+    /// A tuple value, along with type of each item.
+    Tuple {
+        items: Vec<NewValuePtr<'gc>>,
+        item_types: Vec<Type>,
+    },
+    /// A dictionary, a hash map with string keys.
+    Dict {
+        items: FxHashMap<String, NewValuePtr<'gc>>,
+        /// The type of the values in this dict, e.g. Int in `Dict["x" => 1]`.
+        value_type: Type,
+    },
+}
+
+// Types that don't contain any GC'd values, so they're 'static' from
+// the perspective of GC.
+static_collect!(Type);
+
+type NewValuePtr<'gc> = Gc<'gc, RefLock<NewValue<'gc>>>;
 
 #[cfg(test)]
 mod tests {

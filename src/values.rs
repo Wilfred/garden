@@ -707,4 +707,12 @@ mod tests {
         let value = Value::new(Value_::String("foo \\ \" \n bar".into()));
         assert_eq!(value.display(&env), "\"foo \\\\ \\\" \\n bar\"");
     }
+
+    #[test]
+    fn test_value_gc() {
+        let _arena = Arena::<Rootable![NewValuePtr<'_>]>::new(|mc| {
+            let one = Gc::new(mc, RefLock::new(NewValue::Integer(123)));
+            one
+        });
+    }
 }

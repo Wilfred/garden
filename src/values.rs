@@ -667,6 +667,19 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
 enum NewValue<'gc> {
     /// An integer value.
     Integer(i64),
+    /// A reference to a user-defined function, along with its return
+    /// type.
+    Fun {
+        name_sym: Symbol,
+        fun_info: FunInfo,
+        runtime_type: Type,
+    },
+    // /// A closure value.
+    // Closure(Vec<BlockBindings>, FunInfo, Type),
+    /// A reference to a built-in function.
+    BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>, Option<Type>),
+    /// A string value.
+    String(String),
     /// A list value, along with the type of its elements.
     List {
         items: Vec<NewValuePtr<'gc>>,
@@ -683,11 +696,39 @@ enum NewValue<'gc> {
         /// The type of the values in this dict, e.g. Int in `Dict["x" => 1]`.
         value_type: Type,
     },
+    /// A value in a user-defined enum, such as `True` or `Some(123)`.
+    EnumVariant {
+        type_name: TypeName,
+        runtime_type: Type,
+        variant_idx: usize,
+        payload: Option<NewValuePtr<'gc>>,
+    },
+    /// A value with the type of a user-defined struct. Fields are
+    /// ordered according to the definition of the type.
+    Struct {
+        type_name: TypeName,
+        fields: Vec<(SymbolName, NewValuePtr<'gc>)>,
+        runtime_type: Type,
+    },
+    // /// When we import a namespace with `import "./foo.gdn" as f`,
+    // /// this is the value that is stored in `f`.
+    // Namespace {
+    //     /// The imported namespace.
+    //     ns_info: Rc<RefCell<NamespaceInfo>>,
+    //     /// The name that this namespace value has in the current
+    //     /// scope (`f` in the above example).
+    //     imported_name_sym: Symbol,
+    // },
 }
 
 // Types that don't contain any GC'd values, so they're 'static' from
 // the perspective of GC.
 static_collect!(Type);
+static_collect!(TypeName);
+static_collect!(Symbol);
+static_collect!(SymbolName);
+static_collect!(FunInfo);
+static_collect!(BuiltinFunctionKind);
 
 type NewValuePtr<'gc> = Gc<'gc, RefLock<NewValue<'gc>>>;
 

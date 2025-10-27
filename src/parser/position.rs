@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use gc_arena::{static_collect, Collect};
 use serde::Serialize;
 
 use crate::parser::lex::Token;
@@ -36,6 +37,8 @@ pub(crate) struct Position {
     #[serde(skip)]
     pub(crate) vfs_path: VfsPathBuf,
 }
+
+static_collect!(Position);
 
 impl std::fmt::Debug for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

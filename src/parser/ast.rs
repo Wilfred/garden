@@ -1,5 +1,6 @@
 //! Syntax tree definitions for Garden.
 
+use gc_arena::{static_collect, Collect};
 use rustc_hash::FxHashMap;
 
 use std::fmt::Display;
@@ -93,6 +94,8 @@ pub(crate) struct TypeHint {
     pub(crate) args: Vec<TypeHint>,
     pub(crate) position: Position,
 }
+
+static_collect!(TypeHint);
 
 impl TypeHint {
     /// The source code equivalent of this type hint.
@@ -449,6 +452,8 @@ impl Expression_ {
 #[derive(Clone, PartialEq, Eq, Hash, Copy)]
 pub(crate) struct SyntaxId(pub(crate) usize);
 
+static_collect!(SyntaxId);
+
 impl std::fmt::Debug for SyntaxId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Avoid deriving Debug because otherwise we get:
@@ -548,6 +553,8 @@ pub(crate) struct Expression {
     pub(crate) value_is_used: bool,
     pub(crate) id: SyntaxId,
 }
+
+static_collect!(Expression);
 
 impl Expression {
     pub(crate) fn new(position: Position, expr_: Expression_, id: SyntaxId) -> Self {

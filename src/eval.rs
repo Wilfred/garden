@@ -79,6 +79,12 @@ pub(crate) struct Bindings {
     pub(crate) block_bindings: Vec<BlockBindings>,
 }
 
+#[derive(Debug, Clone, Collect)]
+#[collect(no_drop)]
+pub(crate) struct NewBindings<'gc> {
+    pub(crate) block_bindings: Vec<NewBlockBindings<'gc>>,
+}
+
 impl Bindings {
     pub(crate) fn push_block(&mut self) {
         self.block_bindings.push(BlockBindings::default());
@@ -203,6 +209,8 @@ pub(crate) enum ExpressionState {
     /// evaluated `bar()` but not yet called `foo()` with the result.
     EvaluatedAllSubexpressions,
 }
+
+static_collect!(ExpressionState);
 
 impl ExpressionState {
     pub(crate) fn done_children(&self) -> bool {

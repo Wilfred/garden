@@ -2,12 +2,13 @@ use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use gc_arena::{static_collect, Collect};
 use rustc_hash::{FxHashMap, FxHashSet};
 use strum::IntoEnumIterator;
 
-use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionState};
+use crate::eval::{load_toplevel_items, Bindings, EnclosingSymbol, ExpressionState, NewBindings};
 use crate::garden_type::TypeVarEnv;
-use crate::namespaces::NamespaceInfo;
+use crate::namespaces::{NamespaceInfo, NewNamespaceInfo};
 use crate::parser::ast::{
     BuiltinMethodKind, Expression, IdGenerator, MethodInfo, MethodKind, StructInfo, Symbol,
     SymbolName, SyntaxId, TestInfo, TypeHint, TypeName, Visibility,
@@ -16,7 +17,7 @@ use crate::parser::parse_toplevel_items;
 use crate::parser::position::Position;
 use crate::parser::vfs::{to_abs_path, Vfs};
 use crate::types::{BuiltinType, TypeDef, TypeDefAndMethods};
-use crate::values::{BuiltinFunctionKind, Value, Value_};
+use crate::values::{BuiltinFunctionKind, NewValuePtr, Value, Value_};
 use crate::VfsPathBuf;
 
 #[derive(Debug, Clone)]
@@ -597,6 +598,44 @@ pub(crate) struct StackFrame {
     /// The values of subexpressions that we've evaluated so far.
     pub(crate) evalled_values: Vec<Value>,
 }
+
+#[derive(Debug, Clone, Collect)]
+#[collect(no_drop)]
+pub(crate) struct NewStackFrame<'gc> {
+    /// The namespace we're currently in, where the callee is defined.
+    pub(crate) namespace: NewNamespaceInfo<'gc>,
+
+    /// The name of the function, method or test that we're evaluating.
+    pub(crate) enclosing_name: EnclosingSymbol,
+    /// Used to check the type of the returned value.
+    pub(crate) return_hint: Option<TypeHint>,
+    /// The position of the call site.
+    pub(crate) caller_pos: Option<Position>,
+    /// The ID of the call site expression.
+    pub(crate) caller_expr_id: Option<SyntaxId>,
+    /// Does the call site use the return value? If this is false,
+    /// we're only called for side effects.
+    pub(crate) caller_uses_value: bool,
+    pub(crate) bindings: NewBindings<'gc>,
+    /// Types bound in this stack frame, due to generic parameters.
+    pub(crate) type_bindings: TypeVarEnv,
+    /// If we are entering a block with extra bindings that are only
+    /// defined for the duration of the block, pass them here.
+    ///
+    /// For example:
+    /// ```garden
+    /// match x { Some(y) => { y + 1 } _ => {}}
+    /// ```
+    ///
+    /// We want `y` to be bound, but only in the block.
+    pub(crate) bindings_next_block: Vec<(Symbol, NewValuePtr<'gc>)>,
+    /// A stack of expressions to evaluate.
+    pub(crate) exprs_to_eval: Vec<(ExpressionState, Rc<Expression>)>,
+    /// The values of subexpressions that we've evaluated so far.
+    pub(crate) evalled_values: Vec<NewValuePtr<'gc>>,
+}
+
+static_collect!(EnclosingSymbol);
 
 fn canonicalize_namespace_path(abs_path: &Path) -> PathBuf {
     // Canonicalise stdlib paths, which always start with __.

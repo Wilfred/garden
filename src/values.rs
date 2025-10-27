@@ -12,7 +12,7 @@ use gc_arena::{static_collect, Arena, Collect, Gc, Mutation, Rootable};
 use crate::env::Env;
 use crate::eval::{BlockBindings, NewBlockBindings};
 use crate::garden_type::{Type, TypeDefKind};
-use crate::namespaces::NamespaceInfo;
+use crate::namespaces::{NamespaceInfo, NewNamespaceInfo};
 use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
 use crate::parser::vfs::to_project_relative;
 use crate::types::TypeDef;
@@ -714,7 +714,7 @@ pub(crate) enum NewValue<'gc> {
     /// this is the value that is stored in `f`.
     Namespace {
         /// The imported namespace.
-        ns_info: NamespaceInfo,
+        ns_info: NewNamespaceInfo<'gc>,
         /// The name that this namespace value has in the current
         /// scope (`f` in the above example).
         imported_name_sym: Symbol,

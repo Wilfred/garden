@@ -10,7 +10,7 @@ use gc_arena::lock::RefLock;
 use gc_arena::{static_collect, Arena, Collect, Gc, Mutation, Rootable};
 
 use crate::env::Env;
-use crate::eval::BlockBindings;
+use crate::eval::{BlockBindings, NewBlockBindings};
 use crate::garden_type::{Type, TypeDefKind};
 use crate::namespaces::NamespaceInfo;
 use crate::parser::ast::{FunInfo, Symbol, SymbolName, TypeName};
@@ -659,12 +659,12 @@ pub(crate) fn escape_string_literal(s: &str) -> String {
     res
 }
 
-#[derive(Collect)]
+#[derive(Debug, Collect)]
 // For safety, we agree to not implement `Drop`. We could also use
 // `#[collect(unsafe_drop)]` or `#[collect(require_static)]` (if our type were
 // 'static) here instead.
 #[collect(no_drop)]
-enum NewValue<'gc> {
+pub(crate) enum NewValue<'gc> {
     /// An integer value.
     Integer(i64),
     /// A reference to a user-defined function, along with its return
@@ -674,8 +674,8 @@ enum NewValue<'gc> {
         fun_info: FunInfo,
         runtime_type: Type,
     },
-    // /// A closure value.
-    // Closure(Vec<BlockBindings>, FunInfo, Type),
+    /// A closure value.
+    Closure(Vec<NewBlockBindings<'gc>>, FunInfo, Type),
     /// A reference to a built-in function.
     BuiltinFunction(BuiltinFunctionKind, Option<FunInfo>, Option<Type>),
     /// A string value.
@@ -730,7 +730,7 @@ static_collect!(SymbolName);
 static_collect!(FunInfo);
 static_collect!(BuiltinFunctionKind);
 
-type NewValuePtr<'gc> = Gc<'gc, RefLock<NewValue<'gc>>>;
+pub(crate) type NewValuePtr<'gc> = Gc<'gc, RefLock<NewValue<'gc>>>;
 
 #[cfg(test)]
 mod tests {
@@ -753,7 +753,16 @@ mod tests {
     fn test_value_gc() {
         let _arena = Arena::<Rootable![NewValuePtr<'_>]>::new(|mc| {
             let one = Gc::new(mc, RefLock::new(NewValue::Integer(123)));
-            one
+
+            let list = Gc::new(
+                mc,
+                RefLock::new(NewValue::List {
+                    items: vec![one],
+                    elem_type: Type::int(),
+                }),
+            );
+
+            list
         });
     }
 }

@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
+use gc_arena::{static_collect, Collect};
 use normalize_path::NormalizePath as _;
 use ordered_float::OrderedFloat;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -35,7 +36,7 @@ use crate::parser::vfs::{Vfs, VfsPathBuf};
 use crate::parser::{lex, parse_toplevel_items, placeholder_symbol};
 use crate::pos_to_id::{find_expr_of_id, find_item_at};
 use crate::types::{TypeDef, TypeDefAndMethods};
-use crate::values::{type_representation, BuiltinFunctionKind, Value, Value_};
+use crate::values::{type_representation, BuiltinFunctionKind, NewValuePtr, Value, Value_};
 use crate::{msgcode, msgtext};
 
 /// Bindings in a single block. For example, `x` is only bound inside
@@ -50,6 +51,16 @@ pub(crate) struct BlockBindings {
     /// function parameters.
     pub(crate) values: FxHashMap<InternedSymbolId, Value>,
 }
+
+#[derive(Debug, Clone, Default, Collect)]
+#[collect(no_drop)]
+pub(crate) struct NewBlockBindings<'gc> {
+    /// Values bound in this block, such as local variables or
+    /// function parameters.
+    pub(crate) values: FxHashMap<InternedSymbolId, NewValuePtr<'gc>>,
+}
+
+static_collect!(InternedSymbolId);
 
 /// Use reference equality for block bindings, so closures have
 /// reference equality.

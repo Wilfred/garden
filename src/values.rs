@@ -710,15 +710,15 @@ pub(crate) enum NewValue<'gc> {
         fields: Vec<(SymbolName, NewValuePtr<'gc>)>,
         runtime_type: Type,
     },
-    // /// When we import a namespace with `import "./foo.gdn" as f`,
-    // /// this is the value that is stored in `f`.
-    // Namespace {
-    //     /// The imported namespace.
-    //     ns_info: Rc<RefCell<NamespaceInfo>>,
-    //     /// The name that this namespace value has in the current
-    //     /// scope (`f` in the above example).
-    //     imported_name_sym: Symbol,
-    // },
+    /// When we import a namespace with `import "./foo.gdn" as f`,
+    /// this is the value that is stored in `f`.
+    Namespace {
+        /// The imported namespace.
+        ns_info: NamespaceInfo,
+        /// The name that this namespace value has in the current
+        /// scope (`f` in the above example).
+        imported_name_sym: Symbol,
+    },
 }
 
 // Types that don't contain any GC'd values, so they're 'static' from

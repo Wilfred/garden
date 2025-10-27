@@ -1,11 +1,12 @@
 use std::path::PathBuf;
 use std::rc::Rc;
 
+use gc_arena::{static_collect, Collect};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::parser::ast::{SymbolName, TypeName};
 use crate::types::TypeDefAndMethods;
-use crate::values::Value;
+use crate::values::{NewValuePtr, Value};
 
 #[derive(Debug, Clone)]
 pub(crate) struct NamespaceInfo {
@@ -23,3 +24,23 @@ pub(crate) struct NamespaceInfo {
 
     pub(crate) types: FxHashMap<TypeName, TypeDefAndMethods>,
 }
+
+#[derive(Debug, Clone, Collect)]
+#[collect(no_drop)]
+pub(crate) struct NewNamespaceInfo<'gc> {
+    /// The absolute path to this loaded file. Note that built-in
+    /// namespaces like the prelude are still just "__prelude.gdn".
+    pub(crate) abs_path: Rc<PathBuf>,
+
+    /// The values in this namespace: the functions and other
+    /// namespaces that are in scope.
+    pub(crate) values: FxHashMap<SymbolName, NewValuePtr<'gc>>,
+
+    /// Symbols that are visible outside of this namespace, i.e. they
+    /// are marked `external`.
+    pub(crate) exported_syms: FxHashSet<SymbolName>,
+
+    pub(crate) types: FxHashMap<TypeName, TypeDefAndMethods>,
+}
+
+static_collect!(TypeDefAndMethods);

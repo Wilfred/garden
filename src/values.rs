@@ -736,6 +736,10 @@ pub(crate) type GArena = Arena<Rootable![NewValuePtr<'_>]>;
 
 fn takes_arena(_: &GArena) {}
 
+fn create_42<'gc>(mc: &Mutation<'gc>) -> NewValuePtr<'gc> {
+    Gc::new(mc, RefLock::new(NewValue::Integer(42)))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parser::ast::IdGenerator;
@@ -758,10 +762,12 @@ mod tests {
         let arena: Arena<_> = Arena::<Rootable![NewValuePtr<'_>]>::new(|mc| {
             let one = Gc::new(mc, RefLock::new(NewValue::Integer(123)));
 
+            let forty_two = create_42(mc);
+
             let list = Gc::new(
                 mc,
                 RefLock::new(NewValue::List {
-                    items: vec![one],
+                    items: vec![one, forty_two],
                     elem_type: Type::int(),
                 }),
             );

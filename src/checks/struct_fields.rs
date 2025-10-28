@@ -11,12 +11,12 @@ use crate::diagnostics::{Diagnostic, Severity};
 use crate::env::Env;
 use crate::types::TypeDef;
 
-struct StructFieldVisitor<'a> {
-    env: &'a Env,
+struct StructFieldVisitor<'a, 'gc> {
+    env: &'a Env<'gc>,
     diagnostics: Vec<Diagnostic>,
 }
 
-impl Visitor for StructFieldVisitor<'_> {
+impl Visitor for StructFieldVisitor<'_, '_> {
     fn visit_expr_struct_literal(
         &mut self,
         name_sym: &TypeSymbol,

@@ -25,13 +25,13 @@ pub(crate) fn check_hints(items: &[ToplevelItem], env: &Env) -> Vec<Diagnostic> 
 
 /// Check that every type hint mentions a defined type, and that it
 /// has the correct number of type arguments.
-struct HintVisitor<'a> {
-    env: &'a Env,
+struct HintVisitor<'a, 'gc> {
+    env: &'a Env<'gc>,
     diagnostics: Vec<Diagnostic>,
     bound_type_params: HashSet<TypeName>,
 }
 
-impl Visitor for HintVisitor<'_> {
+impl Visitor for HintVisitor<'_, '_> {
     fn visit_method_info(&mut self, method_info: &crate::parser::ast::MethodInfo) {
         let old_type_params = self.bound_type_params.clone();
 

@@ -133,9 +133,9 @@ impl LocalBindings {
 }
 
 #[derive(Debug)]
-struct TypeCheckVisitor<'a> {
+struct TypeCheckVisitor<'a, 'gc> {
     path: VfsPathBuf,
-    env: &'a Env,
+    env: &'a Env<'gc>,
     diagnostics: Vec<Diagnostic>,
     bindings: LocalBindings,
     id_to_ty: FxHashMap<SyntaxId, Type>,
@@ -145,7 +145,7 @@ struct TypeCheckVisitor<'a> {
     callees: FxHashMap<Option<ToplevelItemId>, HashSet<ToplevelItemId>>,
 }
 
-impl TypeCheckVisitor<'_> {
+impl TypeCheckVisitor<'_, '_> {
     fn visit_toplevel_item(&mut self, item: &ToplevelItem) {
         match &item {
             ToplevelItem::Fun(_, fun_info, _) => self.visit_fun_info(fun_info),

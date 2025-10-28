@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -60,7 +61,9 @@ impl Stack {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Env {
+pub(crate) struct Env<'gc> {
+    phantom: PhantomData<&'gc ()>,
+
     pub(crate) tests: FxHashMap<SymbolName, TestInfo>,
     pub(crate) types: FxHashMap<TypeName, TypeDefAndMethods>,
 
@@ -124,7 +127,7 @@ pub(crate) struct Env {
     pub(crate) cli_args: Vec<String>,
 }
 
-impl Env {
+impl Env<'_> {
     pub(crate) fn new(id_gen: IdGenerator, mut vfs: Vfs) -> Self {
         let mut namespaces = FxHashMap::default();
 
@@ -149,6 +152,7 @@ impl Env {
         }));
 
         let mut env = Self {
+            phantom: PhantomData,
             tests: FxHashMap::default(),
             types: built_in_types(),
             prelude_namespace: temp_prelude,

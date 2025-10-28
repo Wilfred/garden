@@ -732,6 +732,10 @@ static_collect!(BuiltinFunctionKind);
 
 pub(crate) type NewValuePtr<'gc> = Gc<'gc, RefLock<NewValue<'gc>>>;
 
+pub(crate) type GArena = Arena<Rootable![NewValuePtr<'_>]>;
+
+fn takes_arena(_: &GArena) {}
+
 #[cfg(test)]
 mod tests {
     use crate::parser::ast::IdGenerator;
@@ -751,7 +755,7 @@ mod tests {
 
     #[test]
     fn test_value_gc() {
-        let _arena = Arena::<Rootable![NewValuePtr<'_>]>::new(|mc| {
+        let arena: Arena<_> = Arena::<Rootable![NewValuePtr<'_>]>::new(|mc| {
             let one = Gc::new(mc, RefLock::new(NewValue::Integer(123)));
 
             let list = Gc::new(
@@ -764,5 +768,7 @@ mod tests {
 
             list
         });
+
+        takes_arena(&arena);
     }
 }

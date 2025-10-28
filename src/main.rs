@@ -3,6 +3,8 @@
 // This tends to trigger on larger tuples of simple types, and naming
 // them would probably be worse for readability.
 #![allow(clippy::type_complexity)]
+// Currently working on a big refactoring for GC.
+#![allow(dead_code)]
 // Catch unfinished code.
 #![warn(clippy::todo)]
 // Catch unfinished code.

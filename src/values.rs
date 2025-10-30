@@ -721,6 +721,25 @@ pub(crate) enum NewValue<'gc> {
     },
 }
 
+impl NewValue<'_> {
+    /// A helper for creating a unit value.
+    pub(crate) fn unit<'gc>(mc: &Mutation<'gc>) -> NewValuePtr<'gc> {
+        // We can assume that Unit is always defined because it's in the
+        // prelude.
+        Gc::new(
+            mc,
+            RefLock::new(NewValue::EnumVariant {
+                type_name: TypeName {
+                    text: "Unit".to_owned(),
+                },
+                runtime_type: Type::unit(),
+                variant_idx: 0,
+                payload: None,
+            }),
+        )
+    }
+}
+
 // Types that don't contain any GC'd values, so they're 'static' from
 // the perspective of GC.
 static_collect!(Type);

@@ -264,6 +264,9 @@ pub(crate) enum EvalError {
     AssertionFailed(Position, ErrorMessage),
     /// Ran out of ticks (i.e. program did not terminate in time).
     ReachedTickLimit(Position),
+    /// Runtime stack exceeded the limit (typically infinite
+    /// recursion).
+    ReachedRecursionLimit(Position),
     /// Tried to execute a function that isn't permitted in the
     /// sandbox.
     ForbiddenInSandbox(Position),

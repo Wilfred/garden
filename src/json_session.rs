@@ -422,6 +422,19 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             position: Some(position),
             id,
         },
+        EvalError::ReachedRecursionLimit(position) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Err(vec![ResponseError {
+                    position: Some(position.clone()),
+                    message: "Reached the recursion limit.".to_owned(),
+                    stack: None,
+                }]),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: Some(position),
+            id,
+        },
         EvalError::ForbiddenInSandbox(position) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
@@ -788,6 +801,19 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
                 value: Err(vec![ResponseError {
                     position: Some(position.clone()),
                     message: "Reached the tick limit.".to_owned(),
+                    stack: None,
+                }]),
+                stack_frame_name: Some(env.top_frame_name()),
+            },
+            position: Some(position),
+            id: None,
+        },
+        Err(EvalError::ReachedRecursionLimit(position)) => Response {
+            kind: ResponseKind::Evaluate {
+                warnings: vec![],
+                value: Err(vec![ResponseError {
+                    position: Some(position.clone()),
+                    message: "Reached the recursion limit.".to_owned(),
                     stack: None,
                 }]),
                 stack_frame_name: Some(env.top_frame_name()),

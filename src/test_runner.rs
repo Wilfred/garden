@@ -111,9 +111,9 @@ fn sandboxed_tests_summary(
 
                 msg.as_string()
             }
-            Some(EvalError::ReachedTickLimit(_)) => {
+            Some(EvalError::ReachedTickLimit(_) | EvalError::ReachedRecursionLimit(_)) => {
                 num_reached_limit += 1;
-                "timed_out".to_owned()
+                "exceeded resource limit".to_owned()
             }
             Some(EvalError::ForbiddenInSandbox(_)) => {
                 num_sandboxed += 1;
@@ -262,6 +262,7 @@ pub(crate) fn run_tests_in_files(
                 EvalError::Exception(position, msg) => (Some(position), Some(msg)),
                 EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
                 EvalError::ReachedTickLimit(position) => (Some(position), None),
+                EvalError::ReachedRecursionLimit(position) => (Some(position), None),
                 EvalError::ForbiddenInSandbox(position) => (Some(position), None),
             };
 

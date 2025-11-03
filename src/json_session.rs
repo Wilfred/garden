@@ -422,7 +422,7 @@ fn err_to_response(e: EvalError, env: &Env, id: Option<RequestId>) -> Response {
             position: Some(position),
             id,
         },
-        EvalError::ReachedRecursionLimit(position) => Response {
+        EvalError::ReachedStackLimit(position) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {
@@ -808,7 +808,7 @@ fn eval_to_response(env: &mut Env, session: &Session) -> Response {
             position: Some(position),
             id: None,
         },
-        Err(EvalError::ReachedRecursionLimit(position)) => Response {
+        Err(EvalError::ReachedStackLimit(position)) => Response {
             kind: ResponseKind::Evaluate {
                 warnings: vec![],
                 value: Err(vec![ResponseError {

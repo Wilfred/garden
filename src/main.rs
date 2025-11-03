@@ -495,7 +495,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
             EvalError::Exception(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
-            EvalError::ReachedRecursionLimit(_) => eprintln!("Reached the recursion limit."),
+            EvalError::ReachedStackLimit(_) => eprintln!("Reached the stack limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
             }
@@ -514,7 +514,7 @@ fn test_eval_up_to(src: &str, path: &Path, offset: usize, interrupted: Arc<Atomi
             EvalError::Exception(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::AssertionFailed(_, msg) => eprintln!("{}", msg.as_string()),
             EvalError::ReachedTickLimit(_) => eprintln!("Reached the tick limit."),
-            EvalError::ReachedRecursionLimit(_) => eprintln!("Reached the recursion limit."),
+            EvalError::ReachedStackLimit(_) => eprintln!("Reached the stack limit."),
             EvalError::ForbiddenInSandbox(_) => {
                 eprintln!("Tried to execute unsafe code in sandboxed mode.")
             }
@@ -703,9 +703,9 @@ fn run_file(src: &str, path: &Path, arguments: &[String], interrupted: Arc<Atomi
                 position.as_ide_string(&env.project_root)
             );
         }
-        Err(EvalError::ReachedRecursionLimit(position)) => {
+        Err(EvalError::ReachedStackLimit(position)) => {
             eprintln!(
-                "{}: Reached the recursion limit.",
+                "{}: Reached the stack limit.",
                 position.as_ide_string(&env.project_root)
             );
         }

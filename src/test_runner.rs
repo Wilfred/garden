@@ -66,6 +66,7 @@ fn sandboxed_tests_summary(
     // Currently it's chosen by bumping it if writing a sample file
     // that hits the limit.
     env.tick_limit = Some(100_000);
+    env.stack_limit = Some(1_000);
     env.enforce_sandbox = true;
 
     let mut test_at_cursor = None;
@@ -111,7 +112,7 @@ fn sandboxed_tests_summary(
 
                 msg.as_string()
             }
-            Some(EvalError::ReachedTickLimit(_) | EvalError::ReachedRecursionLimit(_)) => {
+            Some(EvalError::ReachedTickLimit(_) | EvalError::ReachedStackLimit(_)) => {
                 num_reached_limit += 1;
                 "exceeded resource limit".to_owned()
             }
@@ -262,7 +263,7 @@ pub(crate) fn run_tests_in_files(
                 EvalError::Exception(position, msg) => (Some(position), Some(msg)),
                 EvalError::AssertionFailed(position, msg) => (Some(position), Some(msg)),
                 EvalError::ReachedTickLimit(position) => (Some(position), None),
-                EvalError::ReachedRecursionLimit(position) => (Some(position), None),
+                EvalError::ReachedStackLimit(position) => (Some(position), None),
                 EvalError::ForbiddenInSandbox(position) => (Some(position), None),
             };
 

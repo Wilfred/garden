@@ -241,7 +241,7 @@ pub(crate) fn repl(interrupted: Arc<AtomicBool>) {
                 println!("Reached tick limit.");
                 is_stopped = false;
             }
-            Err(EvalError::ReachedRecursionLimit(_)) => {
+            Err(EvalError::ReachedStackLimit(_)) => {
                 println!("Reached recursion limit.");
                 is_stopped = false;
             }

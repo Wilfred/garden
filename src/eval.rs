@@ -266,7 +266,7 @@ pub(crate) enum EvalError {
     ReachedTickLimit(Position),
     /// Runtime stack exceeded the limit (typically infinite
     /// recursion).
-    ReachedRecursionLimit(Position),
+    ReachedStackLimit(Position),
     /// Tried to execute a function that isn't permitted in the
     /// sandbox.
     ForbiddenInSandbox(Position),
@@ -5493,6 +5493,13 @@ pub(crate) fn eval(env: &mut Env, session: &Session) -> Result<Value, EvalError>
                     let position = outer_expr.position.clone();
                     restore_stack_frame(env, (expr_state, outer_expr), &[]);
                     return Err(EvalError::ReachedTickLimit(position));
+                }
+            }
+            if let Some(recursion_limit) = env.stack_limit {
+                if env.stack.0.len() > recursion_limit {
+                    let position = outer_expr.position.clone();
+                    restore_stack_frame(env, (expr_state, outer_expr), &[]);
+                    return Err(EvalError::ReachedStackLimit(position));
                 }
             }
 

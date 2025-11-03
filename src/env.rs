@@ -93,6 +93,8 @@ pub(crate) struct Env {
     pub(crate) ticks: usize,
     /// Stop evaluation if we exceed this number of ticks.
     pub(crate) tick_limit: Option<usize>,
+    /// Stop evaluation if the call stack exceeds this size.
+    pub(crate) stack_limit: Option<usize>,
 
     /// Stop after evaluating the expression with this ID, if we reach
     /// it.
@@ -158,6 +160,7 @@ impl Env {
             stack: Stack::new(user_namespace.clone()),
             ticks: 0,
             tick_limit: None,
+            stack_limit: None,
             enforce_sandbox: false,
             stop_at_expr_id: None,
             id_gen,

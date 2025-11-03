@@ -88,7 +88,7 @@ fn sandboxed_tests_summary(
     let mut num_failed = 0;
     let mut num_errored = 0;
     let mut num_sandboxed = 0;
-    let mut num_timed_out = 0;
+    let mut num_reached_limit = 0;
 
     let mut tests: FxHashMap<_, TestState> = FxHashMap::default();
     for (test_sym, err) in &summary.tests {
@@ -112,7 +112,7 @@ fn sandboxed_tests_summary(
                 msg.as_string()
             }
             Some(EvalError::ReachedTickLimit(_)) => {
-                num_timed_out += 1;
+                num_reached_limit += 1;
                 "timed_out".to_owned()
             }
             Some(EvalError::ForbiddenInSandbox(_)) => {
@@ -141,8 +141,8 @@ fn sandboxed_tests_summary(
             "failing"
         } else if num_errored == 1 {
             "erroring"
-        } else if num_timed_out == 1 {
-            "timing out"
+        } else if num_reached_limit == 1 {
+            "exceeded resource limit"
         } else if num_sandboxed == 1 {
             "sandboxed"
         } else {
@@ -163,8 +163,8 @@ fn sandboxed_tests_summary(
     if num_errored > 0 {
         parts.push(format!("{num_errored} errored"));
     }
-    if num_timed_out > 0 {
-        parts.push(format!("{num_timed_out} timed out"));
+    if num_reached_limit > 0 {
+        parts.push(format!("{num_reached_limit} exceeded resource limit"));
     }
     if num_sandboxed > 0 {
         parts.push(format!("{num_sandboxed} sandboxed"));

@@ -22,6 +22,10 @@ __PRELUDE_FUNS
 
 __FS_FUNS
 
+## Random `__random.gdn`
+
+__RANDOM_FUNS
+
 ## Reflection `__reflect.gdn`
 
 __REFLECT_FUNS

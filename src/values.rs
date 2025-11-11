@@ -390,6 +390,7 @@ pub(crate) enum BuiltinFunctionKind {
     MethodsForType,
     GetEnv,
     Keywords,
+    RandomInt,
 }
 
 impl BuiltinFunctionKind {
@@ -419,6 +420,7 @@ impl BuiltinFunctionKind {
             | BuiltinFunctionKind::MethodsForType
             | BuiltinFunctionKind::NamespaceFunctions
             | BuiltinFunctionKind::Keywords => PathBuf::from("__reflect.gdn"),
+            BuiltinFunctionKind::RandomInt => PathBuf::from("__random.gdn"),
         }
     }
 }
@@ -450,6 +452,7 @@ impl Display for BuiltinFunctionKind {
             BuiltinFunctionKind::MethodsForType => "methods_for_type",
             BuiltinFunctionKind::GetEnv => "get_env",
             BuiltinFunctionKind::Keywords => "keywords",
+            BuiltinFunctionKind::RandomInt => "int",
         };
         write!(f, "{name}")
     }

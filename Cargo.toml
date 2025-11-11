@@ -24,6 +24,7 @@ lazy_static = "1.4.0"
 line-numbers = "0.4.0"
 ordered-float = "3.7.0"
 owo-colors = { version = "4.0.0", features = ["supports-colors"] }
+rand = "0.9.1"
 regex = "1.7.1"
 rustyline = "17.0.1"
 serde = { version = "1.0.104", features = ["derive", "rc"] }
@@ -33,7 +34,6 @@ strum = "0.24.1"
 strum_macros = "0.24.1"
 rustc-hash = "2.1.0"
 normalize-path = "0.2.1"
-rand = "0.9.1"
 
 [[bin]]
 name = "garden"

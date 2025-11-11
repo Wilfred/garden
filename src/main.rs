@@ -740,6 +740,7 @@ mod tests {
         cmd.arg("test")
             .arg("src/__prelude.gdn")
             .arg("src/__fs.gdn")
+            .arg("src/__random.gdn")
             .arg("src/__reflect.gdn");
         cmd.assert().success();
     }

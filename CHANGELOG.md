@@ -35,6 +35,8 @@ Added `Dict::get()`, `Dict::set()` and `Dict::items()`.
 
 Added `__reflect::operators()`.
 
+Added `__random::int()`.
+
 ## Build
 
 Garden now requires Rust 1.85+ to build.

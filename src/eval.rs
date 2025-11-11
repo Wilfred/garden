@@ -13,6 +13,7 @@ use std::time::Instant;
 
 use normalize_path::NormalizePath as _;
 use ordered_float::OrderedFloat;
+use rand::Rng;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
@@ -650,6 +651,8 @@ fn read_src(abs_path: &Path, import_info: &ImportInfo) -> Result<String, Diagnos
         return Ok(include_str!("__prelude.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__fs.gdn") {
         return Ok(include_str!("__fs.gdn").to_owned());
+    } else if import_info.path == PathBuf::from("__random.gdn") {
+        return Ok(include_str!("__random.gdn").to_owned());
     } else if import_info.path == PathBuf::from("__reflect.gdn") {
         return Ok(include_str!("__reflect.gdn").to_owned());
     }
@@ -3330,6 +3333,25 @@ fn eval_builtin_call(
 
             if expr_value_is_used {
                 env.push_value(v);
+            }
+        }
+        BuiltinFunctionKind::RandomInt => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                0,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut rng = rand::rng();
+            let random_value: i64 = rng.random();
+
+            if expr_value_is_used {
+                env.push_value(Value::new(Value_::Integer(random_value)));
             }
         }
     }

@@ -64,7 +64,7 @@ fun write_method_page(type_name: String, method_name: String, out_dir: Path, bas
 
   match reflect::doc_comment_for_method(type_name, method_name) {
     Some(doc_comment) => {
-      let heading = "# `" ^ qualified_name ^ "`"
+      let heading = "# `" ^ qualified_name ^ "()`"
 
       let page_src = render_doc_comment(
         heading,
@@ -108,7 +108,7 @@ fun render_type_doc_comment(heading: String, doc_comment: String, src: Option<St
     ""
   } else {
     let method_list = methods.map(fun(m: String) {
-      "* [`" ^ m ^ "`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
+      "* [`" ^ m ^ "()`](/method:" ^ type_name ^ "::" ^ m ^ ".html)"
     })
     "\n\n## Methods\n\n" ^ "\n".join(method_list)
   }
@@ -352,22 +352,22 @@ fun substitute_shorthand(website_dir: Path, src: String): String {
   let type_links = join_with_commas_and(type_links)
 
   let prelude_funs = reflect::namespace_functions(prelude).map(fun(name: String) {
-    "".join(["[`", name, "`](./fun:__prelude.gdn::", name, ".html)"])
+    "".join(["[`", name ^ "()", "`](./fun:__prelude.gdn::", name, ".html)"])
   })
   let prelude_funs = join_with_commas_and(prelude_funs)
 
   let fs_funs = reflect::namespace_functions(fs).map(fun(name: String) {
-    "".join(["[`", name, "`](./fun:__fs.gdn::", name, ".html)"])
+    "".join(["[`", name ^ "()", "`](./fun:__fs.gdn::", name, ".html)"])
   })
   let fs_funs = join_with_commas_and(fs_funs)
 
   let random_funs = reflect::namespace_functions(random).map(fun(name: String) {
-    "".join(["[`", name, "`](./fun:__random.gdn::", name, ".html)"])
+    "".join(["[`", name ^ "()", "`](./fun:__random.gdn::", name, ".html)"])
   })
   let random_funs = join_with_commas_and(random_funs)
 
   let reflect_funs = reflect::namespace_functions(reflect).map(fun(name: String) {
-    "".join(["[`", name, "`](./fun:__reflect.gdn::", name, ".html)"])
+    "".join(["[`", name ^ "()", "`](./fun:__reflect.gdn::", name, ".html)"])
   })
   let reflect_funs = join_with_commas_and(reflect_funs)
 

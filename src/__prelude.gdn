@@ -252,7 +252,7 @@ test trim_left {
 // ```
 // " foo ".trim_right() //-> " foo"
 // ```
-public method trim_right(this: String, ): String {
+public method trim_right(this: String): String {
   let i = this.len() - 1
   while i >= 0 {
     let char = this.substring(i, i + 1)
@@ -274,7 +274,7 @@ test trim_right {
 }
 
 // Remove whitespace from both the start and end of this string.
-public method trim(this: String, ): String {
+public method trim(this: String): String {
   this.trim_left().trim_right()
 }
 

@@ -808,7 +808,7 @@ struct String {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }
 
-// A 64-bit integer, such as `1234`.
+// A 64-bit signed integer, such as `1234`, `10_000` or `-5`.
 struct Int {
   __BUILTIN_IMPLEMENTATION: NoValue,
 }

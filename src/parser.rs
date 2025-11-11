@@ -170,7 +170,8 @@ fn parse_integer(
     let token = require_a_token(tokens, diagnostics, "integer literal");
 
     if INTEGER_RE.is_match(token.text) {
-        let i: i64 = token.text.parse().unwrap();
+        let text = token.text.replace('_', "");
+        let i: i64 = text.parse().unwrap();
         Expression::new(token.position, Expression_::IntLiteral(i), id_gen.next())
     } else {
         diagnostics.push(ParseError::Invalid {

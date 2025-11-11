@@ -20,6 +20,9 @@ public fun foo() {}
 external fun foo() {}
 ```
 
+Integer literals now support underscores to make them easier to
+read. `10000` can now be written `10_000`.
+
 ## Runtime
 
 Fixed a crash when evaluating empty blocks.

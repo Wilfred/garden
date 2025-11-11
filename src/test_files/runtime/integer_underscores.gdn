@@ -1,0 +1,8 @@
+{
+  let i = 1_000
+  dbg(i)
+}
+
+// args: run
+// expected stdout: 1000
+

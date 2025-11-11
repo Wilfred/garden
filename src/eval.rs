@@ -13,7 +13,7 @@ use std::time::Instant;
 
 use normalize_path::NormalizePath as _;
 use ordered_float::OrderedFloat;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::checks::{check_toplevel_items, check_toplevel_items_in_env};
@@ -3347,11 +3347,59 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let rng = env.random.get_or_insert_with(rand::rng);
+            let rng = env.random.get_or_insert_with(|| {
+                let mut thread_rng = rand::rng();
+                rand::rngs::StdRng::from_rng(&mut thread_rng)
+            });
             let random_value: i64 = rng.random();
 
             if expr_value_is_used {
                 env.push_value(Value::new(Value_::Integer(random_value)));
+            }
+        }
+        BuiltinFunctionKind::RandomSeed => {
+            check_arity(
+                &SymbolName {
+                    text: format!("{kind}"),
+                },
+                receiver_value,
+                receiver_pos,
+                1,
+                arg_positions,
+                arg_values,
+            )?;
+
+            let mut saved_values = vec![receiver_value.clone()];
+            for value in arg_values.iter().rev() {
+                saved_values.push(value.clone());
+            }
+
+            let seed_value = &arg_values[0];
+            let Value_::Integer(seed) = seed_value.as_ref() else {
+                return Err((
+                    RestoreValues(saved_values),
+                    EvalError::Exception(
+                        arg_positions[0].clone(),
+                        ErrorMessage(vec![Text(format!(
+                            "Expected an integer for seed, got: {}",
+                            type_representation(seed_value)
+                        ))]),
+                    ),
+                ));
+            };
+
+            // Seed the RNG using the provided integer value
+            let seed_u64 = (*seed as u64).to_le_bytes();
+            let mut seed_bytes = [0u8; 32];
+            // Repeat the 8-byte seed to fill the 32-byte array
+            for i in 0..4 {
+                seed_bytes[i * 8..(i + 1) * 8].copy_from_slice(&seed_u64);
+            }
+
+            env.random = Some(rand::rngs::StdRng::from_seed(seed_bytes));
+
+            if expr_value_is_used {
+                env.push_value(Value::unit());
             }
         }
     }

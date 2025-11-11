@@ -125,7 +125,7 @@ pub(crate) struct Env {
     pub(crate) cli_args: Vec<String>,
 
     /// Random number generator for built-in random functions.
-    pub(crate) random: Option<rand::rngs::ThreadRng>,
+    pub(crate) random: Option<rand::rngs::StdRng>,
 }
 
 impl Env {

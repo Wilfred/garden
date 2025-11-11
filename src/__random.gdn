@@ -6,6 +6,17 @@ public fun int(): Int {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Seed the random number generator with a specific value.
+//
+// After calling this function, subsequent calls to [int()] will produce
+// a predictable sequence of numbers. Calling [seed()] again with the same
+// value will reset the sequence.
+//
+// This is useful for reproducible testing and debugging.
+public fun seed(s: Int): Unit {
+  __BUILTIN_IMPLEMENTATION
+}
+
 test random_int {
   int()
 }

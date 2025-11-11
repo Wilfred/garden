@@ -19,9 +19,19 @@ test add_one_to_two {
 }
 ```
 
+The built-in namespaces available are `__fs`, `__random` and
+`__reflect`. You can import and use them like this:
+
+```
+import "__fs.gdn" as fs
+
+fs::list_directory(Path{ p: "/"})
+```
+
 # Verifying changes
 - cargo run -- check yourfile.gdn: Check the test program named yourfile.gdn
 - cargo run -- run yourfile.gdn: Run the code in yourfile.gdn.
+- cargo run -- test yourfile.gdn: Run unit tests in yourfile.gdn.
 
 Remember that Garden does not treat `main` functions specially. You'll
 need to write a toplevel call to any functions you want to call at

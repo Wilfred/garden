@@ -123,6 +123,9 @@ pub(crate) struct Env {
     /// Command line arguments used to invoke this Garden program,
     /// e.g. `vec!["--stuff"]`.
     pub(crate) cli_args: Vec<String>,
+
+    /// Random number generator for built-in random functions.
+    pub(crate) random: Option<rand::rngs::ThreadRng>,
 }
 
 impl Env {
@@ -167,6 +170,7 @@ impl Env {
             vfs,
             initial_state: None,
             cli_args: vec![],
+            random: None,
         };
 
         let prelude_namespace = fresh_prelude(&mut env, &prelude_vfs_path);

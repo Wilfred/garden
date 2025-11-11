@@ -3347,7 +3347,7 @@ fn eval_builtin_call(
                 arg_values,
             )?;
 
-            let mut rng = rand::rng();
+            let rng = env.random.get_or_insert_with(rand::rng);
             let random_value: i64 = rng.random();
 
             if expr_value_is_used {

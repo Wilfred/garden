@@ -1,0 +1,6 @@
+fun words(): List<String> {
+  // https://github.com/first20hours/google-10000-english/blob/master/google-10000-english-no-swears.txt
+  let f = Path{ p: "words.txt"}
+  let src = f.read().or_throw()
+  src.lines()
+}

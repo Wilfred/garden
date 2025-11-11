@@ -1,0 +1,11 @@
+// Generate a random integer value.
+//
+// This is a pseudorandom number, and should not be used for
+// cryptographic purposes.
+public fun int(): Int {
+  __BUILTIN_IMPLEMENTATION
+}
+
+test random_int {
+  int()
+}

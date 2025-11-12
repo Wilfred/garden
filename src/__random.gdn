@@ -19,22 +19,18 @@ public fun seed(s: Int): Unit {
 
 // Choose a random item from a list.
 //
-// Returns a random element from the provided list. The list must be
-// non-empty, otherwise an error is raised.
+// Returns Some(item) with a random element from the provided list,
+// or None if the list is empty.
 //
 // This is affected by the random seed set by [seed()].
-public fun choice<T>(items: List<T>): T {
+public fun choice<T>(items: List<T>): Option<T> {
   let len = items.len()
 
   if len == 0 {
-    throw("Cannot choose from an empty list")
-  }
-
-  let index = ((int() % len) + len) % len
-
-  match items.get(index) {
-    Some(item) => item
-    None => throw("Internal error: index out of bounds")
+    None
+  } else {
+    let index = ((int() % len) + len) % len
+    items.get(index)
   }
 }
 

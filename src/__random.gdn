@@ -24,13 +24,10 @@ public fun seed(s: Int): Unit {
 //
 // This is affected by the random seed set by [seed()].
 public fun choice<T>(items: List<T>): Option<T> {
-  let len = items.len()
-
-  if len == 0 {
+  if items.len() == 0 {
     None
   } else {
-    let index = ((int() % len) + len) % len
-    items.get(index)
+    items.get(((int() % items.len()) + items.len()) % items.len())
   }
 }
 

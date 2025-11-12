@@ -35,7 +35,7 @@ Added `Dict::get()`, `Dict::set()` and `Dict::items()`.
 
 Added `__reflect::operators()`.
 
-Added `__random::int()`.
+Added `__random::int()`, `__random::seed()`, and `__random::choice()`.
 
 ## Build
 

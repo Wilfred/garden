@@ -2150,7 +2150,22 @@ fn eval_integer_binop(
 
                 Value::new(Value_::Integer(lhs_num / rhs_num))
             }
-            BinaryOperatorKind::Modulo => Value::new(Value_::Integer(lhs_num % rhs_num)),
+            BinaryOperatorKind::Modulo => {
+                if rhs_num == 0 {
+                    return Err((
+                        RestoreValues(vec![lhs_value.clone(), rhs_value.clone()]),
+                        EvalError::Exception(
+                            position.clone(),
+                            ErrorMessage(vec![Text(format!(
+                                "Tried to calculate the remainder of dividing {} by zero.",
+                                lhs_value.display(env)
+                            ))]),
+                        ),
+                    ));
+                } else {
+                    Value::new(Value_::Integer(lhs_num % rhs_num))
+                }
+            }
             BinaryOperatorKind::Exponent => {
                 if rhs_num < 0 {
                     return Err((

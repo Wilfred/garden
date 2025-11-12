@@ -1,7 +1,14 @@
 {
   dbg(10 % 8)
+  10 % 0
 }
 
 // args: run
 // expected stdout: 2
+
+// expected stderr:
+// Error: Tried to calculate the remainder of dividing 10 by zero.
+// --| src/test_files/runtime/modulo.gdn:3:3	 __toplevel__
+//  3|   10 % 0
+//   |   ^^^^^^
 

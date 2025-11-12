@@ -27,6 +27,8 @@ read. `10000` can now be written `10_000`.
 
 Fixed a crash when evaluating empty blocks.
 
+Fixed a crash on `foo % 0`.
+
 ## Standard Library
 
 `__garden.gdn` is now `__reflect.gdn`.

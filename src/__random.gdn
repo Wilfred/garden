@@ -30,17 +30,9 @@ public fun choice<T>(items: List<T>): T {
     throw("Cannot choose from an empty list")
   }
 
-  let random_int = int()
-  let index = random_int % len
+  let index = ((int() % len) + len) % len
 
-  // Handle negative modulo results
-  let positive_index = if index < 0 {
-    index + len
-  } else {
-    index
-  }
-
-  match items.get(positive_index) {
+  match items.get(index) {
     Some(item) => item
     None => throw("Internal error: index out of bounds")
   }

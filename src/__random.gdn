@@ -17,6 +17,35 @@ public fun seed(s: Int): Unit {
   __BUILTIN_IMPLEMENTATION
 }
 
+// Choose a random item from a list.
+//
+// Returns a random element from the provided list. The list must be
+// non-empty, otherwise an error is raised.
+//
+// This is affected by the random seed set by [seed()].
+public fun choice<T>(items: List<T>): T {
+  let len = items.len()
+
+  if len == 0 {
+    throw("Cannot choose from an empty list")
+  }
+
+  let random_int = int()
+  let index = random_int % len
+
+  // Handle negative modulo results
+  let positive_index = if index < 0 {
+    index + len
+  } else {
+    index
+  }
+
+  match items.get(positive_index) {
+    Some(item) => item
+    None => throw("Internal error: index out of bounds")
+  }
+}
+
 test random_int {
   int()
 }

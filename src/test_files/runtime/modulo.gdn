@@ -1,14 +1,17 @@
 {
-  dbg(10 % 8)
+  dbg(11 % 5)
+  dbg(-4 % 3)
   10 % 0
 }
 
 // args: run
-// expected stdout: 2
+// expected stdout:
+// 1
+// 2
 
 // expected stderr:
 // Error: Tried to calculate the remainder of dividing 10 by zero.
-// --| src/test_files/runtime/modulo.gdn:3:3	 __toplevel__
-//  3|   10 % 0
+// --| src/test_files/runtime/modulo.gdn:4:3	 __toplevel__
+//  4|   10 % 0
 //   |   ^^^^^^
 

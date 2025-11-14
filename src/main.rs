@@ -211,6 +211,8 @@ enum CliCommands {
     /// Parse the Garden program at the path specified and print the
     /// AST.
     DumpAst { path: PathBuf },
+    /// Extract code blocks from a markdown file and execute them.
+    RunMarkdown { path: PathBuf },
 }
 
 fn main() {
@@ -278,6 +280,12 @@ fn main() {
             let abs_path = to_abs_path(&path);
             let src = read_utf8_or_die(&abs_path);
             dump_ast(&src, &abs_path)
+        }
+        CliCommands::RunMarkdown { path } => {
+            let abs_path = to_abs_path(&path);
+            let markdown_src = read_utf8_or_die(&abs_path);
+            let code = extract_code_from_markdown(&markdown_src);
+            run_file(&code, &abs_path, &[], interrupted)
         }
         CliCommands::ShowType { path, offset } => {
             let abs_path = to_abs_path(&path);
@@ -559,6 +567,33 @@ fn from_utf8_or_die(src_bytes: Vec<u8>, path: &Path) -> String {
             std::process::exit(1);
         }
     }
+}
+
+/// Extract all code blocks from markdown (triple backtick blocks).
+fn extract_code_from_markdown(markdown: &str) -> String {
+    let mut code_blocks = Vec::new();
+    let mut in_code_block = false;
+    let mut current_block = String::new();
+
+    for line in markdown.lines() {
+        if line.starts_with("```") {
+            if in_code_block {
+                // End of code block
+                code_blocks.push(current_block.clone());
+                current_block.clear();
+                in_code_block = false;
+            } else {
+                // Start of code block
+                in_code_block = true;
+            }
+        } else if in_code_block {
+            current_block.push_str(line);
+            current_block.push('\n');
+        }
+    }
+
+    // Join all code blocks with newlines
+    code_blocks.join("\n")
 }
 
 fn dump_ast(src: &str, path: &Path) {
